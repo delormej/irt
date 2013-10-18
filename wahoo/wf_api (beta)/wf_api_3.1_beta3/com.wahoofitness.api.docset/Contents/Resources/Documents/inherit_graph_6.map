@@ -1,0 +1,33 @@
+<map id="G" name="G">
+<area shape="rect" href="$protocol___w_f_bike_power_delegate&#45;p.html" title="\&lt;_WFBikePowerDelegate\&gt;" alt="" coords="9,56,223,83"/>
+<area shape="rect" href="$protocol_w_f_bike_power_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFBikePowerConnection." alt="" coords="311,56,516,83"/>
+<area shape="rect" href="$interface___w_f_bike_power_connection.html" title="_WFBikePowerConnection" alt="" coords="636,56,841,83"/>
+<area shape="rect" href="$interface_w_f_bike_power_connection.html" title="Represents a connection to an ANT+ Bike Power sensor." alt="" coords="935,56,1135,83"/>
+<area shape="rect" href="$protocol___w_f_bike_trainer_delegate&#45;p.html" title="\&lt;_WFBikeTrainerDelegate\&gt;" alt="" coords="5,5,227,32"/>
+<area shape="rect" href="$protocol_w_f_bike_trainer_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFBikePowerConnection." alt="" coords="307,5,520,32"/>
+<area shape="rect" href="$protocol___w_f_weight_scale_delegate&#45;p.html" title="Internal&#45;use base class for the WFWeightScaleDelegate." alt="" coords="299,917,528,944"/>
+<area shape="rect" href="$protocol_w_f_weight_scale_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFWeightScaleConnection." alt="" coords="627,917,851,944"/>
+<area shape="rect" href="$interface_w_f_weight_scale_connection.html" title="Represents a connection to an ANT+ or BTLE Weight Scale sensor." alt="" coords="927,867,1143,893"/>
+<area shape="rect" href="$protocol_w_f_bike_speed_cadence_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFBikeSpeedCadenceConnection." alt="" coords="276,107,551,133"/>
+<area shape="rect" href="$interface_w_f_bike_speed_cadence_connection.html" title="Represents a connection to an ANT+ combined Bike Speed and Cadence sensor." alt="" coords="604,107,873,133"/>
+<area shape="rect" href="$protocol_w_f_b_t_l_e_glucose_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFBTLEGlucoseConnection." alt="" coords="301,157,525,184"/>
+<area shape="rect" href="$interface_w_f_b_t_l_e_glucose_connection.html" title="Represents a connection to a BTLE Glucose Monitor sensor." alt="" coords="629,157,848,184"/>
+<area shape="rect" href="$protocol_w_f_glucose_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFGlucoseConnection." alt="" coords="319,208,508,235"/>
+<area shape="rect" href="$interface_w_f_glucose_connection.html" title="Represents a connection to an ANT+ Glucose Monitor sensor." alt="" coords="647,208,831,235"/>
+<area shape="rect" href="$protocol_w_f_proximity_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFProximityConnection." alt="" coords="313,259,513,285"/>
+<area shape="rect" href="$interface_w_f_proximity_connection.html" title="Represents a connection to a BTLE Proximity sensor." alt="" coords="643,259,835,285"/>
+<area shape="rect" href="$interface_w_f_sensor_connection.html" title="Represents the connection for an ANT sensor." alt="" coords="325,461,501,488"/>
+<area shape="rect" href="$interface___w_f_weight_scale_connection.html" title="Internal&#45;use base class for the WFWeightScaleConnection." alt="" coords="627,816,851,843"/>
+<area shape="rect" href="$interface_w_f_bike_cadence_connection.html" title="Represents a connection to an ANT+ Bike Cadence sensor." alt="" coords="628,309,849,336"/>
+<area shape="rect" href="$interface_w_f_bike_speed_connection.html" title="Represents a connection to an ANT+ Bike Speed sensor." alt="" coords="637,360,840,387"/>
+<area shape="rect" href="$interface_w_f_blood_pressure_connection.html" title="Represents a connection to a BTLE Blood Pressure sensor." alt="" coords="625,411,852,437"/>
+<area shape="rect" href="$interface_w_f_calorimeter_connection.html" title="Represents a connection to an ANT+ Calorimeter sensor." alt="" coords="632,461,845,488"/>
+<area shape="rect" href="$interface_w_f_display_connection.html" title="Represents a connection to an detatched display (bike computer / watch)" alt="" coords="649,512,828,539"/>
+<area shape="rect" href="$interface_w_f_fitness_equipment_connection.html" title="Represents a connection to an ANT+ Fitness Equipment sensor." alt="" coords="612,563,865,589"/>
+<area shape="rect" href="$interface_w_f_footpod_connection.html" title="Represents a connection to an ANT+ Stride sensor." alt="" coords="645,867,832,893"/>
+<area shape="rect" href="$interface_w_f_geo_cache_connection.html" title="Represents a connection to an ANT+ GeoCache sensor." alt="" coords="637,613,840,640"/>
+<area shape="rect" href="$interface_w_f_health_thermometer_connection.html" title="Represents a connection to a BTLE Health Thermometer sensor." alt="" coords="601,664,876,691"/>
+<area shape="rect" href="$interface_w_f_heartrate_connection.html" title="Represents a connection to an ANT+ Heart Rate Monitor sensor." alt="" coords="641,715,836,741"/>
+<area shape="rect" href="$interface_w_f_multi_sport_connection.html" title="Represents an ANT+ Multi&#45;Sport Speed and Distance connection." alt="" coords="639,765,839,792"/>
+<area shape="rect" href="$protocol_w_f_treadmill_delegate&#45;p.html" title="\&lt;WFTreadmillDelegate\&gt;" alt="" coords="313,867,513,893"/>
+</map>

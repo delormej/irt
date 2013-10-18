@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" href="$protocol_w_f_weight_scale_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFWeightScaleConnection." alt="" coords="8,84,232,111"/>
+<area shape="rect" href="$interface_w_f_weight_scale_connection.html" title="Represents a connection to an ANT+ or BTLE Weight Scale sensor." alt="" coords="12,161,228,188"/>
+</map>

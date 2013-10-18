@@ -1,0 +1,572 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		45130916165E99B7005006EE /* KICKRSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 45130910165E99B7005006EE /* KICKRSettings.m */; };
+		457E6F1516A39E4B00951FC4 /* ErgModeVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 457E6F1316A39E4B00951FC4 /* ErgModeVC.m */; };
+		457E6F4A16A43E2800951FC4 /* BrakeModeVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 457E6F2116A43E2700951FC4 /* BrakeModeVC.m */; };
+		457E6F4C16A43E2800951FC4 /* BrakeModeVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 457E6F2516A43E2700951FC4 /* BrakeModeVC.xib */; };
+		457E6F4E16A43E2800951FC4 /* ErgModeVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 457E6F2916A43E2700951FC4 /* ErgModeVC.xib */; };
+		457E6F5016A43E2800951FC4 /* StandardModeVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 457E6F2D16A43E2700951FC4 /* StandardModeVC.xib */; };
+		457E6F6216A43E2800951FC4 /* StandardModeVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 457E6F4916A43E2700951FC4 /* StandardModeVC.m */; };
+		457E6F6516A483F100951FC4 /* minus_green.png in Resources */ = {isa = PBXBuildFile; fileRef = 457E6F6316A483F100951FC4 /* minus_green.png */; };
+		457E6F6616A483F100951FC4 /* plus_green.png in Resources */ = {isa = PBXBuildFile; fileRef = 457E6F6416A483F100951FC4 /* plus_green.png */; };
+		AB0A04CB140FF08100A8A19B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB0A04CA140FF08100A8A19B /* UIKit.framework */; };
+		AB0A04CD140FF08100A8A19B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB0A04CC140FF08100A8A19B /* Foundation.framework */; };
+		AB0A04CF140FF08100A8A19B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB0A04CE140FF08100A8A19B /* CoreGraphics.framework */; };
+		AB1DC8D614F9468B00C308CC /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB1DC8D514F9468B00C308CC /* MessageUI.framework */; };
+		AB5DD55915D5756A00EEABF4 /* KICKRVC.m in Sources */ = {isa = PBXBuildFile; fileRef = AB5DD54B15D5756A00EEABF4 /* KICKRVC.m */; };
+		AB5DD55A15D5756A00EEABF4 /* BTDeviceInfoVC.m in Sources */ = {isa = PBXBuildFile; fileRef = AB5DD54D15D5756A00EEABF4 /* BTDeviceInfoVC.m */; };
+		AB5DD55D15D5756A00EEABF4 /* SensorManagerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AB5DD55315D5756A00EEABF4 /* SensorManagerViewController.m */; };
+		AB5DD55E15D5756A00EEABF4 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AB5DD55515D5756A00EEABF4 /* SettingsViewController.m */; };
+		AB5DD55F15D5756A00EEABF4 /* WFSensorCommonViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AB5DD55715D5756A00EEABF4 /* WFSensorCommonViewController.m */; };
+		AB5DD56915D5759500EEABF4 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AB5DD56215D5759500EEABF4 /* main.m */; };
+		AB5DD56B15D5759500EEABF4 /* KICKRDemoAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AB5DD56615D5759500EEABF4 /* KICKRDemoAppDelegate.m */; };
+		AB5DD57715D575A600EEABF4 /* blackBox.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD56C15D575A600EEABF4 /* blackBox.png */; };
+		AB5DD57815D575A600EEABF4 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD56D15D575A600EEABF4 /* Default.png */; };
+		AB5DD57915D575A600EEABF4 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD56E15D575A600EEABF4 /* Default@2x.png */; };
+		AB5DD57A15D575A600EEABF4 /* greenButton.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD56F15D575A600EEABF4 /* greenButton.png */; };
+		AB5DD57B15D575A600EEABF4 /* greenhalfButton.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD57015D575A600EEABF4 /* greenhalfButton.png */; };
+		AB5DD57C15D575A600EEABF4 /* greyBigButton.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD57115D575A600EEABF4 /* greyBigButton.png */; };
+		AB5DD57D15D575A600EEABF4 /* greyhalfButton.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD57215D575A600EEABF4 /* greyhalfButton.png */; };
+		AB5DD57E15D575A600EEABF4 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD57315D575A600EEABF4 /* icon.png */; };
+		AB5DD57F15D575A600EEABF4 /* icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD57415D575A600EEABF4 /* icon@2x.png */; };
+		AB5DD58015D575A600EEABF4 /* redButton.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD57515D575A600EEABF4 /* redButton.png */; };
+		AB5DD58115D575A600EEABF4 /* redhalfButton.png in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD57615D575A600EEABF4 /* redhalfButton.png */; };
+		AB5DD58F15D575C500EEABF4 /* KICKRVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD58415D575C500EEABF4 /* KICKRVC.xib */; };
+		AB5DD59015D575C500EEABF4 /* BTDeviceInfoVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD58615D575C500EEABF4 /* BTDeviceInfoVC.xib */; };
+		AB5DD59215D575C500EEABF4 /* SensorManagerViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD58A15D575C500EEABF4 /* SensorManagerViewController.xib */; };
+		AB5DD59315D575C500EEABF4 /* SettingsViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD58C15D575C500EEABF4 /* SettingsViewController.xib */; };
+		AB5DD59A15D575D400EEABF4 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD59415D575D400EEABF4 /* InfoPlist.strings */; };
+		AB5DD59B15D575D400EEABF4 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB5DD59615D575D400EEABF4 /* MainWindow.xib */; };
+		AB6D215B1425202100EB6F27 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB6D215A1425202100EB6F27 /* MediaPlayer.framework */; };
+		AB82599815E007EE00D8FD0A /* SimModeVC.m in Sources */ = {isa = PBXBuildFile; fileRef = AB82599615E007ED00D8FD0A /* SimModeVC.m */; };
+		AB82599915E007EE00D8FD0A /* SimModeVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB82599715E007EE00D8FD0A /* SimModeVC.xib */; };
+		ABDE7A7D1607C8B4003F2471 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = ABDE7A7C1607C8B4003F2471 /* Default-568h@2x.png */; };
+		ABE92546141021A30061D3D3 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ABE92545141021A30061D3D3 /* ExternalAccessory.framework */; };
+		ABE92548141021CB0061D3D3 /* WFConnector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ABE92547141021CB0061D3D3 /* WFConnector.framework */; };
+		EC4792771455B9BA002DF15C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC4792761455B9BA002DF15C /* AudioToolbox.framework */; };
+		ECE853271451854F00C59323 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ECE853261451854F00C59323 /* CoreBluetooth.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		4513090F165E99B7005006EE /* KICKRSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KICKRSettings.h; sourceTree = "<group>"; };
+		45130910165E99B7005006EE /* KICKRSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KICKRSettings.m; sourceTree = "<group>"; };
+		457E6F1216A39E4A00951FC4 /* ErgModeVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ErgModeVC.h; sourceTree = "<group>"; };
+		457E6F1316A39E4B00951FC4 /* ErgModeVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ErgModeVC.m; sourceTree = "<group>"; };
+		457E6F2016A43E2700951FC4 /* BrakeModeVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrakeModeVC.h; sourceTree = "<group>"; };
+		457E6F2116A43E2700951FC4 /* BrakeModeVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BrakeModeVC.m; sourceTree = "<group>"; };
+		457E6F2616A43E2700951FC4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = BrakeModeVC.xib; sourceTree = "<group>"; };
+		457E6F2A16A43E2700951FC4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = ErgModeVC.xib; sourceTree = "<group>"; };
+		457E6F2E16A43E2700951FC4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = StandardModeVC.xib; sourceTree = "<group>"; };
+		457E6F4816A43E2700951FC4 /* StandardModeVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StandardModeVC.h; sourceTree = "<group>"; };
+		457E6F4916A43E2700951FC4 /* StandardModeVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StandardModeVC.m; sourceTree = "<group>"; };
+		457E6F6316A483F100951FC4 /* minus_green.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = minus_green.png; sourceTree = "<group>"; };
+		457E6F6416A483F100951FC4 /* plus_green.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = plus_green.png; sourceTree = "<group>"; };
+		AB0A04C6140FF08100A8A19B /* KICKRDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KICKRDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB0A04CA140FF08100A8A19B /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		AB0A04CC140FF08100A8A19B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		AB0A04CE140FF08100A8A19B /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		AB1DC8D514F9468B00C308CC /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
+		AB5DD54A15D5756A00EEABF4 /* KICKRVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KICKRVC.h; path = KICKRDemo/KICKRVC.h; sourceTree = SOURCE_ROOT; };
+		AB5DD54B15D5756A00EEABF4 /* KICKRVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = KICKRVC.m; path = KICKRDemo/KICKRVC.m; sourceTree = SOURCE_ROOT; };
+		AB5DD54C15D5756A00EEABF4 /* BTDeviceInfoVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BTDeviceInfoVC.h; path = KICKRDemo/BTDeviceInfoVC.h; sourceTree = SOURCE_ROOT; };
+		AB5DD54D15D5756A00EEABF4 /* BTDeviceInfoVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BTDeviceInfoVC.m; path = KICKRDemo/BTDeviceInfoVC.m; sourceTree = SOURCE_ROOT; };
+		AB5DD55215D5756A00EEABF4 /* SensorManagerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SensorManagerViewController.h; path = KICKRDemo/SensorManagerViewController.h; sourceTree = SOURCE_ROOT; };
+		AB5DD55315D5756A00EEABF4 /* SensorManagerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SensorManagerViewController.m; path = KICKRDemo/SensorManagerViewController.m; sourceTree = SOURCE_ROOT; };
+		AB5DD55415D5756A00EEABF4 /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SettingsViewController.h; path = KICKRDemo/SettingsViewController.h; sourceTree = SOURCE_ROOT; };
+		AB5DD55515D5756A00EEABF4 /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SettingsViewController.m; path = KICKRDemo/SettingsViewController.m; sourceTree = SOURCE_ROOT; };
+		AB5DD55615D5756A00EEABF4 /* WFSensorCommonViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WFSensorCommonViewController.h; path = KICKRDemo/WFSensorCommonViewController.h; sourceTree = SOURCE_ROOT; };
+		AB5DD55715D5756A00EEABF4 /* WFSensorCommonViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WFSensorCommonViewController.m; path = KICKRDemo/WFSensorCommonViewController.m; sourceTree = SOURCE_ROOT; };
+		AB5DD56215D5759500EEABF4 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = KICKRDemo/main.m; sourceTree = SOURCE_ROOT; };
+		AB5DD56315D5759500EEABF4 /* KICKRDemo-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "KICKRDemo-Info.plist"; path = "KICKRDemo/KICKRDemo-Info.plist"; sourceTree = SOURCE_ROOT; };
+		AB5DD56415D5759500EEABF4 /* KICKRDemo-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "KICKRDemo-Prefix.pch"; path = "KICKRDemo/KICKRDemo-Prefix.pch"; sourceTree = SOURCE_ROOT; };
+		AB5DD56515D5759500EEABF4 /* KICKRDemoAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KICKRDemoAppDelegate.h; path = KICKRDemo/KICKRDemoAppDelegate.h; sourceTree = SOURCE_ROOT; };
+		AB5DD56615D5759500EEABF4 /* KICKRDemoAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = KICKRDemoAppDelegate.m; path = KICKRDemo/KICKRDemoAppDelegate.m; sourceTree = SOURCE_ROOT; };
+		AB5DD56C15D575A600EEABF4 /* blackBox.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = blackBox.png; path = KICKRDemo/images/blackBox.png; sourceTree = SOURCE_ROOT; };
+		AB5DD56D15D575A600EEABF4 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Default.png; path = KICKRDemo/images/Default.png; sourceTree = SOURCE_ROOT; };
+		AB5DD56E15D575A600EEABF4 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default@2x.png"; path = "KICKRDemo/images/Default@2x.png"; sourceTree = SOURCE_ROOT; };
+		AB5DD56F15D575A600EEABF4 /* greenButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = greenButton.png; path = KICKRDemo/images/greenButton.png; sourceTree = SOURCE_ROOT; };
+		AB5DD57015D575A600EEABF4 /* greenhalfButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = greenhalfButton.png; path = KICKRDemo/images/greenhalfButton.png; sourceTree = SOURCE_ROOT; };
+		AB5DD57115D575A600EEABF4 /* greyBigButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = greyBigButton.png; path = KICKRDemo/images/greyBigButton.png; sourceTree = SOURCE_ROOT; };
+		AB5DD57215D575A600EEABF4 /* greyhalfButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = greyhalfButton.png; path = KICKRDemo/images/greyhalfButton.png; sourceTree = SOURCE_ROOT; };
+		AB5DD57315D575A600EEABF4 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = KICKRDemo/images/icon.png; sourceTree = SOURCE_ROOT; };
+		AB5DD57415D575A600EEABF4 /* icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon@2x.png"; path = "KICKRDemo/images/icon@2x.png"; sourceTree = SOURCE_ROOT; };
+		AB5DD57515D575A600EEABF4 /* redButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = redButton.png; path = KICKRDemo/images/redButton.png; sourceTree = SOURCE_ROOT; };
+		AB5DD57615D575A600EEABF4 /* redhalfButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = redhalfButton.png; path = KICKRDemo/images/redhalfButton.png; sourceTree = SOURCE_ROOT; };
+		AB5DD58515D575C500EEABF4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = KICKRDemo/en.lproj/KICKRVC.xib; sourceTree = SOURCE_ROOT; };
+		AB5DD58715D575C500EEABF4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = KICKRDemo/en.lproj/BTDeviceInfoVC.xib; sourceTree = SOURCE_ROOT; };
+		AB5DD58B15D575C500EEABF4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = KICKRDemo/en.lproj/SensorManagerViewController.xib; sourceTree = SOURCE_ROOT; };
+		AB5DD58D15D575C500EEABF4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = KICKRDemo/en.lproj/SettingsViewController.xib; sourceTree = SOURCE_ROOT; };
+		AB5DD59515D575D400EEABF4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = KICKRDemo/en.lproj/InfoPlist.strings; sourceTree = SOURCE_ROOT; };
+		AB5DD59715D575D400EEABF4 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = KICKRDemo/en.lproj/MainWindow.xib; sourceTree = SOURCE_ROOT; };
+		AB6D215A1425202100EB6F27 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
+		AB82599515E007ED00D8FD0A /* SimModeVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimModeVC.h; sourceTree = "<group>"; };
+		AB82599615E007ED00D8FD0A /* SimModeVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SimModeVC.m; sourceTree = "<group>"; };
+		AB82599715E007EE00D8FD0A /* SimModeVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = SimModeVC.xib; path = en.lproj/SimModeVC.xib; sourceTree = "<group>"; };
+		ABDE7A7C1607C8B4003F2471 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "../../Default-568h@2x.png"; sourceTree = "<group>"; };
+		ABE92545141021A30061D3D3 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
+		ABE92547141021CB0061D3D3 /* WFConnector.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WFConnector.framework; path = ../dependencies/WFConnector.framework; sourceTree = "<group>"; };
+		EC4792761455B9BA002DF15C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		ECE853261451854F00C59323 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AB0A04C3140FF08100A8A19B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB1DC8D614F9468B00C308CC /* MessageUI.framework in Frameworks */,
+				EC4792771455B9BA002DF15C /* AudioToolbox.framework in Frameworks */,
+				ECE853271451854F00C59323 /* CoreBluetooth.framework in Frameworks */,
+				ABE92548141021CB0061D3D3 /* WFConnector.framework in Frameworks */,
+				AB6D215B1425202100EB6F27 /* MediaPlayer.framework in Frameworks */,
+				ABE92546141021A30061D3D3 /* ExternalAccessory.framework in Frameworks */,
+				AB0A04CB140FF08100A8A19B /* UIKit.framework in Frameworks */,
+				AB0A04CD140FF08100A8A19B /* Foundation.framework in Frameworks */,
+				AB0A04CF140FF08100A8A19B /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AB0A04BB140FF08000A8A19B = {
+			isa = PBXGroup;
+			children = (
+				AB0A04D0140FF08100A8A19B /* KICKRDemo */,
+				AB0A04C9140FF08100A8A19B /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		AB0A04C7140FF08100A8A19B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AB0A04C6140FF08100A8A19B /* KICKRDemo.app */,
+			);
+			name = Products;
+			path = ..;
+			sourceTree = "<group>";
+		};
+		AB0A04C9140FF08100A8A19B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AB1DC8D514F9468B00C308CC /* MessageUI.framework */,
+				EC4792761455B9BA002DF15C /* AudioToolbox.framework */,
+				ECE853261451854F00C59323 /* CoreBluetooth.framework */,
+				AB6D215A1425202100EB6F27 /* MediaPlayer.framework */,
+				ABE92547141021CB0061D3D3 /* WFConnector.framework */,
+				ABE92545141021A30061D3D3 /* ExternalAccessory.framework */,
+				AB0A04CA140FF08100A8A19B /* UIKit.framework */,
+				AB0A04CC140FF08100A8A19B /* Foundation.framework */,
+				AB0A04CE140FF08100A8A19B /* CoreGraphics.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		AB0A04D0140FF08100A8A19B /* KICKRDemo */ = {
+			isa = PBXGroup;
+			children = (
+				AB63EBDD1652CE3500109A09 /* KICKR */,
+				AB63EBDF1652CEAB00109A09 /* settings_and_metadata */,
+				AB0A04C7140FF08100A8A19B /* Products */,
+				AB0A04D1140FF08100A8A19B /* Supporting Files */,
+			);
+			path = KICKRDemo;
+			sourceTree = "<group>";
+		};
+		AB0A04D1140FF08100A8A19B /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				AB5DD55615D5756A00EEABF4 /* WFSensorCommonViewController.h */,
+				AB5DD55715D5756A00EEABF4 /* WFSensorCommonViewController.m */,
+				AB5DD59415D575D400EEABF4 /* InfoPlist.strings */,
+				AB5DD59615D575D400EEABF4 /* MainWindow.xib */,
+				AB5DD56215D5759500EEABF4 /* main.m */,
+				AB5DD56315D5759500EEABF4 /* KICKRDemo-Info.plist */,
+				AB5DD56415D5759500EEABF4 /* KICKRDemo-Prefix.pch */,
+				AB5DD56515D5759500EEABF4 /* KICKRDemoAppDelegate.h */,
+				AB5DD56615D5759500EEABF4 /* KICKRDemoAppDelegate.m */,
+				AB0A04F1140FF5BE00A8A19B /* images */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		AB0A04F1140FF5BE00A8A19B /* images */ = {
+			isa = PBXGroup;
+			children = (
+				457E6F6316A483F100951FC4 /* minus_green.png */,
+				457E6F6416A483F100951FC4 /* plus_green.png */,
+				ABDE7A7C1607C8B4003F2471 /* Default-568h@2x.png */,
+				AB5DD56C15D575A600EEABF4 /* blackBox.png */,
+				AB5DD56D15D575A600EEABF4 /* Default.png */,
+				AB5DD56E15D575A600EEABF4 /* Default@2x.png */,
+				AB5DD56F15D575A600EEABF4 /* greenButton.png */,
+				AB5DD57015D575A600EEABF4 /* greenhalfButton.png */,
+				AB5DD57115D575A600EEABF4 /* greyBigButton.png */,
+				AB5DD57215D575A600EEABF4 /* greyhalfButton.png */,
+				AB5DD57315D575A600EEABF4 /* icon.png */,
+				AB5DD57415D575A600EEABF4 /* icon@2x.png */,
+				AB5DD57515D575A600EEABF4 /* redButton.png */,
+				AB5DD57615D575A600EEABF4 /* redhalfButton.png */,
+			);
+			path = images;
+			sourceTree = "<group>";
+		};
+		AB63EBDD1652CE3500109A09 /* KICKR */ = {
+			isa = PBXGroup;
+			children = (
+				AB5DD54A15D5756A00EEABF4 /* KICKRVC.h */,
+				AB5DD54B15D5756A00EEABF4 /* KICKRVC.m */,
+				AB5DD58415D575C500EEABF4 /* KICKRVC.xib */,
+				457E6F4816A43E2700951FC4 /* StandardModeVC.h */,
+				457E6F4916A43E2700951FC4 /* StandardModeVC.m */,
+				457E6F2D16A43E2700951FC4 /* StandardModeVC.xib */,
+				457E6F2016A43E2700951FC4 /* BrakeModeVC.h */,
+				457E6F2116A43E2700951FC4 /* BrakeModeVC.m */,
+				457E6F2516A43E2700951FC4 /* BrakeModeVC.xib */,
+				457E6F1216A39E4A00951FC4 /* ErgModeVC.h */,
+				457E6F1316A39E4B00951FC4 /* ErgModeVC.m */,
+				457E6F2916A43E2700951FC4 /* ErgModeVC.xib */,
+				AB82599515E007ED00D8FD0A /* SimModeVC.h */,
+				AB82599615E007ED00D8FD0A /* SimModeVC.m */,
+				AB82599715E007EE00D8FD0A /* SimModeVC.xib */,
+			);
+			name = KICKR;
+			sourceTree = "<group>";
+		};
+		AB63EBDF1652CEAB00109A09 /* settings_and_metadata */ = {
+			isa = PBXGroup;
+			children = (
+				4513090F165E99B7005006EE /* KICKRSettings.h */,
+				45130910165E99B7005006EE /* KICKRSettings.m */,
+				AB5DD54C15D5756A00EEABF4 /* BTDeviceInfoVC.h */,
+				AB5DD54D15D5756A00EEABF4 /* BTDeviceInfoVC.m */,
+				AB5DD58615D575C500EEABF4 /* BTDeviceInfoVC.xib */,
+				AB5DD55215D5756A00EEABF4 /* SensorManagerViewController.h */,
+				AB5DD55315D5756A00EEABF4 /* SensorManagerViewController.m */,
+				AB5DD58A15D575C500EEABF4 /* SensorManagerViewController.xib */,
+				AB5DD55415D5756A00EEABF4 /* SettingsViewController.h */,
+				AB5DD55515D5756A00EEABF4 /* SettingsViewController.m */,
+				AB5DD58C15D575C500EEABF4 /* SettingsViewController.xib */,
+			);
+			name = settings_and_metadata;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AB0A04C5140FF08100A8A19B /* KICKRDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB0A04E7140FF08100A8A19B /* Build configuration list for PBXNativeTarget "KICKRDemo" */;
+			buildPhases = (
+				AB0A04C2140FF08100A8A19B /* Sources */,
+				AB0A04C3140FF08100A8A19B /* Frameworks */,
+				AB0A04C4140FF08100A8A19B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KICKRDemo;
+			productName = KICKRDemo;
+			productReference = AB0A04C6140FF08100A8A19B /* KICKRDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AB0A04BD140FF08000A8A19B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+			};
+			buildConfigurationList = AB0A04C0140FF08000A8A19B /* Build configuration list for PBXProject "KICKRDemo" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = AB0A04BB140FF08000A8A19B;
+			productRefGroup = AB0A04C7140FF08100A8A19B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AB0A04C5140FF08100A8A19B /* KICKRDemo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AB0A04C4140FF08100A8A19B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB5DD57715D575A600EEABF4 /* blackBox.png in Resources */,
+				AB5DD57815D575A600EEABF4 /* Default.png in Resources */,
+				AB5DD57915D575A600EEABF4 /* Default@2x.png in Resources */,
+				AB5DD57A15D575A600EEABF4 /* greenButton.png in Resources */,
+				AB5DD57B15D575A600EEABF4 /* greenhalfButton.png in Resources */,
+				AB5DD57C15D575A600EEABF4 /* greyBigButton.png in Resources */,
+				AB5DD57D15D575A600EEABF4 /* greyhalfButton.png in Resources */,
+				AB5DD57E15D575A600EEABF4 /* icon.png in Resources */,
+				AB5DD57F15D575A600EEABF4 /* icon@2x.png in Resources */,
+				AB5DD58015D575A600EEABF4 /* redButton.png in Resources */,
+				AB5DD58115D575A600EEABF4 /* redhalfButton.png in Resources */,
+				AB5DD58F15D575C500EEABF4 /* KICKRVC.xib in Resources */,
+				AB5DD59015D575C500EEABF4 /* BTDeviceInfoVC.xib in Resources */,
+				AB5DD59215D575C500EEABF4 /* SensorManagerViewController.xib in Resources */,
+				AB5DD59315D575C500EEABF4 /* SettingsViewController.xib in Resources */,
+				AB5DD59A15D575D400EEABF4 /* InfoPlist.strings in Resources */,
+				AB5DD59B15D575D400EEABF4 /* MainWindow.xib in Resources */,
+				AB82599915E007EE00D8FD0A /* SimModeVC.xib in Resources */,
+				ABDE7A7D1607C8B4003F2471 /* Default-568h@2x.png in Resources */,
+				457E6F4C16A43E2800951FC4 /* BrakeModeVC.xib in Resources */,
+				457E6F4E16A43E2800951FC4 /* ErgModeVC.xib in Resources */,
+				457E6F5016A43E2800951FC4 /* StandardModeVC.xib in Resources */,
+				457E6F6516A483F100951FC4 /* minus_green.png in Resources */,
+				457E6F6616A483F100951FC4 /* plus_green.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AB0A04C2140FF08100A8A19B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB5DD55915D5756A00EEABF4 /* KICKRVC.m in Sources */,
+				AB5DD55A15D5756A00EEABF4 /* BTDeviceInfoVC.m in Sources */,
+				AB5DD55D15D5756A00EEABF4 /* SensorManagerViewController.m in Sources */,
+				AB5DD55E15D5756A00EEABF4 /* SettingsViewController.m in Sources */,
+				AB5DD55F15D5756A00EEABF4 /* WFSensorCommonViewController.m in Sources */,
+				AB5DD56915D5759500EEABF4 /* main.m in Sources */,
+				AB5DD56B15D5759500EEABF4 /* KICKRDemoAppDelegate.m in Sources */,
+				AB82599815E007EE00D8FD0A /* SimModeVC.m in Sources */,
+				45130916165E99B7005006EE /* KICKRSettings.m in Sources */,
+				457E6F1516A39E4B00951FC4 /* ErgModeVC.m in Sources */,
+				457E6F4A16A43E2800951FC4 /* BrakeModeVC.m in Sources */,
+				457E6F6216A43E2800951FC4 /* StandardModeVC.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		457E6F2516A43E2700951FC4 /* BrakeModeVC.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				457E6F2616A43E2700951FC4 /* en */,
+			);
+			name = BrakeModeVC.xib;
+			path = en.lproj;
+			sourceTree = "<group>";
+		};
+		457E6F2916A43E2700951FC4 /* ErgModeVC.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				457E6F2A16A43E2700951FC4 /* en */,
+			);
+			name = ErgModeVC.xib;
+			path = en.lproj;
+			sourceTree = "<group>";
+		};
+		457E6F2D16A43E2700951FC4 /* StandardModeVC.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				457E6F2E16A43E2700951FC4 /* en */,
+			);
+			name = StandardModeVC.xib;
+			path = en.lproj;
+			sourceTree = "<group>";
+		};
+		AB5DD58415D575C500EEABF4 /* KICKRVC.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AB5DD58515D575C500EEABF4 /* en */,
+			);
+			name = KICKRVC.xib;
+			sourceTree = "<group>";
+		};
+		AB5DD58615D575C500EEABF4 /* BTDeviceInfoVC.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AB5DD58715D575C500EEABF4 /* en */,
+			);
+			name = BTDeviceInfoVC.xib;
+			sourceTree = "<group>";
+		};
+		AB5DD58A15D575C500EEABF4 /* SensorManagerViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AB5DD58B15D575C500EEABF4 /* en */,
+			);
+			name = SensorManagerViewController.xib;
+			sourceTree = "<group>";
+		};
+		AB5DD58C15D575C500EEABF4 /* SettingsViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AB5DD58D15D575C500EEABF4 /* en */,
+			);
+			name = SettingsViewController.xib;
+			sourceTree = "<group>";
+		};
+		AB5DD59415D575D400EEABF4 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AB5DD59515D575D400EEABF4 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		AB5DD59615D575D400EEABF4 /* MainWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AB5DD59715D575D400EEABF4 /* en */,
+			);
+			name = MainWindow.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		AB0A04E5140FF08100A8A19B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = (
+					"-lstdc++",
+					"-all_load",
+				);
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		AB0A04E6140FF08100A8A19B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = (
+					"-lstdc++",
+					"-all_load",
+				);
+				PROVISIONING_PROFILE = "";
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AB0A04E8140FF08100A8A19B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../dependencies\"",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "KICKRDemo/KICKRDemo-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				GCC_THUMB_SUPPORT = NO;
+				INFOPLIST_FILE = "KICKRDemo/KICKRDemo-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		AB0A04E9140FF08100A8A19B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../dependencies\"",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "KICKRDemo/KICKRDemo-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_THUMB_SUPPORT = NO;
+				INFOPLIST_FILE = "KICKRDemo/KICKRDemo-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AB0A04C0140FF08000A8A19B /* Build configuration list for PBXProject "KICKRDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB0A04E5140FF08100A8A19B /* Debug */,
+				AB0A04E6140FF08100A8A19B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AB0A04E7140FF08100A8A19B /* Build configuration list for PBXNativeTarget "KICKRDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB0A04E8140FF08100A8A19B /* Debug */,
+				AB0A04E9140FF08100A8A19B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AB0A04BD140FF08000A8A19B /* Project object */;
+}

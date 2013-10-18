@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface_w_f_bike_power_data___deprecated.html" title="Represents the most commonly used data available from the ANT+ Bike Power sensor." alt="" coords="5,84,248,111"/>
+<area shape="rect" href="$interface_w_f_sensor_data.html" title="This is the abstract base class for all types of ANT sensor data." alt="" coords="64,7,189,33"/>
+</map>

@@ -1,0 +1,11 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface_w_f_fit_message_base.html" title="Represents a single record in a FIT file system." alt="" coords="5,183,163,209"/>
+<area shape="rect" href="$interface_w_f_fit_message_activity.html" title="Represents a single activity record from a fitness device FIT file." alt="" coords="236,5,409,32"/>
+<area shape="rect" href="$interface_w_f_fit_message_blood_pressure.html" title="Represents a single record in a Blood Pressure Profile FIT file." alt="" coords="211,56,435,83"/>
+<area shape="rect" href="$interface_w_f_fit_message_device_info.html" title="Represents a device info record from a fitness device FIT file." alt="" coords="223,107,423,133"/>
+<area shape="rect" href="$interface_w_f_fit_message_event.html" title="Represents an event record from a fitness device FIT file." alt="" coords="241,157,404,184"/>
+<area shape="rect" href="$interface_w_f_fit_message_lap.html" title="Represents a lap record from a fitness device FIT file." alt="" coords="248,208,397,235"/>
+<area shape="rect" href="$interface_w_f_fit_message_record.html" title="Represent a single data record from a fitness device FIT file." alt="" coords="236,259,409,285"/>
+<area shape="rect" href="$interface_w_f_fit_message_session.html" title="Represents a session record from a fitness device FIT file." alt="" coords="235,309,411,336"/>
+<area shape="rect" href="$interface_w_f_fit_message_weight_scale.html" title="Represents a single record in a Weight Scale Profile FIT file." alt="" coords="216,360,429,387"/>
+</map>

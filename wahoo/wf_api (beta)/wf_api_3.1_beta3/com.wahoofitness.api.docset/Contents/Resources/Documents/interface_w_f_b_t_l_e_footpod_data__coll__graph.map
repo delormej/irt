@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface_w_f_footpod_data.html" title="Represents the most commonly used data available from the ANT+ Stride sensor." alt="" coords="23,84,159,111"/>
+<area shape="rect" href="$interface_w_f_sensor_data.html" title="This is the abstract base class for all types of ANT sensor data." alt="" coords="28,7,153,33"/>
+</map>

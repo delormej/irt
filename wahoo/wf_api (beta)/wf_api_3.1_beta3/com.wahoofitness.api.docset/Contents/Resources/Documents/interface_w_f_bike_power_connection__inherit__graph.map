@@ -1,0 +1,8 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface___w_f_bike_power_connection.html" title="_WFBikePowerConnection" alt="" coords="205,161,411,188"/>
+<area shape="rect" href="$interface_w_f_sensor_connection.html" title="Represents the connection for an ANT sensor." alt="" coords="5,84,181,111"/>
+<area shape="rect" href="$protocol_w_f_bike_power_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFBikePowerConnection." alt="" coords="205,84,411,111"/>
+<area shape="rect" href="$protocol___w_f_bike_power_delegate&#45;p.html" title="\&lt;_WFBikePowerDelegate\&gt;" alt="" coords="199,7,412,33"/>
+<area shape="rect" href="$protocol_w_f_bike_trainer_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFBikePowerConnection." alt="" coords="436,84,649,111"/>
+<area shape="rect" href="$protocol___w_f_bike_trainer_delegate&#45;p.html" title="\&lt;_WFBikeTrainerDelegate\&gt;" alt="" coords="436,7,657,33"/>
+</map>

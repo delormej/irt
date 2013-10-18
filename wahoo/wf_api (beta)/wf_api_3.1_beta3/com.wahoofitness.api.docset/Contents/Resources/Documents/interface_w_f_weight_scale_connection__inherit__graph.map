@@ -1,0 +1,6 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface___w_f_weight_scale_connection.html" title="Internal&#45;use base class for the WFWeightScaleConnection." alt="" coords="5,84,229,111"/>
+<area shape="rect" href="$interface_w_f_sensor_connection.html" title="Represents the connection for an ANT sensor." alt="" coords="29,7,205,33"/>
+<area shape="rect" href="$protocol_w_f_weight_scale_delegate&#45;p.html" title="Provides the interface for callback methods used by the WFWeightScaleConnection." alt="" coords="253,84,477,111"/>
+<area shape="rect" href="$protocol___w_f_weight_scale_delegate&#45;p.html" title="Internal&#45;use base class for the WFWeightScaleDelegate." alt="" coords="251,7,480,33"/>
+</map>

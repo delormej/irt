@@ -1,0 +1,21 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface___w_f_bike_power_connection.html" title="_WFBikePowerConnection" alt="" coords="265,5,471,32"/>
+<area shape="rect" href="$interface___w_f_weight_scale_connection.html" title="Internal&#45;use base class for the WFWeightScaleConnection." alt="" coords="256,56,480,83"/>
+<area shape="rect" href="$interface_w_f_bike_cadence_connection.html" title="Represents a connection to an ANT+ Bike Cadence sensor." alt="" coords="257,107,479,133"/>
+<area shape="rect" href="$interface_w_f_bike_speed_cadence_connection.html" title="Represents a connection to an ANT+ combined Bike Speed and Cadence sensor." alt="" coords="233,157,503,184"/>
+<area shape="rect" href="$interface_w_f_bike_speed_connection.html" title="Represents a connection to an ANT+ Bike Speed sensor." alt="" coords="267,208,469,235"/>
+<area shape="rect" href="$interface_w_f_blood_pressure_connection.html" title="Represents a connection to a BTLE Blood Pressure sensor." alt="" coords="255,259,481,285"/>
+<area shape="rect" href="$interface_w_f_b_t_l_e_glucose_connection.html" title="Represents a connection to a BTLE Glucose Monitor sensor." alt="" coords="259,309,477,336"/>
+<area shape="rect" href="$interface_w_f_calorimeter_connection.html" title="Represents a connection to an ANT+ Calorimeter sensor." alt="" coords="261,360,475,387"/>
+<area shape="rect" href="$interface_w_f_display_connection.html" title="Represents a connection to an detatched display (bike computer / watch)" alt="" coords="279,411,457,437"/>
+<area shape="rect" href="$interface_w_f_fitness_equipment_connection.html" title="Represents a connection to an ANT+ Fitness Equipment sensor." alt="" coords="241,461,495,488"/>
+<area shape="rect" href="$interface_w_f_footpod_connection.html" title="Represents a connection to an ANT+ Stride sensor." alt="" coords="275,512,461,539"/>
+<area shape="rect" href="$interface_w_f_geo_cache_connection.html" title="Represents a connection to an ANT+ GeoCache sensor." alt="" coords="267,563,469,589"/>
+<area shape="rect" href="$interface_w_f_glucose_connection.html" title="Represents a connection to an ANT+ Glucose Monitor sensor." alt="" coords="276,613,460,640"/>
+<area shape="rect" href="$interface_w_f_health_thermometer_connection.html" title="Represents a connection to a BTLE Health Thermometer sensor." alt="" coords="231,664,505,691"/>
+<area shape="rect" href="$interface_w_f_heartrate_connection.html" title="Represents a connection to an ANT+ Heart Rate Monitor sensor." alt="" coords="271,715,465,741"/>
+<area shape="rect" href="$interface_w_f_multi_sport_connection.html" title="Represents an ANT+ Multi&#45;Sport Speed and Distance connection." alt="" coords="268,765,468,792"/>
+<area shape="rect" href="$interface_w_f_proximity_connection.html" title="Represents a connection to a BTLE Proximity sensor." alt="" coords="272,816,464,843"/>
+<area shape="rect" href="$interface_w_f_bike_power_connection.html" title="Represents a connection to an ANT+ Bike Power sensor." alt="" coords="564,5,764,32"/>
+<area shape="rect" href="$interface_w_f_weight_scale_connection.html" title="Represents a connection to an ANT+ or BTLE Weight Scale sensor." alt="" coords="556,56,772,83"/>
+</map>

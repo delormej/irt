@@ -1,0 +1,5 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface___w_f_bike_power_connection.html" title="_WFBikePowerConnection" alt="" coords="9,161,215,188"/>
+<area shape="rect" href="$protocol___w_f_bike_power_delegate&#45;p.html" title="\&lt;_WFBikePowerDelegate\&gt;" alt="" coords="5,7,219,33"/>
+<area shape="rect" href="$interface_w_f_bike_power_connection.html" title="Represents a connection to an ANT+ Bike Power sensor." alt="" coords="12,239,212,265"/>
+</map>

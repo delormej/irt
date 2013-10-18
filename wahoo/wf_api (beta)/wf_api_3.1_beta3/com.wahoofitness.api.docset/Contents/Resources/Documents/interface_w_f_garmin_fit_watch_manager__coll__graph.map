@@ -1,0 +1,5 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface_w_f_fit_device_manager.html" title="Provides a means of communicating with, and transferring data from an ANT FS fitness device..." alt="" coords="29,161,203,188"/>
+<area shape="rect" href="$interface_w_f_ant_file_manager.html" title="Provides a means of communicating with, and transferring data from an ANT FS device." alt="" coords="39,84,193,111"/>
+<area shape="rect" href="$interface_w_f_ant_f_s_device.html" title="Represents the base class for ANT FS device implementations." alt="" coords="49,7,183,33"/>
+</map>

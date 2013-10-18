@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface_w_f_bike_speed_cadence_data.html" title="Represents the most commonly used data available from the ANT+ combined Bike Speed and Cadence sensor..." alt="" coords="23,84,241,111"/>
+<area shape="rect" href="$interface_w_f_sensor_data.html" title="This is the abstract base class for all types of ANT sensor data." alt="" coords="69,7,195,33"/>
+</map>

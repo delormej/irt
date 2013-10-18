@@ -1,0 +1,489 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AB0A04CB140FF08100A8A19B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB0A04CA140FF08100A8A19B /* UIKit.framework */; };
+		AB0A04CD140FF08100A8A19B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB0A04CC140FF08100A8A19B /* Foundation.framework */; };
+		AB0A04CF140FF08100A8A19B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB0A04CE140FF08100A8A19B /* CoreGraphics.framework */; };
+		AB0A04D5140FF08100A8A19B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AB0A04D3140FF08100A8A19B /* InfoPlist.strings */; };
+		AB0A04D7140FF08100A8A19B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AB0A04D6140FF08100A8A19B /* main.m */; };
+		AB0A04DE140FF08100A8A19B /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB0A04DC140FF08100A8A19B /* MainWindow.xib */; };
+		AB0A04F6140FF5BE00A8A19B /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = AB0A04F2140FF5BE00A8A19B /* Default.png */; };
+		AB0A04F7140FF5BE00A8A19B /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AB0A04F3140FF5BE00A8A19B /* Default@2x.png */; };
+		AB0A04F8140FF5BE00A8A19B /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = AB0A04F4140FF5BE00A8A19B /* icon.png */; };
+		AB0A04F9140FF5BE00A8A19B /* icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AB0A04F5140FF5BE00A8A19B /* icon@2x.png */; };
+		AB1DC8D614F9468B00C308CC /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB1DC8D514F9468B00C308CC /* MessageUI.framework */; };
+		AB2114FD14FD3C8500B48141 /* BTDeviceInfoVC.m in Sources */ = {isa = PBXBuildFile; fileRef = AB2114FB14FD3C8500B48141 /* BTDeviceInfoVC.m */; };
+		AB2114FE14FD3C8500B48141 /* BTDeviceInfoVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB2114FC14FD3C8500B48141 /* BTDeviceInfoVC.xib */; };
+		AB40CE54161F57FD00ABE933 /* WFConnector.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ABE92547141021CB0061D3D3 /* WFConnector.framework */; };
+		AB65810414EAEE4600FCF158 /* sensor-data.plist in Resources */ = {isa = PBXBuildFile; fileRef = AB65810314EAEE4600FCF158 /* sensor-data.plist */; };
+		AB6D215B1425202100EB6F27 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB6D215A1425202100EB6F27 /* MediaPlayer.framework */; };
+		AB9CD018146DAB00002EEAA3 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AB9CD016146DAB00002EEAA3 /* SettingsViewController.m */; };
+		AB9CD019146DAB00002EEAA3 /* SettingsViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = AB9CD017146DAB00002EEAA3 /* SettingsViewController.xib */; };
+		ABA206AA14EB0B7E0072B89C /* blackBox.png in Resources */ = {isa = PBXBuildFile; fileRef = ABA206A314EB0B7E0072B89C /* blackBox.png */; };
+		ABA206AB14EB0B7E0072B89C /* greenButton.png in Resources */ = {isa = PBXBuildFile; fileRef = ABA206A414EB0B7E0072B89C /* greenButton.png */; };
+		ABA206AC14EB0B7E0072B89C /* greenhalfButton.png in Resources */ = {isa = PBXBuildFile; fileRef = ABA206A514EB0B7E0072B89C /* greenhalfButton.png */; };
+		ABA206AD14EB0B7E0072B89C /* greyBigButton.png in Resources */ = {isa = PBXBuildFile; fileRef = ABA206A614EB0B7E0072B89C /* greyBigButton.png */; };
+		ABA206AE14EB0B7E0072B89C /* greyhalfButton.png in Resources */ = {isa = PBXBuildFile; fileRef = ABA206A714EB0B7E0072B89C /* greyhalfButton.png */; };
+		ABA206AF14EB0B7E0072B89C /* redButton.png in Resources */ = {isa = PBXBuildFile; fileRef = ABA206A814EB0B7E0072B89C /* redButton.png */; };
+		ABA206B014EB0B7E0072B89C /* redhalfButton.png in Resources */ = {isa = PBXBuildFile; fileRef = ABA206A914EB0B7E0072B89C /* redhalfButton.png */; };
+		ABE6A5C21509EAA400A71559 /* WahooDemoAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = ABE6A5C11509EAA300A71559 /* WahooDemoAppDelegate.m */; };
+		ABE92546141021A30061D3D3 /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ABE92545141021A30061D3D3 /* ExternalAccessory.framework */; };
+		ABF26999141035930013B3B1 /* WFSensorCommonViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = ABF26996141035930013B3B1 /* WFSensorCommonViewController.m */; };
+		ABF2699F141036D50013B3B1 /* SensorManagerViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = ABF2699B141036D50013B3B1 /* SensorManagerViewController.xib */; };
+		ABF269A0141036D50013B3B1 /* SensorManagerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = ABF2699E141036D50013B3B1 /* SensorManagerViewController.m */; };
+		B590CA7715A7345D00B32A58 /* BTLEWeightScaleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B590CA7615A7345D00B32A58 /* BTLEWeightScaleViewController.m */; };
+		B590CA7B15A7346C00B32A58 /* BTLEWeightScaleViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = B590CA7915A7346C00B32A58 /* BTLEWeightScaleViewController.xib */; };
+		B5C66FE415AF6B3E00993CB8 /* BTLEWeightScaleUserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B5C66FE315AF6B3E00993CB8 /* BTLEWeightScaleUserViewController.m */; };
+		B5C66FE715AF6B4A00993CB8 /* BTLEWeightScaleUserViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = B5C66FE515AF6B4A00993CB8 /* BTLEWeightScaleUserViewController.xib */; };
+		EC4792771455B9BA002DF15C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC4792761455B9BA002DF15C /* AudioToolbox.framework */; };
+		ECE853271451854F00C59323 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ECE853261451854F00C59323 /* CoreBluetooth.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		F62C59941618DC2B00CBC530 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F62C59931618DC2B00CBC530 /* Default-568h@2x.png */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AB0A04C6140FF08100A8A19B /* WahooDemoScale.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WahooDemoScale.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB0A04CA140FF08100A8A19B /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		AB0A04CC140FF08100A8A19B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		AB0A04CE140FF08100A8A19B /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		AB0A04D2140FF08100A8A19B /* WahooDemoScale-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "WahooDemoScale-Info.plist"; sourceTree = "<group>"; };
+		AB0A04D4140FF08100A8A19B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AB0A04D6140FF08100A8A19B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		AB0A04D8140FF08100A8A19B /* WahooDemoScale-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "WahooDemoScale-Prefix.pch"; sourceTree = "<group>"; };
+		AB0A04D9140FF08100A8A19B /* WahooDemoAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WahooDemoAppDelegate.h; sourceTree = "<group>"; };
+		AB0A04DD140FF08100A8A19B /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainWindow.xib; sourceTree = "<group>"; };
+		AB0A04F2140FF5BE00A8A19B /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		AB0A04F3140FF5BE00A8A19B /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
+		AB0A04F4140FF5BE00A8A19B /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
+		AB0A04F5140FF5BE00A8A19B /* icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon@2x.png"; sourceTree = "<group>"; };
+		AB1DC8D514F9468B00C308CC /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
+		AB2114FA14FD3C8500B48141 /* BTDeviceInfoVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTDeviceInfoVC.h; sourceTree = "<group>"; };
+		AB2114FB14FD3C8500B48141 /* BTDeviceInfoVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTDeviceInfoVC.m; sourceTree = "<group>"; };
+		AB2114FC14FD3C8500B48141 /* BTDeviceInfoVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = BTDeviceInfoVC.xib; path = ../en.lproj/BTDeviceInfoVC.xib; sourceTree = "<group>"; };
+		AB65810314EAEE4600FCF158 /* sensor-data.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "sensor-data.plist"; sourceTree = "<group>"; };
+		AB6D215A1425202100EB6F27 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
+		AB9CD015146DAB00002EEAA3 /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
+		AB9CD016146DAB00002EEAA3 /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
+		AB9CD017146DAB00002EEAA3 /* SettingsViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = SettingsViewController.xib; path = en.lproj/SettingsViewController.xib; sourceTree = "<group>"; };
+		ABA206A314EB0B7E0072B89C /* blackBox.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blackBox.png; sourceTree = "<group>"; };
+		ABA206A414EB0B7E0072B89C /* greenButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = greenButton.png; sourceTree = "<group>"; };
+		ABA206A514EB0B7E0072B89C /* greenhalfButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = greenhalfButton.png; sourceTree = "<group>"; };
+		ABA206A614EB0B7E0072B89C /* greyBigButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = greyBigButton.png; sourceTree = "<group>"; };
+		ABA206A714EB0B7E0072B89C /* greyhalfButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = greyhalfButton.png; sourceTree = "<group>"; };
+		ABA206A814EB0B7E0072B89C /* redButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = redButton.png; sourceTree = "<group>"; };
+		ABA206A914EB0B7E0072B89C /* redhalfButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = redhalfButton.png; sourceTree = "<group>"; };
+		ABE6A5C11509EAA300A71559 /* WahooDemoAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WahooDemoAppDelegate.m; sourceTree = "<group>"; };
+		ABE92545141021A30061D3D3 /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
+		ABE92547141021CB0061D3D3 /* WFConnector.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WFConnector.framework; path = ../dependencies/WFConnector.framework; sourceTree = "<group>"; };
+		ABF26995141035930013B3B1 /* WFSensorCommonViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WFSensorCommonViewController.h; sourceTree = "<group>"; };
+		ABF26996141035930013B3B1 /* WFSensorCommonViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WFSensorCommonViewController.m; sourceTree = "<group>"; };
+		ABF2699C141036D50013B3B1 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/SensorManagerViewController.xib; sourceTree = "<group>"; };
+		ABF2699D141036D50013B3B1 /* SensorManagerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SensorManagerViewController.h; sourceTree = "<group>"; };
+		ABF2699E141036D50013B3B1 /* SensorManagerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SensorManagerViewController.m; sourceTree = "<group>"; };
+		B590CA7515A7345D00B32A58 /* BTLEWeightScaleViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTLEWeightScaleViewController.h; sourceTree = "<group>"; };
+		B590CA7615A7345D00B32A58 /* BTLEWeightScaleViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTLEWeightScaleViewController.m; sourceTree = "<group>"; };
+		B590CA7A15A7346C00B32A58 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = WahooDemo/en.lproj/BTLEWeightScaleViewController.xib; sourceTree = SOURCE_ROOT; };
+		B5C66FE215AF6B3E00993CB8 /* BTLEWeightScaleUserViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTLEWeightScaleUserViewController.h; sourceTree = "<group>"; };
+		B5C66FE315AF6B3E00993CB8 /* BTLEWeightScaleUserViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTLEWeightScaleUserViewController.m; sourceTree = "<group>"; };
+		B5C66FE615AF6B4A00993CB8 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = WahooDemo/en.lproj/BTLEWeightScaleUserViewController.xib; sourceTree = SOURCE_ROOT; };
+		EC4792761455B9BA002DF15C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		ECE853261451854F00C59323 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+		F62C59931618DC2B00CBC530 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AB0A04C3140FF08100A8A19B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB40CE54161F57FD00ABE933 /* WFConnector.framework in Frameworks */,
+				AB1DC8D614F9468B00C308CC /* MessageUI.framework in Frameworks */,
+				EC4792771455B9BA002DF15C /* AudioToolbox.framework in Frameworks */,
+				ECE853271451854F00C59323 /* CoreBluetooth.framework in Frameworks */,
+				AB6D215B1425202100EB6F27 /* MediaPlayer.framework in Frameworks */,
+				ABE92546141021A30061D3D3 /* ExternalAccessory.framework in Frameworks */,
+				AB0A04CB140FF08100A8A19B /* UIKit.framework in Frameworks */,
+				AB0A04CD140FF08100A8A19B /* Foundation.framework in Frameworks */,
+				AB0A04CF140FF08100A8A19B /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AB0A04BB140FF08000A8A19B = {
+			isa = PBXGroup;
+			children = (
+				F62C59931618DC2B00CBC530 /* Default-568h@2x.png */,
+				AB0A04D0140FF08100A8A19B /* WahooDemoScale */,
+				AB0A04C9140FF08100A8A19B /* Frameworks */,
+				AB0A04C7140FF08100A8A19B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AB0A04C7140FF08100A8A19B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AB0A04C6140FF08100A8A19B /* WahooDemoScale.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AB0A04C9140FF08100A8A19B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AB1DC8D514F9468B00C308CC /* MessageUI.framework */,
+				EC4792761455B9BA002DF15C /* AudioToolbox.framework */,
+				ECE853261451854F00C59323 /* CoreBluetooth.framework */,
+				AB6D215A1425202100EB6F27 /* MediaPlayer.framework */,
+				ABE92547141021CB0061D3D3 /* WFConnector.framework */,
+				ABE92545141021A30061D3D3 /* ExternalAccessory.framework */,
+				AB0A04CA140FF08100A8A19B /* UIKit.framework */,
+				AB0A04CC140FF08100A8A19B /* Foundation.framework */,
+				AB0A04CE140FF08100A8A19B /* CoreGraphics.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		AB0A04D0140FF08100A8A19B /* WahooDemoScale */ = {
+			isa = PBXGroup;
+			children = (
+				AB6580EF14EAEC2900FCF158 /* BTSmart */,
+				AB0A04D9140FF08100A8A19B /* WahooDemoAppDelegate.h */,
+				ABE6A5C11509EAA300A71559 /* WahooDemoAppDelegate.m */,
+				ABF26995141035930013B3B1 /* WFSensorCommonViewController.h */,
+				ABF26996141035930013B3B1 /* WFSensorCommonViewController.m */,
+				AB0A04DC140FF08100A8A19B /* MainWindow.xib */,
+				AB9CD015146DAB00002EEAA3 /* SettingsViewController.h */,
+				AB9CD016146DAB00002EEAA3 /* SettingsViewController.m */,
+				AB9CD017146DAB00002EEAA3 /* SettingsViewController.xib */,
+				ABF2699D141036D50013B3B1 /* SensorManagerViewController.h */,
+				ABF2699E141036D50013B3B1 /* SensorManagerViewController.m */,
+				ABF2699B141036D50013B3B1 /* SensorManagerViewController.xib */,
+				AB0A04D1140FF08100A8A19B /* Supporting Files */,
+			);
+			name = WahooDemoScale;
+			path = WahooDemo;
+			sourceTree = "<group>";
+		};
+		AB0A04D1140FF08100A8A19B /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				AB0A04F1140FF5BE00A8A19B /* images */,
+				AB65810314EAEE4600FCF158 /* sensor-data.plist */,
+				AB0A04D2140FF08100A8A19B /* WahooDemoScale-Info.plist */,
+				AB0A04D3140FF08100A8A19B /* InfoPlist.strings */,
+				AB0A04D6140FF08100A8A19B /* main.m */,
+				AB0A04D8140FF08100A8A19B /* WahooDemoScale-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		AB0A04F1140FF5BE00A8A19B /* images */ = {
+			isa = PBXGroup;
+			children = (
+				ABA206A314EB0B7E0072B89C /* blackBox.png */,
+				ABA206A414EB0B7E0072B89C /* greenButton.png */,
+				ABA206A514EB0B7E0072B89C /* greenhalfButton.png */,
+				ABA206A614EB0B7E0072B89C /* greyBigButton.png */,
+				ABA206A714EB0B7E0072B89C /* greyhalfButton.png */,
+				ABA206A814EB0B7E0072B89C /* redButton.png */,
+				ABA206A914EB0B7E0072B89C /* redhalfButton.png */,
+				AB0A04F2140FF5BE00A8A19B /* Default.png */,
+				AB0A04F3140FF5BE00A8A19B /* Default@2x.png */,
+				AB0A04F4140FF5BE00A8A19B /* icon.png */,
+				AB0A04F5140FF5BE00A8A19B /* icon@2x.png */,
+			);
+			path = images;
+			sourceTree = "<group>";
+		};
+		AB6580EF14EAEC2900FCF158 /* BTSmart */ = {
+			isa = PBXGroup;
+			children = (
+				B5C66FE515AF6B4A00993CB8 /* BTLEWeightScaleUserViewController.xib */,
+				B5C66FE215AF6B3E00993CB8 /* BTLEWeightScaleUserViewController.h */,
+				B5C66FE315AF6B3E00993CB8 /* BTLEWeightScaleUserViewController.m */,
+				B590CA7915A7346C00B32A58 /* BTLEWeightScaleViewController.xib */,
+				B590CA7515A7345D00B32A58 /* BTLEWeightScaleViewController.h */,
+				B590CA7615A7345D00B32A58 /* BTLEWeightScaleViewController.m */,
+				AB2114FA14FD3C8500B48141 /* BTDeviceInfoVC.h */,
+				AB2114FB14FD3C8500B48141 /* BTDeviceInfoVC.m */,
+				AB2114FC14FD3C8500B48141 /* BTDeviceInfoVC.xib */,
+			);
+			path = BTSmart;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AB0A04C5140FF08100A8A19B /* WahooDemoScale */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB0A04E7140FF08100A8A19B /* Build configuration list for PBXNativeTarget "WahooDemoScale" */;
+			buildPhases = (
+				AB0A04C2140FF08100A8A19B /* Sources */,
+				AB0A04C3140FF08100A8A19B /* Frameworks */,
+				AB0A04C4140FF08100A8A19B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WahooDemoScale;
+			productName = WahooDemo;
+			productReference = AB0A04C6140FF08100A8A19B /* WahooDemoScale.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AB0A04BD140FF08000A8A19B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+			};
+			buildConfigurationList = AB0A04C0140FF08000A8A19B /* Build configuration list for PBXProject "WahooDemoScale" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = AB0A04BB140FF08000A8A19B;
+			productRefGroup = AB0A04C7140FF08100A8A19B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AB0A04C5140FF08100A8A19B /* WahooDemoScale */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AB0A04C4140FF08100A8A19B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB0A04D5140FF08100A8A19B /* InfoPlist.strings in Resources */,
+				AB0A04DE140FF08100A8A19B /* MainWindow.xib in Resources */,
+				AB0A04F6140FF5BE00A8A19B /* Default.png in Resources */,
+				AB0A04F7140FF5BE00A8A19B /* Default@2x.png in Resources */,
+				AB0A04F8140FF5BE00A8A19B /* icon.png in Resources */,
+				AB0A04F9140FF5BE00A8A19B /* icon@2x.png in Resources */,
+				ABF2699F141036D50013B3B1 /* SensorManagerViewController.xib in Resources */,
+				AB9CD019146DAB00002EEAA3 /* SettingsViewController.xib in Resources */,
+				AB65810414EAEE4600FCF158 /* sensor-data.plist in Resources */,
+				ABA206AA14EB0B7E0072B89C /* blackBox.png in Resources */,
+				ABA206AB14EB0B7E0072B89C /* greenButton.png in Resources */,
+				ABA206AC14EB0B7E0072B89C /* greenhalfButton.png in Resources */,
+				ABA206AD14EB0B7E0072B89C /* greyBigButton.png in Resources */,
+				ABA206AE14EB0B7E0072B89C /* greyhalfButton.png in Resources */,
+				ABA206AF14EB0B7E0072B89C /* redButton.png in Resources */,
+				ABA206B014EB0B7E0072B89C /* redhalfButton.png in Resources */,
+				AB2114FE14FD3C8500B48141 /* BTDeviceInfoVC.xib in Resources */,
+				B590CA7B15A7346C00B32A58 /* BTLEWeightScaleViewController.xib in Resources */,
+				B5C66FE715AF6B4A00993CB8 /* BTLEWeightScaleUserViewController.xib in Resources */,
+				F62C59941618DC2B00CBC530 /* Default-568h@2x.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AB0A04C2140FF08100A8A19B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB0A04D7140FF08100A8A19B /* main.m in Sources */,
+				ABF26999141035930013B3B1 /* WFSensorCommonViewController.m in Sources */,
+				ABF269A0141036D50013B3B1 /* SensorManagerViewController.m in Sources */,
+				AB9CD018146DAB00002EEAA3 /* SettingsViewController.m in Sources */,
+				AB2114FD14FD3C8500B48141 /* BTDeviceInfoVC.m in Sources */,
+				ABE6A5C21509EAA400A71559 /* WahooDemoAppDelegate.m in Sources */,
+				B590CA7715A7345D00B32A58 /* BTLEWeightScaleViewController.m in Sources */,
+				B5C66FE415AF6B3E00993CB8 /* BTLEWeightScaleUserViewController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		AB0A04D3140FF08100A8A19B /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AB0A04D4140FF08100A8A19B /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		AB0A04DC140FF08100A8A19B /* MainWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AB0A04DD140FF08100A8A19B /* en */,
+			);
+			name = MainWindow.xib;
+			sourceTree = "<group>";
+		};
+		ABF2699B141036D50013B3B1 /* SensorManagerViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				ABF2699C141036D50013B3B1 /* en */,
+			);
+			name = SensorManagerViewController.xib;
+			sourceTree = "<group>";
+		};
+		B590CA7915A7346C00B32A58 /* BTLEWeightScaleViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B590CA7A15A7346C00B32A58 /* en */,
+			);
+			name = BTLEWeightScaleViewController.xib;
+			sourceTree = "<group>";
+		};
+		B5C66FE515AF6B4A00993CB8 /* BTLEWeightScaleUserViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B5C66FE615AF6B4A00993CB8 /* en */,
+			);
+			name = BTLEWeightScaleUserViewController.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		AB0A04E5140FF08100A8A19B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
+				OTHER_LDFLAGS = (
+					"-lstdc++",
+					"-all_load",
+				);
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		AB0A04E6140FF08100A8A19B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = (
+					"-lstdc++",
+					"-all_load",
+				);
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AB0A04E8140FF08100A8A19B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					armv6,
+					"$(ARCHS_STANDARD_32_BIT)",
+				);
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../dependencies\"",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "WahooDemo/WahooDemoScale-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				GCC_THUMB_SUPPORT = NO;
+				INFOPLIST_FILE = "WahooDemo/WahooDemoScale-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				PRODUCT_NAME = WahooDemoScale;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		AB0A04E9140FF08100A8A19B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					armv6,
+					"$(ARCHS_STANDARD_32_BIT)",
+				);
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../dependencies\"",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "WahooDemo/WahooDemoScale-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_THUMB_SUPPORT = NO;
+				INFOPLIST_FILE = "WahooDemo/WahooDemoScale-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
+				PRODUCT_NAME = WahooDemoScale;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AB0A04C0140FF08000A8A19B /* Build configuration list for PBXProject "WahooDemoScale" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB0A04E5140FF08100A8A19B /* Debug */,
+				AB0A04E6140FF08100A8A19B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AB0A04E7140FF08100A8A19B /* Build configuration list for PBXNativeTarget "WahooDemoScale" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB0A04E8140FF08100A8A19B /* Debug */,
+				AB0A04E9140FF08100A8A19B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AB0A04BD140FF08000A8A19B /* Project object */;
+}

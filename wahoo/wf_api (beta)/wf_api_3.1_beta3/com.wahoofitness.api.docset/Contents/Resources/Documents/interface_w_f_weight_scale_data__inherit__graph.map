@@ -1,0 +1,5 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface_w_f_a_n_t_weight_scale_data.html" title="Represents the data available from the ANT+ Weight Scale sensor." alt="" coords="5,161,203,188"/>
+<area shape="rect" href="$interface_w_f_b_t_l_e_weight_scale_data.html" title="Represents the data available from the Wahoo Fitness BTLE Weight Scale." alt="" coords="227,161,429,188"/>
+<area shape="rect" href="$interface_w_f_sensor_data.html" title="This is the abstract base class for all types of ANT sensor data." alt="" coords="153,7,279,33"/>
+</map>

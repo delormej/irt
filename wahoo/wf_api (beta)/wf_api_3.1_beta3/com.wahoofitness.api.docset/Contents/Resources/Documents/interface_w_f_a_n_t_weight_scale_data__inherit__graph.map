@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface_w_f_weight_scale_data.html" title="Represents the data available from the ANT+ Weight Scale sensor." alt="" coords="20,84,188,111"/>
+<area shape="rect" href="$interface_w_f_sensor_data.html" title="This is the abstract base class for all types of ANT sensor data." alt="" coords="41,7,167,33"/>
+</map>

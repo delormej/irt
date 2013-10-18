@@ -1,0 +1,7 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface_w_f_display_element.html" title="WFDisplayElement" alt="" coords="5,81,160,108"/>
+<area shape="rect" href="$interface_w_f_display_element_bitmap.html" title="WFDisplayElementBitmap" alt="" coords="209,5,415,32"/>
+<area shape="rect" href="$interface_w_f_display_element_group.html" title="WFDisplayElementGroup" alt="" coords="213,56,411,83"/>
+<area shape="rect" href="$interface_w_f_display_element_rect.html" title="WFDisplayElementRect" alt="" coords="219,107,405,133"/>
+<area shape="rect" href="$interface_w_f_display_element_string.html" title="WFDisplayElementString" alt="" coords="213,157,411,184"/>
+</map>

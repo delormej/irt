@@ -1,0 +1,14 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface_w_f_blood_pressure_manager.html" title="Provides a means of communicating with, and transferring data from a Blood Pressure Profile ANT FS de..." alt="" coords="392,107,600,133"/>
+<area shape="rect" href="$interface_w_f_fit_device_manager.html" title="Provides a means of communicating with, and transferring data from an ANT FS fitness device..." alt="" coords="409,157,583,184"/>
+<area shape="rect" href="$interface_w_f_pedometer_manager.html" title="Provides a means of communicating with, and transferring data from a A&amp;D Pedometer Profile ANT FS dev..." alt="" coords="403,208,589,235"/>
+<area shape="rect" href="$interface_w_f_weight_scale_manager.html" title="Provides a means of communicating with, and transferring data from a Weight Scale Profile ANT FS devi..." alt="" coords="397,259,595,285"/>
+<area shape="rect" href="$interface_w_f_ant_f_s_device.html" title="Represents the base class for ANT FS device implementations." alt="" coords="5,183,139,209"/>
+<area shape="rect" href="$interface_w_f_garmin_fit_watch_manager.html" title="Provides a means of communicating with, and transferring data from an unspecified model Garmin Fitnes..." alt="" coords="652,5,873,32"/>
+<area shape="rect" href="$interface_w_f_garmin_f_r310_manager.html" title="Provides a means of communicating with, and transferring data from a Garmin Frontrunner 310 device..." alt="" coords="660,56,865,83"/>
+<area shape="rect" href="$interface_w_f_garmin_f_r405_manager.html" title="Provides a means of communicating with, and transferring data from a Garmin Frontrunner 405 device..." alt="" coords="661,107,864,133"/>
+<area shape="rect" href="$interface_w_f_garmin_f_r60_manager.html" title="Provides a means of communicating with, and transferring data from a Garmin Frontrunner 60 device..." alt="" coords="665,157,860,184"/>
+<area shape="rect" href="$interface_w_f_garmin_f_r610_manager.html" title="Provides a means of communicating with, and transferring data from a Garmin Frontrunner 610 device..." alt="" coords="660,208,865,235"/>
+<area shape="rect" href="$interface_w_f_garmin_f_r910_x_t_manager.html" title="Provides a means of communicating with, and transferring data from a Garmin Frontrunner 910XT device..." alt="" coords="651,259,875,285"/>
+<area shape="rect" href="$interface_w_f_generic_fit_device_manager.html" title="Provides a means of communicating with, and transferring data from a generic ANT FS fitness device..." alt="" coords="648,309,877,336"/>
+</map>

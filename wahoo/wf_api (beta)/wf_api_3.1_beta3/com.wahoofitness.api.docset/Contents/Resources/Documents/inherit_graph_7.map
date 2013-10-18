@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" href="$interface___w_f_hardware_connector.html" title="Represents the internal&#45;use base class for the WFHardwareConnector." alt="" coords="5,5,200,32"/>
+<area shape="rect" href="$interface_w_f_hardware_connector.html" title="The WFHardwareConnector represents the bridge between the fisica sensor receiver (dongle or case) and..." alt="" coords="249,5,436,32"/>
+</map>
