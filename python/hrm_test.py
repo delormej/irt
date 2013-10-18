@@ -5,6 +5,7 @@
 # http://www.roadacious.com
 #
 
+<<<<<<< HEAD
 import itertools, sys, random, operator, datetime, time, usb
 from antprotocol.bases import GarminANT, DynastreamANT
 from antprotocol.protocol import ANTReceiveException
@@ -54,6 +55,12 @@ class Servo(object):
 	def turn1(self):
 		print "sets resistance the motor to 1"
 
+=======
+import itertools, sys, random, operator, datetime, time
+from antprotocol.bases import GarminANT, DynastreamANT
+from antprotocol.protocol import ANTReceiveException
+
+>>>>>>> 347e9ae447830ede2d58af5a6123e8675e4957f3
 class MyHRM(object):
     """Class to represent the Heart Rate Monitor device.
     """
@@ -180,9 +187,14 @@ def main():
         
     device = MyHRM(base)
     
+<<<<<<< HEAD
     device.slave_connect()
     #device.master_connect()
     device.wait_for_beacon()
+=======
+    device.master_connect()
+    #device.wait_for_beacon()
+>>>>>>> 347e9ae447830ede2d58af5a6123e8675e4957f3
     #d = base._receive_message()
     #d1 = base._receive_message()
     
