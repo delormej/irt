@@ -1,0 +1,27 @@
+# When the script is not doing anything else,
+# this loop will listen for button presses.  When a button
+# is pressed it runs the corresponding sequence.
+
+# always start at position 0 which is 8428
+8428 set_target
+
+begin
+  0 button if 8428 set_target endif
+  1 button if 5090 set_target endif
+  2 button if 4600 set_target endif
+  3 button if 2796 set_target endif
+repeat
+ 
+# These subroutines each return 1 if the corresponding
+# button is pressed, and return 0 otherwise.
+sub button
+  get_position 500 greater_than
+  return
+ 
+# These subroutines each perform an arbitrary sequence
+# of servo movements.  You should change these to fit
+# your application.
+sub set_target
+  5 servo 
+  return
+   
