@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?fileVersion 3.1.0?>
+
+<ManagedProjectBuildInfo>
+<project id="ANTPlusRx.com.ti.ccstudio.buildDefinitions.MSP430.executableProjectType.145986131" name="MSP430 Executable" projectType="com.ti.ccstudio.buildDefinitions.MSP430.executableProjectType">
+<configuration artifactExtension="out" artifactName="ANTPlusRx" description="" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924" name="Debug" parent="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug">
+<toolChain id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.DebugToolchain.264025892" name="TI Code Generation Tools" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.DebugToolchain" targetTool="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.linkerDebug.32208987">
+<option id="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS.1055329858" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS" valueType="stringList">
+<listOptionValue builtIn="false" value="DEVICE_CONFIGURATION_ID=MSP430F2274"/>
+<listOptionValue builtIn="false" value="DEVICE_ENDIANNESS=little"/>
+<listOptionValue builtIn="false" value="OUTPUT_FORMAT=COFF"/>
+<listOptionValue builtIn="false" value="CCS_MBS_VERSION=4.2.0"/>
+<listOptionValue builtIn="false" value="LINKER_COMMAND_FILE=lnk_msp430f2274.cmd"/>
+<listOptionValue builtIn="false" value="RUNTIME_SUPPORT_LIBRARY=rts430.lib"/>
+<listOptionValue builtIn="false" value="IS_ASSEMBLY_ONLY=false"/>
+<listOptionValue builtIn="false" value="OUTPUT_TYPE=executable"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.core.OPT_CODEGEN_VERSION.50258018" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_CODEGEN_VERSION" value="3.3.1" valueType="string"/>
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.DIAG_WARNING.1771033112" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.DIAG_WARNING" valueType="stringList">
+<listOptionValue builtIn="false" value="225"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.PRINTF_SUPPORT.73066591" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.PRINTF_SUPPORT" value="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.PRINTF_SUPPORT.minimal" valueType="enumerated"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.SILICON_VERSION.569576381" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.SILICON_VERSION" value="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.SILICON_VERSION.msp" valueType="enumerated"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.DEFINE.1929022993" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.DEFINE" valueType="definedSymbols">
+<listOptionValue builtIn="false" value="__MSP430F2274__"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.INCLUDE_PATH.1900541001" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.INCLUDE_PATH" valueType="includePath">
+<listOptionValue builtIn="false" value="&quot;${CCS_INSTALL_ROOT}/msp430/include&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${MSP430_CG_ROOT}/include&quot;"/>
+<listOptionValue builtIn="false" value="&quot;..\\base&quot;"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OPT_FOR_SPEED.836748962" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OPT_FOR_SPEED" value="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OPT_FOR_SPEED.4" valueType="enumerated"/>
+</tool>
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.linkerDebug.32208987" name="MSP430 Linker" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.linkerDebug">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.HEAP_SIZE.1302582925" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.HEAP_SIZE" value="80" valueType="string"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.STACK_SIZE.419039743" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.STACK_SIZE" value="80" valueType="string"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.SEARCH_PATH.1133677503" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.SEARCH_PATH" valueType="stringList">
+<listOptionValue builtIn="false" value="&quot;${CCS_INSTALL_ROOT}/msp430/include&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/lib&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${MSP430_CG_ROOT}/lib&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${MSP430_CG_ROOT}/include&quot;"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.MAP_FILE.571266833" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.MAP_FILE" value="&quot;ANTPlusRx.map&quot;" valueType="string"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.OUTPUT_FILE.711527012" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.OUTPUT_FILE" value="&quot;ANTPlusRx.out&quot;" valueType="string"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.LIBRARY.349497447" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.LIBRARY" valueType="libs">
+<listOptionValue builtIn="false" value="&quot;rts430.lib&quot;"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.generatedLinkerCommandFiles.1563638441" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.generatedLinkerCommandFiles" valueType="libs">
+<listOptionValue builtIn="false" value="&quot;$(GEN_CMDS_QUOTED)&quot;"/>
+</option>
+</tool>
+<macros expandEnvironmentMacros="true"/>
+</toolChain>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/base/ANTInterface.c" name="ANTInterface.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/ANTInterface.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/ANTInterface.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/ANTInterface.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.100123113" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/base/System.c" name="System.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/System.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/System.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/System.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.2047293635" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/base/ioboard.c" name="ioboard.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/ioboard.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/ioboard.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/ioboard.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1993617798" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/base/timer.c" name="timer.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/timer.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/timer.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/timer.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.721836019" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/bsbc/bc_rx.c" name="bc_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/bsbc/bc_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/bsbc/bc_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/bsbc/bc_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.364020379" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/bsbc/bs_rx.c" name="bs_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/bsbc/bs_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/bsbc/bs_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/bsbc/bs_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.695438415" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/bsbc/main_bsc.c" name="main_bsc.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/bsbc/main_bsc.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/bsbc/main_bsc.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/bsbc/main_bsc.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.371511793" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/cbsc/main_cbsc.c" name="main_cbsc.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/cbsc/main_cbsc.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/cbsc/main_cbsc.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/cbsc/main_cbsc.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1137887748" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/cbsc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/hrm/main_hrm.c" name="main_hrm.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/hrm/main_hrm.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/hrm/main_hrm.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/hrm/main_hrm.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.630175668" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/hrm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/sdm/main_sdm.c" name="main_sdm.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/sdm/main_sdm.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/sdm/main_sdm.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/sdm/main_sdm.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.66706969" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/sdm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/sdm/sdm_rx.c" name="sdm_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/sdm/sdm_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/sdm/sdm_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/sdm/sdm_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.496887742" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/sdm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/hrm/hrm_rx.c" name="hrm_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/hrm/hrm_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/hrm/hrm_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/hrm/hrm_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1621216524" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/hrm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/cbsc/cbsc_rx.c" name="cbsc_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/cbsc/cbsc_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/cbsc/cbsc_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/cbsc/cbsc_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1704067481" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/cbsc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/hrm/hrm_tx.c" name="hrm_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/hrm/hrm_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/hrm/hrm_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/hrm/hrm_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1559261729" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/hrm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/hrm/main_hrm_tx.c" name="main_hrm_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/hrm/main_hrm_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/hrm/main_hrm_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/hrm/main_hrm_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.187551287" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/hrm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/sdm/main_sdm_tx.c" name="main_sdm_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/sdm/main_sdm_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/sdm/main_sdm_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/sdm/main_sdm_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1148905620" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/sdm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/sdm/sdm_tx.c" name="sdm_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/sdm/sdm_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/sdm/sdm_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/sdm/sdm_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1843439369" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/sdm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/bsbc/bc_tx.c" name="bc_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/bsbc/bc_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/bsbc/bc_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/bsbc/bc_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.2130214880" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/bsbc/bs_tx.c" name="bs_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/bsbc/bs_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/bsbc/bs_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/bsbc/bs_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.732378099" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/bsbc/main_bsc_tx.c" name="main_bsc_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/bsbc/main_bsc_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/bsbc/main_bsc_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/bsbc/main_bsc_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.242763794" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/cbsc/cbsc_tx.c" name="cbsc_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/cbsc/cbsc_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/cbsc/cbsc_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/cbsc/cbsc_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.891358302" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/cbsc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/cbsc/main_cbsc_tx.c" name="main_cbsc_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/cbsc/main_cbsc_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/cbsc/main_cbsc_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/cbsc/main_cbsc_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.946982378" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/cbsc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/bps/main_bps.c" name="main_bps.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/bps/main_bps.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/bps/main_bps.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/bps/main_bps.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1020473460" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/bps&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/bps/bps_rx.c" name="bps_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/bps/bps_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/bps/bps_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/bps/bps_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.26294195" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/bps&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/test/slave/main_slave.c" name="main_slave.c" rcbsApplicability="disable" resourcePath="/ANTPlus/test/slave/main_slave.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/test/slave/main_slave.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/test/slave/main_slave.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1980558293" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;test/slave&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/fit1e/fe.c" name="fe.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fe.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fe.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fe.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.2032778384" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/fit1e/fe_main.c" name="fe_main.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fe_main.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fe_main.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fe_main.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1820343465" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/fit1e/fit.c" name="fit.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fit.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fit.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fit.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.2123086855" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/fit1e/fit_convert.c" name="fit_convert.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fit_convert.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fit_convert.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fit_convert.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.37775936" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/fit1e/fit_crc.c" name="fit_crc.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fit_crc.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fit_crc.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fit_crc.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.897796754" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/fit1e/fit_fit1.c" name="fit_fit1.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fit_fit1.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fit_fit1.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/fit_fit1.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.203184251" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/fit1e/process_burst.c" name="process_burst.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/process_burst.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/process_burst.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/process_burst.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1458436326" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/base/printf.c" name="printf.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/printf.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/printf.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/printf.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1904463749" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/antfs/main_antfs_client.c" name="main_antfs_client.c" rcbsApplicability="disable" resourcePath="/ANTPlus/antfs/main_antfs_client.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/antfs/main_antfs_client.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/antfs/main_antfs_client.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1910822016" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;antfs&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/antfs/antfs.c" name="antfs.c" rcbsApplicability="disable" resourcePath="/ANTPlus/antfs/antfs.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/antfs/antfs.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/antfs/antfs.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1852575889" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;antfs&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/base/crc.c" name="crc.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/crc.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/crc.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/crc.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.523290155" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/base/serial.c" name="serial.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/serial.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/serial.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/base/serial.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1025869781" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/antfs/mem.c" name="mem.c" rcbsApplicability="disable" resourcePath="/ANTPlus/antfs/mem.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/antfs/mem.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/antfs/mem.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1648837660" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;antfs&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/fit1e/crc.c" name="crc.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/crc.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/crc.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/fit1e/crc.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1518704437" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/test/slave/test_at3.c" name="test_at3.c" rcbsApplicability="disable" resourcePath="/ANTPlus/test/slave/test_at3.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/test/slave/test_at3.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/test/slave/test_at3.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1570591793" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;.\test\slave&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/wgt/main_wgt_tx.c" name="main_wgt_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/wgt/main_wgt_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/wgt/main_wgt_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/wgt/main_wgt_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1312142376" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/wgt&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/sensor/wgt/wgt_tx.c" name="wgt_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/wgt/wgt_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/wgt/wgt_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/sensor/wgt/wgt_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.745007009" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/wgt&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/wgt/main_wgtrx.c" name="main_wgtrx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/wgt/main_wgtrx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/wgt/main_wgtrx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/wgt/main_wgtrx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.649265145" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/wgt&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.debug.1411043924./ANTPlus/display/wgt/wgt_rx.c" name="wgt_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/wgt/wgt_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/wgt/wgt_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676./ANTPlus/display/wgt/wgt_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerDebug.864632676">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.799073263" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/wgt&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+</configuration>
+<configuration artifactExtension="out" artifactName="ANTPlusRx" description="" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066" name="Release" parent="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release">
+<toolChain id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.ReleaseToolchain.6047025" name="TI Code Generation Tools" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.ReleaseToolchain" targetTool="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.linkerRelease.291221503">
+<option id="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS.621030009" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS" valueType="stringList">
+<listOptionValue builtIn="false" value="DEVICE_CONFIGURATION_ID=MSP430F2274"/>
+<listOptionValue builtIn="false" value="DEVICE_ENDIANNESS=little"/>
+<listOptionValue builtIn="false" value="OUTPUT_FORMAT=COFF"/>
+<listOptionValue builtIn="false" value="CCS_MBS_VERSION=4.2.0"/>
+<listOptionValue builtIn="false" value="LINKER_COMMAND_FILE=lnk_msp430f2274.cmd"/>
+<listOptionValue builtIn="false" value="RUNTIME_SUPPORT_LIBRARY=rts430.lib"/>
+<listOptionValue builtIn="false" value="IS_ASSEMBLY_ONLY=false"/>
+<listOptionValue builtIn="false" value="OUTPUT_TYPE=executable"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.core.OPT_CODEGEN_VERSION.323112011" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_CODEGEN_VERSION" value="3.3.1" valueType="string"/>
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.DIAG_WARNING.620629078" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.DIAG_WARNING" valueType="stringList">
+<listOptionValue builtIn="false" value="225"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.PRINTF_SUPPORT.2030421844" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.PRINTF_SUPPORT" value="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.PRINTF_SUPPORT.minimal" valueType="enumerated"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.SILICON_VERSION.2059698070" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.SILICON_VERSION" value="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.SILICON_VERSION.msp" valueType="enumerated"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.DEFINE.708670936" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.DEFINE" valueType="definedSymbols">
+<listOptionValue builtIn="false" value="__MSP430F2274__"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.INCLUDE_PATH.1177386890" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.INCLUDE_PATH" valueType="includePath">
+<listOptionValue builtIn="false" value="&quot;${CCS_INSTALL_ROOT}/msp430/include&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${MSP430_CG_ROOT}/include&quot;"/>
+<listOptionValue builtIn="false" value="&quot;..\\base&quot;"/>
+</option>
+</tool>
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.linkerRelease.291221503" name="MSP430 Linker" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.linkerRelease">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.HEAP_SIZE.1088434213" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.HEAP_SIZE" value="80" valueType="string"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.STACK_SIZE.924375652" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.STACK_SIZE" value="80" valueType="string"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.SEARCH_PATH.82974783" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.SEARCH_PATH" valueType="stringList">
+<listOptionValue builtIn="false" value="&quot;${CCS_INSTALL_ROOT}/msp430/include&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/lib&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/include&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${MSP430_CG_ROOT}/lib&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${MSP430_CG_ROOT}/include&quot;"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.OUTPUT_FILE.739153646" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.OUTPUT_FILE" value="&quot;ANTPlusRx.out&quot;" valueType="string"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.MAP_FILE.1911756419" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.MAP_FILE" value="&quot;ANTPlusRx.map&quot;" valueType="string"/>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.LIBRARY.478436363" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.LIBRARY" valueType="libs">
+<listOptionValue builtIn="false" value="&quot;rts430.lib&quot;"/>
+</option>
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.generatedLinkerCommandFiles.1428303903" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.linkerID.generatedLinkerCommandFiles" valueType="libs">
+<listOptionValue builtIn="false" value="&quot;$(GEN_CMDS_QUOTED)&quot;"/>
+</option>
+</tool>
+<macros expandEnvironmentMacros="true"/>
+</toolChain>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/base/ANTInterface.c" name="ANTInterface.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/ANTInterface.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/ANTInterface.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/ANTInterface.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.488477430" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/base/System.c" name="System.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/System.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/System.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/System.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.959360011" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/base/ioboard.c" name="ioboard.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/ioboard.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/ioboard.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/ioboard.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.2112780948" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/base/timer.c" name="timer.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/timer.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/timer.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/timer.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.341569852" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/bsbc/bc_rx.c" name="bc_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/bsbc/bc_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/bsbc/bc_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/bsbc/bc_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.857386865" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/bsbc/bs_rx.c" name="bs_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/bsbc/bs_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/bsbc/bs_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/bsbc/bs_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1699699424" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/bsbc/main_bsc.c" name="main_bsc.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/bsbc/main_bsc.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/bsbc/main_bsc.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/bsbc/main_bsc.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.497754906" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/cbsc/main_cbsc.c" name="main_cbsc.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/cbsc/main_cbsc.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/cbsc/main_cbsc.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/cbsc/main_cbsc.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1462193674" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/cbsc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/hrm/main_hrm.c" name="main_hrm.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/hrm/main_hrm.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/hrm/main_hrm.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/hrm/main_hrm.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1186404611" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/hrm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/sdm/main_sdm.c" name="main_sdm.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/sdm/main_sdm.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/sdm/main_sdm.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/sdm/main_sdm.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1938950876" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/sdm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/sdm/sdm_rx.c" name="sdm_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/sdm/sdm_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/sdm/sdm_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/sdm/sdm_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.2094930696" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/sdm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/hrm/hrm_rx.c" name="hrm_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/hrm/hrm_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/hrm/hrm_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/hrm/hrm_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.42514337" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/hrm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/cbsc/cbsc_rx.c" name="cbsc_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/cbsc/cbsc_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/cbsc/cbsc_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/cbsc/cbsc_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.768267376" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/cbsc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/sensor/hrm/hrm_tx.c" name="hrm_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/hrm/hrm_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/hrm/hrm_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/hrm/hrm_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.563526232" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/hrm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/sensor/hrm/main_hrm_tx.c" name="main_hrm_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/hrm/main_hrm_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/hrm/main_hrm_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/hrm/main_hrm_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.866049014" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/hrm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/sensor/sdm/main_sdm_tx.c" name="main_sdm_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/sdm/main_sdm_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/sdm/main_sdm_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/sdm/main_sdm_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.340109357" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/sdm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/sensor/sdm/sdm_tx.c" name="sdm_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/sdm/sdm_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/sdm/sdm_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/sdm/sdm_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1487019752" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/sdm&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/sensor/bsbc/bc_tx.c" name="bc_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/bsbc/bc_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/bsbc/bc_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/bsbc/bc_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1729350282" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/sensor/bsbc/bs_tx.c" name="bs_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/bsbc/bs_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/bsbc/bs_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/bsbc/bs_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1340765585" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/sensor/bsbc/main_bsc_tx.c" name="main_bsc_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/bsbc/main_bsc_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/bsbc/main_bsc_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/bsbc/main_bsc_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.947318714" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/bsbc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/sensor/cbsc/cbsc_tx.c" name="cbsc_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/cbsc/cbsc_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/cbsc/cbsc_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/cbsc/cbsc_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.453219596" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/cbsc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/sensor/cbsc/main_cbsc_tx.c" name="main_cbsc_tx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/sensor/cbsc/main_cbsc_tx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/cbsc/main_cbsc_tx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/sensor/cbsc/main_cbsc_tx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.777856943" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;sensor/cbsc&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/bps/main_bps.c" name="main_bps.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/bps/main_bps.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/bps/main_bps.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/bps/main_bps.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.643638959" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/bps&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/display/bps/bps_rx.c" name="bps_rx.c" rcbsApplicability="disable" resourcePath="/ANTPlus/display/bps/bps_rx.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/bps/bps_rx.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/display/bps/bps_rx.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1906108297" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;display/bps&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/test/slave/main_slave.c" name="main_slave.c" rcbsApplicability="disable" resourcePath="/ANTPlus/test/slave/main_slave.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/test/slave/main_slave.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/test/slave/main_slave.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1287542675" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;test/slave&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/fit1e/fe.c" name="fe.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fe.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fe.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fe.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.815382494" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/fit1e/fe_main.c" name="fe_main.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fe_main.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fe_main.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fe_main.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.440205749" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/fit1e/fit.c" name="fit.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fit.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fit.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fit.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1163106460" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/fit1e/fit_convert.c" name="fit_convert.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fit_convert.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fit_convert.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fit_convert.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.71577141" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/fit1e/fit_crc.c" name="fit_crc.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fit_crc.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fit_crc.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fit_crc.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.2080390942" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/fit1e/fit_fit1.c" name="fit_fit1.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/fit_fit1.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fit_fit1.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/fit_fit1.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.15591879" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/fit1e/process_burst.c" name="process_burst.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/process_burst.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/process_burst.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/process_burst.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1118256896" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/base/printf.c" name="printf.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/printf.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/printf.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/printf.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.818833722" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/antfs/main_antfs_client.c" name="main_antfs_client.c" rcbsApplicability="disable" resourcePath="/ANTPlus/antfs/main_antfs_client.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/antfs/main_antfs_client.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/antfs/main_antfs_client.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1236948547" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;antfs&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/antfs/antfs.c" name="antfs.c" rcbsApplicability="disable" resourcePath="/ANTPlus/antfs/antfs.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/antfs/antfs.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/antfs/antfs.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1284506607" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;antfs&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/base/crc.c" name="crc.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/crc.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/crc.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/crc.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.796538334" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/base/serial.c" name="serial.c" rcbsApplicability="disable" resourcePath="/ANTPlus/base/serial.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/serial.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/base/serial.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1844839160" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;base&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/antfs/mem.c" name="mem.c" rcbsApplicability="disable" resourcePath="/ANTPlus/antfs/mem.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/antfs/mem.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/antfs/mem.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1102876981" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;antfs&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+<resourceConfiguration exclude="false" id="com.ti.ccstudio.buildDefinitions.MSP430.exe.Release.1085813066./ANTPlus/fit1e/crc.c" name="crc.c" rcbsApplicability="disable" resourcePath="/ANTPlus/fit1e/crc.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/crc.c">
+<tool id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195./ANTPlus/fit1e/crc.c" name="MSP430 Compiler" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.exe.compilerRelease.177959195">
+<option id="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY.1216346893" superClass="com.ti.ccstudio.buildDefinitions.MSP430_3.3.compilerID.OBJ_DIRECTORY" value="&quot;fit1e&quot;" valueType="string"/>
+</tool>
+</resourceConfiguration>
+</configuration>
+<macros/>
+</project>
+</ManagedProjectBuildInfo>
