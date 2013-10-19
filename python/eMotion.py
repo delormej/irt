@@ -7,6 +7,7 @@
 
 import sys, time, usb
 from maestro import *
+from eMotionANT import *
 from antprotocol.bases import GarminANT
 from antprotocol.protocol import ANTReceiveException
 
@@ -86,25 +87,10 @@ class Profile(object):
 		# combined rider and bicycle weight in lbs.
 		self.weight = 0
 
-class eMotion(GarminANT):
-	# 
-	# Main interface to the eMotion wireless device.  Responsible for sending / recieving ANT+ messages.
-	#
-	def __init__(self):
-		# nothing to see here yet	
-		print "I was started."
-
-	# Here's what the pgm should do:
-	#
-	# 1. initialize ANT+ via USB
-	# 2. get the user profile data (rider+bike weight)
-	# 3. listen for ANT+ messages
-	#		dispatch accordingly (speed, resistance, power/calibration/etc)
-	def start(self):
-		# let's rock and roll!
-		print "Here's where it all begins."
-
 def main():
+
+	ant = eMotionANT(debug=True)
+	ant.start()
 
 	# test power calculations
 	# 

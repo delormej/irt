@@ -8,11 +8,7 @@ import serial, time, struct
 
 SET_TARGET_COMMAND=0x84
 GET_POSITION_COMMAND=0x90
-
-RESISTANCE_0=8428
-RESISTANCE_1=5090
-RESISTANCE_2=4600
-RESISTANCE_3=2796
+GET_MOVING_STATE_COMMAND=0x93
 
 class Maestro(object):
 
@@ -29,7 +25,24 @@ class Maestro(object):
 	def close(self):
 		self.s.close()
 
+	def isMoving(self):
+		# make sure it's not moving before you check the position.
+		self.s.write( \
+			chr(GET_MOVING_STATE_COMMAND))
+
+		r = self.s.read(1)
+		if r is not None:
+			val = struct.unpack('?', r)
+			return val[0]
+		else:
+			raise "ERROR Could not determine if servo was moving."		
+
 	def getPosition(self):
+		# let the servo finish moving if it is
+		while self.isMoving():
+			# wait just a 1/2 second and try again
+			time.sleep(0.5)
+
 		self.s.write( \
 			chr(GET_POSITION_COMMAND) + \
 			chr(self.channel))
@@ -42,7 +55,6 @@ class Maestro(object):
 		
 		return pos[0]
 
-
 	def setTarget(self, position):
 		low = position&0x7f
 		high = position>>7
@@ -52,18 +64,6 @@ class Maestro(object):
 			chr(self.channel) + \
 			chr(low) + \
 			chr(high))
-
-	def setResistance0(self):
-		self.setTarget(RESISTANCE_0)
-
-	def setResistance1(self):
-		self.setTarget(RESISTANCE_1)
-
-	def setResistance2(self):
-		self.setTarget(RESISTANCE_2)
-
-	def setResistance3(self):
-		self.setTarget(RESISTANCE_3)
 
 # simple test harness to walk through the various steps.
 def _test(port="/dev/ttyACM0", channel=0x05):
