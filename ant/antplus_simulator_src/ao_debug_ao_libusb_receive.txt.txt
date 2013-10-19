@@ -1,2 +1,0 @@
-   168.407 {  21314328}: ReceiveThread(): ReapAsyncNocancel() Error: -5, Win_GetLastError: 31
-   168.407 {  21314328}: ReceiveThread(): SubmitAsync() Error: -5
