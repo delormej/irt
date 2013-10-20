@@ -4,7 +4,7 @@
 # By Jason De Lorme <jjdelorme@yahoo.com>
 # http://www.roadacious.com
 #
-import struct
+import struct, array
 from antprotocol.bases import GarminANT
 from antprotocol.protocol import log
 from eMotion import Power,Resistance
@@ -100,7 +100,8 @@ class eMotionANT(GarminANT):
 
 		print "accumPower: " + str(accumPower) + " watts: " + str(watts)
 
-		msg = struct.pack('@BBBBBHH', \
+		msg = struct.pack('@BBBBBBHH', \
+			MESG_BROADCAST_DATA_ID, \
 			channelId, \
 			page_number, \
 			event_count, \
@@ -109,7 +110,7 @@ class eMotionANT(GarminANT):
 			accumPower, \
 			watts) 
 		
-		self._send_message(*[0x4e] + list(struct.unpack('%sB' % len(msg), msg)))
+		self._send_message(array.array('B', msg).tolist())
 
 	# Here's what the program should do:
 	#
