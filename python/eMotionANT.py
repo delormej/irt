@@ -140,7 +140,7 @@ class Speed(object):
 		revs = int(page[6])
 		revs |= int(page[7]) << 8
 		
-		if time == self._lastTime:
+		if time == self._lastTime or revs < self._cumulativeRevCount:
 			return self._last_mph
 
 		mph = 0

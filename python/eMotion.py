@@ -25,6 +25,10 @@ class Power(object):
 
 	def calcWatts(self, speed, level):
 		watts = 0
+
+		if speed == 0:
+			return watts
+
 		# calculates current power output based on speed and level
 		level0 = (speed*14.04-33.6)-(((speed*14.04-33.06)-(speed*8.75-16.21))/90)*(220-self.weight)
 		
