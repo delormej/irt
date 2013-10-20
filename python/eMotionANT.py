@@ -104,13 +104,16 @@ class eMotionANT(GarminANT):
 			msgId = msg[INDEX_MESG_ID]
 			if msgId == MESG_BROADCAST_DATA_ID:
 				if msg[INDEX_CHANNEL_NUM] == speedChannel:
-					speed_page = msg[INDEX_MESG_DATA+1:len(msg)-1]
+					speed_page = Speed_Page0(msg)
+					
 					mph = speed.get_mph(speed_page)
-					print "Current speed is: " + str(mph)
 					level = resistance.getLevel()
-					print("Watts for level: " + str(level) + ":" + \
-						str(power.calcWatts(mph, level)) )
-
+					watts = power.calcWatts(mph, level)
+					
+					print("Speed|Watts|Level:: " + \
+						str(mph) + " | " + \
+						str(watts) + " | " + \
+						str(level) )
 			"""
 			#TODO: implement this in the future
 			if self.device_number == 0:
@@ -120,6 +123,17 @@ class eMotionANT(GarminANT):
 				self.deviceNumber = self._get_deviceNumber(msg)
 				print "Device number" + str(deviceNumber)
 			"""
+
+class Speed_Page0(object):
+	def __init__(self, msg):
+		try:
+			page = msg[INDEX_MESG_DATA+1:len(msg)-1]
+			self.time = int(page[4])
+			self.time |= int(page[5]) << 8
+			self.revs = int(page[6])
+			self.revs |= int(page[7]) << 8
+		except:
+			raise "Unable to read speed page 0 data."
 
 class Speed(object):
 	#
@@ -132,15 +146,7 @@ class Speed(object):
 		self._last_mph = 0
 
 	def get_mph(self, page):
-		if len(page) < 8:
-			raise "Error, invalid speed page data."
-
-		time = int(page[4])
-		time |= int(page[5]) << 8
-		revs = int(page[6])
-		revs |= int(page[7]) << 8
-		
-		if time == self._lastTime or revs < self._cumulativeRevCount:
+		if page.time == self._lastTime or page.revs < self._cumulativeRevCount:
 			return self._last_mph
 
 		mph = 0
@@ -148,12 +154,12 @@ class Speed(object):
 		# for the very first call, just store, don't calc.
 		if self._lastTime > 0:
 			# caclulate speed
-			mph = self._calc_speed(time, revs)
+			mph = self._calc_speed(page.time, page.revs)
 			self._last_mph = mph
 
 		# store for next call
-		self._lastTime = time 
-		self._cumulativeRevCount = revs
+		self._lastTime = page.time 
+		self._cumulativeRevCount = page.revs
 
 		return mph
 
