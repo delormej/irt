@@ -114,13 +114,7 @@ class eMotionANT(GarminANT):
 				self.deviceNumber = self._get_deviceNumber(msg)
 				print "Device number" + str(deviceNumber)
 			"""
-		
-					
-# Specific to ANT Speed pages
-STATE_INIT_PAGE=0
-STATE_STD_PAGE=1
-STATE_EXT_PAGE=2
-					
+
 class Speed(object):
 	#
 	# Reads speed messages and stores state about last speed.
@@ -135,16 +129,6 @@ class Speed(object):
 	def get_mph(self, message):
 		page = message[INDEX_MESG_DATA]
 		
-		"""
-		# Do we even care about the page state? We only care about 
-		if self._page_state == STATE_INIT_PAGE:
-			self._page_state = STATE_STD_PAGE
-		elif self._page_state == STATE_STD_PAGE:
-			if self._old_page != page:
-				self._page_state = STATE_EXT_PAGE
-		elif self._page_state = STATE_EXT_PAGE:
-		"""
-
 		self._old_page = page
 		
 		speed_data = message[INDEX_MESG_DATA+4]
