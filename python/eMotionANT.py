@@ -61,13 +61,37 @@ class eMotionANT(GarminANT):
 		return self._openChannel(0, SPEED_DEVICE_TYPE, SPEED_FREQUENCY, SPEED_MESSAGE_PERIOD, SPEED_TIME_OUT)
 
 	def _openPowerChannel(self):
-		return self._openChannel(1, \
+
+		channelId = 1
+		val = self._openChannel(channelId, \
 			channelType=0x10, \
 			deviceType=0x0B, \
 			frequency=0x39, \
 			period=[0xF6,0X1F], \
 			transmissionType=0x05, \
 			deviceNumber=[0x64,0x00])  #dummy device number
+
+		# data page number
+		# reserved
+		# reserved
+		# HW revision
+		# Manufacturer ID LSB
+		# Manufacturer ID MSB
+		# Model LSB
+		# Model MSB
+		self._manufacturer_message = [MESG_BROADCAST_DATA_ID, channelId, 0x50, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x01, 0x00]
+
+		# data page number
+		# reserved
+		# Supplemental SW revision
+		# SW Revision
+		# Serial #
+		# Serial # 
+		# Serial #
+		# Serial #
+		self._product_message = [MESG_BROADCAST_DATA_ID, channelId, 0x51, 0xFF, 0x01, 0x00, 0x02, 0x00, 0x01, 0x00]
+
+		return val
 
 	def _openChannel(self, channelId, deviceType, frequency, period, timeout=0x0c, channelType=0x00, transmissionType=0x00, deviceNumber=[0x00,0x00]):
 		# configure the channel
@@ -92,9 +116,8 @@ class eMotionANT(GarminANT):
 			accumPower = watts
 
 		self._accumPower = accumPower
-
 		page_number = 0x10	# power-only message
-		event_count = self._powerEventCount+1
+		self._powerEventCount+=1
 		pedal = 0xFF
 		cadence = 0xFF
 
@@ -104,13 +127,22 @@ class eMotionANT(GarminANT):
 			MESG_BROADCAST_DATA_ID, \
 			channelId, \
 			page_number, \
-			event_count, \
+			self._powerEventCount, \
 			pedal, \
 			cadence, \
 			accumPower, \
 			watts) 
 		
 		self._send_message(array.array('B', msg).tolist())
+
+		# interleave manufacturer & product page page
+		if self._powerEventCount % 121 == 0:
+			print "*********************************************************************************"
+			print "Sending Manufacturer and Product info."
+			print "*********************************************************************************"
+			self._send_message(self._manufacturer_message)
+			self._send_message(self._product_message)
+
 
 	# Here's what the program should do:
 	#
