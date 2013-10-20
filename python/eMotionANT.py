@@ -101,8 +101,8 @@ class eMotionANT(GarminANT):
 			msgId = msg[INDEX_MESG_ID]
 			if msgId == MESG_BROADCAST_DATA_ID:
 				if msg[INDEX_CHANNEL_NUM] == speedChannel:
-					print "In our channel.""
-					mph = speed.get_mph(msg)
+					speed_page = msg[INDEX_MESG_DATA+1:len(msg)-1]
+					mph = speed.get_mph(speed_page)
 					print "Current speed is: " + str(mph)
 
 			"""
@@ -121,30 +121,37 @@ class Speed(object):
 	#
 	def __init__(self, wheel_size):
 		self._wheel_size = wheel_size
-		self._page_state = STATE_INIT_PAGE
 		self._lastTime = 0
 		self._cumulativeRevCount = 0
+		self._last_mph = 0
 
-	@log
-	def get_mph(self, message):
-		page = message[INDEX_MESG_DATA]
+	def get_mph(self, page):
+		if len(page) < 8:
+			raise "Error, invalid speed page data."
+
+		time = int(page[4])
+		time |= int(page[5]) << 8
+		revs = int(page[6])
+		revs |= int(page[7]) << 8
 		
-		self._old_page = page
-		
-		speed_data = message[INDEX_MESG_DATA+4]
-		time = struct.unpack('H', speed_data[0:1])
-		revs = struct.unpack('H', speed_data[2:3])
-		
+		if time == self._lastTime:
+			return self._last_mph
+
 		# caclulate speed
 		mph = self._calc_speed(time, revs)
 
 		# store for next call
-		self._lastTime = lastTime 
+		self._lastTime = time 
 		self._cumulativeRevCount = revs
+		self._last_mph = mph
 
 		return mph
 
 	def _calc_speed(self, time, revs):
+		print "time: " + str(time)
+		print "revs: " + str(revs)
+		print "wheel_size: " + str(self._wheel_size)
+
 		meters_per_sec = (self._wheel_size * (revs - self._cumulativeRevCount) * 1024)/ \
 			(time - self._lastTime)
 		

@@ -11,6 +11,8 @@ from eMotionANT import *
 from antprotocol.bases import GarminANT
 from antprotocol.protocol import ANTReceiveException
 
+from array import *
+
 class Power(object):
 	#
 	# Class that is responsible for reading & calculating power, storing state about last power.
