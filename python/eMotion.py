@@ -11,14 +11,6 @@ from eMotionANT import *
 from antprotocol.bases import GarminANT
 from antprotocol.protocol import ANTReceiveException
 
-class Speed(object):
-	#
-	# Reads speed messages and stores state about last speed.
-	#
-	def __init__(self):
-		#sample data
-		self.last_speed = 0
-
 class Power(object):
 	#
 	# Class that is responsible for reading & calculating power, storing state about last power.
@@ -86,33 +78,42 @@ class Profile(object):
 	def __init__(self):
 		# combined rider and bicycle weight in lbs.
 		self.weight = 0
+		# wheel circumference in meters
+		self.wheel_size=0.207
 
 def main():
 
-	ant = eMotionANT(debug=True)
-	ant.start()
+	try:
+		profile = Profile()
+		profile.weight = 175 # sample data
+				
+		ant = eMotionANT(profile, debug=True)
+		ant.start()
+	
+		return 0
+		#
+		# unreachable
+		#
 
-	# test power calculations
-	# 
-	profile = Profile()
-	profile.weight = 175 # sample data
+		# test power calculations
+		# 
 
-	speed = Speed()
-	speed.last_speed = 16.9 # sample data
 
-	p = Power(profile.weight)
-	r = Resistance()
+		speed = Speed()
+		speed.last_speed = 16.9 # sample data
 
-	while True:
-		try:
+		p = Power(profile.weight)
+		r = Resistance()
+
+		while True:
 			level = r.getLevel()
 			print("Watts for level: " + str(level) + ":" + \
 				str(p.calcWatts(speed.last_speed, level)) )
 			time.sleep(1.0) # sleep for a second
 	
-		except KeyboardInterrupt:
-			print "Thank you for playing."
-			return 0
+	except KeyboardInterrupt:
+		print "Thank you for playing."
+		return 0
 
 if __name__ == '__main__':
     sys.exit(main())
