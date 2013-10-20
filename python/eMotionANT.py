@@ -4,6 +4,7 @@
 # By Jason De Lorme <jjdelorme@yahoo.com>
 # http://www.roadacious.com
 #
+import struct
 from antprotocol.bases import GarminANT
 from antprotocol.protocol import log
 from eMotion import Power,Resistance
@@ -17,12 +18,11 @@ INDEX_MESG_ID=2
 INDEX_MESG_DATA=3
 INDEX_CHANNEL_NUM=INDEX_MESG_DATA
 MESG_BROADCAST_DATA_ID=0x4E
-
-RESPONSE_NO_ERROR=0x00
-		
 MESG_RESPONSE_EVENT_ID=0x40
 MESG_CHANNEL_ID_ID=0x51
 MESG_BURST_DATA_ID=0x50
+
+RESPONSE_NO_ERROR=0x00
 
 class eMotionANT(GarminANT):
 	# 
@@ -35,6 +35,9 @@ class eMotionANT(GarminANT):
 		self.open()
 		self.reset()   
 		self.send_network_key(0, ANT_NETWORK_KEY)
+
+		self._powerEventCount = 0
+		self._accumPower = 0
 
 	def __del__(self):
 		self.close()
@@ -79,8 +82,34 @@ class eMotionANT(GarminANT):
 
 		return channelId
 
-	def _transmitPower(self, watts):
-		pass
+	def _transmitPower(self, channelId, watts):
+
+		accumPower = self._accumPower + watts
+
+		# roll over 
+		if (self._powerEventCount > 255 or accumPower > 65535):
+			self._powerEventCount = 0
+			accumPower = watts
+
+		self._accumPower = accumPower
+
+		page_number = 0x10	# power-only message
+		event_count = self._powerEventCount+1
+		pedal = 0xFF
+		cadence = 0xFF
+
+		print "accumPower: " + str(accumPower) + " watts: " + str(watts)
+
+		msg = struct.pack('@BBBBBHH', \
+			channelId, \
+			page_number, \
+			event_count, \
+			pedal, \
+			cadence, \
+			accumPower, \
+			watts) 
+		
+		self._send_message(*[0x4e] + list(struct.unpack('%sB' % len(msg), msg)))
 
 	# Here's what the program should do:
 	#
@@ -95,8 +124,7 @@ class eMotionANT(GarminANT):
 		speed = Speed(self._profile.wheel_size)
 
 		power = Power(self._profile.weight)
-		#powerChannel = self._openPowerChannel()
-		powerChannel = 1
+		powerChannel = self._openPowerChannel()
 		resistance = Resistance()
 
 		while True:
@@ -121,7 +149,7 @@ class eMotionANT(GarminANT):
 
 					level = resistance.getLevel()
 					watts = power.calcWatts(mph, level)
-					self._transmitPower(watts)
+					self._transmitPower(powerChannel, watts)
 
 					print("Speed|Watts|Level:: " + \
 						str(mph) + " | " + \
@@ -130,6 +158,8 @@ class eMotionANT(GarminANT):
 				elif msg[INDEX_CHANNEL_NUM] == powerChannel:
 					pass
 					# respond to power related events.
+			elif msgId == MESG_RESPONSE_EVENT_ID:
+				pass
 
 			"""
 			#TODO: implement this in the future
@@ -177,6 +207,9 @@ class Speed(object):
 		# store for next call
 		self._lastTime = page.time 
 		self._cumulativeRevCount = page.revs
+
+		if mph < 0:
+			mph = 0
 
 		return mph
 

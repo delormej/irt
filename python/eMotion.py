@@ -37,6 +37,10 @@ class Power(object):
 		else:
 			watts = level0 + speed * self.slope[level] + self.intercept[level]
 
+		# never return less than 0
+		if watts < 0:
+			watts = 0
+
 		return watts
 
 class Resistance(object):
