@@ -6,7 +6,7 @@
 #
 from antprotocol.bases import GarminANT
 from antprotocol.protocol import log
-import struct
+from eMotion import Power,Resistance
 
 #
 # global defines
@@ -40,8 +40,9 @@ class eMotionANT(GarminANT):
 		self.close()
 
 	def _get_deviceNumber(self, message):				
-		num = struct.unpack('H', msg[INDEX_MESG_DATA:INDEX_MESG_DATA+1])
-		return num
+		#num = struct.unpack('H', msg[INDEX_MESG_DATA:INDEX_MESG_DATA+1])
+		#return num
+		pass
 
 	def set_channel_id(self, channelId=0, deviceNumber=0, pairing=0, deviceType=0, transmissionType=0):
 		self._send_message(0x51, channelId, deviceNumber, pairing, deviceType, transmissionType)
@@ -83,12 +84,14 @@ class eMotionANT(GarminANT):
 		speedChannel = self._openSpeedChannel()
 		speed = Speed(self._profile.wheel_size)
 
+		power = Power(self._profile.weight)
+		resistance = Resistance()
+
 		while True:
 			msg = self._receive_message()
-			# 0 length message indicates 
+			# 0 length message normally indicates time out, no messages available.
 			if len(msg) == 0:
 				continue;
-
 			#
 			# Raw ANT message structure is:
 			#	Sync|Msg length|Msg Id|{Content(Bytes 0-(N-1))}|Checksum 
@@ -104,6 +107,9 @@ class eMotionANT(GarminANT):
 					speed_page = msg[INDEX_MESG_DATA+1:len(msg)-1]
 					mph = speed.get_mph(speed_page)
 					print "Current speed is: " + str(mph)
+					level = resistance.getLevel()
+					print("Watts for level: " + str(level) + ":" + \
+						str(power.calcWatts(mph, level)) )
 
 			"""
 			#TODO: implement this in the future

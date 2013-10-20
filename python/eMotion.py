@@ -104,14 +104,6 @@ def main():
 		speed = Speed()
 		speed.last_speed = 16.9 # sample data
 
-		p = Power(profile.weight)
-		r = Resistance()
-
-		while True:
-			level = r.getLevel()
-			print("Watts for level: " + str(level) + ":" + \
-				str(p.calcWatts(speed.last_speed, level)) )
-			time.sleep(1.0) # sleep for a second
 	
 	except KeyboardInterrupt:
 		print "Thank you for playing."
