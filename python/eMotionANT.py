@@ -61,7 +61,7 @@ class eMotionANT(GarminANT):
 		return self._openChannel(0, SPEED_DEVICE_TYPE, SPEED_FREQUENCY, SPEED_MESSAGE_PERIOD, SPEED_TIME_OUT)
 
 	def _openPowerChannel(self):
-
+		self._powerEvents = 0
 		channelId = 1
 		val = self._openChannel(channelId, \
 			channelType=0x10, \
@@ -107,11 +107,10 @@ class eMotionANT(GarminANT):
 		return channelId
 
 	def _transmitPower(self, channelId, watts):
-
 		accumPower = self._accumPower + watts
 
 		# roll over 
-		if (self._powerEventCount > 255 or accumPower > 65535):
+		if (self._powerEventCount >= 255 or accumPower >= 65535):
 			self._powerEventCount = 0
 			accumPower = watts
 
@@ -134,15 +133,15 @@ class eMotionANT(GarminANT):
 			watts) 
 		
 		self._send_message(array.array('B', msg).tolist())
+		self._powerEvents+=1
 
 		# interleave manufacturer & product page page
-		if self._powerEventCount % 121 == 0:
-			print "*********************************************************************************"
-			print "Sending Manufacturer and Product info."
-			print "*********************************************************************************"
-			self._send_message(self._manufacturer_message)
+		if self._powerEvents % 242 == 0:
 			self._send_message(self._product_message)
-
+			self._powerEvents+=1
+		elif self._powerEvents % 121 == 0:
+			self._send_message(self._manufacturer_message)
+			self._powerEvents+=1
 
 	# Here's what the program should do:
 	#
