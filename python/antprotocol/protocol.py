@@ -79,9 +79,8 @@ def log(f):
 
 class ANT(object):
 
-    def __init__(self, chan=0x00, debug=False):
+    def __init__(self, debug=False):
         self._debug = debug
-        self._chan = chan
 
         self._state = 0
         self._receiveBuffer = []
@@ -160,8 +159,8 @@ class ANT(object):
         self._check_reset_response(0x20)
 
     @log
-    def set_channel_frequency(self, freq):
-        self._send_message(0x45, self._chan, freq)
+    def set_channel_frequency(self, channelId, freq):
+        self._send_message(0x45, channelId, freq)
         self._check_ok_response()
 
     @log
@@ -170,8 +169,8 @@ class ANT(object):
         self._check_ok_response()
 
     @log
-    def set_search_timeout(self, timeout):
-        self._send_message(0x44, self._chan, timeout)
+    def set_search_timeout(self, channelId, timeout):
+        self._send_message(0x44, channelId, timeout)
         self._check_ok_response()
 
     @log
@@ -180,28 +179,28 @@ class ANT(object):
         self._check_ok_response()
 
     @log
-    def set_channel_period(self, period):
-        self._send_message(0x43, self._chan, period)
+    def set_channel_period(self, channelId, period):
+        self._send_message(0x43, channelId, period)
         self._check_ok_response()
 
     @log
-    def set_channel_id(self, id):
-        self._send_message(0x51, self._chan, id)
+    def set_channel_id(self, channelId, deviceNumber=0, pairing=0, deviceType=0, transmissionType=0):
+        self._send_message(0x51, channelId, deviceNumber, pairing, deviceType, transmissionType)
+        self._check_ok_response()
+		
+    @log
+    def open_channel(self, channelId):
+        self._send_message(0x4b, channelId)
         self._check_ok_response()
 
     @log
-    def open_channel(self):
-        self._send_message(0x4b, self._chan)
+    def close_channel(self, channelId):
+        self._send_message(0x4c, channelId)
         self._check_ok_response()
 
     @log
-    def close_channel(self):
-        self._send_message(0x4c, self._chan)
-        self._check_ok_response()
-
-    @log
-    def assign_channel(self):
-        self._send_message(0x42, self._chan, 0x00, 0x00)
+    def assign_channel(self, channelId, type=0x00):
+        self._send_message(0x42, channelId, type, 0x00)
         self._check_ok_response()
 
     @log
@@ -257,10 +256,10 @@ class ANT(object):
         raise ANTReceiveException("Burst receive failed to detect end")
 
     @log
-    def send_acknowledged_data(self, l):
+    def send_acknowledged_data(self, channelId, l):
         for tries in range(8):
             try:
-                self._send_message(0x4f, self._chan, l)
+                self._send_message(0x4f, channelId, l)
                 self._check_tx_response()
             except ANTReceiveException:
                 continue

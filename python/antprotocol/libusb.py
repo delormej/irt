@@ -49,8 +49,8 @@ class ANTlibusb(ANT):
            'out' : 0x01
            }
 
-    def __init__(self, chan=0x0, debug=False):
-        super(ANTlibusb, self).__init__(chan, debug)
+    def __init__(self, debug=False):
+        super(ANTlibusb, self).__init__(debug)
         self._connection = False
         self.timeout = 1000
 

@@ -44,10 +44,6 @@ class eMotionANT(GarminANT):
 		#return num
 		pass
 
-	def set_channel_id(self, channelId=0, deviceNumber=0, pairing=0, deviceType=0, transmissionType=0):
-		self._send_message(0x51, channelId, deviceNumber, pairing, deviceType, transmissionType)
-		self._check_ok_response()
-
 	@log
 	def _openSpeedChannel(self):
 		SPEED_DEVICE_TYPE=0x7B
@@ -59,18 +55,32 @@ class eMotionANT(GarminANT):
 		# TODO: support checking for both speed (type 123)
 		#		AND speed and cadence (type 121)
 		#################################################
+		return self._openChannel(0, SPEED_DEVICE_TYPE, SPEED_FREQUENCY, SPEED_MESSAGE_PERIOD, SPEED_TIME_OUT)
 
+	def _openPowerChannel(self):
+		return self._openChannel(1, \
+			channelType=0x10, \
+			deviceType=0x0B, \
+			frequency=0x39, \
+			period=[0xF6,0X1F], \
+			transmissionType=0x05, \
+			deviceNumber=[0x64,0x00])  #dummy device number
+
+	def _openChannel(self, channelId, deviceType, frequency, period, timeout=0x0c, channelType=0x00, transmissionType=0x00, deviceNumber=0):
 		# configure the channel
-		self._chan = 0
-		self.assign_channel()
-		self.set_channel_id(channelId=self._chan, deviceType=SPEED_DEVICE_TYPE)
-		self.set_channel_frequency(SPEED_FREQUENCY)
-		self.set_channel_period(SPEED_MESSAGE_PERIOD)
-		self.set_search_timeout(SPEED_TIME_OUT)
+		
+		self.assign_channel(channelId, channelType)
+		self.set_channel_id(channelId=channelId, deviceType=deviceType, deviceNumber=deviceNumber, transmissionType=transmissionType)
+		self.set_channel_frequency(channelId, frequency)
+		self.set_channel_period(channelId, period)
+		self.set_search_timeout(channelId, timeout)
        
-		self.open_channel()
+		self.open_channel(channelId)
 
-		return self._chan
+		return channelId
+
+	def _transmitPower(self, watts):
+		pass
 
 	# Here's what the program should do:
 	#
@@ -85,6 +95,8 @@ class eMotionANT(GarminANT):
 		speed = Speed(self._profile.wheel_size)
 
 		power = Power(self._profile.weight)
+		#powerChannel = self._openPowerChannel()
+		powerChannel = 1
 		resistance = Resistance()
 
 		while True:
@@ -105,15 +117,20 @@ class eMotionANT(GarminANT):
 			if msgId == MESG_BROADCAST_DATA_ID:
 				if msg[INDEX_CHANNEL_NUM] == speedChannel:
 					speed_page = Speed_Page0(msg)
-					
 					mph = speed.get_mph(speed_page)
+
 					level = resistance.getLevel()
 					watts = power.calcWatts(mph, level)
-					
+					self._transmitPower(watts)
+
 					print("Speed|Watts|Level:: " + \
 						str(mph) + " | " + \
 						str(watts) + " | " + \
 						str(level) )
+				elif msg[INDEX_CHANNEL_NUM] == powerChannel:
+					pass
+					# respond to power related events.
+
 			"""
 			#TODO: implement this in the future
 			if self.device_number == 0:
