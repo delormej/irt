@@ -66,7 +66,7 @@ class eMotionANT(GarminANT):
 			transmissionType=0x05, \
 			deviceNumber=[0x64,0x00])  #dummy device number
 
-	def _openChannel(self, channelId, deviceType, frequency, period, timeout=0x0c, channelType=0x00, transmissionType=0x00, deviceNumber=0):
+	def _openChannel(self, channelId, deviceType, frequency, period, timeout=0x0c, channelType=0x00, transmissionType=0x00, deviceNumber=[0x00,0x00]):
 		# configure the channel
 		
 		self.assign_channel(channelId, channelType)

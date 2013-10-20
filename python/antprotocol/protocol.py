@@ -184,8 +184,8 @@ class ANT(object):
         self._check_ok_response()
 
     @log
-    def set_channel_id(self, channelId, deviceNumber=0, pairing=0, deviceType=0, transmissionType=0):
-        self._send_message(0x51, channelId, deviceNumber, pairing, deviceType, transmissionType)
+    def set_channel_id(self, channelId, deviceNumber=[0x00,0x00], deviceType=0, transmissionType=0):
+        self._send_message(0x51, channelId, deviceNumber, deviceType, transmissionType)
         self._check_ok_response()
 		
     @log
