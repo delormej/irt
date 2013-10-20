@@ -81,7 +81,7 @@ class Profile(object):
 		# combined rider and bicycle weight in lbs.
 		self.weight = 0
 		# wheel circumference in meters
-		self.wheel_size=0.207
+		self.wheel_size=2.07
 
 def main():
 

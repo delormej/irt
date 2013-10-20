@@ -137,24 +137,24 @@ class Speed(object):
 		if time == self._lastTime:
 			return self._last_mph
 
-		# caclulate speed
-		mph = self._calc_speed(time, revs)
+		mph = 0
+
+		# for the very first call, just store, don't calc.
+		if self._lastTime > 0:
+			# caclulate speed
+			mph = self._calc_speed(time, revs)
+			self._last_mph = mph
 
 		# store for next call
 		self._lastTime = time 
 		self._cumulativeRevCount = revs
-		self._last_mph = mph
 
 		return mph
 
 	def _calc_speed(self, time, revs):
-		print "time: " + str(time)
-		print "revs: " + str(revs)
-		print "wheel_size: " + str(self._wheel_size)
-
 		meters_per_sec = (self._wheel_size * (revs - self._cumulativeRevCount) * 1024)/ \
 			(time - self._lastTime)
 		
+		# convert to mp/h
 		mph = meters_per_sec * 2.23693629 
-
 		return mph
