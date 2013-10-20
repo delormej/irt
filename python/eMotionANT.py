@@ -50,14 +50,18 @@ class eMotionANT(GarminANT):
 	@log
 	def _openSpeedChannel(self):
 		SPEED_DEVICE_TYPE=0x7B
-		SPEED_MESSAGE_PERIOD=[0xB6, 0x1F]
+		SPEED_MESSAGE_PERIOD=[0xB6, 0x1F] #8118
 		SPEED_FREQUENCY=0x39 #57
 		SPEED_TIME_OUT=0x0C
 
-		#################################################
-		# TODO: support checking for both speed (type 123)
-		#		AND speed and cadence (type 121)
-		#################################################
+		return self._openChannel(0, SPEED_DEVICE_TYPE, SPEED_FREQUENCY, SPEED_MESSAGE_PERIOD, SPEED_TIME_OUT)
+
+	def _openSpeedCadenceChannel(self):
+		SPEED_DEVICE_TYPE=0x79
+		SPEED_MESSAGE_PERIOD=[0x96, 0x1F] # 8086
+		SPEED_FREQUENCY=0x39 #57
+		SPEED_TIME_OUT=0x0C
+
 		return self._openChannel(0, SPEED_DEVICE_TYPE, SPEED_FREQUENCY, SPEED_MESSAGE_PERIOD, SPEED_TIME_OUT)
 
 	def _openPowerChannel(self):
@@ -152,7 +156,7 @@ class eMotionANT(GarminANT):
 	def start(self):
 
 		# let's rock and roll!
-		speedChannel = self._openSpeedChannel()
+		speedChannel = self._openSpeedCadenceChannel() #self._openSpeedChannel()
 		speed = Speed(self._profile.wheel_size)
 
 		power = Power(self._profile.weight)
