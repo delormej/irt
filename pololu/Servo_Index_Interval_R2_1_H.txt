@@ -1,0 +1,288 @@
+<!--Pololu Maestro servo controller settings file, http://www.pololu.com/catalog/product/1350-->
+<UscSettings version="1">
+  <NeverSuspend>false</NeverSuspend>
+  <SerialMode>UART_FIXED_BAUD_RATE</SerialMode>
+  <FixedBaudRate>9600</FixedBaudRate>
+  <SerialTimeout>0</SerialTimeout>
+  <EnableCrc>false</EnableCrc>
+  <SerialDeviceNumber>12</SerialDeviceNumber>
+  <SerialMiniSscOffset>0</SerialMiniSscOffset>
+  <Channels ServosAvailable="6" ServoPeriod="156">
+    <!--Period = 19.968 ms-->
+    <!--Channel 0-->
+    <Channel name="" mode="Input" min="0" max="1024" homemode="Ignore" home="0" speed="0" acceleration="0" neutral="1024" range="1905" />
+    <!--Channel 1-->
+    <Channel name="" mode="Input" min="0" max="1024" homemode="Ignore" home="0" speed="0" acceleration="0" neutral="1024" range="1905" />
+    <!--Channel 2-->
+    <Channel name="" mode="Input" min="0" max="1024" homemode="Ignore" home="0" speed="0" acceleration="0" neutral="1024" range="1905" />
+    <!--Channel 3-->
+    <Channel name="" mode="Input" min="0" max="1024" homemode="Ignore" home="0" speed="0" acceleration="0" neutral="1024" range="1905" />
+    <!--Channel 4-->
+    <Channel name="" mode="Input" min="0" max="1024" homemode="Ignore" home="0" speed="0" acceleration="0" neutral="1024" range="1905" />
+    <!--Channel 5-->
+    <Channel name="" mode="Servo" min="2176" max="8704" homemode="Goto" home="8028" speed="248" acceleration="25" neutral="6000" range="1905" />
+  </Channels>
+  <Sequences>
+    <Sequence name="Sequence 0">
+      <Frame name="Frame 0" duration="3000">1023 1023 1022 1021 762 9472</Frame>
+      <Frame name="Frame 1" duration="2000">1023 1023 1023 1021 759 7586</Frame>
+      <Frame name="Frame 2" duration="2000">1023 1023 1023 1023 763 5664</Frame>
+      <Frame name="Frame 3" duration="2000">1019 1023 1022 1023 760 3593</Frame>
+    </Sequence>
+  </Sequences>
+  <Script ScriptDone="false"># Servo Index &amp; Interval 
+# Up &amp; Down Counting
+# 3X resistance
+# 3x resistance distance
+# 3x recover distance
+# Version 2.100 JDH 11/19/12
+
+
+home:
+500 delay
+mag_off
+#Stack reset loop
+begin                     
+depth 0 greater_than while
+drop
+repeat
+0
+
+
+# When the script is not doing anything else,
+# this loop will listen for button presses.  When a button
+# is pressed it runs the corresponding sequence.
+begin
+  button_1 if goto home endif     #Reset/Home
+  button_4 if index_up endif      #Index magnet up
+  button_3 if index_down endif    #Index magnet down
+  button_2 if 500 delay           #Start Interval cycle
+			  led_off
+              button_2 logical_not if
+              set_resistance
+              set_resistance_miles
+              set_recover_miles
+              2 roll 3 roll 3 roll 3 roll # arrange stack
+              goto interval       #Interval cycle
+              endif
+              endif
+  photo_switch if led_on
+               else led_off
+               endif 
+repeat
+
+interval:
+    2000 delay 
+    begin
+     3 pick 3 pick 3 pick 3 pick  #copy stack
+     5 servo                      #servo to mag 0ff
+     delay_miles                  #delay recover distance
+    button_1 if goto home endif 
+     5 servo                      #servo to selected resistance
+     delay_miles                  #delay resistance distance
+    button_1 if goto home endif   #reset to mag off
+    repeat
+ 
+# These subroutines each return 1 if the corresponding
+# button is pressed, and return 0 otherwise.
+#Key fob button 1 channel 0 input
+#               2         1 input
+#               3         2 input
+#               4         3 input
+#Photo Sensor             4 input
+#Servo                    5 servo
+
+sub button_1
+  0 get_position 500 greater_than
+  return
+ 
+sub button_2
+  1 get_position 500 greater_than
+  return
+ 
+sub button_3
+  2 get_position 500 greater_than
+  return
+
+sub button_4
+  3 get_position 500 greater_than
+  return
+
+sub photo_switch
+  4 get_position 680 less_than
+  return
+
+sub calibrate
+1300 4 times
+return
+
+sub pos_0
+  calibrate 3228 plus
+return
+
+sub pos_1
+  calibrate 110 minus
+return
+
+sub pos_2
+  calibrate 600 minus
+return
+
+sub pos_3
+   calibrate 2404 minus
+return
+
+# These subroutines each perform an arbitrary sequence
+# of servo movements. Currently these settings are matched
+# for each servo/arm set.
+
+sub mag_3
+    pos_3 5 servo
+    return
+
+sub mag_2
+    pos_2 5 servo
+    return
+
+sub mag_1
+    pos_1 5 servo
+    return
+
+sub mag_off
+    pos_0 5 servo
+    return
+
+sub waggle_1
+    mag_1 1000 delay mag_off 1000 delay
+    return
+
+sub waggle_2
+    mag_2 1000 delay mag_off 1000 delay
+    return
+
+sub waggle_3
+    mag_3 1000 delay mag_off 1000 delay
+    return
+
+sub index_up
+       500 delay
+       button_4 if return
+      else
+       1 plus dup dup dup dup dup
+       0 equals  if mag_off endif
+       1 equals  if mag_1 endif
+       2 equals  if mag_2 endif
+       3 equals  if mag_3 endif
+       4 equals  if 1 minus endif
+      return endif
+
+  sub index_down
+       500 delay
+       button_3 if return
+      else
+       1 minus dup dup dup dup dup
+       0 equals  if mag_off endif
+       1 equals  if mag_1 endif
+       2 equals  if mag_2 endif
+       3 equals  if mag_3 endif
+      -1 equals if 1 plus endif
+       return endif
+ 
+  sub set_resistance
+       begin
+       button_2 if
+                500 delay
+       button_2 logical_not if
+                waggle_1
+                pos_1 return endif endif
+       button_3 if
+                500 delay
+       button_3 logical_not if
+                waggle_2
+                pos_2 return endif endif 
+       button_4 if
+                500 delay
+       button_4 logical_not if
+                waggle_3
+                pos_3 return endif endif
+       button_1 if goto home endif 
+       repeat
+       return
+
+   sub set_resistance_miles # Sets distance in .01 miles
+       begin
+       button_2 if
+                500 delay
+       button_2 logical_not if
+                waggle_1
+                15 return endif endif
+       button_3 if
+                500 delay
+       button_3 logical_not if
+                waggle_2
+                25 return endif endif 
+       button_4 if
+                500 delay
+       button_4 logical_not if
+                waggle_3
+                50 return endif endif
+       button_1 if goto home endif 
+       repeat
+       return
+
+   sub set_recover_miles   # Sets distance in .01 miles
+       begin
+       button_2 if
+                500 delay
+       button_2 logical_not if
+                waggle_1
+                15 pos_0 return endif endif
+       button_3 if
+                500 delay
+       button_3 logical_not if
+                waggle_2
+                25 pos_0 return endif endif
+       button_4 if
+                500 delay
+       button_4 logical_not if
+                waggle_3
+                50 pos_0 return endif endif     
+       button_1 if goto home endif 
+       repeat
+       return
+
+
+# delay by a specified number of counts
+   sub delay_counts
+	       begin dup while
+	                 1 minus dup photo_trigger
+       button_1 if drop return endif
+       repeat
+       drop return
+
+# delay by specified number of .01 miles, 144 counts per .01 mile
+   sub delay_miles
+       begin dup while
+                1 minus 144 delay_counts
+               # 1 minus 2 delay_counts
+       button_1 if return endif
+       repeat
+       drop return
+
+   sub photo_trigger
+       photo_open:
+       begin
+       photo_switch logical_not if goto photo_closed endif
+       button_1 if return endif 
+       repeat
+       photo_closed:
+       begin
+       button_1 if return endif
+       photo_switch if drop return endif
+       repeat
+
+       return
+
+
+</Script>
+</UscSettings>
