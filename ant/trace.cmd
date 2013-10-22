@@ -1,6 +1,7 @@
 
 @REM INSTRUCTIONS HERE: http://msdn.microsoft.com/en-us/library/windows/hardware/hh451296(v=vs.85).aspx
-
+@REM then apply this filter
+@REM USBPort.USBPORT_ETW_EVENT_COMPLETE_URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER_DATA
 echo off
 @REM ---------------------------------------------------------------------------------------
 @REM UNCOMMENT THE LOGMAN COMMANDS FOR THE FOLLOWING PROVIDERS AS REQUIRED
