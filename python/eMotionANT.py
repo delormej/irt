@@ -6,7 +6,7 @@
 #
 import struct, array
 from antprotocol.bases import GarminANT
-from antprotocol.protocol import log
+from antprotocol.protocol import log,hexRepr
 from eMotion import Power,Resistance
 
 #
@@ -67,12 +67,14 @@ class eMotionANT(GarminANT):
 	def _openPowerChannel(self):
 		self._powerEvents = 0
 		channelId = 1
+
+		# transmission type = 0xA5 for KCKR, 0x5 for normal power meter.
 		val = self._openChannel(channelId, \
 			channelType=0x10, \
 			deviceType=0x0B, \
 			frequency=0x39, \
 			period=[0xF6,0X1F], \
-			transmissionType=0x05, \
+			transmissionType=0xA5, \
 			deviceNumber=[0x64,0x00])  #dummy device number
 
 		# data page number
@@ -163,6 +165,8 @@ class eMotionANT(GarminANT):
 		powerChannel = self._openPowerChannel()
 		resistance = Resistance()
 
+		burstState = False
+
 		while True:
 			msg = self._receive_message()
 			# 0 length message normally indicates time out, no messages available.
@@ -178,6 +182,11 @@ class eMotionANT(GarminANT):
 
 			# is this a broadcast message?
 			msgId = msg[INDEX_MESG_ID]
+			if (burstState == True and msgId != 0x50):
+				# acknowledge the burst
+				self._send_message(0x4f, powerChannel, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+				burstState = False
+
 			if msgId == MESG_BROADCAST_DATA_ID:
 				if msg[INDEX_CHANNEL_NUM] == speedChannel:
 					speed_page = Speed_Page0(msg)
@@ -194,6 +203,13 @@ class eMotionANT(GarminANT):
 				elif msg[INDEX_CHANNEL_NUM] == powerChannel:
 					pass
 					# respond to power related events.
+			elif msgId == 0x50:
+				# Burst data
+				print "**********************************************"
+				print "Received burst data: " + hexRepr(msg)
+				# while msgId = 0x50 read in the response
+				if burstState == False:
+					burstState = True
 			elif msgId == MESG_RESPONSE_EVENT_ID:
 				pass
 
