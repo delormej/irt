@@ -165,7 +165,7 @@ class eMotionANT(GarminANT):
 		powerChannel = self._openPowerChannel()
 		resistance = Resistance()
 
-		burstState = False
+		burst_resistance_state = False
 
 		while True:
 			msg = self._receive_message()
@@ -182,11 +182,6 @@ class eMotionANT(GarminANT):
 
 			# is this a broadcast message?
 			msgId = msg[INDEX_MESG_ID]
-			if (burstState == True and msgId != 0x50):
-				# acknowledge the burst
-				self._send_message(0x4f, powerChannel, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-				burstState = False
-
 			if msgId == MESG_BROADCAST_DATA_ID:
 				if msg[INDEX_CHANNEL_NUM] == speedChannel:
 					speed_page = Speed_Page0(msg)
@@ -203,17 +198,30 @@ class eMotionANT(GarminANT):
 				elif msg[INDEX_CHANNEL_NUM] == powerChannel:
 					pass
 					# respond to power related events.
-			elif msgId == 0x50:
-				# Burst data
+			elif msgId == MESG_BURST_DATA_ID:
 				print "**********************************************"
-				print "Received burst data: " + hexRepr(msg)
-				# while msgId = 0x50 read in the response
-				if burstState == False:
-					burstState = True
-			elif msgId == MESG_RESPONSE_EVENT_ID:
-				pass
+				print "Received burst data! "
+				# Received a resistance kckr request.
+				seq = msg[3]
+				if seq == 0x01 and msg[4] == 0x48:
+					burst_resistance_state = True
+					print "Setting resistance mode: " + str(msg[5])
+					resistance.setMode(msg[5])
+				elif seq == 0x21:
+					pass
+				elif seq == 0xC1 and burst_resistance_state == True:
+					# 3rd message and the one that contains the level.
+					burst_resistance_state = False # reset flag
+					print "Acknowledging..."
+					# acknowledge the burst
+					self._send_message(0x4f, powerChannel, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+					# set the power
+					resistance.setLevel(msg[4:5])
 
 			"""
+            elif msgId == MESG_RESPONSE_EVENT_ID:
+				pass
+			
 			#TODO: implement this in the future
 			if self.device_number == 0:
 				# request message to get below

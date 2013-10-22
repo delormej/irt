@@ -13,6 +13,10 @@ from antprotocol.protocol import ANTReceiveException
 
 from array import *
 
+RESISTANCE_MODE_PERCENT = 0x40
+RESISTANCE_MODE_STANDARD = 0x41
+RESISTANCE_MODE_ERG = 0x42
+
 class Power(object):
 	#
 	# Class that is responsible for reading & calculating power, storing state about last power.
@@ -49,6 +53,7 @@ class Resistance(object):
 	# Use the servo control class Maestro.
 	#
 	def __init__(self):
+		self._mode = RESISTANCE_MODE_STANDARD
 		self._positionToLevel = \
 			{ 8428:0,
 			5090:1,
@@ -61,6 +66,11 @@ class Resistance(object):
 		self.servo.open()
 		
 	def setLevel(self, level):
+		if self._mode == RESISTANCE_MODE_STANDARD:
+			level = level[0] # first byte
+		elif self._mode == RESISTANCE_MODE_PERCENT:
+			return # unsupported 
+
 		# ideally this should be a value between 0 and 9, but it's only 3 right now.
 		if level <0 or level >3:
 			raise "Value must be between 0 and 3"
@@ -77,6 +87,9 @@ class Resistance(object):
 		position = self.servo.getPosition()
 		level = self._positionToLevel[position]
 		return level
+
+	def setMode(self, mode):
+		self._mode = mode
 
 	def __del__(self):
 		self.servo.close()
