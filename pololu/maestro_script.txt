@@ -7,9 +7,10 @@
 
 begin
   0 button if 8428 set_target endif
-  1 button if 5090 set_target endif
+  #1 button if 5090 set_target endif
   2 button if 4600 set_target endif
   3 button if 2796 set_target endif
+  photo_trigger increment
 repeat
  
 # These subroutines each return 1 if the corresponding
@@ -25,3 +26,24 @@ sub set_target
   5 servo 
   return
    
+sub increment
+	  1 get_position 1 plus
+	  dup
+	  13119 greater_than if 0 endif
+	  1 servo
+	  return
+
+sub photo_trigger
+    photo_open:
+		begin
+			photo_switch logical_not if goto photo_closed endif
+		repeat
+    photo_closed:
+		begin
+			photo_switch if return endif
+		repeat
+    return
+
+sub photo_switch
+  4 get_position 680 less_than
+  return
