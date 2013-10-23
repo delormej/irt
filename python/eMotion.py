@@ -6,125 +6,31 @@
 #
 
 import sys, time, usb
-from maestro import *
-from eMotionANT import *
 from antprotocol.bases import GarminANT
 from antprotocol.protocol import ANTReceiveException
+from profile import *
+from eMotionANT import *
+from speed import *
+from power import *
+from resistance import *
+from maestro import *
 
-from array import *
-
-RESISTANCE_MODE_PERCENT = 0x40
-RESISTANCE_MODE_STANDARD = 0x41
-RESISTANCE_MODE_ERG = 0x42
-
-class Power(object):
-	#
-	# Class that is responsible for reading & calculating power, storing state about last power.
-	#
-	def __init__(self, weight):
-		self.weight = weight
-		self.last_power = 0
-		self.slope = { 1: 2.6, 2: 7.1, 3: 11.0 }
-		self.intercept = { 1: -9.60, 2: -29.99, 3: -13.34 }
-
-	def calcWatts(self, speed, level):
-		watts = 0
-
-		if speed == 0:
-			return watts
-
-		# calculates current power output based on speed and level
-		level0 = (speed*14.04-33.6)-(((speed*14.04-33.06)-(speed*8.75-16.21))/90)*(220-self.weight)
-		
-		if level == 0:
-			watts = level0
-		else:
-			watts = level0 + speed * self.slope[level] + self.intercept[level]
-
-		# never return less than 0
-		if watts < 0:
-			watts = 0
-
-		return watts
-
-class Resistance(object):
-	#
-	# Class that is responsible for calculating resistance settings, sending/reading messages to servo control and storing state.
-	# Use the servo control class Maestro.
-	#
-	def __init__(self):
-		self._mode = RESISTANCE_MODE_STANDARD
-		self._positionToLevel = \
-			{ 8428:0,
-			5090:1,
-			4600:2,
-			2796:3 }
-
-		# inverse level to position mapping
-		self._levelToPosition = { v:k for k, v in self._positionToLevel.items() } 
-		self.servo = Maestro()
-		self.servo.open()
-		
-	def setLevel(self, level):
-		if self._mode == RESISTANCE_MODE_STANDARD:
-			level = level[0] # first byte
-		elif self._mode == RESISTANCE_MODE_PERCENT:
-			return # unsupported 
-
-		# ideally this should be a value between 0 and 9, but it's only 3 right now.
-		if level <0 or level >3:
-			raise "Value must be between 0 and 3"
-			
-		try:
-			position = self._levelToPosition[level]
-		except:
-			raise "Failed to find a valid servo position for level " + level + "."
-
-		self.servo.setTarget(position)
-
-	def getLevel(self):
-		# returns the current level
-		position = self.servo.getPosition()
-		level = self._positionToLevel[position]
-		return level
-
-	def setMode(self, mode):
-		self._mode = mode
-
-	def __del__(self):
-		self.servo.close()
-
-class Profile(object):
-	# 
-	# Class that is responsible for requesting, reading and storing state of user profile.
-	#
-	def __init__(self):
-		# combined rider and bicycle weight in lbs.
-		self.weight = 0
-		# wheel circumference in meters
-		self.wheel_size=2.07
-
+#
+# Test / Main method
+#
 def main():
 
 	try:
 		profile = Profile()
 		profile.weight = 175 # sample data
-				
-		ant = eMotionANT(profile, debug=True)
-		ant.start()
-	
-		return 0
-		#
-		# unreachable
-		#
+		maestro = Maestro()
+		#speed = MaestroSpeed(maestro)		# could be ANTSpeed or BTSpeed in future
+		speed = ANTSpeed(profile.wheel_size)
+		power = Power(profile.weight)		# could be a BT power in future
+		resistance = Resistance(maestro)	# could be a BTResistance in future
 
-		# test power calculations
-		# 
-
-
-		speed = Speed()
-		speed.last_speed = 16.9 # sample data
-
+		emotion = eMotionANT(maestro, speed, power, resistance, debug=True)	
+		emotion.start()
 	
 	except KeyboardInterrupt:
 		print "Thank you for playing."

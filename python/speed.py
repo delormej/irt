@@ -1,4 +1,12 @@
-import time
+#!/usr/bin/env python
+#################################################################
+# 
+# By Jason De Lorme <jjdelorme@yahoo.com>
+# http://www.roadacious.com
+#
+
+import time, sys
+from ant_define import *
 from maestro import *
 
 TICK_CHANNEL=1
@@ -6,18 +14,23 @@ TICK_ROLLOVER = 13120
 TICKS_PER_01 = 144.0	# 144 ticks per 0.01 miles
 MS_IN_HOUR = 3600.0
 
-class speed(object):
+# ----------------------------------------------------------------------------
+#
+# Class responsible for reading and calculating speed based on ticks recorded 
+# on the maestro device.
+#
+# ----------------------------------------------------------------------------
+class MaestroSpeed(object):
 
-	def __init__(self):
+	def __init__(self, maestro):
 		self._last_time_ms = 0	# last reading in milliseconds
 		self._last_count = 0	# last tick count, 144 ticks = 0.01 miles
-		self._maestro = Maestro()
-		self._maestro.open()
+		self._maestro = maestro
 
 	def __del__(self):
-		self._maestro.close()
+		pass
 	
-	def get_speed(self):
+	def get_mph(self):
 		count_delta = 0
 		time_delta = 0
 		count = self._get_count()
@@ -54,6 +67,67 @@ class speed(object):
 	def _get_time_ms(self):
 		return time.time()
 
+# ----------------------------------------------------------------------------
+#
+# Class responsible for calculating speed from ANT messages.
+#
+# ----------------------------------------------------------------------------
+class ANTSpeed(object):
+	#
+	# Reads speed messages and stores state about last speed.
+	#
+	def __init__(self, wheel_size, debug=False):
+		self._wheel_size = wheel_size
+		self._lastTime = 0
+		self._cumulativeRevCount = 0
+		self._last_mph = 0
+
+	def get_mph(self, msg):
+		page = Speed_Page0(msg)
+
+		if page.time == self._lastTime or page.revs < self._cumulativeRevCount:
+			return self._last_mph
+
+		mph = 0.0
+
+		# for the very first call, just store, don't calc.
+		if self._lastTime > 0:
+			# caclulate speed
+			mph = self._calc_speed(page.time, page.revs)
+			self._last_mph = mph
+
+		# store for next call
+		self._lastTime = page.time 
+		self._cumulativeRevCount = page.revs
+
+		if mph < 0.0:
+			mph = 0.0
+
+		return mph
+
+	def _calc_speed(self, time, revs):
+		meters_per_sec = (self._wheel_size * (revs - self._cumulativeRevCount) * 1024)/ \
+			(time - self._lastTime)
+		
+		# convert to mp/h
+		mph = meters_per_sec * 2.23693629 
+		return mph
+
+# ----------------------------------------------------------------------------
+#
+# Helper object for working with the ANT speed page0 data.
+#
+# ----------------------------------------------------------------------------
+class Speed_Page0(object):
+	
+	def __init__(self, msg):
+		page = msg[INDEX_MESG_DATA+1:len(msg)-1]
+		self.time = int(page[4])
+		self.time |= int(page[5]) << 8
+		self.revs = int(page[6])
+		self.revs |= int(page[7]) << 8
+
+# test harness method
 def _test(self):
 	s = speed()
 	while True:
