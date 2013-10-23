@@ -4,7 +4,7 @@
 # By Jason De Lorme <jjdelorme@yahoo.com>
 # 
 
-import serial, time, struct
+import serial, time, struct, threading
 
 SET_TARGET_COMMAND=0x84
 GET_POSITION_COMMAND=0x90
@@ -20,6 +20,8 @@ class Maestro(serial.Serial):
 	def __init__(self, port="/dev/ttyACM0", baudrate=9600, channel=0x05, timeout=1, debug=False):
 		super(Maestro, self).__init__(port=port, baudrate=baudrate, timeout=timeout)
 		self.channel = channel
+		
+		self._lock = threading.Lock()
 
 	def __del__(self):
 		self.close()
@@ -71,13 +73,15 @@ class Maestro(serial.Serial):
 	# Threadsafe read implementation
 	#
 	def read(self, count):
-		return super(Maestro, self).read(count)
+		with self._lock:
+			return super(Maestro, self).read(count)
 
 	#
 	# Threadsafe write implementation
 	#
 	def write(self, message):
-		return super(Maestro, self).write(message)
+		with self._lock:
+			return super(Maestro, self).write(message)
 
 # simple test harness to walk through the various steps.
 def _test(port="/dev/ttyACM0", channel=0x05):
