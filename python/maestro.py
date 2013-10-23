@@ -37,15 +37,10 @@ class Maestro(object):
 		else:
 			raise "ERROR Could not determine if servo was moving."		
 
-	def getPosition(self):
-		# let the servo finish moving if it is
-		while self.isMoving():
-			# wait just a 1/2 second and try again
-			time.sleep(0.5)
-
+	def getFastPosition(self, channel):
 		self.s.write( \
 			chr(GET_POSITION_COMMAND) + \
-			chr(self.channel))
+			chr(channel))
 
 		r = self.s.read(2)
 		if r is not None:
@@ -54,6 +49,14 @@ class Maestro(object):
 			return None
 		
 		return pos[0]
+
+	def getPosition(self):
+		# let the servo finish moving if it is
+		while self.isMoving():
+			# wait just a 1/2 second and try again
+			time.sleep(0.5)
+
+		return getFastPosition(self.channel)
 
 	def setTarget(self, position):
 		low = position&0x7f
