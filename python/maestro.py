@@ -67,6 +67,18 @@ class Maestro(serial.Serial):
 			chr(low) + \
 			chr(high))
 
+	#
+	# Threadsafe read implementation
+	#
+	def read(self, count):
+		return super(Maestro, self).read(count)
+
+	#
+	# Threadsafe write implementation
+	#
+	def write(self, message):
+		return super(Maestro, self).write(message)
+
 # simple test harness to walk through the various steps.
 def _test(port="/dev/ttyACM0", channel=0x05):
 	m = Maestro(port=port, channel=channel)
