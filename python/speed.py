@@ -8,6 +8,7 @@
 import time, sys
 from ant_define import *
 from maestro import *
+from antprotocol.protocol import log
 
 TICK_CHANNEL=1
 TICK_ROLLOVER = 13120
@@ -22,7 +23,8 @@ MS_IN_HOUR = 3600.0
 # ----------------------------------------------------------------------------
 class MaestroSpeed(object):
 
-	def __init__(self, maestro):
+	def __init__(self, maestro, debug=False):
+		self._debug = debug
 		self._last_time_ms = 0	# last reading in milliseconds
 		self._last_count = 0	# last tick count, 144 ticks = 0.01 miles
 		self._maestro = maestro
@@ -30,6 +32,7 @@ class MaestroSpeed(object):
 	def __del__(self):
 		pass
 	
+	@log
 	def get_mph(self):
 		count_delta = 0
 		time_delta = 0

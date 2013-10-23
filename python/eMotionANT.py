@@ -8,7 +8,7 @@ from ant_define import *
 from speed import *
 from antprotocol.bases import GarminANT
 from antprotocol.protocol import log
-import array
+import array, threading, time
 
 # ----------------------------------------------------------------------------
 #
@@ -54,12 +54,13 @@ class eMotionANT(GarminANT):
 	# MaestroSpeed.  This isn't used if reading ANTSpeed.
 	#
 	def _start_speed_thread(self):
-		pass
+		threading.Thread(target=self._process_speed).start()
 
 	#
 	# Initializes ANT by opening, reseting, sending network key and opening the 
 	# speed and power channels.
 	#
+	@log
 	def _init_ant(self):
 		self.open()
 		self.reset()   
@@ -99,6 +100,16 @@ class eMotionANT(GarminANT):
 	def _process_speed_message(self, msg):
 		mph = self._speed.get_mph(msg)
 		self._calc_power(mph)
+
+	#
+	# Gets speed from Maestro and calculates power.
+	#
+	@log
+	def _process_speed(self):
+		while True:
+			mph = self._speed.get_mph()
+			self._calc_power(mph)
+			time.sleep(0.02)
 
 	#
 	# Reads mag resistance level, calculates power from speed and sends ANT power message.
