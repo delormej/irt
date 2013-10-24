@@ -67,7 +67,7 @@ class eMotionANT(GarminANT):
 		self.open()
 		self.reset()   
 		self.send_network_key(0, ANT_NETWORK_KEY)
-		self._openSpeedCadenceChannel()
+		#self._openSpeedCadenceChannel()
 		self._openPowerChannel()
 		print "Connected to ANT+"
 
@@ -111,12 +111,12 @@ class eMotionANT(GarminANT):
 	@log
 	def _process_maestro(self):
 		# wait a little bit before we start looping.
-		time.sleep(5)
+		time.sleep(3)
 
 		while self._closing == False:
 			mph = self._process_speed()		
 			self._process_power(mph)
-			time.sleep(0.2)
+			time.sleep(0.5)
 
 	def _process_speed(self):
 		# TODO - this state, etc.. should be moved to the speed module.
@@ -130,9 +130,11 @@ class eMotionANT(GarminANT):
 		else:
 			self._cum_wheel_revs += wheel_revs
 
-		event_time = ((int)(time.time() * 1024)) & 0x0000FFFF
-
-		self._transmit_speed(event_time, self._cum_wheel_revs)
+		#event_time = ((int)(time.time() * 1024)) & 0x0000FFFF
+		event_time = ((int)(time.time() * 2048)) & 0x0000FFFF
+		wheel_ticks = ((int)(wheel_revs) & 0x000000FF)
+		
+		#self._transmit_torque(wheel_ticks, event_time)
 		mph = self._speed.get_mph(servo_revs)
 		
 		return mph
@@ -148,7 +150,7 @@ class eMotionANT(GarminANT):
 
 		level = self._resistance.getLevel()
 		watts = self._power.calcWatts(mph, level)
-		self._transmitPower(watts)
+		self._transmit_power(watts)
 
 	@log
 	def _openSpeedChannel(self):
@@ -197,7 +199,7 @@ class eMotionANT(GarminANT):
 	# Send ANT+ Power
 	#
 	@log
-	def _transmitPower(self, watts):
+	def _transmit_power(self, watts):
 		accumPower = self._accumPower + watts
 
 		# roll over 
@@ -239,6 +241,26 @@ class eMotionANT(GarminANT):
 			RESERVED, \
 			event_time, \
 			cumulative_revs) 
+		
+		self._send_message(array.array('B', msg).tolist())
+
+	#
+	# Used to send speed data along with power.  It lives on the torque page.
+	#
+	def _transmit_torque(self, wheel_revs, time_period):
+		cadence = 0xFF
+		accum_torque = 0
+		event_count = self._powerEventCount & 0x000000FF
+
+		msg = struct.pack('@BBBBBBHH', \
+			MESG_BROADCAST_DATA_ID, \
+			ANT_POWER_CHANNEL, \
+			POWER_TORQUE_PAGE, \
+			wheel_revs, \
+			event_count, \
+			cadence, \
+			time_period, \
+			accum_torque)
 		
 		self._send_message(array.array('B', msg).tolist())
 

@@ -14,6 +14,8 @@ RESISTANCE_MODE_PERCENT = 0x40
 RESISTANCE_MODE_STANDARD = 0x41
 RESISTANCE_MODE_ERG = 0x42
 
+from antprotocol.protocol import log
+
 # ----------------------------------------------------------------------------
 #
 # Class responsible for getting / setting mag resistance.
@@ -24,7 +26,8 @@ class Resistance(object):
 	# Class that is responsible for calculating resistance settings, sending/reading messages to servo control and storing state.
 	# Use the servo control class Maestro.
 	#
-	def __init__(self, servo):
+	def __init__(self, servo, debug=False):
+		self._debug = debug
 		self.servo = servo
 		self._mode = RESISTANCE_MODE_STANDARD
 		self._positionToLevel = \
@@ -38,7 +41,8 @@ class Resistance(object):
 
 	def __del__(self):
 		pass
-		
+	
+	@log
 	def setLevel(self, level):
 		if self._mode == RESISTANCE_MODE_STANDARD:
 			level = level[0] # first byte

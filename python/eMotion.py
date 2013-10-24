@@ -27,13 +27,14 @@ def main():
 		speed = MaestroSpeed(maestro, profile.wheel_size, debug=True)		# could be ANTSpeed or BTSpeed in future
 		#speed = ANTSpeed(profile.wheel_size)
 		power = Power(profile.weight)		# could be a BT power in future
-		resistance = Resistance(maestro)	# could be a BTResistance in future
+		resistance = Resistance(maestro, debug=True)	# could be a BTResistance in future
 
-		emotion = eMotionANT(maestro, speed, power, resistance, debug=False)	
+		emotion = eMotionANT(maestro, speed, power, resistance, debug=True)	
 		emotion.start()
 	
 	except KeyboardInterrupt:
-		emotion._closing = True # hack for now to see if we can shutdown the thread
+		if emotion is not None:
+			emotion._closing = True # hack for now to see if we can shutdown the thread
 		print "Thank you for playing."
 		return 0
 

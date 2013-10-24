@@ -5,6 +5,7 @@
 # http://www.roadacious.com
 #
 
+from antprotocol.protocol import log
 
 # ----------------------------------------------------------------------------
 #
@@ -15,7 +16,8 @@ class Power(object):
 	#
 	# Class that is responsible for reading & calculating power, storing state about last power.
 	#
-	def __init__(self, weight):
+	def __init__(self, weight, debug=True):
+		self._debug = debug
 		self.weight = weight
 		self.slope = { 1: 2.6, 2: 7.1, 3: 11.0 }
 		self.intercept = { 1: -9.60, 2: -29.99, 3: -13.34 }
@@ -23,6 +25,7 @@ class Power(object):
 	#
 	# Calculates wattage based on eMotion curve.
 	#
+	@log
 	def calcWatts(self, speed, level):
 		watts = 0
 

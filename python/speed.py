@@ -85,7 +85,7 @@ class MaestroSpeed(object):
 
 		 0.01 miles : 144 s_revs 
 		 0.01 miles = 16.09344 meters
-		 1 s_rev = 0.11176 distance_meters
+		 1 servo_rev = 0.11176 distance_meters
 
 		 This assumes a 2.07m wheel circumference. If different, we need to change.
 		"""

@@ -340,7 +340,8 @@ class ANT(object):
                 continue
             self._receiveBuffer = data[l:]
             if self._debug:
-                print "received: " + hexRepr(p)
+                #print "received: " + hexRepr(p)
+				pass
             return p
 
     def _receive(self, size=4096):
