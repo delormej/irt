@@ -27,29 +27,37 @@ class Maestro(serial.Serial):
 		self.close()
 
 	def isMoving(self):
-		# make sure it's not moving before you check the position.
-		self.write( \
-			chr(GET_MOVING_STATE_COMMAND))
+		try:
+			# make sure it's not moving before you check the position.
+			self.write( \
+				chr(GET_MOVING_STATE_COMMAND))
 
-		r = self.read(1)
-		if r is not None:
-			val = struct.unpack('?', r)
-			return val[0]
-		else:
-			raise "ERROR Could not determine if servo was moving."		
+			r = self.read(1)
+			if r is not None:
+				val = struct.unpack('?', r)
+				return val[0]
+			else:
+				raise "ERROR Could not determine if servo was moving."		
+		except Exception as e:
+			print str(e)
+			return False
 
 	def getFastPosition(self, channel):
-		self.write( \
-			chr(GET_POSITION_COMMAND) + \
-			chr(channel))
+		try:
+			self.write( \
+				chr(GET_POSITION_COMMAND) + \
+				chr(channel))
 
-		r = self.read(2)
-		if r is not None:
-			pos = struct.unpack('h', r)
-		else:
-			return None
+			r = self.read(2)
+			if r is not None:
+				pos = struct.unpack('h', r)
+			else:
+				return None
 		
-		return pos[0]
+			return pos[0]
+		except Exception as e:
+			print "ERROR - getFastPosition: " + str(e)
+			return 0
 
 	def getPosition(self):
 		# let the servo finish moving if it is

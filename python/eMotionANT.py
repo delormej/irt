@@ -26,6 +26,7 @@ class eMotionANT(GarminANT):
 		self._power = power
 		self._resistance = resistance
 		self._use_maestro_speed = (speed.__class__ == MaestroSpeed) # polymorphism hack
+		self._cum_wheel_revs = 0
 		self._init_ant()
 
 	def __del__(self):
@@ -55,7 +56,7 @@ class eMotionANT(GarminANT):
 	#
 	def _start_speed_thread(self):
 		self._closing = False
-		threading.Thread(target=self._process_speed).start()
+		threading.Thread(target=self._process_maestro).start()
 
 	#
 	# Initializes ANT by opening, reseting, sending network key and opening the 
@@ -97,28 +98,54 @@ class eMotionANT(GarminANT):
 				self._resistance.setLevel(msg[4:5])
 
 	# 
-	# Handles speed message, calculates power and dispatches the ANT message.
+	# Handles ANT speed message, calculates power and dispatches the ANT message.
 	#
 	def _process_speed_message(self, msg):
 		mph = self._speed.get_mph(msg)
-		self._generate_power(mph)
+		self._process_power(mph)
 
 	#
-	# Gets speed from Maestro and calculates power.
+	# Gets speed from Maestro, calculates power, sends speed and power ANT
+	# messages.
 	#
 	@log
-	def _process_speed(self):
+	def _process_maestro(self):
 		# wait a little bit before we start looping.
 		time.sleep(5)
+
 		while self._closing == False:
-			mph = self._speed.get_mph()
-			self._generate_power(mph)
+			mph = self._process_speed()		
+			self._process_power(mph)
 			time.sleep(0.2)
 
+	def _process_speed(self):
+		# TODO - this state, etc.. should be moved to the speed module.
+		servo_revs = self._speed.get_revs()
+		wheel_revs = self._speed.servo_to_wheel_revs(servo_revs)
+		
+		# Handle revs rollover.
+		if (self._cum_wheel_revs + wheel_revs) > WHEEL_REVS_ROLLOVER:
+			self._cum_wheel_revs = \
+				wheel_revs - (WHEEL_REVS_ROLLOVER - self._cum_wheel_revs)
+		else:
+			self._cum_wheel_revs += wheel_revs
+
+		event_time = ((int)(time.time() * 1024)) & 0x0000FFFF
+
+		self._transmit_speed(event_time, self._cum_wheel_revs)
+		mph = self._speed.get_mph(servo_revs)
+		
+		return mph
+
 	#
-	# Reads mag resistance level, calculates power from speed and sends ANT power message.
+	# Reads mag resistance level, calculates power from speed and sends ANT power
+	# messages.
 	#
-	def _generate_power(self, mph):
+	def _process_power(self, mph):
+		if mph == 0:
+			# do nothing if speed is 0
+			return
+
 		level = self._resistance.getLevel()
 		watts = self._power.calcWatts(mph, level)
 		self._transmitPower(watts)
