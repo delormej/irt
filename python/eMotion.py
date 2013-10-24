@@ -24,15 +24,16 @@ def main():
 		profile = Profile()
 		profile.weight = 175 # sample data
 		maestro = Maestro()
-		speed = MaestroSpeed(maestro, debug=False)		# could be ANTSpeed or BTSpeed in future
+		speed = MaestroSpeed(maestro, debug=True)		# could be ANTSpeed or BTSpeed in future
 		#speed = ANTSpeed(profile.wheel_size)
 		power = Power(profile.weight)		# could be a BT power in future
 		resistance = Resistance(maestro)	# could be a BTResistance in future
 
-		emotion = eMotionANT(maestro, speed, power, resistance, debug=True)	
+		emotion = eMotionANT(maestro, speed, power, resistance, debug=False)	
 		emotion.start()
 	
 	except KeyboardInterrupt:
+		emotion._closing = True # hack for now to see if we can shutdown the thread
 		print "Thank you for playing."
 		return 0
 

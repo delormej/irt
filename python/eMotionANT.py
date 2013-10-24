@@ -29,7 +29,7 @@ class eMotionANT(GarminANT):
 		self._init_ant()
 
 	def __del__(self):
-		pass
+		self._closing = True
 
 	#
 	# Main loop, reads messages and sends power data.
@@ -54,6 +54,7 @@ class eMotionANT(GarminANT):
 	# MaestroSpeed.  This isn't used if reading ANTSpeed.
 	#
 	def _start_speed_thread(self):
+		self._closing = False
 		threading.Thread(target=self._process_speed).start()
 
 	#
@@ -109,7 +110,7 @@ class eMotionANT(GarminANT):
 	def _process_speed(self):
 		# wait a little bit before we start looping.
 		time.sleep(5)
-		while True:
+		while self._closing == False:
 			mph = self._speed.get_mph()
 			self._generate_power(mph)
 			time.sleep(0.2)
