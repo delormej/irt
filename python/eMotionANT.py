@@ -67,6 +67,7 @@ class eMotionANT(GarminANT):
 		self.send_network_key(0, ANT_NETWORK_KEY)
 		self._openSpeedCadenceChannel()
 		self._openPowerChannel()
+		print "Connected to ANT+"
 
 	#
 	# Handles parsing of ANT messages and dispatching accordingly.
@@ -99,22 +100,24 @@ class eMotionANT(GarminANT):
 	#
 	def _process_speed_message(self, msg):
 		mph = self._speed.get_mph(msg)
-		self._calc_power(mph)
+		self._generate_power(mph)
 
 	#
 	# Gets speed from Maestro and calculates power.
 	#
 	@log
 	def _process_speed(self):
+		# wait a little bit before we start looping.
+		time.sleep(5)
 		while True:
 			mph = self._speed.get_mph()
-			self._calc_power(mph)
-			time.sleep(0.02)
+			self._generate_power(mph)
+			time.sleep(0.2)
 
 	#
 	# Reads mag resistance level, calculates power from speed and sends ANT power message.
 	#
-	def _calc_power(self, mph):
+	def _generate_power(self, mph):
 		level = self._resistance.getLevel()
 		watts = self._power.calcWatts(mph, level)
 		self._transmitPower(watts)
@@ -135,6 +138,9 @@ class eMotionANT(GarminANT):
 		self._powerEventCount = 0	# rolls over at 255
 		self._powerEvents = 0		# doesn't roll over, cumulative
 		self._accumPower = 0
+
+		# State required for sending speed message.
+		self._cumulative_revs = 0
 
 		return self._openChannel(ANT_POWER_CHANNEL, POWER_DEVICE_TYPE, \
 			POWER_FREQUENCY, POWER_MESSAGE_PERIOD, SPEED_TIME_OUT, \
@@ -177,8 +183,6 @@ class eMotionANT(GarminANT):
 		pedal = 0xFF
 		cadence = 0xFF
 
-		print "accumPower: " + str(accumPower) + " watts: " + str(watts)
-
 		msg = struct.pack('@BBBBBBHH', \
 			MESG_BROADCAST_DATA_ID, \
 			ANT_POWER_CHANNEL, \
@@ -193,6 +197,22 @@ class eMotionANT(GarminANT):
 		self._powerEvents+=1
 
 		self._transmitCommon()
+
+	#
+	# Returns the appropriate ANT message for reporting speed.
+	#
+	def _transmit_speed(self, event_time, cumulative_revs):
+		msg = struct.pack('@BBBBBBHH', \
+			MESG_BROADCAST_DATA_ID, \
+			ANT_POWER_CHANNEL, \
+			SPEED_PAGE_0, \
+			RESERVED, \
+			RESERVED, \
+			RESERVED, \
+			event_time, \
+			cumulative_revs) 
+		
+		self._send_message(array.array('B', msg).tolist())
 
 	#
 	# Sends required common messages for manufacturer and product.

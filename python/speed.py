@@ -79,7 +79,7 @@ class ANTSpeed(object):
 	#
 	# Reads speed messages and stores state about last speed.
 	#
-	def __init__(self, wheel_size, debug=False):
+	def __init__(self, wheel_size=0.0, debug=False):
 		self._wheel_size = wheel_size
 		self._lastTime = 0
 		self._cumulativeRevCount = 0
@@ -108,6 +108,9 @@ class ANTSpeed(object):
 
 		return mph
 
+	#
+	# Core speed calculation
+	#
 	def _calc_speed(self, time, revs):
 		meters_per_sec = (self._wheel_size * (revs - self._cumulativeRevCount) * 1024)/ \
 			(time - self._lastTime)
