@@ -5,7 +5,6 @@
 # 
 
 import serial, time, struct, threading
-from antprotocol.protocol import log
 
 SET_TARGET_COMMAND=0x84
 GET_POSITION_COMMAND=0x90
@@ -68,7 +67,6 @@ class Maestro(serial.Serial):
 
 		return self.getFastPosition(self.channel)
 
-	@log
 	def setTarget(self, position):
 		low = position&0x7f
 		high = position>>7
