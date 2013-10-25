@@ -34,6 +34,9 @@ class MaestroSpeed(object):
 		pass
 	
 	@log
+	#
+	# Returns miles per hour.
+	#
 	def get_mph(self, count=0):
 		try:
 			count_delta = 0
@@ -74,6 +77,24 @@ class MaestroSpeed(object):
 		except Exception as e:
 			print "ERROR: could not get speed: " + str(e)
 			return 0.0
+
+	#
+	# Converts miles per hour into meters per second.
+	#
+	def get_mps(self, mph):
+		return mph * 0.44704
+
+	#
+	# Calculates the current wheel period in 1/2048 seconds.
+	#
+	def get_wheel_period(self, mph):
+		if mph == 0:
+			return 0
+		
+		speed = self.get_mps(mph)
+		#  //(3600*2048/10)/100000 = 7.3728
+		currentWheelPeriod2048 = 7.3728 * self._wheel_size / speed
+		return currentWheelPeriod2048
 
 	# 
 	# Calculates the number of wheel revolutions based on servo revolutions.
@@ -164,6 +185,32 @@ class Speed_Page0(object):
 		self.time |= int(page[5]) << 8
 		self.revs = int(page[6])
 		self.revs |= int(page[7]) << 8
+
+# ----------------------------------------------------------------------------
+#
+# Mock object for testing.
+#
+# ----------------------------------------------------------------------------
+class MockMaestroSpeed(MaestroSpeed):
+
+	def __init__(self, maestro, wheel_size=0.0, debug=False):	
+		super(MockMaestroSpeed, self).__init__(maestro=maestro, wheel_size=wheel_size, debug=True)
+		self._last_time = 0	
+
+	@log
+	def get_revs(self):
+		if self._last_time == 0:
+			self._last_time = time.time()
+			return 1
+
+		# how long has it been in seconds? 
+		time_period = time.time() - self._last_time
+
+		# assume 18 mph
+		distance = (18.0 / 3600) * time_period
+		revs = (distance / 0.01) * 144
+
+		return (int)(revs)
 
 # test harness method
 def _test(self):
