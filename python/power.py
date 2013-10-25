@@ -16,7 +16,7 @@ class Power(object):
 	#
 	# Class that is responsible for reading & calculating power, storing state about last power.
 	#
-	def __init__(self, weight, debug=True):
+	def __init__(self, weight, debug=False):
 		self._debug = debug
 		self.weight = weight
 		self.slope = { 1: 2.6, 2: 7.1, 3: 11.0 }

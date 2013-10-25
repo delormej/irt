@@ -74,6 +74,7 @@ class eMotionANT(GarminANT):
 	#
 	# Handles parsing of ANT messages and dispatching accordingly.
 	#
+	@log
 	def _process_message(self, msg):
 		msgId = msg[INDEX_MESG_ID]
 		if msgId == MESG_BROADCAST_DATA_ID:
@@ -82,6 +83,7 @@ class eMotionANT(GarminANT):
 				self._process_speed_message(msg)
 
 		elif msgId == MESG_BURST_DATA_ID:
+			print "Processing burst."
 			seq = msg[3]
 			if seq == 0x01 and msg[4] == 0x48:
 				self._burst_resistance_state = True
@@ -92,10 +94,11 @@ class eMotionANT(GarminANT):
 
 			elif seq == 0xC1 and self._burst_resistance_state == True:
 				# 3rd message and the one that contains the level.
-				self._burst_resistance_state = False # reset flag
 				# acknowledge the burst 
 				self._send_message(0x4f, ANT_POWER_CHANNEL, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 				self._resistance.setLevel(msg[4:5])
+				self._burst_resistance_state = False 
+				print "SET RESISTANCE!"
 
 	# 
 	# Handles ANT speed message, calculates power and dispatches the ANT message.
@@ -134,11 +137,11 @@ class eMotionANT(GarminANT):
 		torque = self._process_torque(wheel_period, watts)
 
 		# Always send torque message.
-		self._transmit_torque(wheel_revs, wheel_period)
+		#self._transmit_torque(wheel_revs, wheel_period)
 
 		# Only transmit standard power message every 5th power message. 
-		if self._powerEvents % 5 == 0:
-			self._transmit_power(watts)
+		#if self._powerEvents % 5 == 0:
+		self._transmit_power(watts)
 
 		# Figures out which common message to submit at which time.
 		self._transmitCommon()
