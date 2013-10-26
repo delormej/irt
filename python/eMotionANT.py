@@ -227,16 +227,12 @@ class eMotionANT(GarminANT):
 	#
 	@log
 	def _transmit_power(self, watts):
-		accumPower = self._accumPower + watts
+		self._accumPower += watts
+		accumPower = (int)(self._accumPower) & 0x0000FFFF
 
-		# roll over 
-		if (self._standardPowerEvents >= 255 or accumPower >= 65535):
-			self._standardPowerEvents = 0
-			accumPower = watts
-
-		self._accumPower = accumPower
 		page_number = 0x10	# power-only message
 		self._standardPowerEvents+=1
+		events = (int)(self._standardPowerEvents) & 0x0000000F
 		pedal = 0xFF
 		cadence = 0xFF
 
@@ -244,11 +240,11 @@ class eMotionANT(GarminANT):
 			MESG_BROADCAST_DATA_ID, \
 			ANT_POWER_CHANNEL, \
 			page_number, \
-			self._standardPowerEvents, \
+			events, \
 			pedal, \
 			cadence, \
 			accumPower, \
-			watts) 
+			(int)(watts) & 0x0000FFFF) 
 		
 		self._send_message(array.array('B', msg).tolist())
 		self._powerEvents+=1

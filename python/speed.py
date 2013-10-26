@@ -56,7 +56,7 @@ class MaestroSpeed(object):
 				self._last_count = count
 				return 0.0
 
-			# if current count is less, a rollover occured
+			# if current count is less, a rollover on the maestro occured
 			if count < self._last_count:
 				count_delta = (TICK_ROLLOVER - self._last_count) + count
 			else:
