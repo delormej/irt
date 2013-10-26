@@ -6,6 +6,7 @@
 #
 from ant_define import *
 from speed import *
+from torque import *
 from antprotocol.bases import GarminANT
 from antprotocol.protocol import log
 import array, threading, time, math
@@ -24,9 +25,11 @@ class eMotionANT(GarminANT):
 		self._maestro = maestro
 		self._speed = speed
 		self._power = power
+		self._torque = Torque()
 		self._resistance = resistance
 		self._use_maestro_speed = True # (speed.__class__ == MaestroSpeed) # polymorphism hack
-		self._cum_wheel_revs = 0
+		self._last_time = 0
+
 		self._init_ant()
 
 	def __del__(self):
@@ -70,6 +73,19 @@ class eMotionANT(GarminANT):
 		#self._openSpeedCadenceChannel()
 		self._openPowerChannel()
 		print "Connected to ANT+"
+
+	@log
+	def _get_period(self):
+		current_time = time.time()
+
+		if self._last_time != 0:
+			period = (int)((current_time - self._last_time) * 2048.0)
+		else:
+			period = 0
+
+		self._last_time = current_time
+		# (int)(time.time()*2048) & 0x0000FFFF
+		return period
 
 	#
 	# Handles parsing of ANT messages and dispatching accordingly.
@@ -125,23 +141,25 @@ class eMotionANT(GarminANT):
 	#
 	@log
 	def _process_maestro(self):
+		period = self._get_period()
 		servo_revs = self._speed.get_revs()
-
-		wheel_revs = self._speed.servo_to_wheel_revs(servo_revs)
-		self._cum_wheel_revs += wheel_revs
-
+		wheel_revs = (int)(self._speed.servo_to_wheel_revs(servo_revs))
 		mph = self._speed.get_mph(servo_revs)
-		wheel_period = self._speed.get_wheel_period(mph)
+
+		if period == 0:
+		    return
 
 		watts = self._process_power(mph)
-		torque = self._process_torque(wheel_period, watts)
+		accum_torque = self._torque.process_torque(watts, period)
+		accum_period = self._torque.get_accum_period()
+		torque_events = self._torque.get_event_count()
 
 		# Always send torque message.
-		#self._transmit_torque(wheel_revs, wheel_period)
+		self._transmit_torque(accum_torque, accum_period, wheel_revs, torque_events)
 
 		# Only transmit standard power message every 5th power message. 
-		#if self._powerEvents % 5 == 0:
-		self._transmit_power(watts)
+		if self._powerEvents % 5 == 0:
+		    self._transmit_power(watts)
 
 		# Figures out which common message to submit at which time.
 		self._transmitCommon()
@@ -155,17 +173,6 @@ class eMotionANT(GarminANT):
 		watts = self._power.calcWatts(mph, level)
 
 		return watts
-
-	#
-	# Calculates torque based on watts and speed.
-	#
-	def _process_torque(self, wheel_period, watts):
-		currentTorque = (watts*wheel_period)/(128*math.pi)
-
-		self._accumTorque += currentTorque
-		self._accumWheelPeriod += wheel_period
-
-		return currentTorque
 
 	@log
 	def _openSpeedChannel(self):
@@ -206,7 +213,7 @@ class eMotionANT(GarminANT):
 		self.set_channel_frequency(channelId, frequency)
 		self.set_channel_period(channelId, period)
 		self.set_search_timeout(channelId, timeout)
-       
+
 		self.open_channel(channelId)
 
 		return channelId
@@ -261,10 +268,13 @@ class eMotionANT(GarminANT):
 	#
 	# Used to send speed data along with power.  It lives on the torque page.
 	#
-	def _transmit_torque(self, wheel_revs, time_period):
+	@log
+	def _transmit_torque(self, accum_torque, time_period, wheel_revs, events):
 		cadence = 0xFF
-		event_count = (int)(self._torqueEvents) & 0x000000FF
+		event_count = (int)(events) & 0x000000FF
 		wheel_ticks = (int)(wheel_revs) & 0x000000FF
+		torque = (int)(accum_torque) & 0x0000FFFF
+		period = (int)(time_period) & 0x0000FFFF
 
 		msg = struct.pack('@BBBBBBHH', \
 			MESG_BROADCAST_DATA_ID, \
@@ -273,12 +283,11 @@ class eMotionANT(GarminANT):
 			wheel_ticks, \
 			event_count, \
 			cadence, \
-			time_period, \
-			self._accumTorque)
+			period, \
+			torque)
 		
 		self._send_message(array.array('B', msg).tolist())
 		self._powerEvents+=1
-		self._torqueEvents+=1
 
 	#
 	# Sends required common messages for manufacturer and product.

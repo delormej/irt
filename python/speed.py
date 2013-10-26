@@ -32,7 +32,7 @@ class MaestroSpeed(object):
 
 	def __del__(self):
 		pass
-	
+
 	@log
 	#
 	# Returns miles per hour.
@@ -83,18 +83,6 @@ class MaestroSpeed(object):
 	#
 	def get_mps(self, mph):
 		return mph * 0.44704
-
-	#
-	# Calculates the current wheel period in 1/2048 seconds.
-	#
-	def get_wheel_period(self, mph):
-		if mph == 0:
-			return 0
-		
-		speed = self.get_mps(mph)
-		#  //(3600*2048/10)/100000 = 7.3728
-		currentWheelPeriod2048 = 7.3728 * self._wheel_size / speed
-		return currentWheelPeriod2048
 
 	# 
 	# Calculates the number of wheel revolutions based on servo revolutions.
