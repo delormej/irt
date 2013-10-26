@@ -34,6 +34,7 @@ class eMotionANT(GarminANT):
 
 	def __del__(self):
 		self._closing = True
+		self.close_channel(ANT_POWER_CHANNEL)
 
 	#
 	# Main loop, reads messages and sends power data.
@@ -41,7 +42,7 @@ class eMotionANT(GarminANT):
 	def start(self):
 		if self._use_maestro_speed:
 			self._start_speed_thread()
-			
+            			
 		# state maintained for reading sequence burst messages.
 		self._burst_resistance_state = False
 
@@ -161,7 +162,7 @@ class eMotionANT(GarminANT):
 		self._transmit_torque(accum_torque, accum_period, wheel_revs, torque_events)
 
 		# Only transmit standard power message every 5th power message. 
-		if self._powerEvents % 5 == 0:
+		if self._powerEvents % 4 == 0:
 		    self._transmit_power(watts)
 
 		# Figures out which common message to submit at which time.
