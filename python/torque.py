@@ -47,7 +47,7 @@ class Torque(object):
 	# Returns radians / second
 	#
 	def _angular_velocity(self, wheel_ticks, period):
-		return (2 * math.pi * wheel_ticks) / (period / 2048)
+		return (2 * math.pi * wheel_ticks) / (period)
 
 	#
 	# The average torque between two received messages is computed from the difference in accumulated torque, divided by the
@@ -60,12 +60,18 @@ class Torque(object):
 	#
 	# Retuns watts
 	#
-	def _power(self, torque, ang_velocity):
-		return torque * ang_velocity
+	#def _power(self, torque, ang_velocity):
+	#	return torque * ang_velocity
 
+	#
+	# power in watts period in 1/2048 seconds
+	#
 	def _torque(self, power, period):
 		return (power * period) / (128 * math.pi)
 
+	#
+	# torque in 1/32nm, period in 1/2048 seconds
+	#
 	def _power(self, torque, period):
 		return (128 * math.pi) * (torque  / period)
 
