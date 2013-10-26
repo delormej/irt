@@ -42,7 +42,7 @@ class eMotionANT(GarminANT):
 	def start(self):
 		if self._use_maestro_speed:
 			self._start_speed_thread()
-            			
+
 		# state maintained for reading sequence burst messages.
 		self._burst_resistance_state = False
 
