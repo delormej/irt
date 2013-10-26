@@ -22,22 +22,30 @@ class Torque(object):
 		self._accum_torque = 0
 		self._accum_period = 0
 
+	#
+	# torque is stored in 1/32nm
+	#
 	def get_accum_torque(self):
 		return self._accum_torque
 
 	def get_event_count(self):
 		return self._events
 
+	#
+	# accumulated period is stored in 1/2048 seconds
+	#
 	def get_accum_period(self):
 		return self._accum_period
 
+	#
 	# period is 1/2048 seconds.
+	#
 	@log
-	def process_torque(self, watts, period):
-		torque = self._torque(watts, period)
+	def process_torque(self, watts, period2048):
+		torque = self._torque(watts, period2048)
 		self._events += 1
-		self._accum_torque += (int)(torque / 32)
-		self._accum_period += period
+		self._accum_torque += (int)(torque)
+		self._accum_period += period2048
 		
 		return self._accum_torque
 
@@ -65,12 +73,14 @@ class Torque(object):
 
 	#
 	# power in watts period in 1/2048 seconds
+	# torque is returned in 1/32nm
 	#
 	def _torque(self, power, period):
 		return (power * period) / (128 * math.pi)
 
 	#
 	# torque in 1/32nm, period in 1/2048 seconds
+	# power returned in watts
 	#
 	def _power(self, torque, period):
 		return (128 * math.pi) * (torque  / period)

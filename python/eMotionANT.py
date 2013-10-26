@@ -75,6 +75,9 @@ class eMotionANT(GarminANT):
 		print "Connected to ANT+"
 
 	@log
+	#
+	# returns current period delta in 1/2048 seconds 
+	#
 	def _get_period(self):
 		current_time = time.time()
 
