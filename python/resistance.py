@@ -31,16 +31,16 @@ class Resistance(object):
 		self.servo = servo
 		self._mode = RESISTANCE_MODE_STANDARD
 		self._positionToLevel = \
-			{ 0:8428,
-                1:5090,
-                2:5091,
-                3:5009,
-                4:4846,
-                5:4600,
-                6:4272,
-                7:3862,
-                8:3370,
-                9:2796 }
+			{ 8428:0,
+                5090:1,
+                5091:2,
+                5009:3,
+                4846:4,
+                4600:5,
+                4272:6,
+                3862:7,
+                3370:8,
+                2796:9 }
 
 		# inverse level to position mapping
 		self._levelToPosition = { v:k for k, v in self._positionToLevel.items() } 
