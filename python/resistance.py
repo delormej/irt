@@ -31,10 +31,16 @@ class Resistance(object):
 		self.servo = servo
 		self._mode = RESISTANCE_MODE_STANDARD
 		self._positionToLevel = \
-			{ 8428:0,
-			5090:1,
-			4600:2,
-			2796:3 }
+			{ 0:8428,
+                1:5090,
+                2:5091,
+                3:5009,
+                4:4846,
+                5:4600,
+                6:4272,
+                7:3862,
+                8:3370,
+                9:2796 }
 
 		# inverse level to position mapping
 		self._levelToPosition = { v:k for k, v in self._positionToLevel.items() } 
@@ -50,8 +56,8 @@ class Resistance(object):
 			return # unsupported 
 
 		# ideally this should be a value between 0 and 9, but it's only 3 right now.
-		if level <0 or level >3:
-			raise "Value must be between 0 and 3"
+		if level <0 or level >9:
+			raise "Value must be between 0 and 9"
 			
 		try:
 			position = self._levelToPosition[level]

@@ -19,8 +19,8 @@ class Power(object):
 	def __init__(self, weight, debug=False):
 		self._debug = debug
 		self.weight = weight
-		self.slope = { 1: 2.6, 2: 7.1, 3: 11.0 }
-		self.intercept = { 1: -9.60, 2: -29.99, 3: -13.34 }
+		self.slope = {1: 2.6, 2: 3.8, 3: 5.0, 4: 6.1, 5: 7.1, 6: 8.2, 7: 9.2, 8: 10.1, 9: 11.0 }
+		self.intercept = { 1: -9.60, 2: -18.75, 3: -25.00, 4: -28.94, 5: -29.99, 6: -29.23, 7: -26.87, 8: -20.90, 9: -13.34 }
 
 	#
 	# Calculates wattage based on eMotion curve.
