@@ -5,6 +5,7 @@
 # 
 
 import serial, time, struct, threading
+from RPIO import PWM
 
 SET_TARGET_COMMAND=0x84
 GET_POSITION_COMMAND=0x90
@@ -90,6 +91,49 @@ class Maestro(serial.Serial):
 	def write(self, message):
 		with self._lock:
 			return super(Maestro, self).write(message)
+
+# ----------------------------------------------------------------------------
+#
+# Simple pulse width modulation wrapper responsible for moving the Servo.
+#
+# ----------------------------------------------------------------------------
+class Servo(object):
+
+	def __init__(self, gpio=4, debug=False):
+		self._gpio = gpio
+		self._position = 0
+		self._lock = threading.Lock()
+		
+		PWM.setup(pulse_incr_us=1)
+		PWM.init_channel(0)
+
+	def __del__(self):
+		PWM.cleanup()
+
+	#
+	# (Thread Safe) Moves the servo to the position.
+	# Note that the bounds are from 2796 -> 8428 in 1/4 seconds
+	#
+	def setTarget(self, position):
+		if (position < 2796 or position > 8428):
+			raise "Position out of range."
+		
+		with self._lock:
+			PWM.add_channel_pulse(0, self._gpio, 0, position/4)
+			self._position = position
+
+	#
+	# (Thread Safe) Gets the last position the servo was set to.
+	#
+	def getPosition(self):
+		with self._lock:	
+			return self._position
+
+	#
+	# no-op - here for legacy compat, always returns false.
+	#
+	def isMoving(self):
+		return false;
 
 # simple test harness to walk through the various steps.
 def _test(port="/dev/ttyACM0", channel=0x05):
