@@ -5,7 +5,6 @@
 # 
 
 import serial, time, struct, threading
-from RPIO import PWM
 
 SET_TARGET_COMMAND=0x84
 GET_POSITION_COMMAND=0x90
@@ -97,6 +96,7 @@ class Maestro(serial.Serial):
 # Simple pulse width modulation wrapper responsible for moving the Servo.
 #
 # ----------------------------------------------------------------------------
+from RPIO import PWM
 class Servo(object):
 
 	def __init__(self, gpio=4, debug=False):
@@ -134,6 +134,44 @@ class Servo(object):
 	#
 	def isMoving(self):
 		return false;
+
+# ----------------------------------------------------------------------------
+#
+# Simple GPIO wrapper.
+#
+# ----------------------------------------------------------------------------
+import RPi.GPIO as GPIO
+
+BCM_CHANNEL_OPTEK = 17			# Speed sensor
+BCM_CHANNEL_BUTTON_III = 27		# RF button III
+
+class Board(object):
+
+	def __init__(self, debug=False):
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setup(BCM_CHANNEL_OPTEK, GPIO.IN)
+		GPIO.setup(BCM_CHANNEL_BUTTON_III, GPIO.IN)
+		self._revs = 0
+
+		GPIO.add_event_detect(BCM_CHANNEL_OPTEK, GPIO.FALLING, \
+			callback=self.onDrumRevolution, bouncetime=50)
+
+		GPIO.add_event_detect(BCM_CHANNEL_BUTTON_III, GPIO.RISING, \
+			callback=self.onButtonIII, bouncetime=200)
+
+	def __del__(self):
+		GPIO.remove_event_detect(BCM_CHANNEL_OPTEK)
+		GPIO.remove_event_detect(BCM_CHANNEL_BUTTON_III)
+		return
+
+	def onDrumRevolution(self, channel):
+		self._revs += 1
+		print self._revs
+		return
+
+	def onButtonIII(self, channel):
+		print "Button III Clicked"
+		return
 
 # simple test harness to walk through the various steps.
 def _test(port="/dev/ttyACM0", channel=0x05):
