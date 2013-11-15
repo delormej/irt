@@ -15,6 +15,7 @@ TICK_ROLLOVER = 13120
 TICKS_PER_01 = 144.0	# 144 ticks per 0.01 miles
 MS_IN_HOUR = 3600.0
 
+		
 # ----------------------------------------------------------------------------
 #
 # Class responsible for reading and calculating speed based on ticks recorded 
@@ -109,6 +110,23 @@ class MaestroSpeed(object):
 
 	def _get_time_ms(self):
 		return time.time()
+		
+
+# ----------------------------------------------------------------------------
+#
+# Class responsible for reading and calculating speed based from real time
+# ticks recieved via GPIO
+#
+# ----------------------------------------------------------------------------
+class GPIOSpeed(MaestroSpeed):
+
+	def __init__(self, board, wheel_size=0.0, debug=False):
+		super(GPIOSpeed, self).__init__(maestro=None, wheel_size=wheel_size, debug=debug)
+		self._board = board
+
+	def get_revs(self):
+		return self._board.get_revs()
+
 
 # ----------------------------------------------------------------------------
 #

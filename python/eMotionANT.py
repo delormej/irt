@@ -20,9 +20,9 @@ import array, threading, time, math
 # ----------------------------------------------------------------------------
 class eMotionANT(GarminANT):
 
-	def __init__(self, maestro, speed, power, resistance, debug=False):
+	def __init__(self, speed, power, resistance, debug=False):
 		super(eMotionANT, self).__init__(debug=debug)
-		self._maestro = maestro
+		self._debug = debug
 		self._speed = speed
 		self._power = power
 		self._torque = Torque()
@@ -31,6 +31,7 @@ class eMotionANT(GarminANT):
 		self._last_time = 0
 
 		self._init_ant()
+		self._resistance.setLevel([0])
 
 	def __del__(self):
 		self._closing = True

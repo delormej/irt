@@ -13,7 +13,7 @@ from eMotionANT import *
 from speed import *
 from power import *
 from resistance import *
-from maestro import *
+from mygpio import *
 
 #
 # Test / Main method
@@ -23,13 +23,14 @@ def main():
 	try:
 		profile = Profile()
 		profile.weight = 175 # sample data
-		maestro = Maestro(debug=True)
-		#speed = MaestroSpeed(maestro, profile.wheel_size, debug=False)		# could be ANTSpeed or BTSpeed in future
-		speed = MockMaestroSpeed(maestro, profile.wheel_size, debug=False)
-		power = Power(profile.weight)		# could be a BT power in future
-		resistance = Resistance(maestro, debug=True)	# could be a BTResistance in future
+		
+		board = Board(debug=True)
+		speed = GPIOSpeed(board, profile.wheel_size, debug=True)
+		power = Power(profile.weight)								# could be a BT power in future
+		servo = Servo()
+		resistance = Resistance(servo=servo, debug=True)			# could be a BTResistance in future
 
-		emotion = eMotionANT(maestro, speed, power, resistance, debug=False)	
+		emotion = eMotionANT(speed, power, resistance)	
 		emotion.start()
 	
 	except KeyboardInterrupt:
