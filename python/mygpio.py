@@ -72,11 +72,10 @@ class Board(object):
 		self._debug = debug
 		RPIO.setup(BCM_CHANNEL_OPTEK, RPIO.IN) # , pull_up_down=RPIO.PUD_UP)
 		RPIO.setup(BCM_CHANNEL_BUTTON_III, RPIO.IN)
-
 		self._revs = 0
 
 		RPIO.add_interrupt_callback(BCM_CHANNEL_OPTEK, edge='falling', \
-			callback=self._onDrumRevolution, threaded_callback=True, debounce_timeout_ms=10)
+			callback=self._onDrumRevolution, threaded_callback=True, debounce_timeout_ms=1)
 
 		RPIO.add_interrupt_callback(BCM_CHANNEL_BUTTON_III, edge='rising', \
 			callback=self._onButton, threaded_callback=True, debounce_timeout_ms=200)
@@ -84,14 +83,14 @@ class Board(object):
 		RPIO.wait_for_interrupts(threaded=True)
 
 	def __del__(self):
-		#GPIO.remove_event_detect(BCM_CHANNEL_OPTEK)
-		#GPIO.remove_event_detect(BCM_CHANNEL_BUTTON_III)
 		RPIO.del_interrupt_callback(BCM_CHANNEL_OPTEK)
+		RPIO.del_interrupt_callback(BCM_CHANNEL_BUTTON_III)
+		RPIO.stop_waiting_for_interrupts()
+		RPIO.cleanup()
 
 	def get_revs(self):
-		return self._revs / 2
+		return self._revs
 
-	@log
 	def _onDrumRevolution(self, gpio_id, value):
 		self._revs += 1
 		return
