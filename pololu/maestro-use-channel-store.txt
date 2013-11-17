@@ -1,0 +1,16 @@
+begin
+  button_1 
+	  if increment
+	  endif
+repeat
+
+sub button_1
+  0 get_position 500 greater_than
+  return
+
+sub increment
+	  1 get_position 1 plus
+	  dup
+	  13119 greater_than if 0 endif
+	  1 servo
+	  return

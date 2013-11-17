@@ -1,0 +1,61 @@
+<!--Pololu Maestro servo controller settings file, http://www.pololu.com/catalog/product/1350-->
+<UscSettings version="1">
+  <NeverSuspend>false</NeverSuspend>
+  <SerialMode>USB_DUAL_PORT</SerialMode>
+  <FixedBaudRate>9600</FixedBaudRate>
+  <SerialTimeout>0</SerialTimeout>
+  <EnableCrc>false</EnableCrc>
+  <SerialDeviceNumber>12</SerialDeviceNumber>
+  <SerialMiniSscOffset>0</SerialMiniSscOffset>
+  <Channels ServosAvailable="6" ServoPeriod="156">
+    <!--Period = 19.968 ms-->
+    <!--Channel 0-->
+    <Channel name="" mode="Input" min="0" max="1024" homemode="Ignore" home="0" speed="0" acceleration="0" neutral="1024" range="1905" />
+    <!--Channel 1-->
+    <Channel name="" mode="Input" min="0" max="1024" homemode="Ignore" home="0" speed="0" acceleration="0" neutral="1024" range="1905" />
+    <!--Channel 2-->
+    <Channel name="" mode="Input" min="0" max="1024" homemode="Ignore" home="0" speed="0" acceleration="0" neutral="1024" range="1905" />
+    <!--Channel 3-->
+    <Channel name="" mode="Input" min="0" max="1024" homemode="Ignore" home="0" speed="0" acceleration="0" neutral="1024" range="1905" />
+    <!--Channel 4-->
+    <Channel name="" mode="Input" min="0" max="1024" homemode="Ignore" home="0" speed="0" acceleration="0" neutral="1024" range="1905" />
+    <!--Channel 5-->
+    <Channel name="" mode="Servo" min="2176" max="8704" homemode="Goto" home="8028" speed="248" acceleration="25" neutral="6000" range="1905" />
+  </Channels>
+  <Sequences>
+    <Sequence name="Sequence 0">
+      <Frame name="Frame 0" duration="500">717 0 0 0 947 8428</Frame>
+      <Frame name="Frame 1" duration="500">0 0 0 0 952 5090</Frame>
+      <Frame name="Frame 2" duration="500">0 0 0 0 953 5090</Frame>
+      <Frame name="Frame 3" duration="500">0 0 0 0 953 5090</Frame>
+    </Sequence>
+  </Sequences>
+  <Script ScriptDone="false"># When the script is not doing anything else,
+# this loop will listen for button presses.  When a button
+# is pressed it runs the corresponding sequence.
+
+# always start at position 0 which is 8428
+8428 set_target
+
+begin
+  0 button if 8428 set_target endif
+  1 button if 5090 set_target endif
+  2 button if 4600 set_target endif
+  3 button if 2796 set_target endif
+repeat
+ 
+# These subroutines each return 1 if the corresponding
+# button is pressed, and return 0 otherwise.
+sub button
+  get_position 500 greater_than
+  return
+ 
+# These subroutines each perform an arbitrary sequence
+# of servo movements.  You should change these to fit
+# your application.
+sub set_target
+  5 servo 
+  return
+   
+</Script>
+</UscSettings>
