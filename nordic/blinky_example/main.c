@@ -77,14 +77,15 @@ void set_resistance(uint32_t position_us)
 	 * would be 180 degrees, so 0.14*3 = 0.48 seconds max time to move 180 degrees.
 	 * Each iteration takes 20ms (20,000us-position_us), rounding up to a 1/2 second: 
 	 * 			500 / 20 = 25
-	 */
+		 
 	for (int i = 0; i < 25; i++)
 	{	
 		nrf_gpio_pin_write(PIN_SERVO_SIGNAL, 1);
 		nrf_delay_us(position_us);
 		nrf_gpio_pin_write(PIN_SERVO_SIGNAL, 0);
 		nrf_delay_us(20000-position_us);		
-	}	
+	}*/
+	pwm_set_servo(position_us);
 }
 
 // 
@@ -134,7 +135,7 @@ void on_gpiote_event(uint32_t event_pins_low_to_high, uint32_t event_pins_high_t
 		on_button_ii_event();
 	else if (event_pins_low_to_high & (1 << PIN_BUTTON_III))
 		on_button_iii_event();
-	else if (event_pins_high_to_low & (1 << PIN_SERVO_SIGNAL))
+	else if (event_pins_high_to_low & (1 << PIN_DRUM_REV))
 		on_drum_rev_event();
 }
 
@@ -145,7 +146,6 @@ int init_gpiote(void)
 {
   // Configure LED-pins as outputs
   nrf_gpio_range_cfg_output(LED_START, LED_STOP);
-	nrf_gpio_cfg_output(PIN_SERVO_SIGNAL);
 	
 	nrf_gpio_cfg_input(PIN_BUTTON_III, NRF_GPIO_PIN_PULLUP);
 	nrf_gpio_cfg_input(PIN_BUTTON_II, NRF_GPIO_PIN_PULLUP);	
@@ -192,12 +192,15 @@ int main(void)
 	// Configure GPIO Tasks and Events
 	init_gpiote();
 	
+	pwm_init(PIN_SERVO_SIGNAL);
+	
 	// Test blinking the light when it turns on.
 	send_hello();
 	
 	// Set servo to 0 position
 	m_resistance_level = 0;
-	set_resistance(RESISTANCE_LEVEL[m_resistance_level]);
+	//set_resistance(RESISTANCE_LEVEL[m_resistance_level]);
+	pwm_set_servo(RESISTANCE_LEVEL[m_resistance_level]);
 
   while(true)
   {

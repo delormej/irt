@@ -1,151 +1,166 @@
-#include "nrf_pwm.h"
+/* Copyright (c) 2013 Jason De Lorme. All Rights Reserved.
+ *
+ * Uses 3 compare registers: 	[0] Pulse Width in us (position of servo in microseconds)
+ *														[1] Period Width of 20ms
+ *														[2] Duration of 500ms (longest it would take to move 180 degrees)
+ *
+ *      |<--- Period Width (20ms) ------>|
+ *
+ *      +--------+                       +--------+
+ *      |        |                       |        |
+ * -----+        +-----------------------+        +------
+ *
+ *   -->|        |<-- Pulse Width 
+*/
+
+
+#include <stdbool.h>
+#include <stdint.h>
 #include "nrf.h"
+#include "nrf_assert.h"
 #include "nrf_gpiote.h"
 #include "nrf_gpio.h"
+#include "boards.h"
+#include "nrf_pwm.h"
 
-uint32_t pwm_max_value, pwm_next_value[PWM_NUM_CHANNELS], pwm_io_ch[PWM_NUM_CHANNELS], pwm_running[PWM_NUM_CHANNELS], pwm_temp_inten;
-const uint32_t pwm_gpiote_channel[3] = {PWM_GPIOTE_CHANNEL0, PWM_GPIOTE_CHANNEL1, PWM_GPIOTE_CHANNEL2};
+uint32_t m_pwm_pin_output = 0;
+bool m_is_running = false;
 
-int32_t nrf_ppi_enable_first_available_channel(volatile uint32_t *event_ptr, volatile uint32_t *task_ptr)
+/** @brief Function for handling timer 2 peripheral interrupts.
+ */
+void TIMER2_IRQHandler(void)
 {
-    uint32_t channel_num;
-    // Traverse the total list of channels
-    for(channel_num = 0; channel_num < 16; channel_num++)
+    if ((NRF_TIMER2->INTENSET & TIMER_INTENSET_COMPARE2_Msk) != 0)
     {
-        // Look for a channel that is not set
-        if((NRF_PPI->CHEN & (1 << channel_num)) == 0)
-        {
-            // When a free channel is found, exit the loop
-            break;
-        }
-    }
-
-    if(channel_num >= 16)
-    {
-        // If the loop reaches the end no channels are free, and we exit returning -1
-        return -1;
-    }
-    else
-    {
-        // Otherwise we configure the channel and return the channel number
-        *(&(NRF_PPI->CH0_EEP) + (channel_num * 2)) = (uint32_t)event_ptr;
-        *(&(NRF_PPI->CH0_TEP) + (channel_num * 2)) = (uint32_t)task_ptr;    
-        NRF_PPI->CHENSET = (1 << channel_num);   
-        return channel_num;
+        /* Stop the timer, we've pulsed enough.
+				NRF_TIMER2->TASKS_STOP = 1;
+				NRF_TIMER2->TASKS_CLEAR = 1; */
     }
 }
 
-void pwm_init_common(nrf_pwm_mode_t pwm_mode)
-{
-	PWM_TIMER->TASKS_CLEAR = 1;
-	PWM_TIMER->BITMODE = TIMER_BITMODE_BITMODE_16Bit;
-    switch(pwm_mode)
-    {
-        case PWM_MODE_LED_100:   // 0-100 resolution, 156 Hz PWM frequency, 32 kHz timer frequency (prescaler 9)
-            PWM_TIMER->PRESCALER = 9; /* Prescaler 4 results in 1 tick == 1 microsecond */
-            pwm_max_value = 100;
-            break;
-        case PWM_MODE_LED_255:   // 8-bit resolution, 122 Hz PWM frequency, 65 kHz timer frequency (prescaler 8)
-            PWM_TIMER->PRESCALER = 8;
-            pwm_max_value = 255;        
-            break;
-        case PWM_MODE_LED_1000:  // 0-1000 resolution, 250 Hz PWM frequency, 500 kHz timer frequency (prescaler 5)
-            PWM_TIMER->PRESCALER = 5;
-            pwm_max_value = 1000;
-            break;
-        case PWM_MODE_MTR_100:   // 0-100 resolution, 20 kHz PWM frequency, 4MHz timer frequency (prescaler 2)
-            PWM_TIMER->PRESCALER = 2;
-            pwm_max_value = 100;
-            break;
-        case PWM_MODE_MTR_255:    // 8-bit resolution, 31 kHz PWM frequency, 16MHz timer frequency (prescaler 0)	
-            PWM_TIMER->PRESCALER = 0;
-            pwm_max_value = 255;
-            break;
-    }
-    PWM_TIMER->CC[3] = pwm_max_value*2;
-	PWM_TIMER->MODE = TIMER_MODE_MODE_Timer;
-    PWM_TIMER->SHORTS = TIMER_SHORTS_COMPARE3_CLEAR_Msk;
-    PWM_TIMER->EVENTS_COMPARE[0] = PWM_TIMER->EVENTS_COMPARE[1] = PWM_TIMER->EVENTS_COMPARE[2] = PWM_TIMER->EVENTS_COMPARE[3] = 0;     
 
-    for(int i = 0; i < PWM_NUM_CHANNELS; i++)
-    {
-        nrf_ppi_enable_first_available_channel(&PWM_TIMER->EVENTS_COMPARE[i], &NRF_GPIOTE->TASKS_OUT[pwm_gpiote_channel[i]]);
-        nrf_ppi_enable_first_available_channel(&PWM_TIMER->EVENTS_COMPARE[3], &NRF_GPIOTE->TASKS_OUT[pwm_gpiote_channel[i]]);        
-    }
-    NVIC_SetPriority(PWM_IRQn, 3);
-    NVIC_EnableIRQ(PWM_IRQn);
-    PWM_TIMER->TASKS_START = 1;
-}
-#if (PWM_NUM_CHANNELS == 1)
-void nrf_pwm_init(uint32_t io_select_pwm0, nrf_pwm_mode_t pwm_mode)
+/** @brief Function for initializing the Timer 2 peripheral.
+ */
+static void timer2_init(void)
 {
-    pwm_io_ch[0] = io_select_pwm0;
-    nrf_gpio_cfg_output(io_select_pwm0);
-    pwm_running[0] = 0;    
+    // Start 16 MHz crystal oscillator .
+    NRF_CLOCK->EVENTS_HFCLKSTARTED  = 0;
+    NRF_CLOCK->TASKS_HFCLKSTART     = 1;
 
-    pwm_init_common(pwm_mode);
+    // Wait for the external oscillator to start up.
+    while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0) 
+    {
+        //Do nothing.
+    }
+
+    NRF_TIMER2->MODE        = TIMER_MODE_MODE_Timer;
+    NRF_TIMER2->BITMODE     = TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
+    NRF_TIMER2->PRESCALER   = PWM_TIMER_PRESCALER;
+
+    // Clears the timer, sets it to 0.
+    NRF_TIMER2->TASKS_CLEAR = 1;
+
+    // First Timer compare event will fire right away.
+		NRF_TIMER2->CC[0] = 1;	
+
+		// On compare 2 event, clear the counter and restart.
+		NRF_TIMER2->SHORTS = TIMER_SHORTS_COMPARE2_CLEAR_Msk;
+
+    // Interrupt setup.
+    //NRF_TIMER2->INTENSET = (TIMER_INTENSET_COMPARE2_Enabled << TIMER_INTENSET_COMPARE2_Pos);
+		// Shortcut to STOP the timer when compare 2 hits.
 }
-#elif (PWM_NUM_CHANNELS == 2)
-void nrf_pwm_init(uint32_t io_select_pwm0, uint32_t io_select_pwm1, nrf_pwm_mode_t pwm_mode)
+
+
+/** @brief Function for initializing the GPIO Tasks/Events peripheral.
+ */
+static void gpiote_init(void)
 {
-    pwm_io_ch[0] = io_select_pwm0;
-    nrf_gpio_cfg_output(io_select_pwm0);
-    pwm_io_ch[1] = io_select_pwm1;
-    nrf_gpio_cfg_output(io_select_pwm1);
-    pwm_running[0] = pwm_running[1] = 0;
+    nrf_gpio_cfg_output(m_pwm_pin_output);
+
+    NRF_GPIO->OUT = 0x00000000UL;
+
+    // Configure GPIOTE channel 0 to toggle the PWM pin state
+		// @note Only one GPIOTE task can be connected to an output pin.
+    nrf_gpiote_task_config(0, m_pwm_pin_output, \
+                           NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
+}
+
+
+/** @brief Function for initializing the Programmable Peripheral Interconnect peripheral.
+ */
+static void ppi_init(void)
+{
+    // Configure PPI channel 0 to toggle PWM_OUTPUT_PIN on every TIMER2 COMPARE[0] match.
+    NRF_PPI->CH[0].EEP = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[0];
+    NRF_PPI->CH[0].TEP = (uint32_t)&NRF_GPIOTE->TASKS_OUT[0];
+
+    // Configure PPI channel 1 to toggle PWM_OUTPUT_PIN on every TIMER2 COMPARE[1] match.
+    NRF_PPI->CH[1].EEP = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[1];
+    NRF_PPI->CH[1].TEP = (uint32_t)&NRF_GPIOTE->TASKS_OUT[0];
     
-    pwm_init_common(pwm_mode);
+    // Configure PPI channel 1 to toggle PWM_OUTPUT_PIN on every TIMER2 COMPARE[2] match.
+    //NRF_PPI->CH[2].EEP = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[2];
+    //NRF_PPI->CH[2].TEP = (uint32_t)&NRF_GPIOTE->TASKS_OUT[0];
+    
+    // Enable PPI channels 0-2.
+    NRF_PPI->CHEN = (PPI_CHEN_CH0_Enabled << PPI_CHEN_CH0_Pos)
+                    | (PPI_CHEN_CH1_Enabled << PPI_CHEN_CH1_Pos);
+                    //| (PPI_CHEN_CH2_Enabled << PPI_CHEN_CH2_Pos);
 }
-#elif (PWM_NUM_CHANNELS == 3)
-void nrf_pwm_init(uint32_t io_select_pwm0, uint32_t io_select_pwm1, uint32_t io_select_pwm2, nrf_pwm_mode_t pwm_mode)
+
+
+/**
+ * @brief Function for application main entry.
+ */
+void pwm_init(uint32_t pwm_pin_output_number)
 {
-    pwm_io_ch[0] = io_select_pwm0;
-    nrf_gpio_cfg_output(io_select_pwm0);
-    pwm_io_ch[1] = io_select_pwm1;
-    nrf_gpio_cfg_output(io_select_pwm1);
-    pwm_io_ch[2] = io_select_pwm2;
-    nrf_gpio_cfg_output(io_select_pwm2);
-    pwm_running[0] = pwm_running[1] = pwm_running[2] = 0;    
-    pwm_init_common(pwm_mode);
+    m_pwm_pin_output = pwm_pin_output_number;
+	
+    gpiote_init();
+    ppi_init();
+    timer2_init();
+
+    // Enabling constant latency as indicated by PAN 11 "HFCLK: Base current with HFCLK 
+    // running is too high" found at Product Anomaly document found at
+    // https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF51822/#Downloads
+    //
+    // @note This example does not go to low power mode therefore constant latency is not needed.
+    //       However this setting will ensure correct behaviour when routing TIMER events through 
+    //       PPI (shown in this example) and low power mode simultaneously.
+    NRF_POWER->TASKS_CONSTLAT = 1;
+
+    // Enable interrupt on Timer 2.
+    //NVIC_EnableIRQ(TIMER2_IRQn);
+    //__enable_irq();
 }
-#endif
-void nrf_pwm_set_value(uint32_t pwm_channel, uint32_t pwm_value)
+
+void pwm_set_servo(uint32_t pulse_width_us)
 {
-    pwm_next_value[pwm_channel] = pwm_value;
-    PWM_TIMER->EVENTS_COMPARE[3] = 0;
-    PWM_TIMER->SHORTS = TIMER_SHORTS_COMPARE3_CLEAR_Msk | TIMER_SHORTS_COMPARE3_STOP_Msk;
-    PWM_TIMER->INTENSET = TIMER_INTENSET_COMPARE3_Msk;    
-    PWM_TIMER->TASKS_START = 1;
+		if (pulse_width_us < PWM_PULSE_MIN ||
+					pulse_width_us > PWM_PULSE_MAX)
+				// TODO: should return an error here.
+				return;
+
+		if (m_is_running)
+		{
+			// Stop timer and clear any existing counts.
+			NRF_TIMER2->TASKS_STOP = 1;
+			NRF_TIMER2->TASKS_CLEAR = 1;			
+		}
+
+		NRF_TIMER2->CC[1] = pulse_width_us; 
+		NRF_TIMER2->CC[2] = PWM_PERIOD_WIDTH_US - pulse_width_us;
+		
+		// Start the timer.
+		NRF_TIMER2->TASKS_START = 1;
+		m_is_running = true;
 }
-void PWM_IRQHandler(void)
+
+void pwm_stop_servo(void)
 {
-    static uint32_t i;
-    PWM_TIMER->EVENTS_COMPARE[3] = 0;
-    PWM_TIMER->INTENCLR = 0xFFFFFFFF;
-    for(i = 0; i < PWM_NUM_CHANNELS; i++)
-    {
-        if(pwm_next_value[i] == 0)
-        {
-            nrf_gpiote_unconfig(pwm_gpiote_channel[i]);
-            nrf_gpio_pin_write(pwm_io_ch[i], 0);
-            pwm_running[i] = 0;
-        }
-        else if (pwm_next_value[i] >= pwm_max_value)
-        {
-            nrf_gpiote_unconfig(pwm_gpiote_channel[i]);
-            nrf_gpio_pin_write(pwm_io_ch[i], 1); 
-            pwm_running[i] = 0;
-        }
-        else
-        {
-            PWM_TIMER->CC[i] = pwm_next_value[i] * 2;
-            if(!pwm_running[i])
-            {
-                nrf_gpiote_task_config(pwm_gpiote_channel[i], pwm_io_ch[i], NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_HIGH);  
-                pwm_running[i] = 1;
-            }
-        }
-    }
-    PWM_TIMER->SHORTS = TIMER_SHORTS_COMPARE3_CLEAR_Msk;
-    PWM_TIMER->TASKS_START = 1;
+			NRF_TIMER2->TASKS_STOP = 1;
+			NRF_TIMER2->TASKS_CLEAR = 1;			
 }
+
+/** @} */
