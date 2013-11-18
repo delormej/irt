@@ -28,6 +28,8 @@
 #include "nrf_gpio.h"
 #include "nrf_delay.h"
 #include "boards.h"
+#include "nrf_pwm.h"
+#include "resistance.h"
 
 #define NULL								0		// Not sure why this isn't defined in any other header?
 #define PIN_SERVO_SIGNAL		3		// P3 - P0.03
@@ -36,6 +38,7 @@
 #define PIN_DRUM_REV 				0		// P3 - P0.00 
 #define GPIOTE_MAX_USERS		1
 
+uint8_t m_resistance_level = 0;
 
 /*****************************************************************************
 * Error Handling Functions
@@ -66,55 +69,68 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     NVIC_SystemReset();
 }
 
+void set_resistance(uint32_t position_us)
+{
+	// Move the servo.
+	for (int i = 0; i<100; i++)
+	{
+		nrf_gpio_pin_write(PIN_SERVO_SIGNAL, 1);
+		nrf_delay_us(position_us);
+		nrf_gpio_pin_write(PIN_SERVO_SIGNAL, 0);
+		nrf_delay_us(20000-position_us);
+	}	
+}
+
+// 
+// blinks led 0 for 1/2 second.
+//
+void blink_led(void)
+{
+		// Blink once for 1/2 second when the button is pushd.
+		nrf_gpio_port_write(LED_PORT, 1 << (LED_OFFSET));
+		nrf_delay_ms(500);
+		nrf_gpio_port_write(LED_PORT, 0 << (LED_OFFSET));	
+}
+
 //
 // Occurs when a drum revolution occurs
 //
-void on_drum_rev_event()
+void on_drum_rev_event(void)
 {
+	blink_led();
 }
 
-// Blinks the 2 leds to say "hello" we're staring up.
-void send_hello()
+void on_button_ii_event(void)
 {
-  uint8_t output_state = 0;
-	nrf_gpio_port_write(LED_PORT, 1 << (output_state + LED_OFFSET));
-	output_state = (output_state + 1) & BLINKY_STATE_MASK;
-	nrf_delay_ms(500);
-	nrf_gpio_port_write(LED_PORT, 1 << (output_state + LED_OFFSET));
-	nrf_delay_ms(500);
-	nrf_gpio_port_write(LED_PORT, 0 << (output_state + LED_OFFSET));	
+	blink_led();
+	// decrement
+	if (m_resistance_level > 0)
+		set_resistance(RESISTANCE_LEVEL[--m_resistance_level]);	
 }
 
 //
 // Occurs when button (III) is pressed.
 //
-static void on_button_iii_event()
+void on_button_iii_event(void)
 {
-		// Blink once for 1/2 second when the button is pushd.
-		nrf_gpio_port_write(LED_PORT, 1 << (LED_OFFSET));
-		nrf_delay_ms(750);
-		nrf_gpio_port_write(LED_PORT, 0 << (LED_OFFSET));
+	blink_led();
+	// increment
+	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
+		set_resistance(RESISTANCE_LEVEL[++m_resistance_level]);
 }
 
 //
 // All GPIO events come to this function.
 //
-static void on_gpiote_event(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
+void on_gpiote_event(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
 {
-	
-	// Move the servo to 2000us
-	for (int i = 0; i<100; i++)
-	{
-		nrf_gpio_pin_write(PIN_SERVO_SIGNAL, 1);
-		nrf_delay_ms(2);
-		nrf_gpio_pin_write(PIN_SERVO_SIGNAL, 0);
-	}
-	
-	// Dispatch the drum event.
-	on_button_iii_event();
-	// Dispatch the button event.
+	if (event_pins_low_to_high & (1 << PIN_BUTTON_II))
+		on_button_ii_event();
+	else if (event_pins_low_to_high & (1 << PIN_BUTTON_III))
+		on_button_iii_event();
+	else if (event_pins_high_to_low & (1 << PIN_SERVO_SIGNAL))
+		on_drum_rev_event();
 }
-
 
 //
 // Initializes the GPIO tasks & events library and starts listening for GPIO events.
@@ -148,6 +164,19 @@ int init_gpiote(void)
 		return NRF_SUCCESS;
 }
 
+
+// Blinks the 2 leds to say "hello" we're staring up.
+void send_hello(void)
+{
+  uint8_t output_state = 0;
+	nrf_gpio_port_write(LED_PORT, 1 << (output_state + LED_OFFSET));
+	output_state = (output_state + 1) & BLINKY_STATE_MASK;
+	nrf_delay_ms(500);
+	nrf_gpio_port_write(LED_PORT, 1 << (output_state + LED_OFFSET));
+	nrf_delay_ms(500);
+	nrf_gpio_port_write(LED_PORT, 0 << (output_state + LED_OFFSET));	
+}
+
 /**
  * @brief Function for application main entry.
  * @return 0. int return type required by ANSI/ISO standard.
@@ -159,9 +188,14 @@ int main(void)
 	
 	// Test blinking the light when it turns on.
 	send_hello();
+	
+	// Set servo to 0 position
+	m_resistance_level = 0;
+	set_resistance(RESISTANCE_LEVEL[m_resistance_level]);
 
   while(true)
   {
+		// no-op endless loop
   }
 }
 

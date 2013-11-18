@@ -9,6 +9,20 @@
 *.suo
 *.ncb
 
+# Keil Stuff #
+###################
+*.fed
+*.hex
+*.l2p
+*.lnp
+*.map
+*.axf
+*.i
+*.d
+*.crf
+*._2i
+*.dep
+
 # Packages #
 ############
 # it's better to unpack these files and commit the raw source
