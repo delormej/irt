@@ -71,13 +71,19 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 void set_resistance(uint32_t position_us)
 {
-	// Move the servo.
-	for (int i = 0; i<100; i++)
-	{
+	/* Move the servo.
+	 *
+	 * Sending this signal 25 times because it takes 0.14sec to 60 degrees, max 
+	 * would be 180 degrees, so 0.14*3 = 0.48 seconds max time to move 180 degrees.
+	 * Each iteration takes 20ms (20,000us-position_us), rounding up to a 1/2 second: 
+	 * 			500 / 20 = 25
+	 */
+	for (int i = 0; i < 25; i++)
+	{	
 		nrf_gpio_pin_write(PIN_SERVO_SIGNAL, 1);
 		nrf_delay_us(position_us);
 		nrf_gpio_pin_write(PIN_SERVO_SIGNAL, 0);
-		nrf_delay_us(20000-position_us);
+		nrf_delay_us(20000-position_us);		
 	}	
 }
 
