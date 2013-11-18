@@ -112,22 +112,10 @@ void pwm_set_servo(uint32_t pulse_width_us)
 					pulse_width_us > PWM_PULSE_MAX)
 				// TODO: should return an error here.
 				return;
-				
-		uint32_t tries = 0, max_tries = 5000;
-
+		
+		// Stop timer and clear any existing counts if already running.
 		if (m_is_running)
-		{
-			// Make sure that the pin is not high before sending another pulse train.
-			while ((NRF_GPIO->IN & (1 << m_pwm_pin_output)) != 0)
-			{
-				// Keep trying, but not indefinitely.
-				if (++tries > max_tries)
-					return;
-			}
-			
-			// Stop timer and clear any existing counts.
 			pwm_stop_servo();		
-		}
 
 		NRF_TIMER2->CC[0] = pulse_width_us;
 		NRF_TIMER2->CC[1] = pulse_width_us*2; 
@@ -140,8 +128,17 @@ void pwm_set_servo(uint32_t pulse_width_us)
 
 void pwm_stop_servo(void)
 {
-			NRF_TIMER2->TASKS_STOP = 1;
-			NRF_TIMER2->TASKS_CLEAR = 1;			
+		uint32_t tries = 0, max_tries = 5000;
+		
+		// Make sure that the pin is not high before sending another pulse train.
+		while ((NRF_GPIO->IN & (1 << m_pwm_pin_output)) != 0)
+		{
+			// Keep trying for a while and if no success - just stop the timer.
+			if (++tries > max_tries)
+				break;
+		}	
+		NRF_TIMER2->TASKS_STOP = 1;
+		NRF_TIMER2->TASKS_CLEAR = 1;			
 }
 
 /** @} */
