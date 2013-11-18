@@ -60,9 +60,6 @@ static void timer2_init(void)
     // Clears the timer, sets it to 0.
     NRF_TIMER2->TASKS_CLEAR = 1;
 
-    // First Timer compare event will fire right away.
-		NRF_TIMER2->CC[0] = 1;	
-
 		// On compare 2 event, clear the counter and restart.
 		NRF_TIMER2->SHORTS = TIMER_SHORTS_COMPARE2_CLEAR_Msk;
 
@@ -149,8 +146,9 @@ void pwm_set_servo(uint32_t pulse_width_us)
 			NRF_TIMER2->TASKS_CLEAR = 1;			
 		}
 
-		NRF_TIMER2->CC[1] = pulse_width_us; 
-		NRF_TIMER2->CC[2] = PWM_PERIOD_WIDTH_US - pulse_width_us;
+		NRF_TIMER2->CC[0] = pulse_width_us;
+		NRF_TIMER2->CC[1] = pulse_width_us*2; 
+		NRF_TIMER2->CC[2] = PWM_PERIOD_WIDTH_US - (pulse_width_us*2);
 		
 		// Start the timer.
 		NRF_TIMER2->TASKS_START = 1;
