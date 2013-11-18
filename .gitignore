@@ -22,6 +22,8 @@
 *.crf
 *._2i
 *.dep
+*.lst
+*.uv*
 
 # Packages #
 ############

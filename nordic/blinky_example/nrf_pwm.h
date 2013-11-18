@@ -2,6 +2,13 @@
 #define __NRF_PWM_H__
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "nrf.h"
+#include "nrf_assert.h"
+#include "nrf_gpiote.h"
+#include "nrf_gpio.h"
+#include "boards.h"
+#include "nrf_pwm.h"
 
 #define PWM_PERIOD_WIDTH_US		20*1000		// 20ms
 #define PWM_DURATION_US				500*1000	// 500ms is how long we should pulse for.

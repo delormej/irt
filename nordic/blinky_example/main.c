@@ -69,9 +69,9 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     NVIC_SystemReset();
 }
 
-void set_resistance(uint32_t position_us)
+void set_resistance(uint32_t level)
 {
-		pwm_set_servo(position_us);
+		pwm_set_servo(RESISTANCE_LEVEL[level]);
 }
 
 // 
@@ -98,7 +98,7 @@ void on_button_ii_event(void)
 	blink_led();
 	// decrement
 	if (m_resistance_level > 0)
-		set_resistance(RESISTANCE_LEVEL[--m_resistance_level]);	
+		set_resistance(--m_resistance_level);	
 }
 
 //
@@ -109,7 +109,7 @@ void on_button_iii_event(void)
 	blink_led();
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
-		set_resistance(RESISTANCE_LEVEL[++m_resistance_level]);
+		set_resistance(++m_resistance_level);
 }
 
 //
@@ -178,14 +178,14 @@ int main(void)
 	// Configure GPIO Tasks and Events
 	init_gpiote();
 	
+	// Configure pulse width modulation for resistance servo control.
 	pwm_init(PIN_SERVO_SIGNAL);
 	
 	// Test blinking the light when it turns on.
 	send_hello();
 	
-	// Set servo to 0 position
-	m_resistance_level = 0;
-	pwm_set_servo(RESISTANCE_LEVEL[m_resistance_level]);
+	// Set servo to level 0 position.
+	set_resistance(m_resistance_level);
 
   while(true)
   {

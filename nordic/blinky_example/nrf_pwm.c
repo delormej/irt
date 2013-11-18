@@ -12,15 +12,6 @@
  *
  *   -->|        |<-- Pulse Width 
 */
-
-
-#include <stdbool.h>
-#include <stdint.h>
-#include "nrf.h"
-#include "nrf_assert.h"
-#include "nrf_gpiote.h"
-#include "nrf_gpio.h"
-#include "boards.h"
 #include "nrf_pwm.h"
 
 uint32_t m_pwm_pin_output = 0;
