@@ -26,19 +26,6 @@
 uint32_t m_pwm_pin_output = 0;
 bool m_is_running = false;
 
-/** @brief Function for handling timer 2 peripheral interrupts.
- */
-void TIMER2_IRQHandler(void)
-{
-    if ((NRF_TIMER2->INTENSET & TIMER_INTENSET_COMPARE2_Msk) != 0)
-    {
-        /* Stop the timer, we've pulsed enough.
-				NRF_TIMER2->TASKS_STOP = 1;
-				NRF_TIMER2->TASKS_CLEAR = 1; */
-    }
-}
-
-
 /** @brief Function for initializing the Timer 2 peripheral.
  */
 static void timer2_init(void)
@@ -62,10 +49,6 @@ static void timer2_init(void)
 
 		// On compare 2 event, clear the counter and restart.
 		NRF_TIMER2->SHORTS = TIMER_SHORTS_COMPARE2_CLEAR_Msk;
-
-    // Interrupt setup.
-    //NRF_TIMER2->INTENSET = (TIMER_INTENSET_COMPARE2_Enabled << TIMER_INTENSET_COMPARE2_Pos);
-		// Shortcut to STOP the timer when compare 2 hits.
 }
 
 
@@ -96,14 +79,9 @@ static void ppi_init(void)
     NRF_PPI->CH[1].EEP = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[1];
     NRF_PPI->CH[1].TEP = (uint32_t)&NRF_GPIOTE->TASKS_OUT[0];
     
-    // Configure PPI channel 1 to toggle PWM_OUTPUT_PIN on every TIMER2 COMPARE[2] match.
-    //NRF_PPI->CH[2].EEP = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[2];
-    //NRF_PPI->CH[2].TEP = (uint32_t)&NRF_GPIOTE->TASKS_OUT[0];
-    
-    // Enable PPI channels 0-2.
+    // Enable PPI channels 0-1.
     NRF_PPI->CHEN = (PPI_CHEN_CH0_Enabled << PPI_CHEN_CH0_Pos)
                     | (PPI_CHEN_CH1_Enabled << PPI_CHEN_CH1_Pos);
-                    //| (PPI_CHEN_CH2_Enabled << PPI_CHEN_CH2_Pos);
 }
 
 
@@ -126,10 +104,6 @@ void pwm_init(uint32_t pwm_pin_output_number)
     //       However this setting will ensure correct behaviour when routing TIMER events through 
     //       PPI (shown in this example) and low power mode simultaneously.
     NRF_POWER->TASKS_CONSTLAT = 1;
-
-    // Enable interrupt on Timer 2.
-    //NVIC_EnableIRQ(TIMER2_IRQn);
-    //__enable_irq();
 }
 
 void pwm_set_servo(uint32_t pulse_width_us)
@@ -138,12 +112,21 @@ void pwm_set_servo(uint32_t pulse_width_us)
 					pulse_width_us > PWM_PULSE_MAX)
 				// TODO: should return an error here.
 				return;
+				
+		uint32_t tries = 0, max_tries = 5000;
 
 		if (m_is_running)
 		{
+			// Make sure that the pin is not high before sending another pulse train.
+			while ((NRF_GPIO->IN & (1 << m_pwm_pin_output)) != 0)
+			{
+				// Keep trying, but not indefinitely.
+				if (++tries > max_tries)
+					return;
+			}
+			
 			// Stop timer and clear any existing counts.
-			NRF_TIMER2->TASKS_STOP = 1;
-			NRF_TIMER2->TASKS_CLEAR = 1;			
+			pwm_stop_servo();		
 		}
 
 		NRF_TIMER2->CC[0] = pulse_width_us;
