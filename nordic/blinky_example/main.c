@@ -30,13 +30,14 @@
 #include "boards.h"
 #include "nrf_pwm.h"
 #include "resistance.h"
+#include "revolutions.h"
 
 #define NULL								0		// Not sure why this isn't defined in any other header?
 #define PIN_SERVO_SIGNAL		3		// P3 - P0.03
 #define PIN_BUTTON_II				2		// P3 - P0.02
 #define PIN_BUTTON_III 			1		// P3 - P0.01
 #define PIN_DRUM_REV 				0		// P3 - P0.00 
-#define GPIOTE_MAX_USERS		1
+#define GPIOTE_MAX_USERS		3
 
 uint8_t m_resistance_level = 0;
 
@@ -125,6 +126,19 @@ void on_gpiote_event(uint32_t event_pins_low_to_high, uint32_t event_pins_high_t
 		on_drum_rev_event();
 }
 
+void REVS_IRQHandler()
+{
+	REVS_TIMER->EVENTS_COMPARE[0] = 0;	// This stops the IRQHandler from getting called indefinetly.
+	/*
+	uint32_t revs = 0;
+
+	REVS_TIMER->TASKS_CAPTURE[0] = 1;
+	revs = REVS_TIMER->CC[0]; */
+	
+	blink_led();
+}
+
+
 //
 // Initializes the GPIO tasks & events library and starts listening for GPIO events.
 //
@@ -141,7 +155,7 @@ int init_gpiote(void)
 	
 	app_gpiote_user_id_t p_user_id;
 	uint32_t pins_low_to_high_mask = (1 << PIN_BUTTON_II) | (1 << PIN_BUTTON_III);	// buttons
-	uint32_t pins_high_to_low_mask = 1 << PIN_DRUM_REV;		// drum rotation
+	uint32_t pins_high_to_low_mask = 0; // 1 << PIN_DRUM_REV;		// drum rotation
 	
 	uint32_t err_code = app_gpiote_user_register(&p_user_id,
 																					pins_low_to_high_mask,
@@ -177,10 +191,12 @@ int main(void)
 {
 	// Configure GPIO Tasks and Events
 	init_gpiote();
-	
+
 	// Configure pulse width modulation for resistance servo control.
 	pwm_init(PIN_SERVO_SIGNAL);
-	
+
+	init_revolutions(PIN_DRUM_REV);
+
 	// Test blinking the light when it turns on.
 	send_hello();
 	
@@ -189,7 +205,6 @@ int main(void)
 
   while(true)
   {
-		// no-op endless loop
   }
 }
 
