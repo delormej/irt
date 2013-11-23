@@ -6,7 +6,7 @@ void revs_init_gpiote(uint32_t pin_drum_rev)
 	// Configure GPIO input from drum revolution pin and create an event on channel 3. 
 	// commenting this because we do it in main.c, need to refactor.
 	// nrf_gpio_cfg_input(pin_drum_rev, NRF_GPIO_PIN_NOPULL);
-	nrf_gpiote_event_config(3, pin_drum_rev, NRF_GPIOTE_POLARITY_TOGGLE);
+	nrf_gpiote_event_config(3, pin_drum_rev, NRF_GPIOTE_POLARITY_HITOLO);
 }
 
 void revs_init_ppi()

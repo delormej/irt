@@ -4,7 +4,7 @@
 #define REVS_TIMER 				NRF_TIMER1
 #define REVS_IRQHandler		TIMER1_IRQHandler
 #define REVS_IRQn					TIMER1_IRQn
-#define REVS_TO_TRIGGER		19			// Number of revolutions before iterrupt is triggered.
+#define REVS_TO_TRIGGER		19UL			// Number of revolutions before iterrupt is triggered.
 
 #include <stdbool.h>
 #include <stdint.h>
