@@ -50,6 +50,7 @@
 #include "nrf_delay.h"
 #include "boards.h"
 #include "resistance.h"
+#include "revolutions.h"
 
 #define HR_INC_BUTTON_PIN_NO                 EVAL_BOARD_BUTTON_0                       /**< Button used to increment heart rate. */
 #define HR_DEC_BUTTON_PIN_NO                 EVAL_BOARD_BUTTON_1                       /**< Button used to decrement heart rate. */
@@ -730,6 +731,21 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     on_ble_evt(p_ble_evt);
 }
 
+/**@brief Function called when a specified number of drum revolutions occur."
+ *
+ *
+ */
+void REVS_IRQHandler()
+{
+	REVS_TIMER->EVENTS_COMPARE[0] = 0;	// This stops the IRQHandler from getting called indefinetly.
+	/*
+	uint32_t revs = 0;
+
+	REVS_TIMER->TASKS_CAPTURE[0] = 1;
+	revs = REVS_TIMER->CC[0]; */
+	
+	led_start();
+}
 
 /*****************************************************************************
 * Main Function
@@ -775,6 +791,7 @@ int main(void)
     advertising_start();
 
 		set_resistance(m_resistance_level);	
+		init_revolutions(PIN_DRUM_REV);
 		app_button_enable();
 
     // Enter main loop
