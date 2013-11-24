@@ -252,7 +252,6 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 
 void on_button_ii_event(void)
 {
-	led_start();
 	// decrement
 	if (m_resistance_level > 0)
 		set_resistance(--m_resistance_level);	
@@ -263,7 +262,6 @@ void on_button_ii_event(void)
 //
 void on_button_iii_event(void)
 {
-	led_stop();
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 		set_resistance(++m_resistance_level);
@@ -777,6 +775,7 @@ int main(void)
     advertising_start();
 
 		set_resistance(m_resistance_level);	
+		app_button_enable();
 
     // Enter main loop
     for (;;)
