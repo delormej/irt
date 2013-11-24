@@ -49,7 +49,7 @@ static void gpiote_init(void)
 {
     nrf_gpio_cfg_output(m_pwm_pin_output);
 
-    NRF_GPIO->OUT = 0x00000000UL;
+    //NRF_GPIO->OUT = 0x00000000UL;
 
     // Configure GPIOTE channel 0 to toggle the PWM pin state
 		// @note Only one GPIOTE task can be connected to an output pin.

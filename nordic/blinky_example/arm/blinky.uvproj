@@ -411,7 +411,7 @@
             <File>
               <FileName>resistance.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resistance.c</FilePath>
+              <FilePath>..\..\emotion\resistance.c</FilePath>
             </File>
             <File>
               <FileName>revolutions.c</FileName>
@@ -917,7 +917,7 @@
             <File>
               <FileName>resistance.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resistance.c</FilePath>
+              <FilePath>..\..\emotion\resistance.c</FilePath>
             </File>
             <File>
               <FileName>revolutions.c</FileName>
@@ -1423,7 +1423,7 @@
             <File>
               <FileName>resistance.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resistance.c</FilePath>
+              <FilePath>..\..\emotion\resistance.c</FilePath>
             </File>
             <File>
               <FileName>revolutions.c</FileName>
@@ -1929,7 +1929,7 @@
             <File>
               <FileName>resistance.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\resistance.c</FilePath>
+              <FilePath>..\..\emotion\resistance.c</FilePath>
             </File>
             <File>
               <FileName>revolutions.c</FileName>

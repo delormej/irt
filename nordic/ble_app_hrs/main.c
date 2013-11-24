@@ -71,7 +71,7 @@
 #define MAX_HEART_RATE                       300                                       /**< Maximum heart rate as returned by the simulated measurement function. */
 #define HEART_RATE_CHANGE                    2                                         /**< Value by which the heart rate is incremented/decremented during button press. */
 
-#define APP_GPIOTE_MAX_USERS                 1                                         /**< Maximum number of users of the GPIOTE handler. */
+#define APP_GPIOTE_MAX_USERS                 2                                         /**< Maximum number of users of the GPIOTE handler. */
 
 #define BUTTON_DETECTION_DELAY               APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)  /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
 
@@ -125,10 +125,12 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt);
 *****************************************************************************/
 static void blink_led(void)
 {
+	/*
 		// Blink once for 1/2 second when the button is pushd.
 		nrf_gpio_port_write(LED_PORT, 1 << (LED_OFFSET));
 		nrf_delay_ms(500);
 		nrf_gpio_port_write(LED_PORT, 0 << (LED_OFFSET));	
+	*/
 }
 
 
@@ -248,6 +250,24 @@ static void heart_rate_meas_timeout_handler(void * p_context)
     }
 }
 
+void on_button_ii_event(void)
+{
+	led_start();
+	// decrement
+	if (m_resistance_level > 0)
+		set_resistance(--m_resistance_level);	
+}
+
+//
+// Occurs when button (III) is pressed.
+//
+void on_button_iii_event(void)
+{
+	led_stop();
+	// increment
+	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
+		set_resistance(++m_resistance_level);
+}
 
 /**@brief Function for handling button events.
  *
@@ -276,11 +296,11 @@ static void button_event_handler(uint8_t pin_no)
             break;
 						
 				case PIN_BUTTON_II:
-						m_cur_heart_rate += 6;
+						on_button_ii_event();
 						break;
 
 				case PIN_BUTTON_III:
-						m_cur_heart_rate -= 6;
+						on_button_iii_event();
 						break;
 
         default:
@@ -620,10 +640,12 @@ static void advertising_start(void)
  */
 static void system_off_mode_enter(void)
 {
+	/*
     uint32_t err_code;
     
     err_code = sd_power_system_off();
     APP_ERROR_CHECK(err_code);
+	*/
 }
 
 
@@ -719,10 +741,15 @@ int main(void)
 {
     uint32_t err_code;
 
+		m_resistance_level = 0;
+
     timers_init();
     gpiote_init();
     buttons_init();
 
+		//set_resistance(m_resistance_level);	
+		
+		/*
     if (is_first_start())
     {
         // The startup was not because of button presses. This is the first start.
@@ -733,6 +760,7 @@ int main(void)
         GPIO_WAKEUP_BUTTON_CONFIG(HR_DEC_BUTTON_PIN_NO);
         NRF_POWER->SYSTEMOFF = 1;
     }
+		*/
 
     bond_manager_init();
     ble_stack_init();
@@ -747,8 +775,6 @@ int main(void)
 
     // Actually start advertising
     advertising_start();
-
-		set_resistance(m_resistance_level);
 
     // Enter main loop
     for (;;)
