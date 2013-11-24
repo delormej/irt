@@ -5,10 +5,12 @@
 
 void revs_init_gpiote(uint32_t pin_drum_rev)
 {
-	// Configure GPIO input from drum revolution pin and create an event on channel 3. 
-	// commenting this because we do it in main.c, need to refactor.
-	// nrf_gpio_cfg_input(pin_drum_rev, NRF_GPIO_PIN_NOPULL);
-	nrf_gpiote_event_config(2, pin_drum_rev, NRF_GPIOTE_POLARITY_HITOLO);
+	// Configure GPIO input from drum revolution pin and create an event on channel. 
+	nrf_gpio_cfg_input(pin_drum_rev, NRF_GPIO_PIN_NOPULL);
+	
+	nrf_gpiote_event_config(REVS_CHANNEL_TASK_TOGGLE, 
+													pin_drum_rev, 
+													NRF_GPIOTE_POLARITY_HITOLO);
 }
 
 void revs_init_ppi()
@@ -17,7 +19,7 @@ void revs_init_ppi()
 	
 	// Using hardcoded channel 3.
 	err_code = sd_ppi_channel_assign(3, 
-																	&NRF_GPIOTE->EVENTS_IN[2], 
+																	&NRF_GPIOTE->EVENTS_IN[REVS_CHANNEL_TASK_TOGGLE], 
 																	&REVS_TIMER->TASKS_COUNT);
 	
 	if (err_code == NRF_ERROR_SOC_PPI_INVALID_CHANNEL)

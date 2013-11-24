@@ -631,7 +631,7 @@ static void advertising_start(void)
     err_code = sd_ble_gap_adv_start(&m_adv_params);
     APP_ERROR_CHECK(err_code);
 
-    led_start();
+    //led_start();
 }
 
 
@@ -664,7 +664,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
-            led_stop();
+            //led_stop();
             
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             
@@ -744,7 +744,7 @@ void REVS_IRQHandler()
 	REVS_TIMER->TASKS_CAPTURE[0] = 1;
 	revs = REVS_TIMER->CC[0]; */
 	
-	led_start();
+	m_cur_heart_rate = m_cur_heart_rate+3;
 }
 
 /*****************************************************************************
