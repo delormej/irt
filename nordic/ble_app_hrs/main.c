@@ -699,10 +699,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         case BLE_GAP_EVT_TIMEOUT:
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
             {
+							/*
                 led_stop();
                 GPIO_WAKEUP_BUTTON_CONFIG(HR_INC_BUTTON_PIN_NO);
                 GPIO_WAKEUP_BUTTON_CONFIG(HR_DEC_BUTTON_PIN_NO);
                 system_off_mode_enter();
+								*/
             }
             break;
 
@@ -779,9 +781,11 @@ int main(void)
     // Enter main loop
     for (;;)
     {
+			/*
         // Switch to a low power state until an event is available for the application
         err_code = sd_app_event_wait();
         APP_ERROR_CHECK(err_code);
+			*/
     }
 }
 
