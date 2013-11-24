@@ -488,6 +488,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
             </File>
+            <File>
+              <FileName>ble_radio_notification.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_radio_notification.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -502,6 +507,11 @@
               <FileName>ble_bas.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ble.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -989,6 +999,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
             </File>
+            <File>
+              <FileName>ble_radio_notification.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_radio_notification.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1003,6 +1018,11 @@
               <FileName>ble_bas.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ble.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1490,6 +1510,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
             </File>
+            <File>
+              <FileName>ble_radio_notification.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_radio_notification.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1504,6 +1529,11 @@
               <FileName>ble_bas.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ble.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1991,6 +2021,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
             </File>
+            <File>
+              <FileName>ble_radio_notification.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_radio_notification.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -2005,6 +2040,11 @@
               <FileName>ble_bas.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ble.c</FilePath>
             </File>
           </Files>
         </Group>
