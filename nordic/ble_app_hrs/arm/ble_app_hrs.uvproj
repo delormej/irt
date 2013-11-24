@@ -523,6 +523,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\emotion\nrf_pwm.c</FilePath>
             </File>
+            <File>
+              <FileName>resistance.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\emotion\resistance.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
@@ -1043,6 +1048,11 @@
               <FileName>nrf_pwm.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\emotion\nrf_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>resistance.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\emotion\resistance.c</FilePath>
             </File>
           </Files>
         </Group>

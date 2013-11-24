@@ -49,6 +49,7 @@
 #include "ble_debug_assert_handler.h"
 #include "nrf_delay.h"
 #include "boards.h"
+#include "resistance.h"
 
 #define HR_INC_BUTTON_PIN_NO                 EVAL_BOARD_BUTTON_0                       /**< Button used to increment heart rate. */
 #define HR_DEC_BUTTON_PIN_NO                 EVAL_BOARD_BUTTON_1                       /**< Button used to decrement heart rate. */
@@ -105,6 +106,7 @@
 #define PIN_DRUM_REV 				0		// P3 - P0.00 
 /*****************************************************************************/
 
+uint8_t m_resistance_level = 0;
 
 static ble_gap_sec_params_t                  m_sec_params;                             /**< Security requirements for this application. */
 static ble_gap_adv_params_t                  m_adv_params;                             /**< Parameters to be passed to the stack when starting advertising. */
@@ -745,6 +747,8 @@ int main(void)
 
     // Actually start advertising
     advertising_start();
+
+		set_resistance(m_resistance_level);
 
     // Enter main loop
     for (;;)

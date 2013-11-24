@@ -28,12 +28,10 @@
 #include "nrf_gpio.h"
 #include "nrf_delay.h"
 #include "boards.h"
-#include "nrf_pwm.h"
 #include "resistance.h"
 #include "revolutions.h"
 
 #define NULL								0		// Not sure why this isn't defined in any other header?
-#define PIN_SERVO_SIGNAL		3		// P3 - P0.03
 #define PIN_BUTTON_II				2		// P3 - P0.02
 #define PIN_BUTTON_III 			1		// P3 - P0.01
 #define PIN_DRUM_REV 				0		// P3 - P0.00 
@@ -86,11 +84,6 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
     app_error_handler(DEAD_BEEF, line_num, p_file_name);
-}
-
-void set_resistance(uint32_t level)
-{
-		pwm_set_servo(RESISTANCE_LEVEL[level]);
 }
 
 // 
@@ -209,9 +202,6 @@ int main(void)
 {
 	// Configure GPIO Tasks and Events
 	init_gpiote();
-
-	// Configure pulse width modulation for resistance servo control.
-	pwm_init(PIN_SERVO_SIGNAL);
 
 	init_revolutions(PIN_DRUM_REV);
 
