@@ -47,7 +47,8 @@
 #include "ble_radio_notification.h"
 #include "ble_flash.h"
 #include "ble_debug_assert_handler.h"
-
+#include "nrf_delay.h"
+#include "boards.h"
 
 #define HR_INC_BUTTON_PIN_NO                 EVAL_BOARD_BUTTON_0                       /**< Button used to increment heart rate. */
 #define HR_DEC_BUTTON_PIN_NO                 EVAL_BOARD_BUTTON_1                       /**< Button used to decrement heart rate. */
@@ -95,6 +96,16 @@
 
 #define DEAD_BEEF                            0xDEADBEEF                                /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+/*****************************************************************************
+* InsideRide defines.
+*****************************************************************************/
+#define PIN_SERVO_SIGNAL		3		// P3 - P0.03
+#define PIN_BUTTON_II				2		// P3 - P0.02
+#define PIN_BUTTON_III 			1		// P3 - P0.01
+#define PIN_DRUM_REV 				0		// P3 - P0.00 
+/*****************************************************************************/
+
+
 static ble_gap_sec_params_t                  m_sec_params;                             /**< Security requirements for this application. */
 static ble_gap_adv_params_t                  m_adv_params;                             /**< Parameters to be passed to the stack when starting advertising. */
 ble_bas_t                                    bas;                                      /**< Structure used to identify the battery service. */
@@ -106,6 +117,17 @@ static app_timer_id_t                        m_heart_rate_timer_id;             
 
 
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt);
+
+/*****************************************************************************
+* InsideRide functions.
+*****************************************************************************/
+static void blink_led(void)
+{
+		// Blink once for 1/2 second when the button is pushd.
+		nrf_gpio_port_write(LED_PORT, 1 << (LED_OFFSET));
+		nrf_delay_ms(500);
+		nrf_gpio_port_write(LED_PORT, 0 << (LED_OFFSET));	
+}
 
 
 /*****************************************************************************
@@ -250,7 +272,15 @@ static void button_event_handler(uint8_t pin_no)
                 m_cur_heart_rate = MAX_HEART_RATE; // Loop back
             }
             break;
-            
+						
+				case PIN_BUTTON_II:
+						m_cur_heart_rate += 6;
+						break;
+
+				case PIN_BUTTON_III:
+						m_cur_heart_rate -= 6;
+						break;
+
         default:
             APP_ERROR_HANDLER(pin_no);
     }
@@ -525,7 +555,9 @@ static void buttons_init(void)
     static app_button_cfg_t buttons[] =
     {
         {HR_INC_BUTTON_PIN_NO, false, NRF_GPIO_PIN_PULLUP, button_event_handler},
-        {HR_DEC_BUTTON_PIN_NO, false, NRF_GPIO_PIN_PULLUP, button_event_handler}  // Note: This pin is also BONDMNGR_DELETE_BUTTON_PIN_NO
+        {HR_DEC_BUTTON_PIN_NO, false, NRF_GPIO_PIN_PULLUP, button_event_handler},  // Note: This pin is also BONDMNGR_DELETE_BUTTON_PIN_NO
+				{PIN_BUTTON_II, false, NRF_GPIO_PIN_PULLUP, button_event_handler},
+				{PIN_BUTTON_III, false, NRF_GPIO_PIN_PULLUP, button_event_handler}
     };
     
     APP_BUTTON_INIT(buttons, sizeof(buttons) / sizeof(buttons[0]), BUTTON_DETECTION_DELAY, false);

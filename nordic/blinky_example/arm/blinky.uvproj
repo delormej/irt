@@ -416,7 +416,7 @@
             <File>
               <FileName>revolutions.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\revolutions.c</FilePath>
+              <FilePath>..\..\emotion\revolutions.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -451,7 +451,7 @@
             <File>
               <FileName>nrf_pwm.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\nrf_pwm.c</FilePath>
+              <FilePath>..\..\emotion\nrf_pwm.c</FilePath>
             </File>
             <File>
               <FileName>ble_advdata.c</FileName>
@@ -922,7 +922,7 @@
             <File>
               <FileName>revolutions.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\revolutions.c</FilePath>
+              <FilePath>..\..\emotion\revolutions.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -957,7 +957,7 @@
             <File>
               <FileName>nrf_pwm.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\nrf_pwm.c</FilePath>
+              <FilePath>..\..\emotion\nrf_pwm.c</FilePath>
             </File>
             <File>
               <FileName>ble_advdata.c</FileName>
@@ -1369,7 +1369,7 @@
               <MiscControls>--c99</MiscControls>
               <Define>NRF51 BOARD_PCA10001</Define>
               <Undefine></Undefine>
-              <IncludePath>..;..\..\nrf51822\Include;..\..\nrf51822\Include\app_common;..\..\nrf51822\Include\ble\softdevice;..\..\nrf51822\Include\ble;..\..\nrf51822\Include\ble\ble_services</IncludePath>
+              <IncludePath>..;..\..\nrf51822\Include;..\..\nrf51822\Include\app_common;..\..\nrf51822\Include\ble\softdevice;..\..\nrf51822\Include\ble;..\..\nrf51822\Include\ble\ble_services;..\..\emotion</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1428,7 +1428,7 @@
             <File>
               <FileName>revolutions.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\revolutions.c</FilePath>
+              <FilePath>..\..\emotion\revolutions.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1463,7 +1463,7 @@
             <File>
               <FileName>nrf_pwm.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\nrf_pwm.c</FilePath>
+              <FilePath>..\..\emotion\nrf_pwm.c</FilePath>
             </File>
             <File>
               <FileName>ble_advdata.c</FileName>
@@ -1934,7 +1934,7 @@
             <File>
               <FileName>revolutions.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\revolutions.c</FilePath>
+              <FilePath>..\..\emotion\revolutions.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1969,7 +1969,7 @@
             <File>
               <FileName>nrf_pwm.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\nrf_pwm.c</FilePath>
+              <FilePath>..\..\emotion\nrf_pwm.c</FilePath>
             </File>
             <File>
               <FileName>ble_advdata.c</FileName>
