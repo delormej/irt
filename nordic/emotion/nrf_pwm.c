@@ -43,7 +43,7 @@ static void gpiote_init(void)
 
     // Configure GPIOTE channel 0 to toggle the PWM pin state
 		// @note Only one GPIOTE task can be connected to an output pin.
-    nrf_gpiote_task_config(3, 
+    nrf_gpiote_task_config(PWM_CHANNEL_TASK_TOGGLE, 
 													m_pwm_pin_output,
                           NRF_GPIOTE_POLARITY_TOGGLE, 
 													NRF_GPIOTE_INITIAL_VALUE_LOW);
@@ -61,14 +61,14 @@ static void ppi_init(void)
 	// Using hardcoded channels that are available, 4 & 5.
 	err_code = sd_ppi_channel_assign(4, 
 																	&NRF_TIMER2->EVENTS_COMPARE[0], 
-																	&NRF_GPIOTE->TASKS_OUT[3]);
+																	&NRF_GPIOTE->TASKS_OUT[PWM_CHANNEL_TASK_TOGGLE]);
 	
 	if (err_code == NRF_ERROR_SOC_PPI_INVALID_CHANNEL)
 		APP_ERROR_HANDLER(NRF_ERROR_SOC_PPI_INVALID_CHANNEL);
 	
 	err_code = sd_ppi_channel_assign(5, 
 																	&NRF_TIMER2->EVENTS_COMPARE[1], 
-																	&NRF_GPIOTE->TASKS_OUT[3]);
+																	&NRF_GPIOTE->TASKS_OUT[PWM_CHANNEL_TASK_TOGGLE]);
 	
 	if (err_code == NRF_ERROR_SOC_PPI_INVALID_CHANNEL)
 		APP_ERROR_HANDLER(NRF_ERROR_SOC_PPI_INVALID_CHANNEL);
