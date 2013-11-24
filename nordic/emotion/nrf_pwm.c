@@ -13,6 +13,7 @@
  *   -->|        |<-- Pulse Width 
 */
 #include "nrf_pwm.h"
+#include "nrf_sdm.h"
 
 uint32_t m_pwm_pin_output = 0;
 bool m_is_running = false;
@@ -22,8 +23,8 @@ bool m_is_running = false;
 static void timer2_init(void)
 {
     // Start 16 MHz crystal oscillator .
-    NRF_CLOCK->EVENTS_HFCLKSTARTED  = 0;
-    NRF_CLOCK->TASKS_HFCLKSTART     = 1;
+    //NRF_CLOCK->EVENTS_HFCLKSTARTED  = 0;
+    //NRF_CLOCK->TASKS_HFCLKSTART     = 1;
 
     // Wait for the external oscillator to start up.
     while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0) 
@@ -53,7 +54,7 @@ static void gpiote_init(void)
 
     // Configure GPIOTE channel 0 to toggle the PWM pin state
 		// @note Only one GPIOTE task can be connected to an output pin.
-    nrf_gpiote_task_config(0, m_pwm_pin_output, \
+    nrf_gpiote_task_config(3, m_pwm_pin_output, \
                            NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
 }
 
@@ -62,6 +63,14 @@ static void gpiote_init(void)
  */
 static void ppi_init(void)
 {
+	uint32_t err_code; 
+	err_code = sd_ppi_channel_assign(4, &NRF_TIMER2->EVENTS_COMPARE[0], &NRF_GPIOTE->TASKS_OUT[3]);
+	err_code = sd_ppi_channel_assign(5, &NRF_TIMER2->EVENTS_COMPARE[1], &NRF_GPIOTE->TASKS_OUT[3]);
+	
+	err_code = sd_ppi_channel_enable_set((PPI_CHEN_CH4_Enabled << PPI_CHEN_CH4_Pos)
+																				| (PPI_CHEN_CH5_Enabled << PPI_CHEN_CH5_Pos));
+	
+	/*
     // Configure PPI channel 0 to toggle PWM_OUTPUT_PIN on every TIMER2 COMPARE[0] match.
     NRF_PPI->CH[0].EEP = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[0];
     NRF_PPI->CH[0].TEP = (uint32_t)&NRF_GPIOTE->TASKS_OUT[0];
@@ -73,6 +82,7 @@ static void ppi_init(void)
     // Enable PPI channels 0-1.
     NRF_PPI->CHEN = (PPI_CHEN_CH0_Enabled << PPI_CHEN_CH0_Pos)
                     | (PPI_CHEN_CH1_Enabled << PPI_CHEN_CH1_Pos);
+		*/
 }
 
 
@@ -94,7 +104,7 @@ void pwm_init(uint32_t pwm_pin_output_number)
     // @note This example does not go to low power mode therefore constant latency is not needed.
     //       However this setting will ensure correct behaviour when routing TIMER events through 
     //       PPI (shown in this example) and low power mode simultaneously.
-    NRF_POWER->TASKS_CONSTLAT = 1;
+    //NRF_POWER->TASKS_CONSTLAT = 1;
 }
 
 void pwm_set_servo(uint32_t pulse_width_us)
