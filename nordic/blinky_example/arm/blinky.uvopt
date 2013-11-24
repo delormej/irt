@@ -656,7 +656,7 @@
       <Focus>0</Focus>
       <ColumnNumber>19</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>13</TopLine>
+      <TopLine>14</TopLine>
       <CurrentLine>30</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\main.c</PathWithFileName>
@@ -907,7 +907,7 @@
   </Group>
 
   <Group>
-    <GroupName>New Group</GroupName>
+    <GroupName>svc</GroupName>
     <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
@@ -923,8 +923,8 @@
       <TopLine>0</TopLine>
       <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</PathWithFileName>
-      <FilenameWithoutPath>ble_bas.c</FilenameWithoutPath>
+      <PathWithFileName>..\..\nrf51822\Source\ble\ble_services\ble_dis.c</PathWithFileName>
+      <FilenameWithoutPath>ble_dis.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -939,8 +939,8 @@
       <TopLine>0</TopLine>
       <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\..\nrf51822\Source\ble\ble_services\ble_dis.c</PathWithFileName>
-      <FilenameWithoutPath>ble_dis.c</FilenameWithoutPath>
+      <PathWithFileName>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</PathWithFileName>
+      <FilenameWithoutPath>ble_bas.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

@@ -491,17 +491,17 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>New Group</GroupName>
+          <GroupName>svc</GroupName>
           <Files>
-            <File>
-              <FileName>ble_bas.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
-            </File>
             <File>
               <FileName>ble_dis.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_dis.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_bas.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -992,17 +992,17 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>New Group</GroupName>
+          <GroupName>svc</GroupName>
           <Files>
-            <File>
-              <FileName>ble_bas.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
-            </File>
             <File>
               <FileName>ble_dis.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_dis.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_bas.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1493,17 +1493,17 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>New Group</GroupName>
+          <GroupName>svc</GroupName>
           <Files>
-            <File>
-              <FileName>ble_bas.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
-            </File>
             <File>
               <FileName>ble_dis.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_dis.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_bas.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1994,17 +1994,17 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>New Group</GroupName>
+          <GroupName>svc</GroupName>
           <Files>
-            <File>
-              <FileName>ble_bas.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
-            </File>
             <File>
               <FileName>ble_dis.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_dis.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_bas.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
             </File>
           </Files>
         </Group>
