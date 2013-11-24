@@ -453,6 +453,56 @@
               <FileType>1</FileType>
               <FilePath>..\nrf_pwm.c</FilePath>
             </File>
+            <File>
+              <FileName>ble_advdata.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_advdata.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_bondmngr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_bondmngr.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_conn_params.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_conn_params.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_stack_handler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_stack_handler.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\app_common\app_timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_srv_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>New Group</GroupName>
+          <Files>
+            <File>
+              <FileName>ble_bas.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_dis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_dis.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
@@ -904,6 +954,56 @@
               <FileType>1</FileType>
               <FilePath>..\nrf_pwm.c</FilePath>
             </File>
+            <File>
+              <FileName>ble_advdata.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_advdata.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_bondmngr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_bondmngr.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_conn_params.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_conn_params.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_stack_handler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_stack_handler.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\app_common\app_timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_srv_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>New Group</GroupName>
+          <Files>
+            <File>
+              <FileName>ble_bas.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_dis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_dis.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
@@ -1069,7 +1169,7 @@
             <Capability>1</Capability>
             <DriverSelection>4099</DriverSelection>
           </Flash1>
-          <bUseTDR>0</bUseTDR>
+          <bUseTDR>1</bUseTDR>
           <Flash2>Segger\JL2CM3.dll</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
@@ -1259,7 +1359,7 @@
               <MiscControls>--c99</MiscControls>
               <Define>NRF51 BOARD_PCA10001</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\..\..\Include</IncludePath>
+              <IncludePath>..;..\..\nrf51822\Include;..\..\nrf51822\Include\app_common;..\..\nrf51822\Include\ble\softdevice;..\..\nrf51822\Include\ble;..\..\nrf51822\Include\ble\ble_services</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1354,6 +1454,56 @@
               <FileName>nrf_pwm.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\nrf_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_advdata.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_advdata.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_bondmngr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_bondmngr.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_conn_params.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_conn_params.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_stack_handler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_stack_handler.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\app_common\app_timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_srv_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>New Group</GroupName>
+          <Files>
+            <File>
+              <FileName>ble_bas.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_dis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_dis.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1520,7 +1670,7 @@
             <Capability>1</Capability>
             <DriverSelection>4099</DriverSelection>
           </Flash1>
-          <bUseTDR>0</bUseTDR>
+          <bUseTDR>1</bUseTDR>
           <Flash2>Segger\JL2CM3.dll</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
@@ -1805,6 +1955,56 @@
               <FileName>nrf_pwm.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\nrf_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_advdata.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_advdata.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_bondmngr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_bondmngr.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_conn_params.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_conn_params.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_stack_handler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_stack_handler.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\app_common\app_timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_srv_common.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_srv_common.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>New Group</GroupName>
+          <Files>
+            <File>
+              <FileName>ble_bas.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_dis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_dis.c</FilePath>
             </File>
           </Files>
         </Group>
