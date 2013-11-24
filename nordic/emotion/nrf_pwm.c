@@ -14,6 +14,7 @@
 */
 #include "nrf_pwm.h"
 #include "nrf_sdm.h"
+#include "app_error.h"
 
 uint32_t m_pwm_pin_output = 0;
 bool m_is_running = false;
@@ -22,16 +23,6 @@ bool m_is_running = false;
  */
 static void timer2_init(void)
 {
-    // Start 16 MHz crystal oscillator .
-    //NRF_CLOCK->EVENTS_HFCLKSTARTED  = 0;
-    //NRF_CLOCK->TASKS_HFCLKSTART     = 1;
-
-    // Wait for the external oscillator to start up.
-    while (NRF_CLOCK->EVENTS_HFCLKSTARTED == 0) 
-    {
-        //Do nothing.
-    }
-
     NRF_TIMER2->MODE        = TIMER_MODE_MODE_Timer;
     NRF_TIMER2->BITMODE     = TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
     NRF_TIMER2->PRESCALER   = PWM_TIMER_PRESCALER;
@@ -50,44 +41,45 @@ static void gpiote_init(void)
 {
     nrf_gpio_cfg_output(m_pwm_pin_output);
 
-    //NRF_GPIO->OUT = 0x00000000UL;
-
     // Configure GPIOTE channel 0 to toggle the PWM pin state
 		// @note Only one GPIOTE task can be connected to an output pin.
-    nrf_gpiote_task_config(3, m_pwm_pin_output, \
-                           NRF_GPIOTE_POLARITY_TOGGLE, NRF_GPIOTE_INITIAL_VALUE_LOW);
+    nrf_gpiote_task_config(3, 
+													m_pwm_pin_output,
+                          NRF_GPIOTE_POLARITY_TOGGLE, 
+													NRF_GPIOTE_INITIAL_VALUE_LOW);
 }
 
-
 /** @brief Function for initializing the Programmable Peripheral Interconnect peripheral.
+ *
+ * 	@note	The PPI allows an event on one peripheral to automatically execute a task on 
+ *				another peripheral without using the CPU.  In this case we are 
  */
 static void ppi_init(void)
 {
 	uint32_t err_code; 
-	err_code = sd_ppi_channel_assign(4, &NRF_TIMER2->EVENTS_COMPARE[0], &NRF_GPIOTE->TASKS_OUT[3]);
-	err_code = sd_ppi_channel_assign(5, &NRF_TIMER2->EVENTS_COMPARE[1], &NRF_GPIOTE->TASKS_OUT[3]);
 	
-	err_code = sd_ppi_channel_enable_set((PPI_CHEN_CH4_Enabled << PPI_CHEN_CH4_Pos)
-																				| (PPI_CHEN_CH5_Enabled << PPI_CHEN_CH5_Pos));
+	// Using hardcoded channels that are available, 4 & 5.
+	err_code = sd_ppi_channel_assign(4, 
+																	&NRF_TIMER2->EVENTS_COMPARE[0], 
+																	&NRF_GPIOTE->TASKS_OUT[3]);
 	
-	/*
-    // Configure PPI channel 0 to toggle PWM_OUTPUT_PIN on every TIMER2 COMPARE[0] match.
-    NRF_PPI->CH[0].EEP = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[0];
-    NRF_PPI->CH[0].TEP = (uint32_t)&NRF_GPIOTE->TASKS_OUT[0];
+	if (err_code == NRF_ERROR_SOC_PPI_INVALID_CHANNEL)
+		APP_ERROR_HANDLER(NRF_ERROR_SOC_PPI_INVALID_CHANNEL);
+	
+	err_code = sd_ppi_channel_assign(5, 
+																	&NRF_TIMER2->EVENTS_COMPARE[1], 
+																	&NRF_GPIOTE->TASKS_OUT[3]);
+	
+	if (err_code == NRF_ERROR_SOC_PPI_INVALID_CHANNEL)
+		APP_ERROR_HANDLER(NRF_ERROR_SOC_PPI_INVALID_CHANNEL);
 
-    // Configure PPI channel 1 to toggle PWM_OUTPUT_PIN on every TIMER2 COMPARE[1] match.
-    NRF_PPI->CH[1].EEP = (uint32_t)&NRF_TIMER2->EVENTS_COMPARE[1];
-    NRF_PPI->CH[1].TEP = (uint32_t)&NRF_GPIOTE->TASKS_OUT[0];
-    
-    // Enable PPI channels 0-1.
-    NRF_PPI->CHEN = (PPI_CHEN_CH0_Enabled << PPI_CHEN_CH0_Pos)
-                    | (PPI_CHEN_CH1_Enabled << PPI_CHEN_CH1_Pos);
-		*/
+
+	sd_ppi_channel_enable_set((PPI_CHEN_CH4_Enabled << PPI_CHEN_CH4_Pos)
+														| (PPI_CHEN_CH5_Enabled << PPI_CHEN_CH5_Pos));
 }
 
-
 /**
- * @brief Function for application main entry.
+ * @brief Initializes PWM.
  */
 void pwm_init(uint32_t pwm_pin_output_number)
 {
@@ -118,6 +110,13 @@ void pwm_set_servo(uint32_t pulse_width_us)
 		if (m_is_running)
 			pwm_stop_servo();		
 
+		//
+		// Configuring capture compares for the timer.
+		// 
+		// First timer capture is just a time buffer for the 1st call, it can be any 
+		// value greater than a few hundred 'us'.  The 2nd is the actual pulse width 
+		// in microseconds (us).  The 3rd is the remainder of the 20ms total period.
+		//
 		NRF_TIMER2->CC[0] = pulse_width_us;
 		NRF_TIMER2->CC[1] = pulse_width_us*2; 
 		NRF_TIMER2->CC[2] = PWM_PERIOD_WIDTH_US - (pulse_width_us*2);

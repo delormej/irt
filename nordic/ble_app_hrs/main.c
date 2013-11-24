@@ -748,8 +748,6 @@ int main(void)
     timers_init();
     gpiote_init();
     buttons_init();
-
-		//set_resistance(m_resistance_level);	
 		
 		/*
     if (is_first_start())
@@ -777,6 +775,8 @@ int main(void)
 
     // Actually start advertising
     advertising_start();
+
+		set_resistance(m_resistance_level);	
 
     // Enter main loop
     for (;;)
