@@ -235,6 +235,8 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 
     UNUSED_PARAMETER(p_context);
 
+		m_cur_heart_rate = revs_get_count();
+
     err_code = ble_hrs_heart_rate_measurement_send(&m_hrs, m_cur_heart_rate);
 
     if (
@@ -744,7 +746,7 @@ void REVS_IRQHandler()
 	REVS_TIMER->TASKS_CAPTURE[0] = 1;
 	revs = REVS_TIMER->CC[0]; */
 	
-	m_cur_heart_rate = m_cur_heart_rate+3;
+	m_cur_heart_rate = revs_get_count();
 }
 
 /*****************************************************************************

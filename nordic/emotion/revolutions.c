@@ -3,7 +3,7 @@
 #include "app_error.h"
 
 
-void revs_init_gpiote(uint32_t pin_drum_rev)
+static void revs_init_gpiote(uint32_t pin_drum_rev)
 {
 	// Configure GPIO input from drum revolution pin and create an event on channel. 
 	nrf_gpio_cfg_input(pin_drum_rev, NRF_GPIO_PIN_NOPULL);
@@ -13,7 +13,7 @@ void revs_init_gpiote(uint32_t pin_drum_rev)
 													NRF_GPIOTE_POLARITY_HITOLO);
 }
 
-void revs_init_ppi()
+static void revs_init_ppi()
 {
 	uint32_t err_code; 
 	
@@ -30,19 +30,29 @@ void revs_init_ppi()
 	sd_ppi_channel_enable_set(PPI_CHEN_CH3_Enabled << PPI_CHEN_CH3_Pos);
 }
 
-void revs_init_timer()
+static void revs_init_timer()
 {
 	REVS_TIMER->MODE				=	TIMER_MODE_MODE_Counter;
 	REVS_TIMER->BITMODE   	= TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
 	REVS_TIMER->TASKS_CLEAR = 1;
 	
-	REVS_TIMER->CC[0] 			= REVS_TO_TRIGGER;
+	//REVS_TIMER->CC[0] 			= REVS_TO_TRIGGER;
 
 	// Clear the counter every time we hit the trigger value.
-	REVS_TIMER->SHORTS 			= TIMER_SHORTS_COMPARE0_CLEAR_Msk;
+	//REVS_TIMER->SHORTS 			= TIMER_SHORTS_COMPARE0_CLEAR_Msk;
 	
 	// Interrupt setup.
-  REVS_TIMER->INTENSET 		= (TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos);	
+  //REVS_TIMER->INTENSET 		= (TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos);	
+}
+
+uint16_t revs_get_count()
+{
+	uint16_t revs = 0;
+
+	REVS_TIMER->TASKS_CAPTURE[0] = 1;
+	revs = REVS_TIMER->CC[0]; 
+	
+	return revs;
 }
 
 void init_revolutions(uint32_t pin_drum_rev)

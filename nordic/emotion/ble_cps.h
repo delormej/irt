@@ -67,7 +67,7 @@
 #define BLE_CPS_FEATURE_INSTANT_MEAS_DIRECTION_BIT		(0x01 << 17)	// Instantaneous Measurement Direction Supported
 #define BLE_CPS_FEATURE_FACTORY_CALIBRATION_BIT			(0x01 << 18)	// Factory Calibration Date Supported
 
-
+/**@brief Cycling Power Service measurement type. */
 typedef struct ble_cps_meas_s
 {
 	uint16_t    flags;									// 16 bits defined here: https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
@@ -89,23 +89,6 @@ typedef struct ble_cps_meas_s
 	uint16_t	accum_energy;							// Unit is in kilojoules with a resolution of 1.
 } ble_cps_meas_t;
 
-
-
-
-
-
-/**@brief Heart Rate Service event type. */
-typedef enum
-{
-	BLE_HRS_EVT_NOTIFICATION_ENABLED,                   /**< Heart Rate value notification enabled event. */
-	BLE_HRS_EVT_NOTIFICATION_DISABLED                   /**< Heart Rate value notification disabled event. */
-} ble_hrs_evt_type_t;
-
-/**@brief Heart Rate Service event. */
-typedef struct
-{
-	ble_hrs_evt_type_t evt_type;                        /**< Type of event. */
-} ble_hrs_evt_t;
 
 // Forward declaration of the ble_hrs_t type. 
 typedef struct ble_hrs_s ble_hrs_t;

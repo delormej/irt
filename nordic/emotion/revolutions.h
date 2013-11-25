@@ -17,7 +17,12 @@
 #include "boards.h"
 #include "nrf_pwm.h"
 
-// Initializes the counter and iterrupt handler.
+/**@brief 	Initializes the drum photo sensor that reports revolutions.*/
 void init_revolutions(uint32_t pin_drum_rev);
+
+/**@brief 	Gets the current count of drum revolutions since the counter 
+ * 					was cleared or rolled over. 
+ */
+uint16_t revs_get_count(void);
 
 #endif
