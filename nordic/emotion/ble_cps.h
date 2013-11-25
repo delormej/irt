@@ -67,6 +67,20 @@
 #define BLE_CPS_FEATURE_INSTANT_MEAS_DIRECTION_BIT		(0x01 << 17)	// Instantaneous Measurement Direction Supported
 #define BLE_CPS_FEATURE_FACTORY_CALIBRATION_BIT			(0x01 << 18)	// Factory Calibration Date Supported
 
+/**@brief Cycling Power Service event type. */
+typedef enum
+{
+	BLE_CPS_EVT_NOTIFICATION_ENABLED,                   /**< Cycling Power value notification enabled event. */
+	BLE_CPS_EVT_NOTIFICATION_DISABLED                   /**< Cycling Power value notification disabled event. */
+} ble_cps_evt_type_t;
+
+/**@brief Cycling Power Service event. */
+typedef struct
+{
+	ble_cps_evt_type_t evt_type;                        /**< Type of event. */
+} ble_cps_evt_t;
+
+
 /**@brief Cycling Power Service measurement type. */
 typedef struct ble_cps_meas_s
 {
@@ -82,129 +96,83 @@ typedef struct ble_cps_meas_s
 	int16_t		min_force_magnitude;					// Unit is in newtons with a resolution of 1.
 	int16_t		max_torque_magnitude;					// Unit is in newton metres with a resolution of 1/32
 	int16_t		min_torque_magnitude;					// Unit is in newton metres with a resolution of 1/32
-	uint12_t	max_angle;								// Unit is in degrees with a resolution of 1. 
-	uint12_t	min_angle;								// Unit is in degrees with a resolution of 1. 
+	char	max_angle[12];								// Unit is in degrees with a resolution of 1. 
+	char	min_angle[12];								// Unit is in degrees with a resolution of 1. 
 	uint16_t	top_dead_spot_angle;					// Unit is in degrees with a resolution of 1. 
 	uint16_t	bottom_dead_spot_angle;					// Unit is in degrees with a resolution of 1. 
 	uint16_t	accum_energy;							// Unit is in kilojoules with a resolution of 1.
 } ble_cps_meas_t;
 
+/*
+https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
+Cycling Power Control Point bluetooth.characteristic.cycling_power_control_point 0x2A66 
+Cycling Power Feature org.bluteooth.characteristic.cycling_power_feature 0x2A65 
+Cycling Power Measurement org.blueeooth.cycling_power_measurement 0x2A63 
+Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64 
+*/
 
 // Forward declaration of the ble_hrs_t type. 
-typedef struct ble_hrs_s ble_hrs_t;
+typedef struct ble_cps_s ble_cps_t;
 
-/**@brief Heart Rate Service event handler type. */
-typedef void(*ble_hrs_evt_handler_t) (ble_hrs_t * p_hrs, ble_hrs_evt_t * p_evt);
+/**@brief Cycling Power Service event handler type. */
+typedef void(*ble_cps_evt_handler_t) (ble_cps_t * p_cps, ble_cps_evt_t * p_evt);
 
-/**@brief Heart Rate Service init structure. This contains all options and data needed for
+/**@brief Cycling Power Service init structure. This contains all options and data needed for
 *        initialization of the service. */
 typedef struct
 {
-	ble_hrs_evt_handler_t        evt_handler;                                          /**< Event handler to be called for handling events in the Heart Rate Service. */
+	ble_cps_evt_handler_t        evt_handler;                                          /**< Event handler to be called for handling events in the Cycling Power Service. */
 	bool                         is_sensor_contact_supported;                          /**< Determines if sensor contact detection is to be supported. */
-	uint8_t *                    p_body_sensor_location;                               /**< If not NULL, initial value of the Body Sensor Location characteristic. */
-	ble_srv_cccd_security_mode_t hrs_hrm_attr_md;                                      /**< Initial security level for heart rate service measurement attribute */
-	ble_srv_security_mode_t      hrs_bsl_attr_md;                                      /**< Initial security level for body sensor location attribute */
-} ble_hrs_init_t;
+	uint8_t *                    p_sensor_location;                               /**< If not NULL, initial value of the Sensor Location characteristic. */
+	ble_srv_cccd_security_mode_t cps_meas_attr_md;                                      /**< Initial security level for cycling power service measurement attribute */
+	ble_srv_security_mode_t      cps_sl_attr_md;                                      /**< Initial security level for sensor location attribute */
+} ble_cps_init_t;
 
-/**@brief Heart Rate Service structure. This contains various status information for the service. */
-typedef struct ble_hrs_s
+/**@brief Cycling Power Service structure. This contains various status information for the service. */
+typedef struct ble_cps_s
 {
-	ble_hrs_evt_handler_t        evt_handler;                                          /**< Event handler to be called for handling events in the Heart Rate Service. */
-	bool                         is_expended_energy_supported;                         /**< TRUE if Expended Energy measurement is supported. */
-	bool                         is_sensor_contact_supported;                          /**< TRUE if sensor contact detection is supported. */
-	uint16_t                     service_handle;                                       /**< Handle of Heart Rate Service (as provided by the BLE stack). */
-	ble_gatts_char_handles_t     hrm_handles;                                          /**< Handles related to the Heart Rate Measurement characteristic. */
-	ble_gatts_char_handles_t     bsl_handles;                                          /**< Handles related to the Body Sensor Location characteristic. */
-	ble_gatts_char_handles_t     hrcp_handles;                                         /**< Handles related to the Heart Rate Control Point characteristic. */
+	ble_cps_evt_handler_t        evt_handler;                                          /**< Event handler to be called for handling events in the Cycling Power Service. */
+	uint16_t                     service_handle;                                       /**< Handle of Cycling Power Service (as provided by the BLE stack). */
+	ble_gatts_char_handles_t     cpf_handles;                                          /**< Handles related to the Cycling Power Feature characteristic. */
+	ble_gatts_char_handles_t     cpm_handles;                                          /**< Handles related to the Cycling Power Measurement characteristic. */
+	ble_gatts_char_handles_t     sl_handles;                                          /**< Handles related to the Sensor Location characteristic. */
+	ble_gatts_char_handles_t     cpcp_handles;                                         /**< Handles related to the Cycling Power Control Point characteristic. */
+	ble_gatts_char_handles_t     cpv_handles;                                         /**< Handles related to the Cycling Power Vector characteristic. */
 	uint16_t                     conn_handle;                                          /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
-	bool                         is_sensor_contact_detected;                           /**< TRUE if sensor contact has been detected. */
-	uint16_t                     rr_interval[BLE_HRS_MAX_BUFFERED_RR_INTERVALS];       /**< Set of RR Interval measurements since the last Heart Rate Measurement transmission. */
-	uint16_t                     rr_interval_count;                                    /**< Number of RR Interval measurements since the last Heart Rate Measurement transmission. */
 } ble_hrs_t;
 
-/**@brief Function for initializing the Heart Rate Service.
+/**@brief Function for initializing the Cycling Power Service.
 *
-* @param[out]  p_hrs       Heart Rate Service structure. This structure will have to be supplied by
+* @param[out]  p_cps       Cycling Power Service structure. This structure will have to be supplied by
 *                          the application. It will be initialized by this function, and will later
 *                          be used to identify this particular service instance.
-* @param[in]   p_hrs_init  Information needed to initialize the service.
+* @param[in]   p_cps_init  Information needed to initialize the service.
 *
 * @return      NRF_SUCCESS on successful initialization of service, otherwise an error code.
 */
-uint32_t ble_cps_init(ble_hrs_t * p_hrs, const ble_hrs_init_t * p_hrs_init);
+uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init);
 
 /**@brief Function for handling the Application's BLE Stack events.
 *
-* @details Handles all events from the BLE stack of interest to the Heart Rate Service.
+* @details Handles all events from the BLE stack of interest to the Cycling Power Service.
 *
 * @param[in]   p_hrs      Heart Rate Service structure.
 * @param[in]   p_ble_evt  Event received from the BLE stack.
 */
-void ble_cps_on_ble_evt(ble_hrs_t * p_hrs, ble_evt_t * p_ble_evt);
+void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt);
 
-/**@brief Function for sending heart rate measurement if notification has been enabled.
+/**@brief Function for sending cycling power measurement if notification has been enabled.
 *
-* @details The application calls this function after having performed a heart rate measurement.
-*          If notification has been enabled, the heart rate measurement data is encoded and sent to
+* @details The application calls this function after having performed a cycling power measurement.
+*          If notification has been enabled, the measurement data is encoded and sent to
 *          the client.
 *
-* @param[in]   p_hrs                    Heart Rate Service structure.
-* @param[in]   heart_rate               New heart rate measurement.
-* @param[in]   include_expended_energy  Determines if expended energy will be included in the
-*                                       heart rate measurement data.
+* @param[in]   p_cps                    Cycling Power Service structure.
+* @param[in]   ble_cps_meas_t           New cycling power measurement structure.
 *
 * @return      NRF_SUCCESS on success, otherwise an error code.
 */
-uint32_t ble_cps_cycling_power_measurement_send(ble_hrs_t * p_hrs, uint16_t heart_rate);
-
-/**@brief Function for adding a RR Interval measurement to the RR Interval buffer.
-*
-* @details All buffered RR Interval measurements will be included in the next heart rate
-*          measurement message, up to the maximum number of measurements that will fit into the
-*          message. If the buffer is full, the oldest measurement in the buffer will be deleted.
-*
-* @param[in]   p_hrs        Heart Rate Service structure.
-* @param[in]   rr_interval  New RR Interval measurement (will be buffered until the next
-*                           transmission of Heart Rate Measurement).
-*/
-void ble_hrs_rr_interval_add(ble_hrs_t * p_hrs, uint16_t rr_interval);
-
-/**@brief Function for checking if RR Interval buffer is full.
-*
-* @param[in]   p_hrs        Heart Rate Service structure.
-*
-* @return      true if RR Interval buffer is full, false otherwise.
-*/
-bool ble_hrs_rr_interval_buffer_is_full(ble_hrs_t * p_hrs);
-
-/**@brief Function for setting the state of the Sensor Contact Supported bit.
-*
-* @param[in]   p_hrs                        Heart Rate Service structure.
-* @param[in]   is_sensor_contact_supported  New state of the Sensor Contact Supported bit.
-*
-* @return      NRF_SUCCESS on success, otherwise an error code.
-*/
-uint32_t ble_hrs_sensor_contact_supported_set(ble_hrs_t * p_hrs, bool is_sensor_contact_supported);
-
-/**@brief Function for setting the state of the Sensor Contact Detected bit.
-*
-* @param[in]   p_hrs                        Heart Rate Service structure.
-* @param[in]   is_sensor_contact_detected   TRUE if sensor contact is detected, FALSE otherwise.
-*/
-void ble_hrs_sensor_contact_detected_update(ble_hrs_t * p_hrs, bool is_sensor_contact_detected);
-
-/**@brief Function for setting the Body Sensor Location.
-*
-* @details Sets a new value of the Body Sensor Location characteristic. The new value will be sent
-*          to the client the next time the client reads the Body Sensor Location characteristic.
-*
-* @param[in]   p_hrs                 Heart Rate Service structure.
-* @param[in]   body_sensor_location  New Body Sensor Location.
-*
-* @return      NRF_SUCCESS on success, otherwise an error code.
-*/
-uint32_t ble_hrs_body_sensor_location_set(ble_hrs_t * p_hrs, uint8_t body_sensor_location);
+uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_hrs, ble_cps_meas_t * power);
 
 #endif // BLE_CPS_H__
 
