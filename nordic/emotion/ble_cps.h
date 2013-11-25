@@ -21,6 +21,26 @@
 *       ble_cps_on_ble_evt() from the @ref ble_stack_handler callback.
 */
 
+
+/*
+
+This is what the WAHOO reports:
+
+Primary Service: Generic Access 0x1800
+	DeviceName, Read, UUID: 0x2A00
+	Appearance, Read, UUID: 0x2A01
+	SlavePreferredConnectionParameters, Read, UUID: 0x2A04
+Primary Service: Generic Attribute 0x1801
+Primary Service: 0xA026EE01-0A7D-4AB3-97FA-F1500F9FEB8B
+	WriteWithoutResponse, Notify, UUID: 0xA026EE02-0A7D-4AB3-97FA-F1500F9FEB8B
+	Notify, UUID: 0xA026EE04-0A7D-4AB3-97FA-F1500F9FEB8B
+Primary Service: Cycling Power org.bluetooth.service.cycling_power 0x1818 
+
+
+
+*/
+
+
 #ifndef BLE_CPS_H__
 #define BLE_CPS_H__
 
