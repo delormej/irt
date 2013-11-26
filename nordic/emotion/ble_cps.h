@@ -54,13 +54,19 @@ Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64
 #include "ble.h"
 #include "ble_srv_common.h"
 
+#pragma anon_unions  
+
+// Some fields require this 12 bit value, so declaring this type here.
+// See this for detail on bitfields: http://www.keil.com/support/man/docs/armccref/armccref_babjddhe.htm
+typedef struct {int value:12;} uint12_t;
 
 // https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
 #define BLE_UUID_CYCLING_POWER_SERVICE                              0x1818    /**< Cycling Power Service UUID. */
 
 // https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
-#define BLE_UUID_SENSOR_LOCATION_CHAR																0x2A5D 		/**< Sensor Location UUID org.bluetooth.characteristic.sensor_location */
-
+#define BLE_UUID_SENSOR_LOCATION_CHAR																0x2A5D 		/**< Sensor Location UUID.  */
+#define BLE_UUID_CYCLING_POWER_FEATURE_CHAR													0x2A65 		/**< Cycling Power Feature UUID. */
+#define BLE_UUID_CYCLING_POWER_MEASUREMENT_CHAR											0x2A63		/**< Cycling Power Measurement UUID. */
 
 // Sensor Location values (unit8)
 #define BLE_CPS_SENSOR_LOCATION_OTHER		0
@@ -113,12 +119,11 @@ typedef struct
 	ble_cps_evt_type_t evt_type;                        /**< Type of event. */
 } ble_cps_evt_t;
 
-
 /**@brief Cycling Power Service measurement type. */
 typedef struct ble_cps_meas_s
 {
-	uint16_t    flags;									// 16 bits defined here: https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
-	int16_t		instant_power;                          // Note this is a SIGNED int16
+	uint16_t  flags;									// 16 bits defined here: https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
+	int16_t		instant_power;         	// Note this is a SIGNED int16
 	uint8_t		pedal_power_balance;
 	uint16_t	accum_torque;							// Unit is in newton metres with a resolution of 1/32
 	uint32_t	accum_wheel_revs;
@@ -129,8 +134,8 @@ typedef struct ble_cps_meas_s
 	int16_t		min_force_magnitude;					// Unit is in newtons with a resolution of 1.
 	int16_t		max_torque_magnitude;					// Unit is in newton metres with a resolution of 1/32
 	int16_t		min_torque_magnitude;					// Unit is in newton metres with a resolution of 1/32
-	char	max_angle[12];								// Unit is in degrees with a resolution of 1. 
-	char	min_angle[12];								// Unit is in degrees with a resolution of 1. 
+	uint12_t	max_angle;								// Unit is in degrees with a resolution of 1. 
+	uint12_t	min_angle;								// Unit is in degrees with a resolution of 1. 
 	uint16_t	top_dead_spot_angle;					// Unit is in degrees with a resolution of 1. 
 	uint16_t	bottom_dead_spot_angle;					// Unit is in degrees with a resolution of 1. 
 	uint16_t	accum_energy;							// Unit is in kilojoules with a resolution of 1.
@@ -151,7 +156,8 @@ typedef struct
 	bool                         use_cycling_power_control_point;                          /**< Determines if cycling power control point is supported.  This is required if sensor supports wheel revolution data. */
 	bool                         use_cycling_power_vector;
 	uint8_t *                    p_sensor_location;                               /**< Initial value of the Sensor Location characteristic. */
-	uint32_t *									 p_cps_features;																	/**< Bitmask of enabled features. */
+	uint8_t *										 p_cps_features;																	/**< Bitmask of enabled features. */
+	ble_cps_meas_t *						 p_cps_meas;																			/**< Initial cycling power service measurement structure. */
 	ble_srv_security_mode_t      cps_cpf_attr_md;                                      /**< Initial security level for cycling power feature attribute */
 	ble_srv_security_mode_t      cps_cpm_attr_md;                                      /**< Initial security level for cycling power measurement attribute */
 	ble_srv_security_mode_t      cps_sl_attr_md;                                      /**< Initial security level for sensor location attribute */
