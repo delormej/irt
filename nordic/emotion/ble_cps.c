@@ -5,6 +5,130 @@
 #include "ble_srv_common.h"
 #include "app_util.h"
 
+// https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
+#define BLE_UUID_CYCLING_POWER_SERVICE                  0x1818    /**< Cycling Power Service UUID. */
+
+// https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
+#define BLE_UUID_SENSOR_LOCATION_CHAR										0x2A5D 		/**< Sensor Location UUID.  */
+#define BLE_UUID_CYCLING_POWER_FEATURE_CHAR							0x2A65 		/**< Cycling Power Feature UUID. */
+#define BLE_UUID_CYCLING_POWER_MEASUREMENT_CHAR					0x2A63		/**< Cycling Power Measurement UUID. */
+
+// Sensor Location values (unit8)
+#define BLE_CPS_SENSOR_LOCATION_OTHER										0
+#define BLE_CPS_SENSOR_LOCATION_TOP_SHOE								1 // Top of shoe
+#define BLE_CPS_SENSOR_LOCATION_IN_SHOE									2 // In shoe
+#define BLE_CPS_SENSOR_LOCATION_HIP											3
+#define BLE_CPS_SENSOR_LOCATION_FRONT_WHEEL							4 
+#define BLE_CPS_SENSOR_LOCATION_LEFT_CRANK							5 
+#define BLE_CPS_SENSOR_LOCATION_RIGHT_CRANK							6 
+#define BLE_CPS_SENSOR_LOCATION_LEFT_PEDAL							7 
+#define BLE_CPS_SENSOR_LOCATION_RIGHT_PEDAL							8 
+#define BLE_CPS_SENSOR_LOCATION_FRONT_HUB								9 
+#define BLE_CPS_SENSOR_LOCATION_REAR_DROP								10 // Rear Dropout
+#define BLE_CPS_SENSOR_LOCATION_CHAINSTAY								11 
+#define BLE_CPS_SENSOR_LOCATION_REAR_WHEEL							12 
+#define BLE_CPS_SENSOR_LOCATION_REAR_HUB								13 
+#define BLE_CPS_SENSOR_LOCATION_CHEST										14 
+
+// Cycling Power Feature bits
+#define BLE_CPS_FEATURE_PEDAL_POWER_BALANCE_BIT         (0x01 << 0)		// Pedal Power Balance Supported
+#define BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT          (0x01 << 1)		// Accumulated Torque Supported
+#define BLE_CPS_FEATURE_WHEEL_REV_BIT										(0x01 << 2)		// Wheel Revolution Data Supported
+#define BLE_CPS_FEATURE_CRANK_REV_BIT										(0x01 << 3)		// Crank Revolution Data Supported
+#define BLE_CPS_FEATURE_EXTREME_MAGNITUDES_BIT          (0x01 << 4)		// Extreme Magnitudes Supported
+#define BLE_CPS_FEATURE_EXTREME_ANGLES_BIT							(0x01 << 5)		// Extreme Angles Supported
+#define BLE_CPS_FEATURE_DEAD_SPOT_ANGLES_BIT						(0x01 << 6)		// Top and Bottom Dead Spot Angles Supported
+#define BLE_CPS_FEATURE_ACCUM_ENERGY_BIT								(0x01 << 7)		// Accumulated Energy Supported
+#define BLE_CPS_FEATURE_OFFSET_COMP_INDICATOR_BIT       (0x01 << 8)		// Offset Compensation Indicator Supported
+#define BLE_CPS_FEATURE_OFFSET_COMP_BIT									(0x01 << 9)		// Offset Compensation Supported
+#define BLE_CPS_FEATURE_POWER_MASK_BIT									(0x01 << 10)	// Cycling Power Measurement Characteristic Content Masking Supported
+#define BLE_CPS_FEATURE_MULTIPLE_SENSORS_BIT						(0x01 << 11)	// Multiple Sensor Locations Supported
+#define BLE_CPS_FEATURE_CRANK_LEN_ADJUST_BIT						(0x01 << 12)	// Crank Length Adjustment Supported
+#define BLE_CPS_FEATURE_CHAIN_LEN_ADJUST_BIT						(0x01 << 13)	// Chain Length Adjustment Supported
+#define BLE_CPS_FEATURE_CHAIN_WEIGHT_ADJUST_BIT         (0x01 << 14)	// Chain Weight Adjustment Supported
+#define BLE_CPS_FEATURE_SPAN_LEN_ADJUST_BIT							(0x01 << 15)	// Span Length Adjustment Supported
+#define BLE_CPS_FEATURE_SENSOR_MEAS_CONTEXT_BIT					(0x01 << 16)	// Sensor Measurement Context
+#define BLE_CPS_FEATURE_INSTANT_MEAS_DIRECTION_BIT			(0x01 << 17)	// Instantaneous Measurement Direction Supported
+#define BLE_CPS_FEATURE_FACTORY_CALIBRATION_BIT					(0x01 << 18)	// Factory Calibration Date Supported
+
+// Cycling Power Measurement flag bits: https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
+#define CPS_MEAS_FLAG_PEDAL_POWER_PRESENT        				(0x01 << 0)		
+#define CPS_MEAS_FLAG_PEDAL_POWER_REFERENCE        			(0x01 << 1) 
+#define CPS_MEAS_FLAG_ACCUM_TORQUE_PRESENT							(0x01 << 2)
+#define CPS_MEAS_FLAG_ACCUM_TORQUE_SOURCE								(0x01 << 3)
+#define CPS_MEAS_FLAG_WHEEL_REV_PRESENT									(0x01 << 4)
+#define CPS_MEAS_FLAG_CRANK_REV_PRESENT									(0x01 << 5)
+#define CPS_MEAS_FLAG_EXTREME_FORCE_PRESENT							(0x01 << 6)
+#define CPS_MEAS_FLAG_EXTREME_TORQUE_PRESENT						(0x01 << 7)
+#define CPS_MEAS_FLAG_EXTREME_ANGLES_PRESENT						(0x01 << 8)
+#define CPS_MEAS_FLAG_TOP_DEAD_SPOT_PRESENT							(0x01 << 9)
+#define CPS_MEAS_FLAG_BOTTOM_DEAD_SPOT_PRESENT					(0x01 << 10)
+#define CPS_MEAS_FLAG_ACCUM_ENERGY_PRESENT							(0x01 << 11)
+#define CPS_MEAS_FLAG_OFFSET_COMP_INDICATOR							(0x01 << 12)
+
+#define MAX_CPM_LEN																			34	// This is unscientific? I'm just added up all the bytes of all possible fields in the structure.
+
+/**@brief Function for encoding a Cycling Power Measurement.
+ *
+ * @param[in]   p_cps              Cycling Power Service structure.
+ * @param[in]   p_cps_measurement  Measurement to be encoded.
+ * @param[out]  p_encoded_buffer   Buffer where the encoded data will be written.
+ *
+ * @return      Size of encoded data.
+ */
+static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
+                                      ble_cps_meas_t * p_cps_measurement,
+                                      uint8_t *        p_encoded_buffer)
+{
+    uint8_t flags = 0;
+    uint8_t len   = 1;
+
+		// TODO: could this encoding be a problem? The actual value should be a *signed* int16.
+		// length should be the same, but we don't care about the most significant bit do we?
+		// Instantaneous power field
+		len += uint16_encode(p_cps_measurement->instant_power, &p_encoded_buffer[len]);
+
+		// NOTE: Skipping Pedal Power Balance, NOT USED
+		
+		// Accumulated torque field
+		if (p_cps->feature & BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT)
+		{
+			if (p_cps_measurement->accum_torque != NULL)
+			{
+				flags |= CPS_MEAS_FLAG_ACCUM_TORQUE_PRESENT;
+				len += uint16_encode(p_cps_measurement->accum_torque, &p_encoded_buffer[len]);
+			}
+		}
+
+		// Wheel revolution data fields (sent as a pair)
+		if (p_cps->feature & BLE_CPS_FEATURE_WHEEL_REV_BIT)
+		{
+			if (p_cps_measurement->accum_wheel_revs != NULL)
+			{
+				flags |= CPS_MEAS_FLAG_WHEEL_REV_PRESENT;
+				len += uint32_encode(p_cps_measurement->accum_wheel_revs, &p_encoded_buffer[len]);
+				len += uint16_encode(p_cps_measurement->last_wheel_event_time, &p_encoded_buffer[len]);
+			}
+		}
+		
+		// NOTE: Skipping Crank revolution, NOT USED.
+		// NOTE: Skipping Extreme force, torque and angles, top and bottom dead spot, NONE USED.
+		
+		if (p_cps->feature & BLE_CPS_FEATURE_ACCUM_ENERGY_BIT)
+		{
+			if (p_cps_measurement->accum_energy != NULL)
+			{
+				flags |= CPS_MEAS_FLAG_ACCUM_ENERGY_PRESENT;
+				len += uint16_encode(p_cps_measurement->accum_energy, &p_encoded_buffer[len]);
+			}
+		}
+		    
+    // Flags field
+    p_encoded_buffer[0] = flags;
+    
+    return len;
+}
+
 static uint32_t cycling_power_feature_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 {
     ble_gatts_char_md_t char_md;
@@ -31,15 +155,15 @@ static uint32_t cycling_power_feature_char_add(ble_cps_t * p_cps, const ble_cps_
     attr_md.rd_auth    = 0;
     attr_md.wr_auth    = 0;
     attr_md.vlen       = 0;
-    
+		
     memset(&attr_char_value, 0, sizeof(attr_char_value));
     
     attr_char_value.p_uuid       = &ble_uuid;
     attr_char_value.p_attr_md    = &attr_md;
-    attr_char_value.init_len     = sizeof(uint8_t);
+    attr_char_value.init_len     = 0; // FIX
     attr_char_value.init_offs    = 0;
-    attr_char_value.max_len      = sizeof(uint8_t);
-    attr_char_value.p_value      = p_cps_init->p_cps_features;
+    attr_char_value.max_len      = 0; // FIX
+    attr_char_value.p_value      = 0;//p_cps_init->p_cps_features;
     
     return sd_ble_gatts_characteristic_add(p_cps->service_handle,
                                            &char_md,
@@ -50,17 +174,26 @@ static uint32_t cycling_power_feature_char_add(ble_cps_t * p_cps, const ble_cps_
 static uint32_t cycling_power_measurement_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 {
     ble_gatts_char_md_t char_md;
+    ble_gatts_attr_md_t cccd_md;		
     ble_gatts_attr_t    attr_char_value;
     ble_uuid_t          ble_uuid;
     ble_gatts_attr_md_t attr_md;
+		ble_cps_meas_t			initial_cpm;
+		uint8_t							encoded_cpm[MAX_CPM_LEN];
     
+    memset(&cccd_md, 0, sizeof(cccd_md));
+
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.read_perm);
+		BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.write_perm);
+    cccd_md.vloc = BLE_GATTS_VLOC_STACK;
+		
     memset(&char_md, 0, sizeof(char_md));
     
     char_md.char_props.notify = 1;
     char_md.p_char_user_desc  = NULL;
     char_md.p_char_pf         = NULL;
     char_md.p_user_desc_md    = NULL;
-    char_md.p_cccd_md         = NULL;
+    char_md.p_cccd_md         = &cccd_md;
     char_md.p_sccd_md         = NULL;
     
     BLE_UUID_BLE_ASSIGN(ble_uuid, BLE_UUID_CYCLING_POWER_MEASUREMENT_CHAR);
@@ -78,10 +211,10 @@ static uint32_t cycling_power_measurement_char_add(ble_cps_t * p_cps, const ble_
     
     attr_char_value.p_uuid       = &ble_uuid;
     attr_char_value.p_attr_md    = &attr_md;
-    attr_char_value.init_len     = sizeof(ble_cps_meas_t);
+    attr_char_value.init_len     = cps_measurement_encode(p_cps, &initial_cpm, encoded_cpm);
     attr_char_value.init_offs    = 0;
-    attr_char_value.max_len      = sizeof(ble_cps_meas_t);
-    attr_char_value.p_value      = NULL;
+    attr_char_value.max_len      = MAX_CPM_LEN;
+    attr_char_value.p_value      = encoded_cpm;
     
     return sd_ble_gatts_characteristic_add(p_cps->service_handle,
                                            &char_md,
@@ -203,4 +336,5 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 		
     return NRF_SUCCESS;	
 }
+
 

@@ -34,6 +34,7 @@
 #include "ble_bas.h"
 #include "ble_hrs.h"
 #include "ble_dis.h"
+#include "ble_cps.h"
 #include "ble_conn_params.h"
 #include "ble_eval_board_pins.h"
 #include "ble_stack_handler.h"
@@ -132,6 +133,14 @@ static void blink_led(void)
 		nrf_delay_ms(500);
 		nrf_gpio_port_write(LED_PORT, 0 << (LED_OFFSET));	
 	*/
+}
+
+/**@brief Function for getting the bitmask of features supported by the 
+ * 				cycling power service.
+ */
+static uint8_t get_cps_features()
+{
+	//return BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT | BLE_CPS_FEATURE_WHEEL_REV_BIT;
 }
 
 
@@ -421,6 +430,7 @@ static void services_init(void)
     ble_hrs_init_t hrs_init;
     ble_bas_init_t bas_init;
     ble_dis_init_t dis_init;
+		ble_cps_init_t cps_init;
     uint8_t        body_sensor_location;
 
     // Initialize Heart Rate Service
@@ -470,6 +480,12 @@ static void services_init(void)
 
     err_code = ble_dis_init(&dis_init);
     APP_ERROR_CHECK(err_code);
+		
+		// Initialize Cycling Power Service
+		memset(&cps_init, 0, sizeof(cps_init));
+		
+		//int features:18 = 
+		//cps_init.p_cps_features = get_cps_features();
 }
 
 
