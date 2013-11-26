@@ -119,6 +119,7 @@ static volatile uint16_t                     m_cur_heart_rate;                  
 static app_timer_id_t                        m_battery_timer_id;                       /**< Battery timer. */
 static app_timer_id_t                        m_heart_rate_timer_id;                    /**< Heart rate measurement timer. */
 
+static ble_cps_t                             m_cps;                                    /**< Structure used to identify the cycling power service. */
 
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt);
 
@@ -481,11 +482,22 @@ static void services_init(void)
     err_code = ble_dis_init(&dis_init);
     APP_ERROR_CHECK(err_code);
 		
+		//
 		// Initialize Cycling Power Service
+		//
+		uint8_t sensor_location = BLE_CPS_SENSOR_LOCATION_REAR_WHEEL;
+		
 		memset(&cps_init, 0, sizeof(cps_init));
 		
-		//int features:18 = 
-		//cps_init.p_cps_features = get_cps_features();
+		cps_init.p_sensor_location = &sensor_location;
+		cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
+														| BLE_CPS_FEATURE_WHEEL_REV_BIT;
+
+    // Here the sec level for the Cycling Power Service can be changed/increased.
+		
+		
+		err_code = ble_cps_init(&m_cps, &cps_init);
+		APP_ERROR_CHECK(err_code);
 }
 
 

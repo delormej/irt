@@ -54,6 +54,43 @@ Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64
 #include "ble.h"
 #include "ble_srv_common.h"
 
+// Sensor Location values (unit8)
+#define BLE_CPS_SENSOR_LOCATION_OTHER										0
+#define BLE_CPS_SENSOR_LOCATION_TOP_SHOE								1 // Top of shoe
+#define BLE_CPS_SENSOR_LOCATION_IN_SHOE									2 // In shoe
+#define BLE_CPS_SENSOR_LOCATION_HIP											3
+#define BLE_CPS_SENSOR_LOCATION_FRONT_WHEEL							4 
+#define BLE_CPS_SENSOR_LOCATION_LEFT_CRANK							5 
+#define BLE_CPS_SENSOR_LOCATION_RIGHT_CRANK							6 
+#define BLE_CPS_SENSOR_LOCATION_LEFT_PEDAL							7 
+#define BLE_CPS_SENSOR_LOCATION_RIGHT_PEDAL							8 
+#define BLE_CPS_SENSOR_LOCATION_FRONT_HUB								9 
+#define BLE_CPS_SENSOR_LOCATION_REAR_DROP								10 // Rear Dropout
+#define BLE_CPS_SENSOR_LOCATION_CHAINSTAY								11 
+#define BLE_CPS_SENSOR_LOCATION_REAR_WHEEL							12 
+#define BLE_CPS_SENSOR_LOCATION_REAR_HUB								13 
+#define BLE_CPS_SENSOR_LOCATION_CHEST										14 
+
+// Cycling Power Feature bits
+#define BLE_CPS_FEATURE_PEDAL_POWER_BALANCE_BIT         (0x01 << 0)		// Pedal Power Balance Supported
+#define BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT          (0x01 << 1)		// Accumulated Torque Supported
+#define BLE_CPS_FEATURE_WHEEL_REV_BIT										(0x01 << 2)		// Wheel Revolution Data Supported
+#define BLE_CPS_FEATURE_CRANK_REV_BIT										(0x01 << 3)		// Crank Revolution Data Supported
+#define BLE_CPS_FEATURE_EXTREME_MAGNITUDES_BIT          (0x01 << 4)		// Extreme Magnitudes Supported
+#define BLE_CPS_FEATURE_EXTREME_ANGLES_BIT							(0x01 << 5)		// Extreme Angles Supported
+#define BLE_CPS_FEATURE_DEAD_SPOT_ANGLES_BIT						(0x01 << 6)		// Top and Bottom Dead Spot Angles Supported
+#define BLE_CPS_FEATURE_ACCUM_ENERGY_BIT								(0x01 << 7)		// Accumulated Energy Supported
+#define BLE_CPS_FEATURE_OFFSET_COMP_INDICATOR_BIT       (0x01 << 8)		// Offset Compensation Indicator Supported
+#define BLE_CPS_FEATURE_OFFSET_COMP_BIT									(0x01 << 9)		// Offset Compensation Supported
+#define BLE_CPS_FEATURE_POWER_MASK_BIT									(0x01 << 10)	// Cycling Power Measurement Characteristic Content Masking Supported
+#define BLE_CPS_FEATURE_MULTIPLE_SENSORS_BIT						(0x01 << 11)	// Multiple Sensor Locations Supported
+#define BLE_CPS_FEATURE_CRANK_LEN_ADJUST_BIT						(0x01 << 12)	// Crank Length Adjustment Supported
+#define BLE_CPS_FEATURE_CHAIN_LEN_ADJUST_BIT						(0x01 << 13)	// Chain Length Adjustment Supported
+#define BLE_CPS_FEATURE_CHAIN_WEIGHT_ADJUST_BIT         (0x01 << 14)	// Chain Weight Adjustment Supported
+#define BLE_CPS_FEATURE_SPAN_LEN_ADJUST_BIT							(0x01 << 15)	// Span Length Adjustment Supported
+#define BLE_CPS_FEATURE_SENSOR_MEAS_CONTEXT_BIT					(0x01 << 16)	// Sensor Measurement Context
+#define BLE_CPS_FEATURE_INSTANT_MEAS_DIRECTION_BIT			(0x01 << 17)	// Instantaneous Measurement Direction Supported
+#define BLE_CPS_FEATURE_FACTORY_CALIBRATION_BIT					(0x01 << 18)	// Factory Calibration Date Supported
 
 /**@brief Cycling Power Service event type. */
 typedef enum
