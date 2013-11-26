@@ -94,6 +94,8 @@ static uint32_t cycling_power_feature_char_add(ble_cps_t * p_cps, const ble_cps_
     ble_gatts_attr_t    attr_char_value;
     ble_uuid_t          ble_uuid;
     ble_gatts_attr_md_t attr_md;
+		uint32_t						init_value_feature;
+		uint8_t							init_value_encoded[4];	// 4 bytes to the array (feature total size is 32 = 4*8).
     
     memset(&char_md, 0, sizeof(char_md));
     
@@ -116,13 +118,16 @@ static uint32_t cycling_power_feature_char_add(ble_cps_t * p_cps, const ble_cps_
     attr_md.vlen       = 0;
 		
     memset(&attr_char_value, 0, sizeof(attr_char_value));
-    
+
+		// Encode the feature bits.
+		uint32_encode(p_cps_init->feature, &init_value_encoded[4]);
+
     attr_char_value.p_uuid       = &ble_uuid;
     attr_char_value.p_attr_md    = &attr_md;
-    attr_char_value.init_len     = 0; // FIX
+    attr_char_value.init_len     = sizeof(uint32_t);
     attr_char_value.init_offs    = 0;
-    attr_char_value.max_len      = 0; // FIX
-    attr_char_value.p_value      = 0;//p_cps_init->p_cps_features;
+    attr_char_value.max_len      = sizeof(uint32_t);
+    attr_char_value.p_value      = init_value_encoded;
     
     return sd_ble_gatts_characteristic_add(p_cps->service_handle,
                                            &char_md,
@@ -296,4 +301,6 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
     return NRF_SUCCESS;	
 }
 
-
+void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
+{
+}

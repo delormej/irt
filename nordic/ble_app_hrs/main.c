@@ -495,7 +495,8 @@ static void services_init(void)
 														| BLE_CPS_FEATURE_WHEEL_REV_BIT;
 
     // Here the sec level for the Cycling Power Service can be changed/increased.
-		
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_sl_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_sl_attr_md.write_perm);
 		
 		err_code = ble_cps_init(&m_cps, &cps_init);
 		APP_ERROR_CHECK(err_code);
@@ -757,6 +758,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
     ble_bondmngr_on_ble_evt(p_ble_evt);
     ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
+		ble_cps_on_ble_evt(&m_cps, p_ble_evt);
     ble_bas_on_ble_evt(&bas, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
     on_ble_evt(p_ble_evt);
