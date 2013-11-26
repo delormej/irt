@@ -7,8 +7,9 @@
 
 // https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
 #define BLE_UUID_SENSOR_LOCATION_CHAR										0x2A5D 		/**< Sensor Location UUID.  */
-#define BLE_UUID_CYCLING_POWER_FEATURE_CHAR							0x2A65 		/**< Cycling Power Feature UUID. */
 #define BLE_UUID_CYCLING_POWER_MEASUREMENT_CHAR					0x2A63		/**< Cycling Power Measurement UUID. */
+#define BLE_UUID_CYCLING_POWER_FEATURE_CHAR							0x2A65 		/**< Cycling Power Feature UUID. */
+#define BLE_UUID_CYCLING_POWER_CONTROL_POINT_CHAR				0x2A66		/**< Cycling Power Control Point UUID. */
 
 // Cycling Power Measurement flag bits: https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
 #define CPS_MEAS_FLAG_PEDAL_POWER_PRESENT        				(0x01 << 0)		
@@ -120,7 +121,12 @@ static uint32_t cycling_power_feature_char_add(ble_cps_t * p_cps, const ble_cps_
     memset(&attr_char_value, 0, sizeof(attr_char_value));
 
 		// Encode the feature bits.
-		uint32_encode(p_cps_init->feature, &init_value_encoded[4]);
+		//uint32_encode(p_cps_init->feature, &init_value_encoded[4]);
+		init_value_feature    = p_cps_init->feature;
+    init_value_encoded[0] = init_value_feature & 0xFF;
+    init_value_encoded[1] = (init_value_feature >> 8) & 0xFF;
+		init_value_encoded[2] = (init_value_feature >> 16) & 0xFF;
+		init_value_encoded[3] = (init_value_feature >> 24) & 0xFF;
 
     attr_char_value.p_uuid       = &ble_uuid;
     attr_char_value.p_attr_md    = &attr_md;

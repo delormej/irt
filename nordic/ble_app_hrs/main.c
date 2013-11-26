@@ -495,9 +495,14 @@ static void services_init(void)
 														| BLE_CPS_FEATURE_WHEEL_REV_BIT;
 
     // Here the sec level for the Cycling Power Service can be changed/increased.
+		// TODO: all of this could be put into the ble_cps_init function, no need because
+		// we're never going to change the permission level, it's as defined in the 
+		// bluetooth specification for the service.
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_sl_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_sl_attr_md.write_perm);
-		
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_cpf_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_cpf_attr_md.write_perm);
+
 		err_code = ble_cps_init(&m_cps, &cps_init);
 		APP_ERROR_CHECK(err_code);
 }
