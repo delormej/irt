@@ -54,6 +54,9 @@ Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64
 #include "ble.h"
 #include "ble_srv_common.h"
 
+// https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
+#define BLE_UUID_CYCLING_POWER_SERVICE                  0x1818    /**< Cycling Power Service UUID. */
+
 // Sensor Location values (unit8)
 #define BLE_CPS_SENSOR_LOCATION_OTHER										0
 #define BLE_CPS_SENSOR_LOCATION_TOP_SHOE								1 // Top of shoe

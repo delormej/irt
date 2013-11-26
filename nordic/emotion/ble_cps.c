@@ -5,9 +5,6 @@
 #include "ble_srv_common.h"
 #include "app_util.h"
 
-// https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
-#define BLE_UUID_CYCLING_POWER_SERVICE                  0x1818    /**< Cycling Power Service UUID. */
-
 // https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
 #define BLE_UUID_SENSOR_LOCATION_CHAR										0x2A5D 		/**< Sensor Location UUID.  */
 #define BLE_UUID_CYCLING_POWER_FEATURE_CHAR							0x2A65 		/**< Cycling Power Feature UUID. */
