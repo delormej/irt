@@ -36,6 +36,11 @@ Primary Service: 0xA026EE01-0A7D-4AB3-97FA-F1500F9FEB8B
 	Notify, UUID: 0xA026EE04-0A7D-4AB3-97FA-F1500F9FEB8B
 Primary Service: Cycling Power org.bluetooth.service.cycling_power 0x1818 
 
+https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
+Cycling Power Control Point bluetooth.characteristic.cycling_power_control_point 0x2A66 
+Cycling Power Feature org.bluteooth.characteristic.cycling_power_feature 0x2A65 
+Cycling Power Measurement org.blueeooth.cycling_power_measurement 0x2A63 
+Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64 
 
 
 */
@@ -48,6 +53,14 @@ Primary Service: Cycling Power org.bluetooth.service.cycling_power 0x1818
 #include <stdbool.h>
 #include "ble.h"
 #include "ble_srv_common.h"
+
+
+// https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
+#define BLE_UUID_CYCLING_POWER_SERVICE                              0x1818    /**< Cycling Power Service UUID. */
+
+// https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
+#define BLE_UUID_SENSOR_LOCATION_CHAR																0x2A5D 		/**< Sensor Location UUID org.bluetooth.characteristic.sensor_location */
+
 
 // Sensor Location values (unit8)
 #define BLE_CPS_SENSOR_LOCATION_OTHER		0
@@ -123,15 +136,8 @@ typedef struct ble_cps_meas_s
 	uint16_t	accum_energy;							// Unit is in kilojoules with a resolution of 1.
 } ble_cps_meas_t;
 
-/*
-https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
-Cycling Power Control Point bluetooth.characteristic.cycling_power_control_point 0x2A66 
-Cycling Power Feature org.bluteooth.characteristic.cycling_power_feature 0x2A65 
-Cycling Power Measurement org.blueeooth.cycling_power_measurement 0x2A63 
-Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64 
-*/
 
-// Forward declaration of the ble_hrs_t type. 
+// Forward declaration of the ble_cps_t type. 
 typedef struct ble_cps_s ble_cps_t;
 
 /**@brief Cycling Power Service event handler type. */
@@ -142,10 +148,15 @@ typedef void(*ble_cps_evt_handler_t) (ble_cps_t * p_cps, ble_cps_evt_t * p_evt);
 typedef struct
 {
 	ble_cps_evt_handler_t        evt_handler;                                          /**< Event handler to be called for handling events in the Cycling Power Service. */
-	bool                         is_sensor_contact_supported;                          /**< Determines if sensor contact detection is to be supported. */
-	uint8_t *                    p_sensor_location;                               /**< If not NULL, initial value of the Sensor Location characteristic. */
-	ble_srv_cccd_security_mode_t cps_meas_attr_md;                                      /**< Initial security level for cycling power service measurement attribute */
+	bool                         use_cycling_power_control_point;                          /**< Determines if cycling power control point is supported.  This is required if sensor supports wheel revolution data. */
+	bool                         use_cycling_power_vector;
+	uint8_t *                    p_sensor_location;                               /**< Initial value of the Sensor Location characteristic. */
+	uint32_t *									 p_cps_features;																	/**< Bitmask of enabled features. */
+	ble_srv_security_mode_t      cps_cpf_attr_md;                                      /**< Initial security level for cycling power feature attribute */
+	ble_srv_security_mode_t      cps_cpm_attr_md;                                      /**< Initial security level for cycling power measurement attribute */
 	ble_srv_security_mode_t      cps_sl_attr_md;                                      /**< Initial security level for sensor location attribute */
+	ble_srv_security_mode_t      cps_cpcp_attr_md;                                    /**< Initial security level for cycling power control point attribute */
+	ble_srv_security_mode_t      cps_cpv_attr_md;                                    /**< Initial security level for cycling power vector attribute */	
 } ble_cps_init_t;
 
 /**@brief Cycling Power Service structure. This contains various status information for the service. */
@@ -159,7 +170,7 @@ typedef struct ble_cps_s
 	ble_gatts_char_handles_t     cpcp_handles;                                         /**< Handles related to the Cycling Power Control Point characteristic. */
 	ble_gatts_char_handles_t     cpv_handles;                                         /**< Handles related to the Cycling Power Vector characteristic. */
 	uint16_t                     conn_handle;                                          /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
-} ble_hrs_t;
+} ble_cps_t;
 
 /**@brief Function for initializing the Cycling Power Service.
 *
@@ -176,7 +187,7 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init);
 *
 * @details Handles all events from the BLE stack of interest to the Cycling Power Service.
 *
-* @param[in]   p_hrs      Heart Rate Service structure.
+* @param[in]   p_cps      Heart Rate Service structure.
 * @param[in]   p_ble_evt  Event received from the BLE stack.
 */
 void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt);
@@ -192,7 +203,7 @@ void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt);
 *
 * @return      NRF_SUCCESS on success, otherwise an error code.
 */
-uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_hrs, ble_cps_meas_t * power);
+uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, ble_cps_meas_t * power);
 
 #endif // BLE_CPS_H__
 
