@@ -126,24 +126,18 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt);
 /*****************************************************************************
 * InsideRide functions.
 *****************************************************************************/
-static void blink_led(void)
+static void blink_led()
 {
-	/*
 		// Blink once for 1/2 second when the button is pushd.
 		nrf_gpio_port_write(LED_PORT, 1 << (LED_OFFSET));
 		nrf_delay_ms(500);
 		nrf_gpio_port_write(LED_PORT, 0 << (LED_OFFSET));	
-	*/
 }
 
-/**@brief Function for getting the bitmask of features supported by the 
- * 				cycling power service.
- */
-static uint8_t get_cps_features()
+static void init_led()
 {
-	//return BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT | BLE_CPS_FEATURE_WHEEL_REV_BIT;
+	nrf_gpio_range_cfg_output(LED_START, LED_STOP);
 }
-
 
 /*****************************************************************************
 * Error Handling Functions
@@ -261,10 +255,31 @@ static void heart_rate_meas_timeout_handler(void * p_context)
     {
         APP_ERROR_HANDLER(err_code);
     }
+		
+		//
+		// Also send the instant power data.
+		//
+		ble_cps_meas_t cps_meas;
+		cps_meas.instant_power = 140UL;
+		err_code = ble_cps_cycling_power_measurement_send(&m_cps, &cps_meas);
+
+    if (
+        (err_code != NRF_SUCCESS)
+        &&
+        (err_code != NRF_ERROR_INVALID_STATE)
+        &&
+        (err_code != BLE_ERROR_NO_TX_BUFFERS)
+        &&
+        (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
+    )
+    {
+        APP_ERROR_HANDLER(err_code);
+    }
 }
 
 void on_button_ii_event(void)
 {
+	blink_led();
 	// decrement
 	if (m_resistance_level > 0)
 		set_resistance(--m_resistance_level);	
@@ -502,6 +517,8 @@ static void services_init(void)
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_sl_attr_md.write_perm);
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_cpf_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_cpf_attr_md.write_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_cpm_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_cpm_attr_md.write_perm);
 
 		err_code = ble_cps_init(&m_cps, &cps_init);
 		APP_ERROR_CHECK(err_code);
@@ -658,6 +675,17 @@ static void application_timers_start(void)
     APP_ERROR_CHECK(err_code);
 }
 
+static void application_timers_stop(void)
+{
+		uint32_t err_code;
+		
+		err_code = app_timer_stop(m_battery_timer_id);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = app_timer_stop(m_heart_rate_timer_id);
+    APP_ERROR_CHECK(err_code);	
+}
+
 
 /**@brief Function for starting advertising.
  */
@@ -701,7 +729,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
-            //led_stop();
+            nrf_gpio_port_write(LED_PORT, 1 << (LED_OFFSET));	
             
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             
@@ -717,12 +745,22 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
+						nrf_gpio_port_write(LED_PORT, 0 << (LED_OFFSET));	
+						
+						// Stop broadcasting data.
+						application_timers_stop();
+						
+						
             // Since we are not in a connection and have not started advertising, store bonds
-            err_code = ble_bondmngr_bonded_masters_store();
-            APP_ERROR_CHECK(err_code);
+            //err_code = ble_bondmngr_bonded_masters_store();
+            //APP_ERROR_CHECK(err_code);
 
             // Go to system-off mode, should not return from this function, wakeup will trigger
             // a reset.
+						
+						// start advertising again?
+						advertising_start();
+						
             system_off_mode_enter();
             break;
 
@@ -797,6 +835,7 @@ int main(void)
 
 		m_resistance_level = 0;
 
+		init_led();
     timers_init();
     gpiote_init();
     buttons_init();

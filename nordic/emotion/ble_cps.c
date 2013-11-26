@@ -28,6 +28,29 @@
 
 #define MAX_CPM_LEN																			34	// This is unscientific? I'm just added up all the bytes of all possible fields in the structure.
 
+/**@brief Function for handling the Connect event.
+ *
+ * @param[in]   p_hrs       Cycling Power Service structure.
+ * @param[in]   p_ble_evt   Event received from the BLE stack.
+ */
+static void on_connect(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
+{
+    p_cps->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+}
+
+
+/**@brief Function for handling the Disconnect event.
+ *
+ * @param[in]   p_hrs       Cycling Power Service structure.
+ * @param[in]   p_ble_evt   Event received from the BLE stack.
+ */
+static void on_disconnect(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
+{
+    UNUSED_PARAMETER(p_ble_evt);
+    p_cps->conn_handle = BLE_CONN_HANDLE_INVALID;
+}
+
+
 /**@brief Function for encoding a Cycling Power Measurement.
  *
  * @param[in]   p_cps              Cycling Power Service structure.
@@ -236,6 +259,7 @@ static uint32_t sensor_location_char_add(ble_cps_t * p_cps, const ble_cps_init_t
 
 static uint32_t cycling_power_control_point_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 {
+	//ble_cs_ctrlpt_init_t 
 	return 0;
 }
 
@@ -244,6 +268,28 @@ static uint32_t cycling_power_vector_char_add(ble_cps_t * p_cps, const ble_cps_i
 	return 0;
 }
 
+
+
+void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
+{
+    switch (p_ble_evt->header.evt_id)
+    {
+        case BLE_GAP_EVT_CONNECTED:
+            on_connect(p_cps, p_ble_evt);
+            break;
+            
+        case BLE_GAP_EVT_DISCONNECTED:
+            on_disconnect(p_cps, p_ble_evt);
+            break;
+            
+        case BLE_GATTS_EVT_WRITE:
+//            on_write(p_cps, p_ble_evt);
+            break;
+            
+        default:
+            break;
+    }	
+}
 
 uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 {
@@ -307,6 +353,40 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
     return NRF_SUCCESS;	
 }
 
-void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
+uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, ble_cps_meas_t * p_cps_meas)
 {
+    uint32_t err_code;
+    
+    // Send value if connected and notifying
+    if (p_cps->conn_handle != BLE_CONN_HANDLE_INVALID)
+    {
+        uint8_t								 encoded_cpm[MAX_CPM_LEN];
+        uint16_t               len;
+        uint16_t               hvx_len;
+        ble_gatts_hvx_params_t hvx_params;
+        
+        len     = cps_measurement_encode(p_cps, p_cps_meas, &encoded_cpm[MAX_CPM_LEN]);
+        hvx_len = len;
+
+        memset(&hvx_params, 0, sizeof(hvx_params));
+        
+        hvx_params.handle   = p_cps->cpm_handles.value_handle;
+        hvx_params.type     = BLE_GATT_HVX_NOTIFICATION;
+        hvx_params.offset   = 0;
+        hvx_params.p_len    = &hvx_len;
+        hvx_params.p_data   = encoded_cpm;
+        
+        err_code = sd_ble_gatts_hvx(p_cps->conn_handle, &hvx_params);
+        if ((err_code == NRF_SUCCESS) && (hvx_len != len))
+        {
+            err_code = NRF_ERROR_DATA_SIZE;
+        }
+    }
+    else
+    {
+        err_code = NRF_ERROR_INVALID_STATE;
+    }
+
+    return err_code;
 }
+

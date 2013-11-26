@@ -53,6 +53,7 @@ Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64
 #include <stdbool.h>
 #include "ble.h"
 #include "ble_srv_common.h"
+#include "ble_sc_ctrlpt.h"
 
 // https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
 #define BLE_UUID_CYCLING_POWER_SERVICE                  0x1818    /**< Cycling Power Service UUID. */
@@ -147,6 +148,8 @@ typedef struct
 	uint8_t *                    p_sensor_location;                               		/**< Pointer to initial value of the Sensor Location characteristic. */
 	uint32_t 									 	 feature;																							/**< Bitmask of enabled features. */
 	ble_cps_meas_t *						 p_cps_meas;																					/**< Initial cycling power service measurement structure. */
+	ble_sc_ctrlpt_evt_handler_t  ctrlpt_evt_handler;                    							/**< Control point event handler */
+	ble_srv_error_handler_t      error_handler;                         							/**< Function to be called in case of an error. */
 	ble_srv_security_mode_t      cps_cpf_attr_md;                                     /**< Initial security level for cycling power feature attribute */
 	ble_srv_security_mode_t      cps_cpm_attr_md;                                     /**< Initial security level for cycling power measurement attribute */
 	ble_srv_security_mode_t      cps_sl_attr_md;                                      /**< Initial security level for sensor location attribute */
@@ -160,6 +163,7 @@ typedef struct ble_cps_s
 	ble_cps_evt_handler_t        evt_handler;                                         /**< Event handler to be called for handling events in the Cycling Power Service. */
 	uint16_t                     service_handle;                                      /**< Handle of Cycling Power Service (as provided by the BLE stack). */
 	uint32_t										 feature;																							/**< Bitmask of features enabled. */
+	ble_sc_ctrlpt_t              ctrl_pt;                               							/**< Data for cycling power control point. */
 	ble_gatts_char_handles_t     cpf_handles;                                         /**< Handles related to the Cycling Power Feature characteristic. */
 	ble_gatts_char_handles_t     cpm_handles;                                         /**< Handles related to the Cycling Power Measurement characteristic. */
 	ble_gatts_char_handles_t     sl_handles;                                          /**< Handles related to the Sensor Location characteristic. */
@@ -199,7 +203,7 @@ void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt);
 *
 * @return      NRF_SUCCESS on success, otherwise an error code.
 */
-uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, ble_cps_meas_t * power);
+uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, ble_cps_meas_t * p_cps_meas);
 
 #endif // BLE_CPS_H__
 
