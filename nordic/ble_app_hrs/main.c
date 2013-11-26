@@ -506,8 +506,9 @@ static void services_init(void)
 		memset(&cps_init, 0, sizeof(cps_init));
 		
 		cps_init.p_sensor_location = &sensor_location;
-		cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
-														| BLE_CPS_FEATURE_WHEEL_REV_BIT;
+		cps_init.feature = 0;
+		//cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
+		//												| BLE_CPS_FEATURE_WHEEL_REV_BIT;
 
     // Here the sec level for the Cycling Power Service can be changed/increased.
 		// TODO: all of this could be put into the ble_cps_init function, no need because

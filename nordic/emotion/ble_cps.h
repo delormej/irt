@@ -151,7 +151,7 @@ typedef struct
 	ble_sc_ctrlpt_evt_handler_t  ctrlpt_evt_handler;                    							/**< Control point event handler */
 	ble_srv_error_handler_t      error_handler;                         							/**< Function to be called in case of an error. */
 	ble_srv_security_mode_t      cps_cpf_attr_md;                                     /**< Initial security level for cycling power feature attribute */
-	ble_srv_security_mode_t      cps_cpm_attr_md;                                     /**< Initial security level for cycling power measurement attribute */
+	ble_srv_cccd_security_mode_t cps_cpm_attr_md;                                     /**< Initial security level for cycling power measurement attribute */
 	ble_srv_security_mode_t      cps_sl_attr_md;                                      /**< Initial security level for sensor location attribute */
 	ble_srv_security_mode_t      cps_cpcp_attr_md;                                    /**< Initial security level for cycling power control point attribute */
 	ble_srv_security_mode_t      cps_cpv_attr_md;                                    	/**< Initial security level for cycling power vector attribute */	
