@@ -143,11 +143,10 @@ static volatile uint32_t last_report_ticks = 0;
 
 static uint16_t get_seconds_2048()
 {
-	uint32_t * p_ticks;
-	app_timer_cnt_get(p_ticks);
+	uint32_t ticks = NRF_RTC1->COUNTER;
 	
 	// TODO: Optimize this out - only need to figure this out once.
-	uint16_t freq = (32768/NRF_RTC1->PRESCALER+1);
+	float freq = 32768/(NRF_RTC1->PRESCALER+1);
 
 	// Need to use the diff compute because the timer could have overflowed
 	// depending on the PRESCALER value set.
@@ -156,9 +155,9 @@ static uint16_t get_seconds_2048()
 	
 	// Based on frequence of ticks, calculate 1/2048 second
 	// freq = hz = times per second.
-	uint32_t value = (freq / 2048) * (*p_ticks);
+	uint16_t value = ROUNDED_DIV(ticks, (freq / 2048));
 	
-	return (uint16_t)(value & 0x0000FFFF);
+	return (uint16_t)value;
 }
 
 /*****************************************************************************
@@ -286,7 +285,7 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 		cps_meas.instant_power = 250 - m_cur_heart_rate;
 		cps_meas.accum_torque = m_cur_heart_rate * 2;
 		cps_meas.accum_wheel_revs = m_cur_heart_rate;
-		cps_meas.last_wheel_event_time = 5; //get_seconds_2048();
+		cps_meas.last_wheel_event_time = get_seconds_2048();
 		
 		err_code = ble_cps_cycling_power_measurement_send(&m_cps, &cps_meas);
 
