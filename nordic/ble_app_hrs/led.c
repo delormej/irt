@@ -31,6 +31,7 @@
 #include "nrf_gpiote.h"
 #include "led.h"
 #include "app_util.h"
+#include "boards.h"
 
 #define PPI_CHAN0_TO_TOGGLE_LED              0                                         /*!< The PPI Channel that connects CC0 compare event to the GPIOTE Task that toggles the Advertising LED. */
 #define GPIOTE_CHAN_FOR_LED_TASK             0                                         /*!< The GPIOTE Channel used to perform write operation on the Advertising LED pin. */
@@ -120,6 +121,26 @@ void led_stop(void)
     nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
 }
 
+void blink_led(void)
+{
+		// Blink once for 1/2 second when the button is pushd.
+		nrf_gpio_port_write(LED_PORT, 1 << (LED_OFFSET));
+		nrf_delay_ms(200);
+		nrf_gpio_port_write(LED_PORT, 0 << (LED_OFFSET));	
+}
+
+void blink_led2()
+{
+		// Blink once for 1/2 second when the button is pushd.
+		nrf_gpio_port_write(LED_PORT, 1 << (LED_OFFSET+1));
+		nrf_delay_ms(200);
+		nrf_gpio_port_write(LED_PORT, 0 << (LED_OFFSET+1));	
+}
+
+void init_led()
+{
+	nrf_gpio_range_cfg_output(LED_START, LED_STOP);
+}
 
 
 /**

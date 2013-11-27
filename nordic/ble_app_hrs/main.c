@@ -126,18 +126,6 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt);
 /*****************************************************************************
 * InsideRide functions.
 *****************************************************************************/
-static void blink_led()
-{
-		// Blink once for 1/2 second when the button is pushd.
-		nrf_gpio_port_write(LED_PORT, 1 << (LED_OFFSET));
-		nrf_delay_ms(500);
-		nrf_gpio_port_write(LED_PORT, 0 << (LED_OFFSET));	
-}
-
-static void init_led()
-{
-	nrf_gpio_range_cfg_output(LED_START, LED_STOP);
-}
 
 static volatile uint32_t last_report_ticks = 0;
 
@@ -862,6 +850,9 @@ int main(void)
 		m_resistance_level = 0;
 
 		init_led();
+		blink_led();
+		blink_led2();
+		
     timers_init();
     gpiote_init();
     buttons_init();

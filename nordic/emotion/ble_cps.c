@@ -4,6 +4,7 @@
 #include "ble_l2cap.h"
 #include "ble_srv_common.h"
 #include "app_util.h"
+#include "led.h"
 
 // https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
 #define BLE_UUID_SENSOR_LOCATION_CHAR										0x2A5D 		/**< Sensor Location UUID.  */
@@ -50,6 +51,20 @@ static void on_disconnect(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
     p_cps->conn_handle = BLE_CONN_HANDLE_INVALID;
 }
 
+/**@brief Function for handling the Write event.
+ *
+ * @param[in]   p_cps       Cycling Power Service structure.
+ * @param[in]   p_ble_evt   Event received from the BLE stack.
+ */
+static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
+{
+		blink_led2();
+		ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
+    
+		int x = 1+1;
+		
+    //if (p_evt_write->handle == p_cps->cpm_handles.cccd_handle)
+}
 
 /**@brief Function for encoding a Cycling Power Measurement.
  *
@@ -306,7 +321,7 @@ void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
             break;
             
         case BLE_GATTS_EVT_WRITE:
-//            on_write(p_cps, p_ble_evt);
+            on_write(p_cps, p_ble_evt);
             break;
             
         default:

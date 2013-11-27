@@ -40,6 +40,10 @@ void led_start(void);
  */
 void led_stop(void);
 
+void init_led(void);
+void blink_led(void);
+void blink_led2(void);
+
 #endif // LED_H__
 
 /** @} */
