@@ -78,27 +78,6 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
                                       ble_cps_meas_t * p_cps_measurement,
                                       uint8_t *        p_encoded_buffer)
 {
-		/* 
-		p_encoded_buffer[0] = 0x06;  
-		p_encoded_buffer[1] = 0;
-		
-		p_encoded_buffer[2] = 0x98;	// Instant Power
-		p_encoded_buffer[3] = 0;
-
-		p_encoded_buffer[4] = 0xE8;	// 
-		p_encoded_buffer[5] = 0x7E;
-
-		p_encoded_buffer[6] = 0x6B;
-		p_encoded_buffer[7] = 0x03;
-
-		p_encoded_buffer[8] = 0;
-		p_encoded_buffer[9] = 0;
-
-		p_encoded_buffer[10] = 0x68;
-		p_encoded_buffer[11] = 0xFD;
-
-		return 12; */
-
     uint16_t flags = 0;
     uint8_t len    = 2;
 
@@ -147,6 +126,61 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
     p_encoded_buffer[1] = (uint8_t) ((flags & 0xFF00) >> 8);
 		
     return len;
+}
+
+/*@brief 	This adds a vendor specific characteristic.  Namely, a write property from the Wahoo.
+ *
+ */
+static uint32_t vendor_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
+{
+    uint32_t						err_code;
+		ble_gatts_char_md_t char_md;
+    ble_gatts_attr_t    attr_char_value;
+    ble_uuid_t        	ble_uuid;
+    ble_gatts_attr_md_t attr_md;
+		
+		memset(&char_md, 0, sizeof(char_md));
+		
+		char_md.char_props.write = 1;
+		char_md.char_props.indicate = 1;
+    char_md.p_char_user_desc = NULL;
+    char_md.p_char_pf        = NULL;
+    char_md.p_user_desc_md   = NULL;
+    char_md.p_cccd_md        = NULL;
+    char_md.p_sccd_md        = NULL;		
+		
+		// A026E005-0A75-4AB3-97FA-F1500F9FEB8B
+		const ble_uuid128_t WAHOO_UUID = { 0x8B, 0xEB, 0x9F, 0x0F, 0x50, 0xF1, 0xFA, 0x97, 0xB3, 0x4A, 0x7D, 0x0A, 0x00, 0x00, 0x26, 0xA0 };
+		const uint16_t WAHOO_CHAR = 0xE005;
+		uint8_t uuid_type; // = BLE_UUID_TYPE_VENDOR_BEGIN;
+	
+		err_code = sd_ble_uuid_vs_add(&WAHOO_UUID, &uuid_type);
+		if (err_code != NRF_SUCCESS)
+		{
+			APP_ERROR_HANDLER(err_code);
+		}
+
+		ble_uuid.type = uuid_type;
+		ble_uuid.uuid = WAHOO_CHAR;
+
+		BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
+    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
+    attr_md.rd_auth    = 0;
+    attr_md.wr_auth    = 0;
+    attr_md.vlen       = 1;
+
+    attr_char_value.p_uuid       = &ble_uuid;
+    attr_char_value.p_attr_md    = &attr_md;
+/*    attr_char_value.init_len     = sizeof(uint32_t);
+    attr_char_value.init_offs    = 0;
+    attr_char_value.max_len      = sizeof(uint32_t);
+    attr_char_value.p_value      = 0;*/
+    
+    return sd_ble_gatts_characteristic_add(p_cps->service_handle,
+                                           &char_md,
+                                           &attr_char_value,
+                                           &p_cps->cpf_handles);				
 }
 
 static uint32_t cycling_power_feature_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
@@ -343,6 +377,12 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
     BLE_UUID_BLE_ASSIGN(ble_uuid, BLE_UUID_CYCLING_POWER_SERVICE);
 
     err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY, &ble_uuid, &p_cps->service_handle);
+    if (err_code != NRF_SUCCESS)
+    {
+        return err_code;
+    }
+
+		err_code = vendor_char_add(p_cps, p_cps_init);
     if (err_code != NRF_SUCCESS)
     {
         return err_code;
