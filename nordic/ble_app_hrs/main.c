@@ -139,6 +139,28 @@ static void init_led()
 	nrf_gpio_range_cfg_output(LED_START, LED_STOP);
 }
 
+static volatile uint32_t last_report_ticks = 0;
+
+static uint16_t get_seconds_2048()
+{
+	uint32_t * p_ticks;
+	app_timer_cnt_get(p_ticks);
+	
+	// TODO: Optimize this out - only need to figure this out once.
+	uint16_t freq = (32768/NRF_RTC1->PRESCALER+1);
+
+	// Need to use the diff compute because the timer could have overflowed
+	// depending on the PRESCALER value set.
+	//uint32_t * p_ticks_diff;
+	//uint32_t err = app_timer_cnt_diff_compute(*p_ticks, last_report_ticks, p_ticks_diff);
+	
+	// Based on frequence of ticks, calculate 1/2048 second
+	// freq = hz = times per second.
+	uint32_t value = (freq / 2048) * (*p_ticks);
+	
+	return (uint16_t)(value & 0x0000FFFF);
+}
+
 /*****************************************************************************
 * Error Handling Functions
 *****************************************************************************/
@@ -240,7 +262,7 @@ static void heart_rate_meas_timeout_handler(void * p_context)
     UNUSED_PARAMETER(p_context);
 
 		m_cur_heart_rate = revs_get_count();
-
+/*
     err_code = ble_hrs_heart_rate_measurement_send(&m_hrs, m_cur_heart_rate);
 
     if (
@@ -255,12 +277,17 @@ static void heart_rate_meas_timeout_handler(void * p_context)
     {
         APP_ERROR_HANDLER(err_code);
     }
-		
+	*/	
 		//
 		// Also send the instant power data.
 		//
 		ble_cps_meas_t cps_meas;
-		cps_meas.instant_power = 140UL;
+		memset(&cps_meas, 0, sizeof(cps_meas));
+		cps_meas.instant_power = 250 - m_cur_heart_rate;
+		cps_meas.accum_torque = m_cur_heart_rate * 2;
+		cps_meas.accum_wheel_revs = m_cur_heart_rate;
+		cps_meas.last_wheel_event_time = 5; //get_seconds_2048();
+		
 		err_code = ble_cps_cycling_power_measurement_send(&m_cps, &cps_meas);
 
     if (
@@ -506,9 +533,8 @@ static void services_init(void)
 		memset(&cps_init, 0, sizeof(cps_init));
 		
 		cps_init.p_sensor_location = &sensor_location;
-		cps_init.feature = 0;
-		//cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
-		//												| BLE_CPS_FEATURE_WHEEL_REV_BIT;
+		cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
+														| BLE_CPS_FEATURE_WHEEL_REV_BIT;
 
     // Here the sec level for the Cycling Power Service can be changed/increased.
 		// TODO: all of this could be put into the ble_cps_init function, no need because

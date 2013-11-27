@@ -63,8 +63,29 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
                                       ble_cps_meas_t * p_cps_measurement,
                                       uint8_t *        p_encoded_buffer)
 {
-    uint8_t flags = 0;
-    uint8_t len   = 1;
+		/* 
+		p_encoded_buffer[0] = 0x06;  
+		p_encoded_buffer[1] = 0;
+		
+		p_encoded_buffer[2] = 0x98;	// Instant Power
+		p_encoded_buffer[3] = 0;
+
+		p_encoded_buffer[4] = 0xE8;	// 
+		p_encoded_buffer[5] = 0x7E;
+
+		p_encoded_buffer[6] = 0x6B;
+		p_encoded_buffer[7] = 0x03;
+
+		p_encoded_buffer[8] = 0;
+		p_encoded_buffer[9] = 0;
+
+		p_encoded_buffer[10] = 0x68;
+		p_encoded_buffer[11] = 0xFD;
+
+		return 12; */
+
+    uint16_t flags = 0;
+    uint8_t len    = 2;
 
 		// TODO: could this encoding be a problem? The actual value should be a *signed* int16.
 		// length should be the same, but we don't care about the most significant bit do we?
@@ -106,9 +127,10 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
 			}
 		}
 		    
-    // Flags field
-    p_encoded_buffer[0] = flags;
-    
+    // Take 16 bit flags field and seperate into 2 octets.
+		p_encoded_buffer[0] = (uint8_t) ((flags & 0x00FF) >> 0);
+    p_encoded_buffer[1] = (uint8_t) ((flags & 0xFF00) >> 8);
+		
     return len;
 }
 
@@ -144,7 +166,6 @@ static uint32_t cycling_power_feature_char_add(ble_cps_t * p_cps, const ble_cps_
     memset(&attr_char_value, 0, sizeof(attr_char_value));
 
 		// Encode the feature bits.
-		//uint32_encode(p_cps_init->feature, &init_value_encoded[4]);
 		init_value_feature    = p_cps_init->feature;
     init_value_encoded[0] = init_value_feature & 0xFF;
     init_value_encoded[1] = (init_value_feature >> 8) & 0xFF;
@@ -201,7 +222,9 @@ static uint32_t cycling_power_measurement_char_add(ble_cps_t * p_cps, const ble_
     attr_md.vlen       = 1;
     
     memset(&attr_char_value, 0, sizeof(attr_char_value));
-    
+	
+		memset(&encoded_cpm, 0, sizeof(encoded_cpm));
+	
     attr_char_value.p_uuid       = &ble_uuid;
     attr_char_value.p_attr_md    = &attr_md;
     attr_char_value.init_len     = cps_measurement_encode(p_cps, &initial_cpm, encoded_cpm);
@@ -299,6 +322,7 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
     // Initialize service structure
     p_cps->evt_handler                 = p_cps_init->evt_handler;
     p_cps->conn_handle                 = BLE_CONN_HANDLE_INVALID;
+		p_cps->feature										 = p_cps_init->feature;
     
     // Add service
     BLE_UUID_BLE_ASSIGN(ble_uuid, BLE_UUID_CYCLING_POWER_SERVICE);
@@ -365,7 +389,9 @@ uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, ble_cps_meas_
         uint16_t               hvx_len;
         ble_gatts_hvx_params_t hvx_params;
         
-        len     = cps_measurement_encode(p_cps, p_cps_meas, &encoded_cpm[MAX_CPM_LEN]);
+				memset(&encoded_cpm, 0, sizeof(encoded_cpm));
+				
+        len     = cps_measurement_encode(p_cps, p_cps_meas, encoded_cpm);
         hvx_len = len;
 
         memset(&hvx_params, 0, sizeof(hvx_params));
