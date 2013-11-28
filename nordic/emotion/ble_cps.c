@@ -51,6 +51,10 @@ static void on_disconnect(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
     p_cps->conn_handle = BLE_CONN_HANDLE_INVALID;
 }
 
+uint8_t 	m_counter = 1;
+uint8_t 	data[3];
+uint16_t 	len = 0;
+
 /**@brief Function for handling the Write event.
  *
  * @param[in]   p_cps       Cycling Power Service structure.
@@ -58,12 +62,29 @@ static void on_disconnect(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
  */
 static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 {
-		blink_led2();
-		ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
-    
-		int x = 1+1;
-		
-    //if (p_evt_write->handle == p_cps->cpm_handles.cccd_handle)
+	blink_led2();
+	ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
+	
+	len = p_evt_write->len;
+	
+	if (true) // p_evt_write->handle == p_cps->cprc_handles.value_handle)
+				//&& p_evt_write->len == 3)
+	{
+		// TODO: just so I know it's getting called.
+
+		ble_cps_rc_evt_t evt;
+		evt.resistance_mode = p_evt_write->data[0];
+		evt.p_value = (uint16_t*)&p_evt_write->data[1];
+		data[0] = evt.resistance_mode; // p_evt_write->data[0];
+		data[1] = evt.p_value[0]; // p_evt_write->data[1];
+		data[2] = evt.p_value[1]; // p_evt_write->data[2];
+
+		// Propogate the set resistance control.
+		if (p_cps->evt_handler != NULL)
+		{
+			p_cps->evt_handler(p_cps, &evt);
+		}
+	}
 }
 
 /**@brief Function for encoding a Cycling Power Measurement.
@@ -128,10 +149,12 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
     return len;
 }
 
-/*@brief 	This adds a vendor specific characteristic.  Namely, a write property from the Wahoo.
+/*@brief 	This adds a vendor specific characteristic.  Namely, a write property
+ *				used by the Wahoo KICKR to set resistance.
  *
+ *@note		
  */
-static uint32_t vendor_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
+static uint32_t resistance_control_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 {
     uint32_t						err_code;
 		ble_gatts_char_md_t char_md;
@@ -172,10 +195,6 @@ static uint32_t vendor_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_
 
     attr_char_value.p_uuid       = &ble_uuid;
     attr_char_value.p_attr_md    = &attr_md;
-/*    attr_char_value.init_len     = sizeof(uint32_t);
-    attr_char_value.init_offs    = 0;
-    attr_char_value.max_len      = sizeof(uint32_t);
-    attr_char_value.p_value      = 0;*/
     
     return sd_ble_gatts_characteristic_add(p_cps->service_handle,
                                            &char_md,
@@ -382,7 +401,8 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
         return err_code;
     }
 
-		err_code = vendor_char_add(p_cps, p_cps_init);
+		// Add the resistance control characteristic
+		err_code = resistance_control_char_add(p_cps, p_cps_init);
     if (err_code != NRF_SUCCESS)
     {
         return err_code;

@@ -96,18 +96,32 @@ Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64
 #define BLE_CPS_FEATURE_INSTANT_MEAS_DIRECTION_BIT			(0x01 << 17)	// Instantaneous Measurement Direction Supported
 #define BLE_CPS_FEATURE_FACTORY_CALIBRATION_BIT					(0x01 << 18)	// Factory Calibration Date Supported
 
-/**@brief Cycling Power Service event type. */
 typedef enum
 {
-	BLE_CPS_EVT_NOTIFICATION_ENABLED,                   /**< Cycling Power value notification enabled event. */
-	BLE_CPS_EVT_NOTIFICATION_DISABLED                   /**< Cycling Power value notification disabled event. */
-} ble_cps_evt_type_t;
+	BLE_CPS_BIKE_ROAD				= 0x21,
+	BLE_CPS_BIKE_MOUNT			= 0x2E
+} ble_cps_bike_type_t;
 
-/**@brief Cycling Power Service event. */
+//
+// TODO: These values are not specific to BLE so they should be moved out to 
+// the resistance module.
+//
+typedef enum 
+{
+	BLE_CPS_RESISTANCE_PERCENT 	= 0x40,
+	BLE_CPS_RESISTANCE_LEVEL		= 0x41,
+	BLE_CPS_RESISTANCE_ERG			= 0x42,
+	BLE_CPS_SET_BIKE_TYPE				= 0x44,
+	BLE_CPS_SET_SLOPE						= 0x46,
+	BLE_CPS_SET_WIND						= 0x47
+} ble_cps_resistance_mode_t;
+
+/**@brief Cycling Power Service set resistance event. */
 typedef struct
 {
-	ble_cps_evt_type_t evt_type;                        /**< Type of event. */
-} ble_cps_evt_t;
+	ble_cps_resistance_mode_t resistance_mode;					/**< Data containing the resistance mode. */
+	uint16_t* p_value;																	/**< Value to set the mode to. */
+} ble_cps_rc_evt_t;
 
 /**@brief Cycling Power Service measurement type. */
 typedef struct ble_cps_meas_s
@@ -136,7 +150,7 @@ typedef struct ble_cps_meas_s
 typedef struct ble_cps_s ble_cps_t;
 
 /**@brief Cycling Power Service event handler type. */
-typedef void(*ble_cps_evt_handler_t) (ble_cps_t * p_cps, ble_cps_evt_t * p_evt);
+typedef void(*ble_cps_evt_handler_t) (ble_cps_t * p_cps, ble_cps_rc_evt_t * p_evt);
 
 /**@brief Cycling Power Service init structure. This contains all options and data needed for
 *        initialization of the service. */
@@ -169,6 +183,7 @@ typedef struct ble_cps_s
 	ble_gatts_char_handles_t     sl_handles;                                          /**< Handles related to the Sensor Location characteristic. */
 	ble_gatts_char_handles_t     cpcp_handles;                                        /**< Handles related to the Cycling Power Control Point characteristic. */
 	ble_gatts_char_handles_t     cpv_handles;                                         /**< Handles related to the Cycling Power Vector characteristic. */
+	ble_gatts_char_handles_t     cprc_handles;                                        /**< Handles related to the Cycling Power Resistance Control characteristic. */
 	uint16_t                     conn_handle;                                         /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
 } ble_cps_t;
 
