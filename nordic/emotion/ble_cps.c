@@ -62,18 +62,19 @@ uint16_t 	len = 0;
  */
 static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 {
-	// TODO: blink just so I know it's getting called.
-	blink_led2();
 	ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
 	
 	len = p_evt_write->len;
-	
 	if (true) // p_evt_write->handle == p_cps->cprc_handles.value_handle)
-				//&& p_evt_write->len == 3)
 	{
 		ble_cps_rc_evt_t evt;
 		evt.resistance_mode = p_evt_write->data[0];
 		evt.p_value = (uint16_t*)&p_evt_write->data[1];
+		
+		// We should always ignore the second bit if the len is 2, but just to be
+		// sure zero-ing out the second byte.
+		//if (p_evt_write->len == 2)
+			//evt.p_value[2] = 0;
 		
 		// REMOVE DEBUG STUFF:
 		data[0] = evt.resistance_mode; 
@@ -85,6 +86,8 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 		{
 			p_cps->evt_handler(p_cps, &evt);
 		}
+		// TODO: blink just so I know it's getting called.
+		blink_led2();		
 	}
 }
 
