@@ -62,6 +62,7 @@ uint16_t 	len = 0;
  */
 static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 {
+	// TODO: blink just so I know it's getting called.
 	blink_led2();
 	ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
 	
@@ -70,14 +71,14 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 	if (true) // p_evt_write->handle == p_cps->cprc_handles.value_handle)
 				//&& p_evt_write->len == 3)
 	{
-		// TODO: just so I know it's getting called.
-
 		ble_cps_rc_evt_t evt;
 		evt.resistance_mode = p_evt_write->data[0];
 		evt.p_value = (uint16_t*)&p_evt_write->data[1];
-		data[0] = evt.resistance_mode; // p_evt_write->data[0];
-		data[1] = evt.p_value[0]; // p_evt_write->data[1];
-		data[2] = evt.p_value[1]; // p_evt_write->data[2];
+		
+		// REMOVE DEBUG STUFF:
+		data[0] = evt.resistance_mode; 
+		data[1] = evt.p_value[0]; 
+		data[2] = evt.p_value[1]; 
 
 		// Propogate the set resistance control.
 		if (p_cps->evt_handler != NULL)
@@ -171,8 +172,10 @@ static uint32_t resistance_control_char_add(ble_cps_t * p_cps, const ble_cps_ini
     char_md.p_user_desc_md   = NULL;
     char_md.p_cccd_md        = NULL;
     char_md.p_sccd_md        = NULL;		
-		
-		// A026E005-0A75-4AB3-97FA-F1500F9FEB8B
+
+		// 
+		// Set vendor specific UUID (A026E005-0A75-4AB3-97FA-F1500F9FEB8B)
+		//
 		const ble_uuid128_t WAHOO_UUID = { 0x8B, 0xEB, 0x9F, 0x0F, 0x50, 0xF1, 0xFA, 0x97, 0xB3, 0x4A, 0x7D, 0x0A, 0x00, 0x00, 0x26, 0xA0 };
 		const uint16_t WAHOO_CHAR = 0xE005;
 		uint8_t uuid_type; // = BLE_UUID_TYPE_VENDOR_BEGIN;
@@ -186,6 +189,7 @@ static uint32_t resistance_control_char_add(ble_cps_t * p_cps, const ble_cps_ini
 		ble_uuid.type = uuid_type;
 		ble_uuid.uuid = WAHOO_CHAR;
 
+		// Set attribute metadata.
 		BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
     attr_md.vloc       = BLE_GATTS_VLOC_STACK;
@@ -195,11 +199,15 @@ static uint32_t resistance_control_char_add(ble_cps_t * p_cps, const ble_cps_ini
 
     attr_char_value.p_uuid       = &ble_uuid;
     attr_char_value.p_attr_md    = &attr_md;
+    attr_char_value.init_len     = 0;
+    attr_char_value.init_offs    = 0;
+    attr_char_value.max_len      = 4;
+    attr_char_value.p_value      = NULL;
     
     return sd_ble_gatts_characteristic_add(p_cps->service_handle,
                                            &char_md,
                                            &attr_char_value,
-                                           &p_cps->cpf_handles);				
+                                           &p_cps->cprc_handles);				
 }
 
 static uint32_t cycling_power_feature_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
