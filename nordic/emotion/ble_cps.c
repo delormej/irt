@@ -65,7 +65,7 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 	ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
 	
 	len = p_evt_write->len;
-	if (true) // p_evt_write->handle == p_cps->cprc_handles.value_handle)
+	if (p_evt_write->handle == p_cps->cprc_handles.value_handle)
 	{
 		ble_cps_rc_evt_t evt;
 		evt.resistance_mode = p_evt_write->data[0];
