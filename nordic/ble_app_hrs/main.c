@@ -348,6 +348,18 @@ static void button_event_handler(uint8_t pin_no)
     }
 }
 
+/*@brief	Event handler that the cycling power service calls when a set resistance
+ *				command is received.
+ *
+ */
+static void cps_set_resistance_handler(ble_cps_t * p_cps, ble_cps_rc_evt_t * p_evt)
+{
+	if (p_evt->resistance_mode == BLE_CPS_RESISTANCE_LEVEL)
+	{
+		uint8_t level = p_evt->p_value[0];
+		set_resistance(level);
+	}
+}
 
 /*****************************************************************************
 * Static Initialization Functions
@@ -522,6 +534,7 @@ static void services_init(void)
 		cps_init.p_sensor_location = &sensor_location;
 		cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
 														| BLE_CPS_FEATURE_WHEEL_REV_BIT;
+		cps_init.evt_handler = cps_set_resistance_handler;
 
     // Here the sec level for the Cycling Power Service can be changed/increased.
 		// TODO: all of this could be put into the ble_cps_init function, no need because
