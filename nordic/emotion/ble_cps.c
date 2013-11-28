@@ -71,11 +71,6 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 		evt.resistance_mode = p_evt_write->data[0];
 		evt.p_value = (uint16_t*)&p_evt_write->data[1];
 		
-		// We should always ignore the second bit if the len is 2, but just to be
-		// sure zero-ing out the second byte.
-		//if (p_evt_write->len == 2)
-			//evt.p_value[2] = 0;
-		
 		// REMOVE DEBUG STUFF:
 		data[0] = evt.resistance_mode; 
 		data[1] = evt.p_value[0]; 
