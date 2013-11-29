@@ -18,11 +18,10 @@
 #include "nrf_pwm.h"
 
 /**@brief 	Initializes the drum photo sensor that reports revolutions.*/
-void init_revolutions(uint32_t pin_drum_rev);
+void init_speed(uint32_t pin_drum_rev, uint16_t wheel_size_mm);
 
-/**@brief 	Gets the current count of drum revolutions since the counter 
- * 					was cleared or rolled over. 
+/**@brief 	Gets the count of wheel revolutions since the counter started.
  */
-uint16_t revs_get_count(void);
+uint16_t get_wheel_revolutions(void);
 
 #endif

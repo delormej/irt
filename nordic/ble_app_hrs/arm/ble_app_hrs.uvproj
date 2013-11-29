@@ -414,6 +414,11 @@
           <GroupName>Source Code</GroupName>
           <Files>
             <File>
+              <FileName>resistance.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\emotion\resistance.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\..\main.c</FilePath>
@@ -427,6 +432,11 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>speed.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\emotion\speed.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -527,16 +537,6 @@
               <FileName>nrf_pwm.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\emotion\nrf_pwm.c</FilePath>
-            </File>
-            <File>
-              <FileName>resistance.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\emotion\resistance.c</FilePath>
-            </File>
-            <File>
-              <FileName>revolutions.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\emotion\revolutions.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -950,6 +950,11 @@
           <GroupName>Source Code</GroupName>
           <Files>
             <File>
+              <FileName>resistance.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\emotion\resistance.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\..\main.c</FilePath>
@@ -963,6 +968,11 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>speed.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\emotion\speed.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1063,16 +1073,6 @@
               <FileName>nrf_pwm.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\emotion\nrf_pwm.c</FilePath>
-            </File>
-            <File>
-              <FileName>resistance.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\emotion\resistance.c</FilePath>
-            </File>
-            <File>
-              <FileName>revolutions.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\emotion\revolutions.c</FilePath>
             </File>
           </Files>
         </Group>

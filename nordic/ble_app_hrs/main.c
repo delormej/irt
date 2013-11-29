@@ -51,7 +51,7 @@
 #include "nrf_delay.h"
 #include "boards.h"
 #include "resistance.h"
-#include "revolutions.h"
+#include "speed.h"
 
 #define HR_INC_BUTTON_PIN_NO                 EVAL_BOARD_BUTTON_0                       /**< Button used to increment heart rate. */
 #define HR_DEC_BUTTON_PIN_NO                 EVAL_BOARD_BUTTON_1                       /**< Button used to decrement heart rate. */
@@ -129,23 +129,30 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt);
 
 static volatile uint32_t last_report_ticks = 0;
 
+/*@brief 	Retuns the count of 1/2048th seconds (2048 per second) since the 
+ *				the counter started.  
+ *
+ *@note		This value rolls over at 32 seconds.
+ */
 static uint16_t get_seconds_2048()
 {
-	uint32_t ticks = NRF_RTC1->COUNTER;
-	
 	// TODO: Optimize this out - only need to figure this out once.
+	
+	// RTC1 is based on a 32.768khz crystal, or in other words it oscillates
+	// 32768 times per second.  The PRESCALER determins how often a tick gets
+	// counted.  With a prescaler of 0, there are 32,768 ticks in 1 second
+	// 1/2048th of a second would be 16 ticks (32768/2048)
+	// # of 2048th's would then be ticks / 16.
 	float freq = 32768/(NRF_RTC1->PRESCALER+1);
 
-	// Need to use the diff compute because the timer could have overflowed
-	// depending on the PRESCALER value set.
-	//uint32_t * p_ticks_diff;
-	//uint32_t err = app_timer_cnt_diff_compute(*p_ticks, last_report_ticks, p_ticks_diff);
+	// Get current tick count.
+	uint32_t ticks = NRF_RTC1->COUNTER;
+
+	// Based on frequence of ticks, calculate 1/2048 seconds.
+	// freq (hz) = times per second.
+	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (freq / 2048));
 	
-	// Based on frequence of ticks, calculate 1/2048 second
-	// freq = hz = times per second.
-	uint16_t value = ROUNDED_DIV(ticks, (freq / 2048));
-	
-	return (uint16_t)value;
+	return seconds_2048;
 }
 
 /*****************************************************************************
@@ -248,7 +255,6 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 
     UNUSED_PARAMETER(p_context);
 
-		m_cur_heart_rate = revs_get_count();
 /*
     err_code = ble_hrs_heart_rate_measurement_send(&m_hrs, m_cur_heart_rate);
 
@@ -270,9 +276,11 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 		//
 		ble_cps_meas_t cps_meas;
 		memset(&cps_meas, 0, sizeof(cps_meas));
-		cps_meas.instant_power = 250 - m_cur_heart_rate;
-		cps_meas.accum_torque = m_cur_heart_rate * 2;
-		cps_meas.accum_wheel_revs = m_cur_heart_rate;
+		
+		uint32_t revs = get_wheel_revolutions();
+		cps_meas.instant_power = revs;  // For debugging purposes, show revs here.
+		cps_meas.accum_torque = 0; 
+		cps_meas.accum_wheel_revs = revs;
 		cps_meas.last_wheel_event_time = get_seconds_2048();
 		
 		err_code = ble_cps_cycling_power_measurement_send(&m_cps, &cps_meas);
@@ -834,22 +842,6 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     on_ble_evt(p_ble_evt);
 }
 
-/**@brief Function called when a specified number of drum revolutions occur."
- *
- *
- */
-void REVS_IRQHandler()
-{
-	REVS_TIMER->EVENTS_COMPARE[0] = 0;	// This stops the IRQHandler from getting called indefinetly.
-	/*
-	uint32_t revs = 0;
-
-	REVS_TIMER->TASKS_CAPTURE[0] = 1;
-	revs = REVS_TIMER->CC[0]; */
-	
-	m_cur_heart_rate = revs_get_count();
-}
-
 /*****************************************************************************
 * Main Function
 *****************************************************************************/
@@ -898,7 +890,7 @@ int main(void)
     advertising_start();
 
 		set_resistance(m_resistance_level);	
-		init_revolutions(PIN_DRUM_REV);
+		init_speed(PIN_DRUM_REV, 2070);
 		app_button_enable();
 
     // Enter main loop
