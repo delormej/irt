@@ -414,11 +414,6 @@
           <GroupName>Source Code</GroupName>
           <Files>
             <File>
-              <FileName>resistance.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\emotion\resistance.c</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\..\main.c</FilePath>
@@ -432,6 +427,11 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>resistance.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\emotion\resistance.c</FilePath>
             </File>
             <File>
               <FileName>speed.c</FileName>
@@ -950,11 +950,6 @@
           <GroupName>Source Code</GroupName>
           <Files>
             <File>
-              <FileName>resistance.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\emotion\resistance.c</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\..\main.c</FilePath>
@@ -968,6 +963,11 @@
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>resistance.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\emotion\resistance.c</FilePath>
             </File>
             <File>
               <FileName>speed.c</FileName>
