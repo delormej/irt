@@ -1,3 +1,11 @@
+/*
+*******************************************************************************
+* 
+* By Jason De Lorme <jjdelorme@yahoo.com>
+* http://www.roadacious.com
+*
+********************************************************************************/
+
 #include "speed.h"
 #include "nrf_sdm.h"
 #include "app_error.h"
@@ -82,10 +90,25 @@ static uint16_t revs_get_count()
 	return revs;
 }
 
-/**@brief		Returns the number of wheel revolutions.
- *
- *@note			Approx. 19 flywheel revolutions per 1 2.07m wheel revolution.
- */
+float get_speed_kmh(uint16_t wheel_revolutions, uint16_t seconds_2048)
+{
+	if (wheel_revolutions == 0 || seconds_2048 == 0)
+		return 0.0f;
+	
+	// Convert mm to meters, divide by revs, multiply by 1,000 for km.
+	float km = ((m_wheel_size*1000) / wheel_revolutions)*1000;
+	// Divide distance by time (multiple by  2048 to get seconds, then seconds in hour).
+	float speed = km / (seconds_2048 * 2048 * 3600);
+	
+	return speed;
+}
+
+float get_speed_mph(uint16_t wheel_revolutions, uint16_t seconds_2048)
+{
+	// Convert km/h to mp/h.
+	return get_speed_kmh(wheel_revolutions, seconds_2048) * 1.609344;
+}
+
 uint16_t get_wheel_revolutions()
 {
 	/*
@@ -99,7 +122,7 @@ uint16_t get_wheel_revolutions()
 	if (revs == 0)
 		return 0;
 	
-	// TODO: Use m_wheel_size to accurately calculatoe 
+	// TODO: Use m_wheel_size to more accurately calculate flywheel to wheel revs.
 	uint16_t flywheel_to_wheel_revs = 19;
 	return ROUNDED_DIV(revs, flywheel_to_wheel_revs);
 }
