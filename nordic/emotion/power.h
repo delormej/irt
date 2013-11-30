@@ -1,0 +1,34 @@
+/*
+*******************************************************************************
+*
+* By Jason De Lorme <jjdelorme@yahoo.com>
+* http://www.roadacious.com
+*
+* This module is responsible for calculating power based on rider profile 
+* e.g. weight, current speed and resistance.
+*
+********************************************************************************/
+
+#ifndef __POWER_H__
+#define __POWER_H__
+
+#include <stdint.h>
+#include "insideride.h"
+
+#define IRT_ERROR_INVALID_RESISTANCE_LEVEL					IRT_ERROR + 0x01
+
+/**@brief	Calculates an estimated power in watts based on current speed, rider
+ *			profile including total weight (bike+gear+rider) in pounds and the
+ *			current mag resistance level.
+ *
+ * @return	IRT_SUCCESS if successful, otherwise and error code.
+ *
+ * @params[out]	p_watts	Power in watts..
+ *
+ * @note	Speed is miles per hour, weight is in pounds, resistance level is 0-9.
+ *
+ */
+uint8_t calc_power(float speed_mph, float total_weight_lb,
+	uint8_t resistance_level, int16_t* p_watts);
+
+#endif
