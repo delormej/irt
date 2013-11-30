@@ -438,6 +438,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\emotion\speed.c</FilePath>
             </File>
+            <File>
+              <FileName>power.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\emotion\power.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -973,6 +978,11 @@
               <FileName>speed.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\emotion\speed.c</FilePath>
+            </File>
+            <File>
+              <FileName>power.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\emotion\power.c</FilePath>
             </File>
           </Files>
         </Group>

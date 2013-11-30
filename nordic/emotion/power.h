@@ -31,4 +31,10 @@
 uint8_t calc_power(float speed_mph, float total_weight_lb,
 	uint8_t resistance_level, int16_t* p_watts);
 
+/**@brief	Calculates torque based on watts for a given period.  The period is
+ *			in 1/2048th seconds.  Torque is returned in 1/32 nanometers.
+ *
+ */
+uint8_t calc_torque(int16_t watts, uint16_t seconds_2048, uint16_t* p_torque);
+
 #endif

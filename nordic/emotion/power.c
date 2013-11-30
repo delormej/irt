@@ -8,6 +8,8 @@
 
 #include "power.h"
 
+#define	MATH_PI			3.14159265358979f
+
 float slope[10] = { 0, 2.6, 3.8, 5.0, 6.1, 7.1, 8.2, 9.2, 10.1, 11.0 };
 float intercept [10] = { 0, -9.60, -18.75, -25.00, -28.94, -29.99, -29.23, -26.87, -20.90, -13.34 };
 
@@ -42,5 +44,18 @@ uint8_t calc_power(float speed_mph, float total_weight_lb,
 	*p_watts = (int16_t)(level0 + speed_mph *
 		slope[resistance_level] + intercept[resistance_level]);
 
+	return IRT_SUCCESS;
+}
+
+uint8_t calc_torque(int16_t watts, uint16_t seconds_2048, uint16_t* p_torque)
+{
+	if (watts == 0 || seconds_2048 == 0)
+	{
+		*p_torque = 0;
+		return IRT_SUCCESS;
+	}
+	
+	*p_torque = (watts * seconds_2048) / (128 * MATH_PI);
+	
 	return IRT_SUCCESS;
 }
