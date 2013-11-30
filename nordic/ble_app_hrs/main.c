@@ -367,11 +367,11 @@ static void cps_set_resistance_handler(ble_cps_t * p_cps, ble_cps_rc_evt_t * p_e
 	switch (p_evt->resistance_mode)
 	{
 		case BLE_CPS_RESISTANCE_SET_STANDARD:
-			set_resistance((uint8_t)value);
+			set_resistance((uint8_t)(value >> 8));
 			break;
 			
 		case BLE_CPS_RESISTANCE_SET_PERCENT:
-			set_resistance_pct((uint8_t)value);
+			set_resistance_pct((uint8_t)(value >> 8));
 			break;
 			
 		case BLE_CPS_RESISTANCE_SET_ERG:
