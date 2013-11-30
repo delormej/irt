@@ -76,3 +76,9 @@ void set_resistance_pct(uint8_t percent)
 		pwm_set_servo(position);
 }
 
+// TODO: Future implementations.
+void set_resistance_erg(uint16_t watts) {};
+void set_resistance_slope(uint16_t slope) {};
+void set_resistance_wind(uint16_t wind) {};
+
+
