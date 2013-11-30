@@ -50,8 +50,11 @@
 #include "ble_debug_assert_handler.h"
 #include "nrf_delay.h"
 #include "boards.h"
+
+#include "insideride.h"
 #include "resistance.h"
 #include "speed.h"
+#include "power.h"
 
 #define HR_INC_BUTTON_PIN_NO                 EVAL_BOARD_BUTTON_0                       /**< Button used to increment heart rate. */
 #define HR_DEC_BUTTON_PIN_NO                 EVAL_BOARD_BUTTON_1                       /**< Button used to decrement heart rate. */
@@ -108,7 +111,13 @@
 #define PIN_DRUM_REV 				0		// P3 - P0.00 
 /*****************************************************************************/
 
-uint8_t m_resistance_level = 0;
+/*****************************************************************************
+* InsideRide managed state.
+*****************************************************************************/
+static volatile uint8_t m_resistance_level = 0;			// Current mag resistance.
+static volatile uint8_t m_accum_torque = 0;					// Tracks accumlated torque.
+static volatile uint8_t m_last_seconds_2048 = 0;		// Last time of reported event in 1/2048th seconds.
+
 
 static ble_gap_sec_params_t                  m_sec_params;                             /**< Security requirements for this application. */
 static ble_gap_adv_params_t                  m_adv_params;                             /**< Parameters to be passed to the stack when starting advertising. */
@@ -277,11 +286,39 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 		ble_cps_meas_t cps_meas;
 		memset(&cps_meas, 0, sizeof(cps_meas));
 		
-		uint32_t revs = get_wheel_revolutions();
-		cps_meas.instant_power = revs;  // For debugging purposes, show revs here.
-		cps_meas.accum_torque = 0; 
+		//
+		// Time period.
+		//
+		uint16_t 	seconds_2048 	=	get_seconds_2048();
+		// Calculate the amount of time in 1/2048th seconds since last reporting event.
+		uint16_t period_seconds_2048 = seconds_2048 - m_last_seconds_2048;
+		// Update the last event time.
+		m_last_seconds_2048 = seconds_2048;
+		
+		uint32_t 	revs 					= get_wheel_revolutions();
+		float 		speed 				= get_speed_mph(revs, period_seconds_2048);				
+		int16_t		watts;
+		uint16_t 	torque;
+		
+		const float	total_weight = 175.0f;	// Hard coded value for now.
+		
+		err_code = calc_power(speed, total_weight, m_resistance_level, &watts);
+		// TODO: Handle the error for real here, not sure what the overall error 
+		// handling strategy will be, but this is not critical, just move on.
+		if (err_code != IRT_SUCCESS)
+			return;		
+		
+		err_code = calc_torque(watts, period_seconds_2048, &torque);
+		if (err_code != IRT_SUCCESS)
+			return;
+		
+		// Store accumulated torque for the session.
+		m_accum_torque += torque;
+		
+		cps_meas.instant_power = watts;
+		cps_meas.accum_torque = m_accum_torque; 
 		cps_meas.accum_wheel_revs = revs;
-		cps_meas.last_wheel_event_time = get_seconds_2048();
+		cps_meas.last_wheel_event_time = m_last_seconds_2048;
 		
 		err_code = ble_cps_cycling_power_measurement_send(&m_cps, &cps_meas);
 

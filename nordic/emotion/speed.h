@@ -39,12 +39,12 @@ uint16_t get_wheel_revolutions(void);
  *					period is defined in 1/2048ths of a second.
  *					
  */
-float get_speed_kmh(uint16_t wheel_revolutions, uint16_t seconds_2048);
+float get_speed_kmh(uint16_t wheel_revolutions, uint16_t period_seconds_2048);
 
 /**@brief		Returns speed in miles per hour (kph) given a period.  The 
  *					period is defined in 1/2048ths of a second.
  *					
  */
-float get_speed_mph(uint16_t wheel_revolutions, uint16_t seconds_2048);
+float get_speed_mph(uint16_t wheel_revolutions, uint16_t period_seconds_2048);
 
 #endif

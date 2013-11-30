@@ -47,15 +47,15 @@ uint8_t calc_power(float speed_mph, float total_weight_lb,
 	return IRT_SUCCESS;
 }
 
-uint8_t calc_torque(int16_t watts, uint16_t seconds_2048, uint16_t* p_torque)
+uint8_t calc_torque(int16_t watts, uint16_t period_seconds_2048, uint16_t* p_torque)
 {
-	if (watts == 0 || seconds_2048 == 0)
+	if (watts == 0 || period_seconds_2048 == 0)
 	{
 		*p_torque = 0;
 		return IRT_SUCCESS;
 	}
 	
-	*p_torque = (watts * seconds_2048) / (128 * MATH_PI);
+	*p_torque = (watts * period_seconds_2048) / (128 * MATH_PI);
 	
 	return IRT_SUCCESS;
 }
