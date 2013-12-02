@@ -52,8 +52,10 @@ void set_resistance(uint8_t level)
 		pwm_set_servo(RESISTANCE_LEVEL[level]);
 }
 
-void set_resistance_pct(uint8_t percent)
+void set_resistance_pct(uint16_t percent)
 {
+	return;
+	// NOT FUNCTIONING YET.
 		INIT_RESISTANCE();
 		if (percent == 0)
 		{

@@ -74,7 +74,7 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 		// We'll do this after we see how the events show up in ANT+ and make sure that
 		// it's consistent. 
 		ble_cps_rc_evt_t evt;
-		evt.resistance_mode = p_evt_write->data[0];
+		evt.resistance_mode = (ble_cps_resistance_mode_t)p_evt_write->data[0];
 		evt.p_value = (uint16_t*)&p_evt_write->data[1];
 		
 		// TODO: REMOVE DEBUG STUFF:

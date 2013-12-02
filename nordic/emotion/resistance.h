@@ -24,7 +24,7 @@ void set_resistance(uint8_t level);
 /**@brief		Sets the resistance to a value 0-100 percent.
  *
  */
-void set_resistance_pct(uint8_t percent);
+void set_resistance_pct(uint16_t percent);
 
 // Future implementations.
 void set_resistance_erg(uint16_t watts);
