@@ -114,9 +114,10 @@
 /*****************************************************************************
 * InsideRide managed state.
 *****************************************************************************/
-static volatile uint8_t m_resistance_level = 0;			// Current mag resistance.
-static volatile uint16_t m_accum_torque = 0;					// Tracks accumlated torque.
-static volatile uint16_t m_last_seconds_2048 = 0;		// Last time of reported event in 1/2048th seconds.
+static volatile uint8_t m_resistance_level 		= 0;			// Current mag resistance.
+static volatile uint16_t m_accum_torque 			= 0;					// Tracks accumlated torque.
+static volatile uint16_t m_last_seconds_2048 	= 0;		// Last time of reported event in 1/2048th seconds.
+static volatile uint32_t m_accum_wheel_revs 	= 0;			// Last count of wheel revolutions.
 
 static ble_gap_sec_params_t                  m_sec_params;                             /**< Security requirements for this application. */
 static ble_gap_adv_params_t                  m_adv_params;                             /**< Parameters to be passed to the stack when starting advertising. */
@@ -295,10 +296,27 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 		// Update the last event time.
 		m_last_seconds_2048 = seconds_2048;
 		
-		uint32_t 	revs 					= get_wheel_revolutions();
-		float 		speed 				= get_speed_mph(revs, period_seconds_2048);				
-		int16_t		watts;
-		uint16_t 	torque;
+		// Get the last wheel revolution count which is cumulative since the start.
+		uint32_t 	accum_revs		= get_wheel_revolutions();
+		uint32_t 	period_revs		= 0;
+		
+		if (m_accum_wheel_revs == 0)
+		{
+			// Handle first count scenario.
+			m_accum_wheel_revs 	= accum_revs;
+			period_revs 				= accum_revs;
+		} 
+		else
+		{
+			// Calculate revs since last reported.
+			period_revs = accum_revs - m_accum_wheel_revs;
+			// Set last recorded #.
+			m_accum_wheel_revs = accum_revs;
+		}
+		
+		float 		speed 				= get_speed_mph(period_revs, period_seconds_2048);				
+		int16_t		watts					= 0;
+		uint16_t 	torque				= 0;
 		
 		const float	total_weight = 175.0f;	// Hard coded value for now.
 		
@@ -316,8 +334,8 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 		m_accum_torque += torque;
 		
 		cps_meas.instant_power = watts;
-		cps_meas.accum_torque = m_accum_torque; 
-		cps_meas.accum_wheel_revs = revs;
+		cps_meas.accum_torque = 0; // m_accum_torque; 
+		cps_meas.accum_wheel_revs = accum_revs;
 		cps_meas.last_wheel_event_time = m_last_seconds_2048;
 
 		err_code = ble_cps_cycling_power_measurement_send(&m_cps, &cps_meas);
@@ -601,8 +619,9 @@ static void services_init(void)
 		memset(&cps_init, 0, sizeof(cps_init));
 		
 		cps_init.p_sensor_location = &sensor_location;
-		cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
-														| BLE_CPS_FEATURE_WHEEL_REV_BIT;
+		/*cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
+														| BLE_CPS_FEATURE_WHEEL_REV_BIT;*/
+		cps_init.feature = BLE_CPS_FEATURE_WHEEL_REV_BIT;
 		cps_init.evt_handler = cps_set_resistance_handler;
 
     // Here the sec level for the Cycling Power Service can be changed/increased.
