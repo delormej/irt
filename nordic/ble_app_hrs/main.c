@@ -417,32 +417,29 @@ static void button_event_handler(uint8_t pin_no)
  */
 static void cps_set_resistance_handler(ble_cps_t * p_cps, ble_cps_rc_evt_t * p_evt)
 {
-	uint16_t value;
-	
 	switch (p_evt->resistance_mode)
 	{
 		case BLE_CPS_RESISTANCE_SET_STANDARD:
-			value = (uint8_t)p_evt->p_value[0];
-			set_resistance(value);
+			m_resistance_level = (uint8_t)p_evt->p_value[0];
+			set_resistance(m_resistance_level);
 			break;
-			
+			/*
 		case BLE_CPS_RESISTANCE_SET_PERCENT:
-			//value = p_evt->p_value[0];
-			//set_resistance_pct(value);
+			set_resistance_pct(x);
 			break;
 			
 		case BLE_CPS_RESISTANCE_SET_ERG:
-			set_resistance_erg(value);
+			set_resistance_erg(x);
 			break;
 			
 		case BLE_CPS_RESISTANCE_SET_SLOPE:
-			set_resistance_slope(value);
+			set_resistance_slope(x);
 			break;
 			
 		case BLE_CPS_RESISTANCE_SET_WIND:
-			set_resistance_wind(value);
+			set_resistance_wind(x);
 			break;
-			
+			*/
 		default:
 			break;
 	}
