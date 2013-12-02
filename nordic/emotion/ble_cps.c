@@ -120,6 +120,7 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
 			if (p_cps_measurement->accum_torque != NULL)
 			{
 				flags |= CPS_MEAS_FLAG_ACCUM_TORQUE_PRESENT;
+				// TODO: If reporting from crank, this flag bit should be 1: CPS_MEAS_FLAG_ACCUM_TORQUE_SOURCE
 				len += uint16_encode(p_cps_measurement->accum_torque, &p_encoded_buffer[len]);
 			}
 		}
