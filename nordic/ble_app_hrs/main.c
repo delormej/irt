@@ -115,9 +115,8 @@
 * InsideRide managed state.
 *****************************************************************************/
 static volatile uint8_t m_resistance_level = 0;			// Current mag resistance.
-static volatile uint8_t m_accum_torque = 0;					// Tracks accumlated torque.
-static volatile uint8_t m_last_seconds_2048 = 0;		// Last time of reported event in 1/2048th seconds.
-
+static volatile uint16_t m_accum_torque = 0;					// Tracks accumlated torque.
+static volatile uint16_t m_last_seconds_2048 = 0;		// Last time of reported event in 1/2048th seconds.
 
 static ble_gap_sec_params_t                  m_sec_params;                             /**< Security requirements for this application. */
 static ble_gap_adv_params_t                  m_adv_params;                             /**< Parameters to be passed to the stack when starting advertising. */
@@ -160,7 +159,7 @@ static uint16_t get_seconds_2048()
 	// Based on frequence of ticks, calculate 1/2048 seconds.
 	// freq (hz) = times per second.
 	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (freq / 2048));
-	
+
 	return seconds_2048;
 }
 
@@ -250,6 +249,7 @@ static void battery_level_meas_timeout_handler(void * p_context)
 }
 
 
+
 /**@brief Function for handling the Heart rate measurement timer timeout.
  *
  * @details This function will be called each time the heart rate measurement timer expires.
@@ -319,7 +319,7 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 		cps_meas.accum_torque = m_accum_torque; 
 		cps_meas.accum_wheel_revs = revs;
 		cps_meas.last_wheel_event_time = m_last_seconds_2048;
-		
+
 		err_code = ble_cps_cycling_power_measurement_send(&m_cps, &cps_meas);
 
     if (

@@ -6,6 +6,7 @@
 *
 ********************************************************************************/
 
+#include "insideride.h"
 #include "speed.h"
 #include "nrf_sdm.h"
 #include "app_error.h"
@@ -80,9 +81,10 @@ static void revs_init_timer()
   REVS_TIMER->INTENSET 		= (TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos);	
 	*/
 }
-static uint16_t revs_get_count()
+
+static uint32_t revs_get_count()
 {
-	uint16_t revs = 0;
+	uint32_t revs = 0;
 
 	REVS_TIMER->TASKS_CAPTURE[0] = 1;
 	revs = REVS_TIMER->CC[0]; 
@@ -99,14 +101,14 @@ float get_speed_kmh(uint16_t wheel_revolutions, uint16_t period_seconds_2048)
 	float km = ((m_wheel_size*1000) / wheel_revolutions)*1000;
 	// Divide distance by time (multiple by  2048 to get seconds, then seconds in hour).
 	float speed = km / (period_seconds_2048 * 2048 * 3600);
-	
+
 	return speed;
 }
 
 float get_speed_mph(uint16_t wheel_revolutions, uint16_t period_seconds_2048)
 {
 	// Convert km/h to mp/h.
-	return get_speed_kmh(wheel_revolutions, period_seconds_2048) * 1.609344;
+	return get_speed_kmh(wheel_revolutions, period_seconds_2048) * 0.621371;
 }
 
 uint16_t get_wheel_revolutions()
@@ -117,14 +119,16 @@ uint16_t get_wheel_revolutions()
 		 0.01 miles = 16.09344 meters
 		 1 servo_rev = 0.11176 distance_meters
 	*/
-	uint16_t revs = revs_get_count();
+	uint32_t revs = revs_get_count();
 	
 	if (revs == 0)
 		return 0;
 	
 	// TODO: Use m_wheel_size to more accurately calculate flywheel to wheel revs.
-	uint16_t flywheel_to_wheel_revs = 19;
-	return ROUNDED_DIV(revs, flywheel_to_wheel_revs);
+	uint8_t flywheel_to_wheel_revs = 19;
+	uint16_t wheel_revs = (uint16_t)(ROUNDED_DIV(revs, flywheel_to_wheel_revs));
+	
+	return wheel_revs;
 }
 
 void init_speed(uint32_t pin_drum_rev, uint16_t wheel_size_mm)
