@@ -97,12 +97,13 @@ float get_speed_kmh(uint16_t wheel_revolutions, uint16_t period_seconds_2048)
 	if (wheel_revolutions == 0 || period_seconds_2048 == 0)
 		return 0.0f;
 	
-	// Convert mm to meters, divide by revs, multiply by 1,000 for km.
-	float km = ((m_wheel_size*1000) / wheel_revolutions)*1000;
-	// Divide distance by time (multiple by  2048 to get seconds, then seconds in hour).
-	float speed = km / (period_seconds_2048 * 2048 * 3600);
+	// Convert mm to meters, muliply by revs, multiply by 1,000 for km.
+	float distance_m = (((float)m_wheel_size) / 1000.0f) * wheel_revolutions;
+	// Get speed in meters per second.
+	float mps = distance_m / (period_seconds_2048 / 2048);
+	float kmh = mps * 3.6;
 
-	return speed;
+	return kmh;
 }
 
 float get_speed_mph(uint16_t wheel_revolutions, uint16_t period_seconds_2048)
