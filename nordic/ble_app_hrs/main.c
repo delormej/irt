@@ -109,6 +109,8 @@
 #define PIN_BUTTON_II				2		// P3 - P0.02
 #define PIN_BUTTON_III 			1		// P3 - P0.01
 #define PIN_DRUM_REV 				0		// P3 - P0.00 
+
+#define CYCLING_POWER_MEAS_INTERVAL             APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Heart rate measurement interval (ticks). */
 /*****************************************************************************/
 
 /*****************************************************************************
@@ -783,7 +785,7 @@ static void application_timers_start(void)
     err_code = app_timer_start(m_battery_timer_id, BATTERY_LEVEL_MEAS_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 
-    err_code = app_timer_start(m_heart_rate_timer_id, HEART_RATE_MEAS_INTERVAL, NULL);
+    err_code = app_timer_start(m_heart_rate_timer_id, CYCLING_POWER_MEAS_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 }
 
