@@ -115,7 +115,7 @@
 #define ANT_HRM_PAGE_4                  4                                            /**< HRM page 4 constant. */
 #define ANT_BUFFER_INDEX_MESG_ID        0x01                                         /**< Index for Message ID. */
 #define ANT_BUFFER_INDEX_MESG_DATA      0x03                                         /**< Index for Data. */
-#define ANT_HRMRX_NETWORK_KEY           {0, 0, 0, 0, 0, 0, 0, 0}                     /**< The default network key used. */
+#define ANT_HRMRX_NETWORK_KEY           {0xB9,0xA5,0x21,0xFB,0xBD,0x72,0xC3,0x45}                     /**< The default network key used. */
 
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;     /**< Handle of the current connection. */
 static bool                             m_is_advertising = false;                    /**< True when in advertising state, False otherwise. */
