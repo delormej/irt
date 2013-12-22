@@ -49,6 +49,8 @@
 #include "ble_flash.h"
 #include "ble_debug_assert_handler.h"
 #include "nrf_delay.h"
+#include "ble_nus.h"
+#include "simple_uart.h"
 #include "boards.h"
 
 #include "insideride.h"
@@ -126,6 +128,8 @@ static ble_gap_adv_params_t                  m_adv_params;                      
 ble_bas_t                                    bas;                                      /**< Structure used to identify the battery service. */
 static ble_hrs_t                             m_hrs;                                    /**< Structure used to identify the heart rate service. */
 static volatile uint16_t                     m_cur_heart_rate;                         /**< Current heart rate value. */
+
+static ble_nus_t                        		 m_nus;
 
 static app_timer_id_t                        m_battery_timer_id;                       /**< Battery timer. */
 static app_timer_id_t                        m_heart_rate_timer_id;                    /**< Heart rate measurement timer. */
@@ -515,6 +519,7 @@ static void advertising_init(void)
 {
     uint32_t      err_code;
     ble_advdata_t advdata;
+		ble_advdata_t scanrsp;
     uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
 
     ble_uuid_t adv_uuids[] =
@@ -522,32 +527,40 @@ static void advertising_init(void)
         {BLE_UUID_HEART_RATE_SERVICE,         BLE_UUID_TYPE_BLE},
         {BLE_UUID_BATTERY_SERVICE,            BLE_UUID_TYPE_BLE},
         {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
-				{BLE_UUID_CYCLING_POWER_SERVICE, 			BLE_UUID_TYPE_BLE}
+				{BLE_UUID_CYCLING_POWER_SERVICE, 			BLE_UUID_TYPE_BLE},
+		    {BLE_UUID_NUS_SERVICE, 								m_nus.uuid_type}
     };
 
-    // Build and set advertising data
     memset(&advdata, 0, sizeof(advdata));
-
     advdata.name_type               = BLE_ADVDATA_FULL_NAME;
-    advdata.include_appearance      = true;
+    advdata.include_appearance      = false;
     advdata.flags.size              = sizeof(flags);
     advdata.flags.p_data            = &flags;
-    advdata.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
-    advdata.uuids_complete.p_uuids  = adv_uuids;
 
-    err_code = ble_advdata_set(&advdata, NULL);
-    APP_ERROR_CHECK(err_code);
-
-    // Initialize advertising parameters (used when starting advertising)
-    memset(&m_adv_params, 0, sizeof(m_adv_params));
+    memset(&scanrsp, 0, sizeof(scanrsp));
+    scanrsp.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
+    scanrsp.uuids_complete.p_uuids  = adv_uuids;
     
-    m_adv_params.type        = BLE_GAP_ADV_TYPE_ADV_IND;
-    m_adv_params.p_peer_addr = NULL;                           // Undirected advertisement
-    m_adv_params.fp          = BLE_GAP_ADV_FP_ANY;
-    m_adv_params.interval    = APP_ADV_INTERVAL;
-    m_adv_params.timeout     = APP_ADV_TIMEOUT_IN_SECONDS;
+    err_code = ble_advdata_set(&advdata, &scanrsp);
+    APP_ERROR_CHECK(err_code);
 }
 
+void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length)
+{
+	
+	  data[length] = '\0';
+    simple_uart_putstring(data);
+    simple_uart_putstring("\n");
+#ifdef LOOPBACK
+    uint32_t err_code;
+
+    err_code = ble_nus_send_string(&m_nus, data, length);
+    if (err_code != NRF_ERROR_INVALID_STATE)
+    {
+        APP_ERROR_CHECK(err_code);
+    }
+#endif
+}
 
 /**@brief Function for initializing the services that will be used by the application.
  *
@@ -636,6 +649,16 @@ static void services_init(void)
 
 		err_code = ble_cps_init(&m_cps, &cps_init);
 		APP_ERROR_CHECK(err_code);
+
+		// initialize UART service.
+    static ble_nus_init_t nus_init;
+    
+    memset(&nus_init, 0, sizeof nus_init);
+    nus_init.data_handler = uart_data_handler;
+    
+    err_code = ble_nus_init(&m_nus, &nus_init);
+    APP_ERROR_CHECK(err_code);
+		
 }
 
 
@@ -807,6 +830,15 @@ static void advertising_start(void)
 {
     uint32_t err_code;
 
+    // Initialize advertising parameters (used when starting advertising)
+    memset(&m_adv_params, 0, sizeof(m_adv_params));
+    
+    m_adv_params.type        = BLE_GAP_ADV_TYPE_ADV_IND;
+    m_adv_params.p_peer_addr = NULL;                           // Undirected advertisement
+    m_adv_params.fp          = BLE_GAP_ADV_FP_ANY;
+    m_adv_params.interval    = APP_ADV_INTERVAL;
+    m_adv_params.timeout     = APP_ADV_TIMEOUT_IN_SECONDS;
+
     err_code = sd_ble_gap_adv_start(&m_adv_params);
     APP_ERROR_CHECK(err_code);
 
@@ -894,6 +926,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
                 system_off_mode_enter();
 								*/
             }
+						advertising_start();
             break;
 
         default:
@@ -917,8 +950,44 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
 		ble_cps_on_ble_evt(&m_cps, p_ble_evt);
     ble_bas_on_ble_evt(&bas, p_ble_evt);
+		ble_nus_on_ble_evt(&m_nus, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
     on_ble_evt(p_ble_evt);
+}
+
+
+static void uart_init(void)
+{
+    simple_uart_config(RTS_PIN_NUMBER, TX_PIN_NUMBER, CTS_PIN_NUMBER, RX_PIN_NUMBER, true);
+    
+    NRF_UART0->INTENSET = UART_INTENSET_RXDRDY_Enabled << UART_INTENSET_RXDRDY_Pos;
+    
+    NVIC_SetPriority(UART0_IRQn, APP_IRQ_PRIORITY_LOW);
+    NVIC_EnableIRQ(UART0_IRQn);
+}
+
+void UART0_IRQHandler(void)
+{
+    static uint8_t data_array[NUS_MAX_DATA_LENGTH];
+    static uint8_t index = 0;
+    uint32_t err_code;
+    
+    data_array[index] = simple_uart_get();
+	  simple_uart_put(data_array[index]);
+    if (data_array[index] == '\n' || index >= NUS_MAX_DATA_LENGTH)
+    {
+        err_code = ble_nus_send_string(&m_nus, data_array, index);
+        if (err_code != NRF_ERROR_INVALID_STATE)
+        {
+            APP_ERROR_CHECK(err_code);
+        }
+        
+        index = 0;
+    }
+    else
+    {
+        index++;
+    }
 }
 
 /*****************************************************************************
@@ -940,6 +1009,7 @@ int main(void)
     timers_init();
     gpiote_init();
     buttons_init();
+		uart_init();
 		
 		/*
     if (is_first_start())
@@ -960,9 +1030,9 @@ int main(void)
 
     // Initialize Bluetooth Stack parameters
     gap_params_init();
-    advertising_init();
     services_init();
-    conn_params_init();
+		advertising_init();
+		conn_params_init();
     sec_params_init();
 
     // Actually start advertising
