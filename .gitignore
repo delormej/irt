@@ -23,7 +23,6 @@
 *._2i
 *.dep
 *.lst
-*.uvopt*
 *.uvgui*
 
 # Packages #
