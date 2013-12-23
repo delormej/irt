@@ -371,6 +371,10 @@ static void heart_rate_meas_timeout_handler(void * p_context)
     {
         APP_ERROR_HANDLER(err_code);
     }
+		
+		uint8_t data[20] = "";
+		sprintf((char*)&data[0], "Revs:%i %i", accum_revs, m_last_seconds_2048);
+		send_debug(&data[0], sizeof(data));
 }
 
 void on_button_ii_event(void)
