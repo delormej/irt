@@ -14,13 +14,8 @@
 #include "app_util.h"
 #include "math.h"
 
-// Wheel diameter size in mm.  A road wheel is typically 2,070 mmm.
-static uint16_t 			m_wheel_size;
-static uint8_t 				m_flywheel_revs_trigger;			// Rounded down # of flywheel revolutions for a single wheel rev.
-static float 					m_wheel_rev_increment;				// Fractional wheel revolution per flywheel revolution.
-static float 					m_accum_wheel_revs = 0.0f;		// Keeps track of the actual accumulated calculated wheel revs.
-static speed_event_t 	m_speed_event;								// The last recorded speed event.
-
+static uint16_t 	m_wheel_size;									// Wheel diameter size in mm.  A road wheel is typically 2,070mm.
+static float 			m_flywheel_to_wheel_revs;			// Number of flywheel revolutions for 1 wheel revolution.
 
 /**@brief	Configure GPIO input from flywheel revolution pin and create an 
  *				event on achannel. 
@@ -34,6 +29,37 @@ static void revs_init_gpiote(uint32_t pin_flywheel_rev)
 													NRF_GPIOTE_POLARITY_HITOLO);
 }
 
+/**@brief		Enable PPI channel 3, combined with previous settings.
+ *
+ */
+static void revs_init_ppi()
+{
+	uint32_t err_code; 
+	
+	// Using hardcoded channel 3.
+	err_code = sd_ppi_channel_assign(3, 
+																&NRF_GPIOTE->EVENTS_IN[REVS_CHANNEL_TASK_TOGGLE], 
+																&REVS_TIMER->TASKS_COUNT);
+	
+	if (err_code == NRF_ERROR_SOC_PPI_INVALID_CHANNEL)
+		APP_ERROR_HANDLER(NRF_ERROR_SOC_PPI_INVALID_CHANNEL);
+
+	sd_ppi_channel_enable_set(PPI_CHEN_CH3_Enabled << PPI_CHEN_CH3_Pos);
+}
+
+/**@brief 	Function called when a specified number of flywheel revolutions occur.
+ *
+ */
+static void REVS_IRQHandler()
+{
+	REVS_TIMER->EVENTS_COMPARE[0] = 0;	// This stops the IRQHandler from getting called indefinetly.
+	/*
+	uint32_t revs = 0;
+
+	REVS_TIMER->TASKS_CAPTURE[0] = 1;
+	revs = REVS_TIMER->CC[0]; */
+}
+
 /**@brief		Initializes the counter which tracks the # of flywheel revolutions.
  *
  */
@@ -44,30 +70,36 @@ static void revs_init_timer()
 	REVS_TIMER->TASKS_CLEAR = 1;
 	
 	/**
-		Set up a trigger that will call REVS_IRQHandler after a certain number of revolutions.
-	 **/
+		Uncomment this code to set up a trigger that will call REVS_IRQHandler after a 
+		certain number of revolutions.
+	 **
 
-	REVS_TIMER->CC[0] 			= m_flywheel_revs_trigger;
+	REVS_TIMER->CC[0] 			= REVS_TO_TRIGGER;
 
 	// Clear the counter every time we hit the trigger value.
 	REVS_TIMER->SHORTS 			= TIMER_SHORTS_COMPARE0_CLEAR_Msk;
 	
 	// Interrupt setup.
   REVS_TIMER->INTENSET 		= (TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos);	
+	*/
 }
 
-static uint32_t revs_get_count()
+/**@brief 	Returns the accumulated count of flywheel revolutions since the
+ *					counter started.
+ *					
+ */
+static uint32_t get_flywheel_revs()
 {
 	uint32_t revs = 0;
-	/*
+
 	REVS_TIMER->TASKS_CAPTURE[0] = 1;
 	revs = REVS_TIMER->CC[0]; 
-	*/
+	
 	return revs;
 }
 
-/**@brief 	Retuns the count of 1/2048th seconds (2048 per second) since the 
- *				the counter started.  
+/**@brief 	Returns the count of 1/2048th seconds (2048 per second) since the 
+ *					the counter started.  
  *
  * @note		This value rolls over at 32 seconds.
  */
@@ -105,37 +137,82 @@ static float get_speed_mps(float wheel_revolutions, uint16_t period_seconds_2048
 	return mps;
 }
 
-/*
-static float get_speed_kmh(uint16_t wheel_revolutions, uint16_t period_seconds_2048)
+/**@brief		Calculates how long it would have taken since the last complete 
+ *					wheel revolution given current speed (in meters per second).  
+ *					Returns a value in 1/2048's of a second.
+ *
+ */
+static uint16_t partial_wheel_rev_time_2048(float speed_mps, float accum_wheel_revs)
 {
-	return get_speed_mps(wheel_revolutions, period_seconds_2048) * 3.6;
+	uint16_t time_to_full_rev_2048 = 0;
+	
+	if (speed_mps > 0)
+	{
+		// Get the speed in meters per 1/2048s.
+		float speed_2048 = speed_mps / 2048;
+	
+		// A single wheel rev at this speed would take this many 1/2048's of a second.	
+		float single_wheel_rev_time = (m_wheel_size / 1000) / speed_2048;
+
+		// Difference between calculated partial wheel revs and the last full wheel rev.
+		float partial_wheel_rev = fmod(accum_wheel_revs, 1);
+
+		// How long ago in 1/2048's of a second would the last full wheel rev have occurred?
+		time_to_full_rev_2048 = round(partial_wheel_rev * single_wheel_rev_time);
+	}
+	
+	return time_to_full_rev_2048;
 }
 
-float get_speed_mph(uint16_t wheel_revolutions, uint16_t period_seconds_2048)
+
+/*****************************************************************************
+*
+* Public functions, see function descriptions in header.
+*
+*****************************************************************************/
+
+float get_speed_kmh(float speed_mps)
+{
+	return speed_mps * 3.6;
+}
+
+float get_speed_mph(float speed_mps)
 {
 	// Convert km/h to mp/h.
-	return get_speed_kmh(wheel_revolutions, period_seconds_2048) * 0.621371;
+	return speed_mps * 0.621371;
 }
-*/
 
-uint16_t get_wheel_revolutions()
+void calc_speed(const speed_event_t* last_speed_event, speed_event_t* current_speed_event)
 {
-	uint32_t revs = revs_get_count();
+	// Last flywheel revolution count.
+	uint32_t flywheel_revs = get_flywheel_revs();
 	
-	if (revs == 0)
-		return 0;
+	// Calculate accumlated fractional wheel revolutions.
+	float accum_wheel_revs = flywheel_revs / m_flywheel_to_wheel_revs;
+
+	// Current time stamp.
+	uint16_t current_2048 = get_seconds_2048();
 	
-	uint16_t wheel_revs = (uint16_t)(ROUNDED_DIV(revs, m_flywheel_to_wheel_revs));
+	// Calculate the current speed in meters per second.
+	current_speed_event->speed_mps = get_speed_mps(
+											accum_wheel_revs - last_speed_event->accum_wheel_revs, 	// # of wheel revs in the period
+											current_2048 		 - last_speed_event->event_time_2048);	// Current time period in 1/2048 seconds.
 	
-	return wheel_revs;
+	// Determine time since a full wheel rev in 1/2048's of a second at this speed.
+	uint16_t time_since_full_rev_2048 = partial_wheel_rev_time_2048(
+																						current_speed_event->speed_mps,
+																						accum_wheel_revs);
+	
+	// Assign the speed event to the last calculated complete wheel revolution.
+	current_speed_event->event_time_2048 	= current_2048 - time_since_full_rev_2048;
+	current_speed_event->accum_wheel_revs = floor(accum_wheel_revs);
+	current_speed_event->period_2048 			= current_speed_event->event_time_2048 - 
+																					last_speed_event->event_time_2048;
+	
 }
 
 void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 {
-	// Initialize tracking structure.
-	memset(&m_speed_event, 0, sizeof(m_speed_event));
-	m_speed_event.event_time_2048 = get_seconds_2048();
-	
 	m_wheel_size = wheel_size_mm;
 	
 	// TODO: this is an assumed ratio, we need test/measure with other wheel sizes.
@@ -147,12 +224,10 @@ void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 	*/
 	const float ratio 						= (2.07/0.11176)/2.07;
 	// For every 1 wheel revolution the flywheel revolves this many times.
-	float flywheel_to_wheel_revs 	= (wheel_size_mm/1000)*ratio;
-	// Round down for the IRQ trigger value for approximately 1 wheel revolution.
-	m_flywheel_revs_trigger 			= floor(flywheel_to_wheel_revs);
-	m_wheel_rev_increment 				= flywheel_to_wheel_revs - m_flywheel_revs_trigger;
+	m_flywheel_to_wheel_revs 	= (wheel_size_mm/1000)*ratio;
 	
 	revs_init_gpiote(pin_flywheel_rev);
+	revs_init_ppi();
 	revs_init_timer();
 	
 	// Enable interrupt handler which will internally map to REVS_IRQHandler.
@@ -161,62 +236,4 @@ void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 	
 	// Start the counter.
 	REVS_TIMER->TASKS_START = 1;
-}
-
-
-/**@brief		Function called when a specified number of flywheel revolutions occur.
- *					Populates the m_speed_event structure with the last recorded event.
- *
- */
-static void on_flywheel_handler()
-{
-	// Increment the wheel revolutions based on the fraction associated with a whole
-	// number of flywheel revolutions.
-	m_accum_wheel_revs += m_wheel_rev_increment;
-
-	uint16_t m_last_event_time_2048 = m_speed_event.event_time_2048;
-	uint16_t current_2048 					= get_seconds_2048();
-	
-	// Get the actual current speed in meters per second.
-	m_speed_event.speed_mps = get_speed_mps(
-											m_accum_wheel_revs - m_speed_event.accum_wheel_revs, 	// # of wheel revs in the period
-											current_2048 - m_speed_event.event_time_2048);					// Current time period in 1/2048 seconds.
-	
-	// Get the speed in meters per 1/2048s.
-	float speed_2048 = m_speed_event.speed_mps / 2048;
-	
-	// A single wheel rev at this speed would take this many 1/2048's of a second.
-	float single_wheel_rev_time = (m_wheel_size / 1000) / speed_2048;
-	
-	// Difference between calculated partial wheel revs and the last full wheel rev.
-	float partial_wheel_rev = fmod(m_accum_wheel_revs, 1);
-
-	// How long ago in 1/2048's of a second would the last full wheel rev have occurred?
-	uint16_t time_to_full_rev_2048 = round(partial_wheel_rev * single_wheel_rev_time);
-	
-	//
-	// Record the last speed event.
-	// 
-	m_speed_event.event_time_2048 	= current_2048 - time_to_full_rev_2048;
-	m_speed_event.accum_wheel_revs 	= floor(m_accum_wheel_revs);
-	m_speed_event.period_2048 			= m_speed_event.event_time_2048 - 
-																					m_last_event_time_2048;
-	
-}
-
-/**@brief 	Interrupt invoked when a specified number of flywheel revolutions occur.
- *
- */
-static void REVS_IRQHandler()
-{
-	REVS_TIMER->EVENTS_COMPARE[0] = 0;	// This stops the IRQHandler from getting called indefinetly.
-	/*
-	// This *should* be equal to m_flywheel_revs_trigger, so no need for the extra step?
-	uint32_t revs = 0;
-
-	REVS_TIMER->TASKS_CAPTURE[0] = 1;
-	revs = REVS_TIMER->CC[0]; 					
-	*/
-	
-	on_flywheel_handler();
 }
