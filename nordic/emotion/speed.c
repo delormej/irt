@@ -14,6 +14,7 @@
 
 // Wheel diameter size in mm.  A road wheel is typically 2,070 mmm.
 static uint16_t m_wheel_size;
+static float m_flywheel_to_wheel_revs;
 
 /**@brief	Configure GPIO input from flywheel revolution pin and create an 
  *				event on achannel. 
@@ -114,20 +115,12 @@ float get_speed_mph(uint16_t wheel_revolutions, uint16_t period_seconds_2048)
 
 uint16_t get_wheel_revolutions()
 {
-	/*
-		For example, assuming a 2.07m wheel circumference:
-		 0.01 miles : 144 s_revs 
-		 0.01 miles = 16.09344 meters
-		 1 servo_rev = 0.11176 distance_meters
-	*/
 	uint32_t revs = revs_get_count();
 	
 	if (revs == 0)
 		return 0;
 	
-	// TODO: Use m_wheel_size to more accurately calculate flywheel to wheel revs.
-	uint8_t flywheel_to_wheel_revs = 19;
-	uint16_t wheel_revs = (uint16_t)(ROUNDED_DIV(revs, flywheel_to_wheel_revs));
+	uint16_t wheel_revs = (uint16_t)(ROUNDED_DIV(revs, m_flywheel_to_wheel_revs));
 	
 	return wheel_revs;
 }
@@ -135,6 +128,16 @@ uint16_t get_wheel_revolutions()
 void init_speed(uint32_t pin_drum_rev, uint16_t wheel_size_mm)
 {
 	m_wheel_size = wheel_size_mm;
+	
+	// TODO: this is an assumed ratio, we need test/measure with other wheel sizes.
+	/*
+		For example, assuming a 2.07m wheel circumference:
+		 0.01 miles : 144 s_revs 
+		 0.01 miles = 16.09344 meters
+		 1 servo_rev = 0.11176 distance_meters
+	*/
+	const float ratio = (2.07/0.11176)/2.07;
+	m_flywheel_to_wheel_revs = (wheel_size_mm/1000)*ratio;
 	
 	revs_init_gpiote(pin_drum_rev);
 	revs_init_ppi();
