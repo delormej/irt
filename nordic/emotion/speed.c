@@ -179,7 +179,7 @@ float get_speed_kmh(float speed_mps)
 float get_speed_mph(float speed_mps)
 {
 	// Convert km/h to mp/h.
-	return speed_mps * 0.621371;
+	return get_speed_kmh(speed_mps) * 0.621371;
 }
 
 void calc_speed(const speed_event_t* last_speed_event, speed_event_t* current_speed_event)
