@@ -170,6 +170,19 @@ static uint16_t get_seconds_2048()
 	return seconds_2048;
 }
 
+static uint32_t send_debug(uint8_t * data, uint16_t length)
+{
+	  data[length] = '\0';
+    uint32_t err_code;
+
+    err_code = ble_nus_send_string(&m_nus, data, length);
+    if (err_code != NRF_ERROR_INVALID_STATE)
+    {
+        APP_ERROR_CHECK(err_code);
+    }
+}
+
+
 /*****************************************************************************
 * Error Handling Functions
 *****************************************************************************/
@@ -362,6 +375,9 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 
 void on_button_ii_event(void)
 {
+	uint8_t data[] = "button_ii_event";
+	send_debug(&data[0], sizeof(data));
+	
 	blink_led();
 	// decrement
 	if (m_resistance_level > 0)
@@ -373,6 +389,9 @@ void on_button_ii_event(void)
 //
 void on_button_iii_event(void)
 {
+	uint8_t data[] = "button_iii_event";
+	send_debug(&data[0], sizeof(data));
+	
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 		set_resistance(++m_resistance_level);
@@ -549,8 +568,6 @@ void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length)
 {
 	
 	  data[length] = '\0';
-    simple_uart_putstring(data);
-    simple_uart_putstring("\n");
 #ifdef LOOPBACK
     uint32_t err_code;
 
@@ -956,40 +973,6 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 }
 
 
-static void uart_init(void)
-{
-    simple_uart_config(RTS_PIN_NUMBER, TX_PIN_NUMBER, CTS_PIN_NUMBER, RX_PIN_NUMBER, true);
-    
-    NRF_UART0->INTENSET = UART_INTENSET_RXDRDY_Enabled << UART_INTENSET_RXDRDY_Pos;
-    
-    NVIC_SetPriority(UART0_IRQn, APP_IRQ_PRIORITY_LOW);
-    NVIC_EnableIRQ(UART0_IRQn);
-}
-
-void UART0_IRQHandler(void)
-{
-    static uint8_t data_array[NUS_MAX_DATA_LENGTH];
-    static uint8_t index = 0;
-    uint32_t err_code;
-    
-    data_array[index] = simple_uart_get();
-	  simple_uart_put(data_array[index]);
-    if (data_array[index] == '\n' || index >= NUS_MAX_DATA_LENGTH)
-    {
-        err_code = ble_nus_send_string(&m_nus, data_array, index);
-        if (err_code != NRF_ERROR_INVALID_STATE)
-        {
-            APP_ERROR_CHECK(err_code);
-        }
-        
-        index = 0;
-    }
-    else
-    {
-        index++;
-    }
-}
-
 /*****************************************************************************
 * Main Function
 *****************************************************************************/
@@ -1009,7 +992,6 @@ int main(void)
     timers_init();
     gpiote_init();
     buttons_init();
-		uart_init();
 		
 		/*
     if (is_first_start())

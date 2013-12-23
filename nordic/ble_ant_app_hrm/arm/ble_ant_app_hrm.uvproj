@@ -355,7 +355,7 @@
             <uSurpInc>0</uSurpInc>
             <VariousControls>
               <MiscControls>--c99</MiscControls>
-              <Define>NRF51,DEBUG_NRF_USER,BOARD_NRF6310</Define>
+              <Define>NRF51,DEBUG_NRF_USER,BOARD_NRF6310,LOOPBACK</Define>
               <Undefine></Undefine>
               <IncludePath>..;..\..\nrf51922\Include;..\..\nrf51922\Include\app_common;..\..\nrf51922\Include\ble;..\..\nrf51922\Include\ble\ble_services;..\..\nrf51922\Include\ant_ds\softdevice;..\..\emotion;..\..\ble_app_hrs;..\..\ble_app_uart</IncludePath>
             </VariousControls>
