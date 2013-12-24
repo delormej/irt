@@ -357,7 +357,7 @@
               <MiscControls>--c99</MiscControls>
               <Define>NRF51 DEBUG_NRF_USER BOARD_PCA10001</Define>
               <Undefine></Undefine>
-              <IncludePath>..;..\..\nrf51822\Include;..\..\nrf51822\Include\app_common;..\..\nrf51822\Include\ble;..\..\nrf51822\Include\ble\ble_services;..\..\nrf51822\Include\ble\softdevice;..\..\emotion</IncludePath>
+              <IncludePath>..;..\..\nrf51822\Include;..\..\nrf51822\Include\app_common;..\..\nrf51822\Include\ble;..\..\nrf51822\Include\ble\ble_services;..\..\nrf51822\Include\ble\softdevice;..\..\emotion;..\..\ble_app_uart</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -467,6 +467,11 @@
               <FileName>ble_cps.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\emotion\ble_cps.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_nus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\ble_app_uart\ble_nus.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1008,6 +1013,11 @@
               <FileName>ble_cps.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\emotion\ble_cps.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_nus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\ble_app_uart\ble_nus.c</FilePath>
             </File>
           </Files>
         </Group>
