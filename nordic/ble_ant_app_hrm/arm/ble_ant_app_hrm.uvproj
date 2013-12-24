@@ -419,11 +419,6 @@
               <FilePath>..\..\ble_app_hrs\main.c</FilePath>
             </File>
             <File>
-              <FileName>battery.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\ble_app_hrs\battery.c</FilePath>
-            </File>
-            <File>
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\ble_app_hrs\led.c</FilePath>
@@ -443,6 +438,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\emotion\power.c</FilePath>
             </File>
+            <File>
+              <FileName>battery.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\ble_app_hrs\battery.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -459,11 +459,6 @@
               <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_bas.c</FilePath>
             </File>
             <File>
-              <FileName>ble_hrs.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51822\Source\ble\ble_services\ble_hrs.c</FilePath>
-            </File>
-            <File>
               <FileName>ble_cps.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\emotion\ble_cps.c</FilePath>
@@ -472,6 +467,11 @@
               <FileName>ble_nus.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\ble_app_uart\ble_nus.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_hrs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51922\Source\ble\ble_services\ble_hrs.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -502,11 +502,6 @@
               <FileName>ble_stack_handler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51822\Source\ble\ble_stack_handler.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_bondmngr.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51822\Source\ble\ble_bondmngr.c</FilePath>
             </File>
             <File>
               <FileName>ble_flash.c</FileName>
