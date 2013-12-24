@@ -45,7 +45,8 @@ typedef struct speed_event_s
 	uint16_t	period_2048;															// Time period in 1/2048's of second since the prior event.
 	uint16_t 	event_time_2048;													// Time stamp of the associated wheel revolution in 1/2048's of a second.
 	uint32_t 	accum_wheel_revs;													// Count of accumulated wheel revolutions at this time stamp.
-	float			speed_mps;																// Speed in meters per second.
+	uint32_t 	accum_flywheel_revs;											// Count of flywheel revs.
+	float			speed_mps;																// Speed in meters per second.	
 } speed_event_t;
 
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.*/

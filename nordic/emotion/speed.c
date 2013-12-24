@@ -204,11 +204,12 @@ void calc_speed(const speed_event_t* last_speed_event, speed_event_t* current_sp
 																						accum_wheel_revs);
 	
 	// Assign the speed event to the last calculated complete wheel revolution.
-	current_speed_event->event_time_2048 	= current_2048 - time_since_full_rev_2048;
-	current_speed_event->accum_wheel_revs = floor(accum_wheel_revs);
-	current_speed_event->period_2048 			= current_speed_event->event_time_2048 - 
-																					last_speed_event->event_time_2048;
-	
+	current_speed_event->event_time_2048 			= current_2048 - time_since_full_rev_2048;
+	current_speed_event->accum_wheel_revs 		= floor(accum_wheel_revs);
+	current_speed_event->period_2048 					= current_speed_event->event_time_2048 - 
+																							last_speed_event->event_time_2048;
+	current_speed_event->accum_flywheel_revs	= flywheel_revs;	// for debug purposes only.
+
 }
 
 void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)

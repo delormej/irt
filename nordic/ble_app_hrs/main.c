@@ -305,13 +305,16 @@ static void heart_rate_meas_timeout_handler(void * p_context)
 		
 		// Hang on to last speed event state.
 		m_last_speed_event = speed_event;	
+		
+		uint8_t data[14] = "";
+		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, speed_event.accum_wheel_revs);
+		send_debug(&data[0], sizeof(data));
 }
 
 void on_button_ii_event(void)
-{/*
+{
 	uint8_t data[] = "button_ii_event";
 	send_debug(&data[0], sizeof(data));
-*/
 
 	blink_led();
 	// decrement
@@ -323,10 +326,10 @@ void on_button_ii_event(void)
 // Occurs when button (III) is pressed.
 //
 void on_button_iii_event(void)
-{/*
+{
 	uint8_t data[] = "button_iii_event";
 	send_debug(&data[0], sizeof(data));
-	*/
+	
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 		set_resistance(++m_resistance_level);
