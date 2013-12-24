@@ -49,8 +49,9 @@
 #include "ble_flash.h"
 #include "ble_debug_assert_handler.h"
 #include "nrf_delay.h"
+#include "ble_nus.h"
+#include "simple_uart.h"
 #include "boards.h"
-
 #include "insideride.h"
 #include "resistance.h"
 #include "speed.h"
@@ -70,7 +71,6 @@
 #define APP_TIMER_OP_QUEUE_SIZE              5                                         /**< Size of timer operation queues. */
 
 #define BATTERY_LEVEL_MEAS_INTERVAL          APP_TIMER_TICKS(2000, APP_TIMER_PRESCALER)/**< Battery level measurement interval (ticks). */
-
 #define HEART_RATE_MEAS_INTERVAL             APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Heart rate measurement interval (ticks). */
 #define MIN_HEART_RATE                       60                                        /**< Minimum heart rate as returned by the simulated measurement function. */
 #define MAX_HEART_RATE                       300                                       /**< Maximum heart rate as returned by the simulated measurement function. */
@@ -113,19 +113,22 @@
 #define CYCLING_POWER_MEAS_INTERVAL             APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Heart rate measurement interval (ticks). */
 /*****************************************************************************/
 
+const float	m_total_rider_weight = 175.0f;	// Includes bike + rider + equipment.  Hard coded value for now.
+
 /*****************************************************************************
 * InsideRide managed state.
 *****************************************************************************/
-static volatile uint8_t m_resistance_level 		= 0;			// Current mag resistance.
-static volatile uint16_t m_accum_torque 			= 0;					// Tracks accumlated torque.
-static volatile uint16_t m_last_seconds_2048 	= 0;		// Last time of reported event in 1/2048th seconds.
-static volatile uint32_t m_accum_wheel_revs 	= 0;			// Last count of wheel revolutions.
+static volatile uint8_t 	m_resistance_level 	= 0;			// Current mag resistance.
+static volatile uint16_t 	m_accum_torque 			= 0;					// Tracks accumlated torque.
+
+static speed_event_t			m_last_speed_event;
 
 static ble_gap_sec_params_t                  m_sec_params;                             /**< Security requirements for this application. */
 static ble_gap_adv_params_t                  m_adv_params;                             /**< Parameters to be passed to the stack when starting advertising. */
-ble_bas_t                                    bas;                                      /**< Structure used to identify the battery service. */
+ble_bas_t                             			 bas;                                      /**< Structure used to identify the battery service. */
 static ble_hrs_t                             m_hrs;                                    /**< Structure used to identify the heart rate service. */
 static volatile uint16_t                     m_cur_heart_rate;                         /**< Current heart rate value. */
+static ble_nus_t                        		 m_nus;
 
 static app_timer_id_t                        m_battery_timer_id;                       /**< Battery timer. */
 static app_timer_id_t                        m_heart_rate_timer_id;                    /**< Heart rate measurement timer. */
@@ -138,32 +141,18 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt);
 * InsideRide functions.
 *****************************************************************************/
 
-static volatile uint32_t last_report_ticks = 0;
-
-/*@brief 	Retuns the count of 1/2048th seconds (2048 per second) since the 
- *				the counter started.  
- *
- *@note		This value rolls over at 32 seconds.
- */
-static uint16_t get_seconds_2048()
+static uint32_t send_debug(uint8_t * data, uint16_t length)
 {
-	// TODO: Optimize this out - only need to figure this out once.
-	
-	// RTC1 is based on a 32.768khz crystal, or in other words it oscillates
-	// 32768 times per second.  The PRESCALER determins how often a tick gets
-	// counted.  With a prescaler of 0, there are 32,768 ticks in 1 second
-	// 1/2048th of a second would be 16 ticks (32768/2048)
-	// # of 2048th's would then be ticks / 16.
-	float freq = 32768/(NRF_RTC1->PRESCALER+1);
+	  data[length] = '\0';
+    uint32_t err_code;
 
-	// Get current tick count.
-	uint32_t ticks = NRF_RTC1->COUNTER;
-
-	// Based on frequence of ticks, calculate 1/2048 seconds.
-	// freq (hz) = times per second.
-	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (freq / 2048));
-
-	return seconds_2048;
+    err_code = ble_nus_send_string(&m_nus, data, length);
+    if (err_code != NRF_ERROR_INVALID_STATE)
+    {
+        APP_ERROR_CHECK(err_code);
+    }
+		
+		return err_code;
 }
 
 /*****************************************************************************
@@ -251,8 +240,6 @@ static void battery_level_meas_timeout_handler(void * p_context)
     battery_start();
 }
 
-
-
 /**@brief Function for handling the Heart rate measurement timer timeout.
  *
  * @details This function will be called each time the heart rate measurement timer expires.
@@ -264,81 +251,42 @@ static void battery_level_meas_timeout_handler(void * p_context)
 static void heart_rate_meas_timeout_handler(void * p_context)
 {
     uint32_t err_code;
-
     UNUSED_PARAMETER(p_context);
 
-/*
-    err_code = ble_hrs_heart_rate_measurement_send(&m_hrs, m_cur_heart_rate);
-
-    if (
-        (err_code != NRF_SUCCESS)
-        &&
-        (err_code != NRF_ERROR_INVALID_STATE)
-        &&
-        (err_code != BLE_ERROR_NO_TX_BUFFERS)
-        &&
-        (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
-    )
-    {
-        APP_ERROR_HANDLER(err_code);
-    }
-	*/	
-		//
-		// Also send the instant power data.
-		//
+		// Initialize structures.
 		ble_cps_meas_t cps_meas;
 		memset(&cps_meas, 0, sizeof(cps_meas));
 		
-		//
-		// Time period.
-		//
-		uint16_t 	seconds_2048 	=	get_seconds_2048();
-		// Calculate the amount of time in 1/2048th seconds since last reporting event.
-		uint16_t period_seconds_2048 = seconds_2048 - m_last_seconds_2048;
-		// Update the last event time.
-		m_last_seconds_2048 = seconds_2048;
-		
-		// Get the last wheel revolution count which is cumulative since the start.
-		uint32_t 	accum_revs		= get_wheel_revolutions();
-		uint32_t 	period_revs		= 0;
-		
-		if (m_accum_wheel_revs == 0)
-		{
-			// Handle first count scenario.
-			m_accum_wheel_revs 	= accum_revs;
-			period_revs 				= accum_revs;
-		} 
-		else
-		{
-			// Calculate revs since last reported.
-			period_revs = accum_revs - m_accum_wheel_revs;
-			// Set last recorded #.
-			m_accum_wheel_revs = accum_revs;
-		}
-		
-		float 		speed 				= get_speed_mph(period_revs, period_seconds_2048);				
+		speed_event_t			speed_event;
+		memset(&speed_event, 0, sizeof(speed_event));
+
 		int16_t		watts					= 0;
 		uint16_t 	torque				= 0;
+
+		// Calculate speed.
+		// TODO: use error handling here.
+		calc_speed(&m_last_speed_event, &speed_event);
+		float 		speed_mph 		= get_speed_mph(speed_event.speed_mps);
 		
-		const float	total_weight = 175.0f;	// Hard coded value for now.
-		
-		err_code = calc_power(speed, total_weight, m_resistance_level, &watts);
+		// Calculate power.
+		err_code = calc_power(speed_mph, m_total_rider_weight, m_resistance_level, &watts);
 		// TODO: Handle the error for real here, not sure what the overall error 
 		// handling strategy will be, but this is not critical, just move on.
 		if (err_code != IRT_SUCCESS)
 			return;		
 		
-		err_code = calc_torque(watts, period_seconds_2048, &torque);
+		// Calculate torque.
+		err_code = calc_torque(watts, speed_event.period_2048, &torque);
 		if (err_code != IRT_SUCCESS)
 			return;
 		
 		// Store accumulated torque for the session.
 		m_accum_torque += torque;
 		
-		cps_meas.instant_power = watts;
-		cps_meas.accum_torque = 0; // m_accum_torque; 
-		cps_meas.accum_wheel_revs = accum_revs;
-		cps_meas.last_wheel_event_time = m_last_seconds_2048;
+		cps_meas.instant_power 				= watts;
+		cps_meas.accum_torque 				= 0; // m_accum_torque; (not working?)
+		cps_meas.accum_wheel_revs 		= speed_event.accum_wheel_revs;
+		cps_meas.last_wheel_event_time= speed_event.event_time_2048;
 
 		err_code = ble_cps_cycling_power_measurement_send(&m_cps, &cps_meas);
 
@@ -354,10 +302,20 @@ static void heart_rate_meas_timeout_handler(void * p_context)
     {
         APP_ERROR_HANDLER(err_code);
     }
+		
+		// Hang on to last speed event state.
+		m_last_speed_event = speed_event;	
+		
+		uint8_t data[14] = "";
+		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, speed_event.accum_wheel_revs);
+		send_debug(&data[0], sizeof(data));
 }
 
 void on_button_ii_event(void)
 {
+	uint8_t data[] = "button_ii_event";
+	send_debug(&data[0], sizeof(data));
+
 	blink_led();
 	// decrement
 	if (m_resistance_level > 0)
@@ -369,6 +327,9 @@ void on_button_ii_event(void)
 //
 void on_button_iii_event(void)
 {
+	uint8_t data[] = "button_iii_event";
+	send_debug(&data[0], sizeof(data));
+	
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 		set_resistance(++m_resistance_level);
@@ -382,24 +343,6 @@ static void button_event_handler(uint8_t pin_no)
 {
     switch (pin_no)
     {
-        case HR_INC_BUTTON_PIN_NO:
-            // Increase Heart Rate measurement
-            m_cur_heart_rate += HEART_RATE_CHANGE;
-            if (m_cur_heart_rate > MAX_HEART_RATE)
-            {
-                m_cur_heart_rate = MIN_HEART_RATE; // Loop back
-            }
-            break;
-            
-        case HR_DEC_BUTTON_PIN_NO:
-            // Decrease Heart Rate measurement
-            m_cur_heart_rate -= HEART_RATE_CHANGE;
-            if (m_cur_heart_rate < MIN_HEART_RATE)
-            {
-                m_cur_heart_rate = MAX_HEART_RATE; // Loop back
-            }
-            break;
-						
 				case PIN_BUTTON_II:
 						on_button_ii_event();
 						break;
@@ -515,6 +458,7 @@ static void advertising_init(void)
 {
     uint32_t      err_code;
     ble_advdata_t advdata;
+		ble_advdata_t scanrsp;
     uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
 
     ble_uuid_t adv_uuids[] =
@@ -522,32 +466,38 @@ static void advertising_init(void)
         {BLE_UUID_HEART_RATE_SERVICE,         BLE_UUID_TYPE_BLE},
         {BLE_UUID_BATTERY_SERVICE,            BLE_UUID_TYPE_BLE},
         {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
-				{BLE_UUID_CYCLING_POWER_SERVICE, 			BLE_UUID_TYPE_BLE}
+				{BLE_UUID_CYCLING_POWER_SERVICE, 			BLE_UUID_TYPE_BLE},
+		    {BLE_UUID_NUS_SERVICE, 								m_nus.uuid_type}
     };
 
-    // Build and set advertising data
     memset(&advdata, 0, sizeof(advdata));
-
     advdata.name_type               = BLE_ADVDATA_FULL_NAME;
-    advdata.include_appearance      = true;
+    advdata.include_appearance      = false;
     advdata.flags.size              = sizeof(flags);
     advdata.flags.p_data            = &flags;
-    advdata.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
-    advdata.uuids_complete.p_uuids  = adv_uuids;
 
-    err_code = ble_advdata_set(&advdata, NULL);
-    APP_ERROR_CHECK(err_code);
-
-    // Initialize advertising parameters (used when starting advertising)
-    memset(&m_adv_params, 0, sizeof(m_adv_params));
+    memset(&scanrsp, 0, sizeof(scanrsp));
+    scanrsp.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
+    scanrsp.uuids_complete.p_uuids  = adv_uuids;
     
-    m_adv_params.type        = BLE_GAP_ADV_TYPE_ADV_IND;
-    m_adv_params.p_peer_addr = NULL;                           // Undirected advertisement
-    m_adv_params.fp          = BLE_GAP_ADV_FP_ANY;
-    m_adv_params.interval    = APP_ADV_INTERVAL;
-    m_adv_params.timeout     = APP_ADV_TIMEOUT_IN_SECONDS;
+    err_code = ble_advdata_set(&advdata, &scanrsp);
+    APP_ERROR_CHECK(err_code);
 }
 
+void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length)
+{
+	
+	  data[length] = '\0';
+#ifdef LOOPBACK
+    uint32_t err_code;
+
+    err_code = ble_nus_send_string(&m_nus, data, length);
+    if (err_code != NRF_ERROR_INVALID_STATE)
+    {
+        APP_ERROR_CHECK(err_code);
+    }
+#endif
+}
 
 /**@brief Function for initializing the services that will be used by the application.
  *
@@ -581,7 +531,7 @@ static void services_init(void)
     err_code = ble_hrs_init(&m_hrs, &hrs_init);
     APP_ERROR_CHECK(err_code);
 
-    // Initialize Battery Service
+		// Initialize Battery Service
     memset(&bas_init, 0, sizeof(bas_init));
 
     // Here the sec level for the Battery Service can be changed/increased.
@@ -636,6 +586,15 @@ static void services_init(void)
 
 		err_code = ble_cps_init(&m_cps, &cps_init);
 		APP_ERROR_CHECK(err_code);
+
+		// initialize UART service.
+    static ble_nus_init_t nus_init;
+    
+    memset(&nus_init, 0, sizeof nus_init);
+    nus_init.data_handler = uart_data_handler;
+    
+    err_code = ble_nus_init(&m_nus, &nus_init);
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -743,31 +702,11 @@ static void buttons_init(void)
     // the buttons.
     static app_button_cfg_t buttons[] =
     {
-        {HR_INC_BUTTON_PIN_NO, false, NRF_GPIO_PIN_PULLUP, button_event_handler},
-        {HR_DEC_BUTTON_PIN_NO, false, NRF_GPIO_PIN_PULLUP, button_event_handler},  // Note: This pin is also BONDMNGR_DELETE_BUTTON_PIN_NO
 				{PIN_BUTTON_II, false, NRF_GPIO_PIN_PULLUP, button_event_handler},
 				{PIN_BUTTON_III, false, NRF_GPIO_PIN_PULLUP, button_event_handler}
     };
     
     APP_BUTTON_INIT(buttons, sizeof(buttons) / sizeof(buttons[0]), BUTTON_DETECTION_DELAY, false);
-}
-
-
-/**@brief Function for checking if this is the first start, or if it was a restart due to a pushed button.
- */
-static bool is_first_start(void)
-{
-    uint32_t err_code;
-    bool     inc_button_pushed;
-    bool     dec_button_pushed;
-    
-    err_code = app_button_is_pushed(HR_INC_BUTTON_PIN_NO, &inc_button_pushed);
-    APP_ERROR_CHECK(err_code);
-    
-    err_code = app_button_is_pushed(HR_DEC_BUTTON_PIN_NO, &dec_button_pushed);
-    APP_ERROR_CHECK(err_code);
-    
-    return (!inc_button_pushed && !dec_button_pushed);
 }
 
 
@@ -806,6 +745,15 @@ static void application_timers_stop(void)
 static void advertising_start(void)
 {
     uint32_t err_code;
+
+    // Initialize advertising parameters (used when starting advertising)
+    memset(&m_adv_params, 0, sizeof(m_adv_params));
+    
+    m_adv_params.type        = BLE_GAP_ADV_TYPE_ADV_IND;
+    m_adv_params.p_peer_addr = NULL;                           // Undirected advertisement
+    m_adv_params.fp          = BLE_GAP_ADV_FP_ANY;
+    m_adv_params.interval    = APP_ADV_INTERVAL;
+    m_adv_params.timeout     = APP_ADV_TIMEOUT_IN_SECONDS;
 
     err_code = sd_ble_gap_adv_start(&m_adv_params);
     APP_ERROR_CHECK(err_code);
@@ -894,6 +842,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
                 system_off_mode_enter();
 								*/
             }
+						advertising_start();
             break;
 
         default:
@@ -917,9 +866,11 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
 		ble_cps_on_ble_evt(&m_cps, p_ble_evt);
     ble_bas_on_ble_evt(&bas, p_ble_evt);
+		ble_nus_on_ble_evt(&m_nus, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
     on_ble_evt(p_ble_evt);
 }
+
 
 /*****************************************************************************
 * Main Function
@@ -932,6 +883,7 @@ int main(void)
     uint32_t err_code;
 
 		m_resistance_level = 0;
+		memset(&m_last_speed_event, 0, sizeof(m_last_speed_event));
 
 		init_led();
 		blink_led();
@@ -941,28 +893,15 @@ int main(void)
     gpiote_init();
     buttons_init();
 		
-		/*
-    if (is_first_start())
-    {
-        // The startup was not because of button presses. This is the first start.
-        // Go into System-Off mode.
-        // NOTE: This register cannot be set directly after ble_stack_init() because the SoftDevice
-        //       will be enabled.
-        GPIO_WAKEUP_BUTTON_CONFIG(HR_INC_BUTTON_PIN_NO);
-        GPIO_WAKEUP_BUTTON_CONFIG(HR_DEC_BUTTON_PIN_NO);
-        NRF_POWER->SYSTEMOFF = 1;
-    }
-		*/
-
     bond_manager_init();
     ble_stack_init();
     radio_notification_init();
 
     // Initialize Bluetooth Stack parameters
     gap_params_init();
-    advertising_init();
     services_init();
-    conn_params_init();
+		advertising_init();
+		conn_params_init();
     sec_params_init();
 
     // Actually start advertising
