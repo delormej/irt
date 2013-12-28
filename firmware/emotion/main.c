@@ -98,7 +98,7 @@ static void on_button_evt(uint8_t pin_no)
     {
 				case PIN_BUTTON_II:
 						//on_button_ii_event();
-						//send_debug("Button ii", 9);
+						send_debug("Button ii", 9);
 						break;
 
 				case PIN_BUTTON_III:

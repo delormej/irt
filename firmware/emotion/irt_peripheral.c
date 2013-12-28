@@ -71,4 +71,5 @@ void peripheral_init(app_button_handler_t on_button_evt)
     timers_init();
 		gpiote_init();
     buttons_init();
+		app_button_enable();
 }
