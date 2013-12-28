@@ -26,6 +26,9 @@
 #include "nrf_error.h"
 #include "irt_peripheral.h"
 #include "ble_ant.h"
+#include "resistance.h"
+
+static uint8_t m_resistance_level = 0;
 
 /*----------------------------------------------------------------------------
  * Error Handlers
@@ -60,6 +63,28 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 /*----------------------------------------------------------------------------
  * Event handlers
  * ----------------------------------------------------------------------------*/
+
+void on_button_ii_event(void)
+{
+	uint8_t data[] = "button_ii_event";
+	send_debug(&data[0], sizeof(data));
+
+	// decrement
+	if (m_resistance_level > 0)
+		set_resistance(--m_resistance_level);	
+}
+
+void on_button_iii_event(void)
+{
+	uint8_t data[] = "button_iii_event";
+	send_debug(&data[0], sizeof(data));
+	
+	// increment
+	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
+		set_resistance(++m_resistance_level);
+}
+
+
 static void on_ble_connected(void) 
 {
 		nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
@@ -97,12 +122,11 @@ static void on_button_evt(uint8_t pin_no)
     switch (pin_no)
     {
 				case PIN_BUTTON_II:
-						//on_button_ii_event();
-						send_debug("Button ii", 9);
+						on_button_ii_event();
 						break;
 
 				case PIN_BUTTON_III:
-						//on_button_iii_event();
+						on_button_iii_event();
 						break;
 
         default:
@@ -137,6 +161,9 @@ int main(void)
 
 		// Begin advertising and receiving ANT messages.
 		ble_ant_start();
+
+		// Start off with resistance at 0.
+		set_resistance(m_resistance_level);	
 
     // Enter main loop
     for (;;)

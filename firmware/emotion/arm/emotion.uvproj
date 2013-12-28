@@ -357,7 +357,7 @@
               <MiscControls>--c99</MiscControls>
               <Define>NRF51,DEBUG_NRF_USER,LOOPBACK</Define>
               <Undefine></Undefine>
-              <IncludePath>..;..\..\nrf51_sdk\Include;..\..\nrf51_sdk\Include\app_common;..\..\nrf51_sdk\Include\ble;..\..\nrf51_sdk\Include\ble\ble_services;..\..\nrf51_sdk\Include\ant_ds\softdevice;..\services\</IncludePath>
+              <IncludePath>..;..\..\nrf51_sdk\Include;..\..\nrf51_sdk\Include\app_common;..\..\nrf51_sdk\Include\ble;..\..\nrf51_sdk\Include\ble\ble_services;..\..\nrf51_sdk\Include\ant_ds\softdevice;..\services;..\libraries</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -439,11 +439,6 @@
               <FilePath>..\libraries\ble_cps.c</FilePath>
             </File>
             <File>
-              <FileName>nrf_pwm.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\libraries\nrf_pwm.c</FilePath>
-            </File>
-            <File>
               <FileName>power.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\libraries\power.c</FilePath>
@@ -488,6 +483,11 @@
         <Group>
           <GroupName>Libraries</GroupName>
           <Files>
+            <File>
+              <FileName>nrf_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\libraries\nrf_pwm.c</FilePath>
+            </File>
             <File>
               <FileName>ble_error_log.c</FileName>
               <FileType>1</FileType>
