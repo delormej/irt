@@ -138,8 +138,6 @@ int main(void)
 		// Begin advertising and receiving ANT messages.
 		ble_ant_start();
 
-		//send_debug("We're rolling");
-
     // Enter main loop
     for (;;)
     {

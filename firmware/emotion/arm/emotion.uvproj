@@ -433,6 +433,31 @@
               <FileType>1</FileType>
               <FilePath>..\ble_ant_stack_handler.c</FilePath>
             </File>
+            <File>
+              <FileName>ble_cps.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\libraries\ble_cps.c</FilePath>
+            </File>
+            <File>
+              <FileName>nrf_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\libraries\nrf_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>power.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\libraries\power.c</FilePath>
+            </File>
+            <File>
+              <FileName>resistance.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\libraries\resistance.c</FilePath>
+            </File>
+            <File>
+              <FileName>speed.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\libraries\speed.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

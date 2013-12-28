@@ -70,6 +70,9 @@ void peripheral_init(app_button_handler_t on_button_evt)
     leds_init();
     timers_init();
 		gpiote_init();
+		// TODO: move away from using app_button as it's a huge memory hog
+		// and does more than what we need.  It also uses a valuable timer
+		// which we don't need, etc...
     buttons_init();
 		app_button_enable();
 }
