@@ -41,6 +41,7 @@
 #include "ant_parameters_ds.h"
 #include "ant_interface_ds.h"
 #include "irt_peripheral.h"
+#include "ble_ant.h"
 
 #define APP_ADV_INTERVAL                40                                           /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                          /**< The advertising timeout in units of seconds. */
@@ -96,6 +97,7 @@ static ble_hrs_t                        m_hrs;                                  
 
 static uint8_t                          m_ant_network_key[] = ANT_HRMRX_NETWORK_KEY; /**< ANT PLUS network key. */
 
+static ant_ble_evt_handlers_t * 				m_p_ant_ble_evt_handlers;
 
 /**@brief Assert macro callback function.
  *
@@ -246,7 +248,7 @@ static void sec_params_init(void)
 
 /**@brief Start advertising.
  */
-void advertising_start(void)
+static void advertising_start(void)
 {
     uint32_t err_code;
     
@@ -254,6 +256,8 @@ void advertising_start(void)
     APP_ERROR_CHECK(err_code);
     
     m_is_advertising = true;
+		
+		m_p_ant_ble_evt_handlers->on_ble_advertising();
 }
 
 
@@ -348,7 +352,7 @@ static void ant_hrm_rx_init(void)
 
 /**@brief Start receiving the ANT HRM data.
  */
-void ant_hrm_rx_start(void)
+static void ant_hrm_rx_start(void)
 {
     uint32_t err_code = sd_ant_channel_open(ANT_HRMRX_ANT_CHANNEL);
     APP_ERROR_CHECK(err_code);
@@ -494,13 +498,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     {
         case BLE_GAP_EVT_CONNECTED:
             m_is_advertising = false;
-            nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
-            nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
+						m_p_ant_ble_evt_handlers->on_ble_connected();
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             break;
             
         case BLE_GAP_EVT_DISCONNECTED:
-            nrf_gpio_pin_clear(CONNECTED_LED_PIN_NO);
+						m_p_ant_ble_evt_handlers->on_ble_disconnected();
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
             // Need to close the ANT channel to make it safe to write bonding information to flash
@@ -522,7 +525,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
             { 
                 m_is_advertising = false;
-                nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
+                m_p_ant_ble_evt_handlers->on_ble_timeout();
                 
                 // Go to system-off mode (this function will not return; wakeup will cause a reset)
                 err_code = sd_power_system_off();
@@ -618,9 +621,12 @@ void power_manage(void)
     APP_ERROR_CHECK(err_code);
 }
 
-void ble_ant_init()
+void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 {
-   // Initialize S310 SoftDevice
+		// Event pointers.
+		m_p_ant_ble_evt_handlers = ant_ble_evt_handlers;
+	
+		// Initialize S310 SoftDevice
     ble_ant_stack_init();
     
     // Initialize Bluetooth helper modules
@@ -636,4 +642,13 @@ void ble_ant_init()
 
     // Initialize ANT HRM recieve channel
     ant_hrm_rx_init();
+}
+
+void ble_ant_start()
+{
+    // Start execution
+    advertising_start();
+		
+		// Start receiving ANT HRM messages.
+		ant_hrm_rx_start();
 }

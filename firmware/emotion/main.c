@@ -58,10 +58,33 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 }
 
 /*----------------------------------------------------------------------------
- * 
+ * Event handlers
  * ----------------------------------------------------------------------------*/
+static void on_ble_connected(void) 
+{
+		nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
+		nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);	
+}
+	
+static void on_ble_disconnected(void) 
+{
+		nrf_gpio_pin_clear(CONNECTED_LED_PIN_NO);
+}
 
+static void on_ble_timeout(void) 
+{
+		nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
+}
 
+static void on_ble_advertising(void)
+{
+		nrf_gpio_pin_set(ADVERTISING_LED_PIN_NO);	
+}
+
+static void on_ant_channel_closed(void) {}
+static void on_ant_power_data(void) {}
+static void on_set_resistance(void) {}
+	
 /*----------------------------------------------------------------------------
  * Main program functions
  * ----------------------------------------------------------------------------*/
@@ -73,14 +96,21 @@ int main(void)
     // Initialize peripherals
 		peripheral_init();
 
-		// Initialize Bluetooth and ANT stacks.
-		ble_ant_init();
+		ant_ble_evt_handlers_t handlers = { 
+			on_ble_connected,
+			on_ble_disconnected,
+			on_ble_timeout,
+			on_ble_advertising,
+			on_ant_channel_closed,
+			on_ant_power_data,
+			on_set_resistance
+		};
 
-    // Start execution
-    advertising_start();
-		
-		// Start receiving ANT HRM messages.
-		ant_hrm_rx_start();
+		// Initialize Bluetooth and ANT stacks.
+		ble_ant_init(&handlers);
+
+		// Begin advertising and receiving ANT messages.
+		ble_ant_start();
 
     // Enter main loop
     for (;;)
