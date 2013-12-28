@@ -479,11 +479,6 @@
               <FilePath>..\..\nrf51_sdk\Source\ble\ble_services\ble_srv_common.c</FilePath>
             </File>
             <File>
-              <FileName>ble_sensorsim.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51_sdk\Source\ble\ble_sensorsim.c</FilePath>
-            </File>
-            <File>
               <FileName>app_timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51_sdk\Source\app_common\app_timer.c</FilePath>
