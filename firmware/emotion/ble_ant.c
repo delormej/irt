@@ -42,6 +42,7 @@
 #include "ant_interface_ds.h"
 #include "irt_peripheral.h"
 #include "ble_ant.h"
+#include "ble_nus.h"
 
 #define APP_ADV_INTERVAL                40                                           /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                          /**< The advertising timeout in units of seconds. */
@@ -94,10 +95,27 @@ static bool                             m_is_advertising = false;               
 static ble_gap_sec_params_t             m_sec_params;                                /**< Security requirements for this application. */
 static ble_gap_adv_params_t             m_adv_params;                                /**< Parameters to be passed to the stack when starting advertising. */
 static ble_hrs_t                        m_hrs;                                       /**< Structure used to identify the heart rate service. */
+static ble_nus_t                       	m_nus;																			 // BLE UART service for debugging purposes.
 
 static uint8_t                          m_ant_network_key[] = ANT_HRMRX_NETWORK_KEY; /**< ANT PLUS network key. */
 
 static ant_ble_evt_handlers_t * 				m_p_ant_ble_evt_handlers;
+
+
+static void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length)
+{
+	
+	  data[length] = '\0';
+#ifdef LOOPBACK
+    uint32_t err_code;
+
+    err_code = ble_nus_send_string(&m_nus, data, length);
+    if (err_code != NRF_ERROR_INVALID_STATE)
+    {
+        APP_ERROR_CHECK(err_code);
+    }
+#endif
+}
 
 /**@brief Assert macro callback function.
  *
@@ -156,12 +174,14 @@ static void advertising_init(void)
 {
     uint32_t      err_code;
     ble_advdata_t advdata;
+		ble_advdata_t scanrsp;
     uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
     
     ble_uuid_t adv_uuids[] = 
     {
         {BLE_UUID_HEART_RATE_SERVICE,         BLE_UUID_TYPE_BLE}, 
-        {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}
+        {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
+				{BLE_UUID_NUS_SERVICE, 								m_nus.uuid_type}
     };
 
     // Build and set advertising data
@@ -171,32 +191,45 @@ static void advertising_init(void)
     advdata.include_appearance      = true;
     advdata.flags.size              = sizeof(flags);
     advdata.flags.p_data            = &flags;
-    advdata.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
-    advdata.uuids_complete.p_uuids  = adv_uuids;
-    
-    err_code = ble_advdata_set(&advdata, NULL);
-    APP_ERROR_CHECK(err_code);
 
-    // Initialise advertising parameters (used when starting advertising)
+    memset(&scanrsp, 0, sizeof(scanrsp));
+    scanrsp.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
+    scanrsp.uuids_complete.p_uuids  = adv_uuids;
+    
+    err_code = ble_advdata_set(&advdata, &scanrsp);
+    APP_ERROR_CHECK(err_code);
+		
+    // Initialize advertising parameters (used when starting advertising)
     memset(&m_adv_params, 0, sizeof(m_adv_params));
     
     m_adv_params.type        = BLE_GAP_ADV_TYPE_ADV_IND;
-    m_adv_params.p_peer_addr = NULL;
+    m_adv_params.p_peer_addr = NULL;                           // Undirected advertisement
     m_adv_params.fp          = BLE_GAP_ADV_FP_ANY;
     m_adv_params.interval    = APP_ADV_INTERVAL;
-    m_adv_params.timeout     = APP_ADV_TIMEOUT_IN_SECONDS;
+    m_adv_params.timeout     = APP_ADV_TIMEOUT_IN_SECONDS;		
 }
 
+static void ble_dis_service_init()
+{
+		uint32_t       err_code;
+		ble_dis_init_t dis_init;
+    
+		// Initialize Device Information Service
+    memset(&dis_init, 0, sizeof(dis_init));
+    
+    ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, MANUFACTURER_NAME);
 
-/**@brief Initialize services that will be used by the application.
- *
- * @details Initialize the Heart Rate and Device Information services.
- */
-static void services_init(void)
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&dis_init.dis_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&dis_init.dis_attr_md.write_perm);
+
+    err_code = ble_dis_init(&dis_init);
+    APP_ERROR_CHECK(err_code);	
+}
+
+static void ble_hrs_service_init()
 {
     uint32_t       err_code;
     ble_hrs_init_t hrs_init;
-    ble_dis_init_t dis_init;
     uint8_t        body_sensor_location;
     
     // Initialize Heart Rate Service
@@ -217,18 +250,36 @@ static void services_init(void)
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&hrs_init.hrs_bsl_attr_md.write_perm);
 
     err_code = ble_hrs_init(&m_hrs, &hrs_init);
-    APP_ERROR_CHECK(err_code);
+    APP_ERROR_CHECK(err_code);	
+}
 
-    // Initialize Device Information Service
-    memset(&dis_init, 0, sizeof(dis_init));
+static void ble_nus_service_init()
+{
+		uint32_t       err_code;
+		ble_nus_init_t nus_init;
     
-    ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, MANUFACTURER_NAME);
+    memset(&nus_init, 0, sizeof nus_init);
+    nus_init.data_handler = uart_data_handler;
+    
+    err_code = ble_nus_init(&m_nus, &nus_init);
+    APP_ERROR_CHECK(err_code);	
+}
 
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&dis_init.dis_attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&dis_init.dis_attr_md.write_perm);
+static void ble_cps_service_init()
+{
+}
 
-    err_code = ble_dis_init(&dis_init);
-    APP_ERROR_CHECK(err_code);
+
+/**@brief Initialize services that will be used by the application.
+ *
+ * @details Initialize the Heart Rate and Device Information services.
+ */
+static void services_init(void)
+{
+		ble_dis_service_init();
+		ble_hrs_service_init();
+		ble_nus_service_init();
+		ble_cps_service_init();
 }
 
 
@@ -613,6 +664,19 @@ static void radio_notification_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
+void send_debug(uint8_t * data)
+{
+		uint16_t length = sizeof(data);
+	  data[length] = '\0';
+    uint32_t err_code;
+
+    err_code = ble_nus_send_string(&m_nus, data, length);
+    if (err_code != NRF_ERROR_INVALID_STATE)
+    {
+        APP_ERROR_CHECK(err_code);
+    }
+}
+
 /**@brief Power manager.
  */
 void power_manage(void)
@@ -635,8 +699,8 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
     
     // Initialize Bluetooth stack parameters
     gap_params_init();
+    services_init();		
     advertising_init();
-    services_init();
     conn_params_init();
     sec_params_init();
 

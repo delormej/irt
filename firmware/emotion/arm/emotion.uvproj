@@ -357,7 +357,7 @@
               <MiscControls>--c99</MiscControls>
               <Define>NRF51,DEBUG_NRF_USER</Define>
               <Undefine></Undefine>
-              <IncludePath>..;..\..\nrf51_sdk\Include;..\..\nrf51_sdk\Include\app_common;..\..\nrf51_sdk\Include\ble;..\..\nrf51_sdk\Include\ble\ble_services;..\..\nrf51_sdk\Include\ant_ds\softdevice</IncludePath>
+              <IncludePath>..;..\..\nrf51_sdk\Include;..\..\nrf51_sdk\Include\app_common;..\..\nrf51_sdk\Include\ble;..\..\nrf51_sdk\Include\ble\ble_services;..\..\nrf51_sdk\Include\ant_ds\softdevice;..\services\</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -452,6 +452,11 @@
               <FileName>ble_hrs.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51_sdk\Source\ble\ble_services\ble_hrs.c</FilePath>
+            </File>
+            <File>
+              <FileName>ble_nus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\services\ble_nus.c</FilePath>
             </File>
           </Files>
         </Group>

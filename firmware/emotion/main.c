@@ -64,6 +64,7 @@ static void on_ble_connected(void)
 {
 		nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
 		nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);	
+		//send_debug("on_ble_connected");
 }
 	
 static void on_ble_disconnected(void) 
@@ -111,6 +112,8 @@ int main(void)
 
 		// Begin advertising and receiving ANT messages.
 		ble_ant_start();
+
+		//send_debug("We're rolling");
 
     // Enter main loop
     for (;;)
