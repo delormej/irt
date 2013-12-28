@@ -419,9 +419,14 @@
               <FilePath>.\..\main.c</FilePath>
             </File>
             <File>
-              <FileName>ble_ant_stack_handler.c</FileName>
+              <FileName>ble_ant.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\ble_ant_stack_handler.c</FilePath>
+              <FilePath>..\ble_ant.c</FilePath>
+            </File>
+            <File>
+              <FileName>irt_peripheral.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\irt_peripheral.c</FilePath>
             </File>
           </Files>
         </Group>
