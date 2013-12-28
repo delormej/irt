@@ -428,6 +428,11 @@
               <FileType>1</FileType>
               <FilePath>..\irt_peripheral.c</FilePath>
             </File>
+            <File>
+              <FileName>ble_ant_stack_handler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ble_ant_stack_handler.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
