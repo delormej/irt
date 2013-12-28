@@ -92,6 +92,24 @@ static void on_ant_channel_closed(void) {}
 static void on_ant_power_data(void) {}
 static void on_set_resistance(void) {}
 		
+static void on_button_evt(uint8_t pin_no)
+{
+    switch (pin_no)
+    {
+				case PIN_BUTTON_II:
+						//on_button_ii_event();
+						//send_debug("Button ii", 9);
+						break;
+
+				case PIN_BUTTON_III:
+						//on_button_iii_event();
+						break;
+
+        default:
+            APP_ERROR_HANDLER(pin_no);
+    }	
+}
+		
 /*----------------------------------------------------------------------------
  * Main program functions
  * ----------------------------------------------------------------------------*/
@@ -101,9 +119,9 @@ static void on_set_resistance(void) {}
 int main(void)
 {
     // Initialize peripherals
-		peripheral_init();
+		peripheral_init(on_button_evt);
 
-		ant_ble_evt_handlers_t handlers = { 
+		static ant_ble_evt_handlers_t handlers = { 
 			on_ble_connected,
 			on_ble_disconnected,
 			on_ble_timeout,

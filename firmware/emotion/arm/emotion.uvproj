@@ -513,6 +513,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\nrf51_sdk\Source\ble\ble_debug_assert_handler.c</FilePath>
             </File>
+            <File>
+              <FileName>app_button.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51_sdk\Source\app_common\app_button.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_gpiote.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51_sdk\Source\app_common\app_gpiote.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

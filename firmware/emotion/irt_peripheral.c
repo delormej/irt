@@ -1,6 +1,10 @@
 #include "irt_peripheral.h"
 #include "app_util.h"
+#include "app_gpiote.h"
 #include "app_timer.h"
+#include "app_button.h"
+
+static app_button_handler_t m_on_button_evt;
 
 /**@brief LEDs initialization.
  *
@@ -23,18 +27,48 @@ static void timers_init(void)
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
 }
 
+/**@brief Function for handling button events.
+ *
+ * @param[in]   pin_no   The pin number of the button pressed.
+ */
+static void button_event_handler(uint8_t pin_no)
+{
+		m_on_button_evt(pin_no);
+}
+
+/**@brief Function for initializing the GPIOTE module.
+ */
+static void gpiote_init(void)
+{
+    APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
+}
+
 /**@brief Initialize buttons.
  */
-static void buttons_init(void)
+static void buttons_init()
 {
     // Set Wakeup and Bonds Delete buttons as wakeup sources
-    GPIO_WAKEUP_BUTTON_CONFIG(WAKEUP_BUTTON_PIN);
-    //GPIO_WAKEUP_BUTTON_CONFIG(BONDMNGR_DELETE_BUTTON_PIN);
+//    GPIO_WAKEUP_BUTTON_CONFIG(WAKEUP_BUTTON_PIN);
+
+		// This declaration needs to be compile time constant, so we need to pass
+		// this intermediary button_event_handler.
+    static app_button_cfg_t buttons[] =
+    {
+				//{PIN_BUTTON_I,  false, NRF_GPIO_PIN_PULLUP, button_event_handler},
+				{PIN_BUTTON_II, false, NRF_GPIO_PIN_PULLUP, button_event_handler},
+				{PIN_BUTTON_III,false, NRF_GPIO_PIN_PULLUP, button_event_handler}
+				//{PIN_BUTTON_IV, false, NRF_GPIO_PIN_PULLUP, button_event_handler}
+    };
+    
+    APP_BUTTON_INIT(buttons, sizeof(buttons) / sizeof(buttons[0]), BUTTON_DETECTION_DELAY, false);
 }    
 
-void peripheral_init()
+void peripheral_init(app_button_handler_t on_button_evt)
 {
+		m_on_button_evt = on_button_evt;
+	
     leds_init();
     timers_init();
+		gpiote_init();
     buttons_init();
 }
