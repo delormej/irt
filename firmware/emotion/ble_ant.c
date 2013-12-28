@@ -43,6 +43,7 @@
 #include "irt_peripheral.h"
 #include "ble_ant.h"
 #include "ble_nus.h"
+#include "simple_uart.h"
 
 #define APP_ADV_INTERVAL                40                                           /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                          /**< The advertising timeout in units of seconds. */
@@ -104,17 +105,7 @@ static ant_ble_evt_handlers_t * 				m_p_ant_ble_evt_handlers;
 
 static void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length)
 {
-	
-	  data[length] = '\0';
-#ifdef LOOPBACK
-    uint32_t err_code;
-
-    err_code = ble_nus_send_string(&m_nus, data, length);
-    if (err_code != NRF_ERROR_INVALID_STATE)
-    {
-        APP_ERROR_CHECK(err_code);
-    }
-#endif
+		m_p_ant_ble_evt_handlers->on_ble_uart(data, length);
 }
 
 /**@brief Assert macro callback function.
@@ -602,6 +593,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     ble_bondmngr_on_ble_evt(p_ble_evt);
     ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
+		ble_nus_on_ble_evt(&m_nus, p_ble_evt);
     on_ble_evt(p_ble_evt);
 }
 
@@ -664,9 +656,8 @@ static void radio_notification_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-void send_debug(uint8_t * data)
+void send_debug(uint8_t * data, uint16_t length)
 {
-		uint16_t length = sizeof(data);
 	  data[length] = '\0';
     uint32_t err_code;
 

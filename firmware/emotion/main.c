@@ -64,7 +64,6 @@ static void on_ble_connected(void)
 {
 		nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
 		nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);	
-		//send_debug("on_ble_connected");
 }
 	
 static void on_ble_disconnected(void) 
@@ -82,10 +81,17 @@ static void on_ble_advertising(void)
 		nrf_gpio_pin_set(ADVERTISING_LED_PIN_NO);	
 }
 
+static void on_ble_uart(uint8_t * data, uint16_t length)
+{
+#ifdef LOOPBACK
+    send_debug(data, length);
+#endif
+}
+
 static void on_ant_channel_closed(void) {}
 static void on_ant_power_data(void) {}
 static void on_set_resistance(void) {}
-	
+		
 /*----------------------------------------------------------------------------
  * Main program functions
  * ----------------------------------------------------------------------------*/
@@ -102,6 +108,7 @@ int main(void)
 			on_ble_disconnected,
 			on_ble_timeout,
 			on_ble_advertising,
+			on_ble_uart,
 			on_ant_channel_closed,
 			on_ant_power_data,
 			on_set_resistance
