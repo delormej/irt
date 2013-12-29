@@ -174,6 +174,7 @@ static void advertising_init(void)
     {
         {BLE_UUID_HEART_RATE_SERVICE,         BLE_UUID_TYPE_BLE}, 
         {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
+				{BLE_UUID_CYCLING_POWER_SERVICE, 			BLE_UUID_TYPE_BLE},
 				{BLE_UUID_NUS_SERVICE, 								m_nus.uuid_type}
     };
 
