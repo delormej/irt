@@ -3,7 +3,6 @@
 #include "app_gpiote.h"
 #include "app_timer.h"
 #include "app_button.h"
-#include "speed.h"
 
 static app_button_handler_t m_on_button_evt;
 

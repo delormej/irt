@@ -27,6 +27,7 @@
 #include "irt_peripheral.h"
 #include "ble_ant.h"
 #include "resistance.h"
+#include "speed.h"
 
 static uint8_t m_resistance_level = 0;
 
@@ -164,7 +165,8 @@ int main(void)
 
 		// Start off with resistance at 0.
 		set_resistance(m_resistance_level);	
-
+		init_speed(PIN_DRUM_REV, 2070);
+		
     // Enter main loop
     for (;;)
     {
