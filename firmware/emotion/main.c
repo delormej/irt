@@ -29,7 +29,10 @@
 #include "resistance.h"
 #include "speed.h"
 
-static uint8_t m_resistance_level = 0;
+#define CYCLING_POWER_MEAS_INTERVAL       APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Heart rate measurement interval (ticks). */
+
+static uint8_t 														m_resistance_level = 0;
+static app_timer_id_t               			m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
 
 /*----------------------------------------------------------------------------
  * Error Handlers
@@ -61,24 +64,84 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     NVIC_SystemReset();
 }
 
+
+/*----------------------------------------------------------------------------
+ * Timer functions
+ * ----------------------------------------------------------------------------*/
+
+/**@brief Function for handling the cycling power measurement timer timeout.
+ *
+ * @details This function will be called each timer expiration.
+ *
+ * @param[in]   p_context   Pointer used for passing some arbitrary information (context) from the
+ *                          app_start_timer() call to the timeout handler.
+ */
+static void cycling_power_meas_timeout_handler(void * p_context)
+{
+		// TODO: should this be declared at module level.
+		static speed_event_t	m_last_speed_event;
+		memset(&m_last_speed_event, 0, sizeof(m_last_speed_event));
+}
+
+/**@brief Function for starting the application timers.
+ */
+static void application_timers_start(void)
+{
+    uint32_t err_code;
+
+    // Start application timers
+    err_code = app_timer_start(m_cycling_power_timer_id, CYCLING_POWER_MEAS_INTERVAL, NULL);
+    APP_ERROR_CHECK(err_code);
+}
+
+static void application_timers_stop(void)
+{
+		uint32_t err_code;
+		
+		err_code = app_timer_stop(m_cycling_power_timer_id);
+    APP_ERROR_CHECK(err_code);
+}
+
+/**@brief Timer initialization.
+ *
+ * @details Initializes the timer module. This creates and starts application timers.
+ */
+static void timers_init(void)
+{
+    uint32_t err_code;
+
+		// Initialize timer module
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
+
+    err_code = app_timer_create(&m_cycling_power_timer_id,
+                                APP_TIMER_MODE_REPEATED,
+                                cycling_power_meas_timeout_handler);
+    APP_ERROR_CHECK(err_code);
+
+}
+
 /*----------------------------------------------------------------------------
  * Event handlers
  * ----------------------------------------------------------------------------*/
 
-void on_button_ii_event(void)
+static void on_button_ii_event(void)
 {
+	// TODO: wrap this in an ifdef for DEBUG.
 	uint8_t data[] = "button_ii_event";
 	send_debug(&data[0], sizeof(data));
-
+	//
+	
 	// decrement
 	if (m_resistance_level > 0)
 		set_resistance(--m_resistance_level);	
 }
 
-void on_button_iii_event(void)
+static void on_button_iii_event(void)
 {
+	// TODO: wrap this in an ifdef for DEBUG.
 	uint8_t data[] = "button_iii_event";
 	send_debug(&data[0], sizeof(data));
+	//
 	
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
@@ -90,11 +153,15 @@ static void on_ble_connected(void)
 {
 		nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
 		nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);	
+		// Start the main loop for reporting ble services.
+		application_timers_start();
 }
 	
 static void on_ble_disconnected(void) 
 {
 		nrf_gpio_pin_clear(CONNECTED_LED_PIN_NO);
+		// Stop reporting ble services.
+		application_timers_stop();
 }
 
 static void on_ble_timeout(void) 
@@ -143,6 +210,8 @@ static void on_button_evt(uint8_t pin_no)
  */
 int main(void)
 {
+		// Initialize timers.
+		timers_init();
     // Initialize peripherals
 		peripheral_init(on_button_evt);
 

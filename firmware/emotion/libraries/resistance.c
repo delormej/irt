@@ -42,6 +42,10 @@ static uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = {
 
 static void init_resistance() 
 {
+	// TODO: get the servo signal passed in during this method and remove
+	// dependency on the hard linking here.  The desire is to have all 
+	// hw dependencies in irt_peripheral instead of scattered through code
+	// base.
 	pwm_init(PIN_SERVO_SIGNAL);	
 	m_initialized = true;
 }

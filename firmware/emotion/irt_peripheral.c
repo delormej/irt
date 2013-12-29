@@ -17,15 +17,6 @@ static void leds_init(void)
     GPIO_LED_CONFIG(ASSERT_LED_PIN_NO);
 }
 
-/**@brief Timer initialization.
- *
- * @details Initializes the timer module. This creates and starts application timers.
- */
-static void timers_init(void)
-{
-    // Initialize timer module
-    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
-}
 
 /**@brief Function for handling button events.
  *
@@ -60,6 +51,9 @@ static void buttons_init()
 				//{PIN_BUTTON_IV, false, NRF_GPIO_PIN_PULLUP, button_event_handler}
     };
     
+		// TODO: move away from using app_button as it's a huge memory hog
+		// and does more than what we need.  It also uses a valuable timer
+		// which we don't need, etc...
     APP_BUTTON_INIT(buttons, sizeof(buttons) / sizeof(buttons[0]), BUTTON_DETECTION_DELAY, false);
 		app_button_enable();
 }    
@@ -69,7 +63,6 @@ void peripheral_init(app_button_handler_t on_button_evt)
 		m_on_button_evt = on_button_evt;
 	
     leds_init();
-    timers_init();
 		gpiote_init();
 		// TODO: move away from using app_button as it's a huge memory hog
 		// and does more than what we need.  It also uses a valuable timer
