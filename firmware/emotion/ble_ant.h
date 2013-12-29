@@ -21,6 +21,7 @@ typedef struct ant_ble_evt_handlers_s {
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers);
 void ble_ant_start(void);
 void power_manage(void);
+void send_ble_cycling_power(ble_cps_meas_t * p_cps_meas);
 void send_debug(uint8_t * data, uint16_t length);
 
 #endif // BLE_ANT_H__

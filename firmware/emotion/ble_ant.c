@@ -700,6 +700,25 @@ void send_debug(uint8_t * data, uint16_t length)
     }
 }
 
+void send_ble_cycling_power(ble_cps_meas_t * p_cps_meas)
+{
+		uint32_t err_code;
+		err_code = ble_cps_cycling_power_measurement_send(&m_cps, p_cps_meas);
+
+    if (
+        (err_code != NRF_SUCCESS)
+        &&
+        (err_code != NRF_ERROR_INVALID_STATE)
+        &&
+        (err_code != BLE_ERROR_NO_TX_BUFFERS)
+        &&
+        (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
+    )
+    {
+        APP_ERROR_HANDLER(err_code);
+    }
+}
+
 /**@brief Power manager.
  */
 void power_manage(void)
