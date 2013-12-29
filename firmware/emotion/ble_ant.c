@@ -18,6 +18,7 @@
  *
  */
 
+#include "ble_ant.h"
 #include <stdint.h>
 #include <string.h>
 #include "nordic_common.h"
@@ -41,9 +42,9 @@
 #include "ant_parameters_ds.h"
 #include "ant_interface_ds.h"
 #include "irt_peripheral.h"
-#include "ble_ant.h"
+
 #include "ble_nus.h"
-#include "simple_uart.h"
+#include "ble_cps.h"
 
 #define APP_ADV_INTERVAL                40                                           /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                          /**< The advertising timeout in units of seconds. */
@@ -97,6 +98,7 @@ static ble_gap_sec_params_t             m_sec_params;                           
 static ble_gap_adv_params_t             m_adv_params;                                /**< Parameters to be passed to the stack when starting advertising. */
 static ble_hrs_t                        m_hrs;                                       /**< Structure used to identify the heart rate service. */
 static ble_nus_t                       	m_nus;																			 // BLE UART service for debugging purposes.
+static ble_cps_t                        m_cps;                                    	 /**< Structure used to identify the cycling power service. */
 
 static uint8_t                          m_ant_network_key[] = ANT_HRMRX_NETWORK_KEY; /**< ANT PLUS network key. */
 
@@ -258,6 +260,35 @@ static void ble_nus_service_init()
 
 static void ble_cps_service_init()
 {
+		uint32_t       err_code;
+		ble_cps_init_t cps_init;
+		
+		//
+		// Initialize Cycling Power Service
+		//
+		uint8_t sensor_location = BLE_CPS_SENSOR_LOCATION_REAR_WHEEL;
+		
+		memset(&cps_init, 0, sizeof(cps_init));
+		
+		cps_init.p_sensor_location = &sensor_location;
+		/*cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
+														| BLE_CPS_FEATURE_WHEEL_REV_BIT;*/
+		cps_init.feature = BLE_CPS_FEATURE_WHEEL_REV_BIT;
+		cps_init.evt_handler = m_p_ant_ble_evt_handlers->on_set_resistance;
+
+    // Here the sec level for the Cycling Power Service can be changed/increased.
+		// TODO: all of this could be put into the ble_cps_init function, no need because
+		// we're never going to change the permission level, it's as defined in the 
+		// bluetooth specification for the service.
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_sl_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_sl_attr_md.write_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_cpf_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_cpf_attr_md.write_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_cpm_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_cpm_attr_md.write_perm);
+
+		err_code = ble_cps_init(&m_cps, &cps_init);
+		APP_ERROR_CHECK(err_code);	
 }
 
 
