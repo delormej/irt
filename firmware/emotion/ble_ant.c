@@ -41,9 +41,9 @@
 #include "app_timer.h"
 #include "ant_parameters_ds.h"
 #include "ant_interface_ds.h"
+
 #include "irt_peripheral.h"
 #include "irt_emotion.h"
-
 #include "ant_bike_power.h"
 #include "ble_nus.h"
 #include "ble_cps.h"
@@ -375,43 +375,6 @@ static void conn_params_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-
-/**@brief Initialize the ANT HRM reception.
- */
-static void ant_hrm_rx_init(void)
-{
-    uint32_t err_code;
-    
-    err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, m_ant_network_key);
-    APP_ERROR_CHECK(err_code);
-    
-    err_code = sd_ant_channel_assign(ANT_HRMRX_ANT_CHANNEL,
-                                     ANT_HRMRX_CHANNEL_TYPE,
-                                     ANTPLUS_NETWORK_NUMBER,
-                                     ANT_HRMRX_EXT_ASSIGN);
-    APP_ERROR_CHECK(err_code);
-
-    err_code = sd_ant_channel_id_set(ANT_HRMRX_ANT_CHANNEL,
-                                     ANT_HRMRX_DEVICE_NUMBER,
-                                     ANT_HRMRX_DEVICE_TYPE,
-                                     ANT_HRMRX_TRANS_TYPE);
-    APP_ERROR_CHECK(err_code);
-    
-    err_code = sd_ant_channel_radio_freq_set(ANT_HRMRX_ANT_CHANNEL, ANTPLUS_RF_FREQ);
-    APP_ERROR_CHECK(err_code);
-    
-    err_code = sd_ant_channel_period_set(ANT_HRMRX_ANT_CHANNEL, ANT_HRMRX_MSG_PERIOD);
-    APP_ERROR_CHECK(err_code);
-}
-
-/**@brief Start receiving the ANT HRM data.
- */
-static void ant_hrm_rx_start(void)
-{
-    uint32_t err_code = sd_ant_channel_open(ANT_HRMRX_ANT_CHANNEL);
-    APP_ERROR_CHECK(err_code);
-}
-
 /**@brief Handle received ANT data message.
  * 
  * @param[in]  p_evt_buffer   The buffer containg received data. 
@@ -510,7 +473,7 @@ static void on_ant_evt_channel_closed(void)
     }
 
     // Reopen ANT channel
-    ant_hrm_rx_start();
+    ant_bp_tx_start();
 }
 
 
@@ -732,7 +695,7 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
     sec_params_init();
 
     // Initialize ANT channelS
-    ant_hrm_rx_init();
+    ant_bp_tx_init();
 		ant_bp_tx_init();
 }
 
@@ -741,6 +704,6 @@ void ble_ant_start()
     // Start execution
     advertising_start();
 		
-		// Start receiving ANT HRM messages.
-		ant_hrm_rx_start();
+		// Open the ANT channel for transmitting power.
+		ant_bp_tx_start();
 }
