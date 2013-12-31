@@ -460,13 +460,14 @@ static void on_ant_evt_rx(ant_evt_t * p_ant_evt)
  */
 static void on_ant_evt_channel_closed(void)
 {
-    uint32_t err_code;
+    //uint32_t err_code;
 
     if (!m_is_advertising && (m_conn_handle == BLE_CONN_HANDLE_INVALID))
     {
+				// TOOD: ensure this is safe to do, i.e. that the timers are running, etc...
         // We do not have any activity on the radio at this time, so it is safe to store bonds
-        err_code = ble_bondmngr_bonded_masters_store();
-        APP_ERROR_CHECK(err_code);
+        //err_code = ble_bondmngr_bonded_masters_store();
+        //APP_ERROR_CHECK(err_code);
         
         // ANT channel was closed due to a BLE disconnection, restart advertising
         advertising_start();
@@ -565,7 +566,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
     ble_bondmngr_on_ble_evt(p_ble_evt);
-    ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
+    ble_cps_on_ble_evt(&m_cps, p_ble_evt);
+		ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
 		ble_nus_on_ble_evt(&m_nus, p_ble_evt);
     on_ble_evt(p_ble_evt);
@@ -648,21 +650,25 @@ void debug_send(uint8_t * data, uint16_t length)
 void cycling_power_send(ble_cps_meas_t * p_cps_meas)
 {
 		uint32_t err_code;
-		err_code = ble_cps_cycling_power_measurement_send(&m_cps, p_cps_meas);
-
-    if (
-        (err_code != NRF_SUCCESS)
-        &&
-        (err_code != NRF_ERROR_INVALID_STATE)
-        &&
-        (err_code != BLE_ERROR_NO_TX_BUFFERS)
-        &&
-        (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
-    )
-    {
-        APP_ERROR_HANDLER(err_code);
-    }
 		
+		// Send ble message only if connected.
+		if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+		{
+			err_code = ble_cps_cycling_power_measurement_send(&m_cps, p_cps_meas);
+
+			if (
+					(err_code != NRF_SUCCESS)
+					&&
+					(err_code != NRF_ERROR_INVALID_STATE)
+					&&
+					(err_code != BLE_ERROR_NO_TX_BUFFERS)
+					&&
+					(err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
+			)
+			{
+					APP_ERROR_HANDLER(err_code);
+			}
+		}
 		// Send ANT+ message.
 		ant_bp_tx_send(p_cps_meas);
 }

@@ -204,15 +204,11 @@ static void on_ble_connected(void)
 {
 		nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
 		nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);	
-		// Start the main loop for reporting ble services.
-		application_timers_start();
 }
 	
 static void on_ble_disconnected(void) 
 {
 		nrf_gpio_pin_clear(CONNECTED_LED_PIN_NO);
-		// Stop reporting ble services.
-		application_timers_stop();
 }
 
 static void on_ble_timeout(void) 
@@ -326,6 +322,17 @@ int main(void)
 		// Start off with resistance at 0.
 		set_resistance(m_resistance_level);	
 		init_speed(PIN_DRUM_REV, m_user_profile.wheel_size_mm);
+		
+		// TOOD: we need to ensure we're being woken up here by a HW
+		// interrupt or something before we actually start reporting.
+		// Start the main loop for reporting ble services.
+		application_timers_start();
+		
+		// TODO: when do we stop timers? We need to track a timeout since last
+		// HW interupt, i.e. 5 mins or so? 
+		// Stop reporting ble services.
+		// application_timers_stop();
+
 		
     // Enter main loop
     for (;;)
