@@ -42,7 +42,9 @@
 #include "ant_parameters_ds.h"
 #include "ant_interface_ds.h"
 #include "irt_peripheral.h"
+#include "irt_emotion.h"
 
+#include "ant_bike_power.h"
 #include "ble_nus.h"
 #include "ble_cps.h"
 
@@ -73,25 +75,6 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                                   /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-#define ANT_HRMRX_ANT_CHANNEL           0                                            /**< Default ANT Channel. */
-#define ANT_HRMRX_CHANNEL_TYPE          0x40                                         /**< Channel Type Slave RX only. */
-#define ANT_HRMRX_DEVICE_TYPE           0x78                                         /**< Channel ID device type. */
-#define ANT_HRMRX_DEVICE_NUMBER         0                                            /**< Device Number. */
-#define ANT_HRMRX_TRANS_TYPE            0                                            /**< Transmission Type. */
-#define ANT_HRMRX_MSG_PERIOD            0x1F86                                       /**< Message Periods, decimal 8070 (4.06Hz). */
-#define ANT_HRMRX_EXT_ASSIGN            0x00                                         /**< ANT Ext Assign. */
-#define ANT_HRM_TOGGLE_MASK             0x80                                         /**< HRM Page Toggle Bit Mask. */
-#define ANTPLUS_NETWORK_NUMBER          0                                            /**< Network number. */
-#define ANTPLUS_RF_FREQ                 0x39                                         /**< Frequency, Decimal 57 (2457 MHz). */
-#define ANT_HRM_PAGE_0                  0                                            /**< HRM page 0 constant. */
-#define ANT_HRM_PAGE_1                  1                                            /**< HRM page 1 constant. */
-#define ANT_HRM_PAGE_2                  2                                            /**< HRM page 2 constant. */
-#define ANT_HRM_PAGE_3                  3                                            /**< HRM page 3 constant. */
-#define ANT_HRM_PAGE_4                  4                                            /**< HRM page 4 constant. */
-#define ANT_BUFFER_INDEX_MESG_ID        0x01                                         /**< Index for Message ID. */
-#define ANT_BUFFER_INDEX_MESG_DATA      0x03                                         /**< Index for Data. */
-#define ANT_HRMRX_NETWORK_KEY           {0xB9,0xA5,0x21,0xFB,0xBD,0x72,0xC3,0x45}                     /**< The default network key used. */
-
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;     /**< Handle of the current connection. */
 static bool                             m_is_advertising = false;                    /**< True when in advertising state, False otherwise. */
 static ble_gap_sec_params_t             m_sec_params;                                /**< Security requirements for this application. */
@@ -100,14 +83,12 @@ static ble_hrs_t                        m_hrs;                                  
 static ble_nus_t                       	m_nus;																			 // BLE UART service for debugging purposes.
 static ble_cps_t                        m_cps;                                    	 /**< Structure used to identify the cycling power service. */
 
-static uint8_t                          m_ant_network_key[] = ANT_HRMRX_NETWORK_KEY; /**< ANT PLUS network key. */
-
-static ant_ble_evt_handlers_t * 				m_p_ant_ble_evt_handlers;
+static ant_ble_evt_handlers_t * 				mp_ant_ble_evt_handlers;
 
 
 static void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length)
 {
-		m_p_ant_ble_evt_handlers->on_ble_uart(data, length);
+		mp_ant_ble_evt_handlers->on_ble_uart(data, length);
 }
 
 /**@brief Assert macro callback function.
@@ -275,7 +256,7 @@ static void ble_cps_service_init()
 		/*cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
 														| BLE_CPS_FEATURE_WHEEL_REV_BIT;*/
 		cps_init.feature = BLE_CPS_FEATURE_WHEEL_REV_BIT;
-		cps_init.evt_handler = m_p_ant_ble_evt_handlers->on_set_resistance;
+		cps_init.evt_handler = mp_ant_ble_evt_handlers->on_set_resistance;
 
     // Here the sec level for the Cycling Power Service can be changed/increased.
 		// TODO: all of this could be put into the ble_cps_init function, no need because
@@ -331,7 +312,7 @@ static void advertising_start(void)
     
     m_is_advertising = true;
 		
-		m_p_ant_ble_evt_handlers->on_ble_advertising();
+		mp_ant_ble_evt_handlers->on_ble_advertising();
 }
 
 
@@ -423,7 +404,6 @@ static void ant_hrm_rx_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-
 /**@brief Start receiving the ANT HRM data.
  */
 static void ant_hrm_rx_start(void)
@@ -431,7 +411,6 @@ static void ant_hrm_rx_start(void)
     uint32_t err_code = sd_ant_channel_open(ANT_HRMRX_ANT_CHANNEL);
     APP_ERROR_CHECK(err_code);
 }
-
 
 /**@brief Handle received ANT data message.
  * 
@@ -572,12 +551,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     {
         case BLE_GAP_EVT_CONNECTED:
             m_is_advertising = false;
-						m_p_ant_ble_evt_handlers->on_ble_connected();
+						mp_ant_ble_evt_handlers->on_ble_connected();
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             break;
             
         case BLE_GAP_EVT_DISCONNECTED:
-						m_p_ant_ble_evt_handlers->on_ble_disconnected();
+						mp_ant_ble_evt_handlers->on_ble_disconnected();
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
             // Need to close the ANT channel to make it safe to write bonding information to flash
@@ -599,7 +578,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
             { 
                 m_is_advertising = false;
-                m_p_ant_ble_evt_handlers->on_ble_timeout();
+                mp_ant_ble_evt_handlers->on_ble_timeout();
                 
                 // Go to system-off mode (this function will not return; wakeup will cause a reset)
                 err_code = sd_power_system_off();
@@ -688,7 +667,7 @@ static void radio_notification_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-void send_debug(uint8_t * data, uint16_t length)
+void debug_send(uint8_t * data, uint16_t length)
 {
 	  data[length] = '\0';
     uint32_t err_code;
@@ -700,7 +679,10 @@ void send_debug(uint8_t * data, uint16_t length)
     }
 }
 
-void send_ble_cycling_power(ble_cps_meas_t * p_cps_meas)
+//
+// Sends ble & ant data messages.
+//
+void cycling_power_send(ble_cps_meas_t * p_cps_meas)
 {
 		uint32_t err_code;
 		err_code = ble_cps_cycling_power_measurement_send(&m_cps, p_cps_meas);
@@ -717,6 +699,9 @@ void send_ble_cycling_power(ble_cps_meas_t * p_cps_meas)
     {
         APP_ERROR_HANDLER(err_code);
     }
+		
+		// Send ANT+ message.
+		ant_bp_tx_send(p_cps_meas);
 }
 
 /**@brief Power manager.
@@ -730,7 +715,7 @@ void power_manage(void)
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 {
 		// Event pointers.
-		m_p_ant_ble_evt_handlers = ant_ble_evt_handlers;
+		mp_ant_ble_evt_handlers = ant_ble_evt_handlers;
 	
 		// Initialize S310 SoftDevice
     ble_ant_stack_init();
@@ -746,8 +731,9 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
     conn_params_init();
     sec_params_init();
 
-    // Initialize ANT HRM recieve channel
+    // Initialize ANT channelS
     ant_hrm_rx_init();
+		ant_bp_tx_init();
 }
 
 void ble_ant_start()

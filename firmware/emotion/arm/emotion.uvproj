@@ -424,19 +424,14 @@
               <FilePath>..\ble_ant.c</FilePath>
             </File>
             <File>
-              <FileName>irt_peripheral.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\irt_peripheral.c</FilePath>
-            </File>
-            <File>
               <FileName>ble_ant_stack_handler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ble_ant_stack_handler.c</FilePath>
             </File>
             <File>
-              <FileName>ble_cps.c</FileName>
+              <FileName>irt_peripheral.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\libraries\ble_cps.c</FilePath>
+              <FilePath>..\irt_peripheral.c</FilePath>
             </File>
             <File>
               <FileName>power.c</FileName>
@@ -482,6 +477,11 @@
               <FileName>ble_cps.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\services\ble_cps.c</FilePath>
+            </File>
+            <File>
+              <FileName>ant_bike_power.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\services\ant_bike_power.c</FilePath>
             </File>
           </Files>
         </Group>

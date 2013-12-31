@@ -23,7 +23,6 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "ble_ant.h"
 #include "nordic_common.h"
 #include "nrf_error.h"
 #include "irt_peripheral.h"
@@ -31,6 +30,7 @@
 #include "speed.h"
 #include "power.h"
 #include "user_profile.h"
+#include "ble_ant.h"
 
 #define CYCLING_POWER_MEAS_INTERVAL       APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Heart rate measurement interval (ticks). */
 
@@ -124,10 +124,14 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		cps_meas.accum_wheel_revs 		= speed_event.accum_wheel_revs;
 		cps_meas.last_wheel_event_time= speed_event.event_time_2048;
 
-		send_ble_cycling_power(&cps_meas);
+		cycling_power_send(&cps_meas);
 		
 		// Hang on to last speed event state.
 		m_last_speed_event = speed_event;	
+		
+		uint8_t data[14] = "";
+		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, speed_event.accum_wheel_revs);
+		debug_send(&data[0], sizeof(data));		
 }
 
 /**@brief Function for starting the application timers.
@@ -175,7 +179,7 @@ static void on_button_ii_event(void)
 {
 	// TODO: wrap this in an ifdef for DEBUG.
 	uint8_t data[] = "button_ii_event";
-	send_debug(&data[0], sizeof(data));
+	debug_send(&data[0], sizeof(data));
 	//
 	
 	// decrement
@@ -187,7 +191,7 @@ static void on_button_iii_event(void)
 {
 	// TODO: wrap this in an ifdef for DEBUG.
 	uint8_t data[] = "button_iii_event";
-	send_debug(&data[0], sizeof(data));
+	debug_send(&data[0], sizeof(data));
 	//
 	
 	// increment
@@ -224,7 +228,7 @@ static void on_ble_advertising(void)
 static void on_ble_uart(uint8_t * data, uint16_t length)
 {
 #ifdef LOOPBACK
-    send_debug(data, length);
+    debug_send(data, length);
 #endif
 }
 
