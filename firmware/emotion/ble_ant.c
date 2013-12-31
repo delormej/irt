@@ -696,7 +696,6 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 
     // Initialize ANT channelS
     ant_bp_tx_init();
-		ant_bp_tx_init();
 }
 
 void ble_ant_start()
