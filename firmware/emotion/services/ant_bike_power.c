@@ -192,8 +192,6 @@ void ant_bp_tx_send(ble_cps_meas_t * p_cps_meas)
 										p_cps_meas->last_wheel_event_time, 
 										p_cps_meas->accum_wheel_revs);
 	
-		
-	
 		APP_ERROR_CHECK(err_code);
 	
 		if (total_event_count % MANUFACTURER_PAGE_INTERLEAVE_COUNT == 0)
