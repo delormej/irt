@@ -32,7 +32,7 @@
 #include "user_profile.h"
 #include "ble_ant.h"
 
-#define CYCLING_POWER_MEAS_INTERVAL       APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Heart rate measurement interval (ticks). */
+#define CYCLING_POWER_MEAS_INTERVAL       APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Bike power measurement interval (ticks). */
 
 static uint8_t 														m_resistance_level = 0;
 static app_timer_id_t               			m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
