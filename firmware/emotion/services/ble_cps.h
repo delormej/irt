@@ -116,6 +116,7 @@ typedef enum
 	BLE_CPS_RESISTANCE_SET_WIND				= 0x47
 } ble_cps_resistance_mode_t;
 
+// TODO: genericize this so that it's used by ANT & BLE.
 /**@brief Cycling Power Service set resistance event. */
 typedef struct
 {

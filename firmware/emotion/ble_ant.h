@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "ble_cps.h"
 
-#define ANT_HRMRX_ANT_CHANNEL           0                                            /**< Default ANT Channel. */
+// TODO: All ANT HRM related defines and code belong in a module of their own, i.e. ant_hrm.h/.c
 #define ANT_HRMRX_CHANNEL_TYPE          0x40                                         /**< Channel Type Slave RX only. */
 #define ANT_HRMRX_DEVICE_TYPE           0x78                                         /**< Channel ID device type. */
 #define ANT_HRMRX_DEVICE_NUMBER         0                                            /**< Device Number. */
@@ -19,6 +19,10 @@
 #define ANT_HRM_PAGE_2                  2                                            /**< HRM page 2 constant. */
 #define ANT_HRM_PAGE_3                  3                                            /**< HRM page 3 constant. */
 #define ANT_HRM_PAGE_4                  4                                            /**< HRM page 4 constant. */
+
+#define ANT_BP_TX_CHANNEL     	 		 		1                                            /**< Bicycle Speed TX ANT Channel. */
+#define ANT_HRMRX_ANT_CHANNEL           0                                            /**< Default ANT Channel. */
+
 #define ANT_BUFFER_INDEX_MESG_ID        0x01                                         /**< Index for Message ID. */
 #define ANT_BUFFER_INDEX_MESG_DATA      0x03                                         /**< Index for Data. */
 #define ANT_HRMRX_NETWORK_KEY           {0xB9,0xA5,0x21,0xFB,0xBD,0x72,0xC3,0x45}                     /**< The default network key used. */

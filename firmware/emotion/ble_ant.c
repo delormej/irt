@@ -75,6 +75,8 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                                   /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+#define BURST_MSG_ID_SET_RESISTANCE			0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
+
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;     /**< Handle of the current connection. */
 static bool                             m_is_advertising = false;                    /**< True when in advertising state, False otherwise. */
 static ble_gap_sec_params_t             m_sec_params;                                /**< Security requirements for this application. */
@@ -374,12 +376,93 @@ static void conn_params_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-/**@brief Handle received ANT data message.
- * 
- * @param[in]  p_evt_buffer   The buffer containg received data. 
- */
-static void ant_data_messages_handle(uint8_t * p_evt_buffer)
+static __INLINE bool is_message_to_process(uint8_t message_id)
 {
+    switch (message_id)
+    {
+        case MESG_BROADCAST_DATA_ID:
+        case MESG_BURST_DATA_ID:
+				case MESG_ACKNOWLEDGED_DATA_ID:
+            return true;
+        default:
+						return false;
+    }
+}
+
+// Right now all this method does is handle resistance control messages.
+// TODO: need to implement calibration requests as well.
+static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
+{
+	static bool 		receiving_burst_resistance 	= false;
+	static uint8_t	resistance_mode 						= 0;
+	
+	// Only interested in BURST events right now for processing resistance control.
+	if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] != MESG_BURST_DATA_ID)
+	{
+		return;
+	}
+	
+	// TODO: there is probably a more defined way to deal with burst data, but this
+	// should work for now.  i.e. use  some derivation of sd_ant_burst_handler_request
+	// Although that method looks as though it's for sending bursts, not receiving.
+	uint8_t message_sequence_id = p_ant_evt->evt_buffer[2];			// third byte.
+	uint8_t message_id 					= p_ant_evt->evt_buffer[3];			// forth byte.
+	
+	if (message_sequence_id == 0x01 && message_id == BURST_MSG_ID_SET_RESISTANCE)
+	{
+		// Burst has begun, fifth byte has the mode, need to wait for subsequent messages
+		// to parse the level.
+		receiving_burst_resistance 		= true;
+		resistance_mode								= p_ant_evt->evt_buffer[4];
+	}
+	else if (message_sequence_id == 0x21)
+	{
+		// do nothing, not sure what this message is used for.
+	}
+	else if (message_sequence_id == 0xC1 && receiving_burst_resistance)
+	{
+		// 3rd message and the one that contains the level.
+		// Level lives here in these two bytes, combine LOW & HIGH:
+		uint16_t resistance_level = 0;
+		resistance_level = p_ant_evt->evt_buffer[3] | p_ant_evt->evt_buffer[4] << 8u;
+		
+		// we must acknowledge this message.
+		uint32_t err_code;
+		
+		uint8_t zeros[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+		// TODO: I'm not sure what we're really supposed to acknowledge with, but sending
+		// 0's seems to work.
+		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, 8u /*size*/, zeros ); 
+		
+		APP_ERROR_CHECK(err_code);
+		
+		// TODO: refactor this so that it's not so BLE tied, i.e.
+		//			p_level should not be a pointer, just pass the 16 bit value (smaller than a pointer!)
+		//			Should not need to pass a pointer to the cycling power service.
+		// Raise event.
+		ble_cps_rc_evt_t resistance_control_evt;
+		resistance_control_evt.resistance_mode = (ble_cps_resistance_mode_t)resistance_mode;
+		resistance_control_evt.p_value 				 = &resistance_level;
+		
+		mp_ant_ble_evt_handlers->on_set_resistance(NULL, &resistance_control_evt);
+		
+		// Reset state.
+		resistance_mode 					 = 0;
+		receiving_burst_resistance = false;		
+	}
+	
+}
+
+static void ant_data_hrm_messages_handle(ant_evt_t * p_ant_evt)
+{
+		// Determie if this is an interesting event or not.
+		if ( !is_message_to_process( p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] ))
+		{
+			return;
+		}
+	
+		uint8_t * p_evt_buffer = p_ant_evt->evt_buffer;
+	
     static uint32_t s_previous_beat_count = 0;    // Heart beat count from previously received page
     uint32_t        err_code;
     uint32_t        current_page;
@@ -433,28 +516,6 @@ static void ant_data_messages_handle(uint8_t * p_evt_buffer)
     }
 }
 
-
-/**@brief ANT RX event handler.
- *
- * @param[in]   p_ant_evt   Event received from the stack.
- */
-static void on_ant_evt_rx(ant_evt_t * p_ant_evt)
-{
-    uint32_t message_id = p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID];
-
-    switch (message_id)
-    {
-        case MESG_BROADCAST_DATA_ID:
-        case MESG_ACKNOWLEDGED_DATA_ID:
-            ant_data_messages_handle(p_ant_evt->evt_buffer);
-            break;
-
-        default:
-            break;
-    }
-}
-
-
 /**@brief ANT CHANNEL_CLOSED event handler.
  */
 static void on_ant_evt_channel_closed(void)
@@ -477,30 +538,24 @@ static void on_ant_evt_channel_closed(void)
 }
 
 
-/**@brief Application's Stack ANT event handler.
+/**@brief Application's TOP LEVEL Stack ANT event handler.
  *
  * @param[in]   p_ant_evt   Event received from the stack.
  */
 static void on_ant_evt(ant_evt_t * p_ant_evt)
 {
-    if (p_ant_evt->channel == ANT_HRMRX_ANT_CHANNEL)
-    {
-        switch (p_ant_evt->event)
-        {
-            case EVENT_RX:
-                on_ant_evt_rx(p_ant_evt);
-                break;
-
-            case EVENT_CHANNEL_CLOSED:
-                on_ant_evt_channel_closed();
-                break;
-
-            default:
-                break;
-        }
-    }
+		switch (p_ant_evt->channel)
+		{
+			case ANT_HRMRX_ANT_CHANNEL:
+				ant_data_hrm_messages_handle(p_ant_evt);
+				break;
+			case ANT_BP_TX_CHANNEL:
+				ant_data_bp_messages_handle(p_ant_evt);
+				break;
+			default:
+				break;
+		}
 }
-
 
 /**@brief Application's Stack BLE event handler.
  *
