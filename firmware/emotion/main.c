@@ -120,7 +120,7 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		m_accum_torque += torque;
 		
 		cps_meas.instant_power 				= watts;
-		cps_meas.accum_torque 				= 0; // m_accum_torque; (not working?)
+		cps_meas.accum_torque 				= m_accum_torque; //(not working?)
 		cps_meas.accum_wheel_revs 		= speed_event.accum_wheel_revs;
 		cps_meas.last_wheel_event_time= speed_event.event_time_2048;
 

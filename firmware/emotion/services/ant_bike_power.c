@@ -12,9 +12,8 @@
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
 #define MANUFACTURER_PAGE_INTERLEAVE_COUNT	121u
-#define PRODUCT_PAGE_INTERLEAVE_COUNT		121u*2u
+#define PRODUCT_PAGE_INTERLEAVE_COUNT		242u
 #define BATTERY_PAGE_INTERLEAVE_COUNT		61u
-
 
 #define PAGE_NUMBER_INDEX               0                   /**< Index of the data page number field.  */
 #define EVENT_COUNT_INDEX               1u                  /**< Index of the event count field in the power-only main data page. */
@@ -63,17 +62,14 @@ static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 
 static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel_period_2048, uint8_t wheel_ticks)
 {
-		static uint16_t last_accumulated_torque           = 0;            
-		uint16_t torque																		= accumulated_torque - last_accumulated_torque;
-		last_accumulated_torque														= accumulated_torque;
-
 		// NOTE: Torque message uses it's OWN event count, not to be confused with other message
 		// event counts.
     ++(m_torque_tx_buffer[EVENT_COUNT_INDEX]);
     m_torque_tx_buffer[WHEEL_TICKS_INDEX]   					= wheel_ticks;
-    m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX]   			= HIGH_BYTE(accumulated_torque);   
-    m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(torque);            
-    m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(torque);                
+    m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX]   			= LOW_BYTE(last_wheel_period_2048);   
+		m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX]   			= HIGH_BYTE(last_wheel_period_2048);   
+		m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(accumulated_torque);            
+    m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(accumulated_torque);                
 
 		return broadcast_message_transmit(m_torque_tx_buffer);
 }
@@ -81,9 +77,9 @@ static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel
 static uint32_t power_transmit(uint16_t watts)
 {	
     static uint16_t accumulated_power                 = 0;            
-    
-    ++(m_power_tx_buffer[EVENT_COUNT_INDEX]);
     accumulated_power                                += watts;
+		
+    ++(m_power_tx_buffer[EVENT_COUNT_INDEX]);
     m_power_tx_buffer[ACCUMMULATED_POWER_LSB_INDEX]   = LOW_BYTE(accumulated_power);        
     m_power_tx_buffer[ACCUMMULATED_POWER_MSB_INDEX]   = HIGH_BYTE(accumulated_power);   
     m_power_tx_buffer[INSTANT_POWER_LSB_INDEX]        = LOW_BYTE(watts);            
@@ -162,7 +158,7 @@ void ant_bp_tx_init(void)
     m_power_tx_buffer[INSTANT_POWER_MSB_INDEX]        = 0;      
 
 		// Initialize torque transmit buffer.
-    m_torque_tx_buffer[PAGE_NUMBER_INDEX]              = BP_PAGE_STANDARD_POWER_ONLY;
+    m_torque_tx_buffer[PAGE_NUMBER_INDEX]              = BP_PAGE_TORQUE_AT_WHEEL;
     m_torque_tx_buffer[EVENT_COUNT_INDEX]              = 0;
 		m_torque_tx_buffer[WHEEL_TICKS_INDEX]              = 0;    
 		m_torque_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;         
@@ -180,33 +176,36 @@ void ant_bp_tx_start(void)
 
 void ant_bp_tx_send(ble_cps_meas_t * p_cps_meas)
 {
-		uint32_t err_code;
+		static uint16_t event_count										= 0;
+		static uint8_t power_page_interleave 					= POWER_PAGE_INTERLEAVE_COUNT;
+		static uint8_t product_page_interleave 				= PRODUCT_PAGE_INTERLEAVE_COUNT;
+		static uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
 	
-		uint16_t total_event_count;
-		
-		total_event_count = m_torque_tx_buffer[EVENT_COUNT_INDEX] +
-										m_power_tx_buffer[EVENT_COUNT_INDEX];
-	
-		// # Always send torque message.
-		err_code = torque_transmit(p_cps_meas->accum_torque, 
-										p_cps_meas->last_wheel_event_time, 
-										p_cps_meas->accum_wheel_revs);
-	
-		APP_ERROR_CHECK(err_code);
-	
-		if (total_event_count % MANUFACTURER_PAGE_INTERLEAVE_COUNT == 0)
+		uint32_t err_code;		
+
+		// Increment global event_count.
+		event_count++;
+
+		if (event_count % power_page_interleave == 0)
 		{
 			// # Only transmit standard power message every 5th power message. 
 			err_code = power_transmit(p_cps_meas->instant_power);
 		}
-		else if (total_event_count % PRODUCT_PAGE_INTERLEAVE_COUNT == 0)
+		else if (event_count % product_page_interleave == 0)
 		{			
 			// # Figures out which common message to submit at which time.
 			err_code = product_page_transmit();
 		}
-		else if (total_event_count % MANUFACTURER_PAGE_INTERLEAVE_COUNT == 0)
+		else if (event_count % manufacturer_page_interleave == 0)
 		{
 			err_code = manufacturer_page_transmit();
+		}
+		else
+		{
+			// # Default broadcast message is torque.
+			err_code = torque_transmit(p_cps_meas->accum_torque, 
+											p_cps_meas->last_wheel_event_time, 
+											(uint8_t)p_cps_meas->accum_wheel_revs);
 		}
 		
 		APP_ERROR_CHECK(err_code);
