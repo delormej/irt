@@ -429,10 +429,10 @@ static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
 		// we must acknowledge this message.
 		uint32_t err_code;
 		
-		uint8_t zeros[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 		// TODO: I'm not sure what we're really supposed to acknowledge with, but sending
 		// 0's seems to work.
-		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, 8u /*size*/, zeros ); 
+		uint8_t zeros[] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, 8u /*size*/, zeros); 
 		
 		APP_ERROR_CHECK(err_code);
 		

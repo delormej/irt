@@ -55,6 +55,13 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 {
     nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
 
+		/*
+		// TODO: doesn't work, but we need to do something like this.
+		uint8_t data[64];
+		sprintf(data, "ERR: %i, LINE: %i, FILE: %s", 
+				error_code, line_num, p_file_name);
+		debug_send(data, sizeof(data)); */
+
     // This call can be used for debug purposes during development of an application.
     // @note CAUTION: Activating this code will write the stack to flash on an error.
     //                This function should NOT be used in a final product.
@@ -234,6 +241,10 @@ static void on_ant_power_data(void) {}
  */
 static void on_set_resistance(ble_cps_t * p_cps, ble_cps_rc_evt_t * p_evt)
 {
+	uint8_t data[19];
+	sprintf(data, "MODE: %i, LEVEL: %i", p_evt->resistance_mode, *(p_evt->p_value));
+	debug_send(data, sizeof(data));
+	
 	switch (p_evt->resistance_mode)
 	{
 		case BLE_CPS_RESISTANCE_SET_STANDARD:
