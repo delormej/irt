@@ -142,7 +142,7 @@ static float get_speed_mps(float wheel_revolutions, uint16_t period_seconds_2048
  *					Returns a value in 1/2048's of a second.
  *
  */
-static uint16_t partial_wheel_rev_time_2048(float speed_mps, float accum_wheel_revs)
+static uint16_t fractional_wheel_rev_time_2048(float speed_mps, float accum_wheel_revs)
 {
 	uint16_t time_to_full_rev_2048 = 0;
 	
@@ -184,38 +184,52 @@ float get_speed_mph(float speed_mps)
 
 void calc_speed(speed_event_t* speed_event)
 {
-	static uint32_t last_accum_wheel_revs = 0;
-	static uint16_t last_event_time_2048 	= 0;
+	static uint32_t last_accum_flywheel_revs 	= 0;
+	static uint32_t last_accum_wheel_revs 		= 0;
+	static uint16_t last_event_time_2048 			= 0;
 	
+	// Current time stamp.
+	uint16_t current_2048 = get_seconds_2048();
+		
 	// Flywheel revolution count.
 	uint32_t flywheel_revs = get_flywheel_revs();
 	
-	// Calculate accumlated fractional wheel revolutions.
-	float accum_wheel_revs = flywheel_revs / m_flywheel_to_wheel_revs;
-
-	// Current time stamp.
-	uint16_t current_2048 = get_seconds_2048();
+	if (flywheel_revs > last_accum_flywheel_revs)
+	{
+		// Calculate accumlated fractional wheel revolutions.
+		float fractional_wheel_revs = flywheel_revs / m_flywheel_to_wheel_revs;
+		
+		// Calculate the current speed in meters per second.
+		speed_event->speed_mps = get_speed_mps(
+												fractional_wheel_revs - last_accum_wheel_revs, 							// # of wheel revs in the period
+												current_2048 		 	 - last_event_time_2048);								// Current time period in 1/2048 seconds.
+		
+		// Determine time since a full wheel rev in 1/2048's of a second at this speed.
+		uint16_t time_since_full_rev_2048 = fractional_wheel_rev_time_2048(
+																							speed_event->speed_mps,
+																							fractional_wheel_revs);
+		
+		// Assign the speed event to the last calculated complete wheel revolution.
+		speed_event->event_time_2048 			= current_2048 - time_since_full_rev_2048;
+		speed_event->accum_wheel_revs 		= floor(fractional_wheel_revs);
+		speed_event->period_2048 					= speed_event->event_time_2048 - 
+																									last_event_time_2048;
+	}
+	else
+	{
+		// The flywheel hasn't moved, so we're stopped.
+		speed_event->speed_mps 						= 0;
+		speed_event->event_time_2048 			= current_2048;
+		speed_event->accum_wheel_revs 		= last_accum_wheel_revs;
+		speed_event->period_2048 					= current_2048 - last_event_time_2048;
+	}
 	
-	// Calculate the current speed in meters per second.
-	speed_event->speed_mps = get_speed_mps(
-											accum_wheel_revs - last_accum_wheel_revs, 							// # of wheel revs in the period
-											current_2048 		 - last_event_time_2048);	// Current time period in 1/2048 seconds.
-	
-	// Determine time since a full wheel rev in 1/2048's of a second at this speed.
-	uint16_t time_since_full_rev_2048 = partial_wheel_rev_time_2048(
-																						speed_event->speed_mps,
-																						accum_wheel_revs);
-	
-	// Assign the speed event to the last calculated complete wheel revolution.
-	speed_event->event_time_2048 			= current_2048 - time_since_full_rev_2048;
-	speed_event->accum_wheel_revs 		= floor(accum_wheel_revs);
-	speed_event->period_2048 					= speed_event->event_time_2048 - 
-																								last_event_time_2048;
 	speed_event->accum_flywheel_revs	= flywheel_revs;	// for debug purposes only.
 	
 	// Save state in static variables for next calculation.
-	last_accum_wheel_revs 	= speed_event->accum_wheel_revs;
-	last_event_time_2048 		= speed_event->event_time_2048;
+	last_accum_wheel_revs 		= speed_event->accum_wheel_revs;
+	last_event_time_2048 			= speed_event->event_time_2048;
+	last_accum_flywheel_revs	= speed_event->accum_flywheel_revs;
 }
 
 void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
