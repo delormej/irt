@@ -182,9 +182,12 @@ float get_speed_mph(float speed_mps)
 	return get_speed_kmh(speed_mps) * 0.621371;
 }
 
-void calc_speed(const speed_event_t* last_speed_event, speed_event_t* current_speed_event)
+void calc_speed(speed_event_t* speed_event)
 {
-	// Last flywheel revolution count.
+	static uint32_t last_accum_wheel_revs = 0;
+	static uint16_t last_event_time_2048 	= 0;
+	
+	// Flywheel revolution count.
 	uint32_t flywheel_revs = get_flywheel_revs();
 	
 	// Calculate accumlated fractional wheel revolutions.
@@ -194,22 +197,25 @@ void calc_speed(const speed_event_t* last_speed_event, speed_event_t* current_sp
 	uint16_t current_2048 = get_seconds_2048();
 	
 	// Calculate the current speed in meters per second.
-	current_speed_event->speed_mps = get_speed_mps(
-											accum_wheel_revs - last_speed_event->accum_wheel_revs, 	// # of wheel revs in the period
-											current_2048 		 - last_speed_event->event_time_2048);	// Current time period in 1/2048 seconds.
+	speed_event->speed_mps = get_speed_mps(
+											accum_wheel_revs - last_accum_wheel_revs, 							// # of wheel revs in the period
+											current_2048 		 - last_event_time_2048);	// Current time period in 1/2048 seconds.
 	
 	// Determine time since a full wheel rev in 1/2048's of a second at this speed.
 	uint16_t time_since_full_rev_2048 = partial_wheel_rev_time_2048(
-																						current_speed_event->speed_mps,
+																						speed_event->speed_mps,
 																						accum_wheel_revs);
 	
 	// Assign the speed event to the last calculated complete wheel revolution.
-	current_speed_event->event_time_2048 			= current_2048 - time_since_full_rev_2048;
-	current_speed_event->accum_wheel_revs 		= floor(accum_wheel_revs);
-	current_speed_event->period_2048 					= current_speed_event->event_time_2048 - 
-																							last_speed_event->event_time_2048;
-	current_speed_event->accum_flywheel_revs	= flywheel_revs;	// for debug purposes only.
-
+	speed_event->event_time_2048 			= current_2048 - time_since_full_rev_2048;
+	speed_event->accum_wheel_revs 		= floor(accum_wheel_revs);
+	speed_event->period_2048 					= speed_event->event_time_2048 - 
+																								last_event_time_2048;
+	speed_event->accum_flywheel_revs	= flywheel_revs;	// for debug purposes only.
+	
+	// Save state in static variables for next calculation.
+	last_accum_wheel_revs 	= speed_event->accum_wheel_revs;
+	last_event_time_2048 		= speed_event->event_time_2048;
 }
 
 void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)

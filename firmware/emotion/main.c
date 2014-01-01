@@ -82,9 +82,10 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
  */
 static void cycling_power_meas_timeout_handler(void * p_context)
 {
-		// TODO: should this be declared at module level?
-		static speed_event_t	m_last_speed_event;
-		static uint16_t 			m_accum_torque;
+		// Hang on to accumulated torque for a session duration.
+		// TODO: make sure this gets cleared at some point, probably
+		// the wrong spot to keep this.
+		static uint16_t 			m_accum_torque = 0;
 
     uint32_t err_code;
     UNUSED_PARAMETER(p_context);
@@ -96,15 +97,13 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		speed_event_t			speed_event;
 		memset(&speed_event, 0, sizeof(speed_event));
 
-		int16_t		watts					= 0;
-		uint16_t 	torque				= 0;
-
 		// Calculate speed.
 		// TODO: use error handling here.
-		calc_speed(&m_last_speed_event, &speed_event);
+		calc_speed(&speed_event);
 		float speed_mph = get_speed_mph(speed_event.speed_mps);
 		
 		// Calculate power.
+		int16_t		watts					= 0;
 		err_code = calc_power(speed_mph, m_user_profile.total_weight_lb, m_resistance_level, &watts);
 		// TODO: Handle the error for real here, not sure what the overall error 
 		// handling strategy will be, but this is not critical, just move on.
@@ -112,6 +111,7 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 			return;		
 		
 		// Calculate torque.
+		uint16_t 	torque				= 0;
 		err_code = calc_torque(watts, speed_event.period_2048, &torque);
 		if (err_code != IRT_SUCCESS)
 			return;
@@ -125,9 +125,6 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		cps_meas.last_wheel_event_time= speed_event.event_time_2048;
 
 		cycling_power_send(&cps_meas);
-		
-		// Hang on to last speed event state.
-		m_last_speed_event = speed_event;	
 		
 		uint8_t data[14] = "";
 		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, speed_event.accum_wheel_revs);

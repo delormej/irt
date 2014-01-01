@@ -51,8 +51,8 @@ typedef struct speed_event_s
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.*/
 void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm);
 
-/**@brief 	Calculates the current speed as a function of time, so last event must be provided (0's if no prior event).*/
-void calc_speed(const speed_event_t* last_speed_event, speed_event_t* current_speed_event);
+/**@brief 	Calculates the current speed.*/
+void calc_speed(speed_event_t* current_speed_event);
 
 /**@brief		Converts speed from meters per second to kilometers per hour.
  *					

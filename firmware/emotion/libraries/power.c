@@ -17,6 +17,8 @@ int16_t __DEBUG_POWER[2];
 
 // TODO: This only works if you have a predefined LEVEL 0-9.  I need to make it 
 // more dynamic given any position the servo might have from min->max.
+// We should also be able to calc power far more acurately based on flywheel revs
+// instead of speed.
 uint8_t calc_power(float speed_mph, float total_weight_lb, 
 	uint8_t resistance_level, int16_t* p_watts)
 {
