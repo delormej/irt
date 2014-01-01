@@ -53,14 +53,18 @@ static user_profile_t 										m_user_profile;
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
-    nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
+    // TODO: temporarily IGNORE this message.  
+		if (error_code == 0x401F) //TRANSFER_IN_PROGRESS
+			return;
+		
+		nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
 
-		/*
+		
 		// TODO: doesn't work, but we need to do something like this.
 		uint8_t data[64];
 		sprintf(data, "ERR: %i, LINE: %i, FILE: %s", 
-				error_code, line_num, p_file_name);
-		debug_send(data, sizeof(data)); */
+				error_code, line_num, *p_file_name);
+		//debug_send(data, sizeof(data)); 
 
     // This call can be used for debug purposes during development of an application.
     // @note CAUTION: Activating this code will write the stack to flash on an error.
@@ -127,7 +131,7 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		m_accum_torque += torque;
 		
 		cps_meas.instant_power 				= watts;
-		cps_meas.accum_torque 				= m_accum_torque; //(not working?)
+		cps_meas.accum_torque 				= m_accum_torque;
 		cps_meas.accum_wheel_revs 		= speed_event.accum_wheel_revs;
 		cps_meas.last_wheel_event_time= speed_event.event_time_2048;
 
