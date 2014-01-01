@@ -239,32 +239,32 @@ static void on_ant_power_data(void) {}
  *				command is received.
  *
  */
-static void on_set_resistance(ble_cps_t * p_cps, ble_cps_rc_evt_t * p_evt)
+static void on_set_resistance(rc_evt_t rc_evt)
 {
 	uint8_t data[19];
-	sprintf(data, "MODE: %i, LEVEL: %i", p_evt->resistance_mode, *(p_evt->p_value));
+	sprintf(data, "MODE: %i, LEVEL: %i", rc_evt.mode, rc_evt.level);
 	debug_send(data, sizeof(data));
 	
-	switch (p_evt->resistance_mode)
+	switch (rc_evt.mode)
 	{
-		case BLE_CPS_RESISTANCE_SET_STANDARD:
-			m_resistance_level = (uint8_t)p_evt->p_value[0];
+		case RESISTANCE_SET_STANDARD:
+			m_resistance_level = (uint8_t)rc_evt.level;
 			set_resistance(m_resistance_level);
 			break;
 			/*
-		case BLE_CPS_RESISTANCE_SET_PERCENT:
+		case RESISTANCE_SET_PERCENT:
 			set_resistance_pct(x);
 			break;
 			
-		case BLE_CPS_RESISTANCE_SET_ERG:
+		case RESISTANCE_SET_ERG:
 			set_resistance_erg(x);
 			break;
 			
-		case BLE_CPS_RESISTANCE_SET_SLOPE:
+		case RESISTANCE_SET_SLOPE:
 			set_resistance_slope(x);
 			break;
 			
-		case BLE_CPS_RESISTANCE_SET_WIND:
+		case RESISTANCE_SET_WIND:
 			set_resistance_wind(x);
 			break;
 			*/

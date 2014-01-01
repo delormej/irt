@@ -54,6 +54,7 @@ Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64
 #include "ble.h"
 #include "ble_srv_common.h"
 #include "ble_sc_ctrlpt.h"
+#include "resistance.h"
 
 // https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
 #define BLE_UUID_CYCLING_POWER_SERVICE                  0x1818    /**< Cycling Power Service UUID. */
@@ -96,34 +97,7 @@ Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64
 #define BLE_CPS_FEATURE_INSTANT_MEAS_DIRECTION_BIT			(0x01 << 17)	// Instantaneous Measurement Direction Supported
 #define BLE_CPS_FEATURE_FACTORY_CALIBRATION_BIT					(0x01 << 18)	// Factory Calibration Date Supported
 
-typedef enum
-{
-	BLE_CPS_BIKE_ROAD				= 0x21,
-	BLE_CPS_BIKE_MOUNT			= 0x2E
-} ble_cps_bike_type_t;
-
-//
-// TODO: These values are not specific to BLE so they should be moved out to 
-// the resistance module.
-//
-typedef enum 
-{
-	BLE_CPS_RESISTANCE_SET_PERCENT 		= 0x40,
-	BLE_CPS_RESISTANCE_SET_STANDARD		= 0x41,
-	BLE_CPS_RESISTANCE_SET_ERG				= 0x42,
-	BLE_CPS_RESISTANCE_SET_BIKE_TYPE	= 0x44,
-	BLE_CPS_RESISTANCE_SET_SLOPE			= 0x46,
-	BLE_CPS_RESISTANCE_SET_WIND				= 0x47
-} ble_cps_resistance_mode_t;
-
-// TODO: genericize this so that it's used by ANT & BLE.
-/**@brief Cycling Power Service set resistance event. */
-typedef struct
-{
-	ble_cps_resistance_mode_t resistance_mode;					/**< Data containing the resistance mode. */
-	uint16_t* p_value;																	/**< Value to set the mode to. */
-} ble_cps_rc_evt_t;
-
+// TODO: This should be genericized to work for BLE & ANT
 /**@brief Cycling Power Service measurement type. */
 typedef struct ble_cps_meas_s
 {
@@ -150,19 +124,16 @@ typedef struct ble_cps_meas_s
 // Forward declaration of the ble_cps_t type. 
 typedef struct ble_cps_s ble_cps_t;
 
-/**@brief Cycling Power Service event handler type. */
-typedef void(*ble_cps_evt_handler_t) (ble_cps_t * p_cps, ble_cps_rc_evt_t * p_evt);
-
 /**@brief Cycling Power Service init structure. This contains all options and data needed for
 *        initialization of the service. */
 typedef struct
 {
-	ble_cps_evt_handler_t        evt_handler;                                         /**< Event handler to be called for handling events in the Cycling Power Service. */
 	bool                         use_cycling_power_control_point;                     /**< Determines if cycling power control point is supported.  This is required if sensor supports wheel revolution data. */
 	bool                         use_cycling_power_vector;
 	uint8_t *                    p_sensor_location;                               		/**< Pointer to initial value of the Sensor Location characteristic. */
 	uint32_t 									 	 feature;																							/**< Bitmask of enabled features. */
 	ble_cps_meas_t *						 p_cps_meas;																					/**< Initial cycling power service measurement structure. */
+	rc_evt_handler_t     				 rc_evt_handler;                                  		/**< Event handler to be called for handling resistance control event. */
 	ble_sc_ctrlpt_evt_handler_t  ctrlpt_evt_handler;                    							/**< Control point event handler */
 	ble_srv_error_handler_t      error_handler;                         							/**< Function to be called in case of an error. */
 	ble_srv_security_mode_t      cps_cpf_attr_md;                                     /**< Initial security level for cycling power feature attribute */
@@ -175,7 +146,7 @@ typedef struct
 /**@brief Cycling Power Service structure. This contains various status information for the service. */
 typedef struct ble_cps_s
 {
-	ble_cps_evt_handler_t        evt_handler;                                         /**< Event handler to be called for handling events in the Cycling Power Service. */
+	rc_evt_handler_t        		 rc_evt_handler;                                      /**< Event handler to be called for handling events in the Cycling Power Service. */
 	uint16_t                     service_handle;                                      /**< Handle of Cycling Power Service (as provided by the BLE stack). */
 	uint32_t										 feature;																							/**< Bitmask of features enabled. */
 	ble_sc_ctrlpt_t              ctrl_pt;                               							/**< Data for cycling power control point. */

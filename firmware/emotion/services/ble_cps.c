@@ -50,10 +50,6 @@ static void on_disconnect(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
     p_cps->conn_handle = BLE_CONN_HANDLE_INVALID;
 }
 
-uint8_t 	m_counter = 1;
-uint8_t 	data[3];
-uint16_t 	len = 0;
-
 /**@brief Function for handling the Write event.
  *
  * @param[in]   p_cps       Cycling Power Service structure.
@@ -62,8 +58,7 @@ uint16_t 	len = 0;
 static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 {
 	ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
-	
-	len = p_evt_write->len;
+
 	if (p_evt_write->handle == p_cps->cprc_handles.value_handle)
 	{
 		// TODO: THIS STUFF BELONGS OUTSIDE OF BLE AND PROBABLY IN THE MAIN CONTROLLER.
@@ -72,19 +67,15 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 		// resistance module.
 		// We'll do this after we see how the events show up in ANT+ and make sure that
 		// it's consistent. 
-		ble_cps_rc_evt_t evt;
-		evt.resistance_mode = (ble_cps_resistance_mode_t)p_evt_write->data[0];
-		evt.p_value = (uint16_t*)&p_evt_write->data[1];
-		
-		// TODO: REMOVE DEBUG STUFF:
-		data[0] = evt.resistance_mode; 
-		data[1] = evt.p_value[0]; 
-		data[2] = evt.p_value[1]; 
+		rc_evt_t evt;
+		memset(&evt, 0, sizeof(evt));
+		evt.mode = (resistance_mode_t)p_evt_write->data[0];
+		evt.level = p_evt_write->data[1];
 
 		// Propogate the set resistance control.
-		if (p_cps->evt_handler != NULL)
+		if (p_cps->rc_evt_handler != NULL)
 		{
-			p_cps->evt_handler(p_cps, &evt);
+			p_cps->rc_evt_handler(evt);
 		}
 	}
 }
@@ -398,7 +389,7 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
     ble_uuid_t ble_uuid;
 
     // Initialize service structure
-    p_cps->evt_handler                 = p_cps_init->evt_handler;
+    p_cps->rc_evt_handler              = p_cps_init->rc_evt_handler;
     p_cps->conn_handle                 = BLE_CONN_HANDLE_INVALID;
 		p_cps->feature										 = p_cps_init->feature;
     

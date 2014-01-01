@@ -257,7 +257,7 @@ static void ble_cps_service_init()
 		cps_init.p_sensor_location = &sensor_location;
 		cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT 
 														| BLE_CPS_FEATURE_WHEEL_REV_BIT;
-		cps_init.evt_handler = mp_ant_ble_evt_handlers->on_set_resistance;
+		cps_init.rc_evt_handler = mp_ant_ble_evt_handlers->on_set_resistance;
 
     // Here the sec level for the Cycling Power Service can be changed/increased.
 		// TODO: all of this could be put into the ble_cps_init function, no need because
@@ -440,11 +440,11 @@ static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
 		//			p_level should not be a pointer, just pass the 16 bit value (smaller than a pointer!)
 		//			Should not need to pass a pointer to the cycling power service.
 		// Raise event.
-		ble_cps_rc_evt_t resistance_control_evt;
-		resistance_control_evt.resistance_mode = (ble_cps_resistance_mode_t)resistance_mode;
-		resistance_control_evt.p_value 				 = &resistance_level;
+		rc_evt_t evt;
+		evt.mode 	= (resistance_mode_t)resistance_mode;
+		evt.level = resistance_level;
 		
-		mp_ant_ble_evt_handlers->on_set_resistance(NULL, &resistance_control_evt);
+		mp_ant_ble_evt_handlers->on_set_resistance(evt);
 		
 		// Reset state.
 		resistance_mode 					 = 0;
