@@ -46,7 +46,7 @@
 #define ANT_BP_CHANNEL_TYPE          0x10                                         /**< Channel Type TX. */
 #define ANT_BP_DEVICE_TYPE           0x0B                                         /**< Channel ID device type. */
 #define ANT_DEVICE_NUMBER         	 0x01                                         /**< TODO: need a unique Device Number derived from device serial no. */
-#define ANT_BP_TRANS_TYPE            0x5                                         /**< Transmission Type. */
+#define ANT_BP_TRANS_TYPE            0x5 // 0xA5 is how we indicate WAHOO KICKR, normal is: 0x5                                         /**< Transmission Type. */
 #define ANT_BP_MSG_PERIOD            0x1FF6                                     	 /**< Message Periods, decimal 8182 (~4.00Hz) data is transmitted every 8182/32768 seconds. */
 #define ANT_BP_EXT_ASSIGN            0	                                          /**< ANT Ext Assign. */
 
@@ -62,9 +62,13 @@ static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 
 static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel_period_2048, uint8_t wheel_ticks)
 {
+		// Only update the event count if a new event occurred.
 		// NOTE: Torque message uses it's OWN event count, not to be confused with other message
 		// event counts.
-    ++(m_torque_tx_buffer[EVENT_COUNT_INDEX]);
+		if (m_torque_tx_buffer[WHEEL_TICKS_INDEX] != wheel_ticks)
+		{
+			++(m_torque_tx_buffer[EVENT_COUNT_INDEX]);
+		}
     m_torque_tx_buffer[WHEEL_TICKS_INDEX]   					= wheel_ticks;
     m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX]   			= LOW_BYTE(last_wheel_period_2048);   
 		m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX]   			= HIGH_BYTE(last_wheel_period_2048);   
