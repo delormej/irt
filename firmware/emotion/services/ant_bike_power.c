@@ -2,6 +2,7 @@
 */
 
 #include <stdint.h>
+#include "stdio.h"
 #include "ant_bike_power.h"
 #include "app_error.h"
 #include "ant_interface_ds.h"
@@ -56,6 +57,19 @@ static uint8_t 		m_torque_tx_buffer[TX_BUFFER_SIZE];
 
 static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 {
+		// TODO: This is just a hack workaround for right now.
+		// Tried a retry method, but after 10 retries it's still always in same state.
+		uint8_t pucPending = 0;
+		
+		sd_ant_pending_transmit(ANT_BP_TX_CHANNEL, &pucPending);
+		
+		if (pucPending != 0)
+		{
+			uint8_t data[] = "Warning: Pending Transmit";
+			debug_send(data, sizeof(data));
+			return 0;
+		}
+	
 		return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
 }
 
@@ -208,7 +222,7 @@ void ant_bp_tx_send(ble_cps_meas_t * p_cps_meas)
 			// # Default broadcast message is torque.
 			err_code = torque_transmit(p_cps_meas->accum_torque, 
 											p_cps_meas->last_wheel_event_time, 
-											(uint8_t)p_cps_meas->accum_wheel_revs);
+											p_cps_meas->accum_wheel_revs);
 		}
 		
 		APP_ERROR_CHECK(err_code);
