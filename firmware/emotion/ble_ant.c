@@ -436,10 +436,6 @@ static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
 		
 		APP_ERROR_CHECK(err_code);
 		
-		// TODO: refactor this so that it's not so BLE tied, i.e.
-		//			p_level should not be a pointer, just pass the 16 bit value (smaller than a pointer!)
-		//			Should not need to pass a pointer to the cycling power service.
-		// Raise event.
 		rc_evt_t evt;
 		evt.mode 	= (resistance_mode_t)resistance_mode;
 		evt.level = resistance_level;
