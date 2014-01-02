@@ -2,6 +2,7 @@
 */
 
 #include <stdint.h>
+#include "stdio.h"
 #include "ant_bike_power.h"
 #include "app_error.h"
 #include "ant_interface_ds.h"
@@ -56,16 +57,15 @@ static uint8_t 		m_torque_tx_buffer[TX_BUFFER_SIZE];
 
 static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 {
-		// TODO: This is just a hack workaround for right now, but retry 10 times.
-		uint8_t pucPending, retry = 0;
+		// TODO: This is just a hack workaround for right now.
+		// Tried a retry method, but after 10 retries it's still always in same state.
+		uint8_t pucPending = 0;
 		
-		do {
-			sd_ant_pending_transmit(ANT_BP_TX_CHANNEL, &pucPending);
-		} while (pucPending != 0 && ++retry < 10);
-	
-		if (retry == 10)
+		sd_ant_pending_transmit(ANT_BP_TX_CHANNEL, &pucPending);
+		
+		if (pucPending != 0)
 		{
-			uint8_t data[] = "10 retries.";
+			uint8_t data[] = "Warning: Pending Transmit";
 			debug_send(data, sizeof(data));
 			return 0;
 		}
