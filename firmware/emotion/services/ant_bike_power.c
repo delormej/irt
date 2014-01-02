@@ -50,6 +50,8 @@
 #define ANT_BP_MSG_PERIOD            0x1FF6                                     	 /**< Message Periods, decimal 8182 (~4.00Hz) data is transmitted every 8182/32768 seconds. */
 #define ANT_BP_EXT_ASSIGN            0	                                          /**< ANT Ext Assign. */
 
+#define ANT_TRANSMIT_IN_PROGRESS 		 0x401F
+
 static uint8_t 		m_power_tx_buffer[TX_BUFFER_SIZE];
 static uint8_t 		m_torque_tx_buffer[TX_BUFFER_SIZE];
 
@@ -57,20 +59,22 @@ static uint8_t 		m_torque_tx_buffer[TX_BUFFER_SIZE];
 
 static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 {
-		// TODO: This is just a hack workaround for right now.
-		// Tried a retry method, but after 10 retries it's still always in same state.
-		uint8_t pucPending = 0;
+		uint32_t err_code;
+	
+		err_code = sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
 		
-		sd_ant_pending_transmit(ANT_BP_TX_CHANNEL, &pucPending);
-		
-		if (pucPending != 0)
+		// TODO: this feels like a hack, but it works properly and the message does get sent.
+		// This is likely because we're sending so many ACKS to so many set-resistance commands
+		// from Trainer Road.  If we fix that, this condition shouldn't happen as often.
+		if (err_code == ANT_TRANSMIT_IN_PROGRESS)
 		{
 			uint8_t data[] = "Warning: Pending Transmit";
 			debug_send(data, sizeof(data));
-			return 0;
+			
+			err_code = NRF_SUCCESS;
 		}
-	
-		return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+		
+		return err_code;
 }
 
 static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel_period_2048, uint8_t wheel_ticks)

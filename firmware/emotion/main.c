@@ -245,10 +245,6 @@ static void on_ant_power_data(void) {}
  */
 static void on_set_resistance(rc_evt_t rc_evt)
 {
-	uint8_t data[19];
-	sprintf(data, "MODE: %i, LEVEL: %i", rc_evt.mode, rc_evt.level);
-	debug_send(data, sizeof(data));
-	
 	switch (rc_evt.mode)
 	{
 		case RESISTANCE_SET_STANDARD:
@@ -275,6 +271,9 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		default:
 			break;
 	}
+	uint8_t data[19];
+	sprintf(data, "MODE: %i, LEVEL: %i", rc_evt.mode, rc_evt.level);
+	debug_send(data, sizeof(data));	
 }
 
 		
