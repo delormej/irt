@@ -56,6 +56,20 @@ static uint8_t 		m_torque_tx_buffer[TX_BUFFER_SIZE];
 
 static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 {
+		// TODO: This is just a hack workaround for right now, but retry 10 times.
+		uint8_t pucPending, retry = 0;
+		
+		do {
+			sd_ant_pending_transmit(ANT_BP_TX_CHANNEL, &pucPending);
+		} while (pucPending != 0 && ++retry < 10);
+	
+		if (retry == 10)
+		{
+			uint8_t data[] = "10 retries.";
+			debug_send(data, sizeof(data));
+			return 0;
+		}
+	
 		return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
 }
 
