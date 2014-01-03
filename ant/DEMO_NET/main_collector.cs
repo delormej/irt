@@ -28,7 +28,7 @@ namespace ANT_Console_Demo
                 throw new Exception("Error configuring network key");
         }
 
-        private void ConfigureBikePowerChannel(ANT_Channel channel, byte deviceNumber, byte transmissionType, dChannelResponseHandler ChannelResponse)
+        private void ConfigureBikePowerChannel(ANT_Channel channel, ushort deviceNumber, byte transmissionType, dChannelResponseHandler ChannelResponse)
         {
             const ANT_ReferenceLibrary.ChannelType channelType = ANT_ReferenceLibrary.ChannelType.BASE_Slave_Receive_0x00;
             const byte BikePowerDeviceType = 0x0B;
@@ -74,6 +74,7 @@ namespace ANT_Console_Demo
                 case ANT_ReferenceLibrary.ANTMessageID.EXT_ACKNOWLEDGED_DATA_0x5E:
                 case ANT_ReferenceLibrary.ANTMessageID.EXT_BURST_DATA_0x5F:
                     Console.Write("Rx:(" + response.antChannel.ToString() + "): ");
+                    Console.Write(BitConverter.ToString(response.getDataPayload()) + Environment.NewLine);  // Display data payload
                     break;
                 default:
                     break;
@@ -91,17 +92,17 @@ namespace ANT_Console_Demo
             ANT_Device usb_ant_device = new ANT_Device();   // Create a device instance using the automatic constructor (automatic detection of USB device number and baud rate)
             ConfigureDevice(usb_ant_device, DeviceResponse);
 
-            byte quarq_device_no = 5;
+            ushort quarq_device_id = 52652;
             byte quarq_tranmission_type = 0x5;
 
-            byte emotion_device_no = 1;
+            ushort emotion_device_id = 1;
             byte emotion_tranmission_type = 0xA5;
 
             ANT_Channel quarq_channel = usb_ant_device.getChannel(QUARQ_ANT_CHANNEL);    // Get channel from ANT device
-            ConfigureBikePowerChannel(quarq_channel, quarq_device_no, quarq_tranmission_type, ChannelResponse);
+            ConfigureBikePowerChannel(quarq_channel, quarq_device_id, quarq_tranmission_type, ChannelResponse);
 
             ANT_Channel emotion_channel = usb_ant_device.getChannel(EMOTION_ANT_CHANNEL);    // Get channel from ANT device
-            ConfigureBikePowerChannel(emotion_channel, emotion_device_no, emotion_tranmission_type, ChannelResponse);
+            ConfigureBikePowerChannel(emotion_channel, emotion_device_id, emotion_tranmission_type, ChannelResponse);
             
             Console.WriteLine("Initialization was successful!");
         }
