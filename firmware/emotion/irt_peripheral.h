@@ -5,8 +5,6 @@
 #include "ble_nrf6310_pins.h"
 #include "app_timer.h"
 
-#define BONDMNGR_DELETE_BUTTON_PIN      NRF6310_BUTTON_1                             /**< Button used for deleting all bonded masters during startup. */
-
 #define APP_TIMER_PRESCALER             0                                            /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_MAX_TIMERS            3                                            /**< Maximum number of simultaneously created timers. */
 #define APP_TIMER_OP_QUEUE_SIZE         4                                            /**< Size of timer operation queues. */
@@ -20,7 +18,6 @@
 #define PIN_BUTTON_IV										5		// P3 - P0.05
 #define PIN_DRUM_REV 										0		// P3 - P0.00 
 
-#define WAKEUP_BUTTON_PIN               PIN_SERVO_SIGNAL														/**< Button used to wake up the application. */
 #define BUTTON_DETECTION_DELAY          APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)  /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
 
 void peripheral_init(void (*on_button_evt)(uint8_t pin_no));

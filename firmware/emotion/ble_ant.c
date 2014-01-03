@@ -697,7 +697,7 @@ static void bond_manager_init(void)
     bool                bonds_delete;
 
     // Clear all bonded masters if the Bonds Delete button is pushed
-    bonds_delete = (nrf_gpio_pin_read(BONDMNGR_DELETE_BUTTON_PIN) == 0);
+    //bonds_delete = (nrf_gpio_pin_read(BONDMNGR_DELETE_BUTTON_PIN) == 0);
 
     // Initialize the Bond Manager
     bond_init_data.flash_page_num_bond     = FLASH_PAGE_BOND;

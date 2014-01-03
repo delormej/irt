@@ -38,9 +38,6 @@ static void gpiote_init(void)
  */
 static void buttons_init()
 {
-    // Set Wakeup and Bonds Delete buttons as wakeup sources
-//    GPIO_WAKEUP_BUTTON_CONFIG(WAKEUP_BUTTON_PIN);
-
 		// This declaration needs to be compile time constant, so we need to pass
 		// this intermediary button_event_handler.
     static app_button_cfg_t buttons[] =
