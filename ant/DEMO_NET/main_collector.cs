@@ -16,6 +16,7 @@ namespace ANT_Console_Demo
         static readonly byte EMOTION_ANT_CHANNEL = 1;
 
         static readonly byte STANDARD_POWER_ONLY_PAGE = 0x10;
+        static readonly byte UPDATE_EVENT_COUNT_INDEX = 1;
         static readonly byte INSTANT_POWER_LSB_INDEX = 6;
         static readonly byte INSTANT_POWER_MSB_INDEX = 7;
 
@@ -116,8 +117,16 @@ namespace ANT_Console_Demo
             }
         }
 
+        byte m_last_quarq_instant_power_update = 0;
+
         private ushort GetInstantPower(byte[] payload)
         {
+            if (payload[UPDATE_EVENT_COUNT_INDEX] == m_last_quarq_instant_power_update)
+                // No updates.
+                return 0;
+            else
+                m_last_quarq_instant_power_update = payload[UPDATE_EVENT_COUNT_INDEX];
+
             // Combine two bytes to make the watts.
             ushort watts = (ushort)(payload[INSTANT_POWER_LSB_INDEX] |
                 payload[INSTANT_POWER_MSB_INDEX] << 8);
@@ -127,13 +136,6 @@ namespace ANT_Console_Demo
 
         private float GetSpeed(byte[] payload)
         {
-            // Wheel ticks rollover at 255
-            // Time (1/2048s) rolls over every 32 seconds:
-            /*
-                    static readonly byte WHEEL_TICKS_INDEX = 2;
-                    static readonly byte WHEEL_PERIOD_LSB_INDEX = 4;
-                    static readonly byte WHEEL_PERIOD_MSB_INDEX = 5;
-            */
             byte wheel_ticks = payload[WHEEL_TICKS_INDEX];
             ushort wheel_period = (ushort)(payload[WHEEL_PERIOD_LSB_INDEX] |
                 payload[WHEEL_PERIOD_MSB_INDEX] << 8);
