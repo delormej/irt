@@ -252,7 +252,9 @@ uint32_t ble_nus_send_string(ble_nus_t * p_nus, uint8_t * string, uint16_t lengt
 {
     ble_gatts_hvx_params_t hvx_params;
     
-    if (!p_nus->is_notification_enabled)
+		// Don't try to send a message if we're not connected.
+    if (!p_nus->is_notification_enabled || 
+			p_nus->conn_handle == BLE_CONN_HANDLE_INVALID)
     {
         return NRF_ERROR_INVALID_STATE;
     }
