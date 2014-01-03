@@ -15,6 +15,19 @@ namespace ANT_Console_Demo
         static readonly byte QUARQ_ANT_CHANNEL = 0;             
         static readonly byte EMOTION_ANT_CHANNEL = 1;
 
+        static readonly byte STANDARD_POWER_ONLY_PAGE = 0x10;
+        static readonly byte INSTANT_POWER_LSB_INDEX = 6;
+        static readonly byte INSTANT_POWER_MSB_INDEX = 7;
+
+        static readonly byte WHEEL_TORQUE_MAIN_PAGE = 0x11;
+        static readonly byte WHEEL_TICKS_INDEX = 2;
+        static readonly byte WHEEL_PERIOD_LSB_INDEX = 4;
+        static readonly byte WHEEL_PERIOD_MSB_INDEX = 5;
+
+
+        byte m_last_wheel_ticks = 0;
+        ushort m_last_wheel_period = 0;
+
         private void ConfigureDevice(ANT_Device device, ANT_Device.dDeviceResponseHandler DeviceResponse)
         {
             device.ResetSystem();     // Soft reset
@@ -55,32 +68,89 @@ namespace ANT_Console_Demo
                 throw new Exception("Error opening channel");
         }
 
+        private byte[] GetPowerMessagePayload(ANT_Response response)
+        {
+            if ((ANT_ReferenceLibrary.ANTMessageID)response.responseID ==
+                    ANT_ReferenceLibrary.ANTMessageID.BROADCAST_DATA_0x4E)
+            {
+                //Console.Console.Write("Rx:(" + response.antChannel.ToString() + "): ");
+                //Console.Write(BitConverter.ToString(response.getDataPayload()) + Environment.NewLine);  // Display data payload
+
+                return response.getDataPayload();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         private void QuarqChannelResponse(ANT_Response response)
         {
+            byte[] payload = GetPowerMessagePayload(response);
+            if (payload == null || payload[0] != STANDARD_POWER_ONLY_PAGE)
+                return;
+
+            ushort watts = GetInstantPower(payload);
+
+            Console.WriteLine("[{0:H:mm:ss.fff}] Quarq Power: {1:N0}", 
+                response.timeReceived, watts);
         }
 
         private void EmotionChannelResponse(ANT_Response response)
         {
-        }
+            byte[] payload = GetPowerMessagePayload(response);
+            if (payload == null)
+                return;
 
-        private void ChannelResponse(ANT_Response response)
-        {
-            switch ((ANT_ReferenceLibrary.ANTMessageID)response.responseID)
+            if (payload[0] == STANDARD_POWER_ONLY_PAGE)
             {
-                case ANT_ReferenceLibrary.ANTMessageID.BROADCAST_DATA_0x4E:
-                case ANT_ReferenceLibrary.ANTMessageID.ACKNOWLEDGED_DATA_0x4F:
-                case ANT_ReferenceLibrary.ANTMessageID.BURST_DATA_0x50:
-                case ANT_ReferenceLibrary.ANTMessageID.EXT_BROADCAST_DATA_0x5D:
-                case ANT_ReferenceLibrary.ANTMessageID.EXT_ACKNOWLEDGED_DATA_0x5E:
-                case ANT_ReferenceLibrary.ANTMessageID.EXT_BURST_DATA_0x5F:
-                    Console.Write("Rx:(" + response.antChannel.ToString() + "): ");
-                    Console.Write(BitConverter.ToString(response.getDataPayload()) + Environment.NewLine);  // Display data payload
-                    break;
-                default:
-                    break;
+                ushort watts = GetInstantPower(payload);
+                Console.WriteLine("[{0:H:mm:ss.fff}] E-Motion Power: {1:N0}",
+                    response.timeReceived, watts);
+            }
+            else if (payload[0] == WHEEL_TORQUE_MAIN_PAGE)
+            {
+                float speed_mps = GetSpeed(payload);
+                Console.WriteLine("[{0:H:mm:ss.fff}] E-Motion Speed: {1:N1}",
+                    response.timeReceived, speed_mps * 2.23693629f);
             }
         }
 
+        private ushort GetInstantPower(byte[] payload)
+        {
+            // Combine two bytes to make the watts.
+            ushort watts = (ushort)(payload[INSTANT_POWER_LSB_INDEX] |
+                payload[INSTANT_POWER_MSB_INDEX] << 8);
+
+            return watts;
+        }
+
+        private float GetSpeed(byte[] payload)
+        {
+            // Wheel ticks rollover at 255
+            // Time (1/2048s) rolls over every 32 seconds:
+            /*
+                    static readonly byte WHEEL_TICKS_INDEX = 2;
+                    static readonly byte WHEEL_PERIOD_LSB_INDEX = 4;
+                    static readonly byte WHEEL_PERIOD_MSB_INDEX = 5;
+            */
+            byte wheel_ticks = payload[WHEEL_TICKS_INDEX];
+            ushort wheel_period = (ushort)(payload[WHEEL_PERIOD_LSB_INDEX] |
+                payload[WHEEL_PERIOD_MSB_INDEX] << 8);
+
+            if (wheel_period == 0 || wheel_ticks == 0)
+                return 0.0f;
+
+            // Calculate speed
+            float speed = (wheel_ticks - m_last_wheel_ticks) /
+                ((wheel_period - m_last_wheel_period) / 2048f);
+
+            m_last_wheel_ticks = wheel_ticks;
+            m_last_wheel_period = wheel_period;
+            
+            return speed;
+        }
+        
         private void DeviceResponse(ANT_Response response)
         {
             // Going to just ignore for now.
@@ -99,10 +169,10 @@ namespace ANT_Console_Demo
             byte emotion_tranmission_type = 0xA5;
 
             ANT_Channel quarq_channel = usb_ant_device.getChannel(QUARQ_ANT_CHANNEL);    // Get channel from ANT device
-            ConfigureBikePowerChannel(quarq_channel, quarq_device_id, quarq_tranmission_type, ChannelResponse);
+            ConfigureBikePowerChannel(quarq_channel, quarq_device_id, quarq_tranmission_type, QuarqChannelResponse);
 
             ANT_Channel emotion_channel = usb_ant_device.getChannel(EMOTION_ANT_CHANNEL);    // Get channel from ANT device
-            ConfigureBikePowerChannel(emotion_channel, emotion_device_id, emotion_tranmission_type, ChannelResponse);
+            ConfigureBikePowerChannel(emotion_channel, emotion_device_id, emotion_tranmission_type, EmotionChannelResponse);
             
             Console.WriteLine("Initialization was successful!");
         }
