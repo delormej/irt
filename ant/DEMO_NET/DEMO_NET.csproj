@@ -68,6 +68,9 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>ANT_Console_Demo.main_collector</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -84,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="demo.cs" />
+    <Compile Include="main_collector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
