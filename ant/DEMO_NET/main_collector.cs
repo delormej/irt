@@ -1,8 +1,6 @@
 ﻿using ANT_Managed_Library;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 
 namespace ANT_Console_Demo
 {
@@ -15,6 +13,7 @@ namespace ANT_Console_Demo
 
     public class Collector
     {
+        static readonly float m_wheel_size_m = 2.07f;
 
         static readonly byte[] USER_NETWORK_KEY = { 0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45 };
         const byte USER_NETWORK_NUM = 0;         // The network key is assigned to this network number
@@ -198,7 +197,7 @@ namespace ANT_Console_Demo
                 return 0.0f;
 
             // Calculate speed
-            float speed = wheel_ticks_delta / (wheel_period_delta / 2048f);
+            float speed = (wheel_ticks_delta * m_wheel_size_m) / (wheel_period_delta / 2048f);
 
             m_last_wheel_ticks = wheel_ticks;
             m_last_wheel_period = wheel_period;
@@ -239,11 +238,13 @@ namespace ANT_Console_Demo
                 Collector collector = new Collector();
                 collector.Start();
 
-                Reporter reporter = new Reporter(collector);
-                reporter.Start();
+                using (Reporter reporter = new Reporter(collector))
+                {
+                    reporter.Start();
 
-
-                while (true) ;  // Don't exit unless an exception forces.
+                    Console.ReadKey();  // Any key to exit
+                    Console.WriteLine("Exiting...");
+                }
             }
             catch (Exception e)
             {
@@ -253,21 +254,23 @@ namespace ANT_Console_Demo
     }
 
 
-    public class Reporter
+    public class Reporter : IDisposable
     {
         Collector m_collector;
-        const string report_format = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:N0}, {4:N0}";
-
+        StreamWriter m_logFileWriter;        
+        const string report_format = "{0:H:mm:ss.fff}, {1:N4}, {2:N1}, {3:N0}, {4:N0}";
 
         public Reporter(Collector collector)
         {
             m_collector = collector;
+            m_logFileWriter = new StreamWriter("log.csv");
+            m_logFileWriter.AutoFlush = true;
         }
 
         public void Start()
         {
             Console.WriteLine("Starting....");
-            Console.WriteLine("event_time, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power");
+            m_logFileWriter.WriteLine("event_time, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power");
             System.Timers.Timer timer = new System.Timers.Timer(1000);
             timer.Elapsed += Reporter_Elapsed;
             timer.Start();
@@ -280,15 +283,22 @@ namespace ANT_Console_Demo
 
         public void Report(CollectorEventData eventData)
         {
-
-            Console.WriteLine(report_format,
+            string data = String.Format(report_format, 
                 DateTime.Now,
-                eventData.emotion_speed * 2.23693629f,
                 eventData.emotion_speed,
+                eventData.emotion_speed * 2.23693629f,
                 eventData.emotion_power,
                 eventData.quarq_power);
+            m_logFileWriter.WriteLine(data);
+
+            Console.WriteLine(data);
         }
 
+        public void Dispose()
+        {
+            m_logFileWriter.Flush();
+            m_logFileWriter.Close();
+        }
     }
 
 }
