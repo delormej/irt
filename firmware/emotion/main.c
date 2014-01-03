@@ -273,7 +273,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	}
 	uint8_t data[19];
 	sprintf(data, "MODE: %i, LEVEL: %i", rc_evt.mode, rc_evt.level);
-	debug_send(data, sizeof(data));	
+	debug_send(data, sizeof(data));
 }
 
 		
