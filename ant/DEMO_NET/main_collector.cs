@@ -6,28 +6,47 @@ using System.Text;
 
 namespace ANT_Console_Demo
 {
-    class main_collector
+    public struct CollectorEventData
+    {
+        public float emotion_speed;
+        public ushort emotion_power;
+        public ushort quarq_power; 
+    }
+
+    public class Collector
     {
 
         static readonly byte[] USER_NETWORK_KEY = { 0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45 };
-        static readonly byte USER_NETWORK_NUM = 0;         // The network key is assigned to this network number
+        const byte USER_NETWORK_NUM = 0;         // The network key is assigned to this network number
 
-        static readonly byte QUARQ_ANT_CHANNEL = 0;             
-        static readonly byte EMOTION_ANT_CHANNEL = 1;
+        const byte QUARQ_ANT_CHANNEL = 0;
+        const byte EMOTION_ANT_CHANNEL = 1;
 
-        static readonly byte STANDARD_POWER_ONLY_PAGE = 0x10;
-        static readonly byte UPDATE_EVENT_COUNT_INDEX = 1;
-        static readonly byte INSTANT_POWER_LSB_INDEX = 6;
-        static readonly byte INSTANT_POWER_MSB_INDEX = 7;
+        const byte STANDARD_POWER_ONLY_PAGE = 0x10;
+        const byte UPDATE_EVENT_COUNT_INDEX = 1;
+        const byte INSTANT_POWER_LSB_INDEX = 6;
+        const byte INSTANT_POWER_MSB_INDEX = 7;
 
-        static readonly byte WHEEL_TORQUE_MAIN_PAGE = 0x11;
-        static readonly byte WHEEL_TICKS_INDEX = 2;
-        static readonly byte WHEEL_PERIOD_LSB_INDEX = 4;
-        static readonly byte WHEEL_PERIOD_MSB_INDEX = 5;
+        const byte WHEEL_TORQUE_MAIN_PAGE = 0x11;
+        const byte WHEEL_TICKS_INDEX = 2;
+        const byte WHEEL_PERIOD_LSB_INDEX = 4;
+        const byte WHEEL_PERIOD_MSB_INDEX = 5;
 
-
+        byte m_last_quarq_instant_power_update = 0;
+        byte m_last_emotion_instant_power_update = 0;
+        byte m_last_emotion_torque_update = 0;
         byte m_last_wheel_ticks = 0;
         ushort m_last_wheel_period = 0;
+
+        CollectorEventData m_last_event = new CollectorEventData();
+
+        public CollectorEventData EventData
+        {
+            get
+            {
+                return m_last_event;
+            }
+        }
 
         private void ConfigureDevice(ANT_Device device, ANT_Device.dDeviceResponseHandler DeviceResponse)
         {
@@ -87,46 +106,64 @@ namespace ANT_Console_Demo
 
         private void QuarqChannelResponse(ANT_Response response)
         {
-            byte[] payload = GetPowerMessagePayload(response);
-            if (payload == null || payload[0] != STANDARD_POWER_ONLY_PAGE)
-                return;
-
-            ushort watts = GetInstantPower(payload);
-
-            Console.WriteLine("[{0:H:mm:ss.fff}] Quarq Power: {1:N0}", 
-                response.timeReceived, watts);
+            ProcessBikePowerResponse(response, QUARQ_ANT_CHANNEL);
         }
 
         private void EmotionChannelResponse(ANT_Response response)
         {
+            ProcessBikePowerResponse(response, EMOTION_ANT_CHANNEL);
+        }
+
+        private void ProcessBikePowerResponse(ANT_Response response, byte channelId)
+        {
+            // Determine if we have a power message to process.
             byte[] payload = GetPowerMessagePayload(response);
             if (payload == null)
                 return;
 
+            byte event_count = payload[UPDATE_EVENT_COUNT_INDEX];
+
             if (payload[0] == STANDARD_POWER_ONLY_PAGE)
             {
                 ushort watts = GetInstantPower(payload);
-                Console.WriteLine("[{0:H:mm:ss.fff}] E-Motion Power: {1:N0}",
-                    response.timeReceived, watts);
+
+                switch (channelId)
+                {
+                    case QUARQ_ANT_CHANNEL:
+                        if (m_last_quarq_instant_power_update != event_count)
+                        {
+                            m_last_event.quarq_power = watts;
+                            m_last_quarq_instant_power_update = event_count;
+                        }
+                        break;
+                    case EMOTION_ANT_CHANNEL:
+                        if (m_last_emotion_instant_power_update != event_count)
+                        {
+                            m_last_event.emotion_power = watts;
+                            m_last_emotion_instant_power_update = event_count;
+                            /*
+                            Console.WriteLine("[{0:H:mm:ss.fff}] E-Motion Power: {1:N0}",
+                                response.timeReceived, watts);*/
+                        }
+                        break;
+                }
             }
             else if (payload[0] == WHEEL_TORQUE_MAIN_PAGE)
             {
-                float speed_mps = GetSpeed(payload);
-                Console.WriteLine("[{0:H:mm:ss.fff}] E-Motion Speed: {1:N1}",
-                    response.timeReceived, speed_mps * 2.23693629f);
+                if (m_last_emotion_torque_update != event_count)
+                {
+                    float speed_mps = GetSpeed(payload);
+                    m_last_event.emotion_speed = speed_mps;
+                    m_last_emotion_torque_update = event_count;
+                    /*
+                    Console.WriteLine("[{0:H:mm:ss.fff}] E-Motion Speed: {1:N1}",
+                        response.timeReceived, speed_mps * 2.23693629f);*/
+                }
             }
         }
 
-        byte m_last_quarq_instant_power_update = 0;
-
         private ushort GetInstantPower(byte[] payload)
         {
-            if (payload[UPDATE_EVENT_COUNT_INDEX] == m_last_quarq_instant_power_update)
-                // No updates.
-                return 0;
-            else
-                m_last_quarq_instant_power_update = payload[UPDATE_EVENT_COUNT_INDEX];
-
             // Combine two bytes to make the watts.
             ushort watts = (ushort)(payload[INSTANT_POWER_LSB_INDEX] |
                 payload[INSTANT_POWER_MSB_INDEX] << 8);
@@ -143,13 +180,29 @@ namespace ANT_Console_Demo
             if (wheel_period == 0 || wheel_ticks == 0)
                 return 0.0f;
 
+            byte wheel_ticks_delta = 0;
+            if (wheel_ticks < m_last_wheel_ticks)
+                // If we had a rollover.
+                wheel_ticks_delta = (byte)((255 - m_last_wheel_ticks) + wheel_ticks);
+            else
+                wheel_ticks_delta = (byte)(wheel_ticks - m_last_wheel_ticks);
+
+            ushort wheel_period_delta = 0;
+            if (wheel_period < m_last_wheel_period)
+                // If we had a rollover.
+                wheel_period_delta = (ushort)((32768 - m_last_wheel_period) + wheel_period);
+            else
+                wheel_period_delta = (ushort)(wheel_period - m_last_wheel_period);
+
+            if (wheel_ticks_delta == 0 || wheel_period_delta == 0)
+                return 0.0f;
+
             // Calculate speed
-            float speed = (wheel_ticks - m_last_wheel_ticks) /
-                ((wheel_period - m_last_wheel_period) / 2048f);
+            float speed = wheel_ticks_delta / (wheel_period_delta / 2048f);
 
             m_last_wheel_ticks = wheel_ticks;
             m_last_wheel_period = wheel_period;
-            
+
             return speed;
         }
         
@@ -183,8 +236,12 @@ namespace ANT_Console_Demo
         {
             try
             {
-                main_collector collector = new main_collector();
+                Collector collector = new Collector();
                 collector.Start();
+
+                Reporter reporter = new Reporter(collector);
+                reporter.Start();
+
 
                 while (true) ;  // Don't exit unless an exception forces.
             }
@@ -194,4 +251,44 @@ namespace ANT_Console_Demo
             }
         }
     }
+
+
+    public class Reporter
+    {
+        Collector m_collector;
+        const string report_format = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:N0}, {4:N0}";
+
+
+        public Reporter(Collector collector)
+        {
+            m_collector = collector;
+        }
+
+        public void Start()
+        {
+            Console.WriteLine("Starting....");
+            Console.WriteLine("event_time, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power");
+            System.Timers.Timer timer = new System.Timers.Timer(1000);
+            timer.Elapsed += Reporter_Elapsed;
+            timer.Start();
+        }
+
+        void Reporter_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            Report(m_collector.EventData);
+        }
+
+        public void Report(CollectorEventData eventData)
+        {
+
+            Console.WriteLine(report_format,
+                DateTime.Now,
+                eventData.emotion_speed * 2.23693629f,
+                eventData.emotion_speed,
+                eventData.emotion_power,
+                eventData.quarq_power);
+        }
+
+    }
+
 }
