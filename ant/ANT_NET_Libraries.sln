@@ -1,0 +1,37 @@
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C# Express 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ANT_Managed_Library", "ANT_Managed_Library\ANT_Managed_Library.csproj", "{16270052-0DB5-41F9-8DD4-D1700E6E7281}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ANT_NetDll_Demo", "ANT_NetDll_Demo\ANT_NetDll_Demo.csproj", "{9DD3B2F1-DD2F-42EB-AD4F-64FF3096AF84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DEMO_NET", "DEMO_NET\DEMO_NET.csproj", "{73A108D9-6E34-4446-A5F4-45365C4390F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DEMO_ANTFS", "DEMO_ANTFS\DEMO_ANTFS.csproj", "{AF97A6D0-23D6-4D02-B7FF-BC4F180243C7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{16270052-0DB5-41F9-8DD4-D1700E6E7281}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16270052-0DB5-41F9-8DD4-D1700E6E7281}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16270052-0DB5-41F9-8DD4-D1700E6E7281}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16270052-0DB5-41F9-8DD4-D1700E6E7281}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DD3B2F1-DD2F-42EB-AD4F-64FF3096AF84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DD3B2F1-DD2F-42EB-AD4F-64FF3096AF84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DD3B2F1-DD2F-42EB-AD4F-64FF3096AF84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DD3B2F1-DD2F-42EB-AD4F-64FF3096AF84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73A108D9-6E34-4446-A5F4-45365C4390F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73A108D9-6E34-4446-A5F4-45365C4390F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73A108D9-6E34-4446-A5F4-45365C4390F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73A108D9-6E34-4446-A5F4-45365C4390F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF97A6D0-23D6-4D02-B7FF-BC4F180243C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF97A6D0-23D6-4D02-B7FF-BC4F180243C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF97A6D0-23D6-4D02-B7FF-BC4F180243C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF97A6D0-23D6-4D02-B7FF-BC4F180243C7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

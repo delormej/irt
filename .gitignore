@@ -8,6 +8,7 @@
 *.so
 *.suo
 *.ncb
+*.pdb
 
 # Keil Stuff #
 ###################
@@ -37,6 +38,23 @@
 *.rar
 *.tar
 *.zip
+
+# Visual Studio stuff #
+######################
+**/Debug/
+*.exe.manifest
+*.cache
+*.res
+*.lib
+*.exp
+*.tlog
+*.filters
+*.rc
+*.apc
+*.resx
+*.obj
+*.ilk
+*.lastbuildstate
 
 # Logs and databases #
 ######################
