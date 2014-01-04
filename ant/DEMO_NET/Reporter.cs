@@ -8,7 +8,7 @@ namespace ANT_Console_Demo
     {
         Collector m_collector;
         StreamWriter m_logFileWriter;
-        const string report_format = "{0:H:mm:ss.fff}, {1:N4}, {2:N1}, {3:N0}, {4:N0}";
+        const string report_format = "{0:H:mm:ss.fff}, {1:N4}, {2:N4}, {3:N1}, {4:N0}, {5:N0}";
 
         public Reporter(Collector collector)
         {
@@ -20,7 +20,7 @@ namespace ANT_Console_Demo
         public void Start()
         {
             Console.WriteLine("Starting....");
-            m_logFileWriter.WriteLine("event_time, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power");
+            m_logFileWriter.WriteLine("event_time, bike_speed_mps, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power");
             System.Timers.Timer timer = new System.Timers.Timer(1000);
             timer.Elapsed += Reporter_Elapsed;
             timer.Start();
@@ -35,6 +35,7 @@ namespace ANT_Console_Demo
         {
             string data = String.Format(report_format,
                 DateTime.Now,
+                eventData.bike_speed,
                 eventData.emotion_speed,
                 eventData.emotion_speed * 2.23693629f,
                 eventData.emotion_power,
