@@ -49,7 +49,7 @@
 *.exp
 *.tlog
 *.filters
-*.rc
+
 *.apc
 *.resx
 *.obj
