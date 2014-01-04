@@ -1,43 +1,38 @@
 ﻿using ANT_Managed_Library;
 using System;
-using System.IO;
 
 namespace ANT_Console_Demo
 {
     public struct CollectorEventData
     {
         public float emotion_speed;
+        public float bike_speed; // Garmin speed/cadence sensor.
         public ushort emotion_power;
-        public ushort quarq_power; 
+        public ushort quarq_power;
     }
 
     public class Collector
     {
-        static readonly float m_wheel_size_m = 2.07f;
-
         static readonly byte[] USER_NETWORK_KEY = { 0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45 };
         const byte USER_NETWORK_NUM = 0;         // The network key is assigned to this network number
 
         const byte QUARQ_ANT_CHANNEL = 0;
         const byte EMOTION_ANT_CHANNEL = 1;
+        const byte BIKE_SPEED_ANT_CHANNEL = 2;
 
-        const byte STANDARD_POWER_ONLY_PAGE = 0x10;
         const byte UPDATE_EVENT_COUNT_INDEX = 1;
-        const byte INSTANT_POWER_LSB_INDEX = 6;
-        const byte INSTANT_POWER_MSB_INDEX = 7;
 
+        // Standard power page
+        const byte STANDARD_POWER_ONLY_PAGE = 0x10;
+        // Torque page
         const byte WHEEL_TORQUE_MAIN_PAGE = 0x11;
-        const byte WHEEL_TICKS_INDEX = 2;
-        const byte WHEEL_PERIOD_LSB_INDEX = 4;
-        const byte WHEEL_PERIOD_MSB_INDEX = 5;
 
         byte m_last_quarq_instant_power_update = 0;
         byte m_last_emotion_instant_power_update = 0;
         byte m_last_emotion_torque_update = 0;
-        byte m_last_wheel_ticks = 0;
-        ushort m_last_wheel_period = 0;
 
         CollectorEventData m_last_event = new CollectorEventData();
+        Calculator m_calculator = new Calculator();
 
         public CollectorEventData EventData
         {
@@ -87,7 +82,35 @@ namespace ANT_Console_Demo
                 throw new Exception("Error opening channel");
         }
 
-        private byte[] GetPowerMessagePayload(ANT_Response response)
+        private void ConfigureBikeSpeedChannel(ANT_Channel channel, ushort deviceNumber, byte transmissionType, dChannelResponseHandler ChannelResponse)
+        {
+            const ANT_ReferenceLibrary.ChannelType channelType = ANT_ReferenceLibrary.ChannelType.BASE_Slave_Receive_0x00;
+            const byte BikeSpeedDeviceType = 0x79;
+            const byte AntFreq = 0x39;
+            const ushort BikeSpeedChannelPeriod = 8086;
+
+            channel.channelResponse += ChannelResponse;  // Add channel response function to receive channel event messages
+
+            if (!channel.assignChannel(channelType, USER_NETWORK_NUM, 500))
+                throw new Exception("Error assigning channel");
+
+            if (!channel.setChannelID(deviceNumber, false, BikeSpeedDeviceType, transmissionType, 500))  // Not using pairing bit
+                throw new Exception("Error configuring Channel ID");
+
+            if (!channel.setChannelFreq(AntFreq, 500))
+                throw new Exception("Error configuring Radio Frequency");
+
+            if (!channel.setChannelPeriod(BikeSpeedChannelPeriod, 500))
+                throw new Exception("Error configuring Channel Period");
+
+            if (channel.openChannel(500))
+                Console.WriteLine("Channel opened");
+            else
+                throw new Exception("Error opening channel");
+        }
+
+
+        private byte[] GetBroadcastMessagePayload(ANT_Response response)
         {
             if ((ANT_ReferenceLibrary.ANTMessageID)response.responseID ==
                     ANT_ReferenceLibrary.ANTMessageID.BROADCAST_DATA_0x4E)
@@ -113,10 +136,24 @@ namespace ANT_Console_Demo
             ProcessBikePowerResponse(response, EMOTION_ANT_CHANNEL);
         }
 
+        private void SpeedChannelResponse(ANT_Response response)
+        {
+            ProcessBikeSpeedResponse(response, BIKE_SPEED_ANT_CHANNEL);
+        }
+
+        private void ProcessBikeSpeedResponse(ANT_Response response, byte channelId)
+        {
+            byte[] payload = GetBroadcastMessagePayload(response);
+            if (payload == null)
+                return;
+
+            m_last_event.bike_speed = m_calculator.GetBikeSpeed(payload);
+        }
+
         private void ProcessBikePowerResponse(ANT_Response response, byte channelId)
         {
             // Determine if we have a power message to process.
-            byte[] payload = GetPowerMessagePayload(response);
+            byte[] payload = GetBroadcastMessagePayload(response);
             if (payload == null)
                 return;
 
@@ -124,7 +161,7 @@ namespace ANT_Console_Demo
 
             if (payload[0] == STANDARD_POWER_ONLY_PAGE)
             {
-                ushort watts = GetInstantPower(payload);
+                ushort watts = m_calculator.GetInstantPower(payload);
 
                 switch (channelId)
                 {
@@ -151,7 +188,7 @@ namespace ANT_Console_Demo
             {
                 if (m_last_emotion_torque_update != event_count)
                 {
-                    float speed_mps = GetSpeed(payload);
+                    float speed_mps = m_calculator.GetSpeed(payload);
                     m_last_event.emotion_speed = speed_mps;
                     m_last_emotion_torque_update = event_count;
                     /*
@@ -161,50 +198,6 @@ namespace ANT_Console_Demo
             }
         }
 
-        private ushort GetInstantPower(byte[] payload)
-        {
-            // Combine two bytes to make the watts.
-            ushort watts = (ushort)(payload[INSTANT_POWER_LSB_INDEX] |
-                payload[INSTANT_POWER_MSB_INDEX] << 8);
-
-            return watts;
-        }
-
-        private float GetSpeed(byte[] payload)
-        {
-            byte wheel_ticks = payload[WHEEL_TICKS_INDEX];
-            ushort wheel_period = (ushort)(payload[WHEEL_PERIOD_LSB_INDEX] |
-                payload[WHEEL_PERIOD_MSB_INDEX] << 8);
-
-            if (wheel_period == 0 || wheel_ticks == 0)
-                return 0.0f;
-
-            byte wheel_ticks_delta = 0;
-            if (wheel_ticks < m_last_wheel_ticks)
-                // If we had a rollover.
-                wheel_ticks_delta = (byte)((255 - m_last_wheel_ticks) + wheel_ticks);
-            else
-                wheel_ticks_delta = (byte)(wheel_ticks - m_last_wheel_ticks);
-
-            ushort wheel_period_delta = 0;
-            if (wheel_period < m_last_wheel_period)
-                // If we had a rollover.
-                wheel_period_delta = (ushort)((32768 - m_last_wheel_period) + wheel_period);
-            else
-                wheel_period_delta = (ushort)(wheel_period - m_last_wheel_period);
-
-            if (wheel_ticks_delta == 0 || wheel_period_delta == 0)
-                return 0.0f;
-
-            // Calculate speed
-            float speed = (wheel_ticks_delta * m_wheel_size_m) / (wheel_period_delta / 2048f);
-
-            m_last_wheel_ticks = wheel_ticks;
-            m_last_wheel_period = wheel_period;
-
-            return speed;
-        }
-        
         private void DeviceResponse(ANT_Response response)
         {
             // Going to just ignore for now.
@@ -222,12 +215,18 @@ namespace ANT_Console_Demo
             ushort emotion_device_id = 1;
             byte emotion_tranmission_type = 0xA5;
 
+            byte speed_transmission_type = 0x01;
+            byte speed_device_id = 0;
+
             ANT_Channel quarq_channel = usb_ant_device.getChannel(QUARQ_ANT_CHANNEL);    // Get channel from ANT device
             ConfigureBikePowerChannel(quarq_channel, quarq_device_id, quarq_tranmission_type, QuarqChannelResponse);
 
             ANT_Channel emotion_channel = usb_ant_device.getChannel(EMOTION_ANT_CHANNEL);    // Get channel from ANT device
             ConfigureBikePowerChannel(emotion_channel, emotion_device_id, emotion_tranmission_type, EmotionChannelResponse);
-            
+
+            ANT_Channel bike_speed_channel = usb_ant_device.getChannel(BIKE_SPEED_ANT_CHANNEL);
+            ConfigureBikeSpeedChannel(bike_speed_channel, speed_device_id, speed_transmission_type, SpeedChannelResponse);
+
             Console.WriteLine("Initialization was successful!");
         }
 
@@ -252,53 +251,4 @@ namespace ANT_Console_Demo
             }
         }
     }
-
-
-    public class Reporter : IDisposable
-    {
-        Collector m_collector;
-        StreamWriter m_logFileWriter;        
-        const string report_format = "{0:H:mm:ss.fff}, {1:N4}, {2:N1}, {3:N0}, {4:N0}";
-
-        public Reporter(Collector collector)
-        {
-            m_collector = collector;
-            m_logFileWriter = new StreamWriter("log.csv");
-            m_logFileWriter.AutoFlush = true;
-        }
-
-        public void Start()
-        {
-            Console.WriteLine("Starting....");
-            m_logFileWriter.WriteLine("event_time, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power");
-            System.Timers.Timer timer = new System.Timers.Timer(1000);
-            timer.Elapsed += Reporter_Elapsed;
-            timer.Start();
-        }
-
-        void Reporter_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            Report(m_collector.EventData);
-        }
-
-        public void Report(CollectorEventData eventData)
-        {
-            string data = String.Format(report_format, 
-                DateTime.Now,
-                eventData.emotion_speed,
-                eventData.emotion_speed * 2.23693629f,
-                eventData.emotion_power,
-                eventData.quarq_power);
-            m_logFileWriter.WriteLine(data);
-
-            Console.WriteLine(data);
-        }
-
-        public void Dispose()
-        {
-            m_logFileWriter.Flush();
-            m_logFileWriter.Close();
-        }
-    }
-
 }
