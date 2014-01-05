@@ -71,7 +71,7 @@ namespace ANT_Console_Demo
             {
                 // Copy the events to return array.
                 int count = m_bikeSpeedEvents.Count;
-                if (count == 0)
+                if (count < 2)
                     return null;
 
                 events = new BikeSpeedEvent[count];
