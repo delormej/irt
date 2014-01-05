@@ -13,7 +13,7 @@ namespace ANT_Console_Demo
         public ushort quarq_power;
     }
 
-    public struct BikeSpeedEvent
+    public struct SpeedEvent
     {
         public ushort EventTime;
         public ushort CumulativeWheelRevs;
@@ -39,19 +39,24 @@ namespace ANT_Console_Demo
         const byte STANDARD_POWER_ONLY_PAGE = 0x10;
         // Torque page
         const byte WHEEL_TORQUE_MAIN_PAGE = 0x11;
+        const byte WHEEL_TICKS_INDEX = 2;
+        const byte WHEEL_PERIOD_LSB_INDEX = 4;
+        const byte WHEEL_PERIOD_MSB_INDEX = 5;
 
         byte m_last_quarq_instant_power_update = 0;
         byte m_last_emotion_instant_power_update = 0;
         byte m_last_emotion_torque_update = 0;
 
-        SynchronizedCollection<BikeSpeedEvent> m_bikeSpeedEvents; 
+        SynchronizedCollection<SpeedEvent> m_bikeSpeedEvents;
+        SynchronizedCollection<SpeedEvent> m_torqueSpeedEvents; 
 
         CollectorEventData m_last_event = new CollectorEventData();
         Calculator m_calculator = new Calculator();
 
         public Collector()
         {
-            m_bikeSpeedEvents = new SynchronizedCollection<BikeSpeedEvent>();
+            m_bikeSpeedEvents = new SynchronizedCollection<SpeedEvent>();
+            m_torqueSpeedEvents = new SynchronizedCollection<SpeedEvent>();
         }
 
         public CollectorEventData EventData
@@ -63,23 +68,33 @@ namespace ANT_Console_Demo
         }
 
         // Pops bike speed events.  Element[0] is the oldest event, Element[n]is the newest.
-        public BikeSpeedEvent[] PopBikeSpeedEvents()
+        public SpeedEvent[] PopBikeSpeedEvents()
         {
-            BikeSpeedEvent[] events = null;
+            return PopSpeedEvents(m_bikeSpeedEvents);
+        }
 
-            lock (m_bikeSpeedEvents.SyncRoot)
+        public SpeedEvent[] PopTorqueSpeedEvents()
+        {
+            return PopSpeedEvents(m_torqueSpeedEvents);
+        }
+
+        private SpeedEvent[] PopSpeedEvents(SynchronizedCollection<SpeedEvent> collection)
+        {
+            SpeedEvent[] events = null;
+
+            lock (collection.SyncRoot)
             {
                 // Copy the events to return array.
-                int count = m_bikeSpeedEvents.Count;
+                int count = collection.Count;
                 if (count < 2)
                     return null;
 
-                events = new BikeSpeedEvent[count];
-                m_bikeSpeedEvents.CopyTo(events, 0);
-                
+                events = new SpeedEvent[count];
+                collection.CopyTo(events, 0);
+
                 // Clear the collection, but add back the last event.
-                m_bikeSpeedEvents.Clear();
-                m_bikeSpeedEvents.Add(events[count-1]);
+                collection.Clear();
+                collection.Add(events[count - 1]);
             }
 
             return events;
@@ -196,7 +211,7 @@ namespace ANT_Console_Demo
             ushort cumulative_revs = (ushort)(payload[SPEED_CUM_REV_LSB_INDEX] |
                 payload[SPEED_CUM_REV_MSB_INDEX] << 8);
 
-            m_bikeSpeedEvents.Add(new BikeSpeedEvent
+            m_bikeSpeedEvents.Add(new SpeedEvent
             {
                 CumulativeWheelRevs = cumulative_revs,
                 EventTime = event_time
@@ -239,14 +254,20 @@ namespace ANT_Console_Demo
             }
             else if (payload[0] == WHEEL_TORQUE_MAIN_PAGE)
             {
+                // Only process message if it's an update.
                 if (m_last_emotion_torque_update != event_count)
                 {
-                    float speed_mps = m_calculator.GetSpeed(payload);
-                    m_last_event.emotion_speed = speed_mps;
                     m_last_emotion_torque_update = event_count;
-                    /*
-                    Console.WriteLine("[{0:H:mm:ss.fff}] E-Motion Speed: {1:N1}",
-                        response.timeReceived, speed_mps * 2.23693629f);*/
+
+                    byte wheel_ticks = payload[WHEEL_TICKS_INDEX];
+                    ushort wheel_period = (ushort)(payload[WHEEL_PERIOD_LSB_INDEX] |
+                        payload[WHEEL_PERIOD_MSB_INDEX] << 8);
+
+                    m_torqueSpeedEvents.Add(new SpeedEvent
+                    {
+                        CumulativeWheelRevs = wheel_ticks,
+                        EventTime = wheel_period
+                    });
                 }
             }
         }

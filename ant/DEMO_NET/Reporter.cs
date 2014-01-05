@@ -38,6 +38,9 @@ namespace ANT_Console_Demo
             eventData.bike_speed = m_calculator.GetBikeSpeed(
                 m_collector.PopBikeSpeedEvents());
 
+            eventData.emotion_speed = m_calculator.GetSpeed(
+                m_collector.PopTorqueSpeedEvents());
+
             string data = String.Format(report_format,
                 DateTime.Now,
                 eventData.bike_speed,
