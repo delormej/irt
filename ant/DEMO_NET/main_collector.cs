@@ -11,6 +11,7 @@ namespace ANT_Console_Demo
         public float emotion_speed;
         public ushort emotion_power;
         public ushort quarq_power;
+        public ushort resistance_level;
     }
 
     public struct SpeedEvent
@@ -42,6 +43,10 @@ namespace ANT_Console_Demo
         const byte WHEEL_TICKS_INDEX = 2;
         const byte WHEEL_PERIOD_LSB_INDEX = 4;
         const byte WHEEL_PERIOD_MSB_INDEX = 5;
+
+        const byte SET_RESISTANCE_PAGE = 0x60;
+        const byte RESISTANCE_LEVEL_LSB_INDEX = 3;
+        const byte RESISTANCE_LEVEL_MSB_INDEX = 4;
 
         byte m_last_quarq_instant_power_update = 0;
         byte m_last_emotion_instant_power_update = 0;
@@ -167,20 +172,14 @@ namespace ANT_Console_Demo
                 throw new Exception("Error opening channel");
         }
 
-
         private byte[] GetBroadcastMessagePayload(ANT_Response response)
         {
-            if ((ANT_ReferenceLibrary.ANTMessageID)response.responseID ==
-                    ANT_ReferenceLibrary.ANTMessageID.BROADCAST_DATA_0x4E)
+            switch ((ANT_ReferenceLibrary.ANTMessageID)response.responseID)
             {
-                //Console.Console.Write("Rx:(" + response.antChannel.ToString() + "): ");
-                //Console.Write(BitConverter.ToString(response.getDataPayload()) + Environment.NewLine);  // Display data payload
-
-                return response.getDataPayload();
-            }
-            else
-            {
-                return null;
+                case ANT_ReferenceLibrary.ANTMessageID.BROADCAST_DATA_0x4E:
+                    return response.getDataPayload();
+                default:
+                    return null;
             }
         }
 
@@ -191,10 +190,20 @@ namespace ANT_Console_Demo
 
         private void EmotionChannelResponse(ANT_Response response)
         {
-            ProcessBikePowerResponse(response, EMOTION_ANT_CHANNEL);
+            switch ((ANT_ReferenceLibrary.ANTMessageID)response.responseID)
+            {
+                case ANT_ReferenceLibrary.ANTMessageID.BROADCAST_DATA_0x4E:
+                    ProcessBikePowerResponse(response, EMOTION_ANT_CHANNEL);
+                    break;
+                case ANT_ReferenceLibrary.ANTMessageID.BURST_DATA_0x50:
+                    ProcessEmotionBurstData(response);
+                    break;
+                default:
+                    break;
+            }
         }
 
-        private void SpeedChannelResponse(ANT_Response response)
+        void SpeedChannelResponse(ANT_Response response)
         {
             ProcessBikeSpeedResponse(response, BIKE_SPEED_ANT_CHANNEL);
         }
@@ -270,6 +279,16 @@ namespace ANT_Console_Demo
                     });
                 }
             }
+        }
+
+        private void ProcessEmotionBurstData(ANT_Response response)
+        {
+            byte[] payload = response.getDataPayload();
+            if (payload[0] != SET_RESISTANCE_PAGE)
+                return;
+
+            m_last_event.resistance_level = (ushort)(payload[RESISTANCE_LEVEL_LSB_INDEX] |
+                payload[RESISTANCE_LEVEL_MSB_INDEX] << 8);
         }
 
         private void DeviceResponse(ANT_Response response)

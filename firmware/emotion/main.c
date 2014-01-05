@@ -192,7 +192,10 @@ static void on_button_ii_event(void)
 	
 	// decrement
 	if (m_resistance_level > 0)
+	{
 		set_resistance(--m_resistance_level);	
+		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
+	}
 }
 
 static void on_button_iii_event(void)
@@ -204,7 +207,10 @@ static void on_button_iii_event(void)
 	
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
+	{
 		set_resistance(++m_resistance_level);
+		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
+	}
 }
 
 

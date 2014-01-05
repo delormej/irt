@@ -59,7 +59,7 @@ namespace ANT_Console_Demo
                 return 0.0f;
 
             // Calculate speed
-            float speed = (wheel_ticks_delta * m_wheel_size_m) / (wheel_period_delta / 2048f);
+            float speed = (wheel_ticks_delta * m_wheel_size_m) / (wheel_period_delta / 2048f);  
 
             return speed;
         }
