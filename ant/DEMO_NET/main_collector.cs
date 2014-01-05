@@ -1,14 +1,22 @@
 ﻿using ANT_Managed_Library;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace ANT_Console_Demo
 {
     public struct CollectorEventData
     {
+        public float bike_speed;
         public float emotion_speed;
-        public float bike_speed; // Garmin speed/cadence sensor.
         public ushort emotion_power;
         public ushort quarq_power;
+    }
+
+    public struct BikeSpeedEvent
+    {
+        public ushort EventTime;
+        public ushort CumulativeWheelRevs;
     }
 
     public class Collector
@@ -22,6 +30,11 @@ namespace ANT_Console_Demo
 
         const byte UPDATE_EVENT_COUNT_INDEX = 1;
 
+        const byte SPEED_EVENT_TIME_LSB_INDEX = 4;
+        const byte SPEED_EVENT_TIME_MSB_INDEX = 5;
+        const byte SPEED_CUM_REV_LSB_INDEX = 6;
+        const byte SPEED_CUM_REV_MSB_INDEX = 7;
+
         // Standard power page
         const byte STANDARD_POWER_ONLY_PAGE = 0x10;
         // Torque page
@@ -31,8 +44,15 @@ namespace ANT_Console_Demo
         byte m_last_emotion_instant_power_update = 0;
         byte m_last_emotion_torque_update = 0;
 
+        SynchronizedCollection<BikeSpeedEvent> m_bikeSpeedEvents; 
+
         CollectorEventData m_last_event = new CollectorEventData();
         Calculator m_calculator = new Calculator();
+
+        public Collector()
+        {
+            m_bikeSpeedEvents = new SynchronizedCollection<BikeSpeedEvent>();
+        }
 
         public CollectorEventData EventData
         {
@@ -40,6 +60,29 @@ namespace ANT_Console_Demo
             {
                 return m_last_event;
             }
+        }
+
+        // Pops bike speed events.  Element[0] is the oldest event, Element[n]is the newest.
+        public BikeSpeedEvent[] PopBikeSpeedEvents()
+        {
+            BikeSpeedEvent[] events = null;
+
+            lock (m_bikeSpeedEvents.SyncRoot)
+            {
+                // Copy the events to return array.
+                int count = m_bikeSpeedEvents.Count;
+                if (count == 0)
+                    return null;
+
+                events = new BikeSpeedEvent[count];
+                m_bikeSpeedEvents.CopyTo(events, 0);
+                
+                // Clear the collection, but add back the last event.
+                m_bikeSpeedEvents.Clear();
+                m_bikeSpeedEvents.Add(events[count-1]);
+            }
+
+            return events;
         }
 
         private void ConfigureDevice(ANT_Device device, ANT_Device.dDeviceResponseHandler DeviceResponse)
@@ -147,7 +190,17 @@ namespace ANT_Console_Demo
             if (payload == null)
                 return;
 
-            m_last_event.bike_speed = m_calculator.GetBikeSpeed(payload);
+            ushort event_time = (ushort)(payload[SPEED_EVENT_TIME_LSB_INDEX] |
+                payload[SPEED_EVENT_TIME_MSB_INDEX] << 8);
+
+            ushort cumulative_revs = (ushort)(payload[SPEED_CUM_REV_LSB_INDEX] |
+                payload[SPEED_CUM_REV_MSB_INDEX] << 8);
+
+            m_bikeSpeedEvents.Add(new BikeSpeedEvent
+            {
+                CumulativeWheelRevs = cumulative_revs,
+                EventTime = event_time
+            });
         }
 
         private void ProcessBikePowerResponse(ANT_Response response, byte channelId)

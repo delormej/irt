@@ -10,10 +10,6 @@ namespace ANT_Console_Demo
         const byte WHEEL_TICKS_INDEX = 2;
         const byte WHEEL_PERIOD_LSB_INDEX = 4;
         const byte WHEEL_PERIOD_MSB_INDEX = 5;
-        const byte SPEED_EVENT_TIME_LSB_INDEX = 4;
-        const byte SPEED_EVENT_TIME_MSB_INDEX = 5;
-        const byte SPEED_CUM_REV_LSB_INDEX = 6;
-        const byte SPEED_CUM_REV_MSB_INDEX = 7;
         const byte INSTANT_POWER_LSB_INDEX = 6;
         const byte INSTANT_POWER_MSB_INDEX = 7;
 
@@ -21,9 +17,6 @@ namespace ANT_Console_Demo
 
         byte m_last_wheel_ticks = 0;
         ushort m_last_wheel_period = 0;
-
-        ushort m_last_bike_speed_event_time = 0;
-        ushort m_last_bike_speed_cum_rev = 0;
 
         public ushort GetInstantPower(byte[] payload)
         {
@@ -71,39 +64,43 @@ namespace ANT_Console_Demo
         }
 
         // This works on Page0 of the BikeSpeed/BikeSpeed & Cadence message.
-        public float GetBikeSpeed(byte[] payload)
+        public float GetBikeSpeed(BikeSpeedEvent[] events)
         {
-            ushort event_time = (ushort)(payload[SPEED_EVENT_TIME_LSB_INDEX] |
-                payload[SPEED_EVENT_TIME_MSB_INDEX] << 8);
-
-            ushort cumulative_revs = (ushort)(payload[SPEED_CUM_REV_LSB_INDEX] |
-                payload[SPEED_CUM_REV_MSB_INDEX] << 8);
-
-            if (event_time == 0 || cumulative_revs == 0)
+            if (events == null)
                 return 0.0f;
 
-            ushort cumulative_revs_delta = 0;
-            if (cumulative_revs < m_last_bike_speed_cum_rev)
-                // If we had a rollover.
-                cumulative_revs_delta = (byte)((65535 - m_last_bike_speed_cum_rev) + cumulative_revs);
-            else
-                cumulative_revs_delta = (byte)(cumulative_revs - m_last_wheel_ticks);
+            // First array element[0] contains the oldest event.
+            // Last array element[count-1] contains the most recent event.
+            int count = events.Length;
+            if (count == 0)
+                return 0.0f;
 
-            ushort event_time_delta = 0;
-            if (event_time < event_time_delta)
+            BikeSpeedEvent previousEvent = events[0];
+            BikeSpeedEvent latestEvent = events[count - 1];
+
+            // Revs
+            ushort cumulative_revs_delta = 0;
+            if (latestEvent.CumulativeWheelRevs < previousEvent.CumulativeWheelRevs)
                 // If we had a rollover.
-                event_time_delta = (byte)((65535 - m_last_bike_speed_event_time) + event_time);
+                cumulative_revs_delta = (ushort)((previousEvent.CumulativeWheelRevs ^ 0xFFFF) +
+                    latestEvent.CumulativeWheelRevs);
             else
-                event_time_delta = (byte)(cumulative_revs - m_last_bike_speed_event_time);
+                cumulative_revs_delta = (ushort)(latestEvent.CumulativeWheelRevs - 
+                    previousEvent.CumulativeWheelRevs);
+
+            // Event time
+            ushort event_time_delta = 0;
+            if (latestEvent.EventTime < previousEvent.EventTime)
+                // If we had a rollover.
+                event_time_delta = (ushort)((previousEvent.EventTime ^ 0xFFFF) + latestEvent.EventTime);
+            else
+                event_time_delta = (ushort)(latestEvent.EventTime - previousEvent.EventTime);
 
             if (event_time_delta == 0 || cumulative_revs_delta == 0)
                 return 0.0f;
 
             // Calculate speed
             float speed = (cumulative_revs_delta * m_wheel_size_m) / (event_time_delta / 1024f);
-
-            m_last_bike_speed_event_time = event_time;
-            m_last_bike_speed_cum_rev = cumulative_revs;
 
             return speed;
         }
