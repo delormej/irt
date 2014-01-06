@@ -45,8 +45,8 @@ namespace ANT_Console_Demo
         const byte WHEEL_PERIOD_MSB_INDEX = 5;
 
         const byte SET_RESISTANCE_PAGE = 0x60;
-        const byte RESISTANCE_LEVEL_LSB_INDEX = 3;
-        const byte RESISTANCE_LEVEL_MSB_INDEX = 4;
+        const byte RESISTANCE_LEVEL_LSB_INDEX = 4;
+        //const byte RESISTANCE_LEVEL_MSB_INDEX = 5;
 
         byte m_last_quarq_instant_power_update = 0;
         byte m_last_emotion_instant_power_update = 0;
@@ -192,11 +192,9 @@ namespace ANT_Console_Demo
         {
             switch ((ANT_ReferenceLibrary.ANTMessageID)response.responseID)
             {
+                case ANT_ReferenceLibrary.ANTMessageID.BURST_DATA_0x50:
                 case ANT_ReferenceLibrary.ANTMessageID.BROADCAST_DATA_0x4E:
                     ProcessBikePowerResponse(response, EMOTION_ANT_CHANNEL);
-                    break;
-                case ANT_ReferenceLibrary.ANTMessageID.BURST_DATA_0x50:
-                    ProcessEmotionBurstData(response);
                     break;
                 default:
                     break;
@@ -236,59 +234,60 @@ namespace ANT_Console_Demo
 
             byte event_count = payload[UPDATE_EVENT_COUNT_INDEX];
 
-            if (payload[0] == STANDARD_POWER_ONLY_PAGE)
+            switch (payload[0])
             {
-                ushort watts = m_calculator.GetInstantPower(payload);
+                case STANDARD_POWER_ONLY_PAGE:
+                    ushort watts = m_calculator.GetInstantPower(payload);
 
-                switch (channelId)
-                {
-                    case QUARQ_ANT_CHANNEL:
-                        if (m_last_quarq_instant_power_update != event_count)
-                        {
-                            m_last_event.quarq_power = watts;
-                            m_last_quarq_instant_power_update = event_count;
-                        }
-                        break;
-                    case EMOTION_ANT_CHANNEL:
-                        if (m_last_emotion_instant_power_update != event_count)
-                        {
-                            m_last_event.emotion_power = watts;
-                            m_last_emotion_instant_power_update = event_count;
-                            /*
-                            Console.WriteLine("[{0:H:mm:ss.fff}] E-Motion Power: {1:N0}",
-                                response.timeReceived, watts);*/
-                        }
-                        break;
-                }
-            }
-            else if (payload[0] == WHEEL_TORQUE_MAIN_PAGE)
-            {
-                // Only process message if it's an update.
-                if (m_last_emotion_torque_update != event_count)
-                {
-                    m_last_emotion_torque_update = event_count;
-
-                    byte wheel_ticks = payload[WHEEL_TICKS_INDEX];
-                    ushort wheel_period = (ushort)(payload[WHEEL_PERIOD_LSB_INDEX] |
-                        payload[WHEEL_PERIOD_MSB_INDEX] << 8);
-
-                    m_torqueSpeedEvents.Add(new SpeedEvent
+                    switch (channelId)
                     {
-                        CumulativeWheelRevs = wheel_ticks,
-                        EventTime = wheel_period
-                    });
-                }
+                        case QUARQ_ANT_CHANNEL:
+                            if (m_last_quarq_instant_power_update != event_count)
+                            {
+                                m_last_event.quarq_power = watts;
+                                m_last_quarq_instant_power_update = event_count;
+                            }
+                            break;
+                        case EMOTION_ANT_CHANNEL:
+                            if (m_last_emotion_instant_power_update != event_count)
+                            {
+                                m_last_event.emotion_power = watts;
+                                m_last_emotion_instant_power_update = event_count;
+                                /*
+                                Console.WriteLine("[{0:H:mm:ss.fff}] E-Motion Power: {1:N0}",
+                                    response.timeReceived, watts);*/
+                            }
+                            break;
+                    }
+                    break;
+
+                case WHEEL_TORQUE_MAIN_PAGE:
+                    // Only process message if it's an update.
+                    if (m_last_emotion_torque_update != event_count)
+                    {
+                        m_last_emotion_torque_update = event_count;
+
+                        byte wheel_ticks = payload[WHEEL_TICKS_INDEX];
+                        ushort wheel_period = (ushort)(payload[WHEEL_PERIOD_LSB_INDEX] |
+                            payload[WHEEL_PERIOD_MSB_INDEX] << 8);
+
+                        m_torqueSpeedEvents.Add(new SpeedEvent
+                        {
+                            CumulativeWheelRevs = wheel_ticks,
+                            EventTime = wheel_period
+                        });
+                    }
+                    break;
+
+                case SET_RESISTANCE_PAGE:
+                    ProcessEmotionResistanceMessage(payload);
+                    break;
             }
         }
 
-        private void ProcessEmotionBurstData(ANT_Response response)
+        private void ProcessEmotionResistanceMessage(byte[] payload)
         {
-            byte[] payload = response.getDataPayload();
-            if (payload[0] != SET_RESISTANCE_PAGE)
-                return;
-
-            m_last_event.resistance_level = (ushort)(payload[RESISTANCE_LEVEL_LSB_INDEX] |
-                payload[RESISTANCE_LEVEL_MSB_INDEX] << 8);
+            m_last_event.resistance_level = payload[RESISTANCE_LEVEL_LSB_INDEX];
         }
 
         private void DeviceResponse(ANT_Response response)

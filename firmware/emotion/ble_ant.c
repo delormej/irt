@@ -741,17 +741,20 @@ void manual_set_resistance_send(resistance_mode_t mode, uint16_t level)
 		message.dataPage = 0x60;
 		message.commandId = mode;
 		message.commandSequence = SEQUENCE_LAST_MESSAGE;
-		// TODO - refactor HIGH_BYTE and LOW_BYTE macros into a location so that I can use them here.
-		message.responseData0 = (uint8_t)(level & 0x00FFu);                   /**< Get low byte of a uint16_t. */;
-		message.responseData1 = (uint8_t)((level >> 8u) & 0x00FFu);						/**< Get high byte of a uint16_t. */
+		message.responseData0 = (uint8_t)level;
 			
 		uint32_t err_code;
 		
-		// Send a burst message so that we can guarantee receipt.
+		/* Send a burst message so that we can guarantee receipt.
 		err_code = sd_ant_burst_handler_request(ANT_BP_TX_CHANNEL,
 																						sizeof(message),
 																						(uint8_t*)&message,
 																						BURST_SEGMENT_START | BURST_SEGMENT_END);
+																						*/
+																						
+		err_code = sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL,
+																					sizeof(message),
+																					(uint8_t*)&message);
 
 		APP_ERROR_CHECK(err_code);
 }
