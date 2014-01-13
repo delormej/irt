@@ -41,6 +41,12 @@ static float calc_servo_force(float speed_mps, uint16_t servo_pos)
 #define FORCE_SERVO_B_INTERCEPT 	53.76137452f
 #define FORCE_SERVO_B_SPEED			 	4.47f
 
+// Assuming no additional force exists beyond this servo position (mag off).
+#define MIN_SERVO_FORCE_POS				1489
+
+	if (servo_pos > MIN_SERVO_FORCE_POS)
+		return 0;
+
 	float force = (servo_pos*FORCE_SERVO_A_SLOPE + FORCE_SERVO_A_INTERCEPT) -
 		(((servo_pos*FORCE_SERVO_A_SLOPE + FORCE_SERVO_A_INTERCEPT) -
 		(servo_pos*FORCE_SERVO_B_SLOPE + FORCE_SERVO_B_INTERCEPT)) / (FORCE_SERVO_A_SPEED - FORCE_SERVO_B_SPEED))*
