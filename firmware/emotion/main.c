@@ -148,7 +148,7 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 		
 		uint8_t data[14] = "";
-		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, speed_event.accum_wheel_revs);
+		sprintf(&data[0], "%i %i %i", speed_event.accum_flywheel_revs, watts, m_servo_pos);
 		debug_send(&data[0], sizeof(data));		
 }
 
@@ -204,6 +204,7 @@ static void on_button_ii_event(void)
 	if (m_resistance_level > 0)
 	{
 		set_resistance(--m_resistance_level);	
+		m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
 		//manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 	}
 }
@@ -219,6 +220,7 @@ static void on_button_iii_event(void)
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 	{
 		set_resistance(++m_resistance_level);
+		m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
 		//manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 	}
 }
@@ -349,6 +351,8 @@ int main(void)
 
 		// Start off with resistance at 0.
 		set_resistance(m_resistance_level);	
+		m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
+		
 		init_speed(PIN_DRUM_REV, m_user_profile.wheel_size_mm);
 		
 		// TOOD: we need to ensure we're being woken up here by a HW
