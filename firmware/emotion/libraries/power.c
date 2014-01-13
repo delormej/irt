@@ -15,10 +15,6 @@ static const float intercept [10] = { 0, -9.60, -18.75, -25.00, -28.94, -29.99, 
 
 int16_t __DEBUG_POWER[2];
 
-//
-// Returns force in newton meters given total weight in kg and speed in mps
-// with no additional magnet force.
-//
 static float calc_mag0_force(float weight_kg, float speed_mps)
 {
 #define SPEED_FORCE_A_SLOPE 			0.194426f
@@ -29,29 +25,26 @@ static float calc_mag0_force(float weight_kg, float speed_mps)
 #define SPEED_FORCE_B_WEIGHT			79.83219f
 
 	float force = (speed_mps*SPEED_FORCE_A_SLOPE + SPEED_FORCE_A_INTERCEPT) -
-		(((speed_mps*SPEED_FORCE_A_SLOPE + SPEED_FORCE_A_INTERCEPT) - 
+		(((speed_mps*SPEED_FORCE_A_SLOPE + SPEED_FORCE_A_INTERCEPT) -
 		(speed_mps*SPEED_FORCE_B_SLOPE + SPEED_FORCE_B_INTERCEPT)) / (SPEED_FORCE_A_WEIGHT - SPEED_FORCE_B_WEIGHT))*
 		(SPEED_FORCE_A_WEIGHT - weight_kg);
 
 	return force;
 }
 
-//
-// Calculates the force given weight, speed and servo position.
-//
-static float calc_force(float weight_kg, float speed_mps, uint16_t servo_pos)
+static float calc_servo_force(float speed_mps, uint16_t servo_pos)
 {
 #define FORCE_SERVO_A_SLOPE 			-0.037121681f
 #define FORCE_SERVO_A_INTERCEPT 	56.97064764f
-#define FORCE_SERVO_A_WEIGHT			94.34714f
+#define FORCE_SERVO_A_SPEED				8.94f
 #define FORCE_SERVO_B_SLOPE 			-0.036220909f
 #define FORCE_SERVO_B_INTERCEPT 	53.76137452f
-#define FORCE_SERVO_B_WEIGHT			 	79.83219f
+#define FORCE_SERVO_B_SPEED			 	4.47f
 
-	float force = (speed_mps*FORCE_SERVO_A_SLOPE + FORCE_SERVO_A_INTERCEPT) -
-		(((speed_mps*FORCE_SERVO_A_SLOPE + FORCE_SERVO_A_INTERCEPT) -
-		(speed_mps*FORCE_SERVO_B_SLOPE + FORCE_SERVO_B_INTERCEPT)) / (FORCE_SERVO_A_WEIGHT - FORCE_SERVO_B_WEIGHT))*
-		(FORCE_SERVO_A_WEIGHT - speed_mps);
+	float force = (servo_pos*FORCE_SERVO_A_SLOPE + FORCE_SERVO_A_INTERCEPT) -
+		(((servo_pos*FORCE_SERVO_A_SLOPE + FORCE_SERVO_A_INTERCEPT) -
+		(servo_pos*FORCE_SERVO_B_SLOPE + FORCE_SERVO_B_INTERCEPT)) / (FORCE_SERVO_A_SPEED - FORCE_SERVO_B_SPEED))*
+		(FORCE_SERVO_A_SPEED - speed_mps);
 
 	return force;
 }

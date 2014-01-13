@@ -55,7 +55,7 @@ static void init_resistance()
 // Calculates the desired servo position given speed in mps, weight in kg
 // and additional need force in newton meters.
 //
-static uint16_t calc_servo_pos(float speed_mps, float weight_kg, float force_needed)
+static uint16_t calc_servo_pos(float weight_kg, float speed_mps, float force_needed)
 {
 #define SERVO_FORCE_A_SLOPE 			-24.66803762f
 #define SERVO_FORCE_A_INTERCEPT 	1489.635063f
