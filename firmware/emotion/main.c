@@ -35,6 +35,7 @@
 #define CYCLING_POWER_MEAS_INTERVAL       APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Bike power measurement interval (ticks). */
 
 static uint8_t 														m_resistance_level = 0;
+static uint16_t														m_servo_pos;
 static app_timer_id_t               			m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
 static user_profile_t 										m_user_profile;
 
@@ -115,12 +116,18 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		
 		// Calculate power.
 		int16_t		watts					= 0;
-		err_code = calc_power(speed_mph, m_user_profile.total_weight_lb, m_resistance_level, &watts);
+		/*err_code = calc_power(speed_mph, m_user_profile.total_weight_kg * 2.20462262, m_resistance_level, &watts);
 		// TODO: Handle the error for real here, not sure what the overall error 
 		// handling strategy will be, but this is not critical, just move on.
 		if (err_code != IRT_SUCCESS)
 			return;		
-		
+		*/
+		err_code = calc_power2(speed_event.speed_mps, m_user_profile.total_weight_kg, m_servo_pos, &watts);
+		// TODO: Handle the error for real here, not sure what the overall error 
+		// handling strategy will be, but this is not critical, just move on.
+		if (err_code != IRT_SUCCESS)
+			return;		
+			
 		// Calculate torque.
 		uint16_t 	torque				= 0;
 		err_code = calc_torque(watts, speed_event.period_2048, &torque);
@@ -258,6 +265,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	{
 		case RESISTANCE_SET_STANDARD:
 			m_resistance_level = (uint8_t)rc_evt.level;
+			m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
 			set_resistance(m_resistance_level);
 			break;
 			/*
@@ -314,7 +322,7 @@ int main(void)
 		// Initialize hard coded user profile for now.
 		memset(&m_user_profile, 0, sizeof(m_user_profile));
 		m_user_profile.wheel_size_mm = 2070;
-		m_user_profile.total_weight_lb = 175.0f;
+		m_user_profile.total_weight_kg = 175.0f * 0.453592;	// Convert lbs to KG
 		
 		// Initialize timers.
 		timers_init();

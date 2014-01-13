@@ -14,6 +14,22 @@
 #define PIN_SERVO_SIGNAL			3							// GPIO pin that the servo signal line is connected to. (P3 - P0.03)
 #define MAX_RESISTANCE_LEVELS 10						// Maximum resistance levels available.
 
+/**@brief		Array representing the servo position in micrseconds (us) by 
+ *					resistance level 0-9.
+ *
+ */
+static const uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = { 
+	2107, // 0 - no resistance
+	1300,
+	1225,
+	1150,
+	1075,
+	1000,
+	925,
+	850,
+	775, 
+	700}; // Max resistance
+
 /**@brief Bike types, used for predefined resistance coefficients. */
 typedef enum
 {

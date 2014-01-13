@@ -25,22 +25,6 @@ bool m_initialized = false;
 						init_resistance();																								\
 				} while (0)																																								
 
-/**@brief		Array representing the servo position in micrseconds (us) by 
- *					resistance level 0-9.
- *
- */
-static uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = { 
-	2107, // 0 - no resistance
-	1300,
-	1225,
-	1150,
-	1075,
-	1000,
-	925,
-	850,
-	775, 
-	700}; // Max resistance
-
 static void init_resistance() 
 {
 	// TODO: get the servo signal passed in during this method and remove

@@ -55,6 +55,25 @@ static float calc_servo_force(float speed_mps, uint16_t servo_pos)
 	return force;
 }
 
+uint8_t calc_power2(float speed_mps, float weight_kg, 
+	uint16_t servo_pos, int16_t* p_watts)
+{
+	int16_t power = 0;
+	
+	if (speed_mps == 0)
+	{
+		power = 0;
+	}
+	else
+	{
+		float mag0_force = calc_mag0_force(weight_kg, speed_mps);
+		float servo_force = calc_servo_force(speed_mps, servo_pos);
+		power = (uint16_t) ((mag0_force + servo_force) * speed_mps);
+	}
+
+	return IRT_SUCCESS;
+}
+
 // TODO: This only works if you have a predefined LEVEL 0-9.  I need to make it 
 // more dynamic given any position the servo might have from min->max.
 // We should also be able to calc power far more acurately based on flywheel revs

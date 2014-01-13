@@ -17,6 +17,9 @@
 
 #define IRT_ERROR_INVALID_RESISTANCE_LEVEL					IRT_ERROR + 0x01
 
+uint8_t calc_power2(float speed_mps, float weight_kg, 
+	uint16_t servo_pos, int16_t* p_watts);
+
 /**@brief	Calculates an estimated power in watts based on current speed, rider
  *			profile including total weight (bike+gear+rider) in pounds and the
  *			current mag resistance level.
