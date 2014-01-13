@@ -71,6 +71,8 @@ uint8_t calc_power2(float speed_mps, float weight_kg,
 		power = (uint16_t) ((mag0_force + servo_force) * speed_mps);
 	}
 
+	*p_watts = power;
+
 	return IRT_SUCCESS;
 }
 
