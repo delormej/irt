@@ -137,6 +137,9 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 
 		cycling_power_send(&cps_meas);
 		
+		// DEBUG-ONLY - send current resistance setting.
+		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
+		
 		uint8_t data[14] = "";
 		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, speed_event.accum_wheel_revs);
 		debug_send(&data[0], sizeof(data));		
@@ -194,7 +197,7 @@ static void on_button_ii_event(void)
 	if (m_resistance_level > 0)
 	{
 		set_resistance(--m_resistance_level);	
-		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
+		//manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 	}
 }
 
@@ -209,7 +212,7 @@ static void on_button_iii_event(void)
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 	{
 		set_resistance(++m_resistance_level);
-		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
+		//manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 	}
 }
 

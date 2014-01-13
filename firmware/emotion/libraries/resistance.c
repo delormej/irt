@@ -30,15 +30,15 @@ bool m_initialized = false;
  */
 static uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = { 
 	2107, // 0 - no resistance
-	1300,	// this was 1273
-	1272,	
-	1252,
-	1212,
+	1300,
+	1225,
 	1150,
-	1068,
-	966,
-	843,
-	699 };
+	1075,
+	1000,
+	925,
+	850,
+	775, 
+	700}; // Max resistance
 
 static void init_resistance() 
 {
