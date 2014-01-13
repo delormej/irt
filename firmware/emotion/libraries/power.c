@@ -15,6 +15,27 @@ static const float intercept [10] = { 0, -9.60, -18.75, -25.00, -28.94, -29.99, 
 
 int16_t __DEBUG_POWER[2];
 
+//
+// Returns force in newton meters given total weight in kg and speed in mps
+// with no additional magnet force.
+//
+static float get_mag0_force(float weight_kg, float speed_mps)
+{
+#define SPEED_FORCE_A_SLOPE 			0.194426f
+#define SPEED_FORCE_A_INTERCEPT 	23.45062f
+#define SPEED_FORCE_A_WEIGHT			 	94.34714f
+#define SPEED_FORCE_B_SLOPE 			-0.03644f
+#define SPEED_FORCE_B_INTERCEPT 	22.31482f
+#define SPEED_FORCE_B_WEIGHT			 	79.83219f
+
+	float force = (speed_mps*SPEED_FORCE_A_SLOPE + SPEED_FORCE_A_INTERCEPT) -
+		(((speed_mps*SPEED_FORCE_A_SLOPE + SPEED_FORCE_A_INTERCEPT) - 
+		(speed_mps*SPEED_FORCE_B_SLOPE + SPEED_FORCE_B_INTERCEPT)) / (SPEED_FORCE_A_WEIGHT - SPEED_FORCE_B_WEIGHT))*
+		(SPEED_FORCE_A_WEIGHT - weight_kg);
+
+	return force;
+}
+
 // TODO: This only works if you have a predefined LEVEL 0-9.  I need to make it 
 // more dynamic given any position the servo might have from min->max.
 // We should also be able to calc power far more acurately based on flywheel revs

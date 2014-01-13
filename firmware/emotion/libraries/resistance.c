@@ -11,6 +11,7 @@
 
 #include "resistance.h"
 #include "nrf_pwm.h"
+#include "math.h"
 
 bool m_initialized = false;
 
@@ -48,6 +49,36 @@ static void init_resistance()
 	// base.
 	pwm_init(PIN_SERVO_SIGNAL);	
 	m_initialized = true;
+}
+
+//
+// Calculates the desired servo position given speed in mps, weight in kg
+// and additional need force in newton meters.
+//
+static uint16_t calc_servo_pos(float speed_mps, float weight_kg, float force_needed)
+{
+#define SERVO_FORCE_A_SLOPE 			-24.66803762f
+#define SERVO_FORCE_A_INTERCEPT 	1489.635063f
+#define SERVO_FORCE_A_SPEED			 	8.94f
+#define SERVO_FORCE_B_SLOPE 			-26.68991676f
+#define SERVO_FORCE_B_INTERCEPT 	1468.153562f
+#define SERVO_FORCE_B_SPEED			 	4.47f
+
+	float value = (force_needed * SERVO_FORCE_A_SLOPE + SERVO_FORCE_A_INTERCEPT) -
+		(((force_needed * SERVO_FORCE_A_SLOPE + SERVO_FORCE_A_INTERCEPT) -
+		(force_needed * SERVO_FORCE_B_SLOPE + SERVO_FORCE_B_INTERCEPT)) /
+		SERVO_FORCE_A_SPEED - SERVO_FORCE_B_SPEED)*(SERVO_FORCE_A_SPEED - speed_mps);
+
+	// Round the position.
+	uint16_t servo_pos = (uint16_t) value; //  ceil(value);
+
+	// Enforce min/max position.
+	if (servo_pos > RESISTANCE_LEVEL[0])
+		servo_pos = RESISTANCE_LEVEL[0];
+	else if (servo_pos < RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS - 1])
+		servo_pos = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS - 1];
+
+	return servo_pos;
 }
 
 void set_resistance(uint8_t level)
