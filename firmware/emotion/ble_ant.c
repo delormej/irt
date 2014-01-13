@@ -734,7 +734,7 @@ void debug_send(uint8_t * data, uint16_t length)
 // Send a message to indicate a manual set resistance override
 //
 void manual_set_resistance_send(resistance_mode_t mode, uint16_t level)
-{
+{/*
 		ANTMsgWahoo240_t message;
 		memset(&message, 0, sizeof(message));
 		
@@ -744,19 +744,19 @@ void manual_set_resistance_send(resistance_mode_t mode, uint16_t level)
 		message.responseData0 = (uint8_t)level;
 			
 		uint32_t err_code;
-		
+		*/
 		/* Send a burst message so that we can guarantee receipt.
 		err_code = sd_ant_burst_handler_request(ANT_BP_TX_CHANNEL,
 																						sizeof(message),
 																						(uint8_t*)&message,
 																						BURST_SEGMENT_START | BURST_SEGMENT_END);
 																						*/
-																						
+																						/*
 		err_code = sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL,
 																					sizeof(message),
 																					(uint8_t*)&message);
 
-		APP_ERROR_CHECK(err_code);
+		APP_ERROR_CHECK(err_code); */
 }
 
 //
