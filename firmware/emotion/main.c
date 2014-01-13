@@ -59,13 +59,12 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 			return;
 		
 		nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
-
 		
 		// TODO: doesn't work, but we need to do something like this.
 		uint8_t data[64];
 		sprintf(data, "ERR: %i, LINE: %i, FILE: %s", 
-				error_code, line_num, *p_file_name);
-		//debug_send(data, sizeof(data)); 
+				error_code, line_num, "Err");
+		debug_send(data, sizeof(data)); 
 
     // This call can be used for debug purposes during development of an application.
     // @note CAUTION: Activating this code will write the stack to flash on an error.
@@ -143,10 +142,7 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		cps_meas.last_wheel_event_time= speed_event.event_time_2048;
 
 		cycling_power_send(&cps_meas);
-		
-		// DEBUG-ONLY - send current resistance setting.
-		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
-		
+				
 		uint8_t data[14] = "";
 		sprintf(&data[0], "%i %i %i", speed_event.accum_flywheel_revs, watts, m_servo_pos);
 		debug_send(&data[0], sizeof(data));		
@@ -205,7 +201,7 @@ static void on_button_ii_event(void)
 	{
 		set_resistance(--m_resistance_level);	
 		m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
-		//manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
+		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 	}
 }
 
@@ -221,7 +217,7 @@ static void on_button_iii_event(void)
 	{
 		set_resistance(++m_resistance_level);
 		m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
-		//manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
+		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 	}
 }
 
