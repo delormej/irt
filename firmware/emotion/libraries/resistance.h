@@ -13,6 +13,7 @@
 
 #define PIN_SERVO_SIGNAL			3							// GPIO pin that the servo signal line is connected to. (P3 - P0.03)
 #define MAX_RESISTANCE_LEVELS 10						// Maximum resistance levels available.
+#define MIN_RESISTANCE_LEVEL	1500					// Minimum by which there is no longer resistance.
 
 /**@brief		Array representing the servo position in micrseconds (us) by 
  *					resistance level 0-9.
@@ -86,16 +87,16 @@ typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);
  *
  *@note			Levels 0-9 allowable.
  */
-void set_resistance(uint8_t level);
+uint16_t set_resistance(uint8_t level);
 
 /**@brief		Sets the resistance to a value 0-100 percent.
  *
  */
-void set_resistance_pct(uint16_t percent);
+uint16_t set_resistance_pct(uint16_t percent);
 
 // Future implementations.
-void set_resistance_erg(uint16_t watts);
-void set_resistance_slope(uint16_t slope);
-void set_resistance_wind(uint16_t wind);
+uint16_t set_resistance_erg(uint16_t watts);
+uint16_t set_resistance_slope(uint16_t slope);
+uint16_t set_resistance_wind(uint16_t wind);
 
 #endif

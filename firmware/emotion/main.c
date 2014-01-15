@@ -199,8 +199,7 @@ static void on_button_ii_event(void)
 	// decrement
 	if (m_resistance_level > 0)
 	{
-		set_resistance(--m_resistance_level);	
-		m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
+		m_servo_pos = set_resistance(--m_resistance_level);	
 		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 	}
 }
@@ -215,8 +214,7 @@ static void on_button_iii_event(void)
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 	{
-		set_resistance(++m_resistance_level);
-		m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
+		m_servo_pos = set_resistance(++m_resistance_level);
 		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 	}
 }
@@ -263,12 +261,11 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	{
 		case RESISTANCE_SET_STANDARD:
 			m_resistance_level = (uint8_t)rc_evt.level;
-			m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
-			set_resistance(m_resistance_level);
+			m_servo_pos = set_resistance(m_resistance_level);
 			break;
 			/*
 		case RESISTANCE_SET_PERCENT:
-			set_resistance_pct(x);
+			m_servo_pos = set_resistance_pct(rc_evt.level);
 			break;
 			
 		case RESISTANCE_SET_ERG:

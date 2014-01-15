@@ -65,41 +65,44 @@ static uint16_t calc_servo_pos(float weight_kg, float speed_mps, float force_nee
 	return servo_pos;
 }
 
-void set_resistance(uint8_t level)
+uint16_t set_resistance(uint8_t level)
 {
 		INIT_RESISTANCE();
 		pwm_set_servo(RESISTANCE_LEVEL[level]);
+		
+		return RESISTANCE_LEVEL[level];
 }
 
-void set_resistance_pct(uint16_t percent)
+uint16_t set_resistance_pct(uint16_t percent)
 {
-	return;
-	// NOT FUNCTIONING YET.
 		INIT_RESISTANCE();
-		if (percent == 0)
+		uint16_t position = 0;
+		
+		if (percent == 0u)
 		{
-			set_resistance(0);
-			return;
+			pwm_set_servo(RESISTANCE_LEVEL[0]);
+			position = RESISTANCE_LEVEL[0];
 		}
-		else if (percent > 99)
+		else if (percent > 99u)
 		{
-			set_resistance(MAX_RESISTANCE_LEVELS);
-			return;
+			pwm_set_servo(RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1]);
+			position = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
+		}
+		else
+		{
+			// Calculate the difference between easiest and hardest positions.
+			position = MIN_RESISTANCE_LEVEL -((MIN_RESISTANCE_LEVEL-RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1])*
+														percent); 
+			
+			pwm_set_servo(position);
 		}
 		
-		// Calculate the difference between easiest and hardest positions.
-		uint16_t delta = RESISTANCE_LEVEL[0] - 
-											RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
-		
-		// Position is the percentage of the delta less the easiest position.
-		uint16_t position = (delta * percent) - RESISTANCE_LEVEL[0];
-		
-		pwm_set_servo(position);
+		return position;
 }
 
 // TODO: Future implementations.
-void set_resistance_erg(uint16_t watts) {};
-void set_resistance_slope(uint16_t slope) {};
-void set_resistance_wind(uint16_t wind) {};
+uint16_t set_resistance_erg(uint16_t watts) {};
+uint16_t set_resistance_slope(uint16_t slope) {};
+uint16_t set_resistance_wind(uint16_t wind) {};
 
 

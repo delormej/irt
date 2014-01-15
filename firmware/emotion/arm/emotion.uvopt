@@ -150,7 +150,7 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>744</LineNumber>
+          <LineNumber>81</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -159,7 +159,7 @@
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>0</BreakIfRCount>
-          <Filename>C:\Users\jasondel\dev\insideride\firmware\emotion\ble_ant.c</Filename>
+          <Filename>C:\Users\jasondel\dev\insideride\firmware\emotion\libraries\resistance.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression></Expression>
         </Bp>
@@ -250,10 +250,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>21</ColumnNumber>
+      <ColumnNumber>8</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>112</TopLine>
-      <CurrentLine>141</CurrentLine>
+      <TopLine>245</TopLine>
+      <CurrentLine>271</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\..\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -266,10 +266,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>44</ColumnNumber>
+      <ColumnNumber>41</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>726</TopLine>
-      <CurrentLine>754</CurrentLine>
+      <TopLine>454</TopLine>
+      <CurrentLine>484</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\ble_ant.c</PathWithFileName>
       <FilenameWithoutPath>ble_ant.c</FilenameWithoutPath>
@@ -280,7 +280,7 @@
       <GroupNumber>2</GroupNumber>
       <FileNumber>5</FileNumber>
       <FileType>1</FileType>
-      <tvExp>1</tvExp>
+      <tvExp>0</tvExp>
       <Focus>0</Focus>
       <ColumnNumber>21</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -314,10 +314,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>55</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>8</TopLine>
-      <CurrentLine>17</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\libraries\power.c</PathWithFileName>
       <FilenameWithoutPath>power.c</FilenameWithoutPath>
@@ -330,10 +330,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>35</ColumnNumber>
+      <ColumnNumber>0</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>17</TopLine>
-      <CurrentLine>47</CurrentLine>
+      <TopLine>66</TopLine>
+      <CurrentLine>88</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\libraries\resistance.c</PathWithFileName>
       <FilenameWithoutPath>resistance.c</FilenameWithoutPath>
@@ -420,8 +420,8 @@
       <Focus>0</Focus>
       <ColumnNumber>27</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>118</TopLine>
-      <CurrentLine>119</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\services\ble_nus.c</PathWithFileName>
       <FilenameWithoutPath>ble_nus.c</FilenameWithoutPath>
@@ -450,10 +450,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>42</ColumnNumber>
+      <ColumnNumber>1</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>41</TopLine>
-      <CurrentLine>71</CurrentLine>
+      <TopLine>0</TopLine>
+      <CurrentLine>0</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\services\ant_bike_power.c</PathWithFileName>
       <FilenameWithoutPath>ant_bike_power.c</FilenameWithoutPath>
@@ -474,10 +474,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>20</ColumnNumber>
+      <ColumnNumber>43</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>0</TopLine>
-      <CurrentLine>0</CurrentLine>
+      <TopLine>90</TopLine>
+      <CurrentLine>102</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>..\libraries\nrf_pwm.c</PathWithFileName>
       <FilenameWithoutPath>nrf_pwm.c</FilenameWithoutPath>
