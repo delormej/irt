@@ -8,8 +8,12 @@
  * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
  * the file.
  *
- * $LastChangedRevision$
  */
+
+/* Attention! 
+*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile 
+*  qualification listings, this section of source code must not be modified.
+*/
 
 #include "ble_hts.h"
 #include <string.h>
@@ -139,6 +143,7 @@ void ble_hts_on_ble_evt(ble_hts_t * p_hts, ble_evt_t * p_ble_evt)
             break;
 
         default:
+            // No implementation needed.
             break;
     }
 }

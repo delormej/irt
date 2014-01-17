@@ -23,6 +23,10 @@
  *
  *          It provides a function for letting the application update the TX Power Level
  *          characteristic.
+ *
+ * @note Attention! 
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ *  qualification listings, this section of source code must not be modified.
  */
 
 #ifndef BLE_TPS_H__

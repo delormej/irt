@@ -30,6 +30,10 @@
  *
  * @note The application must propagate BLE stack events to the Battery Service module by calling
  *       ble_bas_on_ble_evt() from the from the @ref ble_stack_handler callback.
+ *
+ * @note Attention! 
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ *  qualification listings, this section of source code must not be modified.
  */
 
 #ifndef BLE_BAS_H__

@@ -43,7 +43,7 @@ void ble_debug_assert_handler(uint32_t error_code, uint32_t line_num, const uint
 
     // This function will write error code, filename, and line number to the flash.
     // In addition, the Cortex-M0 stack memory will also be written to the flash.
-    (void) ble_error_log_write(error_code, p_file_name, line_num);
+    //(void) ble_error_log_write(error_code, p_file_name, line_num);
 
     // For debug purposes, this function never returns.
     // Attach a debugger for tracing the error cause.

@@ -35,6 +35,10 @@
  *
  * @note The application must propagate BLE stack events to the Heart Rate Service module by calling
  *       ble_hrs_on_ble_evt() from the from the @ref ble_stack_handler callback.
+ *
+ * @note Attention! 
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ *  qualification listings, this section of source code must not be modified.
  */
 
 #ifndef BLE_HRS_H__

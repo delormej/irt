@@ -73,16 +73,16 @@ static void gap_connected_evt_decode(const uint8_t * const           p_evt_data,
     p_decoded_evt->irk_match_idx  = (p_evt_data[index] & 0xFE) >> 1;
     index++;
 
-    p_decoded_evt->conn_params.min_conn_interval = uint16_decode(&p_evt_data[index]);
-    index                                       += sizeof(uint16_t);
+    p_decoded_evt->conn_params.min_conn_interval    = uint16_decode(&p_evt_data[index]);
+    index                                           += sizeof(uint16_t);
 
-    p_decoded_evt->conn_params.max_conn_interval = uint16_decode(&p_evt_data[index]);
-    index                                       += sizeof(uint16_t);
+    p_decoded_evt->conn_params.max_conn_interval    = uint16_decode(&p_evt_data[index]);
+    index                                           += sizeof(uint16_t);
 
-    p_decoded_evt->conn_params.slave_latency     = uint16_decode(&p_evt_data[index]);
-    index                                       += sizeof(uint16_t);
+    p_decoded_evt->conn_params.slave_latency        = uint16_decode(&p_evt_data[index]);
+    index                                           += sizeof(uint16_t);
 
-    p_decoded_evt->conn_params.conn_sup_timeout  = uint16_decode(&p_evt_data[index]);
+    p_decoded_evt->conn_params.conn_sup_timeout     = uint16_decode(&p_evt_data[index]);
 }
 
 
@@ -94,10 +94,7 @@ static void gap_connected_evt_decode(const uint8_t * const           p_evt_data,
 static void gap_disconnected_evt_decode(const uint8_t * const              p_evt_data,
                                         ble_gap_evt_disconnected_t * const p_decoded_evt)
 {
-    uint32_t index = 0;
-
-    index += ble_addr_decode(p_evt_data, &(p_decoded_evt->peer_addr));
-    p_decoded_evt->reason = p_evt_data[index];
+    p_decoded_evt->reason = p_evt_data[0];
 }
 
 
@@ -124,16 +121,16 @@ static void gap_conn_param_update_evt_decode(
 {
     uint32_t index = 0;
 
-    p_decoded_evt->conn_params.min_conn_interval = uint16_decode(&p_evt_data[index]);
-    index                                       += sizeof(uint16_t);
+    p_decoded_evt->conn_params.min_conn_interval    = uint16_decode(&p_evt_data[index]);
+    index                                           += sizeof(uint16_t);
 
-    p_decoded_evt->conn_params.max_conn_interval = uint16_decode(&p_evt_data[index]);
-    index                                       += sizeof(uint16_t);
+    p_decoded_evt->conn_params.max_conn_interval    = uint16_decode(&p_evt_data[index]);
+    index                                           += sizeof(uint16_t);
 
-    p_decoded_evt->conn_params.slave_latency     = uint16_decode(&p_evt_data[index]);
-    index                                       += sizeof(uint16_t);
+    p_decoded_evt->conn_params.slave_latency        = uint16_decode(&p_evt_data[index]);
+    index                                           += sizeof(uint16_t);
 
-    p_decoded_evt->conn_params.conn_sup_timeout  = uint16_decode(&p_evt_data[index]);
+    p_decoded_evt->conn_params.conn_sup_timeout     = uint16_decode(&p_evt_data[index]);
 }
 
 
@@ -409,6 +406,7 @@ void ble_rpc_gap_evt_packet_decode(ble_evt_t *           p_ble_evt,
             break;
 
         default:
+            // No implementation needed.
             break;
     }
 }

@@ -119,7 +119,7 @@ static void flash_word_write(uint32_t * p_address, uint32_t value)
     while (m_radio_active)
     {
         // Do nothing (just wait for radio to become inactive).
-        (void) sd_app_event_wait();
+        (void) sd_app_evt_wait();
     }
     
     // Turn on flash write enable and wait until the NVMC is ready.

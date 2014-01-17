@@ -18,7 +18,7 @@
 #include "hci_transport.h"
 #include <string.h>
 
-                                     /**< These externals come from from the ble_rpc_dms_encoder.c file. */
+// The following externals are defined in ble_rpc_dms_encoder.c.
 extern uint8_t * g_cmd_response_buf; /**< Pointer to the buffer used for storing command response. */
 extern uint8_t * g_cmd_buffer;       /**< Pointer to the buffer used for storing serialized commands. */
 
@@ -236,7 +236,7 @@ uint32_t sd_ble_gap_ppcp_set(ble_gap_conn_params_t const * const p_conn_params)
 
         index += uint16_encode(p_conn_params->min_conn_interval, &g_cmd_buffer[index]);
         index += uint16_encode(p_conn_params->max_conn_interval, &g_cmd_buffer[index]);
-        index += uint16_encode(p_conn_params->slave_latency, &g_cmd_buffer[index]);
+        index += uint16_encode(p_conn_params->slave_latency    , &g_cmd_buffer[index]);
         index += uint16_encode(p_conn_params->conn_sup_timeout, &g_cmd_buffer[index]);
     }
     else

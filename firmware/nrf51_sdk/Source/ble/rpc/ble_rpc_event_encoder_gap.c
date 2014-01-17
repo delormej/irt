@@ -61,10 +61,10 @@ static uint32_t gap_connected_evt_encode(const ble_evt_t * const p_ble_evt,
     const ble_gap_conn_params_t * p_conn_params;
     p_conn_params = &(p_ble_evt->evt.gap_evt.params.connected.conn_params);
 
-    index += uint16_encode(p_conn_params->min_conn_interval, &p_buffer[index]);
-    index += uint16_encode(p_conn_params->max_conn_interval, &p_buffer[index]);
-    index += uint16_encode(p_conn_params->slave_latency,     &p_buffer[index]);
-    index += uint16_encode(p_conn_params->conn_sup_timeout,  &p_buffer[index]);
+    index += uint16_encode(p_conn_params->min_conn_interval,  &p_buffer[index]);
+    index += uint16_encode(p_conn_params->max_conn_interval,  &p_buffer[index]);
+    index += uint16_encode(p_conn_params->slave_latency     , &p_buffer[index]);
+    index += uint16_encode(p_conn_params->conn_sup_timeout,   &p_buffer[index]);
 
     return index;
 }
@@ -82,8 +82,6 @@ static uint32_t gap_disconnected_evt_encode(const ble_evt_t * const p_ble_evt,
 {
     uint32_t index = 0;
 
-    index += peer_address_encode(&p_buffer[index],
-                                 &(p_ble_evt->evt.gap_evt.params.disconnected.peer_addr));
     p_buffer[index++] = p_ble_evt->evt.gap_evt.params.disconnected.reason;
 
     return index;
@@ -318,6 +316,7 @@ uint32_t ble_rpc_evt_gap_encode(ble_evt_t * p_ble_evt, uint8_t * p_buffer)
             break;
 
         default:
+            // No implementation needed.
             break;
     }
 

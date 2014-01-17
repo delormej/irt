@@ -145,6 +145,7 @@ void ble_rpc_gatts_evt_packet_decode(ble_evt_t *           p_ble_evt,
             break;
 
         default:
+            // No implementation needed.
             break;
     }
 }

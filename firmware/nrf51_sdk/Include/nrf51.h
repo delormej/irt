@@ -6,7 +6,7 @@
  *           nRF51 from Nordic Semiconductor.
  *
  * @version  V2.4C
- * @date     31. October 2013
+ * @date     19. December 2013
  *
  * @note     Generated with SVDConv V2.77p 
  *           from CMSIS SVD File 'nRF51.xml' Version 2.4C,
@@ -169,20 +169,24 @@ typedef struct {                                    /*!< POWER Structure        
   __IO uint32_t  INTENCLR;                          /*!< Interrupt enable clear register.                                      */
   __I  uint32_t  RESERVED3[61];
   __IO uint32_t  RESETREAS;                         /*!< Reset reason.                                                         */
-  __I  uint32_t  RESERVED4[63];
+  __I  uint32_t  RESERVED4[9];
+  __I  uint32_t  RAMSTATUS;                         /*!< Ram status register.                                                  */
+  __I  uint32_t  RESERVED5[53];
   __O  uint32_t  SYSTEMOFF;                         /*!< System off register.                                                  */
-  __I  uint32_t  RESERVED5[3];
+  __I  uint32_t  RESERVED6[3];
   __IO uint32_t  POFCON;                            /*!< Power failure configuration.                                          */
-  __I  uint32_t  RESERVED6[2];
+  __I  uint32_t  RESERVED7[2];
   __IO uint32_t  GPREGRET;                          /*!< General purpose retention register. This register is a retained
                                                          register.                                                             */
-  __I  uint32_t  RESERVED7;
+  __I  uint32_t  RESERVED8;
   __IO uint32_t  RAMON;                             /*!< Ram on/off.                                                           */
-  __I  uint32_t  RESERVED8[7];
+  __I  uint32_t  RESERVED9[7];
   __IO uint32_t  RESET;                             /*!< Pin reset functionality configuration register. This register
                                                          is a retained register.                                               */
-  __I  uint32_t  RESERVED9[12];
+  __I  uint32_t  RESERVED10[12];
   __IO uint32_t  DCDCEN;                            /*!< DCDC converter enable configuration register.                         */
+  __I  uint32_t  RESERVED11[291];
+  __IO uint32_t  DCDCFORCE;                         /*!< DCDC power-up force register.                                         */
 } NRF_POWER_Type;
 
 
@@ -212,11 +216,15 @@ typedef struct {                                    /*!< CLOCK Structure        
   __I  uint32_t  RESERVED2[124];
   __IO uint32_t  INTENSET;                          /*!< Interrupt enable set register.                                        */
   __IO uint32_t  INTENCLR;                          /*!< Interrupt enable clear register.                                      */
-  __I  uint32_t  RESERVED3[64];
+  __I  uint32_t  RESERVED3[63];
+  __I  uint32_t  HFCLKRUN;                          /*!< Task HFCLKSTART triggered status.                                     */
   __I  uint32_t  HFCLKSTAT;                         /*!< High frequency clock status.                                          */
-  __I  uint32_t  RESERVED4[2];
+  __I  uint32_t  RESERVED4;
+  __I  uint32_t  LFCLKRUN;                          /*!< Task LFCLKSTART triggered status.                                     */
   __I  uint32_t  LFCLKSTAT;                         /*!< Low frequency clock status.                                           */
-  __I  uint32_t  RESERVED5[63];
+  __IO uint32_t  LFCLKSRCCOPY;                      /*!< Clock source for the LFCLK clock, set when task LKCLKSTART is
+                                                         triggered.                                                            */
+  __I  uint32_t  RESERVED5[62];
   __IO uint32_t  LFCLKSRC;                          /*!< Clock source for the LFCLK clock.                                     */
   __I  uint32_t  RESERVED6[7];
   __IO uint32_t  CTIV;                              /*!< Calibration timer interval.                                           */
@@ -242,6 +250,8 @@ typedef struct {                                    /*!< MPU Structure          
   __IO uint32_t  PROTENSET0;                        /*!< Protection bit enable set register for low addresses.                 */
   __IO uint32_t  PROTENSET1;                        /*!< Protection bit enable set register for high addresses.                */
   __IO uint32_t  DISABLEINDEBUG;                    /*!< Disable protection mechanism in debug mode.                           */
+  __I  uint32_t  RESERVED2[256];
+  __IO uint32_t  ENRBDREG;                          /*!< Enable or disable RBD.                                                */
 } NRF_MPU_Type;
 
 
@@ -475,26 +485,28 @@ typedef struct {                                    /*!< TWI Structure          
   __IO uint32_t  EVENTS_ERROR;                      /*!< Two-wire error detected.                                              */
   __I  uint32_t  RESERVED6[4];
   __IO uint32_t  EVENTS_BB;                         /*!< Two-wire byte boundary.                                               */
-  __I  uint32_t  RESERVED7[49];
+  __I  uint32_t  RESERVED7[3];
+  __IO uint32_t  EVENTS_SUSPENDED;                  /*!< Two-wire suspended.                                                   */
+  __I  uint32_t  RESERVED8[45];
   __IO uint32_t  SHORTS;                            /*!< Shortcuts for TWI.                                                    */
-  __I  uint32_t  RESERVED8[64];
+  __I  uint32_t  RESERVED9[64];
   __IO uint32_t  INTENSET;                          /*!< Interrupt enable set register.                                        */
   __IO uint32_t  INTENCLR;                          /*!< Interrupt enable clear register.                                      */
-  __I  uint32_t  RESERVED9[110];
+  __I  uint32_t  RESERVED10[110];
   __IO uint32_t  ERRORSRC;                          /*!< Two-wire error source. Write error field to 1 to clear error.         */
-  __I  uint32_t  RESERVED10[14];
+  __I  uint32_t  RESERVED11[14];
   __IO uint32_t  ENABLE;                            /*!< Enable two-wire master.                                               */
-  __I  uint32_t  RESERVED11;
+  __I  uint32_t  RESERVED12;
   __IO uint32_t  PSELSCL;                           /*!< Pin select for SCL.                                                   */
   __IO uint32_t  PSELSDA;                           /*!< Pin select for SDA.                                                   */
-  __I  uint32_t  RESERVED12[2];
+  __I  uint32_t  RESERVED13[2];
   __IO uint32_t  RXD;                               /*!< RX data register.                                                     */
   __IO uint32_t  TXD;                               /*!< TX data register.                                                     */
-  __I  uint32_t  RESERVED13;
+  __I  uint32_t  RESERVED14;
   __IO uint32_t  FREQUENCY;                         /*!< Two-wire frequency.                                                   */
-  __I  uint32_t  RESERVED14[24];
+  __I  uint32_t  RESERVED15[24];
   __IO uint32_t  ADDRESS;                           /*!< Address used in the two-wire transfer.                                */
-  __I  uint32_t  RESERVED15[668];
+  __I  uint32_t  RESERVED16[668];
   __IO uint32_t  POWER;                             /*!< Peripheral power control.                                             */
 } NRF_TWI_Type;
 
@@ -618,7 +630,8 @@ typedef struct {                                    /*!< TIMER Structure        
   __O  uint32_t  TASKS_STOP;                        /*!< Stop Timer.                                                           */
   __O  uint32_t  TASKS_COUNT;                       /*!< Increment Timer (In counter mode).                                    */
   __O  uint32_t  TASKS_CLEAR;                       /*!< Clear timer.                                                          */
-  __I  uint32_t  RESERVED0[12];
+  __O  uint32_t  TASKS_SHUTDOWN;                    /*!< Shutdown timer.                                                       */
+  __I  uint32_t  RESERVED0[11];
   __O  uint32_t  TASKS_CAPTURE[4];                  /*!< Capture Timer value to CC[n] registers.                               */
   __I  uint32_t  RESERVED1[60];
   __IO uint32_t  EVENTS_COMPARE[4];                 /*!< Compare event on CC[n] match.                                         */
@@ -1056,7 +1069,8 @@ typedef struct {                                    /*!< FICR Structure         
   __I  uint32_t  RESERVED0[4];
   __I  uint32_t  CODEPAGESIZE;                      /*!< Code memory page size in bytes.                                       */
   __I  uint32_t  CODESIZE;                          /*!< Code memory size in pages.                                            */
-  __I  uint32_t  RESERVED1[4];
+  __I  uint32_t  RBD;                               /*!< RBD.                                                                  */
+  __I  uint32_t  RESERVED1[3];
   __I  uint32_t  CLENR0;                            /*!< Length of code region 0 in bytes.                                     */
   __I  uint32_t  PPFC;                              /*!< Pre-programmed factory code present.                                  */
   __I  uint32_t  RESERVED2;
@@ -1071,7 +1085,9 @@ typedef struct {                                    /*!< FICR Structure         
   __I  uint32_t  DEVICEADDRTYPE;                    /*!< Device address type.                                                  */
   __I  uint32_t  DEVICEADDR[2];                     /*!< Device address.                                                       */
   __I  uint32_t  OVERRIDEEN;                        /*!< Radio calibration override enable.                                    */
-  __I  uint32_t  RESERVED5[15];
+  __I  uint32_t  NRF_1MBIT[5];                      /*!< Override values for the OVERRIDEn registers in RADIO for NRF_1Mbit
+                                                         mode.                                                                 */
+  __I  uint32_t  RESERVED5[10];
   __I  uint32_t  BLE_1MBIT[5];                      /*!< Override values for the OVERRIDEn registers in RADIO for BLE_1Mbit
                                                          mode.                                                                 */
 } NRF_FICR_Type;

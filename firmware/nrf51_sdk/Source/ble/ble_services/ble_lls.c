@@ -10,6 +10,11 @@
  *
  */
 
+/* Attention! 
+*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile 
+*  qualification listings, this section of source code must not be modified.
+*/
+
 #include "ble_lls.h"
 #include <string.h>
 #include "ble_hci.h"
@@ -98,6 +103,7 @@ void ble_lls_on_ble_evt(ble_lls_t * p_lls, ble_evt_t * p_ble_evt)
             break;
 
         default:
+            // No implementation needed.
             break;
     }
 }

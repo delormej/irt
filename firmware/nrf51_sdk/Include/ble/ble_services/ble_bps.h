@@ -7,8 +7,6 @@
  * Licensees are granted free, non-transferable use of the information. NO
  * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
  * the file.
- *
- * $LastChangedRevision$
  */
 
 /** @file
@@ -25,6 +23,10 @@
  *
  * @note The application must propagate BLE stack events to the Blood Pressure Service
  *       module by calling ble_bps_on_ble_evt() from the from the @ref ble_stack_handler function.
+ *
+ * @note Attention! 
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ *  qualification listings, this section of source code must not be modified.
  */
 
 #ifndef BLE_BPS_H__

@@ -21,6 +21,10 @@
  *
  * @note The application must propagate BLE stack events to the Alert Notification Client module
  *       by calling ble_ans_c_on_ble_evt() from the from the @ref ble_stack_handler callback.
+ *
+ * @note Attention! 
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ *  qualification listings, this section of source code must not be modified.
  */
 #ifndef BLE_ANS_C_H__
 #define BLE_ANS_C_H__
@@ -31,7 +35,7 @@
 #include "ble_bondmngr.h"
 
 #define ANS_NB_OF_CHARACTERISTICS                   5                                     /**< Number of characteristics as defined by Alert Notification Service specification. */
-#define ANS_NB_OF_SERVICES                          1                                     /**< Number of services supported in one master. */
+#define ANS_NB_OF_SERVICES                          1                                     /**< Number of services supported in one central. */
 #define INVALID_SERVICE_HANDLE_BASE                 0xF0                                  /**< Base for indicating invalid service handle. */
 #define INVALID_SERVICE_HANDLE                      (INVALID_SERVICE_HANDLE_BASE + 0x0F)  /**< Indication that the current service handle is invalid. */
 #define INVALID_SERVICE_HANDLE_DISC                 (INVALID_SERVICE_HANDLE_BASE + 0x0E)  /**< Indication that the current service handle is invalid but the service has been discovered. */
@@ -74,7 +78,7 @@ typedef enum
 {
     BLE_ANS_C_EVT_DISCOVER_COMPLETE,                                                      /**< A successful connection has been established and the characteristics of the server has been fetched. */
     BLE_ANS_C_EVT_DISCOVER_FAILED,                                                        /**< It was not possible to discover service or characteristics of the connected peer. */
-    BLE_ANS_C_EVT_RECONNECT,                                                              /**< A re-connection to a known and previously discovered master has occurred. */
+    BLE_ANS_C_EVT_RECONNECT,                                                              /**< A re-connection to a known and previously discovered central has occurred. */
     BLE_ANS_C_EVT_DISCONN_COMPLETE,                                                       /**< The connection has been taken down. */
     BLE_ANS_C_EVT_NOTIFICATION,                                                           /**< A valid Alert Notification has been received from the server.*/
     BLE_ANS_C_EVT_READ_RESP,                                                              /**< A read response has been received from the server.*/
@@ -146,7 +150,7 @@ typedef struct ble_ans_c_s
     ble_ans_c_evt_handler_t             evt_handler;                                      /**< Event handler to be called for handling events in the Alert Notification Client Application. */
     ble_srv_error_handler_t             error_handler;                                    /**< Function to be called in case of an error. */
     uint16_t                            conn_handle;                                      /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
-    int8_t                              master_handle;                                    /**< Handle for the currently connected master if we have a bond in the bond manager. */
+    int8_t                              central_handle;                                   /**< Handle for the currently connected central if we have a bond in the bond manager. */
     uint8_t                             service_handle;                                   /**< Handle to the service in the database to use for this instance. */
     uint32_t                            message_buffer_size;                              /**< Size of message buffer to hold the additional text messages received on notifications. */
     uint8_t *                           p_message_buffer;                                 /**< Pointer to the buffer to be used for additional text message handling. */
@@ -160,7 +164,6 @@ typedef struct
     ble_srv_error_handler_t             error_handler;                                    /**< Function to be called in case of an error. */
     uint32_t                            message_buffer_size;                              /**< Size of buffer to handle messages. */
     uint8_t *                           p_message_buffer;                                 /**< Pointer to buffer for passing messages. */
-    uint8_t                             flash_page_num;                                   /**< Flash page number to use for storing data. */
 } ble_ans_c_init_t;
 
 
@@ -177,7 +180,7 @@ void ble_ans_c_on_ble_evt(ble_ans_c_t * p_ans, const ble_evt_t * p_ble_evt);
 /**@brief Function for handling the Alert Notification Client - Bond Manager stack event.
  *
  * @details Handles all events from the Bond Manager of interest to the Alert Notification Client.
- *          The Alert Notification Client will use the events of re-connection to existing master
+ *          The Alert Notification Client will use the events of re-connection to existing central
  *          and creation of new bonds for handling of service discovery and writing of the Alert
  *          Notification Control Point for re-send of New Alert and Unread Alert notifications.
  *
@@ -240,7 +243,7 @@ uint32_t ble_ans_c_disable_notif_unread_alert(const ble_ans_c_t * p_ans);
 
 
 /**@brief Function for writing to the Alert Notification Control Point to specify alert notification behavior in the
- * Alert Notification Service on the Master.
+ * Alert Notification Service on the Central.
  *
  * @param[in]  p_ans           Alert Notification structure. This structure will have to be
  *                             supplied by the application. It identifies the particular client
@@ -256,7 +259,7 @@ uint32_t ble_ans_c_control_point_write(const ble_ans_c_t * p_ans,
 
 
 /**@brief Function for reading the Supported New Alert characteristic value of the service.
- *        The value describes the alerts supported in the master.
+ *        The value describes the alerts supported in the central.
  *
  * @param[in]  p_ans       Alert Notification structure. This structure will have to be supplied by
  *                         the application. It identifies the particular client instance to use.
@@ -267,7 +270,7 @@ uint32_t ble_ans_c_new_alert_read(const ble_ans_c_t * p_ans);
 
 
 /**@brief Function for reading the Supported Unread Alert characteristic value of the service.
- *        The value describes the alerts supported in the master.
+ *        The value describes the alerts supported in the central.
  *
  * @param[in]  p_ans       Alert Notification structure. This structure will have to be supplied by
  *                         the application. It identifies the particular client instance to use.
@@ -299,7 +302,7 @@ uint32_t ble_ans_c_new_alert_notify(const ble_ans_c_t * p_ans, ble_ans_category_
 uint32_t ble_ans_c_unread_alert_notify(const ble_ans_c_t * p_ans, ble_ans_category_id_t category);
 
 
-/**@brief  Function for loading previous discovered service and characteristic handles for bonded masters from
+/**@brief  Function for loading previous discovered service and characteristic handles for bonded centrals from
  *          flash into RAM.
  *
  * @details Read the database of all discovered service and characteristic handles from flash.
@@ -316,7 +319,7 @@ uint32_t ble_ans_c_unread_alert_notify(const ble_ans_c_t * p_ans, ble_ans_catego
 uint32_t ble_ans_c_service_load(const ble_ans_c_t * p_ans);
 
 
-/**@brief Function for storing discovered service and characteristic handles for bonded masters into flash memory.
+/**@brief Function for storing discovered service and characteristic handles for bonded centrals into flash memory.
  *
  * @details This function will erase the flash page (if the data to store
  *          are diferent than the one already stored) and then write into flash. Those

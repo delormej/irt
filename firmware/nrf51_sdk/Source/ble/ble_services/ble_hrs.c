@@ -10,6 +10,11 @@
  *
  */
 
+/* Attention! 
+*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile 
+*  qualification listings, this section of source code must not be modified.
+*/
+
 #include "ble_hrs.h"
 #include <string.h>
 #include "nordic_common.h"
@@ -117,6 +122,7 @@ void ble_hrs_on_ble_evt(ble_hrs_t * p_hrs, ble_evt_t * p_ble_evt)
             break;
             
         default:
+            // No implementation needed.
             break;
     }
 }

@@ -44,7 +44,7 @@ typedef struct
     uint16_t  packet_length;                                      /**< Length of the received BLE event packet. */
 } ble_rpc_event_packet_t;
 
-static ble_rpc_event_packet_t m_packet_queue[EVENT_QUEUE_SIZE];   /**< Queue for holding received packets until they are fetched by application through \ref sd_ble_evt_get . */
+static ble_rpc_event_packet_t m_packet_queue[EVENT_QUEUE_SIZE];   /**< Queue for holding received packets until they are fetched by the application through \ref sd_ble_evt_get . */
 static uint8_t                m_packet_queue_write_index;         /**< Write index where next packet will be stored. */
 static uint8_t                m_packet_queue_read_index;          /**< Read index for oldest packet in the queue. */
 

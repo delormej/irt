@@ -7,16 +7,16 @@
 
   <Targets>
     <Target>
-      <TargetName>nrf51922_xxaa_s310 (256K)</TargetName>
+      <TargetName>nrf51422_xxaa_s310 (256K)</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <TargetOption>
         <TargetCommonOption>
-          <Device>nRF51922_xxAA</Device>
-          <Vendor>Nordic</Vendor>
+          <Device>nRF51422_xxAA</Device>
+          <Vendor>Nordic Semiconductor</Vendor>
           <Cpu>IRAM(0x20002800-0x20003FFF) IROM(0x20000-0x3FFFF) CLOCK(16000000) CPUTYPE("Cortex-M0") ESEL ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
-          <StartupFile>"Device\Nordic\nRF51922\Source\templates\arm\arm_startup_nrf51.s"("Nordic Semiconductor nRF51922_xxAA Startup Code")</StartupFile>
+          <StartupFile>"Device\Nordic\nRF51422\Source\templates\arm\arm_startup_nrf51422_s310.s"("Nordic Semiconductor nRF51422_xxAA Startup Code")</StartupFile>
           <FlashDriverDll>UL2CM3(-UM0364FCE -O78 -S0 -C0 -TO18 -TC16000000 -TP21 -TDS800D -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO15 -FD20000000 -FC2000 -FN1 -FF0nRF51xxx -FS00 -FL0200000)</FlashDriverDll>
           <DeviceId>0</DeviceId>
           <RegisterFile>nrf.h</RegisterFile>
@@ -29,14 +29,13 @@
           <SLE66CMisc></SLE66CMisc>
           <SLE66AMisc></SLE66AMisc>
           <SLE66LinkerMisc></SLE66LinkerMisc>
-          <SFDFile>SFD\Nordic\nRF51\nRF51922.sfr</SFDFile>
-          <bCustSvd>0</bCustSvd>
+          <SFDFile>SFD\Nordic\nRF51\nrf51422.sfr</SFDFile>
           <UseEnv>0</UseEnv>
           <BinPath></BinPath>
           <IncludePath></IncludePath>
           <LibPath></LibPath>
-          <RegisterFilePath>..\Device\Nordic\nRF51922\Include\</RegisterFilePath>
-          <DBRegisterFilePath>..\Device\Nordic\nRF51922\Include\</DBRegisterFilePath>
+          <RegisterFilePath>..\Device\Nordic\nRF51422\Include\</RegisterFilePath>
+          <DBRegisterFilePath>..\Device\Nordic\nRF51422\Include\</DBRegisterFilePath>
           <TargetStatus>
             <Error>0</Error>
             <ExitCodeStop>0</ExitCodeStop>
@@ -98,7 +97,6 @@
           <StopOnExitCode>3</StopOnExitCode>
           <CustomArgument></CustomArgument>
           <IncludeLibraryModules></IncludeLibraryModules>
-          <ComprImg>1</ComprImg>
         </CommonProperty>
         <DllOption>
           <SimDllName>SARMCM3.DLL</SimDllName>
@@ -171,10 +169,6 @@
           <Flash2>Segger\JL2CM3.dll</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
-          <pFcarmOut></pFcarmOut>
-          <pFcarmGrp></pFcarmGrp>
-          <pFcArmRoot></pFcArmRoot>
-          <FcArmLst>0</FcArmLst>
         </Utilities>
         <TargetArmAds>
           <ArmAdsMisc>
@@ -303,8 +297,8 @@
               </OCR_RVCT3>
               <OCR_RVCT4>
                 <Type>1</Type>
-                <StartAddress>0x20000</StartAddress>
-                <Size>0x1f000</Size>
+                <StartAddress>0x00020000</StartAddress>
+                <Size>0x0001F000</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -328,8 +322,8 @@
               </OCR_RVCT8>
               <OCR_RVCT9>
                 <Type>0</Type>
-                <StartAddress>0x20002800</StartAddress>
-                <Size>0x1800</Size>
+                <StartAddress>0x20002400</StartAddress>
+                <Size>0x00001C00</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
                 <Type>0</Type>
@@ -355,9 +349,9 @@
             <uSurpInc>0</uSurpInc>
             <VariousControls>
               <MiscControls>--c99</MiscControls>
-              <Define>NRF51,DEBUG_NRF_USER,LOOPBACK</Define>
+              <Define>NRF51,DEBUG_NRF_USER,BLE_STACK_SUPPORT_REQD,ANT_STACK_SUPPORT_REQD,LOOPBACK</Define>
               <Undefine></Undefine>
-              <IncludePath>..;..\..\nrf51_sdk\Include;..\..\nrf51_sdk\Include\app_common;..\..\nrf51_sdk\Include\ble;..\..\nrf51_sdk\Include\ble\ble_services;..\..\nrf51_sdk\Include\ant_ds\softdevice;..\services;..\libraries</IncludePath>
+              <IncludePath>..;..\..\nrf51_sdk\Include;..\..\nrf51_sdk\Include\app_common;..\..\nrf51_sdk\Include\ble;..\..\nrf51_sdk\Include\ble\ble_services;..\..\nrf51_sdk\Include\s310;..\..\nrf51_sdk\Include\sd_common;..\services;..\libraries</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -401,12 +395,12 @@
             <File>
               <FileName>arm_startup_nrf51.s</FileName>
               <FileType>2</FileType>
-              <FilePath>.\..\arm_startup_nrf51.s</FilePath>
+              <FilePath>.\..\..\nrf51_sdk\Source\templates\arm\arm_startup_nrf51422_s310.s</FilePath>
             </File>
             <File>
               <FileName>system_nrf51.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\nrf51_sdk\Source\templates\system_nrf51.c</FilePath>
+              <FilePath>.\..\..\nrf51_sdk\Source\templates\system_nrf51.c</FilePath>
             </File>
           </Files>
         </Group>

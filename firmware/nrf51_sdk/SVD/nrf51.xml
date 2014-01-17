@@ -211,6 +211,83 @@
         </register>
         
         <register>
+          <name>RAMSTATUS</name>
+          <description>Ram status register.</description>
+          <addressOffset>0x428</addressOffset>
+          <access>read-only</access>
+          <fields>
+            <field>
+              <name>RAMBLOCK0</name>
+              <description>RAM block 0 status.</description>
+              <lsb>0</lsb> <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Off</name>
+                  <description>RAM block 0 is off or powering up.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>On</name>
+                  <description>RAM block 0 is on.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>RAMBLOCK1</name>
+              <description>RAM block 1 status.</description>
+              <lsb>1</lsb> <msb>1</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Off</name>
+                  <description>RAM block 1 is off or powering up.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>On</name>
+                  <description>RAM block 1 is on.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>RAMBLOCK2</name>
+              <description>RAM block 2 status.</description>
+              <lsb>2</lsb> <msb>2</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Off</name>
+                  <description>RAM block 2 is off or powering up.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>On</name>
+                  <description>RAM block 2 is on.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>RAMBLOCK3</name>
+              <description>RAM block 3 status.</description>
+              <lsb>3</lsb> <msb>3</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Off</name>
+                  <description>RAM block 3 is off or powering up.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>On</name>
+                  <description>RAM block 3 is on.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        
+        <register>
           <name>SYSTEMOFF</name>
           <description>System off register.</description>
           <addressOffset>0x500</addressOffset>
@@ -465,6 +542,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>DCDCEN</name>
           <description>DCDC converter enable configuration register.</description>
@@ -489,6 +567,48 @@
             </field>
           </fields>
         </register>
+        <register>
+          <name>DCDCFORCE</name>
+          <description>DCDC power-up force register.</description>
+          <addressOffset>0xA08</addressOffset>
+          <fields>
+            <field>
+              <name>FORCEOFF</name>
+              <description>DCDC power-up force off.</description>
+              <lsb>0</lsb> <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>NoForce</name>
+                  <description>No force.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Force</name>
+                  <description>Force.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>FORCEON</name>
+              <description>DCDC power-up force on.</description>
+              <lsb>1</lsb> <msb>1</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>NoForce</name>
+                  <description>No force.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Force</name>
+                  <description>Force.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        
       </registers>
     </peripheral>
 
@@ -802,6 +922,32 @@
         </register>
 
         <register>
+          <name>HFCLKRUN</name>
+          <description>Task HFCLKSTART triggered status.</description>
+          <addressOffset>0x408</addressOffset>
+          <access>read-only</access>
+          <fields>
+            <field>
+              <name>STATUS</name>
+              <description>Task HFCLKSTART triggered or not.</description>
+              <lsb>0</lsb> <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>NotTriggered</name>
+                  <description>Task HFCLKSTART not triggered.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Triggered</name>
+                  <description>Task HFCLKSTART not triggered.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        
+        <register>
           <name>HFCLKSTAT</name>
           <description>High frequency clock status.</description>
           <addressOffset>0x40C</addressOffset>
@@ -844,6 +990,32 @@
           </fields>
         </register>
 
+        <register>
+          <name>LFCLKRUN</name>
+          <description>Task LFCLKSTART triggered status.</description>
+          <addressOffset>0x414</addressOffset>
+          <access>read-only</access>
+          <fields>
+            <field>
+              <name>STATUS</name>
+              <description>Task LFCLKSTART triggered or not.</description>
+              <lsb>0</lsb> <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>NotTriggered</name>
+                  <description>Task LFCLKSTART not triggered.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Triggered</name>
+                  <description>Task LFCLKSTART not triggered.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        
         <register>
           <name>LFCLKSTAT</name>
           <description>Low frequency clock status.</description>
@@ -892,6 +1064,36 @@
           </fields>
         </register>
 
+        <register>
+          <name>LFCLKSRCCOPY</name>
+          <description>Clock source for the LFCLK clock, set when task LKCLKSTART is triggered.</description>
+          <addressOffset>0x41C</addressOffset>
+          <fields>
+            <field>
+              <name>SRC</name>
+              <description>Clock source for the LFCLK clock, set when task LKCLKSTART is triggered.</description>
+              <lsb>0</lsb> <msb>1</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>RC</name>
+                  <description>Internal 32KiHz RC oscillator.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Xtal</name>
+                  <description>External 32KiHz crystal.</description>
+                  <value>1</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Synth</name>
+                  <description>Internal 32KiHz synthesizer from HFCLK system clock.</description>
+                  <value>2</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        
         <register>
           <name>LFCLKSRC</name>
           <description>Clock source for the LFCLK clock.</description>
@@ -3056,6 +3258,31 @@
           </fields>
         </register>
         
+        <register>
+          <name>ENRBDREG</name>
+          <description>Enable or disable RBD.</description>
+          <addressOffset>0xA0C</addressOffset>
+          <fields>
+            <field>
+              <name>ENRBDREG</name>
+              <description>Enable or disable RBD.</description>
+              <lsb>0</lsb> <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Disabled</name>
+                  <description>RBD disabled.</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Enabled</name>
+                  <description>RBD enabled.</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        
       </registers>
     </peripheral>
 
@@ -3708,21 +3935,189 @@
                 <name>RAM0</name>
                 <description>Configuration field for RAM block 0.</description>
                 <lsb>0</lsb> <msb>3</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM1</name>
                 <description>Configuration field for RAM block 1.</description>
                 <lsb>4</lsb> <msb>7</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM2</name>
                 <description>Configuration field for RAM block 2.</description>
                 <lsb>8</lsb> <msb>11</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM3</name>
                 <description>Configuration field for RAM block 3.</description>
                 <lsb>12</lsb> <msb>15</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
             </fields>
           </register>
@@ -3735,21 +4130,189 @@
                 <name>RAM0</name>
                 <description>Configuration field for RAM block 0.</description>
                 <lsb>0</lsb> <msb>3</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM1</name>
                 <description>Configuration field for RAM block 1.</description>
                 <lsb>4</lsb> <msb>7</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM2</name>
                 <description>Configuration field for RAM block 2.</description>
                 <lsb>8</lsb> <msb>11</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM3</name>
                 <description>Configuration field for RAM block 3.</description>
                 <lsb>12</lsb> <msb>15</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
             </fields>
           </register>
@@ -3762,21 +4325,189 @@
                 <name>RAM0</name>
                 <description>Configuration field for RAM block 0.</description>
                 <lsb>0</lsb> <msb>3</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM1</name>
                 <description>Configuration field for RAM block 1.</description>
                 <lsb>4</lsb> <msb>7</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM2</name>
                 <description>Configuration field for RAM block 2.</description>
                 <lsb>8</lsb> <msb>11</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM3</name>
                 <description>Configuration field for RAM block 3.</description>
                 <lsb>12</lsb> <msb>15</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
             </fields>
           </register>
@@ -3789,21 +4520,189 @@
                 <name>RAM0</name>
                 <description>Configuration field for RAM block 0.</description>
                 <lsb>0</lsb> <msb>3</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM1</name>
                 <description>Configuration field for RAM block 1.</description>
                 <lsb>4</lsb> <msb>7</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM2</name>
                 <description>Configuration field for RAM block 2.</description>
                 <lsb>8</lsb> <msb>11</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM3</name>
                 <description>Configuration field for RAM block 3.</description>
                 <lsb>12</lsb> <msb>15</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
             </fields>
           </register>
@@ -3816,21 +4715,189 @@
                 <name>RAM0</name>
                 <description>Configuration field for RAM block 0.</description>
                 <lsb>0</lsb> <msb>3</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM1</name>
                 <description>Configuration field for RAM block 1.</description>
                 <lsb>4</lsb> <msb>7</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM2</name>
                 <description>Configuration field for RAM block 2.</description>
                 <lsb>8</lsb> <msb>11</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM3</name>
                 <description>Configuration field for RAM block 3.</description>
                 <lsb>12</lsb> <msb>15</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
             </fields>
           </register>
@@ -3843,21 +4910,189 @@
                 <name>RAM0</name>
                 <description>Configuration field for RAM block 0.</description>
                 <lsb>0</lsb> <msb>3</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM1</name>
                 <description>Configuration field for RAM block 1.</description>
                 <lsb>4</lsb> <msb>7</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM2</name>
                 <description>Configuration field for RAM block 2.</description>
                 <lsb>8</lsb> <msb>11</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
               <field>
                 <name>RAM3</name>
                 <description>Configuration field for RAM block 3.</description>
                 <lsb>12</lsb> <msb>15</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
               </field>
             </fields>
           </register>
@@ -5299,6 +6534,12 @@
             </field>
           </fields>
         </register>
+        
+        <register>
+          <name>BCC</name>
+          <description>Bit counter compare.</description>
+          <addressOffset>0x560</addressOffset>
+        </register>
 
         <register>
           <dim>8</dim>
@@ -5505,12 +6746,6 @@
               <lsb>15</lsb> <msb>15</msb>
             </field>
           </fields>
-        </register>
-        
-        <register>
-          <name>BCC</name>
-          <description>Bit counter compare.</description>
-          <addressOffset>0x560</addressOffset>
         </register>
         
         <register>
@@ -6805,6 +8040,11 @@
           <description>Two-wire byte boundary.</description>
           <addressOffset>0x138</addressOffset>
         </register>
+        <register>
+          <name>EVENTS_SUSPENDED</name>
+          <description>Two-wire suspended.</description>
+          <addressOffset>0x148</addressOffset>
+        </register>
 
         <register>
           <name>SHORTS</name>
@@ -6983,6 +8223,32 @@
                 </enumeratedValue>
               </enumeratedValues>
             </field>
+            <field>
+              <name>SUSPENDED</name>
+              <description>Enable interrupt on SUSPENDED event.</description>
+              <lsb>18</lsb> <msb>18</msb>
+              <enumeratedValues>
+                <usage>read</usage>
+                <enumeratedValue>
+                  <name>Disabled</name>
+                  <description>Interrupt disabled.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Enabled</name>
+                  <description>Interrupt enabled.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+              <enumeratedValues>
+                <usage>write</usage>
+                <enumeratedValue>
+                  <name>Set</name>
+                  <description>Enable interrupt on write.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
           </fields>
         </register>
         <register>
@@ -7098,6 +8364,32 @@
               <name>BB</name>
               <description>Disable interrupt on BB event.</description>
               <lsb>14</lsb> <msb>14</msb>
+              <enumeratedValues>
+                <usage>read</usage>
+                <enumeratedValue>
+                  <name>Disabled</name>
+                  <description>Interrupt disabled.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Enabled</name>
+                  <description>Interrupt enabled.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+              <enumeratedValues>
+                <usage>write</usage>
+                <enumeratedValue>
+                  <name>Clear</name>
+                  <description>Disable interrupt on write.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>SUSPENDED</name>
+              <description>Disable interrupt on SUSPENDED event.</description>
+              <lsb>18</lsb> <msb>18</msb>
               <enumeratedValues>
                 <usage>read</usage>
                 <enumeratedValue>
@@ -7542,6 +8834,7 @@
           <description>Semaphore status.</description>
           <addressOffset>0x400</addressOffset>
           <access>read-only</access>
+          <resetValue>0x00000001</resetValue>
           <fields>
             <field>
               <name>SEMSTAT</name>
@@ -8687,6 +9980,12 @@
           <name>TASKS_CLEAR</name>
           <description>Clear timer.</description>
           <addressOffset>0x00C</addressOffset>
+          <access>write-only</access>
+        </register>
+        <register>
+          <name>TASKS_SHUTDOWN</name>
+          <description>Shutdown timer.</description>
+          <addressOffset>0x010</addressOffset>
           <access>write-only</access>
         </register>
         <register>
@@ -12940,37 +14239,37 @@
               <enumeratedValues>
                 <enumeratedValue>
                   <name>SupplyOneEighthPrescaling</name>
-                  <description>Use analog supply with a 1/8 prescaler as reference.</description>
+                  <description>Use supply with a 1/8 prescaler as reference.</description>
                   <value>0</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>SupplyTwoEighthsPrescaling</name>
-                  <description>Use analog supply with a 2/8 prescaler as reference.</description>
+                  <description>Use supply with a 2/8 prescaler as reference.</description>
                   <value>1</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>SupplyThreeEighthsPrescaling</name>
-                  <description>Use analog supply with a 3/8 prescaler as reference.</description>
+                  <description>Use supply with a 3/8 prescaler as reference.</description>
                   <value>2</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>SupplyFourEighthsPrescaling</name>
-                  <description>Use analog supply with a 4/8 prescaler as reference.</description>
+                  <description>Use supply with a 4/8 prescaler as reference.</description>
                   <value>3</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>SupplyFiveEighthsPrescaling</name>
-                  <description>Use analog supply with a 5/8 prescaler as reference.</description>
+                  <description>Use supply with a 5/8 prescaler as reference.</description>
                   <value>4</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>SupplySixEighthsPrescaling</name>
-                  <description>Use analog supply with a 6/8 prescaler as reference.</description>
+                  <description>Use supply with a 6/8 prescaler as reference.</description>
                   <value>5</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>SupplySevenEighthsPrescaling</name>
-                  <description>Use analog supply with a 7/8 prescaler as reference.</description>
+                  <description>Use supply with a 7/8 prescaler as reference.</description>
                   <value>6</value>
                 </enumeratedValue>
                 <enumeratedValue>
@@ -16418,6 +17717,31 @@
           <description>Code memory size in pages.</description>
           <addressOffset>0x014</addressOffset>
         </register>
+        
+        <register>
+          <name>RBD</name>
+          <description>RBD.</description>
+          <addressOffset>0x018</addressOffset>
+          <fields>
+            <field>
+              <name>RBD</name>
+              <description>RBD.</description>
+              <lsb>0</lsb> <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>NoRoyalty</name>
+                  <description>No royalty.</description>
+                  <value>0x0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Royalty</name>
+                  <description>Royalty.</description>
+                  <value>0x1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
 
         <register>
           <name>CLENR0</name>
@@ -16547,6 +17871,23 @@
           <description>Radio calibration override enable.</description>
           <addressOffset>0x0AC</addressOffset>
           <fields>
+          <field>
+              <name>NRF_1MBIT</name>
+              <description>Override default values for NRF_1Mbit mode.</description>
+              <lsb>0</lsb> <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Override</name>
+                  <description>Override the default values for NRF_1Mbit mode.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>NotOverride</name>
+                  <description>Do not override the default values for NRF_1Mbit mode.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
             <field>
               <name>BLE_1MBIT</name>
               <description>Override default values for BLE_1Mbit mode.</description>
@@ -16567,6 +17908,14 @@
           </fields>
         </register>
         
+        <register>
+          <dim>5</dim>
+          <dimIncrement>0x04</dimIncrement>
+          <dimIndex>0-4</dimIndex>
+          <name>NRF_1MBIT[%s]</name>
+          <description>Override values for the OVERRIDEn registers in RADIO for NRF_1Mbit mode.</description>
+          <addressOffset>0x0B0</addressOffset>
+        </register>
         <register>
           <dim>5</dim>
           <dimIncrement>0x04</dimIncrement>
@@ -16687,1137 +18036,6 @@
           <description>Bootloader start address.</description>
           <addressOffset>0x014</addressOffset>
         </register>
-        
-        <!--
-        <register>
-          <name>AUTOPROTEN</name>
-          <description>Enable automatic flash area protection.</description>
-          <addressOffset>0x014</addressOffset>
-          <fields>
-            <field>
-              <name>AUTOPROTEN</name>
-              <description>Enable automatic flash area protection.</description>
-              <lsb>0</lsb> <msb>7</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Automatic flash area protection disabled.</description>
-                  <value>0xFF</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Automatic flash area protection enabled.</description>
-                  <value>0x00</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        
-        <register>
-          <name>AUTOPROTVALUE0</name>
-          <description>Auto-loaded register values for PROTENSET0 after reset.</description>
-          <addressOffset>0x018</addressOffset>
-          <fields>
-            <field>
-              <name>PROTREG0</name>
-              <description>Auto-load value for PROTENSET0.PROTREG0 field.</description>
-              <lsb>0</lsb> <msb>0</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG0 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG0 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG1</name>
-              <description>Auto-load value for PROTENSET0.PROTREG1 field.</description>
-              <lsb>1</lsb> <msb>1</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG1 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG1 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG2</name>
-              <description>Auto-load value for PROTENSET0.PROTREG2 field.</description>
-              <lsb>2</lsb> <msb>2</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG2 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG2 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG3</name>
-              <description>Auto-load value for PROTENSET0.PROTREG3 field.</description>
-              <lsb>3</lsb> <msb>3</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG3 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG3 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG4</name>
-              <description>Auto-load value for PROTENSET0.PROTREG4 field.</description>
-              <lsb>4</lsb> <msb>4</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG4 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG4 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG5</name>
-              <description>Auto-load value for PROTENSET0.PROTREG5 field.</description>
-              <lsb>5</lsb> <msb>5</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG5 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG5 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG6</name>
-              <description>Auto-load value for PROTENSET0.PROTREG6 field.</description>
-              <lsb>6</lsb> <msb>6</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG6 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG6 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG7</name>
-              <description>Auto-load value for PROTENSET0.PROTREG7 field.</description>
-              <lsb>7</lsb> <msb>7</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG7 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG7 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG8</name>
-              <description>Auto-load value for PROTENSET0.PROTREG8 field.</description>
-              <lsb>8</lsb> <msb>8</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG8 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG8 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG9</name>
-              <description>Auto-load value for PROTENSET0.PROTREG9 field.</description>
-              <lsb>9</lsb> <msb>9</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG9 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG9 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG10</name>
-              <description>Auto-load value for PROTENSET0.PROTREG10 field.</description>
-              <lsb>10</lsb> <msb>10</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG10 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG10 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG11</name>
-              <description>Auto-load value for PROTENSET0.PROTREG11 field.</description>
-              <lsb>11</lsb> <msb>11</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG11 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG11 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG12</name>
-              <description>Auto-load value for PROTENSET0.PROTREG12 field.</description>
-              <lsb>12</lsb> <msb>12</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG12 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG12 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG13</name>
-              <description>Auto-load value for PROTENSET0.PROTREG13 field.</description>
-              <lsb>13</lsb> <msb>13</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG13 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG13 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG14</name>
-              <description>Auto-load value for PROTENSET0.PROTREG14 field.</description>
-              <lsb>14</lsb> <msb>14</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG14 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG14 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG15</name>
-              <description>Auto-load value for PROTENSET0.PROTREG15 field.</description>
-              <lsb>15</lsb> <msb>15</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG15 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG15 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG16</name>
-              <description>Auto-load value for PROTENSET0.PROTREG16 field.</description>
-              <lsb>16</lsb> <msb>16</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG6 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG6 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG17</name>
-              <description>Auto-load value for PROTENSET0.PROTREG17 field.</description>
-              <lsb>17</lsb> <msb>17</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG17 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG17 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG18</name>
-              <description>Auto-load value for PROTENSET0.PROTREG18 field.</description>
-              <lsb>18</lsb> <msb>18</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG18 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG18 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG19</name>
-              <description>Auto-load value for PROTENSET0.PROTREG19 field.</description>
-              <lsb>19</lsb> <msb>19</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG19 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG19 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG20</name>
-              <description>Auto-load value for PROTENSET0.PROTREG20 field.</description>
-              <lsb>20</lsb> <msb>20</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG20 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG20 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG21</name>
-              <description>Auto-load value for PROTENSET0.PROTREG21 field.</description>
-              <lsb>21</lsb> <msb>21</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG21 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG21 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG22</name>
-              <description>Auto-load value for PROTENSET0.PROTREG22 field.</description>
-              <lsb>22</lsb> <msb>22</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG22 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG22 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG23</name>
-              <description>Auto-load value for PROTENSET0.PROTREG23 field.</description>
-              <lsb>23</lsb> <msb>23</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG23 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG23 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG24</name>
-              <description>Auto-load value for PROTENSET0.PROTREG24 field.</description>
-              <lsb>24</lsb> <msb>24</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG24 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG24 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG25</name>
-              <description>Auto-load value for PROTENSET0.PROTREG25 field.</description>
-              <lsb>25</lsb> <msb>25</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG25 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG25 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG26</name>
-              <description>Auto-load value for PROTENSET0.PROTREG26 field.</description>
-              <lsb>26</lsb> <msb>26</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG26 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG26 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG27</name>
-              <description>Auto-load value for PROTENSET0.PROTREG27 field.</description>
-              <lsb>27</lsb> <msb>27</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG27 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG27 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG28</name>
-              <description>Auto-load value for PROTENSET0.PROTREG28 field.</description>
-              <lsb>28</lsb> <msb>28</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG28 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG28 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG29</name>
-              <description>Auto-load value for PROTENSET0.PROTREG29 field.</description>
-              <lsb>29</lsb> <msb>29</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG29 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG29 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG30</name>
-              <description>Auto-load value for PROTENSET0.PROTREG30 field.</description>
-              <lsb>30</lsb> <msb>30</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG30 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG30 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG31</name>
-              <description>Auto-load value for PROTENSET0.PROTREG31 field.</description>
-              <lsb>31</lsb> <msb>31</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG31 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG31 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        
-        <register>
-          <name>AUTOPROTVALUE1</name>
-          <description>Auto-loaded register values for PROTENSET0 after reset.</description>
-          <addressOffset>0x01C</addressOffset>
-          <fields>
-            <field>
-              <name>PROTREG32</name>
-              <description>Auto-load value for PROTENSET0.PROTREG32 field.</description>
-              <lsb>0</lsb> <msb>0</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG32 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG32 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG33</name>
-              <description>Auto-load value for PROTENSET0.PROTREG33 field.</description>
-              <lsb>1</lsb> <msb>1</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG33 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG33 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG34</name>
-              <description>Auto-load value for PROTENSET0.PROTREG34 field.</description>
-              <lsb>2</lsb> <msb>2</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG34 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG34 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG35</name>
-              <description>Auto-load value for PROTENSET0.PROTREG35 field.</description>
-              <lsb>3</lsb> <msb>3</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG35 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG35 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG36</name>
-              <description>Auto-load value for PROTENSET0.PROTREG36 field.</description>
-              <lsb>4</lsb> <msb>4</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG36 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG36 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG37</name>
-              <description>Auto-load value for PROTENSET0.PROTREG37 field.</description>
-              <lsb>5</lsb> <msb>5</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG37 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG37 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG38</name>
-              <description>Auto-load value for PROTENSET0.PROTREG38 field.</description>
-              <lsb>6</lsb> <msb>6</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG38 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG38 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG39</name>
-              <description>Auto-load value for PROTENSET0.PROTREG39 field.</description>
-              <lsb>7</lsb> <msb>7</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG39 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG39 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG40</name>
-              <description>Auto-load value for PROTENSET0.PROTREG40 field.</description>
-              <lsb>8</lsb> <msb>8</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG40 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG40 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG41</name>
-              <description>Auto-load value for PROTENSET0.PROTREG41 field.</description>
-              <lsb>9</lsb> <msb>9</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG41 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG41 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG42</name>
-              <description>Auto-load value for PROTENSET0.PROTREG42 field.</description>
-              <lsb>10</lsb> <msb>10</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG42 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG42 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG43</name>
-              <description>Auto-load value for PROTENSET0.PROTREG43 field.</description>
-              <lsb>11</lsb> <msb>11</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG43 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG43 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG44</name>
-              <description>Auto-load value for PROTENSET0.PROTREG44 field.</description>
-              <lsb>12</lsb> <msb>12</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG44 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG44 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG45</name>
-              <description>Auto-load value for PROTENSET0.PROTREG45 field.</description>
-              <lsb>13</lsb> <msb>13</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG45 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG45 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG46</name>
-              <description>Auto-load value for PROTENSET0.PROTREG46 field.</description>
-              <lsb>14</lsb> <msb>14</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG46 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG46 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG47</name>
-              <description>Auto-load value for PROTENSET0.PROTREG47 field.</description>
-              <lsb>15</lsb> <msb>15</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG47 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG47 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG48</name>
-              <description>Auto-load value for PROTENSET0.PROTREG48 field.</description>
-              <lsb>16</lsb> <msb>16</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG48 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG48 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG49</name>
-              <description>Auto-load value for PROTENSET0.PROTREG49 field.</description>
-              <lsb>17</lsb> <msb>17</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG49 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG49 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG50</name>
-              <description>Auto-load value for PROTENSET0.PROTREG50 field.</description>
-              <lsb>18</lsb> <msb>18</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG50 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG50 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG51</name>
-              <description>Auto-load value for PROTENSET0.PROTREG51 field.</description>
-              <lsb>19</lsb> <msb>19</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG51 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG51 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG52</name>
-              <description>Auto-load value for PROTENSET0.PROTREG52 field.</description>
-              <lsb>20</lsb> <msb>20</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG52 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG52 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG53</name>
-              <description>Auto-load value for PROTENSET0.PROTREG53 field.</description>
-              <lsb>21</lsb> <msb>21</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG53 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG53 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG54</name>
-              <description>Auto-load value for PROTENSET0.PROTREG54 field.</description>
-              <lsb>22</lsb> <msb>22</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG54 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG54 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG55</name>
-              <description>Auto-load value for PROTENSET0.PROTREG55 field.</description>
-              <lsb>23</lsb> <msb>23</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG55 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG55 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG56</name>
-              <description>Auto-load value for PROTENSET0.PROTREG56 field.</description>
-              <lsb>24</lsb> <msb>24</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG56 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG56 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG57</name>
-              <description>Auto-load value for PROTENSET0.PROTREG57 field.</description>
-              <lsb>25</lsb> <msb>25</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG57 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG57 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG58</name>
-              <description>Auto-load value for PROTENSET0.PROTREG58 field.</description>
-              <lsb>26</lsb> <msb>26</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG58 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG58 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG59</name>
-              <description>Auto-load value for PROTENSET0.PROTREG59 field.</description>
-              <lsb>27</lsb> <msb>27</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG59 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG59 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG60</name>
-              <description>Auto-load value for PROTENSET0.PROTREG60 field.</description>
-              <lsb>28</lsb> <msb>28</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG60 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG60 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG61</name>
-              <description>Auto-load value for PROTENSET0.PROTREG61 field.</description>
-              <lsb>29</lsb> <msb>29</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG61 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG61 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG62</name>
-              <description>Auto-load value for PROTENSET0.PROTREG62 field.</description>
-              <lsb>30</lsb> <msb>30</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG62 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG62 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>PROTREG63</name>
-              <description>Auto-load value for PROTENSET0.PROTREG63 field.</description>
-              <lsb>31</lsb> <msb>31</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>PROTENSET0.PROTREG63 bit automaticaly set after reset.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>PROTENSET0.PROTREG63 bit automaticaly cleared after reset.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        -->
         
       </registers>
     </peripheral>

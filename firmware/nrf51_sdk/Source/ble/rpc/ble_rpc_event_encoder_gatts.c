@@ -96,6 +96,7 @@ uint32_t ble_rpc_evt_gatts_encode(ble_evt_t * p_ble_evt, uint8_t * p_buffer)
             break;
 
         default:
+            // No implementation needed.
             break;
     }
 
