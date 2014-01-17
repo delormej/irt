@@ -5,7 +5,7 @@
 #include "stdio.h"
 #include "ant_bike_power.h"
 #include "app_error.h"
-#include "ant_interface_ds.h"
+#include "ant_interface.h"
 #include "irt_emotion.h"
 
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */

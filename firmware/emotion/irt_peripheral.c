@@ -12,9 +12,9 @@ static app_button_handler_t m_on_button_evt;
  */
 static void leds_init(void)
 {
-    GPIO_LED_CONFIG(ADVERTISING_LED_PIN_NO);
-    GPIO_LED_CONFIG(CONNECTED_LED_PIN_NO);
-    GPIO_LED_CONFIG(ASSERT_LED_PIN_NO);
+    nrf_gpio_cfg_output(ADVERTISING_LED_PIN_NO);
+    nrf_gpio_cfg_output(CONNECTED_LED_PIN_NO);
+    nrf_gpio_cfg_output(ASSERT_LED_PIN_NO);
 }
 
 

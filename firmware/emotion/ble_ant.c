@@ -39,8 +39,9 @@
 #include "ble_radio_notification.h"
 #include "ble_flash.h"
 #include "app_timer.h"
-#include "ant_parameters_ds.h"
-#include "ant_interface_ds.h"
+#include "ant_parameters.h"
+#include "ant_interface.h"
+#include "nrf_soc.h"
 
 #include "irt_peripheral.h"
 #include "irt_emotion.h"
@@ -615,7 +616,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
  */
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
-    ble_bondmngr_on_ble_evt(p_ble_evt);
+    //ble_bondmngr_on_ble_evt(p_ble_evt);
     ble_cps_on_ble_evt(&m_cps, p_ble_evt);
 		ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
@@ -648,7 +649,7 @@ static void bond_manager_error_handler(uint32_t nrf_error)
 
 
 /**@brief Bond Manager initialization.
- */
+ *
 static void bond_manager_init(void)
 {
     uint32_t            err_code;
@@ -667,7 +668,7 @@ static void bond_manager_init(void)
 
     err_code = ble_bondmngr_init(&bond_init_data);
     APP_ERROR_CHECK(err_code);
-}
+}*/
 
 
 /**@brief Initialize Radio Notification event handler.
@@ -678,7 +679,7 @@ static void radio_notification_init(void)
 
     err_code = ble_radio_notification_init(NRF_APP_PRIORITY_HIGH,
                                            NRF_RADIO_NOTIFICATION_DISTANCE_800US,
-                                           ble_flash_on_radio_active_evt);
+                                           NULL /*ble_flash_on_radio_active_evt*/);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -727,7 +728,7 @@ void cycling_power_send(ble_cps_meas_t * p_cps_meas)
  */
 void power_manage(void)
 {
-    uint32_t err_code = sd_app_event_wait();
+    uint32_t err_code = sd_app_evt_wait();
     APP_ERROR_CHECK(err_code);
 }
 
@@ -740,7 +741,7 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
     ble_ant_stack_init();
     
     // Initialize Bluetooth helper modules
-    bond_manager_init();
+    //bond_manager_init();
     radio_notification_init();
     
     // Initialize Bluetooth stack parameters
