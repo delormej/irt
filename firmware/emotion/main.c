@@ -183,6 +183,12 @@ static void timers_init(void)
  * Event handlers
  * ----------------------------------------------------------------------------*/
 
+static void on_button_i_event(void)
+{
+	m_resistance_level = 0;
+	set_resistance(m_resistance_level);
+}
+
 static void on_button_ii_event(void)
 {
 	// TODO: wrap this in an ifdef for DEBUG.
@@ -207,6 +213,11 @@ static void on_button_iii_event(void)
 		set_resistance(++m_resistance_level);
 }
 
+static void on_button_iv_event(void)
+{
+	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
+	set_resistance(m_resistance_level);
+}
 
 static void on_ble_connected(void) 
 {
@@ -281,14 +292,18 @@ static void on_button_evt(uint8_t pin_no)
 {
     switch (pin_no)
     {
+				case PIN_BUTTON_I:
+						on_button_i_event();
+						break;
 				case PIN_BUTTON_II:
 						on_button_ii_event();
 						break;
-
 				case PIN_BUTTON_III:
 						on_button_iii_event();
 						break;
-
+				case PIN_BUTTON_IV:
+						on_button_iv_event();
+						break;
         default:
             APP_ERROR_HANDLER(pin_no);
     }	
