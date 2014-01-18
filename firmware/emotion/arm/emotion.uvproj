@@ -7,16 +7,16 @@
 
   <Targets>
     <Target>
-      <TargetName>nrf51922_xxaa_s310 (256K)</TargetName>
+      <TargetName>nrf51422_xxaa_s310 (256K)</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <TargetOption>
         <TargetCommonOption>
-          <Device>nRF51922_xxAA</Device>
-          <Vendor>Nordic</Vendor>
+          <Device>nRF51422_xxAA</Device>
+          <Vendor>Nordic Semiconductor</Vendor>
           <Cpu>IRAM(0x20002800-0x20003FFF) IROM(0x20000-0x3FFFF) CLOCK(16000000) CPUTYPE("Cortex-M0") ESEL ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
-          <StartupFile>"Device\Nordic\nRF51922\Source\templates\arm\arm_startup_nrf51.s"("Nordic Semiconductor nRF51922_xxAA Startup Code")</StartupFile>
+          <StartupFile>"Device\Nordic\nRF51422\Source\templates\arm\arm_startup_nrf51422_s310.s"("Nordic Semiconductor nRF51422_xxAA Startup Code")</StartupFile>
           <FlashDriverDll>UL2CM3(-UM0364FCE -O78 -S0 -C0 -TO18 -TC16000000 -TP21 -TDS800D -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO15 -FD20000000 -FC2000 -FN1 -FF0nRF51xxx -FS00 -FL0200000)</FlashDriverDll>
           <DeviceId>0</DeviceId>
           <RegisterFile>nrf.h</RegisterFile>
@@ -29,14 +29,14 @@
           <SLE66CMisc></SLE66CMisc>
           <SLE66AMisc></SLE66AMisc>
           <SLE66LinkerMisc></SLE66LinkerMisc>
-          <SFDFile>SFD\Nordic\nRF51\nRF51922.sfr</SFDFile>
+          <SFDFile>SFD\Nordic\nRF51\nrf51422.sfr</SFDFile>
           <bCustSvd>0</bCustSvd>
           <UseEnv>0</UseEnv>
           <BinPath></BinPath>
           <IncludePath></IncludePath>
           <LibPath></LibPath>
-          <RegisterFilePath>..\Device\Nordic\nRF51922\Include\</RegisterFilePath>
-          <DBRegisterFilePath>..\Device\Nordic\nRF51922\Include\</DBRegisterFilePath>
+          <RegisterFilePath></RegisterFilePath>
+          <DBRegisterFilePath></DBRegisterFilePath>
           <TargetStatus>
             <Error>0</Error>
             <ExitCodeStop>0</ExitCodeStop>
@@ -328,8 +328,8 @@
               </OCR_RVCT8>
               <OCR_RVCT9>
                 <Type>0</Type>
-                <StartAddress>0x20002800</StartAddress>
-                <Size>0x1800</Size>
+                <StartAddress>0x20002400</StartAddress>
+                <Size>0x1c00</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
                 <Type>0</Type>
@@ -355,9 +355,9 @@
             <uSurpInc>0</uSurpInc>
             <VariousControls>
               <MiscControls>--c99</MiscControls>
-              <Define>NRF51,DEBUG_NRF_USER,LOOPBACK</Define>
+              <Define>NRF51,DEBUG_NRF_USER,BLE_STACK_SUPPORT_REQD,ANT_STACK_SUPPORT_REQD,LOOPBACK</Define>
               <Undefine></Undefine>
-              <IncludePath>..;..\..\nrf51_sdk\Include;..\..\nrf51_sdk\Include\app_common;..\..\nrf51_sdk\Include\ble;..\..\nrf51_sdk\Include\ble\ble_services;..\..\nrf51_sdk\Include\ant_ds\softdevice;..\services;..\libraries</IncludePath>
+              <IncludePath>..;..\..\nrf51_sdk\Include;..\..\nrf51_sdk\Include\app_common;..\..\nrf51_sdk\Include\ble;..\..\nrf51_sdk\Include\ble\ble_services;..\..\nrf51_sdk\Include\s310;..\..\nrf51_sdk\Include\sd_common;..\services;..\libraries</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -401,12 +401,12 @@
             <File>
               <FileName>arm_startup_nrf51.s</FileName>
               <FileType>2</FileType>
-              <FilePath>.\..\arm_startup_nrf51.s</FilePath>
+              <FilePath>.\..\..\nrf51_sdk\Source\templates\arm\arm_startup_nrf51422_s310.s</FilePath>
             </File>
             <File>
               <FileName>system_nrf51.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\nrf51_sdk\Source\templates\system_nrf51.c</FilePath>
+              <FilePath>.\..\..\nrf51_sdk\Source\templates\system_nrf51.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -422,11 +422,6 @@
               <FileName>ble_ant.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ble_ant.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_ant_stack_handler.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ble_ant_stack_handler.c</FilePath>
             </File>
             <File>
               <FileName>irt_peripheral.c</FileName>
@@ -489,11 +484,6 @@
           <GroupName>Libraries</GroupName>
           <Files>
             <File>
-              <FileName>nrf_pwm.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\libraries\nrf_pwm.c</FilePath>
-            </File>
-            <File>
               <FileName>ble_error_log.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51_sdk\Source\ble\ble_error_log.c</FilePath>
@@ -524,29 +514,34 @@
               <FilePath>..\..\nrf51_sdk\Source\ble\ble_bondmngr.c</FilePath>
             </File>
             <File>
-              <FileName>ble_flash.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51_sdk\Source\ble\ble_flash.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_radio_notification.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51_sdk\Source\ble\ble_radio_notification.c</FilePath>
-            </File>
-            <File>
               <FileName>ble_debug_assert_handler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51_sdk\Source\ble\ble_debug_assert_handler.c</FilePath>
             </File>
             <File>
-              <FileName>app_button.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51_sdk\Source\app_common\app_button.c</FilePath>
-            </File>
-            <File>
               <FileName>app_gpiote.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51_sdk\Source\app_common\app_gpiote.c</FilePath>
+            </File>
+            <File>
+              <FileName>pstorage.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51_sdk\Source\app_common\pstorage.c</FilePath>
+            </File>
+            <File>
+              <FileName>crc16.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51_sdk\Source\app_common\crc16.c</FilePath>
+            </File>
+            <File>
+              <FileName>softdevice_handler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51_sdk\Source\sd_common\softdevice_handler.c</FilePath>
+            </File>
+            <File>
+              <FileName>nrf_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\libraries\nrf_pwm.c</FilePath>
             </File>
           </Files>
         </Group>

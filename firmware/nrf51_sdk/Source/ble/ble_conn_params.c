@@ -285,7 +285,8 @@ void ble_conn_params_on_ble_evt(ble_evt_t * p_ble_evt)
             break;
             
         default:
-            break;
+            // No implementation needed.
+           break;
     }
 }
 

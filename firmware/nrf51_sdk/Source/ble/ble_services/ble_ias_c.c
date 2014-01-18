@@ -87,10 +87,11 @@ static uint32_t on_srv_disc_resp(ble_ias_c_t * p_ias_c, ble_evt_t const * p_ble_
         // Immediate Alert Service at the peer. So only the first element of the
         // p_ble_evt->evt.gattc_evt.params.prim_srvc_disc_rsp.services array is of interest.
         const ble_gattc_handle_range_t * p_service_handle_range =
-                      &(p_ble_evt->evt.gattc_evt.params.prim_srvc_disc_rsp.services[0].handle_range);
+                    &(p_ble_evt->evt.gattc_evt.params.prim_srvc_disc_rsp.services[0].handle_range);
 
         // Discover characteristics.
-        err_code = sd_ble_gattc_characteristics_discover(p_ias_c->conn_handle, p_service_handle_range);
+        err_code = sd_ble_gattc_characteristics_discover(p_ias_c->conn_handle,
+                                                         p_service_handle_range);
     }
     
     return err_code;
@@ -196,6 +197,7 @@ void ble_ias_c_on_ble_evt(ble_ias_c_t * p_ias_c, ble_evt_t const * p_ble_evt)
             break;
 
         default:
+            // No implementation needed.
             break;
     }
 

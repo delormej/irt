@@ -10,6 +10,11 @@
  *
  */
 
+/* Attention! 
+*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile 
+*  qualification listings, this section of source code must not be modified.
+*/
+
 #include "ble_dis.h"
 
 #include <stdlib.h>

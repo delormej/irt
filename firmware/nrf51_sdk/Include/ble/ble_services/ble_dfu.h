@@ -130,9 +130,9 @@ typedef void (*ble_dfu_evt_handler_t) (ble_dfu_t * p_dfu, ble_dfu_evt_t * p_evt)
  */
 typedef struct ble_dfu_s
 {
-    uint16_t                     conn_handle;                           /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
-    uint16_t                     service_handle;                        /**< Handle of DFU Service (as provided by the BLE stack). */
-    uint8_t                      uuid_type;                             /**< UUID type assigned for DFU Service by the BLE stack. */
+    uint16_t                     conn_handle;                           /**< Handle of the current connection (as provided by the S110 SoftDevice). This will be BLE_CONN_HANDLE_INVALID when not in a connection. */
+    uint16_t                     service_handle;                        /**< Handle of DFU Service (as provided by the S110 SoftDevice). */
+    uint8_t                      uuid_type;                             /**< UUID type assigned for DFU Service by the S110 SoftDevice. */
     ble_gatts_char_handles_t     dfu_pkt_handles;                       /**< Handles related to the DFU Packet characteristic. */
     ble_gatts_char_handles_t     dfu_ctrl_pt_handles;                   /**< Handles related to the DFU Control Point characteristic. */
     ble_gatts_char_handles_t     dfu_status_rep_handles;                /**< Handles related to the DFU Status Report characteristic. */
@@ -152,14 +152,15 @@ typedef struct
     ble_srv_error_handler_t      error_handler;                         /**< Function to be called in case of an error. */
 } ble_dfu_init_t;
 
-/**@brief      Function for handling a BLE stack event.
+/**@brief      Function for handling a BLE event.
  *
  * @details    The DFU service expects the application to call this function each time an event
- *             is received from the BLE stack. This function processes the event, if it is relevant
- *             for the DFU service and calls the DFU event handler of the application if necessary.
+ *             is received from the S110 SoftDevice. This function processes the event, if it is
+ *             relevant for the DFU service and calls the DFU event handler of the application if
+ *             necessary.
  *
  * @param[in]  p_dfu        Pointer to the DFU service structure.
- * @param[in]  p_ble_evt    Pointer to the event received from BLE stack.
+ * @param[in]  p_ble_evt    Pointer to the event received from S110 SoftDevice.
  */
 void ble_dfu_on_ble_evt(ble_dfu_t * p_dfu, ble_evt_t * p_ble_evt);
 
@@ -171,7 +172,7 @@ void ble_dfu_on_ble_evt(ble_dfu_t * p_dfu, ble_evt_t * p_ble_evt);
  * @param[in]  p_dfu_init   Information needed to initialize the service.
  *
  * @return     NRF_SUCCESS if the DFU service and its characteristics were successfully added to the
- *             BLE Stack. Otherwise an error code.
+ *             S110 SoftDevice. Otherwise an error code.
  *             This function returns NRF_ERROR_NULL if the value of evt_handler in p_dfu_init
  *             structure provided is NULL or if the pointers supplied as input are NULL.
  */
@@ -186,8 +187,8 @@ uint32_t ble_dfu_init(ble_dfu_t * p_dfu, ble_dfu_init_t * p_dfu_init);
  * @param[in]   dfu_proc    Procedure for which this response is to be sent.
  * @param[in]   resp_val    Response value.
  *
- * @return      NRF_SUCCESS if the DFU Service has successfully requested the BLE stack to send the
- *              notification. Otherwise an error code.
+ * @return      NRF_SUCCESS if the DFU Service has successfully requested the S110 SoftDevice to
+ *              send the notification. Otherwise an error code.
  *              This function returns NRF_ERROR_INVALID_STATE if the device is not connected to a
  *              peer or if the DFU service is not initialized or if the notification of the DFU
  *              Status Report characteristic was not enabled by the peer. It returns NRF_ERROR_NULL
@@ -202,8 +203,8 @@ uint32_t ble_dfu_response_send(ble_dfu_t *          p_dfu,
  * @param[in]  p_dfu                      Pointer to the DFU service structure.
  * @param[in]  num_of_firmware_bytes_rcvd Number of bytes.
  *
- * @return     NRF_SUCCESS if the DFU Service has successfully requested the BLE stack to send the
- *             notification. Otherwise an error code.
+ * @return     NRF_SUCCESS if the DFU Service has successfully requested the S110 SoftDevice to send
+ *             the notification. Otherwise an error code.
  *             This function returns NRF_ERROR_INVALID_STATE if the device is not connected to a
  *             peer or if the DFU service is not initialized or if the notification of the DFU
  *             Status Report characteristic was not enabled by the peer. It returns NRF_ERROR_NULL
@@ -219,8 +220,8 @@ uint32_t ble_dfu_bytes_rcvd_report(ble_dfu_t * p_dfu, uint32_t num_of_firmware_b
  * @param[in]  p_dfu                      Pointer to the DFU service structure.
  * @param[in]  num_of_firmware_bytes_rcvd Number of bytes of firmware image received.
  *
- * @return     NRF_SUCCESS if the DFU Service has successfully requested the BLE stack to send the
- *             notification. Otherwise an error code.
+ * @return     NRF_SUCCESS if the DFU Service has successfully requested the S110 SoftDevice to send
+ *             the notification. Otherwise an error code.
  *             This function returns NRF_ERROR_INVALID_STATE if the device is not connected to a
  *             peer or if the DFU service is not initialized or if the notification of the DFU
  *             Status Report characteristic was not enabled by the peer. It returns NRF_ERROR_NULL

@@ -36,6 +36,10 @@
  * @note The application or the service using this module must propagate BLE stack events to the 
  *       Cycling Speead and Candence Service module by calling ble_cscs_on_ble_evt() from the 
  *       from the @ref ble_stack_handler function. This service will forward the event to the @ref ble_sdk_srv_sc_ctrlpt module.
+ *
+ * @note Attention! 
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ *  qualification listings, this section of source code must not be modified.
  */
 
 #ifndef BLE_CSCS_H__

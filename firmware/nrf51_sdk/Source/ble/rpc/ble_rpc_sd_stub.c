@@ -64,7 +64,7 @@ uint32_t sd_softdevice_enable(nrf_clock_lfclksrc_t           clock_source,
 }
 
 
-uint32_t sd_app_event_wait(void)
+uint32_t sd_app_evt_wait(void)
 {
     // Use directly __WFE and __SEV macros since the SoftDevice is not available.
     // Wait for event.
@@ -124,4 +124,16 @@ uint32_t sd_nvic_SetPriority(IRQn_Type IRQn, nrf_app_irq_priority_t priority)
 {
     NVIC_SetPriority(IRQn, (uint32_t)priority);
     return NRF_SUCCESS;
+}
+
+
+uint32_t sd_evt_get(uint32_t * p_evt_id)
+{
+    return NRF_ERROR_NOT_FOUND;
+}
+
+
+uint32_t sd_softdevice_disable(void)
+{
+    return NRF_ERROR_NOT_SUPPORTED;
 }

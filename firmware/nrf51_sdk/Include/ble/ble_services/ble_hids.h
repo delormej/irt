@@ -30,6 +30,10 @@
  *
  * @note The application must propagate BLE stack events to the Human Interface Device Service
  *       module by calling ble_hids_on_ble_evt() from the @ref ble_stack_handler callback.
+ *
+ * @note Attention! 
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ *  qualification listings, this section of source code must not be modified.
  */
 
 #ifndef BLE_HIDS_H__
@@ -110,7 +114,7 @@ typedef struct
  *        data needed for initialization of one Input Report characteristic. */
 typedef struct
 {
-    uint16_t                       max_len;          /**< Maximum length of characteristic value. */
+    uint16_t                      max_len;          /**< Maximum length of characteristic value. */
     ble_srv_report_ref_t          rep_ref;          /**< Value of the Report Reference descriptor. */
     ble_srv_cccd_security_mode_t  security_mode;    /**< Security mode for the HID Input Report characteristic, including cccd. */
 } ble_hids_inp_rep_init_t;
@@ -119,7 +123,7 @@ typedef struct
  *        data needed for initialization of one Output Report characteristic. */
 typedef struct
 {
-    uint16_t                       max_len;          /**< Maximum length of characteristic value. */
+    uint16_t                      max_len;          /**< Maximum length of characteristic value. */
     ble_srv_report_ref_t          rep_ref;          /**< Value of the Report Reference descriptor. */
     ble_srv_cccd_security_mode_t  security_mode;    /**< Security mode for the HID Output Report characteristic, including cccd. */
 } ble_hids_outp_rep_init_t;
@@ -128,7 +132,7 @@ typedef struct
  *        data needed for initialization of one Feature Report characteristic. */
 typedef struct
 {
-    uint16_t                       max_len;          /**< Maximum length of characteristic value. */
+    uint16_t                      max_len;          /**< Maximum length of characteristic value. */
     ble_srv_report_ref_t          rep_ref;          /**< Value of the Report Reference descriptor. */
     ble_srv_cccd_security_mode_t  security_mode;    /**< Security mode for the HID Service Feature Report characteristic, including cccd. */
 } ble_hids_feature_rep_init_t;

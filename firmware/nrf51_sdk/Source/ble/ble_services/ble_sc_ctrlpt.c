@@ -10,6 +10,11 @@
  *
  */
 
+/* Attention! 
+*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile 
+*  qualification listings, this section of source code must not be modified.
+*/
+
 #include "ble_sc_ctrlpt.h"
 #include <string.h>
 #include "nordic_common.h"
@@ -161,6 +166,7 @@ static int ctrlpt_rsp_encode(ble_sc_ctrlpt_t *     p_sc_ctrlpt,
             }
 
             default:
+                // No implementation needed.
                 break;
         }
     }

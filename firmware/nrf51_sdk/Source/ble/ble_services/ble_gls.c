@@ -9,6 +9,11 @@
  * the file.
  */
 
+/* Attention! 
+*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile 
+*  qualification listings, this section of source code must not be modified.
+*/
+
 #include "ble_gls.h"
 #include <string.h>
 #include "ble_srv_common.h"
@@ -745,7 +750,7 @@ static void racp_report_records_procedure(ble_gls_t * p_gls)
  *
  * @return      TRUE if the request is to be executed, FALSE if it is to be rejected.
  *              If it is to be rejected, p_response_code will contain the response code to be
- *              returned to the master.
+ *              returned to the central.
  */
 static bool is_request_to_be_executed(const ble_racp_value_t * p_racp_request,
                                       uint8_t *                p_response_code)
@@ -1228,6 +1233,7 @@ void ble_gls_on_ble_evt(ble_gls_t * p_gls, ble_evt_t * p_ble_evt)
             break;
 
         default:
+            // No implementation needed.
             break;
     }
 }

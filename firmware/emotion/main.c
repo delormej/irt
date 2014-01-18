@@ -60,11 +60,11 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 		
 		nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
 		
-		// TODO: doesn't work, but we need to do something like this.
+		/* TODO: doesn't work, but we need to do something like this.
 		uint8_t data[64];
 		sprintf(data, "ERR: %i, LINE: %i, FILE: %s", 
-				error_code, line_num, "Err");
-		debug_send(data, sizeof(data)); 
+		error_code, line_num, *p_file_name);
+		//debug_send(data, sizeof(data)); */
 
     // This call can be used for debug purposes during development of an application.
     // @note CAUTION: Activating this code will write the stack to flash on an error.
@@ -142,10 +142,10 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		cps_meas.last_wheel_event_time= speed_event.event_time_2048;
 
 		cycling_power_send(&cps_meas);
-				
-		uint8_t data[14] = "";
-		sprintf(&data[0], "%i %i %i", speed_event.accum_flywheel_revs, watts, m_servo_pos);
-		debug_send(&data[0], sizeof(data));		
+		
+		/*uint8_t data[14] = "";
+		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, speed_event.accum_wheel_revs);
+		debug_send(&data[0], sizeof(data));		*/
 }
 
 /**@brief Function for starting the application timers.
@@ -189,12 +189,18 @@ static void timers_init(void)
  * Event handlers
  * ----------------------------------------------------------------------------*/
 
+static void on_button_i_event(void)
+{
+	m_resistance_level = 0;
+	m_servo_pos = set_resistance(m_resistance_level);
+}
+
 static void on_button_ii_event(void)
 {
-	// TODO: wrap this in an ifdef for DEBUG.
+	/* TODO: wrap this in an ifdef for DEBUG.
 	uint8_t data[] = "button_ii_event";
 	debug_send(&data[0], sizeof(data));
-	//
+	*/
 	
 	// decrement
 	if (m_resistance_level > 0)
@@ -206,11 +212,6 @@ static void on_button_ii_event(void)
 
 static void on_button_iii_event(void)
 {
-	// TODO: wrap this in an ifdef for DEBUG.
-	uint8_t data[] = "button_iii_event";
-	debug_send(&data[0], sizeof(data));
-	//
-	
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 	{
@@ -219,6 +220,11 @@ static void on_button_iii_event(void)
 	}
 }
 
+static void on_button_iv_event(void)
+{
+	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
+	m_servo_pos = set_resistance(m_resistance_level);
+}
 
 static void on_ble_connected(void) 
 {
@@ -283,9 +289,10 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		default:
 			break;
 	}
-	uint8_t data[19];
-	sprintf(data, "MODE: %i, LEVEL: %i", rc_evt.mode, rc_evt.level);
-	debug_send(data, sizeof(data));
+
+	//uint8_t data[19];
+	//sprintf(data, "MODE: %i, LEVEL: %i", rc_evt.mode, rc_evt.level);
+	//debug_send(data, sizeof(data));	
 }
 
 		
@@ -293,14 +300,18 @@ static void on_button_evt(uint8_t pin_no)
 {
     switch (pin_no)
     {
+				case PIN_BUTTON_I:
+						on_button_i_event();
+						break;
 				case PIN_BUTTON_II:
 						on_button_ii_event();
 						break;
-
 				case PIN_BUTTON_III:
 						on_button_iii_event();
 						break;
-
+				case PIN_BUTTON_IV:
+						on_button_iv_event();
+						break;
         default:
             APP_ERROR_HANDLER(pin_no);
     }	

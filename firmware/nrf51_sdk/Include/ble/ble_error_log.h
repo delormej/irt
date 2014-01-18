@@ -26,13 +26,11 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "ble_nrf6310_pins.h"
 #include "ble_flash.h"
 
 #define ERROR_MESSAGE_LENGTH  128                                /**< Length of error message to stored. */
 #define STACK_DUMP_LENGTH     256                                /**< Length of stack to be stored at max: 64 entries of 4 bytes each. */
 #define FLASH_PAGE_ERROR_LOG  (BLE_FLASH_PAGE_END - 2)           /**< Address in flash where stack trace can be stored. */
-#define LOG_LED_PIN_NO        NRF6310_LED_6                      /**< Use LED 6 to identify messages in log. */
 
 /**@brief Error Log Data structure.
  *
@@ -64,38 +62,6 @@ typedef struct
  *
  */
 uint32_t ble_error_log_write(uint32_t err_code, const uint8_t * p_message, uint16_t line_number);
-
-
-/**@brief Function for reading Error Log from flash.
- *
- * @details If an error is present, this function will light LED6 and block current execution.
- *          Execution will continue when @see ble_error_log_clear() is called from application.
- *          @see ble_error_log_clear()  will also delete the error present in the flash.
- *
- * @param[in]   error_log   Pointer to the structure where the Error log present in the flash
- *                          will be put. If no error was present, this structure will not be 
- *                          changed.
- *
- * @return      NRF_SUCCESS if access to the flash was successful and no error was present in the
- *              flash.
- */
-uint32_t ble_error_log_read(ble_error_log_data_t * error_log);
-
-
-/**@brief Function for clearing the Error Log in flash.
- *
- * @details If an error was present and execution is blocked at @see ble_error_log_read() then this
- *          function will notify the read and ensure operation continues. This function is expected
- *          to be called from an interrupt, e.g. on button press.
- */
-void ble_error_log_clear(void);
-
-
-/**@brief Function for initializing the error log module.
- *
- * @details The init funtion will ensure the flash is initialized so that error can be logged.
- */
-void ble_error_log_init(void);
 
 
 #endif /* BLE_ERROR_LOG_H__ */

@@ -148,7 +148,7 @@ static uint32_t dfu_ctrl_pt_add(ble_dfu_t * const p_dfu)
 }
 
 
-/**@brief     Function for handing the @ref BLE_GAP_EVT_CONNECTED event from the S110 Stack.
+/**@brief     Function for handling the @ref BLE_GAP_EVT_CONNECTED event from the S110 SoftDevice.
  *
  * @param[in] p_dfu     DFU Service Structure.
  * @param[in] p_ble_evt Pointer to the event received from BLE stack.
@@ -193,7 +193,7 @@ static bool is_cccd_configured(ble_dfu_t * p_dfu)
 }
 
 
-/**@brief     Function for handing a Write event on the Control Point characteristic.
+/**@brief     Function for handling a Write event on the Control Point characteristic.
  *
  * @param[in] p_dfu             DFU Service Structure.
  * @param[in] p_ble_write_evt   Pointer to the write event received from BLE stack.
@@ -309,7 +309,7 @@ static uint32_t on_ctrl_pt_write(ble_dfu_t * p_dfu, ble_gatts_evt_write_t * p_bl
 }
 
 
-/**@brief     Function for handing the @ref BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST event from the S110
+/**@brief     Function for handling the @ref BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST event from the S110
  *            Stack.
  *
  * @param[in] p_dfu     DFU Service Structure.
@@ -339,7 +339,7 @@ static void on_rw_auth_req(ble_dfu_t * p_dfu, ble_evt_t * p_ble_evt)
 }
 
 
-/**@brief     Function for handing the @ref BLE_GATTS_EVT_WRITE event from the S110 Stack.
+/**@brief     Function for handling the @ref BLE_GATTS_EVT_WRITE event from the S110 SoftDevice.
  *
  * @param[in] p_dfu     DFU Service Structure.
  * @param[in] p_ble_evt Pointer to the event received from BLE stack.
@@ -361,7 +361,7 @@ static void on_write(ble_dfu_t * p_dfu, ble_evt_t * p_ble_evt)
 }
 
 
-/**@brief     Function for handing the BLE_GAP_EVT_DISCONNECTED event from the S110 Stack.
+/**@brief     Function for handling the BLE_GAP_EVT_DISCONNECTED event from the S110 SoftDevice.
  *
  * @param[in] p_dfu     DFU Service Structure.
  * @param[in] p_ble_evt Pointer to the event received from BLE stack.
@@ -463,6 +463,7 @@ void ble_dfu_on_ble_evt(ble_dfu_t * p_dfu, ble_evt_t * p_ble_evt)
                 break;
 
             default:
+                // No implementation needed.
                 break;
         }
     }

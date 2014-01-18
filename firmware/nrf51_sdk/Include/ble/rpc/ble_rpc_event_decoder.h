@@ -34,7 +34,7 @@
 
 /**@brief Function for pushing an encoded packet in the event decoder.
  *
- * @warning This function is not reentrant safe and should always be called from same interrupt
+ * @warning This function is not reentrant safe and should always be called from the same interrupt
  *          context.
  *
  * @param[in] p_event_packet       Pointer to the encoded event received.

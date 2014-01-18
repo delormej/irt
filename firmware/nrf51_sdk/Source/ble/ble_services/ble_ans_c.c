@@ -8,6 +8,12 @@
  * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
  * the file.
  */
+
+/* Attention!
+*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile
+*  qualification listings, this section of source code must not be modified.
+*/
+
 #include "ble_ans_c.h"
 #include <string.h>
 #include <stdbool.h>
@@ -17,7 +23,7 @@
 #include "nrf_assert.h"
 #include "ble_bondmngr.h"
 #include "ble_bondmngr_cfg.h"
-#include "ble_flash.h"
+#include "pstorage.h"
 
 #define START_HANDLE_DISCOVER           0x0001                                             /**< Value of start handle during discovery. */
 
@@ -28,10 +34,10 @@
 #define TX_BUFFER_SIZE                  (TX_BUFFER_MASK + 1)                               /**< Size of send buffer, which is 1 higher than the mask. */
 #define WRITE_MESSAGE_LENGTH            2                                                  /**< Length of the write message for CCCD/control point. */
 
-#define BLE_ANS_MAX_DISCOVERED_MASTERS  BLE_BONDMNGR_MAX_BONDED_MASTERS                    /**< Maximum number of discovered services that can be stored in the flash. This number should be identical to maximum number of bonded masters. */
+#define BLE_ANS_MAX_DISCOVERED_CENTRALS  BLE_BONDMNGR_MAX_BONDED_CENTRALS                  /**< Maximum number of discovered services that can be stored in the flash. This number should be identical to maximum number of bonded centrals. */
 
 #define DISCOVERED_SERVICE_DB_SIZE \
-    CEIL_DIV(sizeof(alert_service_t) * BLE_ANS_MAX_DISCOVERED_MASTERS, sizeof(uint32_t))   /**< Size of bonded masters database in word size (4 byte). */
+    CEIL_DIV(sizeof(alert_service_t) * BLE_ANS_MAX_DISCOVERED_CENTRALS, sizeof(uint32_t))  /**< Size of bonded centrals database in word size (4 byte). */
 
 typedef enum
 {
@@ -42,13 +48,13 @@ typedef enum
 typedef enum
 {
     STATE_UNINITIALIZED,                                                                   /**< Uninitialized state of the internal state machine. */
-    STATE_IDLE,                                                                            /**< Idle state, this is the state when no master has connected to this device. */
-    STATE_DISC_SERV,                                                                       /**< A BLE master is connected and a service discovery is in progress. */
-    STATE_DISC_CHAR,                                                                       /**< A BLE master is connected and characteristic discovery is in progress. */
-    STATE_DISC_DESC,                                                                       /**< A BLE master is connected and descriptor discovery is in progress. */
-    STATE_RUNNING,                                                                         /**< A BLE master is connected and complete service discovery has been performed. */
-    STATE_WAITING_ENC,                                                                     /**< A previously bonded BLE master has re-connected and the service awaits the setup of an encrypted link. */
-    STATE_RUNNING_NOT_DISCOVERED,                                                          /**< A BLE master is connected and a service discovery is in progress. */
+    STATE_IDLE,                                                                            /**< Idle state, this is the state when no central has connected to this device. */
+    STATE_DISC_SERV,                                                                       /**< A BLE central is connected and a service discovery is in progress. */
+    STATE_DISC_CHAR,                                                                       /**< A BLE central is connected and characteristic discovery is in progress. */
+    STATE_DISC_DESC,                                                                       /**< A BLE central is connected and descriptor discovery is in progress. */
+    STATE_RUNNING,                                                                         /**< A BLE central is connected and complete service discovery has been performed. */
+    STATE_WAITING_ENC,                                                                     /**< A previously bonded BLE central has re-connected and the service awaits the setup of an encrypted link. */
+    STATE_RUNNING_NOT_DISCOVERED,                                                          /**< A BLE central is connected and a service discovery is in progress. */
 } ans_state_t;
 
 /**@brief Structure used for holding the characteristic found during discovery process.
@@ -59,14 +65,14 @@ typedef struct
     ble_gatt_char_props_t    properties;                                                   /**< Properties for this characteristic. */
     uint16_t                 handle_decl;                                                  /**< Characteristic Declaration Handle for this characteristic. */
     uint16_t                 handle_value;                                                 /**< Value Handle for the value provided in this characteristic. */
-    uint16_t                 handle_cccd;                                                  /**< CCCD Handle value for this characteristic. BLE_ANS_INVALID_HANDLE if not present in the master. */
+    uint16_t                 handle_cccd;                                                  /**< CCCD Handle value for this characteristic. BLE_ANS_INVALID_HANDLE if not present in the central. */
 } alert_characteristic_t;
 
 /**@brief Structure used for holding the Alert Notification Service found during discovery process.
  */
 typedef struct
 {
-    uint8_t                  handle;                                                       /**< Handle of Alert Notification Service which identifies to which master this discovered service belongs. */
+    uint8_t                  handle;                                                       /**< Handle of Alert Notification Service which identifies to which central this discovered service belongs. */
     ble_gattc_service_t      service;                                                      /**< The GATT service holding the discovered Alert Notification Service. */
     alert_characteristic_t   alert_notif_ctrl_point;                                       /**< Characteristic for the Alert Notification Control Point. */
     alert_characteristic_t   suported_new_alert_cat;                                       /**< Characteristic for the Supported New Alert category. */
@@ -75,7 +81,7 @@ typedef struct
     alert_characteristic_t   unread_alert_status;                                          /**< Characteristic for the Unread Alert Notification. */
 } alert_service_t;
 
-/**@brief Structure for writing a message to the master, i.e. Control Point or CCCD.
+/**@brief Structure for writing a message to the central, i.e. Control Point or CCCD.
  */
 typedef struct
 {
@@ -83,7 +89,7 @@ typedef struct
     ble_gattc_write_params_t gattc_params;                                                 /**< GATTC parameters for this message. */
 } write_params_t;
 
-/**@brief Structure for holding data to be transmitted to the connected master.
+/**@brief Structure for holding data to be transmitted to the connected central.
  */
 typedef struct
 {
@@ -96,14 +102,14 @@ typedef struct
     } req;
 } tx_message_t;
 
-static tx_message_t          m_tx_buffer[TX_BUFFER_SIZE];                                  /**< Transmit buffer for messages to be transmitted to the master. */
+static tx_message_t          m_tx_buffer[TX_BUFFER_SIZE];                                  /**< Transmit buffer for messages to be transmitted to the central. */
 static uint32_t              m_tx_insert_index = 0;                                        /**< Current index in the transmit buffer where next message should be inserted. */
 static uint32_t              m_tx_index = 0;                                               /**< Current index in the transmit buffer from where the next message to be transmitted resides. */
-static uint8_t               m_flash_page_num;                                             /**< Flash page number where discovered services for bonded masters should be stored. */
+static pstorage_handle_t     m_flash_handle;                                               /**< Flash handle where discovered services for bonded masters should be stored. */
 
 static ans_state_t           m_client_state = STATE_UNINITIALIZED;                         /**< Current state of the Alert Notification State Machine. */
 
-static uint32_t              m_service_db[DISCOVERED_SERVICE_DB_SIZE];                     /**< Service database for bonded masters (Word size aligned). */
+static uint32_t              m_service_db[DISCOVERED_SERVICE_DB_SIZE];                     /**< Service database for bonded centrals (Word size aligned). */
 static alert_service_t *     mp_service_db;                                                /**< Pointer to start of discovered services database. */
 static alert_service_t       m_service;                                                    /**< Current service data. */
 
@@ -176,7 +182,7 @@ static void service_disc_req_send(const ble_ans_c_t * p_ans)
 /**@brief Function for executing the Characteristic Discovery Procedure.
  */
 static void characteristic_disc_req_send(const ble_ans_c_t *              p_ans,
-                                      const ble_gattc_handle_range_t * p_handle)
+                                         const ble_gattc_handle_range_t * p_handle)
 {
     uint32_t err_code;
 
@@ -229,18 +235,18 @@ static void descriptor_disc_req_send(const ble_ans_c_t * p_ans)
 }
 
 
-/**@brief Function for indicating that a connection has successfully been established. 
- *        Either when the Service Discovery Procedure completes or a re-connection has been 
- *        established to a bonded master.
+/**@brief Function for indicating that a connection has successfully been established.
+ *        Either when the Service Discovery Procedure completes or a re-connection has been
+ *        established to a bonded central.
  *
- * @details This function is executed when a service discovery or a re-connect to a bonded master
- *          occurs. In the event of re-connection to a bonded master, this function will ensure
+ * @details This function is executed when a service discovery or a re-connect to a bonded central
+ *          occurs. In the event of re-connection to a bonded central, this function will ensure
  *          writing of the control point according to the Alert Notification Service Client
  *          specification.
  *          Finally an event is passed to the application:
- *          BLE_ANS_C_EVT_RECONNECT         - When we are connected to an existing master and the
+ *          BLE_ANS_C_EVT_RECONNECT         - When we are connected to an existing central and the
  *                                            alert notification control point has been written.
- *          BLE_ANS_C_EVT_DISCOVER_COMPLETE - When we are connected to a new master and the Service
+ *          BLE_ANS_C_EVT_DISCOVER_COMPLETE - When we are connected to a new central and the Service
  *                                            Discovery has been completed.
  */
 static void connection_established(const ble_ans_c_t * p_ans)
@@ -254,7 +260,7 @@ static void connection_established(const ble_ans_c_t * p_ans)
         m_service.handle = INVALID_SERVICE_HANDLE_DISC;
     }
 
-    if (p_ans->master_handle != INVALID_MASTER_HANDLE &&
+    if (p_ans->central_handle != INVALID_CENTRAL_HANDLE &&
         m_service.handle < INVALID_SERVICE_HANDLE_BASE)
     {
         uint32_t err_code = ble_ans_c_new_alert_notify(p_ans, ANS_TYPE_ALL_ALERTS);
@@ -280,7 +286,7 @@ static void connection_established(const ble_ans_c_t * p_ans)
 }
 
 
-/**@brief Function for waiting until an encrypted link has been established to a bonded master.
+/**@brief Function for waiting until an encrypted link has been established to a bonded central.
  */
 static void encrypted_link_setup_wait(const ble_ans_c_t * p_ans)
 {
@@ -288,19 +294,19 @@ static void encrypted_link_setup_wait(const ble_ans_c_t * p_ans)
 }
 
 
-/**@brief Function for handling the connect event when a master connects.
+/**@brief Function for handling the connect event when a central connects.
  *
- * @details This function will check if bonded master connects, and do the following
- *          Bonded master  - enter wait for encryption state.
- *          Unknown master - Initiate service discovery procedure.
+ * @details This function will check if bonded central connects, and do the following
+ *          Bonded central  - enter wait for encryption state.
+ *          Unknown central - Initiate service discovery procedure.
  */
 static void event_connect(ble_ans_c_t * p_ans, const ble_evt_t * p_ble_evt)
 {
     p_ans->conn_handle = p_ble_evt->evt.gatts_evt.conn_handle;
 
-    if (p_ans->master_handle != INVALID_MASTER_HANDLE)
+    if (p_ans->central_handle != INVALID_CENTRAL_HANDLE)
     {
-        m_service = mp_service_db[p_ans->master_handle];
+        m_service = mp_service_db[p_ans->central_handle];
         encrypted_link_setup_wait(p_ans);
     }
     else
@@ -312,9 +318,9 @@ static void event_connect(ble_ans_c_t * p_ans, const ble_evt_t * p_ble_evt)
 
 
 /**@brief Function for handling the encrypted link event when a secure
- *        connection has been established with a master.
+ *        connection has been established with a central.
  *
- * @details This function will check if the service for the master is known.
+ * @details This function will check if the service for the central is known.
  *          Service known   - Execute action running / switch to running state.
  *          Service unknown - Initiate Service Discovery Procedure.
  */
@@ -380,7 +386,7 @@ static void characteristics_set(alert_characteristic_t * p_characteristic,
                                 const ble_gattc_char_t * p_char_resp)
 {
     BLE_UUID_COPY_INST(p_characteristic->uuid, p_char_resp->uuid);
-    
+
     p_characteristic->properties   = p_char_resp->char_props;
     p_characteristic->handle_decl  = p_char_resp->handle_decl;
     p_characteristic->handle_value = p_char_resp->handle_value;
@@ -400,7 +406,7 @@ static void event_characteristic_rsp(ble_ans_c_t * p_ans, const ble_evt_t * p_bl
     if (p_ble_evt->evt.gattc_evt.gatt_status == BLE_GATT_STATUS_ATTERR_ATTRIBUTE_NOT_FOUND ||
         p_ble_evt->evt.gattc_evt.gatt_status == BLE_GATT_STATUS_ATTERR_INVALID_HANDLE)
     {
-        if ((m_service.alert_notif_ctrl_point.handle_value == 0)    ||					             
+        if ((m_service.alert_notif_ctrl_point.handle_value == 0)    ||
             (m_service.suported_new_alert_cat.handle_value == 0)    ||
             (m_service.suported_unread_alert_cat.handle_value == 0) ||
             (m_service.new_alert.handle_value == 0)                 ||
@@ -409,7 +415,7 @@ static void event_characteristic_rsp(ble_ans_c_t * p_ans, const ble_evt_t * p_bl
             // At least one required characteristic is missing on the server side.
             handle_discovery_failure(p_ans, NRF_ERROR_NOT_FOUND);
         }
-        else 
+        else
         {
             descriptor_disc_req_send(p_ans);
         }
@@ -453,6 +459,7 @@ static void event_characteristic_rsp(ble_ans_c_t * p_ans, const ble_evt_t * p_bl
                     break;
 
                 default:
+                    // No implementation needed.
                     break;
             }
         }
@@ -533,7 +540,7 @@ static void event_descriptor_rsp(ble_ans_c_t * p_ans, const ble_evt_t * p_ble_ev
 }
 
 
-/**@brief Function for receiving and validating notifications received from the master.
+/**@brief Function for receiving and validating notifications received from the central.
  */
 static void event_notify(ble_ans_c_t * p_ans, const ble_evt_t * p_ble_evt)
 {
@@ -574,7 +581,7 @@ static void event_notify(ble_ans_c_t * p_ans, const ble_evt_t * p_ble_evt)
     memcpy(p_alert->p_alert_msg_buf,
            &p_notification->data[NOTIFICATION_DATA_LENGTH],
            p_alert->alert_msg_length);                                                  //lint !e416
- 
+
     p_ans->evt_handler(&event);
 }
 
@@ -623,7 +630,7 @@ static void event_read_rsp(ble_ans_c_t * p_ans, const ble_evt_t * p_ble_evt)
 
     if (p_response->len == READ_DATA_LENGTH_MIN)
     {
-        // Those must default to 0, if they are not returned by master.
+        // Those must default to 0, if they are not returned by central.
         event.data.settings.ans_high_prioritized_alert_support = 0;
         event.data.settings.ans_instant_message_support        = 0;
     }
@@ -644,12 +651,12 @@ static void event_disconnect(ble_ans_c_t * p_ans)
     m_client_state = STATE_IDLE;
 
     if (m_service.handle == INVALID_SERVICE_HANDLE_DISC &&
-        p_ans->master_handle != INVALID_MASTER_HANDLE)
+        p_ans->central_handle != INVALID_CENTRAL_HANDLE)
     {
-        m_service.handle = p_ans->master_handle;
+        m_service.handle = p_ans->central_handle;
     }
 
-    if (m_service.handle < BLE_ANS_MAX_DISCOVERED_MASTERS)
+    if (m_service.handle < BLE_ANS_MAX_DISCOVERED_CENTRALS)
     {
         mp_service_db[m_service.handle] = m_service;
     }
@@ -659,7 +666,7 @@ static void event_disconnect(ble_ans_c_t * p_ans)
     m_service.handle      = INVALID_SERVICE_HANDLE;
     p_ans->service_handle = INVALID_SERVICE_HANDLE;
     p_ans->conn_handle    = BLE_CONN_HANDLE_INVALID;
-    p_ans->master_handle  = INVALID_MASTER_HANDLE;
+    p_ans->central_handle = INVALID_CENTRAL_HANDLE;
 
     // Only if our previous state was RUNNING, i.e. the client had fully initialized, then the
     // application should be notified of the DISCONNECT_COMPLETE.
@@ -671,18 +678,18 @@ static void event_disconnect(ble_ans_c_t * p_ans)
 }
 
 
-/**@brief Function for handling of Bond Manager events. 
+/**@brief Function for handling of Bond Manager events.
  */
 void ble_ans_c_on_bondmgmr_evt(ble_ans_c_t * p_ans, const ble_bondmngr_evt_t * p_bond_mgmr_evt)
 {
     switch (p_bond_mgmr_evt->evt_type)
     {
         case BLE_BONDMNGR_EVT_NEW_BOND:
-            p_ans->master_handle = p_bond_mgmr_evt->master_handle;
+            p_ans->central_handle = p_bond_mgmr_evt->central_handle;
             break;
 
-        case BLE_BONDMNGR_EVT_CONN_TO_BONDED_MASTER:
-            p_ans->master_handle = p_bond_mgmr_evt->master_handle;
+        case BLE_BONDMNGR_EVT_CONN_TO_BONDED_CENTRAL:
+            p_ans->central_handle = p_bond_mgmr_evt->central_handle;
             break;
 
         default:
@@ -713,7 +720,7 @@ void ble_ans_c_on_ble_evt(ble_ans_c_t * p_ans, const ble_evt_t * p_ble_evt)
             break;
 
         case STATE_WAITING_ENC:
-            if ((event == BLE_GAP_EVT_AUTH_STATUS)|| (event == BLE_GAP_EVT_SEC_INFO_REQUEST))
+            if ((event == BLE_GAP_EVT_AUTH_STATUS) || (event == BLE_GAP_EVT_SEC_INFO_REQUEST))
             {
                 event_encrypted_link(p_ans, p_ble_evt);
             }
@@ -793,9 +800,21 @@ void ble_ans_c_on_ble_evt(ble_ans_c_t * p_ans, const ble_evt_t * p_ble_evt)
 }
 
 
+static void ans_pstorage_callback(pstorage_handle_t * handle,
+                                  uint8_t             op_code,
+                                  uint32_t            reason,
+                                  uint8_t           * p_data,
+                                  uint32_t            param_len)
+{
+}
+
+
 uint32_t ble_ans_c_init(ble_ans_c_t * p_ans, const ble_ans_c_init_t * p_ans_init)
 {
-    if (p_ans_init->evt_handler == NULL || p_ans_init->flash_page_num == 0)
+    uint32_t                err_code;
+    pstorage_module_param_t param;
+
+    if (p_ans_init->evt_handler == NULL)
     {
         return NRF_ERROR_INVALID_PARAM;
     }
@@ -803,7 +822,7 @@ uint32_t ble_ans_c_init(ble_ans_c_t * p_ans, const ble_ans_c_init_t * p_ans_init
     p_ans->evt_handler         = p_ans_init->evt_handler;
     p_ans->error_handler       = p_ans_init->error_handler;
     p_ans->service_handle      = INVALID_SERVICE_HANDLE;
-    p_ans->master_handle       = INVALID_MASTER_HANDLE;
+    p_ans->central_handle       = INVALID_CENTRAL_HANDLE;
     p_ans->service_handle      = 0;
     p_ans->message_buffer_size = p_ans_init->message_buffer_size;
     p_ans->p_message_buffer    = p_ans_init->p_message_buffer;
@@ -812,12 +831,19 @@ uint32_t ble_ans_c_init(ble_ans_c_t * p_ans, const ble_ans_c_init_t * p_ans_init
     memset(&m_service, 0, sizeof(alert_service_t));
     memset(m_tx_buffer, 0, TX_BUFFER_SIZE);
 
-    m_service.handle = INVALID_SERVICE_HANDLE;
-    m_client_state   = STATE_IDLE;
-    m_flash_page_num = p_ans_init->flash_page_num;
-    mp_service_db    = (alert_service_t *) (m_service_db);
+    m_service.handle  = INVALID_SERVICE_HANDLE;
+    m_client_state    = STATE_IDLE;
 
-    return NRF_SUCCESS;
+    param.block_count = 1;
+    param.block_size  = DISCOVERED_SERVICE_DB_SIZE * sizeof(uint32_t); // uint32_t array.
+    param.cb          = ans_pstorage_callback;
+
+    // Register with storage module.
+    err_code = pstorage_register(&param, &m_flash_handle);
+
+    mp_service_db = (alert_service_t *) (m_service_db);
+
+    return err_code;
 }
 
 
@@ -826,7 +852,7 @@ uint32_t ble_ans_c_init(ble_ans_c_t * p_ans, const ble_ans_c_init_t * p_ans_init
 static uint32_t cccd_configure(uint16_t conn_handle, uint16_t handle_cccd, bool enable)
 {
     tx_message_t * p_msg;
-    uint16_t       cccd_val = enable ? BLE_CCCD_NOTIFY_BIT_MASK : 0;
+    uint16_t       cccd_val = enable ? BLE_GATT_HVX_NOTIFICATION : 0;
 
     if (m_client_state != STATE_RUNNING)
     {
@@ -968,22 +994,24 @@ uint32_t ble_ans_c_unread_alert_notify(const ble_ans_c_t * p_ans, ble_ans_catego
 uint32_t ble_ans_c_service_load(const ble_ans_c_t * p_ans)
 {
     uint32_t err_code;
-    uint8_t  word_count;
     uint32_t i;
 
-    err_code = ble_flash_page_read(m_flash_page_num, m_service_db, &word_count);
+    err_code = pstorage_load((uint8_t *)m_service_db,
+                             &m_flash_handle,
+                             (DISCOVERED_SERVICE_DB_SIZE * sizeof(uint32_t)),
+                             0);
 
     if (err_code != NRF_SUCCESS)
     {
         // Problem with loading values from flash, initialize the RAM DB with default.
-        for (i = 0; i < BLE_ANS_MAX_DISCOVERED_MASTERS; ++i)
+        for (i = 0; i < BLE_ANS_MAX_DISCOVERED_CENTRALS; ++i)
         {
             mp_service_db[i].handle = INVALID_SERVICE_HANDLE;
         }
-        
+
         if (err_code == NRF_ERROR_NOT_FOUND)
         {
-            // The flash does not contain any memorized masters, set the return code to success.
+            // The flash does not contain any memorized centrals, set the return code to success.
             err_code = NRF_SUCCESS;
         }
     }
@@ -994,11 +1022,11 @@ uint32_t ble_ans_c_service_load(const ble_ans_c_t * p_ans)
 uint32_t ble_ans_c_service_store(void)
 {
     uint32_t err_code;
-    uint8_t  word_count;
 
-    word_count = DISCOVERED_SERVICE_DB_SIZE;
-
-    err_code = ble_flash_page_write(m_flash_page_num, m_service_db, word_count);
+    err_code = pstorage_store(&m_flash_handle,
+                              (uint8_t *) m_service_db,
+                              DISCOVERED_SERVICE_DB_SIZE * sizeof(uint32_t),
+                              0);
 
     return err_code;
 }
@@ -1011,6 +1039,6 @@ uint32_t ble_ans_c_service_delete(void)
         return NRF_SUCCESS;
     }
 
-    return ble_flash_page_erase(m_flash_page_num);
+    return pstorage_clear(&m_flash_handle, 0);
 }
 

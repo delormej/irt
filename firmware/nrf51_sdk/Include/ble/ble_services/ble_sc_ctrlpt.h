@@ -21,12 +21,11 @@
  *          by the @ref ble_sdk_srv_csc module and the ble_sdk_srv_rsc module for control point
  *          mechanisms like setting a cumulative value, Start an automatic calibration,
  *          Update the sensor location or request the supported locations.
+ *
+ * @note Attention! 
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ *  qualification listings, this section of source code must not be modified.
  */
-
-/* Attention!
-*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile
-*  qualification listings, this section of source code must not be modified.
-*/
 
 #ifndef BLE_SC_CTRLPT_H__
 #define BLE_SC_CTRLPT_H__

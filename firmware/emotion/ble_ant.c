@@ -23,6 +23,7 @@
 #include <string.h>
 #include "nordic_common.h"
 #include "nrf.h"
+#include "softdevice_handler.h"
 #include "app_error.h"
 #include "nrf51_bitfields.h"
 #include "ble.h"
@@ -34,19 +35,18 @@
 #include "ble_dis.h"
 #include "ble_conn_params.h"
 #include "ble_sensorsim.h"
-#include "ble_ant_stack_handler.h"
 #include "ble_bondmngr.h"
-#include "ble_radio_notification.h"
-#include "ble_flash.h"
 #include "app_timer.h"
-#include "ant_parameters_ds.h"
-#include "ant_interface_ds.h"
-
+#include "ant_parameters.h"
+#include "ant_interface.h"
+#include "nrf_soc.h"
+#include "pstorage.h"
 #include "irt_peripheral.h"
 #include "irt_emotion.h"
 #include "ant_bike_power.h"
 #include "ble_nus.h"
 #include "ble_cps.h"
+#include "ble_gap.h"
 
 #define APP_ADV_INTERVAL                40                                           /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                          /**< The advertising timeout in units of seconds. */
@@ -148,7 +148,7 @@ static void gap_params_init(void)
 
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
     
-    err_code = sd_ble_gap_device_name_set(&sec_mode, DEVICE_NAME, strlen(DEVICE_NAME));
+    err_code = sd_ble_gap_device_name_set(&sec_mode, (uint8_t const*)DEVICE_NAME, strlen(DEVICE_NAME));
     APP_ERROR_CHECK(err_code);
 
     err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_HEART_RATE_SENSOR_HEART_RATE_BELT);
@@ -392,7 +392,7 @@ static void conn_params_init(void)
     cp_init.first_conn_params_update_delay = FIRST_CONN_PARAMS_UPDATE_DELAY;
     cp_init.next_conn_params_update_delay  = NEXT_CONN_PARAMS_UPDATE_DELAY;
     cp_init.max_conn_params_update_count   = MAX_CONN_PARAMS_UPDATE_COUNT;
-    cp_init.start_on_notify_cccd_handle    = m_hrs.hrm_handles.cccd_handle;
+    cp_init.start_on_notify_cccd_handle    = m_hrs.hrm_handles.cccd_handle; // TODO: need to change this and remove hrs service.
     cp_init.disconnect_on_fail             = false;
     cp_init.evt_handler                    = on_conn_params_evt;
     cp_init.error_handler                  = conn_params_error_handler;
@@ -671,11 +671,16 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
  */
 static void ble_ant_stack_init(void)
 {
-    BLE_ANT_STACK_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM,
-                               BLE_L2CAP_MTU_DEF,
-                               ble_evt_dispatch,
-                               on_ant_evt,
-                               false);
+    // Initialize SoftDevice
+    SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, false);
+    
+    // Subscribe for BLE events.
+    uint32_t err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
+    APP_ERROR_CHECK(err_code);
+        
+    // Subscribe for ANT events.
+    err_code = softdevice_ant_evt_handler_set(on_ant_evt);
+    APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Bond Manager module error handler.
@@ -707,19 +712,6 @@ static void bond_manager_init(void)
     bond_init_data.bonds_delete            = bonds_delete;
 
     err_code = ble_bondmngr_init(&bond_init_data);
-    APP_ERROR_CHECK(err_code);
-}
-
-
-/**@brief Initialize Radio Notification event handler.
- */
-static void radio_notification_init(void)
-{
-    uint32_t err_code;
-
-    err_code = ble_radio_notification_init(NRF_APP_PRIORITY_HIGH,
-                                           NRF_RADIO_NOTIFICATION_DISTANCE_800US,
-                                           ble_flash_on_radio_active_evt);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -785,7 +777,7 @@ void cycling_power_send(ble_cps_meas_t * p_cps_meas)
  */
 void power_manage(void)
 {
-    uint32_t err_code = sd_app_event_wait();
+    uint32_t err_code = sd_app_evt_wait();
     APP_ERROR_CHECK(err_code);
 }
 
@@ -796,10 +788,14 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 	
 		// Initialize S310 SoftDevice
     ble_ant_stack_init();
+		
+    // Initialize persistent storage module.
+    uint32_t err_code;
+		err_code = pstorage_init();
+    APP_ERROR_CHECK(err_code);		
     
     // Initialize Bluetooth helper modules
     bond_manager_init();
-    radio_notification_init();
     
     // Initialize Bluetooth stack parameters
     gap_params_init();

@@ -301,7 +301,7 @@ static void rx_vendor_specific_pkt_type_handle(const uint8_t * p_buffer, uint32_
 /**@brief Function for getting the sequence number of a reliable TX packet for which peer protocol 
  * entity acknowledgment is pending.
  *
- * @return sequence number of a reliable TX packet for which peer protocol entity acknowledgment
+ * @return sequence number of a reliable TX packet for which peer protocol entity acknowledgement
  * is pending.
  */
 static __INLINE uint8_t packet_number_to_transmit_get(void)
@@ -310,9 +310,9 @@ static __INLINE uint8_t packet_number_to_transmit_get(void)
 }
 
 
-/**@brief Function for getting the expected acknowledgment number.
+/**@brief Function for getting the expected acknowledgement number.
  *
- * @return expected acknowledgment number.
+ * @return expected acknowledgement number.
  */
 static __INLINE uint8_t expected_ack_number_get(void)
 {
@@ -324,14 +324,14 @@ static __INLINE uint8_t expected_ack_number_get(void)
 }
 
 
-/**@brief Function for processing a received acknowledgment packet.
+/**@brief Function for processing a received acknowledgement packet.
  *
- * Verifies does the received acknowledgment packet has the expected acknowledgment number and 
+ * Verifies does the received acknowledgement packet has the expected acknowledgement number and 
  * that the header checksum is correct. 
  *
  * @param[in] p_buffer Pointer to the packet data. 
  *
- * @return true if valid acknowledgment packet received.
+ * @return true if valid acknowledgement packet received.
  */
 static __INLINE bool rx_ack_pkt_type_handle(const uint8_t * p_buffer)
 {
@@ -440,11 +440,13 @@ static void tx_sm_event_handle(tx_event_t event)
                     break;
                     
                 default:
+                    // No implementation needed.
                     break;
             }
             break;
             
         default:        
+            // No implementation needed.
             break;
     }
 }
@@ -567,7 +569,7 @@ uint32_t hci_transport_tx_done_register(hci_transport_tx_done_handler_t event_ha
  * This function is registered in the @ref app_timer module when a timer is created on 
  * @ref hci_transport_open. 
  *
- * @note This function must be executed in APP-LO context otherwise retransmission behavior is 
+ * @note This function must be executed in APP-LO context otherwise retransmission behaviour is 
  *       undefined, see @ref nrf51_system_integration_serialization.
  * 
  * @param[in] p_context The timeout context.
@@ -648,7 +650,7 @@ uint32_t hci_transport_tx_alloc(uint8_t ** pp_memory)
     const uint32_t err_code = hci_mem_pool_tx_alloc((void **)pp_memory);    
     if (err_code == NRF_SUCCESS)
     {
-        // @note: no need to validate pp_memory against null as validation has allready been done 
+        // @note: no need to validate pp_memory against null as validation has already been done 
         // by hci_mem_pool_tx_alloc(...) and visible to us from the method return code.
         //lint -e(413) "Likely use of null pointer"        
         *pp_memory += PKT_HDR_SIZE; 
@@ -713,6 +715,7 @@ static uint32_t pkt_write_handle(void)
             break;
                 
         default:
+            // No implementation needed.
             break;
     }
     

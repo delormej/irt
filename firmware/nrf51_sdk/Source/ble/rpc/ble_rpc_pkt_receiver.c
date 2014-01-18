@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "nrf51.h"
-#include "ble_stack_handler.h"
+#include "softdevice_handler.h"
 #include "app_scheduler.h"
 
 
@@ -51,7 +51,7 @@ void hci_pkt_handler(hci_transport_evt_t hci_event)
                                                       (uint16_t) encoded_packet_length);
                 APP_ERROR_CHECK(err_code);
 
-                err_code = app_sched_event_put(NULL, 0, ble_stack_evt_get);
+                err_code = app_sched_event_put(NULL, 0, softdevice_evt_get);
             }
             else
             {

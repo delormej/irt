@@ -18,6 +18,14 @@
 #include "app_util.h"
 
 
+// Offset from where advertisement data other than flags information can start.
+#define ADV_FLAG_OFFSET    2
+
+// Offset for Advertising Data.
+// Offset is 2 as each Advertising Data contain 1 octet of Adveritising Data Type and
+// one octet Advertising Data Length.
+#define ADV_DATA_OFFSET    2
+
 // NOTE: For now, Security Manager TK Value and Security Manager Out of Band Flags (OOB) are omitted
 //       from the advertising data.
 
@@ -27,31 +35,60 @@ static uint32_t name_encode(const ble_advdata_t * p_advdata,
                             uint8_t *             p_len)
 {
     uint32_t err_code;
-    uint16_t name_length = BLE_GAP_ADV_MAX_SIZE - (2 + *p_len);
+    uint16_t rem_adv_data_len;
+    uint16_t actual_length;
     uint8_t  adv_data_format;
+    uint8_t  adv_offset;
+    
+    adv_offset = *p_len;
+    
+    
+    // Check for buffer overflow.
+    if ((adv_offset + ADV_DATA_OFFSET > BLE_GAP_ADV_MAX_SIZE) ||
+       ((p_advdata->short_name_len + ADV_DATA_OFFSET) > BLE_GAP_ADV_MAX_SIZE))
+    {
+        return NRF_ERROR_DATA_SIZE;
+    }
+    actual_length = rem_adv_data_len = (BLE_GAP_ADV_MAX_SIZE - adv_offset - ADV_FLAG_OFFSET);
 
-    // Get GAP device name.
-    err_code = sd_ble_gap_device_name_get(&p_encoded_data[*p_len + 2], &name_length);
+    // Get GAP device name and length
+    err_code = sd_ble_gap_device_name_get(&p_encoded_data[adv_offset + ADV_DATA_OFFSET],
+                                          &actual_length);
     if (err_code != NRF_SUCCESS)
     {
         return err_code;
     }
-
-    // Compute length and type of name field.
-    if ((p_advdata->short_name_len != 0) && (name_length > p_advdata->short_name_len))
+    
+    // Check if device internd to use short name and it can fit available data size.
+    if ((p_advdata->name_type == BLE_ADVDATA_FULL_NAME) && (actual_length <= rem_adv_data_len))
     {
-        name_length     = p_advdata->short_name_len;
-        adv_data_format = BLE_GAP_AD_TYPE_SHORT_LOCAL_NAME;
+        // Complete device name can fit, setting Complete Name in Adv Data.
+        adv_data_format = BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME;
+        rem_adv_data_len = actual_length;
     }
     else
     {
-        adv_data_format = BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME;
+        // Else short name needs to be used. Or application has requested use of short name.
+        adv_data_format = BLE_GAP_AD_TYPE_SHORT_LOCAL_NAME;
+        
+        // If application has set a preference on the short name size, it needs to be considered,
+        // else fit what can be fit.
+        if ((p_advdata->short_name_len != 0) && (p_advdata->short_name_len <= rem_adv_data_len))
+        {
+            // Short name fits available size.
+            rem_adv_data_len = p_advdata->short_name_len;
+        }
+        // Else whatever can fit the data buffer will be packed.
+        else
+        {
+            rem_adv_data_len = actual_length;
+        }
     }
     
     // Complete name field in encoded data.
-    p_encoded_data[(*p_len)++] = name_length + 1;
-    p_encoded_data[(*p_len)++] = adv_data_format;
-    (*p_len) += name_length;
+    p_encoded_data[adv_offset++] = rem_adv_data_len + 1;
+    p_encoded_data[adv_offset++] = adv_data_format;
+    (*p_len) += (rem_adv_data_len + ADV_DATA_OFFSET);
     
     return NRF_SUCCESS;
 }
@@ -97,7 +134,7 @@ static uint32_t uint8_array_encode(const uint8_array_t * p_uint8_array,
     }
 
     // Check for buffer overflow.
-    if ((*p_len) + 2 + p_uint8_array->size > BLE_GAP_ADV_MAX_SIZE)
+    if ((*p_len) + ADV_DATA_OFFSET + p_uint8_array->size > BLE_GAP_ADV_MAX_SIZE)
     {
         return NRF_ERROR_DATA_SIZE;
     }
@@ -273,7 +310,7 @@ static uint32_t conn_int_encode(const ble_advdata_conn_int_t * p_conn_int,
     uint32_t err_code;
 
     // Check for buffer overflow.
-    if ((*p_len) + 2 + 2 * sizeof(uint16_le_t) > BLE_GAP_ADV_MAX_SIZE)
+    if ((*p_len) + ADV_DATA_OFFSET + 2 * sizeof(uint16_le_t) > BLE_GAP_ADV_MAX_SIZE)
     {
         return NRF_ERROR_DATA_SIZE;
     }
@@ -304,7 +341,7 @@ static uint32_t manuf_specific_data_encode(const ble_advdata_manuf_data_t * p_ma
     uint8_t data_size = sizeof(uint16_le_t) + p_manuf_sp_data->data.size;
     
     // Check for buffer overflow.
-    if ((*p_len) + 2 + data_size > BLE_GAP_ADV_MAX_SIZE)
+    if ((*p_len) + ADV_DATA_OFFSET + data_size > BLE_GAP_ADV_MAX_SIZE)
     {
         return NRF_ERROR_DATA_SIZE;
     }

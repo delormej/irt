@@ -26,6 +26,7 @@
 #include "ble_types.h"
 #include "app_util.h"
 #include "ble_gap.h"
+#include "ble_gatt.h"
 
 /** @defgroup UUID_SERVICES Service UUID definitions
  * @{ */
@@ -123,16 +124,10 @@
 #define BLE_UUID_SENSOR_LOCATION_CHAR                            0x2A5D     /**< Sensor Location characteristic UUID. */
 /** @} */
 
-/** @defgroup UUID_CHARACTERISTICS Characteristic UUID definitions
+/** @defgroup UUID_CHARACTERISTICS descriptors UUID definitions
  * @{ */
 #define BLE_UUID_EXTERNAL_REPORT_REF_DESCR                       0x2907     /**< External Report Reference descriptor UUID. */
 #define BLE_UUID_REPORT_REF_DESCR                                0x2908     /**< Report Reference descriptor UUID. */
-/** @} */
-
-/** @defgroup CCCD_BITS CCCD bit definitions
- * @{ */
-#define BLE_CCCD_NOTIFY_BIT_MASK                                 0x0001     /**< Enable Notification bit. */
-#define BLE_CCCD_INDICATE_BIT_MASK                               0x0002     /**< Enable Indication bit. */
 /** @} */
 
 /** @defgroup ALERT_LEVEL_VALUES Definitions for the Alert Level characteristic values
@@ -201,7 +196,7 @@ typedef struct
 static __INLINE bool ble_srv_is_notification_enabled(uint8_t * p_encoded_data)
 {
     uint16_t cccd_value = uint16_decode(p_encoded_data);
-    return ((cccd_value & BLE_CCCD_NOTIFY_BIT_MASK) != 0);
+    return ((cccd_value & BLE_GATT_HVX_NOTIFICATION) != 0);
 }
     
 /**@brief Function for decoding a CCCD value, and then testing if indication is
@@ -214,7 +209,7 @@ static __INLINE bool ble_srv_is_notification_enabled(uint8_t * p_encoded_data)
 static __INLINE bool ble_srv_is_indication_enabled(uint8_t * p_encoded_data)
 {
     uint16_t cccd_value = uint16_decode(p_encoded_data);
-    return ((cccd_value & BLE_CCCD_INDICATE_BIT_MASK) != 0);
+    return ((cccd_value & BLE_GATT_HVX_INDICATION) != 0);
 }
 
 /**@brief Function for encoding a Report Reference Descriptor.

@@ -15,7 +15,8 @@
 #include "app_error.h"
 #include "app_util.h"
 #include "nrf_assert.h"
-#include "ant_interface_ds.h"
+#include "ant_interface.h"
+#include "nrf_soc.h"
 
 
 static ble_ant_stack_ble_evt_handler_t   m_ble_evt_handler;     /**< Application event handler for handling BLE stack events. */
@@ -75,7 +76,7 @@ uint32_t ble_ant_stack_handler_init(nrf_clock_lfclksrc_t              clock_sour
     }
 
     // Enable stack event interrupt (interrupt priority has already been set by the stack)
-    return sd_nvic_EnableIRQ(SD_EVENT_IRQn);
+    return sd_nvic_EnableIRQ(SD_EVT_IRQn);
 }
 
 

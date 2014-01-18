@@ -398,16 +398,16 @@ static uint32_t gap_ppcp_set_handle(uint8_t * p_command, uint32_t command_len)
 
     if (p_command[index++] == RPC_BLE_FIELD_PRESENT)
     {
-        conn_params.min_conn_interval = uint16_decode(&p_command[index]);
+        conn_params.min_conn_interval   = uint16_decode(&p_command[index]);
         index += sizeof(uint16_t);
 
-        conn_params.max_conn_interval = uint16_decode(&p_command[index]);
+        conn_params.max_conn_interval   = uint16_decode(&p_command[index]);
         index += sizeof(uint16_t);
 
-        conn_params.slave_latency     = uint16_decode(&p_command[index]);
+        conn_params.slave_latency       = uint16_decode(&p_command[index]);
         index += sizeof(uint16_t);
 
-        conn_params.conn_sup_timeout  = uint16_decode(&p_command[index]);
+        conn_params.conn_sup_timeout    = uint16_decode(&p_command[index]);
         p_conn_param = &conn_params;
     }
     
@@ -460,8 +460,8 @@ static uint32_t gap_ppcp_get_handle(uint8_t * p_command, uint32_t command_len)
     {
         encode_index += uint16_encode(p_conn_params->min_conn_interval, &resp_data[encode_index]);
         encode_index += uint16_encode(p_conn_params->max_conn_interval, &resp_data[encode_index]);
-        encode_index += uint16_encode(p_conn_params->slave_latency, &resp_data[encode_index]);
-        encode_index += uint16_encode(p_conn_params->conn_sup_timeout, &resp_data[encode_index]);
+        encode_index += uint16_encode(p_conn_params->slave_latency    , &resp_data[encode_index]);
+        encode_index += uint16_encode(p_conn_params->conn_sup_timeout , &resp_data[encode_index]);
 
         return ble_rpc_cmd_resp_data_send(SD_BLE_GAP_PPCP_GET, err_code, resp_data, encode_index);
     }
@@ -706,14 +706,14 @@ static uint32_t gap_conn_param_update_handle(const uint8_t * const p_command, ui
     // Check if the Connection Parameters field is present.
     if (p_command[index++] == RPC_BLE_FIELD_PRESENT)
     {
-        conn_params.min_conn_interval = uint16_decode(&p_command[index]);
-        index                        += sizeof(uint16_t);
-        conn_params.max_conn_interval = uint16_decode(&p_command[index]);
-        index                        += sizeof(uint16_t);
-        conn_params.slave_latency     = uint16_decode(&p_command[index]);
-        index                        += sizeof(uint16_t);
-        conn_params.conn_sup_timeout  = uint16_decode(&p_command[index]);
-        p_conn_params                 = &conn_params;
+        conn_params.min_conn_interval   = uint16_decode(&p_command[index]);
+        index                           += sizeof(uint16_t);
+        conn_params.max_conn_interval   = uint16_decode(&p_command[index]);
+        index                           += sizeof(uint16_t);
+        conn_params.slave_latency       = uint16_decode(&p_command[index]);
+        index                           += sizeof(uint16_t);
+        conn_params.conn_sup_timeout    = uint16_decode(&p_command[index]);
+        p_conn_params                   = &conn_params;
     }
 
     RPC_DECODER_LENGTH_CHECK(command_len, index, SD_BLE_GAP_CONN_PARAM_UPDATE);

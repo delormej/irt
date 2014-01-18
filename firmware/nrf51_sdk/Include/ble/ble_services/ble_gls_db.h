@@ -17,6 +17,11 @@
  * @brief Glucose Service module.
  *
  * @details This module implements at database of stored glucose measurement values.
+ *
+ * @note Attention! 
+ *  To maintain compliance with Nordic Semiconductor ASA Bluetooth profile 
+ *  qualification listings, These APIs must not be modified. However, the corresponding
+ *  functions' implementations can be modified.
  */
 
 #ifndef BLE_GLS_DB_H__

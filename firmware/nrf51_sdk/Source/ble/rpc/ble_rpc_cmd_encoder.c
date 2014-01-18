@@ -64,11 +64,11 @@ void transport_tx_complete_handler(hci_transport_tx_done_result_t result)
 
 
 /**@brief Function for blocking in a loop, using WFE to allow low power mode, while waiting for a
- *        response from the connectivity chip.
+ *        response from nRF51822.
  *
  * @param[in] op_code   The Operation Code for which a response message is expected.
  *
- * @return    The decoded error code received from the connectivity chip.
+ * @return    The decoded error code received from nRF51822.
  */
 uint32_t ble_rpc_cmd_resp_wait(uint8_t op_code)
 {
