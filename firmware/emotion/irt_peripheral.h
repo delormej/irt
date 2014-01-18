@@ -19,10 +19,10 @@
 #define PIN_SHAKE												5		// This is shake on the accelermoter.
 #define PIN_ENBATT											6		// To read the battery voltage, set to a 1, otherwise 0.
 #define PIN_BATTVOLT										7		// Analog input of battery voltage.
-#define PIN_BUTTON_I										8		// RXD4014 - RF3
-#define PIN_BUTTON_II										9		// RXD4014 - RF2
-#define PIN_BUTTON_III 									10	// RXD4014 - RF1
-#define PIN_BUTTON_IV										11	// RXD4014 - RF0
+#define PIN_BUTTON_II										8		// RXD4014 - RF3
+#define PIN_BUTTON_III									9		// RXD4014 - RF2
+#define PIN_BUTTON_IV 									10	// RXD4014 - RF1
+#define PIN_BUTTON_I										11	// RXD4014 - RF0
 #define	PIN_LED_B												12	/* LED_A and LED_B control the STATUS LED. If they are both  */
 #define PIN_LED_A												13	/* the same value, the LED is off. If LEDA is a 1 and LEDB is a 
 																						 * 0, the LED will be GREEN. The reverse will generate RED. 
