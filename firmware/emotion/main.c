@@ -203,11 +203,6 @@ static void on_button_ii_event(void)
 
 static void on_button_iii_event(void)
 {
-	// TODO: wrap this in an ifdef for DEBUG.
-	uint8_t data[] = "button_iii_event";
-	debug_send(&data[0], sizeof(data));
-	//
-	
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 		set_resistance(++m_resistance_level);
