@@ -7,12 +7,12 @@
 ********************************************************************************/
 
 #include <string.h>
+#include <math.h>
 #include "insideride.h"
 #include "speed.h"
 #include "nrf_sdm.h"
 #include "app_error.h"
 #include "app_util.h"
-#include "math.h"
 
 static uint16_t 	m_wheel_size;									// Wheel diameter size in mm.  A road wheel is typically 2,070mm.
 static float 			m_flywheel_to_wheel_revs;			// Number of flywheel revolutions for 1 wheel revolution.

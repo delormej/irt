@@ -62,7 +62,7 @@ LDFLAGS += -mcpu=$(CPU) -mthumb -mabi=aapcs -L $(TEMPLATE_PATH) -T$(LINKER_SCRIP
 
 # Compiler flags
 CFLAGS += -mcpu=$(CPU) -mthumb -mabi=aapcs -D$(DEVICE) -D$(BOARD) -D$(TARGET_CHIP) --std=gnu99
-CFLAGS += -Wall -Werror
+CFLAGS += -Wall #-Werror
 CFLAGS += -mfloat-abi=soft
 
 # Assembler flags
@@ -121,7 +121,7 @@ $(OBJECT_DIRECTORY)/%.o: %.c
 # Build header dependencies
 	$(CC) $(CFLAGS) $(INCLUDEPATHS) -M $< -MF "$(@:.o=.d)" -MT $@
 # Do the actual compilation
-	$(CC) $(CFLAGS) $(INCLUDEPATHS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(INCLUDEPATHS) -c -o $@ $< 
 
 ## Assemble .s files
 $(OBJECT_DIRECTORY)/%.o: %.s
@@ -129,7 +129,7 @@ $(OBJECT_DIRECTORY)/%.o: %.s
 
 ## Link C and assembler objects to an .out file
 $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out: $(BUILD_DIRECTORIES) $(C_OBJECTS) $(ASSEMBLER_OBJECTS) $(LIBRARIES)
-	$(CC) $(LDFLAGS) $(C_OBJECTS) $(ASSEMBLER_OBJECTS) $(LIBRARIES) -o $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out
+	$(CC) $(LDFLAGS) $(C_OBJECTS) $(ASSEMBLER_OBJECTS) $(LIBRARIES) -o $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out -lm 
 
 ## Create binary .bin file from the .out file
 $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).bin: $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out
