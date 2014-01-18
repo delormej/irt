@@ -137,9 +137,9 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 
 		cycling_power_send(&cps_meas);
 		
-		uint8_t data[14] = "";
+		/*uint8_t data[14] = "";
 		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, speed_event.accum_wheel_revs);
-		debug_send(&data[0], sizeof(data));		
+		debug_send(&data[0], sizeof(data));		*/
 }
 
 /**@brief Function for starting the application timers.
@@ -191,10 +191,10 @@ static void on_button_i_event(void)
 
 static void on_button_ii_event(void)
 {
-	// TODO: wrap this in an ifdef for DEBUG.
+	/* TODO: wrap this in an ifdef for DEBUG.
 	uint8_t data[] = "button_ii_event";
 	debug_send(&data[0], sizeof(data));
-	//
+	*/
 	
 	// decrement
 	if (m_resistance_level > 0)
@@ -282,9 +282,9 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		default:
 			break;
 	}
-	uint8_t data[19];
-	sprintf(data, "MODE: %i, LEVEL: %i", rc_evt.mode, rc_evt.level);
-	debug_send(data, sizeof(data));	
+	//uint8_t data[19];
+	//sprintf(data, "MODE: %i, LEVEL: %i", rc_evt.mode, rc_evt.level);
+	//debug_send(data, sizeof(data));	
 }
 
 		

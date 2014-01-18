@@ -15,7 +15,7 @@
 #include "nordic_common.h"
 #include "ble_srv_common.h"
 #include "app_util.h"
-
+#include "ble_gatts.h"
 
 /**@brief Connect event handler.
  *

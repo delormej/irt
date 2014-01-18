@@ -424,11 +424,6 @@
               <FilePath>..\ble_ant.c</FilePath>
             </File>
             <File>
-              <FileName>ble_ant_stack_handler.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\ble_ant_stack_handler.c</FilePath>
-            </File>
-            <File>
               <FileName>irt_peripheral.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\irt_peripheral.c</FilePath>
@@ -489,11 +484,6 @@
           <GroupName>Libraries</GroupName>
           <Files>
             <File>
-              <FileName>nrf_pwm.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\libraries\nrf_pwm.c</FilePath>
-            </File>
-            <File>
               <FileName>ble_error_log.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51_sdk\Source\ble\ble_error_log.c</FilePath>
@@ -524,24 +514,9 @@
               <FilePath>..\..\nrf51_sdk\Source\ble\ble_bondmngr.c</FilePath>
             </File>
             <File>
-              <FileName>ble_flash.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51_sdk\Source\ble\ble_flash.c</FilePath>
-            </File>
-            <File>
-              <FileName>ble_radio_notification.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51_sdk\Source\ble\ble_radio_notification.c</FilePath>
-            </File>
-            <File>
               <FileName>ble_debug_assert_handler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51_sdk\Source\ble\ble_debug_assert_handler.c</FilePath>
-            </File>
-            <File>
-              <FileName>app_button.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\nrf51_sdk\Source\app_common\app_button.c</FilePath>
             </File>
             <File>
               <FileName>app_gpiote.c</FileName>
@@ -557,6 +532,16 @@
               <FileName>crc16.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\nrf51_sdk\Source\app_common\crc16.c</FilePath>
+            </File>
+            <File>
+              <FileName>softdevice_handler.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\nrf51_sdk\Source\sd_common\softdevice_handler.c</FilePath>
+            </File>
+            <File>
+              <FileName>nrf_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\libraries\nrf_pwm.c</FilePath>
             </File>
           </Files>
         </Group>
