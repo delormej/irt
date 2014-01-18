@@ -11,8 +11,8 @@ typedef struct ant_speed_sensor_s {
 	
 } ant_speed_sensor_t;
 
-void ant_bp_tx_init(void);
-void ant_bp_tx_start(void);
-void ant_bp_tx_send(ble_cps_meas_t * p_cps_meas);
+void ant_bp_tx_init(void) { }
+void ant_bp_tx_start(void) { }
+void ant_bp_tx_send(ble_cps_meas_t * p_cps_meas) { }
 
 #endif	// ANT_BIKE_POWER_H__
