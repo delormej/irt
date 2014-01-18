@@ -11,7 +11,6 @@
 
 #include <stdint.h>
 
-#define PIN_SERVO_SIGNAL			3							// GPIO pin that the servo signal line is connected to. (P3 - P0.03)
 #define MAX_RESISTANCE_LEVELS 10						// Maximum resistance levels available.
 
 /**@brief Bike types, used for predefined resistance coefficients. */

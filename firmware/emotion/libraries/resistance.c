@@ -9,6 +9,7 @@
 *
 ********************************************************************************/
 
+#include "irt_peripheral.h"
 #include "resistance.h"
 #include "nrf_pwm.h"
 
