@@ -12,50 +12,58 @@ static app_button_handler_t m_on_button_evt;
  */
 static void leds_init(void)
 {
-    nrf_gpio_cfg_output(ADVERTISING_LED_PIN_NO);
-    nrf_gpio_cfg_output(CONNECTED_LED_PIN_NO);
-    nrf_gpio_cfg_output(ASSERT_LED_PIN_NO);
+    nrf_gpio_cfg_output(PIN_LED_A);
+    nrf_gpio_cfg_output(PIN_LED_B);
 }
-
 
 /**@brief Function for handling button events.
  *
  * @param[in]   pin_no   The pin number of the button pressed.
  */
-static void button_event_handler(uint8_t pin_no)
+static void button_event_handler(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
 {
+		uint8_t pin_no;
+		
+		if (event_pins_low_to_high & (1 << PIN_BUTTON_I)) 
+			pin_no = PIN_BUTTON_I;
+		else if (event_pins_low_to_high & (1 << PIN_BUTTON_II)) 
+			pin_no = PIN_BUTTON_II;
+		else if (event_pins_low_to_high & (1 << PIN_BUTTON_III)) 
+			pin_no = PIN_BUTTON_III;
+		else if (event_pins_low_to_high & (1 << PIN_BUTTON_IV)) 
+			pin_no = PIN_BUTTON_IV;
+			
 		m_on_button_evt(pin_no);
-}
-
-/**@brief Function for initializing the GPIOTE module.
- */
-static void gpiote_init(void)
-{
-    APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
 }
 
 /**@brief Initialize buttons.
  */
 static void buttons_init()
 {
-    // Set Wakeup and Bonds Delete buttons as wakeup sources
-//    GPIO_WAKEUP_BUTTON_CONFIG(WAKEUP_BUTTON_PIN);
+	nrf_gpio_cfg_input(PIN_BUTTON_I, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_input(PIN_BUTTON_II, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_input(PIN_BUTTON_III, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_input(PIN_BUTTON_IV, NRF_GPIO_PIN_NOPULL);
 
-		// This declaration needs to be compile time constant, so we need to pass
-		// this intermediary button_event_handler.
-    static app_button_cfg_t buttons[] =
-    {
-				//{PIN_BUTTON_I,  false, NRF_GPIO_PIN_PULLUP, button_event_handler},
-				{PIN_BUTTON_II, false, NRF_GPIO_PIN_PULLUP, button_event_handler},
-				{PIN_BUTTON_III,false, NRF_GPIO_PIN_PULLUP, button_event_handler}
-				//{PIN_BUTTON_IV, false, NRF_GPIO_PIN_PULLUP, button_event_handler}
-    };
-    
-		// TODO: move away from using app_button as it's a huge memory hog
-		// and does more than what we need.  It also uses a valuable timer
-		// which we don't need, etc...
-    APP_BUTTON_INIT(buttons, sizeof(buttons) / sizeof(buttons[0]), BUTTON_DETECTION_DELAY, false);
-		app_button_enable();
+	APP_GPIOTE_INIT(1);
+	
+	uint32_t err_code;
+	uint32_t  pins_low_to_high_mask, pins_high_to_low_mask;
+
+	pins_low_to_high_mask = (1 << PIN_BUTTON_I | 1 << PIN_BUTTON_II | 1 << PIN_BUTTON_III | 1 << PIN_BUTTON_IV);
+	pins_high_to_low_mask = 0;
+	app_gpiote_user_id_t p_user_id;
+
+	err_code = app_gpiote_user_register(&p_user_id,
+		pins_low_to_high_mask,
+		pins_high_to_low_mask,
+		button_event_handler);
+
+	APP_ERROR_CHECK(err_code);
+
+	err_code = app_gpiote_user_enable(p_user_id);
+	
+	APP_ERROR_CHECK(err_code);
 }    
 
 void peripheral_init(app_button_handler_t on_button_evt)
@@ -63,9 +71,5 @@ void peripheral_init(app_button_handler_t on_button_evt)
 		m_on_button_evt = on_button_evt;
 	
     leds_init();
-		gpiote_init();
-		// TODO: move away from using app_button as it's a huge memory hog
-		// and does more than what we need.  It also uses a valuable timer
-		// which we don't need, etc...
     buttons_init();
 }
