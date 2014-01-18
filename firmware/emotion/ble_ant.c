@@ -18,12 +18,13 @@
  *
  */
 
-#include "ble_ant.h"
 #include <stdint.h>
 #include <string.h>
+#include "ble_ant.h"
 #include "nordic_common.h"
 #include "nrf.h"
 #include "softdevice_handler.h"
+#include "ant_stack_handler_types.h"
 #include "app_error.h"
 #include "nrf51_bitfields.h"
 #include "ble.h"
@@ -86,7 +87,6 @@ static ble_nus_t                       	m_nus;																			 // BLE UART se
 static ble_cps_t                        m_cps;                                    	 /**< Structure used to identify the cycling power service. */
 
 static ant_ble_evt_handlers_t * 				mp_ant_ble_evt_handlers;
-
 
 static void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length)
 {
