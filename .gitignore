@@ -61,6 +61,7 @@
 *.log
 *.sql
 *.sqlite
+JLinkLog.txt
 
 # OS generated files #
 ######################
@@ -72,3 +73,6 @@
 ehthumbs.db
 Thumbs.db
 
+# Build Directories #
+######################
+_build/
