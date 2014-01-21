@@ -15,7 +15,7 @@
 #include <stdint.h>
 
 typedef struct user_profile_s {
-	float			total_weight_lb;
+	float			total_weight_kg;
 	uint16_t	wheel_size_mm;
 } user_profile_t;
 

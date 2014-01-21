@@ -8,6 +8,7 @@
 *.so
 *.suo
 *.ncb
+*.pdb
 
 # Keil Stuff #
 ###################
@@ -38,11 +39,29 @@
 *.tar
 *.zip
 
+# Visual Studio stuff #
+######################
+**/Debug/
+*.exe.manifest
+*.cache
+*.res
+*.lib
+*.exp
+*.tlog
+*.filters
+
+*.apc
+*.resx
+*.obj
+*.ilk
+*.lastbuildstate
+
 # Logs and databases #
 ######################
 *.log
 *.sql
 *.sqlite
+JLinkLog.txt
 
 # OS generated files #
 ######################
@@ -54,3 +73,6 @@
 ehthumbs.db
 Thumbs.db
 
+# Build Directories #
+######################
+_build/

@@ -38,7 +38,6 @@
 #define ASSERT_LED_PIN_NO								PIN_LED_B
 
 #define WAKEUP_BUTTON_PIN               PIN_SHAKE																	/**< Button used to wake up the application. */
-#define BUTTON_DETECTION_DELAY          APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)  /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
 
 void peripheral_init(void (*on_button_evt)(uint8_t pin_no));
 

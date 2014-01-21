@@ -1,0 +1,55 @@
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ANT_DLL", "ANT_DLL\ANT_DLL.vcproj", "{00FCD077-F049-4026-8D40-51903388CDE1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{929444E0-FE12-4443-AC5C-ECA07B46A9F8} = {929444E0-FE12-4443-AC5C-ECA07B46A9F8}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ANT_LIB", "ANT_LIB\ANT_Lib.vcproj", "{929444E0-FE12-4443-AC5C-ECA07B46A9F8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DEMO_DLL", "DEMO_DLL\DEMO_DLL.vcproj", "{3B52ADAF-2763-48BC-9A57-7F36D3805D57}"
+	ProjectSection(ProjectDependencies) = postProject
+		{00FCD077-F049-4026-8D40-51903388CDE1} = {00FCD077-F049-4026-8D40-51903388CDE1}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DEMO_LIB", "DEMO_LIB\DEMO_LIB.vcproj", "{491FDD5B-A409-4FCD-AFCA-12E0343CC7A2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{929444E0-FE12-4443-AC5C-ECA07B46A9F8} = {929444E0-FE12-4443-AC5C-ECA07B46A9F8}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ANT_Unmanaged_Wrapper", "ANT_Unmanaged_Wrapper\ANT_Unmanaged_Wrapper.vcproj", "{9A6B935C-C07D-4D1D-AEFE-2918B51E4F2F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{929444E0-FE12-4443-AC5C-ECA07B46A9F8} = {929444E0-FE12-4443-AC5C-ECA07B46A9F8}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{00FCD077-F049-4026-8D40-51903388CDE1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{00FCD077-F049-4026-8D40-51903388CDE1}.Debug|Win32.Build.0 = Debug|Win32
+		{00FCD077-F049-4026-8D40-51903388CDE1}.Release|Win32.ActiveCfg = Release|Win32
+		{00FCD077-F049-4026-8D40-51903388CDE1}.Release|Win32.Build.0 = Release|Win32
+		{929444E0-FE12-4443-AC5C-ECA07B46A9F8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{929444E0-FE12-4443-AC5C-ECA07B46A9F8}.Debug|Win32.Build.0 = Debug|Win32
+		{929444E0-FE12-4443-AC5C-ECA07B46A9F8}.Release|Win32.ActiveCfg = Release|Win32
+		{929444E0-FE12-4443-AC5C-ECA07B46A9F8}.Release|Win32.Build.0 = Release|Win32
+		{3B52ADAF-2763-48BC-9A57-7F36D3805D57}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3B52ADAF-2763-48BC-9A57-7F36D3805D57}.Debug|Win32.Build.0 = Debug|Win32
+		{3B52ADAF-2763-48BC-9A57-7F36D3805D57}.Release|Win32.ActiveCfg = Release|Win32
+		{3B52ADAF-2763-48BC-9A57-7F36D3805D57}.Release|Win32.Build.0 = Release|Win32
+		{491FDD5B-A409-4FCD-AFCA-12E0343CC7A2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{491FDD5B-A409-4FCD-AFCA-12E0343CC7A2}.Debug|Win32.Build.0 = Debug|Win32
+		{491FDD5B-A409-4FCD-AFCA-12E0343CC7A2}.Release|Win32.ActiveCfg = Release|Win32
+		{491FDD5B-A409-4FCD-AFCA-12E0343CC7A2}.Release|Win32.Build.0 = Release|Win32
+		{9A6B935C-C07D-4D1D-AEFE-2918B51E4F2F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9A6B935C-C07D-4D1D-AEFE-2918B51E4F2F}.Debug|Win32.Build.0 = Debug|Win32
+		{9A6B935C-C07D-4D1D-AEFE-2918B51E4F2F}.Release|Win32.ActiveCfg = Release|Win32
+		{9A6B935C-C07D-4D1D-AEFE-2918B51E4F2F}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

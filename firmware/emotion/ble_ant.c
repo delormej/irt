@@ -157,8 +157,10 @@ static void advertising_init(void)
     {
         {BLE_UUID_HEART_RATE_SERVICE,         BLE_UUID_TYPE_BLE}, 
         {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
-				{BLE_UUID_CYCLING_POWER_SERVICE, 			BLE_UUID_TYPE_BLE},
-				{BLE_UUID_NUS_SERVICE, 								m_nus.uuid_type}
+				{BLE_UUID_CYCLING_POWER_SERVICE, 			BLE_UUID_TYPE_BLE}
+#if defined(BLE_NUS_ENABLED)
+				,{BLE_UUID_NUS_SERVICE, 								m_nus.uuid_type}
+#endif
     };
 
     // Build and set advertising data
@@ -232,6 +234,7 @@ static void ble_hrs_service_init()
 
 static void ble_nus_service_init()
 {
+#if defined(BLE_NUS_ENABLED)
 		uint32_t       err_code;
 		ble_nus_init_t nus_init;
     
@@ -240,6 +243,7 @@ static void ble_nus_service_init()
     
     err_code = ble_nus_init(&m_nus, &nus_init);
     APP_ERROR_CHECK(err_code);	
+#endif
 }
 
 static void ble_cps_service_init()
@@ -393,8 +397,8 @@ static __INLINE bool is_message_to_process(uint8_t message_id)
 // TODO: need to implement calibration requests as well.
 static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
 {
-	static bool 		receiving_burst_resistance 	= false;
-	static uint8_t	resistance_mode 						= 0;
+	static bool 							receiving_burst_resistance 	= false;
+	static resistance_mode_t	resistance_mode = RESISTANCE_SET_STANDARD;
 	
 	// Only interested in BURST events right now for processing resistance control.
 	if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] != MESG_BURST_DATA_ID)
@@ -413,7 +417,7 @@ static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
 		// Burst has begun, fifth byte has the mode, need to wait for subsequent messages
 		// to parse the level.
 		receiving_burst_resistance 		= true;
-		resistance_mode								= p_ant_evt->evt_buffer[4];
+		resistance_mode								= (resistance_mode_t)p_ant_evt->evt_buffer[4];
 	}
 	else if (message_sequence_id == 0x21)
 	{
@@ -426,27 +430,15 @@ static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
 		uint16_t resistance_level = 0;
 		resistance_level = p_ant_evt->evt_buffer[3] | p_ant_evt->evt_buffer[4] << 8u;
 		
-		// we must acknowledge this message.
-		uint32_t err_code;
-		
-		// TODO: I'm not sure what we're really supposed to acknowledge with, but sending
-		// 0's seems to work.
-		uint8_t zeros[] = {0xF0, resistance_mode, 0x00, 0xC1, 0x00, 0x00, 0x00, 0x00};
-		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, 8u /*size*/, zeros); 
-		
-		APP_ERROR_CHECK(err_code);
-		
 		rc_evt_t evt;
-		evt.mode 	= (resistance_mode_t)resistance_mode;
+		evt.mode 	= resistance_mode;
 		evt.level = resistance_level;
+
+		// Reset state.
+		receiving_burst_resistance = false;		
 		
 		mp_ant_ble_evt_handlers->on_set_resistance(evt);
-		
-		// Reset state.
-		resistance_mode 					 = 0;
-		receiving_burst_resistance = false;		
 	}
-	
 }
 
 static void ant_data_hrm_messages_handle(ant_evt_t * p_ant_evt)
@@ -619,7 +611,9 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     ble_cps_on_ble_evt(&m_cps, p_ble_evt);
 		ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
+#if defined(BLE_NUS_ENABLED)
 		ble_nus_on_ble_evt(&m_nus, p_ble_evt);
+#endif		
     on_ble_evt(p_ble_evt);
 }
 
@@ -661,7 +655,7 @@ static void bond_manager_init(void)
     bool                bonds_delete;
 
     // Clear all bonded masters if the Bonds Delete button is pushed
-    bonds_delete = (nrf_gpio_pin_read(BONDMNGR_DELETE_BUTTON_PIN) == 0);
+    //bonds_delete = (nrf_gpio_pin_read(BONDMNGR_DELETE_BUTTON_PIN) == 0);
 
     // Initialize the Bond Manager
     bond_init_data.flash_page_num_bond     = FLASH_PAGE_BOND;
@@ -676,14 +670,10 @@ static void bond_manager_init(void)
 
 void debug_send(uint8_t * data, uint16_t length)
 {
-	  data[length] = '\0';
-    uint32_t err_code;
-
-    err_code = ble_nus_send_string(&m_nus, data, length);
-    if (err_code != NRF_ERROR_INVALID_STATE)
-    {
-        APP_ERROR_CHECK(err_code);
-    }
+#if defined(BLE_NUS_ENABLED)
+		data[length] = '\0';
+		ble_nus_send_string(&m_nus, data, length);
+#endif		
 }
 
 //

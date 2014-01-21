@@ -118,6 +118,8 @@ typedef struct ble_cps_meas_s
 	uint16_t	top_dead_spot_angle;											// Unit is in degrees with a resolution of 1. 
 	uint16_t	bottom_dead_spot_angle;										// Unit is in degrees with a resolution of 1. 
 	uint16_t	accum_energy;															// Unit is in kilojoules with a resolution of 1.
+	resistance_mode_t resistance_mode;
+	uint16_t	resistance_level;
 } ble_cps_meas_t;
 
 

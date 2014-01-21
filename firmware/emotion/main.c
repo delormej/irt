@@ -22,6 +22,7 @@
  ******************************************************************************/
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include "nordic_common.h"
 #include "nrf_error.h"
@@ -35,6 +36,8 @@
 #define CYCLING_POWER_MEAS_INTERVAL       APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Bike power measurement interval (ticks). */
 
 static uint8_t 														m_resistance_level = 0;
+static resistance_mode_t									m_resistance_mode = RESISTANCE_SET_STANDARD;
+static uint16_t														m_servo_pos;
 static app_timer_id_t               			m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
 static user_profile_t 										m_user_profile;
 
@@ -58,12 +61,11 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 			return;
 		
 		nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
-
 		
 		/* TODO: doesn't work, but we need to do something like this.
 		uint8_t data[64];
 		sprintf(data, "ERR: %i, LINE: %i, FILE: %s", 
-				error_code, line_num, *p_file_name);
+		error_code, line_num, *p_file_name);
 		//debug_send(data, sizeof(data)); */
 
     // This call can be used for debug purposes during development of an application.
@@ -115,12 +117,18 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		
 		// Calculate power.
 		int16_t		watts					= 0;
-		err_code = calc_power(speed_mph, m_user_profile.total_weight_lb, m_resistance_level, &watts);
+		/*err_code = calc_power(speed_mph, m_user_profile.total_weight_kg * 2.20462262, m_resistance_level, &watts);
 		// TODO: Handle the error for real here, not sure what the overall error 
 		// handling strategy will be, but this is not critical, just move on.
 		if (err_code != IRT_SUCCESS)
 			return;		
-		
+		*/
+		err_code = calc_power2(speed_event.speed_mps, m_user_profile.total_weight_kg, m_servo_pos, &watts);
+		// TODO: Handle the error for real here, not sure what the overall error 
+		// handling strategy will be, but this is not critical, just move on.
+		if (err_code != IRT_SUCCESS)
+			return;		
+			
 		// Calculate torque.
 		uint16_t 	torque				= 0;
 		err_code = calc_torque(watts, speed_event.period_2048, &torque);
@@ -134,12 +142,22 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		cps_meas.accum_torque 				= m_accum_torque;
 		cps_meas.accum_wheel_revs 		= speed_event.accum_wheel_revs;
 		cps_meas.last_wheel_event_time= speed_event.event_time_2048;
+		
+		cps_meas.resistance_mode			= m_resistance_mode;
+		cps_meas.resistance_level			= m_resistance_level;
 
 		cycling_power_send(&cps_meas);
-		
-		/*uint8_t data[14] = "";
-		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, speed_event.accum_wheel_revs);
-		debug_send(&data[0], sizeof(data));		*/
+
+#if defined(BLE_NUS_ENABLED)
+		static const char format[] = "r,w,l:%i,%i,%i";
+		char message[16];
+		memset(&message, 0, sizeof(message));
+		uint8_t length = sprintf(message, format, 
+															speed_event.accum_flywheel_revs, 
+															watts, 
+															m_resistance_level);
+		debug_send(message, sizeof(message));
+#endif		
 }
 
 /**@brief Function for starting the application timers.
@@ -186,7 +204,7 @@ static void timers_init(void)
 static void on_button_i_event(void)
 {
 	m_resistance_level = 0;
-	set_resistance(m_resistance_level);
+	m_servo_pos = set_resistance(m_resistance_level);
 }
 
 static void on_button_ii_event(void)
@@ -198,20 +216,24 @@ static void on_button_ii_event(void)
 	
 	// decrement
 	if (m_resistance_level > 0)
-		set_resistance(--m_resistance_level);	
+	{
+		m_servo_pos = set_resistance(--m_resistance_level);	
+	}
 }
 
 static void on_button_iii_event(void)
 {
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
-		set_resistance(++m_resistance_level);
+	{
+		m_servo_pos = set_resistance(++m_resistance_level);
+	}
 }
 
 static void on_button_iv_event(void)
 {
 	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
-	set_resistance(m_resistance_level);
+	m_servo_pos = set_resistance(m_resistance_level);
 }
 
 static void on_ble_connected(void) 
@@ -251,15 +273,17 @@ static void on_ant_power_data(void) {}
  */
 static void on_set_resistance(rc_evt_t rc_evt)
 {
-	switch (rc_evt.mode)
+	m_resistance_mode = rc_evt.mode;
+	
+	switch (m_resistance_mode)
 	{
 		case RESISTANCE_SET_STANDARD:
 			m_resistance_level = (uint8_t)rc_evt.level;
-			set_resistance(m_resistance_level);
+			m_servo_pos = set_resistance(m_resistance_level);
 			break;
 			/*
 		case RESISTANCE_SET_PERCENT:
-			set_resistance_pct(x);
+			m_servo_pos = set_resistance_pct(rc_evt.level);
 			break;
 			
 		case RESISTANCE_SET_ERG:
@@ -277,6 +301,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		default:
 			break;
 	}
+
 	//uint8_t data[19];
 	//sprintf(data, "MODE: %i, LEVEL: %i", rc_evt.mode, rc_evt.level);
 	//debug_send(data, sizeof(data));	
@@ -315,7 +340,7 @@ int main(void)
 		// Initialize hard coded user profile for now.
 		memset(&m_user_profile, 0, sizeof(m_user_profile));
 		m_user_profile.wheel_size_mm = 2070;
-		m_user_profile.total_weight_lb = 175.0f;
+		m_user_profile.total_weight_kg = 175.0f * 0.453592;	// Convert lbs to KG
 		
 		// Initialize timers.
 		timers_init();
@@ -342,6 +367,8 @@ int main(void)
 
 		// Start off with resistance at 0.
 		set_resistance(m_resistance_level);	
+		m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
+		
 		init_speed(PIN_DRUM_REV, m_user_profile.wheel_size_mm);
 		
 		// TOOD: we need to ensure we're being woken up here by a HW
