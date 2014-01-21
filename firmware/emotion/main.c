@@ -22,6 +22,7 @@
  ******************************************************************************/
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include "nordic_common.h"
 #include "nrf_error.h"
@@ -146,10 +147,17 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		cps_meas.resistance_level			= m_resistance_level;
 
 		cycling_power_send(&cps_meas);
-		
-		/*uint8_t data[10] = "r,w:";
-		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, watts);
-		debug_send(&data[0], sizeof(data));		*/
+
+#if defined(BLE_NUS_ENABLED)
+		static const char format[] = "r,w,l:%i,%i,%i";
+		char message[16];
+		memset(&message, 0, sizeof(message));
+		uint8_t length = sprintf(message, format, 
+															speed_event.accum_flywheel_revs, 
+															watts, 
+															m_resistance_level);
+		debug_send(message, sizeof(message));
+#endif		
 }
 
 /**@brief Function for starting the application timers.

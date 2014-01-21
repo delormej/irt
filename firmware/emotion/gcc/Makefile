@@ -6,7 +6,7 @@ CFLAGS += -DANT_STACK_SUPPORT_REQD
 CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
 
-#LDFLAGS += --specs=nano.specs 
+LDFLAGS += --specs=nano.specs 
 
 C_SOURCE_FILES += main.c
 C_SOURCE_FILES += nrf_pwm.c

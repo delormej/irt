@@ -670,10 +670,10 @@ static void bond_manager_init(void)
 
 void debug_send(uint8_t * data, uint16_t length)
 {
-	  /* Doesn't seem to be working well, turning it off!
+#if defined(BLE_NUS_ENABLED)
 		data[length] = '\0';
-
-		ble_nus_send_string(&m_nus, data, length);*/
+		ble_nus_send_string(&m_nus, data, length);
+#endif		
 }
 
 //
