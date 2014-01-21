@@ -143,8 +143,10 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 
 		cycling_power_send(&cps_meas);
 		
-		/*uint8_t data[14] = "";
-		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, speed_event.accum_wheel_revs);
+		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
+		
+		/*uint8_t data[10] = "r,w:";
+		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, watts);
 		debug_send(&data[0], sizeof(data));		*/
 }
 
@@ -206,7 +208,6 @@ static void on_button_ii_event(void)
 	if (m_resistance_level > 0)
 	{
 		m_servo_pos = set_resistance(--m_resistance_level);	
-		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 	}
 }
 
@@ -216,7 +217,6 @@ static void on_button_iii_event(void)
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 	{
 		m_servo_pos = set_resistance(++m_resistance_level);
-		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 	}
 }
 
