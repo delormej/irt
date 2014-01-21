@@ -83,7 +83,9 @@ static bool                             m_is_advertising = false;               
 static ble_gap_sec_params_t             m_sec_params;                                /**< Security requirements for this application. */
 static ble_gap_adv_params_t             m_adv_params;                                /**< Parameters to be passed to the stack when starting advertising. */
 static ble_hrs_t                        m_hrs;                                       /**< Structure used to identify the heart rate service. */
+#if defined(BLE_NUS_ENABLED)
 static ble_nus_t                       	m_nus;																			 // BLE UART service for debugging purposes.
+#endif
 static ble_cps_t                        m_cps;                                    	 /**< Structure used to identify the cycling power service. */
 
 static ant_ble_evt_handlers_t * 				mp_ant_ble_evt_handlers;
