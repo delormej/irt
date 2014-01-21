@@ -464,11 +464,6 @@
               <FilePath>..\..\nrf51_sdk\Source\ble\ble_services\ble_hrs.c</FilePath>
             </File>
             <File>
-              <FileName>ble_nus.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\services\ble_nus.c</FilePath>
-            </File>
-            <File>
               <FileName>ble_cps.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\services\ble_cps.c</FilePath>

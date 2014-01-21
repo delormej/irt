@@ -157,8 +157,10 @@ static void advertising_init(void)
     {
         {BLE_UUID_HEART_RATE_SERVICE,         BLE_UUID_TYPE_BLE}, 
         {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
-				{BLE_UUID_CYCLING_POWER_SERVICE, 			BLE_UUID_TYPE_BLE},
-				{BLE_UUID_NUS_SERVICE, 								m_nus.uuid_type}
+				{BLE_UUID_CYCLING_POWER_SERVICE, 			BLE_UUID_TYPE_BLE}
+#if defined(BLE_NUS_ENABLED)
+				,{BLE_UUID_NUS_SERVICE, 								m_nus.uuid_type}
+#endif
     };
 
     // Build and set advertising data
@@ -232,6 +234,7 @@ static void ble_hrs_service_init()
 
 static void ble_nus_service_init()
 {
+#if defined(BLE_NUS_ENABLED)
 		uint32_t       err_code;
 		ble_nus_init_t nus_init;
     
@@ -240,6 +243,7 @@ static void ble_nus_service_init()
     
     err_code = ble_nus_init(&m_nus, &nus_init);
     APP_ERROR_CHECK(err_code);	
+#endif
 }
 
 static void ble_cps_service_init()
@@ -607,7 +611,9 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     ble_cps_on_ble_evt(&m_cps, p_ble_evt);
 		ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
+#if defined(BLE_NUS_ENABLED)
 		ble_nus_on_ble_evt(&m_nus, p_ble_evt);
+#endif		
     on_ble_evt(p_ble_evt);
 }
 
