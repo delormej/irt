@@ -15,14 +15,29 @@
 #include "nrf_pwm.h"
 #include "nrf_sdm.h"
 #include "app_error.h"
+#include "app_timer.h"
+
+#define PULSE_TRAIN_DURATION	APP_TIMER_TICKS(1500, 0)		// In reality it should only take 500ms, but we're giving it 1500ms to be safe.
 
 uint32_t m_pwm_pin_output = 0;
+app_timer_id_t m_stop_pulse_train_timer;
 bool m_is_running = false;
+
+/** @brief 	Called when the timer expires indicating it's time to stop the 
+ *					pulse train going to the servo.
+ */
+static void pulse_train_timeout_handler(void * p_context)
+{
+	pwm_stop_servo();
+}
 
 /** @brief Function for initializing the Timer 2 peripheral.
  */
-static void timer2_init(void)
+static void pwm_timers_init(void)
 {
+		//
+		// Initialize timer2.
+		//
     NRF_TIMER2->MODE        = TIMER_MODE_MODE_Timer;
     NRF_TIMER2->BITMODE     = TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
     NRF_TIMER2->PRESCALER   = PWM_TIMER_PRESCALER;
@@ -32,12 +47,24 @@ static void timer2_init(void)
 
 		// On compare 2 event, clear the counter and restart.
 		NRF_TIMER2->SHORTS = TIMER_SHORTS_COMPARE2_CLEAR_Msk;
+		
+		//
+		// Create a single shot app timer to be used to stop sending signals to the servo
+		// after a preset amount of time (i.e. 2 seconds).
+		//
+		uint32_t err_code = app_timer_create(&m_stop_pulse_train_timer,
+																					APP_TIMER_MODE_SINGLE_SHOT,
+																					pulse_train_timeout_handler);		
+
+		// We assume that APP_TIMER_INIT has been previously called, if not
+		// this will throw NRF_ERROR_INVALID_STATE.
+		APP_ERROR_CHECK(err_code);
 }
 
 
 /** @brief Function for initializing the GPIO Tasks/Events peripheral.
  */
-static void gpiote_init(void)
+static void pwm_gpiote_init(void)
 {
     nrf_gpio_cfg_output(m_pwm_pin_output);
 
@@ -54,7 +81,7 @@ static void gpiote_init(void)
  * 	@note	The PPI allows an event on one peripheral to automatically execute a task on 
  *				another peripheral without using the CPU.  In this case we are 
  */
-static void ppi_init(void)
+static void pwm_ppi_init(void)
 {
 	uint32_t err_code; 
 	
@@ -80,14 +107,20 @@ static void ppi_init(void)
 
 /**
  * @brief Initializes PWM.
+ *
+ * @note	APP_TIMER_INIT must be previously called, if not NRF_ERROR_INVALID_STATE 
+ *				will get thrown as an exception.
+ *
+ *				TODO: we could use NRF_TIMER1 or we could remove PPI dependency and do it
+ *				in CPU code and not use so many HW resources.  This should be considered.
  */
 void pwm_init(uint32_t pwm_pin_output_number)
 {
     m_pwm_pin_output = pwm_pin_output_number;
 	
-    gpiote_init();
-    ppi_init();
-    timer2_init();
+    pwm_gpiote_init();
+    pwm_ppi_init();
+    pwm_timers_init();
 
     // Enabling constant latency as indicated by PAN 11 "HFCLK: Base current with HFCLK 
     // running is too high" found at Product Anomaly document found at
@@ -121,8 +154,10 @@ void pwm_set_servo(uint32_t pulse_width_us)
 		NRF_TIMER2->CC[1] = pulse_width_us*2; 
 		NRF_TIMER2->CC[2] = PWM_PERIOD_WIDTH_US - (pulse_width_us*2);
 		
-		// Start the timer.
+		// Start the timers.
 		NRF_TIMER2->TASKS_START = 1;
+		app_timer_start(m_stop_pulse_train_timer, PULSE_TRAIN_DURATION, NULL);
+		
 		m_is_running = true;
 }
 
@@ -130,6 +165,9 @@ void pwm_stop_servo(void)
 {
 		uint32_t tries = 0, max_tries = 5000;
 		
+		//
+		// TODO: can't we just force the pin low here? 
+		//
 		// Make sure that the pin is not high before sending another pulse train.
 		while ((NRF_GPIO->IN & (1 << m_pwm_pin_output)) != 0)
 		{
