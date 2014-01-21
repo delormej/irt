@@ -52,6 +52,31 @@
 
 #define ANT_TRANSMIT_IN_PROGRESS 		 0x401F
 
+/******************************************************************************
+		
+		Trainer Road specific, from Wahoo Fitness
+
+ ******************************************************************************/
+// Manufacturer-Specific pages (0xF0 - 0xFF).
+#define WF_ANT_RESPONSE_PAGE_ID              0xF0
+//
+#define WF_ANT_RESPONSE_FLAG                 0x80
+
+// This is used by Trainer Road, so we'll use the same format to acknowledge a set resistance command.
+typedef struct  
+{
+    uint8_t dataPage;
+    uint8_t commandId;
+    uint8_t responseStatus;
+    uint8_t commandSequence;
+    uint8_t responseData0;
+    uint8_t responseData1;
+    uint8_t responseData2;
+    uint8_t responseData3;
+    
+} ANTMsgWahoo240_t;
+/*****************************************************************************/
+
 static uint8_t 		m_power_tx_buffer[TX_BUFFER_SIZE];
 static uint8_t 		m_torque_tx_buffer[TX_BUFFER_SIZE];
 
@@ -143,6 +168,27 @@ static __INLINE uint32_t manufacturer_page_transmit(void)
     return broadcast_message_transmit(tx_buffer); 
 }
 
+//
+// Send a message to indicate a manual set resistance override
+//
+static __INLINE uint32_t resistance_transmit(resistance_mode_t mode, uint16_t level)
+{
+		// TODO: should we use this struct instead? ANTMsgWahoo240_t
+    uint8_t tx_buffer[TX_BUFFER_SIZE] = 
+    {
+        WF_ANT_RESPONSE_PAGE_ID, 
+        mode, 
+        WF_ANT_RESPONSE_FLAG, 
+        0xFF, 								// 0xC2,		/* 1+ 0xC1 which is always the last message. */ 
+        (uint8_t)level, 
+        0,
+        0, 
+        0
+    };       
+    
+    return broadcast_message_transmit(tx_buffer); 
+}
+
 void ant_bp_tx_init(void)
 {
     uint32_t err_code;
@@ -201,7 +247,6 @@ void ant_bp_tx_send(ble_cps_meas_t * p_cps_meas)
 		static uint8_t power_page_interleave 					= POWER_PAGE_INTERLEAVE_COUNT;
 		static uint8_t product_page_interleave 				= PRODUCT_PAGE_INTERLEAVE_COUNT;
 		static uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
-	
 		uint32_t err_code;		
 
 		// Increment global event_count.
@@ -221,6 +266,11 @@ void ant_bp_tx_send(ble_cps_meas_t * p_cps_meas)
 		{
 			err_code = manufacturer_page_transmit();
 		}
+		else if (event_count % 2 == 0) // TODO: Placeholder... use scheduler instead.
+		{
+			err_code = resistance_transmit(p_cps_meas->resistance_mode, 
+																			p_cps_meas->resistance_level);
+		}		
 		else
 		{
 			// # Default broadcast message is torque.

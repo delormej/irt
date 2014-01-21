@@ -78,31 +78,6 @@
 
 #define BURST_MSG_ID_SET_RESISTANCE			0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
 
-/******************************************************************************
-		
-		Trainer Road specific, from Wahoo Fitness
-
- ******************************************************************************/
-// Manufacturer-Specific pages (0xF0 - 0xFF).
-#define WF_ANT_RESPONSE_PAGE_ID              0xF0
-//
-#define WF_ANT_RESPONSE_FLAG                 0x80
-
-// This is used by Trainer Road, so we'll use the same format to acknowledge a set resistance command.
-typedef struct  
-{
-    uint8_t dataPage;
-    uint8_t commandId;
-    uint8_t responseStatus;
-    uint8_t commandSequence;
-    uint8_t responseData0;
-    uint8_t responseData1;
-    uint8_t responseData2;
-    uint8_t responseData3;
-    
-} ANTMsgWahoo240_t;
-/*****************************************************************************/
-
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;     /**< Handle of the current connection. */
 static bool                             m_is_advertising = false;                    /**< True when in advertising state, False otherwise. */
 static ble_gap_sec_params_t             m_sec_params;                                /**< Security requirements for this application. */
@@ -414,30 +389,6 @@ static __INLINE bool is_message_to_process(uint8_t message_id)
     }
 }
 
-// Sends an acknowledgement message after the final message in a burst
-// sequence to set resistance.
-static void set_resistance_acknowledge(resistance_mode_t resistance_mode)
-{
-		uint32_t err_code;
-		
-		ANTMsgWahoo240_t acknowledgement = { 
-			.dataPage 			 = WF_ANT_RESPONSE_PAGE_ID,
-			.commandId 			 = resistance_mode,
-			.responseStatus  = WF_ANT_RESPONSE_FLAG,
-			.commandSequence = 0xC2,		/* 1+ 0xC1 which is always the last message. */
-			.responseData0	 = 0,
-			.responseData1	 = 0,
-			.responseData2	 = 0,
-			.responseData3	 = 0
-		}; 
-	
-		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, 
-																							sizeof(acknowledgement), 
-																							(uint8_t*)&acknowledgement); 
-		
-		APP_ERROR_CHECK(err_code);	
-}
-
 // Right now all this method does is handle resistance control messages.
 // TODO: need to implement calibration requests as well.
 static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
@@ -475,19 +426,15 @@ static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
 		uint16_t resistance_level = 0;
 		resistance_level = p_ant_evt->evt_buffer[3] | p_ant_evt->evt_buffer[4] << 8u;
 		
-		set_resistance_acknowledge(resistance_mode);
-		
 		rc_evt_t evt;
 		evt.mode 	= resistance_mode;
 		evt.level = resistance_level;
+
+		// Reset state.
+		receiving_burst_resistance = false;		
 		
 		mp_ant_ble_evt_handlers->on_set_resistance(evt);
-		
-		// Reset state.
-		resistance_mode 					 = RESISTANCE_SET_STANDARD;
-		receiving_burst_resistance = false;		
 	}
-	
 }
 
 static void ant_data_hrm_messages_handle(ant_evt_t * p_ant_evt)
@@ -717,31 +664,10 @@ static void bond_manager_init(void)
 
 void debug_send(uint8_t * data, uint16_t length)
 {
-	  data[length] = '\0';
+	  /* Doesn't seem to be working well, turning it off!
+		data[length] = '\0';
 
-		ble_nus_send_string(&m_nus, data, length);
-}
-
-//
-// Send a message to indicate a manual set resistance override
-//
-void manual_set_resistance_send(resistance_mode_t mode, uint16_t level)
-{
-		ANTMsgWahoo240_t message;
-		memset(&message, 0, sizeof(message));
-		
-		message.dataPage = 0x60;
-		message.commandId = mode;
-		message.commandSequence = SEQUENCE_LAST_MESSAGE;
-		message.responseData0 = (uint8_t)level;
-			
-		uint32_t err_code;
-																						
-		err_code = sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL,
-																					sizeof(message),
-																					(uint8_t*)&message);
-
-		APP_ERROR_CHECK(err_code); 
+		ble_nus_send_string(&m_nus, data, length);*/
 }
 
 //

@@ -44,7 +44,7 @@ namespace ANT_Console_Demo
         const byte WHEEL_PERIOD_LSB_INDEX = 4;
         const byte WHEEL_PERIOD_MSB_INDEX = 5;
 
-        const byte SET_RESISTANCE_PAGE = 0x60;
+        const byte SET_RESISTANCE_PAGE = 0xF0;
         const byte RESISTANCE_LEVEL_LSB_INDEX = 4;
         //const byte RESISTANCE_LEVEL_MSB_INDEX = 5;
 

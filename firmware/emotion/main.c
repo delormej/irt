@@ -35,6 +35,7 @@
 #define CYCLING_POWER_MEAS_INTERVAL       APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Bike power measurement interval (ticks). */
 
 static uint8_t 														m_resistance_level = 0;
+static resistance_mode_t									m_resistance_mode = RESISTANCE_SET_STANDARD;
 static uint16_t														m_servo_pos;
 static app_timer_id_t               			m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
 static user_profile_t 										m_user_profile;
@@ -140,10 +141,11 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		cps_meas.accum_torque 				= m_accum_torque;
 		cps_meas.accum_wheel_revs 		= speed_event.accum_wheel_revs;
 		cps_meas.last_wheel_event_time= speed_event.event_time_2048;
+		
+		cps_meas.resistance_mode			= m_resistance_mode;
+		cps_meas.resistance_level			= m_resistance_level;
 
 		cycling_power_send(&cps_meas);
-		
-		manual_set_resistance_send(RESISTANCE_SET_STANDARD, m_resistance_level);
 		
 		/*uint8_t data[10] = "r,w:";
 		sprintf(&data[0], "revs:%i,%i", speed_event.accum_flywheel_revs, watts);
@@ -263,7 +265,9 @@ static void on_ant_power_data(void) {}
  */
 static void on_set_resistance(rc_evt_t rc_evt)
 {
-	switch (rc_evt.mode)
+	m_resistance_mode = rc_evt.mode;
+	
+	switch (m_resistance_mode)
 	{
 		case RESISTANCE_SET_STANDARD:
 			m_resistance_level = (uint8_t)rc_evt.level;
