@@ -18,6 +18,7 @@ namespace ANT_Console_Demo
     {
         public ushort EventTime;
         public ushort CumulativeWheelRevs;
+        public ushort CumulativeTorque;
     }
 
     public class Collector
@@ -43,6 +44,8 @@ namespace ANT_Console_Demo
         const byte WHEEL_TICKS_INDEX = 2;
         const byte WHEEL_PERIOD_LSB_INDEX = 4;
         const byte WHEEL_PERIOD_MSB_INDEX = 5;
+        const byte ACCUM_TORQUE_LSB_INDEX = 6;
+        const byte ACCUM_TORQUE_MSB_INDEX = 7;
 
         const byte SET_RESISTANCE_PAGE = 0xF0;
         const byte RESISTANCE_LEVEL_LSB_INDEX = 4;
@@ -268,13 +271,18 @@ namespace ANT_Console_Demo
                         m_last_emotion_torque_update = event_count;
 
                         byte wheel_ticks = payload[WHEEL_TICKS_INDEX];
+                        
                         ushort wheel_period = (ushort)(payload[WHEEL_PERIOD_LSB_INDEX] |
                             payload[WHEEL_PERIOD_MSB_INDEX] << 8);
+
+                        ushort accum_torque = (ushort)(payload[ACCUM_TORQUE_MSB_INDEX] |
+                            payload[ACCUM_TORQUE_MSB_INDEX] << 8);
 
                         m_torqueSpeedEvents.Add(new SpeedEvent
                         {
                             CumulativeWheelRevs = wheel_ticks,
-                            EventTime = wheel_period
+                            EventTime = wheel_period,
+                            CumulativeTorque = accum_torque
                         });
                     }
                     break;
