@@ -102,6 +102,26 @@ static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 		return err_code;
 }
 
+static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
+{
+		uint32_t err_code;
+	
+		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+		
+		// TODO: this feels like a hack, but it works properly and the message does get sent.
+		// This is likely because we're sending so many ACKS to so many set-resistance commands
+		// from Trainer Road.  If we fix that, this condition shouldn't happen as often.
+		if (err_code == ANT_TRANSMIT_IN_PROGRESS)
+		{
+			uint8_t data[] = "Warning: Pending Transmit";
+			debug_send(data, sizeof(data));
+			
+			err_code = NRF_SUCCESS;
+		}
+		
+		return err_code;
+}
+
 static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel_period_2048, uint8_t wheel_ticks)
 {
 		// Only update the event count if a new event occurred.
@@ -173,20 +193,22 @@ static __INLINE uint32_t manufacturer_page_transmit(void)
 //
 static __INLINE uint32_t resistance_transmit(resistance_mode_t mode, uint16_t level)
 {
+		static uint8_t resistance_sequence = 0;
+	
 		// TODO: should we use this struct instead? ANTMsgWahoo240_t
     uint8_t tx_buffer[TX_BUFFER_SIZE] = 
     {
         WF_ANT_RESPONSE_PAGE_ID, 
         mode, 
         WF_ANT_RESPONSE_FLAG, 
-        0xFF, 								// 0xC2,		/* 1+ 0xC1 which is always the last message. */ 
-        (uint8_t)level, 
-        0,
-        0, 
-        0
+        ++resistance_sequence, 								
+        0x20, 	// Not sure why, but this is hardcoded to 0x20 for now.
+        0x00,
+        0x01, 	// Again, not sure why, but KICKR responds with this.
+        0x00
     };       
     
-    return broadcast_message_transmit(tx_buffer); 
+    return acknolwedge_message_transmit(tx_buffer); 
 }
 
 void ant_bp_tx_init(void)
