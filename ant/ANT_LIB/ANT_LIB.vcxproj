@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <ProjectName>ANT_LIB</ProjectName>
     <ProjectGuid>{929444E0-FE12-4443-AC5C-ECA07B46A9F8}</ProjectGuid>
     <RootNamespace>ANT_Lib</RootNamespace>
     <Keyword>Win32Proj</Keyword>

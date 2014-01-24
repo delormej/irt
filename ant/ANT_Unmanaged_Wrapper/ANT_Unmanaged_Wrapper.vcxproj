@@ -48,7 +48,6 @@
     <OutDir>$(SolutionDir)\$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);..\ANT_LIB\Debug</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)\$(Configuration)\</OutDir>
@@ -107,6 +106,12 @@ copy "..\ANT_LIB\libraries\DSI_SiUSBXp_3_1.dll" "$(OutDir)"
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ANT_Unmanaged_Wrapper.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ANT_LIB\ANT_Lib.vcxproj">
+      <Project>{929444e0-fe12-4443-ac5c-eca07b46a9f8}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
