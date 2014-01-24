@@ -397,6 +397,7 @@ static __INLINE bool is_message_to_process(uint8_t message_id)
 
 // Right now all this method does is handle resistance control messages.
 // TODO: need to implement calibration requests as well.
+// TODO: This probably belongs in ant_bike_power.c, right?
 static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
 {
 	static bool 							receiving_burst_resistance 	= false;
@@ -405,7 +406,7 @@ static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
 	// Only interested in BURST events right now for processing resistance control.
 	if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] != MESG_BURST_DATA_ID)
 	{
-		return;
+			return;
 	}
 	
 	// TODO: there is probably a more defined way to deal with burst data, but this
