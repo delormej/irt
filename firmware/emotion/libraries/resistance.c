@@ -101,9 +101,39 @@ uint16_t set_resistance_pct(uint16_t percent)
 		return position;
 }
 
+
+/*
+trainerSetSimMode:   (float)  fWeight 
+rollingResistance:  (float)  fCrr 
+windResistance:  (float)  fC  
+
+Puts the trainer in Sim Mode. 
+
+Sim Mode is used to simulate real world riding situations. This mode will adjust the brake resistance based on the effects of gravity, rolling resistance, and wind resistance. In order to creat an accurate simulation of real world conditions the following variables must be set: rider & bike weight, coefficient of rolling resistance, coefficient of wind resistance, wind speed, wheel circumference, and grade. If these variables are not set, they will default to an "average" value.
+Note:IMPORTANT: the following parameters are set when this function is called; however, the remaining parameters can only be set after the trainer is put in Sim Mode.Parameters:
+fWeight represents the weight of the combined rider and bicycle in kilograms. The default value for fWeight is 85.0kg. This parameter can not be adjusted without calling trainerSetSimMode again. 
+fCrr is the coefficient of rolling resistance (unitless). Can be reset later by calling trainerSetRollingResistance. Default value is 0.004. 
+fC is equal to A*Cw*Rho where A is effective frontal area (m^2); Cw is drag coefficent (unitless); and Rho is the air density (kg/m^3). The default value for A*Cw*Rho is 0.60. 
+
+
+*/
+
 // TODO: Future implementations.
-uint16_t set_resistance_erg(uint16_t watts) {};
-uint16_t set_resistance_slope(uint16_t slope) {};
+uint16_t set_resistance_erg(uint16_t watts) 
+{
+/*
+Puts the trainer in Resistance Mode. 
+
+Resistance Mode will directly control the strength of the brake and will stay constant regardless of the rider's speed. This mode is similar to a spin bike where the user can increase or decrease the difficulty of their workout.
+Parameters:
+fpScale a float from 0.0 to 1.0 that represents the percentage the brake is turned on (0.0 = brake turned off; 0.256 = 25.6% of brake; 1.0 = 100% brake force). 
+*/
+};
+uint16_t set_resistance_slope(uint16_t slope) // should be a float fGrade.
+{
+// fGrade is the slope of the hill (slope = rise / run). Should be from -1.0 : 1.0, where -1.0 is a 45 degree downhill slope, 0.0 is flat ground, and 1.0 is a 45 degree uphil slope. 
+
+};
 uint16_t set_resistance_wind(uint16_t wind) {};
 
 
