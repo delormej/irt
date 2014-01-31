@@ -81,6 +81,29 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     NVIC_SystemReset();
 }
 
+// Parses the SET_SIM message from the KICKR and has user profile info.
+// TODO: move this to the user profile object.
+static void set_simulation_mode(uint8_t *pBuffer)
+{
+	// Weight comes through in KG as 8500 85.00kg for example.
+	float weight_kg = (pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
+	// Co-efficient for rolling resistance.
+	float crr = (pBuffer[2] | pBuffer[3] << 8u) / 10000.0f;
+	// Co-efficient of drag.
+	float c = (pBuffer[4] | pBuffer[5] << 8u) / 1000.0f;
+
+#if defined(BLE_NUS_ENABLED)
+		static const char format[] = "k,r,c:%i,%i,%i";
+		char message[16];
+		memset(&message, 0, sizeof(message));
+		uint8_t length = sprintf(message, format, 
+															(uint16_t)weight_kg,
+															((uint16_t)crr)*10000, 
+															((uint16_t)c)*1000);
+		debug_send(message, sizeof(message));
+#endif		
+
+}
 
 /*----------------------------------------------------------------------------
  * Timer functions
@@ -293,7 +316,10 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			float percent = get_resistance_pct(rc_evt.pBuffer);
 			m_servo_pos = set_resistance_pct(percent);
 			break;
-			
+		
+		case RESISTANCE_SET_SIM:
+			set_simulation_mode(rc_evt.pBuffer);
+			break;
 			/*
 		case RESISTANCE_SET_ERG:
 			set_resistance_erg(x);
