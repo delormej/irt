@@ -74,7 +74,7 @@ uint16_t set_resistance(uint8_t level)
 		return RESISTANCE_LEVEL[level];
 }
 
-uint16_t set_resistance_pct(uint16_t percent)
+uint16_t set_resistance_pct(float percent)
 {
 		INIT_RESISTANCE();
 		uint16_t position = 0;
@@ -129,11 +129,11 @@ Parameters:
 fpScale a float from 0.0 to 1.0 that represents the percentage the brake is turned on (0.0 = brake turned off; 0.256 = 25.6% of brake; 1.0 = 100% brake force). 
 */
 };
-uint16_t set_resistance_slope(uint16_t slope) // should be a float fGrade.
+uint16_t set_resistance_slope(float slope) // should be a float fGrade.
 {
 // fGrade is the slope of the hill (slope = rise / run). Should be from -1.0 : 1.0, where -1.0 is a 45 degree downhill slope, 0.0 is flat ground, and 1.0 is a 45 degree uphil slope. 
 
 };
-uint16_t set_resistance_wind(uint16_t wind) {};
+uint16_t set_resistance_wind(float wind) {};
 
 

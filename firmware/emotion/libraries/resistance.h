@@ -43,10 +43,12 @@ typedef enum
 	RESISTANCE_SET_PERCENT 		= 0x40,
 	RESISTANCE_SET_STANDARD		= 0x41,
 	RESISTANCE_SET_ERG				= 0x42,
-	RESISTANCE_SET_SIM				= 0x43,
-	RESISTANCE_SET_BIKE_TYPE	= 0x44,
+	RESISTANCE_SET_SIM				= 0x43, // Weight should come accross in this message?
+	RESISTANCE_SET_BIKE_TYPE	= 0x44, // Co-efficient of rolling resistance
+	RESISTANCE_SET_C					= 0x45, // Wind resistance offset.
 	RESISTANCE_SET_SLOPE			= 0x46,
-	RESISTANCE_SET_WIND				= 0x47
+	RESISTANCE_SET_WIND				= 0x47,
+	RESISTANCE_SET_WHEEL_CR		= 0x48
 } resistance_mode_t;
 
 /* This is from WAHOO FITNESS:
@@ -75,8 +77,23 @@ typedef struct
 {
 	resistance_mode_t 	mode;					/**< Data containing the resistance mode. */
 	uint16_t 						level;				/**< Value to set the mode to. */
+	// should this just be a buffer
+	// and size? like the way ant sends messages? 
+	// then based on mode the recipient can decide
+
+// it will either be an int or a float depending on the resistance type.
+		
+		// uint16_t watts
+		// uint8_t / restistance_t resistance_level
+		// float fGrade (-1.0 - 1.0)
+		// float fScale (1.0 - 1.0)
+		// float fWeight
+	uint8_t buffer[4];
+	void *pBuffer;
+	uint8_t length;
 } rc_evt_t;
 
+		
 
 /**@brief Set resistance event handler type. */
 typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);
@@ -91,11 +108,11 @@ uint16_t set_resistance(uint8_t level);
 /**@brief		Sets the resistance to a value 0-100 percent.
  *
  */
-uint16_t set_resistance_pct(uint16_t percent);
+uint16_t set_resistance_pct(float percent);
 
 // Future implementations.
 uint16_t set_resistance_erg(uint16_t watts);
-uint16_t set_resistance_slope(uint16_t slope);
-uint16_t set_resistance_wind(uint16_t wind);
+uint16_t set_resistance_slope(float slope);
+uint16_t set_resistance_wind(float wind);
 
 #endif
