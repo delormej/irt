@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include "ant_bike_power.h"
 #include "app_error.h"
+#include "ant_parameters.h"
 #include "ant_interface.h"
 #include "irt_emotion.h"
 
@@ -50,6 +51,7 @@
 #define ANT_BP_MSG_PERIOD            0x1FF6                                     	 /**< Message Periods, decimal 8182 (~4.00Hz) data is transmitted every 8182/32768 seconds. */
 #define ANT_BP_EXT_ASSIGN            0	                                          /**< ANT Ext Assign. */
 
+#define ANT_BURST_MSG_ID_SET_RESISTANCE		0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
 #define ANT_TRANSMIT_IN_PROGRESS 		 0x401F
 
 /******************************************************************************
@@ -77,8 +79,9 @@ typedef struct
 } ANTMsgWahoo240_t;
 /*****************************************************************************/
 
-static uint8_t 		m_power_tx_buffer[TX_BUFFER_SIZE];
-static uint8_t 		m_torque_tx_buffer[TX_BUFFER_SIZE];
+static uint8_t 					m_power_tx_buffer[TX_BUFFER_SIZE];
+static uint8_t 					m_torque_tx_buffer[TX_BUFFER_SIZE];
+static rc_evt_handler_t m_on_set_resistance;
 
 // TODO: Implement required calibration page.
 
@@ -211,10 +214,62 @@ static __INLINE uint32_t resistance_transmit(resistance_mode_t mode, uint16_t le
     return acknolwedge_message_transmit(tx_buffer); 
 }
 
-void ant_bp_tx_init(void)
+
+// Right now all this method does is handle resistance control messages.
+// TODO: need to implement calibration requests as well.
+void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
+{
+	static bool 							receiving_burst_resistance 	= false;
+	static resistance_mode_t	resistance_mode = RESISTANCE_SET_STANDARD;
+	
+	// Only interested in BURST events right now for processing resistance control.
+	if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] != MESG_BURST_DATA_ID)
+	{
+			return;
+	}
+	
+	// TODO: there is probably a more defined way to deal with burst data, but this
+	// should work for now.  i.e. use  some derivation of sd_ant_burst_handler_request
+	// Although that method looks as though it's for sending bursts, not receiving.
+	uint8_t message_sequence_id = p_ant_evt->evt_buffer[2];			// third byte.
+	uint8_t message_id 					= p_ant_evt->evt_buffer[3];			// forth byte.
+	
+	if (message_sequence_id == 0x01 && message_id == ANT_BURST_MSG_ID_SET_RESISTANCE)
+	{
+		// Burst has begun, fifth byte has the mode, need to wait for subsequent messages
+		// to parse the level.
+		receiving_burst_resistance 		= true;
+		resistance_mode								= (resistance_mode_t)p_ant_evt->evt_buffer[4];
+	}
+	else if (message_sequence_id == 0x21)
+	{
+		// do nothing, not sure what this message is used for.
+	}
+	else if (message_sequence_id == 0xC1 && receiving_burst_resistance)
+	{
+		// 3rd message and the one that contains the level.
+		// Level lives here in these two bytes, combine LOW & HIGH:
+		uint16_t resistance_level = 0;
+		resistance_level = p_ant_evt->evt_buffer[3] | p_ant_evt->evt_buffer[4] << 8u;
+		
+		rc_evt_t evt;
+		evt.mode 	= resistance_mode;
+		evt.level = resistance_level;
+
+		// Reset state.
+		receiving_burst_resistance = false;		
+		
+		m_on_set_resistance(evt);
+	}
+}
+
+void ant_bp_tx_init(rc_evt_handler_t on_set_resistance)
 {
     uint32_t err_code;
     
+		// Assign callback for when resistance message is processed.	
+		m_on_set_resistance = on_set_resistance;
+		
     err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, m_ant_network_key);
     APP_ERROR_CHECK(err_code);
     
@@ -303,3 +358,4 @@ void ant_bp_tx_send(ble_cps_meas_t * p_cps_meas)
 		
 		APP_ERROR_CHECK(err_code);
 }
+

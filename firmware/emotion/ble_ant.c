@@ -76,8 +76,6 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                                   /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-#define BURST_MSG_ID_SET_RESISTANCE			0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
-
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;     /**< Handle of the current connection. */
 static bool                             m_is_advertising = false;                    /**< True when in advertising state, False otherwise. */
 static ble_gap_sec_params_t             m_sec_params;                                /**< Security requirements for this application. */
@@ -395,55 +393,6 @@ static __INLINE bool is_message_to_process(uint8_t message_id)
     }
 }
 
-// Right now all this method does is handle resistance control messages.
-// TODO: need to implement calibration requests as well.
-// TODO: This probably belongs in ant_bike_power.c, right?
-static void ant_data_bp_messages_handle(ant_evt_t * p_ant_evt)
-{
-	static bool 							receiving_burst_resistance 	= false;
-	static resistance_mode_t	resistance_mode = RESISTANCE_SET_STANDARD;
-	
-	// Only interested in BURST events right now for processing resistance control.
-	if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] != MESG_BURST_DATA_ID)
-	{
-			return;
-	}
-	
-	// TODO: there is probably a more defined way to deal with burst data, but this
-	// should work for now.  i.e. use  some derivation of sd_ant_burst_handler_request
-	// Although that method looks as though it's for sending bursts, not receiving.
-	uint8_t message_sequence_id = p_ant_evt->evt_buffer[2];			// third byte.
-	uint8_t message_id 					= p_ant_evt->evt_buffer[3];			// forth byte.
-	
-	if (message_sequence_id == 0x01 && message_id == BURST_MSG_ID_SET_RESISTANCE)
-	{
-		// Burst has begun, fifth byte has the mode, need to wait for subsequent messages
-		// to parse the level.
-		receiving_burst_resistance 		= true;
-		resistance_mode								= (resistance_mode_t)p_ant_evt->evt_buffer[4];
-	}
-	else if (message_sequence_id == 0x21)
-	{
-		// do nothing, not sure what this message is used for.
-	}
-	else if (message_sequence_id == 0xC1 && receiving_burst_resistance)
-	{
-		// 3rd message and the one that contains the level.
-		// Level lives here in these two bytes, combine LOW & HIGH:
-		uint16_t resistance_level = 0;
-		resistance_level = p_ant_evt->evt_buffer[3] | p_ant_evt->evt_buffer[4] << 8u;
-		
-		rc_evt_t evt;
-		evt.mode 	= resistance_mode;
-		evt.level = resistance_level;
-
-		// Reset state.
-		receiving_burst_resistance = false;		
-		
-		mp_ant_ble_evt_handlers->on_set_resistance(evt);
-	}
-}
-
 static void ant_data_hrm_messages_handle(ant_evt_t * p_ant_evt)
 {
 		// Determie if this is an interesting event or not.
@@ -541,7 +490,7 @@ static void on_ant_evt(ant_evt_t * p_ant_evt)
 				ant_data_hrm_messages_handle(p_ant_evt);
 				break;
 			case ANT_BP_TX_CHANNEL:
-				ant_data_bp_messages_handle(p_ant_evt);
+				ant_bp_rx_handle(p_ant_evt);
 				break;
 			default:
 				break;
@@ -739,8 +688,8 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
     conn_params_init();
     sec_params_init();
 
-    // Initialize ANT channelS
-    ant_bp_tx_init();
+    // Initialize ANT channels
+    ant_bp_tx_init(mp_ant_ble_evt_handlers->on_set_resistance);
 }
 
 void ble_ant_start()
