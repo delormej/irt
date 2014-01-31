@@ -284,11 +284,17 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			m_resistance_level = rc_evt.pBuffer[0];
 			m_servo_pos = set_resistance(m_resistance_level);
 			break;
-			/*
+			
 		case RESISTANCE_SET_PERCENT:
-			m_servo_pos = set_resistance_pct(rc_evt.level);
+			// Reset state since we're not in standard mode any more.
+			m_resistance_level = 0;
+			
+			// Parse the buffer for percentage.
+			float percent = get_resistance_pct(rc_evt.pBuffer);
+			m_servo_pos = set_resistance_pct(percent);
 			break;
 			
+			/*
 		case RESISTANCE_SET_ERG:
 			set_resistance_erg(x);
 			break;

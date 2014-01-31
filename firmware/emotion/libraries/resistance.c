@@ -79,12 +79,12 @@ uint16_t set_resistance_pct(float percent)
 		INIT_RESISTANCE();
 		uint16_t position = 0;
 		
-		if (percent == 0u)
+		if (percent == 0.0f)
 		{
 			pwm_set_servo(RESISTANCE_LEVEL[0]);
 			position = RESISTANCE_LEVEL[0];
 		}
-		else if (percent > 99u)
+		else if (percent > 99.9f)
 		{
 			pwm_set_servo(RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1]);
 			position = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
@@ -92,8 +92,9 @@ uint16_t set_resistance_pct(float percent)
 		else
 		{
 			// Calculate the difference between easiest and hardest positions.
-			position = MIN_RESISTANCE_LEVEL -((MIN_RESISTANCE_LEVEL-RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1])*
-														percent); 
+			position = (uint16_t) (MIN_RESISTANCE_LEVEL -(
+																(MIN_RESISTANCE_LEVEL-RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1]) *
+																percent)); 
 			
 			pwm_set_servo(position);
 		}
@@ -101,6 +102,22 @@ uint16_t set_resistance_pct(float percent)
 		return position;
 }
 
+float get_resistance_pct(uint8_t *buffer)
+{
+	/*	Not exactly sure why it is this way, but it seems that 2 bytes hold a
+	value that is a percentage of the MAX which seems arbitrarily to be 16383.
+	Use that value to calculate the percentage, for example:
+
+	10.7% example:
+	(16383-14630) / 16383 = .10700 = 10.7%
+	*/
+	static const float PCT_100 = 16383.0f;
+	uint16_t value = buffer[0] | buffer[1] << 8u;
+
+	float percent = (PCT_100 - value) / PCT_100;
+
+	return percent;
+}
 
 /*
 trainerSetSimMode:   (float)  fWeight 

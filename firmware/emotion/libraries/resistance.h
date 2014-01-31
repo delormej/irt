@@ -94,6 +94,11 @@ uint16_t set_resistance(uint8_t level);
  */
 uint16_t set_resistance_pct(float percent);
 
+/**@brief		Parses KICKR message to get the percentage.
+ *
+ */
+float 	get_resistance_pct(uint8_t *buffer);
+
 // Future implementations.
 uint16_t set_resistance_erg(uint16_t watts);
 uint16_t set_resistance_slope(float slope);
