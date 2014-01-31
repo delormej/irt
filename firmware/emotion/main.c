@@ -273,12 +273,15 @@ static void on_ant_power_data(void) {}
  */
 static void on_set_resistance(rc_evt_t rc_evt)
 {
-	m_resistance_mode = rc_evt.mode;
+	m_resistance_mode = rc_evt.operation;
 	
+	// 
+	// Parse the messages and set state or resistance as appropriate.
+	//
 	switch (m_resistance_mode)
 	{
 		case RESISTANCE_SET_STANDARD:
-			m_resistance_level = (uint8_t)rc_evt.level;
+			m_resistance_level = rc_evt.pBuffer[0];
 			m_servo_pos = set_resistance(m_resistance_level);
 			break;
 			/*

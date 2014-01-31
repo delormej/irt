@@ -247,14 +247,11 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 	}
 	else if (message_sequence_id == 0xC1 && receiving_burst_resistance)
 	{
-		// 3rd message and the one that contains the level.
-		// Level lives here in these two bytes, combine LOW & HIGH:
-		uint16_t resistance_level = 0;
-		resistance_level = p_ant_evt->evt_buffer[3] | p_ant_evt->evt_buffer[4] << 8u;
-		
+		// Value for the operation exists in this message sequence.  
+
 		rc_evt_t evt;
-		evt.mode 	= resistance_mode;
-		evt.level = resistance_level;
+		evt.operation 	= resistance_mode;
+		evt.pBuffer			= &(p_ant_evt->evt_buffer[3]);
 
 		// Reset state.
 		receiving_burst_resistance = false;		

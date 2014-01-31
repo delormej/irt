@@ -49,7 +49,7 @@ typedef enum
 	RESISTANCE_SET_SLOPE			= 0x46,
 	RESISTANCE_SET_WIND				= 0x47,
 	RESISTANCE_SET_WHEEL_CR		= 0x48
-} resistance_mode_t;
+} resistance_mode_t;	// TODO: rename this OPCODE or something similar, it's not the mode necessarily.
 
 /* This is from WAHOO FITNESS:
 typedef enum
@@ -75,25 +75,9 @@ typedef enum
 /**@brief Resistance control event payload. */
 typedef struct
 {
-	resistance_mode_t 	mode;					/**< Data containing the resistance mode. */
-	uint16_t 						level;				/**< Value to set the mode to. */
-	// should this just be a buffer
-	// and size? like the way ant sends messages? 
-	// then based on mode the recipient can decide
-
-// it will either be an int or a float depending on the resistance type.
-		
-		// uint16_t watts
-		// uint8_t / restistance_t resistance_level
-		// float fGrade (-1.0 - 1.0)
-		// float fScale (1.0 - 1.0)
-		// float fWeight
-	uint8_t buffer[4];
-	void *pBuffer;
-	uint8_t length;
+	resistance_mode_t 	operation;				// Operation to perform or mode to set for resistance.
+	uint8_t							*pBuffer; 				// Pointer to values required for the operation.
 } rc_evt_t;
-
-		
 
 /**@brief Set resistance event handler type. */
 typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);

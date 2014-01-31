@@ -61,16 +61,10 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 
 	if (p_evt_write->handle == p_cps->cprc_handles.value_handle)
 	{
-		// TODO: THIS STUFF BELONGS OUTSIDE OF BLE AND PROBABLY IN THE MAIN CONTROLLER.
-		// should call a specific event handler for writes to this handle.
-		// All the header declarations related to resistance should be moved to the 
-		// resistance module.
-		// We'll do this after we see how the events show up in ANT+ and make sure that
-		// it's consistent. 
 		rc_evt_t evt;
 		memset(&evt, 0, sizeof(evt));
-		evt.mode = (resistance_mode_t)p_evt_write->data[0];
-		evt.level = p_evt_write->data[1];
+		evt.operation = (resistance_mode_t)p_evt_write->data[0];
+		evt.pBuffer 	= &(p_evt_write->data[1]);
 
 		// Propogate the set resistance control.
 		if (p_cps->rc_evt_handler != NULL)
