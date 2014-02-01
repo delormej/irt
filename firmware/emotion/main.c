@@ -83,10 +83,10 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 // Parses the SET_SIM message from the KICKR and has user profile info.
 // TODO: move this to the user profile object.
-static void set_simulation_mode(uint8_t *pBuffer)
+static void user_profile_set(uint8_t *pBuffer)
 {
 	// Weight comes through in KG as 8500 85.00kg for example.
-	float weight_kg = (pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
+	m_user_profile.total_weight_kg = (pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
 	// Co-efficient for rolling resistance.
 	float crr = (pBuffer[2] | pBuffer[3] << 8u) / 10000.0f;
 	// Co-efficient of drag.
@@ -97,7 +97,7 @@ static void set_simulation_mode(uint8_t *pBuffer)
 		char message[16];
 		memset(&message, 0, sizeof(message));
 		uint8_t length = sprintf(message, format, 
-															(uint16_t)weight_kg,
+															(uint16_t)m_user_profile.total_weight_kg,
 															((uint16_t)crr)*10000, 
 															((uint16_t)c)*1000);
 		debug_send(message, sizeof(message));
@@ -296,14 +296,15 @@ static void on_ant_power_data(void) {}
  */
 static void on_set_resistance(rc_evt_t rc_evt)
 {
-	m_resistance_mode = rc_evt.operation;
+	// TODO: Write a macro for extracting the 2 byte value with endianness.			
 	
 	// 
 	// Parse the messages and set state or resistance as appropriate.
 	//
-	switch (m_resistance_mode)
+	switch (rc_evt.operation)
 	{
 		case RESISTANCE_SET_STANDARD:
+			m_resistance_mode = rc_evt.operation;
 			m_resistance_level = rc_evt.pBuffer[0];
 			m_servo_pos = set_resistance(m_resistance_level);
 			break;
@@ -311,6 +312,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		case RESISTANCE_SET_PERCENT:
 			// Reset state since we're not in standard mode any more.
 			m_resistance_level = 0;
+			m_resistance_mode = rc_evt.operation;
 			
 			// Parse the buffer for percentage.
 			float percent = get_resistance_pct(rc_evt.pBuffer);
@@ -318,17 +320,24 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			break;
 		
 		case RESISTANCE_SET_SIM:
-			set_simulation_mode(rc_evt.pBuffer);
+			m_resistance_mode = rc_evt.operation;
+			user_profile_set(rc_evt.pBuffer);
 			break;
-			/*
+
+		case RESISTANCE_SET_WHEEL_CR:
+			m_user_profile.wheel_size_mm = 
+				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u;
+			break;
+			
 		case RESISTANCE_SET_ERG:
-			set_resistance_erg(x);
+			set_resistance_erg(
+				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u);
 			break;
 			
 		case RESISTANCE_SET_SLOPE:
-			set_resistance_slope(x);
+			//set_resistance_slope(x);
 			break;
-			
+			/*
 		case RESISTANCE_SET_WIND:
 			set_resistance_wind(x);
 			break;
@@ -336,10 +345,16 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		default:
 			break;
 	}
+#if defined(BLE_NUS_ENABLED)
+		static const char format[] = "OP:%i,VAL:%i";
+		char message[16];
+		memset(&message, 0, sizeof(message));
+		uint8_t length = sprintf(message, format, 
+															(uint8_t)rc_evt.operation,
+															(int16_t)(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u));
+		debug_send(message, sizeof(message));
+#endif		
 
-	//uint8_t data[19];
-	//sprintf(data, "MODE: %i, LEVEL: %i", rc_evt.mode, rc_evt.level);
-	//debug_send(data, sizeof(data));	
 }
 
 		

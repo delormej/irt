@@ -48,7 +48,10 @@ typedef enum
 	RESISTANCE_SET_C					= 0x45, // Wind resistance offset.
 	RESISTANCE_SET_SLOPE			= 0x46,
 	RESISTANCE_SET_WIND				= 0x47,
-	RESISTANCE_SET_WHEEL_CR		= 0x48
+	RESISTANCE_SET_WHEEL_CR		= 0x48,
+	RESISTANCE_INIT_SPINDOWN	= 0x49,
+	RESISTANCE_READ_MODE      = 0x4A,
+	RESISTANCE_SPINDOWN_RESULT= 0x5A
 } resistance_mode_t;	// TODO: rename this OPCODE or something similar, it's not the mode necessarily.
 
 /* This is from WAHOO FITNESS:
