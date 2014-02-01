@@ -8,7 +8,7 @@
 
 #include <string.h>
 #include <math.h>
-#include "insideride.h"
+#include "irt_common.h"
 #include "speed.h"
 #include "nrf_sdm.h"
 #include "app_error.h"

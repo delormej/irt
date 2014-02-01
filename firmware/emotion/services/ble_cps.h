@@ -54,6 +54,7 @@ Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64
 #include "ble.h"
 #include "ble_srv_common.h"
 #include "ble_sc_ctrlpt.h"
+#include "irt_common.h"
 #include "resistance.h"
 
 // https://developer.bluetooth.org/gatt/services/Pages/ServicesHome.aspx
@@ -97,33 +98,6 @@ Cycling Power Vector org.bluetooth.characteristic.cycling_power_vector 0x2A64
 #define BLE_CPS_FEATURE_INSTANT_MEAS_DIRECTION_BIT			(0x01 << 17)	// Instantaneous Measurement Direction Supported
 #define BLE_CPS_FEATURE_FACTORY_CALIBRATION_BIT					(0x01 << 18)	// Factory Calibration Date Supported
 
-// TODO: This should be genericized to work for BLE & ANT
-/**@brief Cycling Power Service measurement type. */
-typedef struct ble_cps_meas_s
-{
-	uint16_t  flags;																		// 16 bits defined here: https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
-	int16_t		instant_power;         										// Note this is a SIGNED int16
-	uint8_t		pedal_power_balance;
-	uint16_t	accum_torque;															// Unit is in newton metres with a resolution of 1/32
-	uint32_t	accum_wheel_revs;
-	uint16_t	last_wheel_event_time;										// Unit is in seconds with a resolution of 1/2048. 
-	uint16_t	accum_crank_rev;
-	uint16_t	last_crank_event_time;										// Unit is in seconds with a resolution of 1/1024. 
-	int16_t		max_force_magnitude;											// Unit is in newtons with a resolution of 1.
-	int16_t		min_force_magnitude;											// Unit is in newtons with a resolution of 1.
-	int16_t		max_torque_magnitude;											// Unit is in newton metres with a resolution of 1/32
-	int16_t		min_torque_magnitude;											// Unit is in newton metres with a resolution of 1/32
-	uint16_t	max_angle:12;																// Unit is in degrees with a resolution of 1. 
-	uint16_t	min_angle:12;																// Unit is in degrees with a resolution of 1. 
-	uint16_t	top_dead_spot_angle;											// Unit is in degrees with a resolution of 1. 
-	uint16_t	bottom_dead_spot_angle;										// Unit is in degrees with a resolution of 1. 
-	uint16_t	accum_energy;															// Unit is in kilojoules with a resolution of 1.
-	resistance_mode_t resistance_mode;
-	uint16_t	resistance_level;
-	float			instant_speed_mps;
-} ble_cps_meas_t;
-
-
 // Forward declaration of the ble_cps_t type. 
 typedef struct ble_cps_s ble_cps_t;
 
@@ -135,7 +109,7 @@ typedef struct
 	bool                         use_cycling_power_vector;
 	uint8_t *                    p_sensor_location;                               		/**< Pointer to initial value of the Sensor Location characteristic. */
 	uint32_t 									 	 feature;																							/**< Bitmask of enabled features. */
-	ble_cps_meas_t *						 p_cps_meas;																					/**< Initial cycling power service measurement structure. */
+	irt_power_meas_t *						 p_cps_meas;																					/**< Initial cycling power service measurement structure. */
 	rc_evt_handler_t     				 rc_evt_handler;                                  		/**< Event handler to be called for handling resistance control event. */
 	ble_sc_ctrlpt_evt_handler_t  ctrlpt_evt_handler;                    							/**< Control point event handler */
 	ble_srv_error_handler_t      error_handler;                         							/**< Function to be called in case of an error. */
@@ -189,11 +163,11 @@ void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt);
 *          the client.
 *
 * @param[in]   p_cps                    Cycling Power Service structure.
-* @param[in]   ble_cps_meas_t           New cycling power measurement structure.
+* @param[in]   irt_power_meas_t           New cycling power measurement structure.
 *
 * @return      NRF_SUCCESS on success, otherwise an error code.
 */
-uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, ble_cps_meas_t * p_cps_meas);
+uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_meas_t * p_cps_meas);
 
 #endif // BLE_CPS_H__
 

@@ -315,7 +315,7 @@ void ant_bp_tx_start(void)
     APP_ERROR_CHECK(err_code);
 }
 
-void ant_bp_tx_send(ble_cps_meas_t * p_cps_meas)
+void ant_bp_tx_send(irt_power_meas_t * p_cps_meas)
 {
 		static uint16_t event_count										= 0;
 		static uint8_t power_page_interleave 					= POWER_PAGE_INTERLEAVE_COUNT;

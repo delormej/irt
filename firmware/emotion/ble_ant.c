@@ -631,7 +631,7 @@ void debug_send(uint8_t * data, uint16_t length)
 //
 // Sends ble & ant data messages.
 //
-void cycling_power_send(ble_cps_meas_t * p_cps_meas)
+void cycling_power_send(irt_power_meas_t * p_cps_meas)
 {
 		uint32_t err_code;
 		

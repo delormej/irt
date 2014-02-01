@@ -26,6 +26,7 @@
 #include <string.h>
 #include "nordic_common.h"
 #include "nrf_error.h"
+#include "irt_common.h"
 #include "irt_peripheral.h"
 #include "resistance.h"
 #include "speed.h"
@@ -127,10 +128,10 @@ static float get_resistance_pct(uint8_t *buffer)
 	return percent;
 }
 
-/**@brief	Dispatches ant+/ble power messages.
+/**@brief	Dispatches ant+/ble power messages, returns speed & power stats.
  *
  */
-static ble_cps_meas_t transmit_power(void)
+static irt_power_meas_t transmit_power(void)
 {
 		// Hang on to accumulated torque for a session duration.
 		// TODO: make sure this gets cleared at some point, probably
@@ -140,8 +141,8 @@ static ble_cps_meas_t transmit_power(void)
     uint32_t err_code;
 
 		// Initialize structures.
-		ble_cps_meas_t cps_meas;
-		memset(&cps_meas, 0, sizeof(cps_meas));
+		irt_power_meas_t power_meas;
+		memset(&power_meas, 0, sizeof(power_meas));
 		
 		speed_event_t			speed_event;
 		memset(&speed_event, 0, sizeof(speed_event));
@@ -163,29 +164,29 @@ static ble_cps_meas_t transmit_power(void)
 		// TODO: Handle the error for real here, not sure what the overall error 
 		// handling strategy will be, but this is not critical, just move on.
 		if (err_code != IRT_SUCCESS)
-			return cps_meas;		
+			return power_meas;		
 			
 		// Calculate torque.
 		uint16_t 	torque				= 0;
 		err_code = calc_torque(watts, speed_event.period_2048, &torque);
 		if (err_code != IRT_SUCCESS)
 			// TODO: handle error here, or at least bubble up.
-			return cps_meas;
+			return power_meas;
 		
 		// Store accumulated torque for the session.
 		m_accum_torque += torque;
 		
-		cps_meas.instant_power 				= watts;
-		cps_meas.accum_torque 				= m_accum_torque;
-		cps_meas.accum_wheel_revs 		= speed_event.accum_wheel_revs;
-		cps_meas.last_wheel_event_time= speed_event.event_time_2048;
+		power_meas.instant_power 				= watts;
+		power_meas.accum_torque 				= m_accum_torque;
+		power_meas.accum_wheel_revs 		= speed_event.accum_wheel_revs;
+		power_meas.last_wheel_event_time= speed_event.event_time_2048;
 		
-		cps_meas.resistance_mode			= m_resistance_mode;
-		cps_meas.resistance_level			= m_resistance_level;
+		power_meas.resistance_mode			= m_resistance_mode;
+		power_meas.resistance_level			= m_resistance_level;
 
-		cps_meas.instant_speed_mps		= speed_event.speed_mps;
+		power_meas.instant_speed_mps		= speed_event.speed_mps;
 
-		cycling_power_send(&cps_meas);
+		cycling_power_send(&power_meas);
 
 #if defined(BLE_NUS_ENABLED)
 		static const char format[] = "r,w,l:%i,%i,%i";
@@ -199,7 +200,7 @@ static ble_cps_meas_t transmit_power(void)
 #endif			
 
 		// Return power measurement.
-		return cps_meas;
+		return power_meas;
 }
 
 /*----------------------------------------------------------------------------
@@ -217,23 +218,23 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 {
 	  UNUSED_PARAMETER(p_context);
 	
-		// Calculates and transmits the power messages.
-		ble_cps_meas_t cps_meas = transmit_power();
+		// Calculate and transmit power messages.
+		irt_power_meas_t power_meas = transmit_power();
 		
-		// If in erg or sim mode, adjust on the fly.
+		// If in erg or sim mode, adjust resistance accordingly. 
 		switch (m_resistance_mode)
 		{
 			case RESISTANCE_SET_ERG:
 				set_resistance_erg(&m_user_profile, 
 													&m_sim_forces,
-													cps_meas.instant_power,
-													cps_meas.instant_speed_mps);
+													power_meas.instant_power,
+													power_meas.instant_speed_mps);
 				break;
 				
 			case RESISTANCE_SET_SIM:
 				set_resistance_sim(&m_user_profile,
 													&m_sim_forces,
-													cps_meas.instant_speed_mps);
+													power_meas.instant_speed_mps);
 				break;
 				
 			default:
