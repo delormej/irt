@@ -10,6 +10,7 @@
 #define __RESISTANCE_H__
 
 #include <stdint.h>
+#include "user_profile.h"
 
 #define MAX_RESISTANCE_LEVELS 10						// Maximum resistance levels available.
 #define MIN_RESISTANCE_LEVEL	1500					// Minimum by which there is no longer resistance.
@@ -85,6 +86,15 @@ typedef struct
 /**@brief Set resistance event handler type. */
 typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);
 
+/**@brief Factors used when caculated simulation forces. */
+typedef struct rc_sim_forces_s
+{
+	float crr;
+	float c;
+	float wind_speed;
+	float grade;
+} rc_sim_forces_t;
+
 /**@brief		Sets the resistance to a specific level by moving the servo to the 
  *					corresponding position.
  *
@@ -97,10 +107,10 @@ uint16_t set_resistance(uint8_t level);
  */
 uint16_t set_resistance_pct(float percent);
 
-/**@brief		Parses KICKR message to get the percentage.
+/**@brief		Sets resistance to simulation mode.  
  *
  */
-float 	get_resistance_pct(uint8_t *buffer);
+void set_resistance_sim(user_profile_t *p_user_profile, rc_sim_forces_t *p_sim_forces);
 
 // Future implementations.
 uint16_t set_resistance_erg(uint16_t watts);

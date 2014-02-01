@@ -31,6 +31,8 @@
 
 #define REVS_CHANNEL_TASK_TOGGLE	2
 
+#define DEFAULT_WHEEL_SIZE_MM 	2070u						// Defaults to a road wheel which is typically 2,070mm.
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "nrf.h"
@@ -48,10 +50,19 @@ typedef struct speed_event_s
 	float			speed_mps;																// Speed in meters per second.	
 } speed_event_t;
 
-/**@brief 	Initializes the flywheel photo sensor that reports revolutions.*/
-void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm);
+/**@brief 	Initializes the flywheel photo sensor that reports revolutions.
+*
+*/
+void init_speed(uint32_t pin_flywheel_rev);
 
-/**@brief 	Calculates the current speed.*/
+/**@brief 	Set's the wheel size.  Defaults to DEFAULT_WHEEL_SIZE_MM if not set.
+*
+*/
+void set_wheel_size(uint16_t wheel_size_mm);
+
+/**@brief 	Calculates the current speed.
+*
+*/
 void calc_speed(speed_event_t* current_speed_event);
 
 /**@brief		Converts speed from meters per second to kilometers per hour.

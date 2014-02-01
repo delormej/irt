@@ -14,7 +14,9 @@
 #include "nrf_pwm.h"
 #include "math.h"
 
-bool m_initialized = false;
+static user_profile_t 			*mp_user_profile = 0; 
+static rc_sim_forces_t			*mp_sim_forces = 0;
+static bool 								m_initialized = false;
 
 /**@brief 	Initializes the resistance object.
  *
@@ -102,23 +104,6 @@ uint16_t set_resistance_pct(float percent)
 		return position;
 }
 
-float get_resistance_pct(uint8_t *buffer)
-{
-	/*	Not exactly sure why it is this way, but it seems that 2 bytes hold a
-	value that is a percentage of the MAX which seems arbitrarily to be 16383.
-	Use that value to calculate the percentage, for example:
-
-	10.7% example:
-	(16383-14630) / 16383 = .10700 = 10.7%
-	*/
-	static const float PCT_100 = 16383.0f;
-	uint16_t value = buffer[0] | buffer[1] << 8u;
-
-	float percent = (PCT_100 - value) / PCT_100;
-
-	return percent;
-}
-
 /*
 trainerSetSimMode:   (float)  fWeight 
 rollingResistance:  (float)  fCrr 
@@ -153,4 +138,81 @@ uint16_t set_resistance_slope(float slope) // should be a float fGrade.
 };
 uint16_t set_resistance_wind(float wind) {};
 
+void set_resistance_sim(user_profile_t *p_user_profile, rc_sim_forces_t *p_sim_forces)
+{
+	mp_user_profile = p_user_profile;
+	mp_sim_forces = p_sim_forces;
+}
 
+
+// TODO: who is going to maintain responsibility for adjusting servo position
+// every second when calculating power.
+// Power is going to calculate current power based on servo pos + speed.
+// it never needs to know about the additional forces other than weight and wheel circ (user_profile).
+// Resistance module on the other hand does the virtual calculations of how
+// many watts those forces should create and finds the appropriate servo position.
+
+// Resistance module doesn't need to know how to parse messages from the KICKR
+// because main needs to know in order to figure out setting wheel size and also
+// weight.  Why not keep it there, or create a module with KICKR specific messages
+// tihs may be the way you accomplish in the future to abstract the trainer device
+// profile anyways.
+
+/*
+        protected double GravitationalForces(double gradient)
+        {
+            double value = _forces.TotalWeightKg * Conversion.GRAVITY * gradient;
+
+            return value;
+        }
+
+        protected double RollingResistance()
+        {
+            double value = _forces.TotalWeightKg * Conversion.GRAVITY *
+                _forces.RollingResistanceCoefficient;
+
+            return value;
+        }
+
+        public double Calculate(Trackpoint dataPoint)
+        {
+            double value = dataPoint.Speed * (
+                    WindResistance(dataPoint.Speed) +
+                    RollingResistance() +
+                    GravitationalForces(dataPoint.Gradient)
+                    );
+        }
+
+        protected double WindResistance(double speed)
+        {
+            double value = 0.5d *
+                (_forces.FrontalArea * _forces.AirDensity * _forces.DragCoefficient *
+                Math.Pow(speed, 2));
+
+            return value;
+        }
+
+				Forces forces = new Forces()
+                {
+                    DragCoefficient = 0.55,
+                    AirDensity = 1.226,
+                    FrontalArea = 0.5,
+                    RollingResistanceCoefficient = 0.004,
+                };
+
+
+*/
+
+static bool isSimModeSet()
+{
+	return (mp_user_profile != 0);
+}
+
+// Returns resistance 
+static float windResistance(float speed)
+{
+	// need to calculate wind resistnace regardless of whether this gets set.
+	// If you set ADDITIONAL wind resistance it could add / remove from this
+	
+	
+}

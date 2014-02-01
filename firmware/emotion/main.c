@@ -40,6 +40,7 @@ static resistance_mode_t									m_resistance_mode = RESISTANCE_SET_STANDARD;
 static uint16_t														m_servo_pos;
 static app_timer_id_t               			m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
 static user_profile_t 										m_user_profile;
+static rc_sim_forces_t										m_sim_forces;
 
 /*----------------------------------------------------------------------------
  * Error Handlers
@@ -83,14 +84,17 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 // Parses the SET_SIM message from the KICKR and has user profile info.
 // TODO: move this to the user profile object.
-static void user_profile_set(uint8_t *pBuffer)
+static void sim_mode_set(uint8_t *pBuffer)
 {
 	// Weight comes through in KG as 8500 85.00kg for example.
 	m_user_profile.total_weight_kg = (pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
 	// Co-efficient for rolling resistance.
-	float crr = (pBuffer[2] | pBuffer[3] << 8u) / 10000.0f;
+	m_sim_forces.crr = (pBuffer[2] | pBuffer[3] << 8u) / 10000.0f;
 	// Co-efficient of drag.
-	float c = (pBuffer[4] | pBuffer[5] << 8u) / 1000.0f;
+	m_sim_forces.c = (pBuffer[4] | pBuffer[5] << 8u) / 1000.0f;
+
+	// Set the simulation mode in the resistance module.
+	set_resistance_sim(&m_user_profile, &m_sim_forces);
 
 #if defined(BLE_NUS_ENABLED)
 		static const char format[] = "k,r,c:%i,%i,%i";
@@ -98,11 +102,32 @@ static void user_profile_set(uint8_t *pBuffer)
 		memset(&message, 0, sizeof(message));
 		uint8_t length = sprintf(message, format, 
 															(uint16_t)m_user_profile.total_weight_kg,
-															((uint16_t)crr)*10000, 
-															((uint16_t)c)*1000);
+															((uint16_t)m_sim_forces.crr)*10000, 
+															((uint16_t)m_sim_forces.c)*1000);
 		debug_send(message, sizeof(message));
 #endif		
+}
 
+// 
+// Parses KICKR message to get the percentage.
+// TODO: this doesn't belong in ant_bike_power / ble_cps because it's not
+// ble/ant specific, but it doesn't belong here.  Might belong in 
+// resistance module, but putting it here for now.
+static float get_resistance_pct(uint8_t *buffer)
+{
+	/*	Not exactly sure why it is this way, but it seems that 2 bytes hold a
+	value that is a percentage of the MAX which seems arbitrarily to be 16383.
+	Use that value to calculate the percentage, for example:
+
+	10.7% example:
+	(16383-14630) / 16383 = .10700 = 10.7%
+	*/
+	static const float PCT_100 = 16383.0f;
+	uint16_t value = buffer[0] | buffer[1] << 8u;
+
+	float percent = (PCT_100 - value) / PCT_100;
+
+	return percent;
 }
 
 /*----------------------------------------------------------------------------
@@ -321,12 +346,15 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		
 		case RESISTANCE_SET_SIM:
 			m_resistance_mode = rc_evt.operation;
-			user_profile_set(rc_evt.pBuffer);
+			sim_mode_set(rc_evt.pBuffer);
 			break;
 
 		case RESISTANCE_SET_WHEEL_CR:
 			m_user_profile.wheel_size_mm = 
 				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u;
+			// TODO: this is something that should be persisted in
+			// flash storage.
+			set_wheel_size(m_user_profile.wheel_size_mm);
 			break;
 			
 		case RESISTANCE_SET_ERG:
@@ -392,12 +420,16 @@ int main(void)
 		m_user_profile.wheel_size_mm = 2070;
 		m_user_profile.total_weight_kg = 175.0f * 0.453592;	// Convert lbs to KG
 		
+		// Initialize simulation forces structure.
+		memset(&m_sim_forces, 0, sizeof(m_sim_forces));
+
 		// Initialize timers.
 		timers_init();
 		
     // Initialize peripherals
 		peripheral_init(on_button_evt);
 
+		// Event handlers.
 		static ant_ble_evt_handlers_t handlers = { 
 			on_ble_connected,
 			on_ble_disconnected,
@@ -419,7 +451,10 @@ int main(void)
 		set_resistance(m_resistance_level);	
 		m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
 		
-		init_speed(PIN_DRUM_REV, m_user_profile.wheel_size_mm);
+		// Initialize module to read speed from flywheel.
+		init_speed(PIN_FLYWHEEL);
+		if (m_user_profile.wheel_size_mm > 0)
+			set_wheel_size(m_user_profile.wheel_size_mm);
 		
 		// TOOD: we need to ensure we're being woken up here by a HW
 		// interrupt or something before we actually start reporting.
@@ -431,7 +466,6 @@ int main(void)
 		// Stop reporting ble services.
 		// application_timers_stop();
 
-		
     // Enter main loop
     for (;;)
     {
