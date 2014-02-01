@@ -89,10 +89,11 @@ typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);
 /**@brief Factors used when caculated simulation forces. */
 typedef struct rc_sim_forces_s
 {
-	float crr;
-	float c;
-	float wind_speed;
-	float grade;
+	float 	crr;
+	float 	c;
+	float 	wind_speed_mps;
+	float 	grade;
+	int16_t erg_watts;
 } rc_sim_forces_t;
 
 /**@brief		Sets the resistance to a specific level by moving the servo to the 
@@ -107,14 +108,19 @@ uint16_t set_resistance(uint8_t level);
  */
 uint16_t set_resistance_pct(float percent);
 
-/**@brief		Sets resistance to simulation mode.  
+/**@brief		Sets/adjusts resistance to desired simulation parameters.  
  *
  */
-void set_resistance_sim(user_profile_t *p_user_profile, rc_sim_forces_t *p_sim_forces);
+uint16_t set_resistance_sim(user_profile_t *p_user_profile, 
+												rc_sim_forces_t *p_sim_forces,
+												float speed_mps);
 
-// Future implementations.
-uint16_t set_resistance_erg(uint16_t watts);
-uint16_t set_resistance_slope(float slope);
-uint16_t set_resistance_wind(float wind);
+/**@brief		Sets/adjusts resistance to desired watts.
+ *
+ */
+uint16_t set_resistance_erg(user_profile_t *p_user_profile, 
+												rc_sim_forces_t *p_sim_forces,
+												int16_t reported_watts,
+												float speed_mps);
 
 #endif

@@ -14,8 +14,6 @@
 #include "nrf_pwm.h"
 #include "math.h"
 
-static user_profile_t 			*mp_user_profile = 0; 
-static rc_sim_forces_t			*mp_sim_forces = 0;
 static bool 								m_initialized = false;
 
 /**@brief 	Initializes the resistance object.
@@ -120,28 +118,35 @@ fC is equal to A*Cw*Rho where A is effective frontal area (m^2); Cw is drag coef
 
 */
 
-// TODO: Future implementations.
-uint16_t set_resistance_erg(uint16_t watts) 
+uint16_t set_resistance_erg(user_profile_t *p_user_profile, 
+												rc_sim_forces_t *p_sim_forces,
+												int16_t reported_watts,	// last reported watts, could be used for calibration.
+												float speed_mps)
 {
-/*
-Puts the trainer in Resistance Mode. 
+		/*
+		Puts the trainer in Resistance Mode. 
 
-Resistance Mode will directly control the strength of the brake and will stay constant regardless of the rider's speed. This mode is similar to a spin bike where the user can increase or decrease the difficulty of their workout.
-Parameters:
-fpScale a float from 0.0 to 1.0 that represents the percentage the brake is turned on (0.0 = brake turned off; 0.256 = 25.6% of brake; 1.0 = 100% brake force). 
-*/
-};
-uint16_t set_resistance_slope(float slope) // should be a float fGrade.
+		Resistance Mode will directly control the strength of the brake and will stay constant regardless of the rider's speed. This mode is similar to a spin bike where the user can increase or decrease the difficulty of their workout.
+		Parameters:
+		fpScale a float from 0.0 to 1.0 that represents the percentage the brake is turned on (0.0 = brake turned off; 0.256 = 25.6% of brake; 1.0 = 100% brake force). 
+		*/
+	return 0;
+}
+
+uint16_t set_resistance_sim(user_profile_t *p_user_profile, 
+												rc_sim_forces_t *p_sim_forces,
+												float speed_mps)
 {
-// fGrade is the slope of the hill (slope = rise / run). Should be from -1.0 : 1.0, where -1.0 is a 45 degree downhill slope, 0.0 is flat ground, and 1.0 is a 45 degree uphil slope. 
+	// who is going to handle calculating calibration? Whoever is, should keep track of 
+	// current reporting watts, vs. adjusted watts?
+	// fGrade is the slope of the hill (slope = rise / run). Should be from -1.0 : 1.0, where -1.0 is a 45 degree downhill slope, 0.0 is flat ground, and 1.0 is a 45 degree uphil slope. 
+	// TODO: need to calculate wind resistnace regardless of whether this gets set.
+	// If you set ADDITIONAL wind resistance it could add / remove from this
 
-};
-uint16_t set_resistance_wind(float wind) {};
-
-void set_resistance_sim(user_profile_t *p_user_profile, rc_sim_forces_t *p_sim_forces)
-{
-	mp_user_profile = p_user_profile;
-	mp_sim_forces = p_sim_forces;
+	//mp_user_profile = p_user_profile;
+	//mp_sim_forces = p_sim_forces;
+	
+	return 0;  // IRT_SUCCESS
 }
 
 
@@ -202,17 +207,3 @@ void set_resistance_sim(user_profile_t *p_user_profile, rc_sim_forces_t *p_sim_f
 
 
 */
-
-static bool isSimModeSet()
-{
-	return (mp_user_profile != 0);
-}
-
-// Returns resistance 
-static float windResistance(float speed)
-{
-	// need to calculate wind resistnace regardless of whether this gets set.
-	// If you set ADDITIONAL wind resistance it could add / remove from this
-	
-	
-}

@@ -120,6 +120,7 @@ typedef struct ble_cps_meas_s
 	uint16_t	accum_energy;															// Unit is in kilojoules with a resolution of 1.
 	resistance_mode_t resistance_mode;
 	uint16_t	resistance_level;
+	float			instant_speed_mps;
 } ble_cps_meas_t;
 
 

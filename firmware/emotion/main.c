@@ -93,9 +93,6 @@ static void sim_mode_set(uint8_t *pBuffer)
 	// Co-efficient of drag.
 	m_sim_forces.c = (pBuffer[4] | pBuffer[5] << 8u) / 1000.0f;
 
-	// Set the simulation mode in the resistance module.
-	set_resistance_sim(&m_user_profile, &m_sim_forces);
-
 #if defined(BLE_NUS_ENABLED)
 		static const char format[] = "k,r,c:%i,%i,%i";
 		char message[16];
@@ -130,18 +127,10 @@ static float get_resistance_pct(uint8_t *buffer)
 	return percent;
 }
 
-/*----------------------------------------------------------------------------
- * Timer functions
- * ----------------------------------------------------------------------------*/
-
-/**@brief Function for handling the cycling power measurement timer timeout.
+/**@brief	Dispatches ant+/ble power messages.
  *
- * @details This function will be called each timer expiration.
- *
- * @param[in]   p_context   Pointer used for passing some arbitrary information (context) from the
- *                          app_start_timer() call to the timeout handler.
  */
-static void cycling_power_meas_timeout_handler(void * p_context)
+static ble_cps_meas_t transmit_power(void)
 {
 		// Hang on to accumulated torque for a session duration.
 		// TODO: make sure this gets cleared at some point, probably
@@ -149,7 +138,6 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		static uint16_t 			m_accum_torque = 0;
 
     uint32_t err_code;
-    UNUSED_PARAMETER(p_context);
 
 		// Initialize structures.
 		ble_cps_meas_t cps_meas;
@@ -175,13 +163,14 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		// TODO: Handle the error for real here, not sure what the overall error 
 		// handling strategy will be, but this is not critical, just move on.
 		if (err_code != IRT_SUCCESS)
-			return;		
+			return cps_meas;		
 			
 		// Calculate torque.
 		uint16_t 	torque				= 0;
 		err_code = calc_torque(watts, speed_event.period_2048, &torque);
 		if (err_code != IRT_SUCCESS)
-			return;
+			// TODO: handle error here, or at least bubble up.
+			return cps_meas;
 		
 		// Store accumulated torque for the session.
 		m_accum_torque += torque;
@@ -194,6 +183,8 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		cps_meas.resistance_mode			= m_resistance_mode;
 		cps_meas.resistance_level			= m_resistance_level;
 
+		cps_meas.instant_speed_mps		= speed_event.speed_mps;
+
 		cycling_power_send(&cps_meas);
 
 #if defined(BLE_NUS_ENABLED)
@@ -205,7 +196,49 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 															watts, 
 															m_resistance_level);
 		debug_send(message, sizeof(message));
-#endif		
+#endif			
+
+		// Return power measurement.
+		return cps_meas;
+}
+
+/*----------------------------------------------------------------------------
+ * Timer functions
+ * ----------------------------------------------------------------------------*/
+
+/**@brief Function for handling the cycling power measurement timer timeout.
+ *
+ * @details This function will be called each timer expiration.
+ *
+ * @param[in]   p_context   Pointer used for passing some arbitrary information (context) from the
+ *                          app_start_timer() call to the timeout handler.
+ */
+static void cycling_power_meas_timeout_handler(void * p_context)
+{
+	  UNUSED_PARAMETER(p_context);
+	
+		// Calculates and transmits the power messages.
+		ble_cps_meas_t cps_meas = transmit_power();
+		
+		// If in erg or sim mode, adjust on the fly.
+		switch (m_resistance_mode)
+		{
+			case RESISTANCE_SET_ERG:
+				set_resistance_erg(&m_user_profile, 
+													&m_sim_forces,
+													cps_meas.instant_power,
+													cps_meas.instant_speed_mps);
+				break;
+				
+			case RESISTANCE_SET_SIM:
+				set_resistance_sim(&m_user_profile,
+													&m_sim_forces,
+													cps_meas.instant_speed_mps);
+				break;
+				
+			default:
+				break;
+		}
 }
 
 /**@brief Function for starting the application timers.
@@ -349,6 +382,17 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			sim_mode_set(rc_evt.pBuffer);
 			break;
 
+		case RESISTANCE_SET_ERG:
+			m_sim_forces.erg_watts = 
+				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u;
+			break;
+			
+		case RESISTANCE_SET_SLOPE:
+			break;
+			
+		case RESISTANCE_SET_WIND:
+			break;
+			
 		case RESISTANCE_SET_WHEEL_CR:
 			m_user_profile.wheel_size_mm = 
 				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u;
@@ -357,19 +401,6 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			set_wheel_size(m_user_profile.wheel_size_mm);
 			break;
 			
-		case RESISTANCE_SET_ERG:
-			set_resistance_erg(
-				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u);
-			break;
-			
-		case RESISTANCE_SET_SLOPE:
-			//set_resistance_slope(x);
-			break;
-			/*
-		case RESISTANCE_SET_WIND:
-			set_resistance_wind(x);
-			break;
-			*/
 		default:
 			break;
 	}
