@@ -227,14 +227,13 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 			case RESISTANCE_SET_ERG:
 				set_resistance_erg(&m_user_profile, 
 													&m_sim_forces,
-													power_meas.instant_power,
-													power_meas.instant_speed_mps);
+													&power_meas);
 				break;
 				
 			case RESISTANCE_SET_SIM:
 				set_resistance_sim(&m_user_profile,
 													&m_sim_forces,
-													power_meas.instant_speed_mps);
+													&power_meas);
 				break;
 				
 			default:

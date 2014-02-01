@@ -120,8 +120,7 @@ fC is equal to A*Cw*Rho where A is effective frontal area (m^2); Cw is drag coef
 
 uint16_t set_resistance_erg(user_profile_t *p_user_profile, 
 												rc_sim_forces_t *p_sim_forces,
-												int16_t reported_watts,	// last reported watts, could be used for calibration.
-												float speed_mps)
+												irt_power_meas_t *p_power_meas)
 {
 		/*
 		Puts the trainer in Resistance Mode. 
@@ -135,7 +134,7 @@ uint16_t set_resistance_erg(user_profile_t *p_user_profile,
 
 uint16_t set_resistance_sim(user_profile_t *p_user_profile, 
 												rc_sim_forces_t *p_sim_forces,
-												float speed_mps)
+												irt_power_meas_t *p_power_meas)
 {
 	// who is going to handle calculating calibration? Whoever is, should keep track of 
 	// current reporting watts, vs. adjusted watts?

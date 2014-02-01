@@ -10,6 +10,7 @@
 #define __RESISTANCE_H__
 
 #include <stdint.h>
+#include "irt_common.h"
 #include "user_profile.h"
 
 #define MAX_RESISTANCE_LEVELS 10						// Maximum resistance levels available.
@@ -113,14 +114,13 @@ uint16_t set_resistance_pct(float percent);
  */
 uint16_t set_resistance_sim(user_profile_t *p_user_profile, 
 												rc_sim_forces_t *p_sim_forces,
-												float speed_mps);
+												irt_power_meas_t *p_power_meas);
 
 /**@brief		Sets/adjusts resistance to desired watts.
  *
  */
 uint16_t set_resistance_erg(user_profile_t *p_user_profile, 
 												rc_sim_forces_t *p_sim_forces,
-												int16_t reported_watts,
-												float speed_mps);
+												irt_power_meas_t *p_power_meas);
 
 #endif
