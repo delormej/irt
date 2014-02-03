@@ -178,7 +178,6 @@ uint16_t set_resistance_erg(user_profile_t *p_user_profile,
  *				rider & bike weight, coefficient of rolling resistance, coefficient of 
  *				wind resistance, wind speed, wheel circumference, and grade. 
  *				If these variables are not set, they will default to an "average" value.
- 
  */
 uint16_t set_resistance_sim(user_profile_t *p_user_profile, 
 												rc_sim_forces_t *p_sim_forces,
@@ -213,8 +212,6 @@ uint16_t set_resistance_sim(user_profile_t *p_user_profile,
 	return set_resistance_erg(p_user_profile, 
 									p_sim_forces,
 									p_power_meas);
-
-	return 0;  // IRT_SUCCESS
 }
 
 
