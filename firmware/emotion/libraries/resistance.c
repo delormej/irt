@@ -201,74 +201,12 @@ uint16_t set_resistance_sim(user_profile_t *p_user_profile,
 	float gravitational = p_user_profile->total_weight_kg * GRAVITY * 
 							p_sim_forces->grade;
 
-	// Total power required.
-	float force = wind + rolling + gravitational; 
+	// Total power required, which is rounded to nearest int for watts and assign.
+	p_sim_forces->erg_watts = (wind + rolling + gravitational) * 
+								p_power_meas->instant_speed_mps;
 	
-	// Round to nearest int for watts and assign.
-	int16_t watts = force * p_power_meas->instant_speed_mps;
-	p_sim_forces->erg_watts = watts;
-
 	// Same as erg mode now, set to a specific watt level.
 	return set_resistance_erg(p_user_profile, 
 									p_sim_forces,
 									p_power_meas);
 }
-
-
-// TODO: who is going to maintain responsibility for adjusting servo position
-// every second when calculating power.
-// Power is going to calculate current power based on servo pos + speed.
-// it never needs to know about the additional forces other than weight and wheel circ (user_profile).
-// Resistance module on the other hand does the virtual calculations of how
-// many watts those forces should create and finds the appropriate servo position.
-
-// Resistance module doesn't need to know how to parse messages from the KICKR
-// because main needs to know in order to figure out setting wheel size and also
-// weight.  Why not keep it there, or create a module with KICKR specific messages
-// tihs may be the way you accomplish in the future to abstract the trainer device
-// profile anyways.
-
-/*
-        protected double GravitationalForces(double gradient)
-        {
-            double value = _forces.TotalWeightKg * Conversion.GRAVITY * gradient;
-
-            return value;
-        }
-
-        protected double RollingResistance()
-        {
-            double value = _forces.TotalWeightKg * Conversion.GRAVITY *
-                _forces.RollingResistanceCoefficient;
-
-            return value;
-        }
-
-        public double Calculate(Trackpoint dataPoint)
-        {
-            double value = dataPoint.Speed * (
-                    WindResistance(dataPoint.Speed) +
-                    RollingResistance() +
-                    GravitationalForces(dataPoint.Gradient)
-                    );
-        }
-
-        protected double WindResistance(double speed)
-        {
-            double value = 0.5d *
-                (_forces.FrontalArea * _forces.AirDensity * _forces.DragCoefficient *
-                Math.Pow(speed, 2));
-
-            return value;
-        }
-
-				Forces forces = new Forces()
-                {
-                    DragCoefficient = 0.55,
-                    AirDensity = 1.226,
-                    FrontalArea = 0.5,
-                    RollingResistanceCoefficient = 0.004,
-                };
-
-
-*/
