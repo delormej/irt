@@ -83,9 +83,14 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     NVIC_SystemReset();
 }
 
+
+/*----------------------------------------------------------------------------
+ * KICKR resistance commands.
+ * ----------------------------------------------------------------------------*/
+
 // Parses the SET_SIM message from the KICKR and has user profile info.
 // TODO: move this to the user profile object.
-static void sim_mode_set(uint8_t *pBuffer)
+static void set_sim_params(uint8_t *pBuffer)
 {
 	// Weight comes through in KG as 8500 85.00kg for example.
 	m_user_profile.total_weight_kg = (pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
@@ -106,11 +111,36 @@ static void sim_mode_set(uint8_t *pBuffer)
 #endif		
 }
 
-// 
-// Parses KICKR message to get the percentage.
-// TODO: this doesn't belong in ant_bike_power / ble_cps because it's not
-// ble/ant specific, but it doesn't belong here.  Might belong in 
-// resistance module, but putting it here for now.
+/**@brief	Initializes user profile and loads from flash.  Sets defaults for
+ * 				simulation parameters if not set.
+ */
+static void profile_init(void)
+{
+		// Initialize hard coded user profile for now.
+		memset(&m_user_profile, 0, sizeof(m_user_profile));
+		
+		// Wheel circumference in mm.
+		m_user_profile.wheel_size_mm = 2070;
+		
+		// Total weight of rider + bike + shoes, clothing, etc...
+		m_user_profile.total_weight_kg = 178.0f * 0.453592;	// Convert lbs to KG
+		
+		// Initialize simulation forces structure.
+		memset(&m_sim_forces, 0, sizeof(m_sim_forces));	
+		
+	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004. 
+	 *
+	 *	fC is equal to A*Cw*Rho where A is effective frontal area (m^2); Cw is drag 
+	 *	coefficent (unitless); and Rho is the air density (kg/m^3). The default value 
+	 *	for A*Cw*Rho is 0.60. 	
+	 */
+		m_sim_forces.crr 								= 0.004f;
+		m_sim_forces.c 									= 0.60f;
+}
+
+/**@brief Parses the resistance percentage out of the KICKR command.
+ *
+ */
 static float get_resistance_pct(uint8_t *buffer)
 {
 	/*	Not exactly sure why it is this way, but it seems that 2 bytes hold a
@@ -128,7 +158,29 @@ static float get_resistance_pct(uint8_t *buffer)
 	return percent;
 }
 
-/**@brief	Dispatches ant+/ble power messages, returns speed & power stats.
+/**@brief Parses the simulated wind speed out of the KICKR command.
+ *
+ */
+static float get_sim_wind(uint8_t *buffer)
+{
+	return 0.0;
+}
+
+
+/**@brief Parses the simulated slope out of the KICKR command.
+ *
+ */
+static float get_sim_grade(uint8_t *buffer)
+{
+	return 0.0;
+}
+
+
+/*----------------------------------------------------------------------------
+ * Main function for calculating power and transmiting.
+ * ----------------------------------------------------------------------------*/
+
+/**@brief	Transmits the ant+ and ble power messages, returns speed & power stats.
  *
  */
 static irt_power_meas_t transmit_power(void)
@@ -379,18 +431,25 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		
 		case RESISTANCE_SET_SIM:
 			m_resistance_mode = rc_evt.operation;
-			sim_mode_set(rc_evt.pBuffer);
+			set_sim_params(rc_evt.pBuffer);
 			break;
 
 		case RESISTANCE_SET_ERG:
+			// Assign target watt level.
 			m_sim_forces.erg_watts = 
 				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u;
 			break;
 			
 		case RESISTANCE_SET_SLOPE:
+			// Parse out the slope.
+			m_sim_forces.grade = get_sim_grade(rc_evt.pBuffer);
+			m_resistance_mode = RESISTANCE_SET_SIM;
 			break;
 			
 		case RESISTANCE_SET_WIND:
+			// Parse out the wind speed.
+			m_sim_forces.wind_speed_mps = get_sim_wind(rc_evt.pBuffer);
+			m_resistance_mode = RESISTANCE_SET_SIM;
 			break;
 			
 		case RESISTANCE_SET_WHEEL_CR:
@@ -446,13 +505,8 @@ static void on_button_evt(uint8_t pin_no)
  */
 int main(void)
 {
-		// Initialize hard coded user profile for now.
-		memset(&m_user_profile, 0, sizeof(m_user_profile));
-		m_user_profile.wheel_size_mm = 2070;
-		m_user_profile.total_weight_kg = 175.0f * 0.453592;	// Convert lbs to KG
-		
-		// Initialize simulation forces structure.
-		memset(&m_sim_forces, 0, sizeof(m_sim_forces));
+		// initialize the user profile.
+		profile_init();
 
 		// Initialize timers.
 		timers_init();

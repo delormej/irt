@@ -10,9 +10,12 @@
 ********************************************************************************/
 
 #include "irt_peripheral.h"
+#include "power.h"
 #include "resistance.h"
 #include "nrf_pwm.h"
 #include "math.h"
+
+#define	GRAVITY				9.8f
 
 static bool 								m_initialized = false;
 
@@ -68,6 +71,7 @@ static uint16_t calc_servo_pos(float weight_kg, float speed_mps, float force_nee
 
 uint16_t set_resistance(uint8_t level)
 {
+		// Sets the resistance to a standard 0-9 level.
 		INIT_RESISTANCE();
 		pwm_set_servo(RESISTANCE_LEVEL[level]);
 		
@@ -76,6 +80,17 @@ uint16_t set_resistance(uint8_t level)
 
 uint16_t set_resistance_pct(float percent)
 {
+		/*
+		Puts the trainer in Resistance Mode. 
+
+		Resistance Mode will directly control the strength of the brake and will stay 
+		constant regardless of the rider's speed. This mode is similar to a spin bike 
+		where the user can increase or decrease the difficulty of their workout.
+		Parameters:
+		fpScale a float from 0.0 to 1.0 that represents the percentage the brake is 
+		turned on (0.0 = brake turned off; 0.256 = 25.6% of brake; 1.0 = 100% brake force). 
+		*/
+
 		INIT_RESISTANCE();
 		uint16_t position = 0;
 		
@@ -102,49 +117,103 @@ uint16_t set_resistance_pct(float percent)
 		return position;
 }
 
-/*
-trainerSetSimMode:   (float)  fWeight 
-rollingResistance:  (float)  fCrr 
-windResistance:  (float)  fC  
-
-Puts the trainer in Sim Mode. 
-
-Sim Mode is used to simulate real world riding situations. This mode will adjust the brake resistance based on the effects of gravity, rolling resistance, and wind resistance. In order to creat an accurate simulation of real world conditions the following variables must be set: rider & bike weight, coefficient of rolling resistance, coefficient of wind resistance, wind speed, wheel circumference, and grade. If these variables are not set, they will default to an "average" value.
-Note:IMPORTANT: the following parameters are set when this function is called; however, the remaining parameters can only be set after the trainer is put in Sim Mode.Parameters:
-fWeight represents the weight of the combined rider and bicycle in kilograms. The default value for fWeight is 85.0kg. This parameter can not be adjusted without calling trainerSetSimMode again. 
-fCrr is the coefficient of rolling resistance (unitless). Can be reset later by calling trainerSetRollingResistance. Default value is 0.004. 
-fC is equal to A*Cw*Rho where A is effective frontal area (m^2); Cw is drag coefficent (unitless); and Rho is the air density (kg/m^3). The default value for A*Cw*Rho is 0.60. 
-
-
-*/
-
+/**@brief			Sets mag resistance to simulate desired erg watts.
+ * @returns 	Servo position.
+ */
 uint16_t set_resistance_erg(user_profile_t *p_user_profile, 
 												rc_sim_forces_t *p_sim_forces,
 												irt_power_meas_t *p_power_meas)
 {
-		/*
-		Puts the trainer in Resistance Mode. 
+	int16_t mag0_watts = 0;
+	uint16_t servo_position = 0;
+	
 
-		Resistance Mode will directly control the strength of the brake and will stay constant regardless of the rider's speed. This mode is similar to a spin bike where the user can increase or decrease the difficulty of their workout.
-		Parameters:
-		fpScale a float from 0.0 to 1.0 that represents the percentage the brake is turned on (0.0 = brake turned off; 0.256 = 25.6% of brake; 1.0 = 100% brake force). 
-		*/
-	return 0;
+	// TODO: who is going to handle calculating calibration? Whoever is, should keep track of 
+	// current reporting watts, vs. adjusted watts?
+
+	// TODO: since we already do this in the calculation, we should store this value
+	// in p_power_meas instead of recalcuating here.
+	// Calculate the current watts with no mag.
+	calc_power2(p_power_meas->instant_speed_mps, 
+							p_user_profile->total_weight_kg,
+							RESISTANCE_LEVEL[0],	// mag 0 (off) position 
+							&mag0_watts);
+
+	// Calculate mag0 force.
+	float mag0_force = ((float)mag0_watts) / 
+										p_power_meas->instant_speed_mps;
+	
+	// Calculate the incremental force required.
+	float needed_force = (((float)p_sim_forces->erg_watts) / 
+										p_power_meas->instant_speed_mps) - mag0_force;
+	
+	// Determine the correct servo position for that force given speed & weight.
+	servo_position = calc_servo_pos(p_user_profile->total_weight_kg, 
+								p_power_meas->instant_speed_mps,
+								needed_force);
+								
+	//
+	// Ensure we don't move the servo beyond it's min and max.
+	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107 
+	//
+	if (servo_position < RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1])
+	{
+		servo_position = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
+	}
+	else if (servo_position > RESISTANCE_LEVEL[0])
+	{
+		servo_position = RESISTANCE_LEVEL[0];
+	}
+	
+	pwm_set_servo(servo_position);
+
+	return servo_position;
 }
 
+/**@brief	Puts the trainer in simulation mode.
+ * @note 	Sim Mode is used to simulate real world riding situations. This mode 
+ *				will adjust the brake resistance based on the effects of gravity, 
+ *				rolling resistance, and wind resistance. In order to create an accurate 
+ *				simulation of real world conditions the following variables must be set: 
+ *				rider & bike weight, coefficient of rolling resistance, coefficient of 
+ *				wind resistance, wind speed, wheel circumference, and grade. 
+ *				If these variables are not set, they will default to an "average" value.
+ 
+ */
 uint16_t set_resistance_sim(user_profile_t *p_user_profile, 
 												rc_sim_forces_t *p_sim_forces,
 												irt_power_meas_t *p_power_meas)
 {
-	// who is going to handle calculating calibration? Whoever is, should keep track of 
-	// current reporting watts, vs. adjusted watts?
-	// fGrade is the slope of the hill (slope = rise / run). Should be from -1.0 : 1.0, where -1.0 is a 45 degree downhill slope, 0.0 is flat ground, and 1.0 is a 45 degree uphil slope. 
-	// TODO: need to calculate wind resistnace regardless of whether this gets set.
-	// If you set ADDITIONAL wind resistance it could add / remove from this
+	// sim is going to calculate the estimated watts required at grade + wind for
+	// the current speed and rider total weight.  It will then hand this off to
+	// the same functions that 'erg' mode uses to find the right servo position.
 
-	//mp_user_profile = p_user_profile;
-	//mp_sim_forces = p_sim_forces;
+	// p_sim_forces->c is equal to A*Cw*Rho where A is effective frontal area (m^2); 
+	// Cw is drag coefficent (unitless); and Rho is the air density (kg/m^3). 
+	// The default value for A*Cw*Rho is 0.60.
+	float wind = 0.5f * (p_sim_forces->c * pow(p_power_meas->instant_speed_mps, 2));
+
+	// Weight * GRAVITY * Co-efficient of rolling resistance.
+	float rolling = p_user_profile->total_weight_kg * GRAVITY * p_sim_forces->crr;
+
+	// fGrade is the slope of the hill (slope = rise / run). Should be from -1.0 : 1.0, 
+	// where -1.0 is a 45 degree downhill slope, 0.0 is flat ground, and 1.0 is a 45 
+	// degree uphil slope. 
+	float gravitational = p_user_profile->total_weight_kg * GRAVITY * 
+							p_sim_forces->grade;
+
+	// Total power required.
+	float force = wind + rolling + gravitational; 
 	
+	// Round to nearest int for watts and assign.
+	int16_t watts = force * p_power_meas->instant_speed_mps;
+	p_sim_forces->erg_watts = watts;
+
+	// Same as erg mode now, set to a specific watt level.
+	return set_resistance_erg(p_user_profile, 
+									p_sim_forces,
+									p_power_meas);
+
 	return 0;  // IRT_SUCCESS
 }
 
