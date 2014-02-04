@@ -15,9 +15,9 @@
 #include "nrf_pwm.h"
 #include "math.h"
 
-#define	GRAVITY				9.8f
+#define	GRAVITY			9.8f
 
-static bool 								m_initialized = false;
+static bool 				m_initialized = false;
 
 /**@brief 	Initializes the resistance object.
  *
