@@ -21,6 +21,7 @@
  *
  ******************************************************************************/
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -172,7 +173,33 @@ static float get_sim_wind(uint8_t *buffer)
  */
 static float get_sim_grade(uint8_t *buffer)
 {
-	return 0.0;
+	uint16_t value = buffer[0] | buffer[1] << 8u;
+	
+	// First bit is the sign.
+	bool negative = value >> 15u;
+	
+	float percent = 0.0f;
+	
+	if (negative)
+	{
+		// Strip the negative sign bit.
+		value = value & 0x7FFF;
+		// results in a positive (uphill) grade.
+		percent = 1 - ((32768.0f - value) / 32768.0f);
+	}
+	else 
+	{
+		// results in a negative (downhill) grade.
+		percent = ((value - 32768.0f) / 32768.0f);
+	}
+
+	// Initial value sent on the wire from KICKR ranges from -1.0 to 1.0 and 
+	// represents a percentage of 45 degrees up/downhill.  
+	// e.g. 1.0% = 45 degree uphill, 
+	// -1.0% = 45 degree downhill, 
+	// 0% = flat, 
+	// 0.10% = 4.5% uphill grade.
+	return percent * 0.45;
 }
 
 
