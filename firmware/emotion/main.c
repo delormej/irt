@@ -160,11 +160,29 @@ static float get_resistance_pct(uint8_t *buffer)
 }
 
 /**@brief Parses the simulated wind speed out of the KICKR command.
- *
+ * @note	This is the headwind in meters per second. A negative headwind 
+ *				represents a tailwind. The range for mspWindSpeed is -30.0:30.0.
  */
 static float get_sim_wind(uint8_t *buffer)
 {
-	return 0.0;
+	// Note this is a signed int.
+	int16_t value = buffer[0] | buffer[1] << 8u;
+	
+	// First bit is the sign.
+	bool negative = value >> 15u;
+	
+	if (negative)
+	{
+		// Remove the negative sign.
+		value = value & 0x7FFF;
+	}
+	else
+	{
+		value = (32768 - value) *-1;
+	}
+	
+	// Set the right scale.
+	return value / 1000.0f;
 }
 
 
