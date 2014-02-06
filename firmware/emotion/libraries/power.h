@@ -13,7 +13,7 @@
 #define __POWER_H__
 
 #include <stdint.h>
-#include "insideride.h"
+#include "irt_common.h"
 
 #define IRT_ERROR_INVALID_RESISTANCE_LEVEL					IRT_ERROR + 0x01
 

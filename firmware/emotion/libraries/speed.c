@@ -8,13 +8,13 @@
 
 #include <string.h>
 #include <math.h>
-#include "insideride.h"
+#include "irt_common.h"
 #include "speed.h"
 #include "nrf_sdm.h"
 #include "app_error.h"
 #include "app_util.h"
 
-static uint16_t 	m_wheel_size;									// Wheel diameter size in mm.  A road wheel is typically 2,070mm.
+static uint16_t 	m_wheel_size;									// Wheel diameter size in mm.
 static float 			m_flywheel_to_wheel_revs;			// Number of flywheel revolutions for 1 wheel revolution.
 
 /**@brief	Configure GPIO input from flywheel revolution pin and create an 
@@ -232,7 +232,7 @@ void calc_speed(speed_event_t* speed_event)
 	last_accum_flywheel_revs	= speed_event->accum_flywheel_revs;
 }
 
-void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
+void set_wheel_size(uint16_t wheel_size_mm)
 {
 	m_wheel_size = wheel_size_mm;
 	
@@ -246,6 +246,11 @@ void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 	const float ratio 						= (2.07/0.11176)/2.07;
 	// For every 1 wheel revolution the flywheel revolves this many times.
 	m_flywheel_to_wheel_revs 	= (wheel_size_mm/1000)*ratio;
+}
+
+void init_speed(uint32_t pin_flywheel_rev)
+{
+	set_wheel_size(DEFAULT_WHEEL_SIZE_MM);	
 	
 	revs_init_gpiote(pin_flywheel_rev);
 	revs_init_ppi();

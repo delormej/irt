@@ -61,16 +61,10 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 
 	if (p_evt_write->handle == p_cps->cprc_handles.value_handle)
 	{
-		// TODO: THIS STUFF BELONGS OUTSIDE OF BLE AND PROBABLY IN THE MAIN CONTROLLER.
-		// should call a specific event handler for writes to this handle.
-		// All the header declarations related to resistance should be moved to the 
-		// resistance module.
-		// We'll do this after we see how the events show up in ANT+ and make sure that
-		// it's consistent. 
 		rc_evt_t evt;
 		memset(&evt, 0, sizeof(evt));
-		evt.mode = (resistance_mode_t)p_evt_write->data[0];
-		evt.level = p_evt_write->data[1];
+		evt.operation = (resistance_mode_t)p_evt_write->data[0];
+		evt.pBuffer 	= &(p_evt_write->data[1]);
 
 		// Propogate the set resistance control.
 		if (p_cps->rc_evt_handler != NULL)
@@ -89,7 +83,7 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
  * @return      Size of encoded data.
  */
 static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
-                                      ble_cps_meas_t * p_cps_measurement,
+                                      irt_power_meas_t * p_cps_measurement,
                                       uint8_t *        p_encoded_buffer)
 {
     uint16_t flags = 0;
@@ -262,7 +256,7 @@ static uint32_t cycling_power_measurement_char_add(ble_cps_t * p_cps, const ble_
     ble_gatts_attr_t    attr_char_value;
     ble_uuid_t          ble_uuid;
     ble_gatts_attr_md_t attr_md;
-		ble_cps_meas_t			initial_cpm;
+		irt_power_meas_t			initial_cpm;
 		uint8_t							encoded_cpm[MAX_CPM_LEN];
     
     memset(&cccd_md, 0, sizeof(cccd_md));
@@ -454,7 +448,7 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
     return NRF_SUCCESS;	
 }
 
-uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, ble_cps_meas_t * p_cps_meas)
+uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_meas_t * p_cps_meas)
 {
     uint32_t err_code;
     

@@ -487,6 +487,11 @@ void ANTChannel::ANTChannelEvent(UCHAR ucEvent_, UCHAR* pcBuffer_)
 			break;
          
       }
+	  case EVENT_RX_BURST_PACKET:
+	  {
+			UpdateRawTxDisplay("\nRX BURST Msg:\n  ", (UCHAR*) &pcBuffer_[1]);
+			break;
+	  }
 	 default:
 	 {
 		  // Look up event in table

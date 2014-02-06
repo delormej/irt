@@ -10,6 +10,8 @@
 #define __RESISTANCE_H__
 
 #include <stdint.h>
+#include "irt_common.h"
+#include "user_profile.h"
 
 #define MAX_RESISTANCE_LEVELS 10						// Maximum resistance levels available.
 #define MIN_RESISTANCE_LEVEL	1500					// Minimum by which there is no longer resistance.
@@ -43,11 +45,16 @@ typedef enum
 	RESISTANCE_SET_PERCENT 		= 0x40,
 	RESISTANCE_SET_STANDARD		= 0x41,
 	RESISTANCE_SET_ERG				= 0x42,
-	RESISTANCE_SET_SIM				= 0x43,
-	RESISTANCE_SET_BIKE_TYPE	= 0x44,
+	RESISTANCE_SET_SIM				= 0x43, // Weight should come accross in this message?
+	RESISTANCE_SET_BIKE_TYPE	= 0x44, // Co-efficient of rolling resistance
+	RESISTANCE_SET_C					= 0x45, // Wind resistance offset.
 	RESISTANCE_SET_SLOPE			= 0x46,
-	RESISTANCE_SET_WIND				= 0x47
-} resistance_mode_t;
+	RESISTANCE_SET_WIND				= 0x47,
+	RESISTANCE_SET_WHEEL_CR		= 0x48,
+	RESISTANCE_INIT_SPINDOWN	= 0x49,
+	RESISTANCE_READ_MODE      = 0x4A,
+	RESISTANCE_SPINDOWN_RESULT= 0x5A
+} resistance_mode_t;	// TODO: rename this OPCODE or something similar, it's not the mode necessarily.
 
 /* This is from WAHOO FITNESS:
 typedef enum
@@ -73,13 +80,22 @@ typedef enum
 /**@brief Resistance control event payload. */
 typedef struct
 {
-	resistance_mode_t 	mode;					/**< Data containing the resistance mode. */
-	uint16_t 						level;				/**< Value to set the mode to. */
+	resistance_mode_t 	operation;				// Operation to perform or mode to set for resistance.
+	uint8_t							*pBuffer; 				// Pointer to values required for the operation.
 } rc_evt_t;
-
 
 /**@brief Set resistance event handler type. */
 typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);
+
+/**@brief Factors used when caculated simulation forces. */
+typedef struct rc_sim_forces_s
+{
+	float 	crr;
+	float 	c;
+	float 	wind_speed_mps;
+	float 	grade;
+	int16_t erg_watts;
+} rc_sim_forces_t;
 
 /**@brief		Sets the resistance to a specific level by moving the servo to the 
  *					corresponding position.
@@ -91,11 +107,20 @@ uint16_t set_resistance(uint8_t level);
 /**@brief		Sets the resistance to a value 0-100 percent.
  *
  */
-uint16_t set_resistance_pct(uint16_t percent);
+uint16_t set_resistance_pct(float percent);
 
-// Future implementations.
-uint16_t set_resistance_erg(uint16_t watts);
-uint16_t set_resistance_slope(uint16_t slope);
-uint16_t set_resistance_wind(uint16_t wind);
+/**@brief		Sets/adjusts resistance to desired simulation parameters.  
+ *
+ */
+uint16_t set_resistance_sim(user_profile_t *p_user_profile, 
+												rc_sim_forces_t *p_sim_forces,
+												irt_power_meas_t *p_power_meas);
+
+/**@brief		Sets/adjusts resistance to desired watts.
+ *
+ */
+uint16_t set_resistance_erg(user_profile_t *p_user_profile, 
+												rc_sim_forces_t *p_sim_forces,
+												irt_power_meas_t *p_power_meas);
 
 #endif
