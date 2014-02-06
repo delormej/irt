@@ -443,6 +443,11 @@
               <FileType>1</FileType>
               <FilePath>..\libraries\speed.c</FilePath>
             </File>
+            <File>
+              <FileName>accelerometer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\libraries\accelerometer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

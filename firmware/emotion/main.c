@@ -537,6 +537,9 @@ static void on_button_evt(uint8_t pin_no)
 				case PIN_BUTTON_IV:
 						on_button_iv_event();
 						break;
+				case PIN_SHAKE:
+					nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
+					break;
         default:
             APP_ERROR_HANDLER(pin_no);
     }	

@@ -32,6 +32,8 @@ C_SOURCE_FILES += ble_debug_assert_handler.c
 C_SOURCE_FILES += app_gpiote.c
 C_SOURCE_FILES += pstorage.c
 C_SOURCE_FILES += crc16.c
+C_SOURCE_FILES += twi_hw_master.c
+C_SOURCE_FILES += accelerometer.c
 
 C_SOURCE_PATHS += ../
 C_SOURCE_PATHS += ../services/
@@ -39,16 +41,17 @@ C_SOURCE_PATHS += ../libraries/
 C_SOURCE_PATHS += ../../nrf51_sdk/Source/sd_common
 C_SOURCE_PATHS += ../../nrf51_sdk/Source/app_common
 C_SOURCE_PATHS += ../../nrf51_sdk/Source/ble
+C_SOURCE_PATHS += ../../nrf51_sdk/Source/twi_master
 
 INCLUDEPATHS += -I".."
+INCLUDEPATHS += -I"../services"
+INCLUDEPATHS += -I"../libraries"
 INCLUDEPATHS += -I"../../nrf51_sdk/Include"
 INCLUDEPATHS += -I"../../nrf51_sdk/Include/sd_common"
 INCLUDEPATHS += -I"../../nrf51_sdk/Include/app_common"
 INCLUDEPATHS += -I"../../nrf51_sdk/Include/ble"
 INCLUDEPATHS += -I"../../nrf51_sdk/Include/ble/ble_services"
 INCLUDEPATHS += -I"../../nrf51_sdk/Include/s310"
-INCLUDEPATHS += -I"../services"
-INCLUDEPATHS += -I"../libraries"
 
 # This works to program.
 # but you might be able to just use "make flash" command.
