@@ -1,16 +1,24 @@
 #ifndef ACCELEROMETER_H
 #define ACCELEROMETER_H
 
-#define MMA8652FC_SCL_ADDRESS			0x1D
-#define MMA8652FC_WRITE						0x3A
-#define MMA8652FC_READ						0x3B
+#define MMA8652FC_SCL_ADDRESS		0x1D
+#define MMA8652FC_WRITE				0x3A
+#define MMA8652FC_READ				0x3B
 
 /* Interrupt Macros */
-#define _BIT(x)					(0x01 << x)
+#define _BIT(x)				(0x01 << x)
+
+#define FF_MT_OAE			_BIT(6)
+#define FF_MT_ZEFE			_BIT(5)
+#define FF_MT_YEFE			_BIT(4)
+#define FF_MT_XEFE			_BIT(3)
 
 /* CTRL_REG1 bits. */
-#define MMA8652FC_ACTIVE		_BIT(0)
-#define MMA8652FC_STANDBY		(0x00)
+#define MMA8652FC_ACTIVE	_BIT(0)
+#define MMA8652FC_STANDBY	(0x00)
+
+/* CTRL_REG2 bits. */
+#define AUTO_SLEEP_ENABLE	_BIT(2)
 
 /* CTRL_REG3 wake bits. */
 #define WAKE_FF_MT			_BIT(3)		// Wake from freefall/motion interrupt.
@@ -20,7 +28,7 @@
 #define INT_EN_ASLP			_BIT(7)		// Auto-SLEEP/WAKE
 #define INT_EN_FIFO			_BIT(6)		// FIFO interrupt 
 #define INT_EN_TRANS		_BIT(5)		// Transient interrupt
-#define INT_EN_LNDPRT 	_BIT(4)		// Landscape/portrait (orientation)
+#define INT_EN_LNDPRT 		_BIT(4)		// Landscape/portrait (orientation)
 #define INT_EN_PULSE 		_BIT(3)		// Pulse
 #define INT_EN_FF_MT 		_BIT(2)		// Freefall/motion interrupt
 #define INT_EN_DRDY 		_BIT(0)		// Dataready interrupt
@@ -105,4 +113,4 @@ enum {
  */ 
 void accelerometer_init(void);
 
-#endif
+#endif // ACCELEROMETER_H

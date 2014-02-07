@@ -11,28 +11,31 @@
 #include "irt_peripheral.h"
 #include "twi_master.h"
 
-static void accelerometer_read(uint8_t *reg, uint8_t *data, uint8_t size);
+static void accelerometer_read(uint8_t reg, uint8_t *data, uint8_t size)
+{
+	twi_master_transfer(MMA8652FC_WRITE,
+						&reg,
+						1,
+						false);
+
+	twi_master_transfer(MMA8652FC_READ,
+						data,
+						size,
+						true);
+}
 
 /**@brief Writes to the accelerometer using I2C. */
-static bool accelerometer_write(uint8_t reg, uint8_t data, uint8_t size)
+static bool accelerometer_write(uint8_t reg, uint8_t data)
 {
+	uint8_t buffer[2];
+	buffer[0] = reg;
+	buffer[1] = data;
+
 	// Write the register address.
-	if (!twi_master_transfer(MMA8652FC_WRITE, 
-													 &reg, 
-													 sizeof(reg), 
-													 false))
-	{
-		// Something failed with the write.
-		return false;
-	}
-	else 
-	{
-		// Write the value.
-		return twi_master_transfer(MMA8652FC_WRITE, 
-													 &data, 
-													 size, 
-													 true);	
-	}
+	return twi_master_transfer(MMA8652FC_WRITE,
+							 buffer,
+							 sizeof(buffer),
+							 true);
 }
 
 static void enable_interrupt(void)
@@ -50,42 +53,77 @@ static void enable_interrupt(void)
 		 properly in the GPIO pin cfg.
 */
 	bool ret = false;
-	uint8_t reg = 0;
-	uint8_t data = 0;
 		
 	//
 	// Set device to STANDBY by setting bit 0 to value 0 in CTRL_REG1.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY, sizeof(data));
-	
+	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY);
+
+	//
+	// Configure motion detection on all axis.
+	//
+	ret = accelerometer_write(REG8652_FF_MT_CFG,
+								FF_MT_OAE  |
+								FF_MT_ZEFE |
+								FF_MT_YEFE |
+								FF_MT_XEFE);
+
+	//
+	// Configure threshold for motion.
+	//
+	ret = accelerometer_write(REG8652_FF_MT_THS, 15u);
+
 	//
 	// Set CTRL_REG3 WAKE_FF_MT bit to 1 to enable motion interrupt.
 	// CTRL_REG3 register is used to control the Auto-WAKE/SLEEP function by 
 	// setting the orientation or Freefall/Motion as an interrupt to wake.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT, sizeof(data));
+	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT);
 	
 	//
 	// Set CTRL_REG4 INT_EN_FF_MT bit to 1.
 	// CTRL_REG4 register enables the following interrupts: Auto-WAKE/SLEEP, 
 	// Orientation Detection, Freefall/Motion, and Data Ready.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_FF_MT, sizeof(data));	
+	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_ASLP | INT_EN_FF_MT);
 	
 	//
 	// Set configuration in CTRL_REG5 to route interupt to INT1.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG5, INT_CFG_FF_MT, sizeof(data));	
+	ret = accelerometer_write(REG8652_CTRL_REG5, INT_CFG_FF_MT);
 	
 	//
 	// Set device to ACTIVE by setting bit 0 to value 1 in CTRL_REG1.
+	// Also set the data rate to 100hz to match NRF TWI defaults.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_ACTIVE, sizeof(data));
+	uint8_t data_rate = (1 << 4) | (1 << 3); // binary 011000
+	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_ACTIVE | data_rate);
 }
 
+static void whoami(void)
+{
+	uint8_t data = 0;
+
+	accelerometer_read(REG8652_WHO_AM_I, &data, sizeof(data));
+
+	if (data == 0x4a)
+		printf("Matches!\n");
+
+	data = 0;
+	accelerometer_read(REG8652_SYSMOD, &data, sizeof(data));
+	if (data & 1)
+		printf("WAKE mode\n");
+
+	data = 0;
+	accelerometer_read(REG8652_INT_SOURCE, &data, sizeof(data));
+	if (data & (0x1 << 2))
+		printf("SRC_FF_MT\n");
+
+}
 
 void accelerometer_init(void)
 {
 	twi_master_init();
 	enable_interrupt();
+	whoami();
 }
