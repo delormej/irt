@@ -100,7 +100,8 @@ static void enable_interrupt(void)
 	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_ACTIVE | data_rate);
 }
 
-static void whoami(void)
+/*
+static void read_test(void)
 {
 	uint8_t data = 0;
 
@@ -119,11 +120,10 @@ static void whoami(void)
 	if (data & (0x1 << 2))
 		printf("SRC_FF_MT\n");
 
-}
+}*/
 
 void accelerometer_init(void)
 {
 	twi_master_init();
 	enable_interrupt();
-	whoami();
 }

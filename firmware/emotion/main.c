@@ -34,7 +34,6 @@
 #include "power.h"
 #include "user_profile.h"
 #include "ble_ant.h"
-#include "nrf_delay.h"
 
 #define CYCLING_POWER_MEAS_INTERVAL       APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Bike power measurement interval (ticks). */
 
@@ -526,27 +525,18 @@ static void on_button_evt(uint8_t pin_no)
 {
     switch (pin_no)
     {
-				case PIN_BUTTON_I:
-						on_button_i_event();
-						break;
-				case PIN_BUTTON_II:
-						on_button_ii_event();
-						break;
-				case PIN_BUTTON_III:
-						on_button_iii_event();
-						break;
-				case PIN_BUTTON_IV:
-						on_button_iv_event();
-						break;
-				case PIN_SHAKE:
-					nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
-					nrf_delay_ms(500);
-					nrf_gpio_pin_clear(ASSERT_LED_PIN_NO);
-					nrf_delay_ms(500);
-					nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
-					nrf_delay_ms(500);
-					nrf_gpio_pin_clear(ASSERT_LED_PIN_NO);
-					break;
+		case PIN_BUTTON_I:
+				on_button_i_event();
+				break;
+		case PIN_BUTTON_II:
+				on_button_ii_event();
+				break;
+		case PIN_BUTTON_III:
+				on_button_iii_event();
+				break;
+		case PIN_BUTTON_IV:
+				on_button_iv_event();
+				break;
         default:
             APP_ERROR_HANDLER(pin_no);
     }	

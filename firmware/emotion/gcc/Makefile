@@ -9,7 +9,6 @@ CFLAGS += -DBLE_NUS_ENABLED
 LDFLAGS += --specs=nano.specs 
 
 C_SOURCE_FILES += main.c
-C_SOURCE_FILES += nrf_delay.c
 C_SOURCE_FILES += nrf_pwm.c
 C_SOURCE_FILES += irt_peripheral.c
 C_SOURCE_FILES += softdevice_handler.c
@@ -43,7 +42,6 @@ C_SOURCE_PATHS += ../../nrf51_sdk/Source/sd_common
 C_SOURCE_PATHS += ../../nrf51_sdk/Source/app_common
 C_SOURCE_PATHS += ../../nrf51_sdk/Source/ble
 C_SOURCE_PATHS += ../../nrf51_sdk/Source/twi_master
-C_SOURCE_PATHS += ../../nrf51_sdk/Source/nrf_delay
 
 INCLUDEPATHS += -I".."
 INCLUDEPATHS += -I"../services"
