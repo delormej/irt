@@ -4,6 +4,7 @@
 #include "app_timer.h"
 #include "app_button.h"
 #include "accelerometer.h"
+#include "temperature.h"
 
 static app_button_handler_t m_on_button_evt;
 
@@ -82,5 +83,6 @@ void peripheral_init(app_button_handler_t on_button_evt)
 	
     leds_init();
 	wake_init();
-    buttons_init();
+	temperature_init();
+	buttons_init();
 }

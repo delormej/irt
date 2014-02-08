@@ -40,13 +40,23 @@ void temperature_init()
 						buffer,
 						sizeof(buffer),
 						true);
+
+	// Test it out:
+	memset(&buffer, 0, sizeof(buffer));
+	temperature_read(buffer);
 }
 
+
+// Reads the current temperature 12 bit value as a one-shot operation.
 void temperature_read(uint8_t *temperature)
 {
 	uint8_t reg = REGNCT75_ONE_SHOT;
+	twi_master_transfer(NCT75_WRITE,
+						&reg,
+						sizeof(uint8_t),
+						true);
 
-	// Reads the current temperature 12 bit value.
+	reg = REGNCT75_STORED_TEMP;
 	twi_master_transfer(NCT75_WRITE,
 						&reg,
 						sizeof(uint8_t),
