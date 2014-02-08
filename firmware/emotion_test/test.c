@@ -2,7 +2,7 @@
 (1) Launch developer command prompt:
 %comspec% /k ""C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\Tools\VsDevCmd.bat""
 (2) build with debug symbols.
-cl test.c /Z1 
+cl test.c /ZI 
 */
 
 #include <stdio.h>
@@ -39,6 +39,12 @@ uint16_t get_position(float percent)
 
 int main(int argc, char *argv [])
 {
+#define MMA8652FC_I2C_ADDRESS		0x1D // always address using read/write
+#define MMA8652FC_WRITE				(MMA8652FC_I2C_ADDRESS << 1)
+#define MMA8652FC_READ				(MMA8652FC_WRITE | 0x1)
+
+	printf("READ: %i, WRITE: %i\n", MMA8652FC_READ, MMA8652FC_WRITE);
+
 	int i = scanf("Any key to start...");
 
 	uint8_t buffer[4] = { 0x00, 0x00, 0xFF, 0x1F };

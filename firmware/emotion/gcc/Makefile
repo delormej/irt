@@ -34,6 +34,7 @@ C_SOURCE_FILES += pstorage.c
 C_SOURCE_FILES += crc16.c
 C_SOURCE_FILES += twi_hw_master.c
 C_SOURCE_FILES += accelerometer.c
+C_SOURCE_FILES += temperature.c
 
 C_SOURCE_PATHS += ../
 C_SOURCE_PATHS += ../services/

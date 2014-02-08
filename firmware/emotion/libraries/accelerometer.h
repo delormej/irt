@@ -1,9 +1,9 @@
 #ifndef ACCELEROMETER_H
 #define ACCELEROMETER_H
 
-#define MMA8652FC_SCL_ADDRESS		0x1D
-#define MMA8652FC_WRITE				0x3A
-#define MMA8652FC_READ				0x3B
+#define MMA8652FC_I2C_ADDRESS		0x1D
+#define MMA8652FC_WRITE				(MMA8652FC_I2C_ADDRESS << 1)	// 0x3A
+#define MMA8652FC_READ				(MMA8652FC_WRITE | 0x1)			// 0x3B
 
 /* Interrupt Macros */
 #define _BIT(x)				(0x01 << x)
