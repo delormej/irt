@@ -60,11 +60,11 @@ static void enable_interrupt(void)
 	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY);
 
 	//
-	// Configure motion detection on X & Y axis.
-	// NOTE: When I tried setting all axis *ONLY* Z would cause an interrupt.
+	// Configure motion detection on all axis.
 	//
 	ret = accelerometer_write(REG8652_FF_MT_CFG,
 								(FF_MT_OAE  |
+								FF_MT_ZEFE |
 								FF_MT_YEFE |
 								FF_MT_XEFE));
 
