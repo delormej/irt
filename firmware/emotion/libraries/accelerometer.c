@@ -60,35 +60,47 @@ static void enable_interrupt(void)
 	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY);
 
 	//
-	// Configure motion detection on all axis.
+	// Configure motion detection on X & Y axis.
+	// NOTE: When I tried setting all axis *ONLY* Z would cause an interrupt.
 	//
 	ret = accelerometer_write(REG8652_FF_MT_CFG,
-								FF_MT_OAE  |
-								FF_MT_ZEFE |
+								(FF_MT_OAE  |
 								FF_MT_YEFE |
-								FF_MT_XEFE);
+								FF_MT_XEFE));
 
 	//
 	// Configure threshold for motion.
+	// The threshold resolution is 0.063 g/LSB and the threshold register has a
+	// range of 0 to 127 counts. The maximum range is to ±8 g.
+	// Note that even when the full scale value is set to ±2 g or ±4 g, the motion
+	// still detects up to ±8 g.
 	//
-	ret = accelerometer_write(REG8652_FF_MT_THS, 15u);
+	ret = accelerometer_write(REG8652_FF_MT_THS, 5u);
 
 	//
 	// Set CTRL_REG3 WAKE_FF_MT bit to 1 to enable motion interrupt.
 	// CTRL_REG3 register is used to control the Auto-WAKE/SLEEP function by 
 	// setting the orientation or Freefall/Motion as an interrupt to wake.
+	// Also configure to use open-drain.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT);
+	ret = accelerometer_write(REG8652_CTRL_REG3, (WAKE_FF_MT | OPEN_DRAIN));
 	
 	//
-	// Set CTRL_REG4 INT_EN_FF_MT bit to 1.
+	// Set CTRL_REG4's freefall/motion interrupt bit INT_EN_FF_MT .
 	// CTRL_REG4 register enables the following interrupts: Auto-WAKE/SLEEP, 
 	// Orientation Detection, Freefall/Motion, and Data Ready.
 	//
 	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_ASLP | INT_EN_FF_MT);
 	
 	//
-	// Set configuration in CTRL_REG5 to route interupt to INT1.
+	// Configure +/-8g full scale range.
+	/*
+	uint8_t FS1_MASK = _BIT(1);
+	ret = accelerometer_write(REG8652_XYZ_DATA_CFG, FS1_MASK);
+	*/
+
+	//
+	// Set configuration in CTRL_REG5 to route interrupt to INT1.
 	//
 	ret = accelerometer_write(REG8652_CTRL_REG5, INT_CFG_FF_MT);
 	

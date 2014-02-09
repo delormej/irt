@@ -8,6 +8,7 @@
 /* Interrupt Macros */
 #define _BIT(x)				(0x01 << x)
 
+#define FF_MT_ELE			_BIT(7)
 #define FF_MT_OAE			_BIT(6)
 #define FF_MT_ZEFE			_BIT(5)
 #define FF_MT_YEFE			_BIT(4)
@@ -22,6 +23,7 @@
 
 /* CTRL_REG3 wake bits. */
 #define WAKE_FF_MT			_BIT(3)		// Wake from freefall/motion interrupt.
+#define OPEN_DRAIN 			_BIT(0)		// Configure Open-Drain vs push/pull.
 
 /* CTRL_REG4 register enables the following interrupts: Auto-WAKE/SLEEP, 
 	 Orientation Detection, Freefall/Motion, and Data Ready. */
