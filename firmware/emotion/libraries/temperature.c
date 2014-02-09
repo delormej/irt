@@ -70,9 +70,10 @@ float temperature_read()
 	// Combine two bytes and align to 12 bits.
 	uint16_t value = (buffer[0] << 4) | (buffer[1] >> 4);
 
+	// Determine if this is a negative temp.
 	if (buffer[0] & 128u)
 	{
-		// This is a negative temp.
+		// Remove the negative sign bit.
 		value &= 0x7FFF;
 		return (value - 4096.0f) / 16.0f;
 	}
