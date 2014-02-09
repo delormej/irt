@@ -36,9 +36,30 @@ uint16_t get_position(float percent)
 		percent));
 }
 
+float get_temp(void)
+{
+	uint16_t value;
+	uint8_t buffer [] = { 19, 112 };
+
+	// Combine two bytes and align to 12 bits.
+	value = (buffer[0] << 4) | (buffer[1] >> 4);
+
+	if (buffer[0] & 128u)
+	{
+		// This is a negative temp.
+		value &= 0x7FFF;
+		return (value - 4096.0f) / 16.0f;
+	}
+	else
+	{
+		return value / 16.0f;
+	}
+}
+
 
 int main(int argc, char *argv [])
 {
+	
 #define MMA8652FC_I2C_ADDRESS		0x1D // always address using read/write
 #define MMA8652FC_WRITE				(MMA8652FC_I2C_ADDRESS << 1)
 #define MMA8652FC_READ				(MMA8652FC_WRITE | 0x1)
@@ -46,6 +67,9 @@ int main(int argc, char *argv [])
 	printf("READ: %i, WRITE: %i\n", MMA8652FC_READ, MMA8652FC_WRITE);
 
 	int i = scanf("Any key to start...");
+
+	float temp = get_temp();
+	printf("Temp: %f\n", temp);
 
 	uint8_t buffer[4] = { 0x00, 0x00, 0xFF, 0x1F };
 	

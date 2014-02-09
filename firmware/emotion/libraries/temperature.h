@@ -5,6 +5,6 @@
 #include <stdint.h>
 
 void temperature_init(void);
-void temperature_read(uint8_t *temperature);
+float temperature_read(void);
 
 #endif // __TEMPERATURE_H__

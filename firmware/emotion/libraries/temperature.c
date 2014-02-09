@@ -42,13 +42,12 @@ void temperature_init()
 						true);
 
 	// Test it out:
-	memset(&buffer, 0, sizeof(buffer));
-	temperature_read(buffer);
+	float temp  = temperature_read();
 }
 
 
 // Reads the current temperature 12 bit value as a one-shot operation.
-void temperature_read(uint8_t *temperature)
+float temperature_read()
 {
 	uint8_t reg = REGNCT75_ONE_SHOT;
 	twi_master_transfer(NCT75_WRITE,
@@ -62,8 +61,23 @@ void temperature_read(uint8_t *temperature)
 						sizeof(uint8_t),
 						false);
 
+	uint8_t buffer[] = { 0, 0 };
 	twi_master_transfer(NCT75_READ,
-						temperature,
+						buffer,
 						sizeof(uint16_t),	// read two-bytes.
 						true);
+
+	// Combine two bytes and align to 12 bits.
+	uint16_t value = (buffer[0] << 4) | (buffer[1] >> 4);
+
+	if (buffer[0] & 128u)
+	{
+		// This is a negative temp.
+		value &= 0x7FFF;
+		return (value - 4096.0f) / 16.0f;
+	}
+	else
+	{
+		return value / 16.0f;
+	}
 }
