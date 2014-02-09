@@ -60,13 +60,10 @@ static void enable_interrupt(void)
 	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY);
 
 	//
-	// Configure motion detection on all axis.
+	// Configure motion detection on Y axis only.
+	// NOTE: When I tried settng other axis, it wasn't working.
 	//
-	ret = accelerometer_write(REG8652_FF_MT_CFG,
-								(FF_MT_OAE  |
-								FF_MT_ZEFE |
-								FF_MT_YEFE |
-								FF_MT_XEFE));
+	ret = accelerometer_write(REG8652_FF_MT_CFG, (FF_MT_OAE  | FF_MT_YEFE));
 
 	//
 	// Configure threshold for motion.
@@ -75,7 +72,7 @@ static void enable_interrupt(void)
 	// Note that even when the full scale value is set to ±2 g or ±4 g, the motion
 	// still detects up to ±8 g.
 	//
-	ret = accelerometer_write(REG8652_FF_MT_THS, 5u);
+	ret = accelerometer_write(REG8652_FF_MT_THS, 1u);
 
 	//
 	// Set CTRL_REG3 WAKE_FF_MT bit to 1 to enable motion interrupt.
