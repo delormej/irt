@@ -55,7 +55,7 @@ static void buttons_init()
 	uint32_t  pins_low_to_high_mask, pins_high_to_low_mask;
 
 	pins_low_to_high_mask = (1 << PIN_BUTTON_I | 1 << PIN_BUTTON_II | 1 << PIN_BUTTON_III | 1 << PIN_BUTTON_IV);
-	pins_high_to_low_mask = 0;
+	pins_high_to_low_mask = (1 << PIN_SHAKE); //0;
 	app_gpiote_user_id_t p_user_id;
 
 	err_code = app_gpiote_user_register(&p_user_id,
@@ -85,4 +85,8 @@ void peripheral_init(app_button_handler_t on_button_evt)
 	wake_init();
 	temperature_init();
 	buttons_init();
+    uint32_t val = nrf_gpio_pin_read(PIN_SHAKE);
+
+    if (val == 0)
+    	printf("Low");
 }
