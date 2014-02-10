@@ -538,10 +538,10 @@ static void on_button_evt(uint8_t pin_no)
 				on_button_iv_event();
 				break;
 		case PIN_SHAKE:
-				nrf_gpio_pin_clear(PIN_LED_A);
+			/*		nrf_gpio_pin_clear(PIN_LED_A);
 				nrf_gpio_pin_set(PIN_LED_B);
 				nrf_delay_ms(300);
-				nrf_gpio_pin_clear(PIN_LED_B);
+				nrf_gpio_pin_clear(PIN_LED_B); */
 				break;
         default:
             APP_ERROR_HANDLER(pin_no);
