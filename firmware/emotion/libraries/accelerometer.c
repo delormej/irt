@@ -60,13 +60,6 @@ static void enable_interrupt(void)
 	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY);
 
 	//
-	// Set the minimum time period of inactivity required to switch the part
-	// between Wake and Sleep status.
-	//
-	const uint8_t ASLP_COUNT = 15u; // 127u;
-	ret = accelerometer_write(REG8652_ASLP_COUNT, ASLP_COUNT);
-
-	//
 	// Configure motion detection on Y axis only.
 	// NOTE: When I tried setting additional axis, Y wasn't signaling.
 	//
@@ -82,9 +75,16 @@ static void enable_interrupt(void)
 	ret = accelerometer_write(REG8652_FF_MT_THS, 1u);
 
 	//
+	// Set the minimum time period of inactivity required to switch the part
+	// between Wake and Sleep status.
+	//
+	const uint8_t ASLP_COUNT = 15u; // 127u;
+	ret = accelerometer_write(REG8652_ASLP_COUNT, ASLP_COUNT);
+
+	//
 	// Enable Auto-Sleep.
 	//
-	//ret = accelerometer_write(REG8652_CTRL_REG2, AUTO_SLEEP_ENABLE);
+	ret = accelerometer_write(REG8652_CTRL_REG2, AUTO_SLEEP_ENABLE);
 
 	//
 	// Set CTRL_REG3 WAKE_FF_MT bit to 1 to enable motion interrupt.
@@ -100,7 +100,7 @@ static void enable_interrupt(void)
 	// CTRL_REG4 register enables the following interrupts: Auto-WAKE/SLEEP, 
 	// Orientation Detection, Freefall/Motion, and Data Ready.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_ASLP | INT_EN_FF_MT);
+	ret = accelerometer_write(REG8652_CTRL_REG4, /*INT_EN_ASLP | */INT_EN_FF_MT);
 
 	//
 	// Configure +/-8g full scale range.
