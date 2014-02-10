@@ -84,7 +84,7 @@ static void enable_interrupt(void)
 	//
 	// Enable Auto-Sleep.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG2, AUTO_SLEEP_ENABLE);
+	//ret = accelerometer_write(REG8652_CTRL_REG2, AUTO_SLEEP_ENABLE);
 
 	//
 	// Set CTRL_REG3 WAKE_FF_MT bit to 1 to enable motion interrupt.
