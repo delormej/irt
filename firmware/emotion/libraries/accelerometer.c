@@ -60,10 +60,17 @@ static void enable_interrupt(void)
 	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY);
 
 	//
-	// Configure motion detection on Y axis only.
-	// NOTE: When I tried settng other axis, it wasn't working.
+	// Set the minimum time period of inactivity required to switch the part
+	// between Wake and Sleep status.
 	//
-	ret = accelerometer_write(REG8652_FF_MT_CFG, (FF_MT_OAE  | FF_MT_YEFE));
+	const uint8_t ASLP_COUNT = 15u; // 127u;
+	ret = accelerometer_write(REG8652_ASLP_COUNT, ASLP_COUNT);
+
+	//
+	// Configure motion detection on Y axis only.
+	// NOTE: When I tried setting additional axis, Y wasn't signaling.
+	//
+	ret = accelerometer_write(REG8652_FF_MT_CFG, (FF_MT_OAE | FF_MT_YEFE));
 
 	//
 	// Configure threshold for motion.
@@ -75,12 +82,17 @@ static void enable_interrupt(void)
 	ret = accelerometer_write(REG8652_FF_MT_THS, 1u);
 
 	//
+	// Enable Auto-Sleep.
+	//
+	//ret = accelerometer_write(REG8652_CTRL_REG2, AUTO_SLEEP_ENABLE);
+
+	//
 	// Set CTRL_REG3 WAKE_FF_MT bit to 1 to enable motion interrupt.
 	// CTRL_REG3 register is used to control the Auto-WAKE/SLEEP function by 
 	// setting the orientation or Freefall/Motion as an interrupt to wake.
-	// Also configure to use open-drain.
+	// You could also configure to use open-drain.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG3, (WAKE_FF_MT | OPEN_DRAIN));
+	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT); // | OPEN_DRAIN));
 	
 	//
 	// Set CTRL_REG4's freefall/motion interrupt bit INT_EN_FF_MT .
@@ -88,7 +100,7 @@ static void enable_interrupt(void)
 	// Orientation Detection, Freefall/Motion, and Data Ready.
 	//
 	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_ASLP | INT_EN_FF_MT);
-	
+
 	//
 	// Configure +/-8g full scale range.
 	/*
@@ -99,7 +111,7 @@ static void enable_interrupt(void)
 	//
 	// Set configuration in CTRL_REG5 to route interrupt to INT1.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG5, INT_CFG_FF_MT);
+	ret = accelerometer_write(REG8652_CTRL_REG5, (INT_EN_ASLP | INT_CFG_FF_MT));
 	
 	//
 	// Set device to ACTIVE by setting bit 0 to value 1 in CTRL_REG1.
@@ -135,4 +147,12 @@ void accelerometer_init(void)
 {
 	twi_master_init();
 	enable_interrupt();
+}
+
+uint8_t accelerometer_src(void)
+{
+	uint8_t data = 0;
+	accelerometer_read(REG8652_INT_SOURCE, &data, sizeof(data));
+
+	return data;
 }
