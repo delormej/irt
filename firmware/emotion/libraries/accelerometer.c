@@ -100,7 +100,7 @@ static void enable_interrupt(void)
 	// CTRL_REG4 register enables the following interrupts: Auto-WAKE/SLEEP, 
 	// Orientation Detection, Freefall/Motion, and Data Ready.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG4, /*INT_EN_ASLP | */INT_EN_FF_MT);
+	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_ASLP | INT_EN_FF_MT);  // 9:13am.
 
 	//
 	// Configure +/-8g full scale range.
