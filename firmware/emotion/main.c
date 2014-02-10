@@ -416,23 +416,26 @@ static void on_button_iv_event(void)
 
 static void on_ble_connected(void) 
 {
-		nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
-		nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);	
+	nrf_gpio_pin_clear(PIN_LED_B);
+	nrf_gpio_pin_set(PIN_LED_A);
 }
 	
 static void on_ble_disconnected(void) 
 {
-		nrf_gpio_pin_clear(CONNECTED_LED_PIN_NO);
+	nrf_gpio_pin_clear(PIN_LED_A);
+	nrf_gpio_pin_clear(PIN_LED_B);
 }
 
 static void on_ble_timeout(void) 
 {
-		nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
+	nrf_gpio_pin_clear(PIN_LED_A);
+	nrf_gpio_pin_clear(PIN_LED_B);
 }
 
 static void on_ble_advertising(void)
 {
-		nrf_gpio_pin_set(ADVERTISING_LED_PIN_NO);	
+	nrf_gpio_pin_clear(PIN_LED_B);
+	nrf_gpio_pin_set(PIN_LED_A);
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
@@ -538,12 +541,31 @@ static void on_button_evt(uint8_t pin_no)
 				on_button_iv_event();
 				break;
 		case PIN_SHAKE:
-			// This might be starving the CPU.
-			/*		nrf_gpio_pin_clear(PIN_LED_A);
-				nrf_gpio_pin_set(PIN_LED_B);
-				nrf_delay_ms(300);
-				nrf_gpio_pin_clear(PIN_LED_B); */
-				break;
+			nrf_gpio_pin_clear(PIN_LED_A);
+			nrf_gpio_pin_clear(PIN_LED_B);
+			nrf_delay_ms(500);
+			nrf_gpio_pin_set(PIN_LED_B);
+
+			/* This might be starving the CPU.
+			if (accelerometer_src() & 128u)
+			{
+				// Source is wake/sleep.
+
+				if (nrf_gpio_pin_read(PIN_LED_B))
+				{
+					// If B already on then blink.
+					nrf_gpio_pin_clear(PIN_LED_B);
+					nrf_delay_ms(500);
+					nrf_gpio_pin_set(PIN_LED_B);
+				}
+				else
+				{
+					nrf_gpio_pin_clear(PIN_LED_A);
+					nrf_gpio_pin_set(PIN_LED_B);
+
+				}
+			}*/
+			break;
         default:
             APP_ERROR_HANDLER(pin_no);
     }	

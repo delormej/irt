@@ -93,14 +93,14 @@ static void enable_interrupt(void)
 	// You could also configure to use open-drain.
 	// Configure interrupt polarity to be LOW to HIGH on interrupt.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG3, (WAKE_FF_MT | INT_POLARITY)); // | OPEN_DRAIN));
+	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT | INT_POLARITY); // | OPEN_DRAIN);
 	
 	//
 	// Set CTRL_REG4's freefall/motion interrupt bit INT_EN_FF_MT .
 	// CTRL_REG4 register enables the following interrupts: Auto-WAKE/SLEEP, 
 	// Orientation Detection, Freefall/Motion, and Data Ready.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_ASLP); // | INT_EN_FF_MT);  // 9:19
+	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_ASLP | INT_EN_FF_MT);  // 9:19
 
 	//
 	// Configure +/-8g full scale range.

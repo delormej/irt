@@ -34,7 +34,7 @@ static void button_event_handler(uint32_t event_pins_low_to_high, uint32_t event
 			pin_no = PIN_BUTTON_III;
 		else if (event_pins_low_to_high & (1 << PIN_BUTTON_IV)) 
 			pin_no = PIN_BUTTON_IV;
-		else if (event_pins_high_to_low & (1 << PIN_SHAKE))
+		else if (event_pins_low_to_high & (1 << PIN_SHAKE))
 			pin_no = PIN_SHAKE;
 			
 		m_on_button_evt(pin_no);
@@ -54,8 +54,9 @@ static void buttons_init()
 	uint32_t err_code;
 	uint32_t  pins_low_to_high_mask, pins_high_to_low_mask;
 
-	pins_low_to_high_mask = (1 << PIN_BUTTON_I | 1 << PIN_BUTTON_II | 1 << PIN_BUTTON_III | 1 << PIN_BUTTON_IV);
-	pins_high_to_low_mask = (1 << PIN_SHAKE); //0;
+	pins_low_to_high_mask = (1 << PIN_BUTTON_I | 1 << PIN_BUTTON_II | 1 << PIN_BUTTON_III | 1 << PIN_BUTTON_IV |
+			1 << PIN_SHAKE);
+	pins_high_to_low_mask = 0;
 	app_gpiote_user_id_t p_user_id;
 
 	err_code = app_gpiote_user_register(&p_user_id,
@@ -73,7 +74,7 @@ static void buttons_init()
 /**@brief Initialize the pin to wake the device on movement from the accelerometer */
 static void wake_init(void)
 {
-	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_HIGH);
 	accelerometer_init();
 }
 

@@ -23,6 +23,7 @@
 
 /* CTRL_REG3 wake bits. */
 #define WAKE_FF_MT			_BIT(3)		// Wake from freefall/motion interrupt.
+#define INT_POLARITY 		_BIT(1)		// Configure interrupt polarity.
 #define OPEN_DRAIN 			_BIT(0)		// Configure Open-Drain vs push/pull.
 
 /* CTRL_REG4 register enables the following interrupts: Auto-WAKE/SLEEP, 
@@ -39,16 +40,17 @@
 		If the bit value is 0, then the functional block’s interrupt is routed to INT2 (default).
 		If the bit value is 1, then the functional block’s interrupt is routed to INT1.
 */
-#define INT_CFG_FF_MT		_BIT(2)		// Freefall/motion INT1/INT2 Configuration.
+#define INT_CFG_FF_MT		_BIT(2)		// Freefall/motion INT1/INT2 configuration.
+#define INT_CFG_ASLP		_BIT(7)		// Auto-Sleep/Wake INT1/INT2 configuration.
 
 /* FIFO Modes */
 #define FMODE_DISABLE		(0x00 << 6)
-#define FMODE_CIRCULAR	(0x01 << 6)
+#define FMODE_CIRCULAR		(0x01 << 6)
 #define FMODE_FILL			(0x02 << 6)
 #define FMODE_EVENT			(0x03 << 6)
 
 /* FIFO status flags */
-#define F_OVR						_BIT(7)
+#define F_OVR					_BIT(7)
 #define F_WMRK					_BIT(6)
 #define F_COUNT					(0x3f)
 
@@ -114,5 +116,8 @@ enum {
  * 				accelerometer.
  */ 
 void accelerometer_init(void);
+
+/**@brief Returns the interrupt source of the last event. */
+uint8_t accelerometer_src(void);
 
 #endif // ACCELEROMETER_H
