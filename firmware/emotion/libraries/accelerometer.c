@@ -91,8 +91,9 @@ static void enable_interrupt(void)
 	// CTRL_REG3 register is used to control the Auto-WAKE/SLEEP function by 
 	// setting the orientation or Freefall/Motion as an interrupt to wake.
 	// You could also configure to use open-drain.
+	// Configure interrupt polarity to be LOW to HIGH on interrupt.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT); // | OPEN_DRAIN));
+	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT | INT_POLARITY); // | OPEN_DRAIN));
 	
 	//
 	// Set CTRL_REG4's freefall/motion interrupt bit INT_EN_FF_MT .
@@ -111,7 +112,7 @@ static void enable_interrupt(void)
 	//
 	// Set configuration in CTRL_REG5 to route interrupt to INT1.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG5, (INT_EN_ASLP | INT_CFG_FF_MT));
+	ret = accelerometer_write(REG8652_CTRL_REG5, (INT_CFG_ASLP | INT_CFG_FF_MT));
 	
 	//
 	// Set device to ACTIVE by setting bit 0 to value 1 in CTRL_REG1.
