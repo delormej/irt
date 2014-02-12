@@ -114,7 +114,7 @@ static void enable_interrupt(void)
 	// signals on the same interrupt line.
 	// Configure interrupt polarity to be LOW to HIGH on interrupt.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT | INT_POLARITY | OPEN_DRAIN);
+	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT | OPEN_DRAIN); //  | INT_POLARITY
 	
 	//
 	// Set CTRL_REG4's freefall/motion interrupt bit INT_EN_FF_MT .
@@ -143,7 +143,7 @@ static void enable_interrupt(void)
 	ret = accelerometer_write(REG8652_CTRL_REG1, 0x99); // MMA8652FC_ACTIVE | data_rate); // 0x99 == ASLP ODR=6.25Hz, ODR=100 Hz, Active mode
 }
 
-/*
+
 static void read_test(void)
 {
 	uint8_t data = 0;
@@ -154,21 +154,21 @@ static void read_test(void)
 		printf("Matches!\n");
 
 	data = 0;
-	accelerometer_read(REG8652_SYSMOD, &data, sizeof(data));
-	if (data & 1)
-		printf("WAKE mode\n");
-
-	data = 0;
 	accelerometer_read(REG8652_INT_SOURCE, &data, sizeof(data));
 	if (data & (0x1 << 2))
 		printf("SRC_FF_MT\n");
 
-}*/
+	data = 0;
+	accelerometer_read(REG8652_SYSMOD, &data, sizeof(data));
+	if (data & 1)
+		printf("WAKE mode\n");
+}
 
 void accelerometer_init(void)
 {
 	twi_master_init();
 	enable_interrupt();
+	read_test();
 }
 
 uint8_t accelerometer_src(void)

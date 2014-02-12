@@ -430,11 +430,9 @@ static void on_accelerometer(uint8_t source)
 	}
 	else
 	{
-		/* 
-		clear_led();
-		nrf_delay_ms(300);
 		set_led_green();
-		*/
+		nrf_delay_ms(300);
+		clear_led();
 	}
 }
 

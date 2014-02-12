@@ -26,10 +26,13 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 		mp_on_peripheral_evt->on_button_iii();
 	else if (event_pins_low_to_high & (1 << PIN_BUTTON_IV))
 		mp_on_peripheral_evt->on_button_iv();
-	else if (event_pins_low_to_high & (1 << PIN_SHAKE))
+	else if (event_pins_high_to_low & (1 << PIN_SHAKE))
 	{
-		uint8_t source = accelerometer_src();
-		mp_on_peripheral_evt->on_accelerometer_evt(source);
+		set_led_red();
+		nrf_delay_ms(100);
+		clear_led();
+		//uint8_t source = accelerometer_src();
+		//mp_on_peripheral_evt->on_accelerometer_evt(0);
 	}
 }
 
@@ -48,7 +51,7 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_input(PIN_BUTTON_IV, NRF_GPIO_PIN_NOPULL);
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
-	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_HIGH);
+	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_LOW); // sense_
 
 	APP_GPIOTE_INIT(1);
 	
@@ -56,12 +59,12 @@ static void irt_gpio_init()
 	uint32_t  pins_low_to_high_mask, pins_high_to_low_mask;
 
 	pins_low_to_high_mask = (1 << PIN_BUTTON_I |
-			1 << PIN_BUTTON_II |
-			1 << PIN_BUTTON_III |
-			1 << PIN_BUTTON_IV |
-			1 << PIN_SHAKE);
+		1 << PIN_BUTTON_II |
+		1 << PIN_BUTTON_III |
+		1 << PIN_BUTTON_IV);
+	
+	pins_high_to_low_mask = 1 << PIN_SHAKE;
 
-	pins_high_to_low_mask = 0;
 	app_gpiote_user_id_t p_user_id;
 
 	err_code = app_gpiote_user_register(&p_user_id,
@@ -101,4 +104,10 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
     irt_gpio_init();
     accelerometer_init();
 	temperature_init();
+
+	uint32_t val = nrf_gpio_pin_read(PIN_SHAKE);
+	if (val == 1)
+		set_led_red();
+	else
+		set_led_green();
 }
