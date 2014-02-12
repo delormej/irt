@@ -42,7 +42,6 @@ typedef struct peripheral_evt_s
 	void (*on_button_ii)(void);
 	void (*on_button_iii)(void);
 	void (*on_button_iv)(void);
-	void (*on_ant_channel_closed)(void);
 	void (*on_accelerometer_evt)(uint8_t source);
 } peripheral_evt_t;
 
