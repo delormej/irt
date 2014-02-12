@@ -1,5 +1,5 @@
 TOOLCHAIN_PATH = "c:\Program Files (x86)\GNU Tools ARM Embedded\4.8 2013q4\bin\"
-JLINK_PATH = "C:\Program Files (x86)\SEGGER\JLinkARM_V480\"
+JLINK_PATH = "C:\Program Files (x86)\SEGGER\JLinkARM_V480f\"
 
 MAKE_BUILD_FOLDER = if not exist $(OUTPUT_PATH:/=\\) mkdir $(OUTPUT_PATH:/=\\)
 
