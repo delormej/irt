@@ -45,6 +45,4 @@ LDFLAGS += --specs=nano.specs
 
 GDB_PORT_NUMBER = 2331
 
-#my: $(error "$(APPLICATION_SRCS)" )
-
 include $(TEMPLATE_PATH)Makefile
