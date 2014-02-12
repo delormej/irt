@@ -34,6 +34,7 @@
 #include "power.h"
 #include "user_profile.h"
 #include "ble_ant.h"
+#include "nrf_delay.h"
 
 #define CYCLING_POWER_MEAS_INTERVAL       APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Bike power measurement interval (ticks). */
 
@@ -379,13 +380,13 @@ static void timers_init(void)
  * Event handlers
  * ----------------------------------------------------------------------------*/
 
-static void on_button_i_event(void)
+static void on_button_i(void)
 {
 	m_resistance_level = 0;
 	m_servo_pos = set_resistance(m_resistance_level);
 }
 
-static void on_button_ii_event(void)
+static void on_button_ii(void)
 {
 	/* TODO: wrap this in an ifdef for DEBUG.
 	uint8_t data[] = "button_ii_event";
@@ -399,7 +400,7 @@ static void on_button_ii_event(void)
 	}
 }
 
-static void on_button_iii_event(void)
+static void on_button_iii(void)
 {
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
@@ -408,34 +409,54 @@ static void on_button_iii_event(void)
 	}
 }
 
-static void on_button_iv_event(void)
+static void on_button_iv(void)
 {
 	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
 	m_servo_pos = set_resistance(m_resistance_level);
 }
 
+static void on_accelerometer(uint8_t source)
+{
+	if (source & 0x01) // Wake
+	{
+		set_led_green();
+	}
+	else if (source & 0x02) // Sleep
+	{
+		// Blink red and go to sleep.
+		set_led_red();
+		nrf_delay_ms(300);
+		clear_led();
+	}
+	else
+	{
+		/* 
+		clear_led();
+		nrf_delay_ms(300);
+		set_led_green();
+		*/
+	}
+}
+
 static void on_ble_connected(void) 
 {
-	nrf_gpio_pin_clear(PIN_LED_B);
-	nrf_gpio_pin_set(PIN_LED_A);
+	set_led_green();
 }
 	
 static void on_ble_disconnected(void) 
 {
-	nrf_gpio_pin_clear(PIN_LED_A);
-	nrf_gpio_pin_clear(PIN_LED_B);
+	clear_led();
 }
 
 static void on_ble_timeout(void) 
 {
-	nrf_gpio_pin_clear(PIN_LED_A);
-	nrf_gpio_pin_clear(PIN_LED_B);
+	clear_led();
 }
 
 static void on_ble_advertising(void)
 {
-	nrf_gpio_pin_clear(PIN_LED_B);
-	nrf_gpio_pin_set(PIN_LED_A);
+	// TODO: this should invoke a timer and blink the LED.
+	set_led_green();
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
@@ -522,54 +543,6 @@ static void on_set_resistance(rc_evt_t rc_evt)
 #endif		
 
 }
-
-		
-static void on_button_evt(uint8_t pin_no)
-{
-    switch (pin_no)
-    {
-		case PIN_BUTTON_I:
-				on_button_i_event();
-				break;
-		case PIN_BUTTON_II:
-				on_button_ii_event();
-				break;
-		case PIN_BUTTON_III:
-				on_button_iii_event();
-				break;
-		case PIN_BUTTON_IV:
-				on_button_iv_event();
-				break;
-		case PIN_SHAKE:
-			nrf_gpio_pin_clear(PIN_LED_A);
-			nrf_gpio_pin_clear(PIN_LED_B);
-			nrf_delay_ms(500);
-			nrf_gpio_pin_set(PIN_LED_B);
-
-			/* This might be starving the CPU.
-			if (accelerometer_src() & 128u)
-			{
-				// Source is wake/sleep.
-
-				if (nrf_gpio_pin_read(PIN_LED_B))
-				{
-					// If B already on then blink.
-					nrf_gpio_pin_clear(PIN_LED_B);
-					nrf_delay_ms(500);
-					nrf_gpio_pin_set(PIN_LED_B);
-				}
-				else
-				{
-					nrf_gpio_pin_clear(PIN_LED_A);
-					nrf_gpio_pin_set(PIN_LED_B);
-
-				}
-			}*/
-			break;
-        default:
-            APP_ERROR_HANDLER(pin_no);
-    }	
-}
 		
 /*----------------------------------------------------------------------------
  * Main program functions
@@ -579,55 +552,58 @@ static void on_button_evt(uint8_t pin_no)
  */
 int main(void)
 {
-		// initialize the user profile.
-		profile_init();
+	// initialize the user profile.
+	profile_init();
 
-		// Initialize timers.
-		timers_init();
-		
-    // Initialize peripherals
-		peripheral_init(on_button_evt);
+	// Initialize timers.
+	timers_init();
 
-		// Event handlers.
-		static ant_ble_evt_handlers_t handlers = { 
-			on_ble_connected,
-			on_ble_disconnected,
-			on_ble_timeout,
-			on_ble_advertising,
-			on_ble_uart,
-			on_ant_channel_closed,
-			on_ant_power_data,
-			on_set_resistance
-		};
+	// Peripheral interrupt event handlers.
+	static peripheral_evt_t on_peripheral_handlers = {
+		on_button_i,
+		on_button_ii,
+		on_button_iii,
+		on_button_iv,
+		on_accelerometer
+	};
 
-		// Initialize Bluetooth and ANT stacks.
-		ble_ant_init(&handlers);
+	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
+	peripheral_init(&on_peripheral_handlers);
 
-		// Begin advertising and receiving ANT messages.
-		ble_ant_start();
+	// ANT+, BLE event handlers.
+	static ant_ble_evt_handlers_t ant_ble_handlers = {
+		on_ble_connected,
+		on_ble_disconnected,
+		on_ble_timeout,
+		on_ble_advertising,
+		on_ble_uart,
+		on_ant_channel_closed,
+		on_ant_power_data,
+		on_set_resistance
+	};
 
-		// Start off with resistance at 0.
-		set_resistance(m_resistance_level);	
-		m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
-		
-		// Initialize module to read speed from flywheel.
-		init_speed(PIN_FLYWHEEL);
-		if (m_user_profile.wheel_size_mm > 0)
-			set_wheel_size(m_user_profile.wheel_size_mm);
-		
-		// TOOD: we need to ensure we're being woken up here by a HW
-		// interrupt or something before we actually start reporting.
-		// Start the main loop for reporting ble services.
-		application_timers_start();
-		
-		// TODO: when do we stop timers? We need to track a timeout since last
-		// HW interupt, i.e. 5 mins or so? 
-		// Stop reporting ble services.
-		// application_timers_stop();
+	// Initialize Bluetooth and ANT stacks.
+	ble_ant_init(&ant_ble_handlers);
+
+	// Begin advertising and receiving ANT messages.
+	ble_ant_start();
+
+	// Start off with resistance at 0.
+	set_resistance(m_resistance_level);
+	m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
+
+	// Initialize module to read speed from flywheel.
+	init_speed(PIN_FLYWHEEL);
+	if (m_user_profile.wheel_size_mm > 0)
+		set_wheel_size(m_user_profile.wheel_size_mm);
+
+	// Start the main loop for reporting ble services.
+	application_timers_start();
 
     // Enter main loop
     for (;;)
     {
-        power_manage();
+        // TODO: this doesn't actually power manage today?
+    	power_manage();
     }
 }

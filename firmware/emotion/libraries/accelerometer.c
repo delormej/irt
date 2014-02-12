@@ -38,6 +38,23 @@ static bool accelerometer_write(uint8_t reg, uint8_t data)
 							 true);
 }
 
+static bool accelerometer_reset(void)
+{
+	uint8_t val = 0;
+	uint8_t tries = 100;
+
+	accelerometer_write(REG8652_CTRL_REG2, 0x40);		// Reset all registers to POR values
+
+	do		// Wait for the RST bit to clear
+	{
+		accelerometer_read(REG8652_CTRL_REG2, &val, sizeof(val));
+		tries--;
+	} 	while (tries &&  (val & 0x40));
+
+	// Returns success if happened in less than max tries.
+	return (tries > 0);
+}
+
 static void enable_interrupt(void)
 {
 	/* To WAKE the device, the desired function(s) must be enabled in CTRL_REG4 
@@ -47,13 +64,11 @@ static void enable_interrupt(void)
 		 the only exceptions to this are the CTRL_REG1[ACTIVE] and CTRL_REG2[RST] bits.
 		 
 		 Wake ODR (Output Data Rate) is set by CTRL_REG1[DR] bits.
-		 
-		 *NOTE: By default an interrupt event is signaled LOW (logical 0).  This can be
-		 configured, but we'll use the default - just need to make sure we set this
-		 properly in the GPIO pin cfg.
-*/
+	 */
 	bool ret = false;
-		
+
+	ret = accelerometer_reset();
+
 	//
 	// Set device to STANDBY by setting bit 0 to value 0 in CTRL_REG1.
 	//
@@ -72,35 +87,41 @@ static void enable_interrupt(void)
 	// Note that even when the full scale value is set to ±2 g or ±4 g, the motion
 	// still detects up to ±8 g.
 	//
-	ret = accelerometer_write(REG8652_FF_MT_THS, 1u);
+	ret = accelerometer_write(REG8652_FF_MT_THS, 0x04);
 
 	//
 	// Set the minimum time period of inactivity required to switch the part
 	// between Wake and Sleep status.
 	//
-	const uint8_t ASLP_COUNT = 15u; // 127u;
-	ret = accelerometer_write(REG8652_ASLP_COUNT, ASLP_COUNT);
+	ret = accelerometer_write(REG8652_ASLP_COUNT, 0x10); // Set auto-sleep wait period to 5s (5s/0.32s=~16)
+
+	//
+	// Set the debounce count.
+	/*
+	const uint8_t DEBOUNCE_COUNT = 1u;
+	ret = accelerometer_write(REG8652_FF_MT_COUNT, DEBOUNCE_COUNT);
+	*/
 
 	//
 	// Enable Auto-Sleep.
 	//
-	//ret = accelerometer_write(REG8652_CTRL_REG2, AUTO_SLEEP_ENABLE);
+	ret = accelerometer_write(REG8652_CTRL_REG2, AUTO_SLEEP_ENABLE);
 
 	//
-	// Set CTRL_REG3 WAKE_FF_MT bit to 1 to enable motion interrupt.
 	// CTRL_REG3 register is used to control the Auto-WAKE/SLEEP function by 
 	// setting the orientation or Freefall/Motion as an interrupt to wake.
-	// You could also configure to use open-drain.
+	// Open-Drain configuration can be used for connecting multiple interrupt 
+	// signals on the same interrupt line.
 	// Configure interrupt polarity to be LOW to HIGH on interrupt.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT | INT_POLARITY); // | OPEN_DRAIN);
+	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT | INT_POLARITY | OPEN_DRAIN);
 	
 	//
 	// Set CTRL_REG4's freefall/motion interrupt bit INT_EN_FF_MT .
 	// CTRL_REG4 register enables the following interrupts: Auto-WAKE/SLEEP, 
 	// Orientation Detection, Freefall/Motion, and Data Ready.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_ASLP | INT_EN_FF_MT);  // 9:19
+	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_ASLP | INT_EN_FF_MT);
 
 	//
 	// Configure +/-8g full scale range.
@@ -112,14 +133,14 @@ static void enable_interrupt(void)
 	//
 	// Set configuration in CTRL_REG5 to route interrupt to INT1.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG5, INT_CFG_ASLP); // | INT_CFG_FF_MT)); // 9:19
+	ret = accelerometer_write(REG8652_CTRL_REG5, INT_CFG_ASLP | INT_CFG_FF_MT);
 	
 	//
 	// Set device to ACTIVE by setting bit 0 to value 1 in CTRL_REG1.
 	// Also set the data rate to 100hz to match NRF TWI defaults.
 	//
 	uint8_t data_rate = (1 << 4) | (1 << 3); // binary 011000
-	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_ACTIVE | data_rate);
+	ret = accelerometer_write(REG8652_CTRL_REG1, 0x99); // MMA8652FC_ACTIVE | data_rate); // 0x99 == ASLP ODR=6.25Hz, ODR=100 Hz, Active mode
 }
 
 /*
@@ -152,8 +173,22 @@ void accelerometer_init(void)
 
 uint8_t accelerometer_src(void)
 {
-	uint8_t data = 0;
-	accelerometer_read(REG8652_INT_SOURCE, &data, sizeof(data));
+	// TODO: return a more meaningful structure.
 
-	return data;
+	// Must read the interrupt source register to clear for other events.
+
+	uint8_t source = 0, mode = 0, data = 0;
+	accelerometer_read(REG8652_INT_SOURCE, &source, sizeof(source));
+
+	if (source & 0x04) // Free-fall / motion interrupt.
+	{
+		accelerometer_read(REG8652_FF_MT_SRC, &data, sizeof(data));
+	}
+	else if (source & 0x80) // Auto-sleep/wake interrupt.
+	{
+		// Service and clear the auto-sleep/wake interrupt.
+		accelerometer_read(REG8652_SYSMOD, &mode, sizeof(mode));
+	}
+	
+	return mode;
 }

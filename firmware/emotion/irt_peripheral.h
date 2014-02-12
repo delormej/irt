@@ -36,8 +36,21 @@
 #define CONNECTED_LED_PIN_NO						PIN_LED_A
 #define ASSERT_LED_PIN_NO								PIN_LED_B
 
-#define WAKEUP_BUTTON_PIN               PIN_SHAKE																	/**< Button used to wake up the application. */
+typedef struct peripheral_evt_s
+{
+	void (*on_button_i)(void);
+	void (*on_button_ii)(void);
+	void (*on_button_iii)(void);
+	void (*on_button_iv)(void);
+	void (*on_ant_channel_closed)(void);
+	void (*on_accelerometer_evt)(uint8_t source);
+} peripheral_evt_t;
 
-void peripheral_init(void (*on_button_evt)(uint8_t pin_no));
+void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);
+
+// LED functions.
+void set_led_red(void);
+void set_led_green(void);
+void clear_led(void);
 
 #endif // IRT_PERIPHERAL_H__

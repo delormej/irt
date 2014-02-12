@@ -117,7 +117,8 @@ enum {
  */ 
 void accelerometer_init(void);
 
-/**@brief Returns the interrupt source of the last event. */
+/**@brief Clears and returns the interrupt source of the last event. */
 uint8_t accelerometer_src(void);
+
 
 #endif // ACCELEROMETER_H
