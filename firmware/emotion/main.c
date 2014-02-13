@@ -417,6 +417,7 @@ static void on_button_iv(void)
 
 static void on_accelerometer(uint8_t source)
 {
+	/* Starving the CPU?
 	if (source & 0x01) // Wake
 	{
 		set_led_green();
@@ -433,7 +434,7 @@ static void on_accelerometer(uint8_t source)
 		set_led_green();
 		nrf_delay_ms(300);
 		clear_led();
-	}
+	}*/
 }
 
 static void on_ble_connected(void) 
