@@ -28,11 +28,13 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 		mp_on_peripheral_evt->on_button_iv();
 	else if (event_pins_high_to_low & (1 << PIN_SHAKE))
 	{
+		mp_on_peripheral_evt->on_accelerometer_evt(0x02);
+		/*
 		set_led_red();
 		nrf_delay_ms(100);
 		clear_led();
 		//uint8_t source = accelerometer_src();
-		//mp_on_peripheral_evt->on_accelerometer_evt(0);
+		*/
 	}
 }
 
