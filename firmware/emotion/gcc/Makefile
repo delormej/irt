@@ -14,10 +14,8 @@ APPLICATION_SRCS += app_timer.c
 APPLICATION_SRCS += ble_conn_params.c
 APPLICATION_SRCS += ble_bondmngr.c
 APPLICATION_SRCS += ble_debug_assert_handler.c
-APPLICATION_SRCS += app_gpiote.c
 APPLICATION_SRCS += pstorage.c
 APPLICATION_SRCS += crc16.c
-APPLICATION_SRCS += twi_hw_master.c
 APPLICATION_SRCS += nrf_delay.c
 
 SOURCE_PATHS +=  ../libraries/
@@ -37,7 +35,8 @@ USE_SOFTDEVICE = s310
 SDK_PATH = ../../nrf51_sdk/
 TEMPLATE_PATH = ../../gcc/
 
-CFLAGS = -Os
+#CFLAGS = -Os
+#CFLAGS = -g
 CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
 
