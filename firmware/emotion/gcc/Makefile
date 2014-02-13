@@ -36,7 +36,7 @@ SDK_PATH = ../../nrf51_sdk/
 TEMPLATE_PATH = ../../gcc/
 
 #CFLAGS = -Os
-#CFLAGS = -g
+CFLAGS = -g
 CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
 
