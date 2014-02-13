@@ -184,11 +184,12 @@ uint8_t accelerometer_src(void)
 	{
 		accelerometer_read(REG8652_FF_MT_SRC, &data, sizeof(data));
 	}
-	else if (source & 0x80) // Auto-sleep/wake interrupt.
+	
+	if (source & 0x80) // Auto-sleep/wake interrupt.
 	{
 		// Service and clear the auto-sleep/wake interrupt.
 		accelerometer_read(REG8652_SYSMOD, &mode, sizeof(mode));
 	}
 	
-	return mode;
+	return source;
 }

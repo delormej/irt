@@ -421,7 +421,7 @@ static void on_accelerometer(uint8_t source)
 	{
 		set_led_green();
 	}
-	else if (source & 0x02) // Sleep
+	else if (source & 0x80) // Sleep
 	{
 		// Blink red and go to sleep.
 		set_led_red();
