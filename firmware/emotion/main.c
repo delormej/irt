@@ -36,14 +36,17 @@
 #include "ble_ant.h"
 #include "nrf_delay.h"
 
-#define CYCLING_POWER_MEAS_INTERVAL       APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)/**< Bike power measurement interval (ticks). */
+#define CYCLING_POWER_MEAS_INTERVAL		APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER) /**< Bike power measurement interval (ticks). */
+#define DEFAULT_WHEEL_SIZE_MM			2070u
+#define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
 
-static uint8_t 														m_resistance_level = 0;
-static resistance_mode_t									m_resistance_mode = RESISTANCE_SET_STANDARD;
-static uint16_t														m_servo_pos;
-static app_timer_id_t               			m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
-static user_profile_t 										m_user_profile;
-static rc_sim_forces_t										m_sim_forces;
+static uint8_t 							m_resistance_level = 0;
+static resistance_mode_t				m_resistance_mode = RESISTANCE_SET_STANDARD;
+static uint16_t							m_servo_pos;
+static app_timer_id_t               	m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
+static bool								mb_profile_dirty = false;
+static user_profile_t 					m_user_profile;
+static rc_sim_forces_t					m_sim_forces;
 
 /*----------------------------------------------------------------------------
  * Error Handlers
@@ -90,12 +93,35 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
  * KICKR resistance commands.
  * ----------------------------------------------------------------------------*/
 
+/**@brief Parses the wheel params message from the KICKR.  It then advises the
+ * 		  speed module and updates the user profile.  */
+static void set_wheel_params(uint8_t *pBuffer)
+{
+	uint16_t wheel_size = pBuffer[0] | pBuffer[1] << 8u;
+
+	if (m_user_profile.wheel_size_mm != wheel_size)
+	{
+		m_user_profile.wheel_size_mm = wheel_size;
+		mb_profile_dirty = true;
+	}
+
+	// Call speed module to set the wheel size.
+	set_wheel_size(m_user_profile.wheel_size_mm);
+}
+
 // Parses the SET_SIM message from the KICKR and has user profile info.
 // TODO: move this to the user profile object.
 static void set_sim_params(uint8_t *pBuffer)
 {
 	// Weight comes through in KG as 8500 85.00kg for example.
-	m_user_profile.total_weight_kg = (pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
+	float weight = (pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
+
+	if (m_user_profile.total_weight_kg != weight)
+	{
+		m_user_profile.total_weight_kg = weight;
+		mb_profile_dirty = true; 	// flag that we have changes to save.
+	}
+
 	// Co-efficient for rolling resistance.
 	m_sim_forces.crr = (pBuffer[2] | pBuffer[3] << 8u) / 10000.0f;
 	// Co-efficient of drag.
@@ -118,14 +144,25 @@ static void set_sim_params(uint8_t *pBuffer)
  */
 static void profile_init(void)
 {
+		// TODO: Figure out the right time to store the profile.  I don't think you can write
+		// when the radio is active, so you either have to shut the radio down and store or
+		// wait until it's time to shut down the device.  However, if the device is plugged in
+		// the user could pull the cord before it formally shuts down.
+
+		uint32_t err_code;
+
 		// Initialize hard coded user profile for now.
 		memset(&m_user_profile, 0, sizeof(m_user_profile));
 		
-		// Wheel circumference in mm.
-		m_user_profile.wheel_size_mm = 2070;
+		err_code = user_profile_load(&m_user_profile);
+
+		if (m_user_profile.wheel_size_mm == 0)
+			// Wheel circumference in mm.
+			m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
 		
-		// Total weight of rider + bike + shoes, clothing, etc...
-		m_user_profile.total_weight_kg = 178.0f * 0.453592;	// Convert lbs to KG
+		if (m_user_profile.total_weight_kg == 0.0f)
+			// Total weight of rider + bike + shoes, clothing, etc...
+			m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
 		
 		// Initialize simulation forces structure.
 		memset(&m_sim_forces, 0, sizeof(m_sim_forces));	
@@ -138,6 +175,25 @@ static void profile_init(void)
 	 */
 		m_sim_forces.crr 								= 0.004f;
 		m_sim_forces.c 									= 0.60f;
+}
+
+/**@brief Persists any updates the user profile. */
+static void profile_update(void)
+{
+	uint32_t err_code;
+
+	if (mb_profile_dirty)
+	{
+		// This method ensures the device is in a proper state in order to update
+		// the profile.
+		err_code = user_profile_store(&m_user_profile);
+
+		// If successful, clear the dirty flag.
+		if (err_code == NRF_SUCCESS)
+		{
+			mb_profile_dirty = false;
+		}
+	}
 }
 
 /**@brief Parses the resistance percentage out of the KICKR command.
@@ -337,6 +393,14 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 			default:
 				break;
 		}
+
+		// TODO: ideally we run from a battery and we don't have
+		// to do this here.  This is just in case the cord some
+		// how gets yanked before it's time to shutdown.
+		// Only attempt this if dirty is set and every 10 transmits.
+		static uint8_t counter = 1;
+		if (mb_profile_dirty && (counter++ %10))
+			profile_update();
 }
 
 /**@brief Function for starting the application timers.
@@ -521,11 +585,8 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			break;
 			
 		case RESISTANCE_SET_WHEEL_CR:
-			m_user_profile.wheel_size_mm = 
-				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u;
-			// TODO: this is something that should be persisted in
-			// flash storage.
-			set_wheel_size(m_user_profile.wheel_size_mm);
+			//  Parse wheel size and update accordingly.
+			set_wheel_params(rc_evt.pBuffer);
 			break;
 			
 		default:

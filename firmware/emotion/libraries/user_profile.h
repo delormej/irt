@@ -19,4 +19,10 @@ typedef struct user_profile_s {
 	uint16_t	wheel_size_mm;
 } user_profile_t;
 
+/**@brief Loads the user's profile from device persistent storage. */
+uint32_t user_profile_load(user_profile_t *p_user_profile);
+
+/**@brief Stores user profile in persistent storage on the device. */
+uint32_t user_profile_store(user_profile_t *p_user_profile);
+
 #endif // __USER_PROFILE_H__
