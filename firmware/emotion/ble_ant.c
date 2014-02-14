@@ -6,18 +6,6 @@
  *					initializing the BLE and ANT stacks.
  */
 
-/* Copyright (c) 2013 Nordic Semiconductor. All Rights Reserved.
- *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
- *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
- *
- */
-
 #include <stdint.h>
 #include <string.h>
 #include "ble_ant.h"
@@ -41,8 +29,6 @@
 #include "irt_emotion.h"
 #include "irt_peripheral.h"
 #include "ant_bike_power.h"
-#include "ble_bas.h"
-#include "ble_hrs.h"
 #include "ble_dis.h"
 #include "ble_nus.h"
 #include "ble_cps.h"
@@ -76,7 +62,7 @@ static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;
 static bool                             m_is_advertising = false;                    /**< True when in advertising state, False otherwise. */
 static ble_gap_sec_params_t             m_sec_params;                                /**< Security requirements for this application. */
 static ble_gap_adv_params_t             m_adv_params;                                /**< Parameters to be passed to the stack when starting advertising. */
-static ble_hrs_t                        m_hrs;                                       /**< Structure used to identify the heart rate service. */
+
 #if defined(BLE_NUS_ENABLED)
 static ble_nus_t                       	m_nus;																			 // BLE UART service for debugging purposes.
 #endif
@@ -86,7 +72,7 @@ static ant_ble_evt_handlers_t * 				mp_ant_ble_evt_handlers;
 
 static void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length)
 {
-		mp_ant_ble_evt_handlers->on_ble_uart(data, length);
+	mp_ant_ble_evt_handlers->on_ble_uart(data, length);
 }
 
 /**@brief Assert macro callback function.
@@ -122,7 +108,7 @@ static void gap_params_init(void)
     err_code = sd_ble_gap_device_name_set(&sec_mode, (uint8_t const*)DEVICE_NAME, strlen(DEVICE_NAME));
     APP_ERROR_CHECK(err_code);
 
-    err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_HEART_RATE_SENSOR_HEART_RATE_BELT);
+    err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_CYCLING_POWER_SENSOR);
     APP_ERROR_CHECK(err_code);
     
     memset(&gap_conn_params, 0, sizeof(gap_conn_params));
@@ -151,11 +137,10 @@ static void advertising_init(void)
     
     ble_uuid_t adv_uuids[] = 
     {
-        {BLE_UUID_HEART_RATE_SERVICE,         BLE_UUID_TYPE_BLE}, 
-        {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE},
-				{BLE_UUID_CYCLING_POWER_SERVICE, 			BLE_UUID_TYPE_BLE}
+        {BLE_UUID_DEVICE_INFORMATION_SERVICE, 	BLE_UUID_TYPE_BLE},
+		{BLE_UUID_CYCLING_POWER_SERVICE, 		BLE_UUID_TYPE_BLE}
 #if defined(BLE_NUS_ENABLED)
-				,{BLE_UUID_NUS_SERVICE, 								m_nus.uuid_type}
+		,{BLE_UUID_NUS_SERVICE, 				m_nus.uuid_type}
 #endif
     };
 
@@ -201,33 +186,6 @@ static void ble_dis_service_init()
     APP_ERROR_CHECK(err_code);	
 }
 
-static void ble_hrs_service_init()
-{
-    uint32_t       err_code;
-    ble_hrs_init_t hrs_init;
-    uint8_t        body_sensor_location;
-    
-    // Initialize Heart Rate Service
-    body_sensor_location = BLE_HRS_BODY_SENSOR_LOCATION_FINGER;
-    
-    memset(&hrs_init, 0, sizeof(hrs_init));
-    
-    hrs_init.evt_handler                 = NULL;
-    hrs_init.is_sensor_contact_supported = false;
-    hrs_init.p_body_sensor_location      = &body_sensor_location;
-
-    // Here the sec level for the Heart Rate Service can be changed/increased.
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&hrs_init.hrs_hrm_attr_md.cccd_write_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&hrs_init.hrs_hrm_attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&hrs_init.hrs_hrm_attr_md.write_perm);
-
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&hrs_init.hrs_bsl_attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&hrs_init.hrs_bsl_attr_md.write_perm);
-
-    err_code = ble_hrs_init(&m_hrs, &hrs_init);
-    APP_ERROR_CHECK(err_code);	
-}
-
 static void ble_nus_service_init()
 {
 #if defined(BLE_NUS_ENABLED)
@@ -242,27 +200,27 @@ static void ble_nus_service_init()
 #endif
 }
 
+//
+// Initialize Cycling Power Service
+//
 static void ble_cps_service_init()
 {
-		uint32_t       err_code;
-		ble_cps_init_t cps_init;
-		
-		//
-		// Initialize Cycling Power Service
-		//
-		uint8_t sensor_location = BLE_CPS_SENSOR_LOCATION_REAR_WHEEL;
-		
-		memset(&cps_init, 0, sizeof(cps_init));
-		
-		cps_init.p_sensor_location = &sensor_location;
-		cps_init.feature = BLE_CPS_FEATURE_WHEEL_REV_BIT; /*BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT | */ 
-						   
-		cps_init.rc_evt_handler = mp_ant_ble_evt_handlers->on_set_resistance;
+	uint32_t       err_code;
+	ble_cps_init_t cps_init;
 
-    // Here the sec level for the Cycling Power Service can be changed/increased.
-		// TODO: all of this could be put into the ble_cps_init function, no need because
-		// we're never going to change the permission level, it's as defined in the 
-		// bluetooth specification for the service.
+	uint8_t sensor_location = BLE_CPS_SENSOR_LOCATION_REAR_WHEEL;
+
+	memset(&cps_init, 0, sizeof(cps_init));
+
+	cps_init.p_sensor_location = &sensor_location;
+	cps_init.feature = BLE_CPS_FEATURE_WHEEL_REV_BIT; /*BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT | */
+
+	cps_init.rc_evt_handler = mp_ant_ble_evt_handlers->on_set_resistance;
+
+	// Here the sec level for the Cycling Power Service can be changed/increased.
+	// TODO: all of this could be put into the ble_cps_init function, no need because
+	// we're never going to change the permission level, it's as defined in the
+	// bluetooth specification for the service.
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_sl_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_sl_attr_md.write_perm);
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_cpf_attr_md.read_perm);
@@ -270,8 +228,8 @@ static void ble_cps_service_init()
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cps_init.cps_cpm_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&cps_init.cps_cpm_attr_md.write_perm);
 
-		err_code = ble_cps_init(&m_cps, &cps_init);
-		APP_ERROR_CHECK(err_code);	
+	err_code = ble_cps_init(&m_cps, &cps_init);
+	APP_ERROR_CHECK(err_code);
 }
 
 
@@ -281,10 +239,9 @@ static void ble_cps_service_init()
  */
 static void services_init(void)
 {
-	ble_dis_service_init();
-	ble_hrs_service_init();
-	ble_nus_service_init();
-	ble_cps_service_init();
+	ble_dis_service_init();		// Discovery Service
+	ble_nus_service_init();		// Debug Info Service (BLE_UART)
+	ble_cps_service_init();		// Cycling Power Service
 }
 
 
@@ -313,7 +270,7 @@ static void advertising_start(void)
     
     m_is_advertising = true;
 		
-		mp_ant_ble_evt_handlers->on_ble_advertising();
+	mp_ant_ble_evt_handlers->on_ble_advertising();
 }
 
 
@@ -367,26 +324,13 @@ static void conn_params_init(void)
     cp_init.first_conn_params_update_delay = FIRST_CONN_PARAMS_UPDATE_DELAY;
     cp_init.next_conn_params_update_delay  = NEXT_CONN_PARAMS_UPDATE_DELAY;
     cp_init.max_conn_params_update_count   = MAX_CONN_PARAMS_UPDATE_COUNT;
-    cp_init.start_on_notify_cccd_handle    = m_hrs.hrm_handles.cccd_handle; // TODO: need to change this and remove hrs service.
+    cp_init.start_on_notify_cccd_handle    = BLE_GATT_HANDLE_INVALID; // m_hrs.hrm_handles.cccd_handle; // TODO: need to change this and remove hrs service.
     cp_init.disconnect_on_fail             = false;
     cp_init.evt_handler                    = on_conn_params_evt;
     cp_init.error_handler                  = conn_params_error_handler;
     
     err_code = ble_conn_params_init(&cp_init);
     APP_ERROR_CHECK(err_code);
-}
-
-static __INLINE bool is_message_to_process(uint8_t message_id)
-{
-    switch (message_id)
-    {
-        case MESG_BROADCAST_DATA_ID:
-        case MESG_BURST_DATA_ID:
-				case MESG_ACKNOWLEDGED_DATA_ID:
-            return true;
-        default:
-						return false;
-    }
 }
 
 /**@brief ANT CHANNEL_CLOSED event handler.
@@ -437,12 +381,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     {
         case BLE_GAP_EVT_CONNECTED:
             m_is_advertising = false;
-						mp_ant_ble_evt_handlers->on_ble_connected();
+			mp_ant_ble_evt_handlers->on_ble_connected();
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             break;
             
         case BLE_GAP_EVT_DISCONNECTED:
-						mp_ant_ble_evt_handlers->on_ble_disconnected();
+			mp_ant_ble_evt_handlers->on_ble_disconnected();
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
             break;
@@ -483,7 +427,6 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
     ble_cps_on_ble_evt(&m_cps, p_ble_evt);
-	ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
 #if defined(BLE_NUS_ENABLED)
 	ble_nus_on_ble_evt(&m_nus, p_ble_evt);
