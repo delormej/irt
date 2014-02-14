@@ -23,28 +23,27 @@
 #include "ble_ant.h"
 #include "nordic_common.h"
 #include "nrf.h"
+#include "nrf_soc.h"
+#include "nrf51_bitfields.h"
 #include "softdevice_handler.h"
 #include "ant_stack_handler_types.h"
 #include "app_error.h"
-#include "nrf51_bitfields.h"
+#include "app_timer.h"
+#include "ant_parameters.h"
+#include "ant_interface.h"
+#include "pstorage.h"
 #include "ble.h"
 #include "ble_hci.h"
 #include "ble_srv_common.h"
 #include "ble_advdata.h"
+#include "ble_conn_params.h"
+#include "ble_sensorsim.h"
+#include "irt_emotion.h"
+#include "irt_peripheral.h"
+#include "ant_bike_power.h"
 #include "ble_bas.h"
 #include "ble_hrs.h"
 #include "ble_dis.h"
-#include "ble_conn_params.h"
-#include "ble_sensorsim.h"
-#include "ble_bondmngr.h"
-#include "app_timer.h"
-#include "ant_parameters.h"
-#include "ant_interface.h"
-#include "nrf_soc.h"
-#include "pstorage.h"
-#include "irt_peripheral.h"
-#include "irt_emotion.h"
-#include "ant_bike_power.h"
 #include "ble_nus.h"
 #include "ble_cps.h"
 #include "ble_gap.h"
@@ -70,9 +69,6 @@
 #define SEC_PARAM_OOB                   0                                            /**< Out Of Band data not available. */
 #define SEC_PARAM_MIN_KEY_SIZE          7                                            /**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE          16                                           /**< Maximum encryption key size. */
-
-#define FLASH_PAGE_SYS_ATTR             (NRF_FICR->CODESIZE - 3)                     /**< Flash page used for bond manager system attribute information. */
-#define FLASH_PAGE_BOND                 (NRF_FICR->CODESIZE - 1)                     /**< Flash page used for bond manager bonding information. */
 
 #define DEAD_BEEF                       0xDEADBEEF                                   /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
@@ -285,10 +281,10 @@ static void ble_cps_service_init()
  */
 static void services_init(void)
 {
-		ble_dis_service_init();
-		ble_hrs_service_init();
-		ble_nus_service_init();
-		ble_cps_service_init();
+	ble_dis_service_init();
+	ble_hrs_service_init();
+	ble_nus_service_init();
+	ble_cps_service_init();
 }
 
 
@@ -393,69 +389,6 @@ static __INLINE bool is_message_to_process(uint8_t message_id)
     }
 }
 
-static void ant_data_hrm_messages_handle(ant_evt_t * p_ant_evt)
-{
-		// Determie if this is an interesting event or not.
-		if ( !is_message_to_process( p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] ))
-		{
-			return;
-		}
-	
-		uint8_t * p_evt_buffer = p_ant_evt->evt_buffer;
-	
-    static uint32_t s_previous_beat_count = 0;    // Heart beat count from previously received page
-    uint32_t        err_code;
-    uint32_t        current_page;
-    uint8_t         beat_count;
-    uint8_t         computed_heart_rate;
-    uint16_t        beat_time;
-
-    // Decode the default page data present in all pages
-    beat_time           = uint16_decode(&p_evt_buffer[ANT_BUFFER_INDEX_MESG_DATA + 4]);
-    beat_count          = (uint8_t)p_evt_buffer[ANT_BUFFER_INDEX_MESG_DATA + 6];
-    computed_heart_rate = (uint8_t)p_evt_buffer[ANT_BUFFER_INDEX_MESG_DATA + 7];
-
-    // Decode page specific data
-    current_page = p_evt_buffer[ANT_BUFFER_INDEX_MESG_DATA];
-    switch (current_page & ~ANT_HRM_TOGGLE_MASK)
-    {
-        case ANT_HRM_PAGE_4:
-            // Ensure that there is only one beat between time intervals.
-            if ((beat_count - s_previous_beat_count) == 1)
-            {
-                uint16_t prev_beat = uint16_decode(&p_evt_buffer[ANT_BUFFER_INDEX_MESG_DATA + 2]);
-                
-                // Subtracting the event time gives the R-R interval
-                ble_hrs_rr_interval_add(&m_hrs, beat_time - prev_beat);
-            }
-
-            s_previous_beat_count = beat_count;
-            break;
-          
-        case ANT_HRM_PAGE_0:
-        case ANT_HRM_PAGE_1:
-        case ANT_HRM_PAGE_2:
-        case ANT_HRM_PAGE_3:
-        default:
-            break;
-    }
-    
-    // Notify the received heart rate measurement
-    err_code = ble_hrs_heart_rate_measurement_send(&m_hrs, computed_heart_rate);
-    if (
-        (err_code != NRF_SUCCESS)
-        &&
-        (err_code != NRF_ERROR_INVALID_STATE)
-        &&
-        (err_code != BLE_ERROR_NO_TX_BUFFERS)
-        &&
-        (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
-    )
-    {
-        APP_ERROR_HANDLER(err_code);
-    }
-}
-
 /**@brief ANT CHANNEL_CLOSED event handler.
  */
 static void on_ant_evt_channel_closed(void)
@@ -464,10 +397,8 @@ static void on_ant_evt_channel_closed(void)
 
     if (!m_is_advertising && (m_conn_handle == BLE_CONN_HANDLE_INVALID))
     {
-				// TOOD: ensure this is safe to do, i.e. that the timers are running, etc...
-        // We do not have any activity on the radio at this time, so it is safe to store bonds
-        //err_code = ble_bondmngr_bonded_masters_store();
-        //APP_ERROR_CHECK(err_code);
+        // We do not have any activity on the radio at this time, so it is safe
+    	// persist to storage if we have to.
         
         // ANT channel was closed due to a BLE disconnection, restart advertising
         advertising_start();
@@ -486,9 +417,6 @@ static void on_ant_evt(ant_evt_t * p_ant_evt)
 {
 		switch (p_ant_evt->channel)
 		{
-			case ANT_HRMRX_ANT_CHANNEL:
-				ant_data_hrm_messages_handle(p_ant_evt);
-				break;
 			case ANT_BP_TX_CHANNEL:
 				ant_bp_rx_handle(p_ant_evt);
 				break;
@@ -517,12 +445,6 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 						mp_ant_ble_evt_handlers->on_ble_disconnected();
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
-            // Need to close the ANT channel to make it safe to write bonding information to flash
-            err_code = sd_ant_channel_close(ANT_HRMRX_ANT_CHANNEL);
-            APP_ERROR_CHECK(err_code);
-            
-            // Note: Bonding information will be stored, advertising will be restarted and the
-            //       ANT channel will be reopened when ANT event CHANNEL_CLOSED is received.
             break;
 
         case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
@@ -560,12 +482,11 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
  */
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 {
-    ble_bondmngr_on_ble_evt(p_ble_evt);
     ble_cps_on_ble_evt(&m_cps, p_ble_evt);
-		ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
+	ble_hrs_on_ble_evt(&m_hrs, p_ble_evt);
     ble_conn_params_on_ble_evt(p_ble_evt);
 #if defined(BLE_NUS_ENABLED)
-		ble_nus_on_ble_evt(&m_nus, p_ble_evt);
+	ble_nus_on_ble_evt(&m_nus, p_ble_evt);
 #endif		
     on_ble_evt(p_ble_evt);
 }
@@ -586,38 +507,6 @@ static void ble_ant_stack_init(void)
         
     // Subscribe for ANT events.
     err_code = softdevice_ant_evt_handler_set(on_ant_evt);
-    APP_ERROR_CHECK(err_code);
-}
-
-/**@brief Bond Manager module error handler.
- *
- * @param[in]   nrf_error   Error code containing information about what went wrong.
- */
-static void bond_manager_error_handler(uint32_t nrf_error)
-{
-    APP_ERROR_HANDLER(nrf_error);
-}
-
-
-/**@brief Bond Manager initialization.
- */
-static void bond_manager_init(void)
-{
-    uint32_t            err_code;
-    ble_bondmngr_init_t bond_init_data;
-    bool                bonds_delete;
-
-    // Clear all bonded masters if the Bonds Delete button is pushed
-    //bonds_delete = (nrf_gpio_pin_read(BONDMNGR_DELETE_BUTTON_PIN) == 0);
-
-    // Initialize the Bond Manager
-    bond_init_data.flash_page_num_bond     = FLASH_PAGE_BOND;
-    bond_init_data.flash_page_num_sys_attr = FLASH_PAGE_SYS_ATTR;
-    bond_init_data.evt_handler             = NULL;
-    bond_init_data.error_handler           = bond_manager_error_handler;
-    bond_init_data.bonds_delete            = bonds_delete;
-
-    err_code = ble_bondmngr_init(&bond_init_data);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -668,19 +557,16 @@ void power_manage(void)
 
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 {
-		// Event pointers.
-		mp_ant_ble_evt_handlers = ant_ble_evt_handlers;
+	// Event pointers.
+	mp_ant_ble_evt_handlers = ant_ble_evt_handlers;
 	
-		// Initialize S310 SoftDevice
+	// Initialize S310 SoftDevice
     ble_ant_stack_init();
 		
     // Initialize persistent storage module.
     uint32_t err_code;
-		err_code = pstorage_init();
+	err_code = pstorage_init();
     APP_ERROR_CHECK(err_code);		
-    
-    // Initialize Bluetooth helper modules
-    bond_manager_init();
     
     // Initialize Bluetooth stack parameters
     gap_params_init();
@@ -698,6 +584,6 @@ void ble_ant_start()
     // Start execution
     advertising_start();
 		
-		// Open the ANT channel for transmitting power.
-		ant_bp_tx_start();
+	// Open the ANT channel for transmitting power.
+	ant_bp_tx_start();
 }

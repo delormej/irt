@@ -12,10 +12,8 @@ APPLICATION_SRCS += ble_bas.c
 APPLICATION_SRCS += ble_hrs.c
 APPLICATION_SRCS += app_timer.c
 APPLICATION_SRCS += ble_conn_params.c
-APPLICATION_SRCS += ble_bondmngr.c
 APPLICATION_SRCS += ble_debug_assert_handler.c
 APPLICATION_SRCS += pstorage.c
-APPLICATION_SRCS += crc16.c
 APPLICATION_SRCS += nrf_delay.c
 
 SOURCE_PATHS +=  ../libraries/
