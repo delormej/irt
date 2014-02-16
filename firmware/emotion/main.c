@@ -27,6 +27,7 @@
 #include <string.h>
 #include "nordic_common.h"
 #include "nrf_error.h"
+#include "app_scheduler.h"
 #include "irt_common.h"
 #include "irt_peripheral.h"
 #include "resistance.h"
@@ -39,6 +40,10 @@
 #define CYCLING_POWER_MEAS_INTERVAL		APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER) /**< Bike power measurement interval (ticks). */
 #define DEFAULT_WHEEL_SIZE_MM			2070u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
+
+#define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
+                                            BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
+#define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
 
 static uint8_t 							m_resistance_level = 0;
 static resistance_mode_t				m_resistance_mode = RESISTANCE_SET_STANDARD;
@@ -440,6 +445,16 @@ static void timers_init(void)
 
 }
 
+/**@brief Scheduler initialization.
+ *
+ * @details Initializes the scheduler module which is used under the covers to send
+ * the ANT/BLE messages.
+ */
+static void scheduler_init(void)
+{
+    APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
+}
+
 /*----------------------------------------------------------------------------
  * Event handlers
  * ----------------------------------------------------------------------------*/
@@ -630,6 +645,9 @@ int main(void)
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
 	peripheral_init(&on_peripheral_handlers);
 
+	// Initialize the scheduler.
+	scheduler_init();
+
 	// ANT+, BLE event handlers.
 	static ant_ble_evt_handlers_t ant_ble_handlers = {
 		on_ble_connected,
@@ -663,7 +681,7 @@ int main(void)
     // Enter main loop
     for (;;)
     {
-        // TODO: this doesn't actually power manage today?
+    	app_sched_execute();
     	power_manage();
     }
 }

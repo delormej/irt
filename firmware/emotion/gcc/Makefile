@@ -9,6 +9,7 @@ APPLICATION_SRCS += ble_advdata.c
 APPLICATION_SRCS += ble_srv_common.c
 APPLICATION_SRCS += ble_dis.c
 APPLICATION_SRCS += app_timer.c
+APPLICATION_SRCS += app_scheduler.c 
 APPLICATION_SRCS += ble_conn_params.c
 APPLICATION_SRCS += ble_debug_assert_handler.c
 APPLICATION_SRCS += pstorage.c

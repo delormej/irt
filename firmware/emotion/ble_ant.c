@@ -442,7 +442,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 static void ble_ant_stack_init(void)
 {
     // Initialize SoftDevice
-    SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, false);
+    SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, true);
     
     // Subscribe for BLE events.
     uint32_t err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
