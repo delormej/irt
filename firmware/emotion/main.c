@@ -96,6 +96,13 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     NVIC_SystemReset();
 }
 
+/**@brief	Handle Soft Device system events. */
+static void sys_evt_dispatch(uint32_t sys_evt)
+{
+	// TODO: Process storage events.
+	//pstorage_sys_event_handler(sys_evt);
+}
+
 /*----------------------------------------------------------------------------
  * KICKR resistance commands.
  * ----------------------------------------------------------------------------*/
@@ -700,6 +707,11 @@ int main(void)
 
 	// Initializes the soft device, Bluetooth and ANT stacks.
 	ble_ant_init(&ant_ble_handlers);
+
+    // Subscribe for system events.
+	uint32_t err_code;
+    err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
+    APP_ERROR_CHECK(err_code);
 
 	// Begin advertising and receiving ANT messages.
 	ble_ant_start();
