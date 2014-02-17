@@ -248,6 +248,13 @@ void set_wheel_size(uint16_t wheel_size_mm)
 	m_flywheel_to_wheel_revs 	= (wheel_size_mm/1000)*ratio;
 }
 
+/**@brief Simulates the flywheel moving. */
+void speed_simulate_flywheel_rev(uint8_t count)
+{
+	while (count--)
+		REVS_TIMER->TASKS_COUNT = 1;
+}
+
 void init_speed(uint32_t pin_flywheel_rev)
 {
 	set_wheel_size(DEFAULT_WHEEL_SIZE_MM);	

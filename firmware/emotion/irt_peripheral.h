@@ -7,7 +7,7 @@
 #define BONDMNGR_DELETE_BUTTON_PIN      11                             /**< Button used for deleting all bonded masters during startup. */
 
 #define APP_TIMER_PRESCALER             0                                            /**< Value of the RTC1 PRESCALER register. */
-#define APP_TIMER_MAX_TIMERS            3                                            /**< Maximum number of simultaneously created timers. */
+#define APP_TIMER_MAX_TIMERS            4                                            /**< Maximum number of simultaneously created timers. */
 #define APP_TIMER_OP_QUEUE_SIZE         4                                            /**< Size of timer operation queues. */
 
 #define APP_GPIOTE_MAX_USERS            1                                         	 /**< Maximum number of users of the GPIOTE handler. */

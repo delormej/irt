@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "nordic_common.h"
+#include "softdevice_handler.h"
 #include "nrf_error.h"
 #include "app_scheduler.h"
 #include "irt_common.h"
@@ -49,6 +50,8 @@ static uint8_t 							m_resistance_level = 0;
 static resistance_mode_t				m_resistance_mode = RESISTANCE_SET_STANDARD;
 static uint16_t							m_servo_pos;
 static app_timer_id_t               	m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
+static app_timer_id_t               	m_simulate_speed_timer_id;
+
 static bool								mb_profile_dirty = false;
 static user_profile_t 					m_user_profile;
 static rc_sim_forces_t					m_sim_forces;
@@ -92,7 +95,6 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     // On assert, the system can only recover with a reset.
     NVIC_SystemReset();
 }
-
 
 /*----------------------------------------------------------------------------
  * KICKR resistance commands.
@@ -408,6 +410,41 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 			profile_update();
 }
 
+static void simulate_speed_timeout_handler(void)
+{
+	const float wheel_size_m = 2.07f;
+	const float wheel_to_flywheel_ratio = 18.5218325f;
+
+	float speed_kmh = 28.0f;
+
+	float wheel_revs_sec = ((speed_kmh/3600)*1000)/wheel_size_m;
+
+	// 3 times per second.
+	int flywheel_revs_sec = (int)((wheel_revs_sec * wheel_to_flywheel_ratio)/3);
+
+	speed_simulate_flywheel_rev(flywheel_revs_sec);
+}
+
+static void simulate_speed_start(float speed_kmh)
+{
+	// This function simulates the flywheel spinning for DEBUG purposes.
+	// It calculates what the speed of the flywheel would be and sets up a
+	// timer to simulate the flywheel revs on that frequency.
+	const uint32_t ticks = APP_TIMER_TICKS(333, APP_TIMER_PRESCALER);
+	uint32_t err_code;
+
+    err_code = app_timer_create(&m_simulate_speed_timer_id,
+                                APP_TIMER_MODE_REPEATED,
+                                simulate_speed_timeout_handler);
+
+    err_code = app_timer_start(m_simulate_speed_timer_id, ticks, NULL);
+}
+
+static void simlate_speed_stop(void)
+{
+	app_timer_stop(&m_simulate_speed_timer_id);
+}
+
 /**@brief Function for starting the application timers.
  */
 static void application_timers_start(void)
@@ -421,9 +458,9 @@ static void application_timers_start(void)
 
 static void application_timers_stop(void)
 {
-		uint32_t err_code;
+	uint32_t err_code;
 		
-		err_code = app_timer_stop(m_cycling_power_timer_id);
+	err_code = app_timer_stop(m_cycling_power_timer_id);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -618,7 +655,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 #endif		
 
 }
-		
+
 /*----------------------------------------------------------------------------
  * Main program functions
  * ----------------------------------------------------------------------------*/
@@ -629,6 +666,9 @@ int main(void)
 {
 	// initialize the user profile.
 	profile_init();
+
+	// Initialize the scheduler.
+	scheduler_init();
 
 	// Initialize timers.
 	timers_init();
@@ -644,10 +684,6 @@ int main(void)
 
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
 	peripheral_init(&on_peripheral_handlers);
-
-	// Initialize the scheduler.
-	scheduler_init();
-
 	// ANT+, BLE event handlers.
 	static ant_ble_evt_handlers_t ant_ble_handlers = {
 		on_ble_connected,
@@ -660,7 +696,9 @@ int main(void)
 		on_set_resistance
 	};
 
-	// Initialize Bluetooth and ANT stacks.
+	// TODO: Question should we have a separate method to initialize soft device?
+
+	// Initializes the soft device, Bluetooth and ANT stacks.
 	ble_ant_init(&ant_ble_handlers);
 
 	// Begin advertising and receiving ANT messages.
@@ -677,6 +715,9 @@ int main(void)
 
 	// Start the main loop for reporting ble services.
 	application_timers_start();
+
+	// DEBUG ONLY:
+	simulate_speed_start(0.0f);
 
     // Enter main loop
     for (;;)

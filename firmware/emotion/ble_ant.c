@@ -451,6 +451,12 @@ static void ble_ant_stack_init(void)
     // Subscribe for ANT events.
     err_code = softdevice_ant_evt_handler_set(on_ant_evt);
     APP_ERROR_CHECK(err_code);
+
+    // TODO: implement system event handler callback
+    /*
+    // Subscribe for system events.
+    err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
+    APP_ERROR_CHECK(err_code);*/
 }
 
 void debug_send(uint8_t * data, uint16_t length)
