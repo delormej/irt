@@ -393,13 +393,13 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		switch (m_resistance_mode)
 		{
 			case RESISTANCE_SET_ERG:
-				set_resistance_erg(&m_user_profile, 
+				m_servo_pos = set_resistance_erg(&m_user_profile,
 													&m_sim_forces,
 													&power_meas);
 				break;
 				
 			case RESISTANCE_SET_SIM:
-				set_resistance_sim(&m_user_profile,
+				m_servo_pos = set_resistance_sim(&m_user_profile,
 													&m_sim_forces,
 													&power_meas);
 				break;
@@ -627,6 +627,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 
 		case RESISTANCE_SET_ERG:
 			// Assign target watt level.
+			m_resistance_mode = rc_evt.operation;
 			m_sim_forces.erg_watts = 
 				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u;
 			break;
