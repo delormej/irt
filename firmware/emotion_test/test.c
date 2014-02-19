@@ -56,25 +56,38 @@ float get_temp(void)
 	}
 }
 
+typedef struct
+{
+	int x;
+	int y;
+	float f;
+} my_t;
+
+
+int get_addr(my_t** pp_my_t)
+{
+
+	my_t* p_my;
+	p_my = (my_t*)calloc(1, sizeof(my_t));
+	p_my->f = 3.14f;
+	*pp_my_t = p_my;
+}
+
 
 int main(int argc, char *argv [])
 {
-	
-#define MMA8652FC_I2C_ADDRESS		0x1D // always address using read/write
-#define MMA8652FC_WRITE				(MMA8652FC_I2C_ADDRESS << 1)
-#define MMA8652FC_READ				(MMA8652FC_WRITE | 0x1)
+	printf("Press any key.");
+	scanf("Starting...");
+	/*
+	my_t* p_my;
+	my_t** pp_my;
+	get_addr(pp_my);
 
-	printf("READ: %i, WRITE: %i\n", MMA8652FC_READ, MMA8652FC_WRITE);
+	p_my = *pp_my;
+	*/
 
-	int i = scanf("Any key to start...");
+	my_t* p_my	= NULL;
+	get_addr(&p_my);
 
-	float temp = get_temp();
-	printf("Temp: %f\n", temp);
-
-	uint8_t buffer[4] = { 0x00, 0x00, 0xFF, 0x1F };
-	
-	float value = get_resistance_pct(&buffer[2]);
-	uint16_t position = get_position(value);
-
-	printf("val: ||%f, %i||", value, position);
+	printf("val: ||%f, %i||", p_my->f, p_my->x);
 }

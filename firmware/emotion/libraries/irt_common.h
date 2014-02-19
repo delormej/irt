@@ -13,15 +13,16 @@ All rights reserved.
 /*****************************************************************************
 * INSIDERIDE Defines
 *****************************************************************************/
-#define IRT_SUCCESS		0x0
+#define IRT_SUCCESS			0x0
 #define IRT_ERROR			0x1
+#define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 
 
 // TODO: This should be genericized to work for BLE & ANT
 /**@brief Cycling Power Service measurement type. */
 typedef struct irt_power_meas_s
 {
-	uint16_t  flags;																		// 16 bits defined here: https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
+	uint16_t  	flags;																		// 16 bits defined here: https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
 	int16_t		instant_power;         										// Note this is a SIGNED int16
 	uint8_t		pedal_power_balance;
 	uint16_t	accum_torque;															// Unit is in newton metres with a resolution of 1/32
@@ -38,12 +39,17 @@ typedef struct irt_power_meas_s
 	uint16_t	top_dead_spot_angle;											// Unit is in degrees with a resolution of 1. 
 	uint16_t	bottom_dead_spot_angle;										// Unit is in degrees with a resolution of 1. 
 	uint16_t	accum_energy;															// Unit is in kilojoules with a resolution of 1.
-	float			instant_speed_mps;
+	float		instant_speed_mps;
 	// TODO: these should be removed & seperated from power measurement.  
 	// This is only temporary until we use the scheduler.
 	uint8_t 	resistance_mode;
 	uint16_t	resistance_level;
+	uint16_t	servo_position;
 } irt_power_meas_t;
 
+// Abstracts a FIFO queue of events.
+uint32_t irt_power_meas_fifo_init(uint8_t size);
+void 	 irt_power_meas_fifo_free();
+uint32_t irt_power_meas_fifo_op(irt_power_meas_t** first, irt_power_meas_t** next);
 
 #endif // IRT_COMMON_H

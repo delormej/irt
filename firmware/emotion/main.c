@@ -299,18 +299,13 @@ static float get_sim_grade(uint8_t *buffer)
 /**@brief	Transmits the ant+ and ble power messages, returns speed & power stats.
  *
  */
-static irt_power_meas_t transmit_power(void)
+static int32_t calculate_power(irt_power_meas_t* p_power_meas)
 {
 		// Hang on to accumulated torque for a session duration.
 		// TODO: make sure this gets cleared at some point, probably
 		// the wrong spot to keep this.
 		static uint16_t 			m_accum_torque = 0;
-
-    uint32_t err_code;
-
-		// Initialize structures.
-		irt_power_meas_t power_meas;
-		memset(&power_meas, 0, sizeof(power_meas));
+		uint32_t err_code;
 		
 		speed_event_t			speed_event;
 		memset(&speed_event, 0, sizeof(speed_event));
@@ -332,29 +327,28 @@ static irt_power_meas_t transmit_power(void)
 		// TODO: Handle the error for real here, not sure what the overall error 
 		// handling strategy will be, but this is not critical, just move on.
 		if (err_code != IRT_SUCCESS)
-			return power_meas;		
+			return err_code;
 			
 		// Calculate torque.
 		uint16_t 	torque				= 0;
 		err_code = calc_torque(watts, speed_event.period_2048, &torque);
 		if (err_code != IRT_SUCCESS)
 			// TODO: handle error here, or at least bubble up.
-			return power_meas;
+			return err_code;
 		
 		// Store accumulated torque for the session.
 		m_accum_torque += torque;
 		
-		power_meas.instant_power 				= watts;
-		power_meas.accum_torque 				= m_accum_torque;
-		power_meas.accum_wheel_revs 		= speed_event.accum_wheel_revs;
-		power_meas.last_wheel_event_time= speed_event.event_time_2048;
+		p_power_meas->instant_power 				= watts;
+		p_power_meas->accum_torque 				= m_accum_torque;
+		p_power_meas->accum_wheel_revs 		= speed_event.accum_wheel_revs;
+		p_power_meas->last_wheel_event_time= speed_event.event_time_2048;
 		
-		power_meas.resistance_mode			= m_resistance_mode;
-		power_meas.resistance_level			= m_resistance_level;
+		p_power_meas->resistance_mode			= m_resistance_mode;
+		p_power_meas->resistance_level			= m_resistance_level;
+		p_power_meas->servo_position			= m_servo_pos;
 
-		power_meas.instant_speed_mps		= speed_event.speed_mps;
-
-		cycling_power_send(&power_meas);
+		p_power_meas->instant_speed_mps		= speed_event.speed_mps;
 
 #if defined(BLE_NUS_ENABLED)
 		static const char format[] = "r,w,l:%i,%i,%i";
@@ -367,8 +361,7 @@ static irt_power_meas_t transmit_power(void)
 		debug_send(message, sizeof(message));
 #endif			
 
-		// Return power measurement.
-		return power_meas;
+		return IRT_SUCCESS;
 }
 
 /*----------------------------------------------------------------------------
@@ -384,37 +377,55 @@ static irt_power_meas_t transmit_power(void)
  */
 static void cycling_power_meas_timeout_handler(void * p_context)
 {
-	  UNUSED_PARAMETER(p_context);
-	
-		// Calculate and transmit power messages.
-		irt_power_meas_t power_meas = transmit_power();
-		
-		// If in erg or sim mode, adjust resistance accordingly. 
-		switch (m_resistance_mode)
-		{
-			case RESISTANCE_SET_ERG:
-				m_servo_pos = set_resistance_erg(&m_user_profile,
-													&m_sim_forces,
-													&power_meas);
-				break;
-				
-			case RESISTANCE_SET_SIM:
-				m_servo_pos = set_resistance_sim(&m_user_profile,
-													&m_sim_forces,
-													&power_meas);
-				break;
-				
-			default:
-				break;
-		}
+	UNUSED_PARAMETER(p_context);
+	uint32_t err_code;
+	irt_power_meas_t* p_power_meas_current 		= NULL;
+	irt_power_meas_t* p_power_meas_first 		= NULL;
 
-		// TODO: ideally we run from a battery and we don't have
-		// to do this here.  This is just in case the cord some
-		// how gets yanked before it's time to shutdown.
-		// Only attempt this if dirty is set and every 10 transmits.
-		static uint8_t counter = 1;
-		if (mb_profile_dirty && (counter++ %10))
-			profile_update();
+	// Get pointers to the event structures.
+	err_code = irt_power_meas_fifo_op(&p_power_meas_first, &p_power_meas_current);
+
+	// TODO: handle error here with more info.
+	if (err_code != IRT_SUCCESS)
+		return;
+
+	// Calculate the power.
+	err_code = calculate_power(p_power_meas_current);
+
+	// TODO: handle error here with more info.
+	if (err_code != IRT_SUCCESS)
+		return;
+
+	// TODO: this should return an err_code.
+	// Transmit the power message.
+	cycling_power_send(p_power_meas_current);
+
+	// If in erg or sim mode, adjust resistance accordingly.
+	switch (m_resistance_mode)
+	{
+		case RESISTANCE_SET_ERG:
+			m_servo_pos = set_resistance_erg(&m_user_profile,
+												&m_sim_forces,
+												p_power_meas_current);
+			break;
+
+		case RESISTANCE_SET_SIM:
+			m_servo_pos = set_resistance_sim(&m_user_profile,
+												&m_sim_forces,
+												p_power_meas_current);
+			break;
+
+		default:
+			break;
+	}
+
+	// TODO: ideally we run from a battery and we don't have
+	// to do this here.  This is just in case the cord some
+	// how gets yanked before it's time to shutdown.
+	// Only attempt this if dirty is set and every 10 transmits.
+	static uint8_t counter = 1;
+	if (mb_profile_dirty && (counter++ %10))
+		profile_update();
 }
 
 static void simulate_speed_timeout_handler(void)
@@ -664,6 +675,19 @@ static void on_set_resistance(rc_evt_t rc_evt)
 
 }
 
+// TODO: This event should be registered for a callback when it's time to
+// power the system down.
+static void on_power_down(void)
+{
+	uint32_t err_code;
+
+	// Free heap allocation.
+	irt_power_meas_fifo_free();
+
+	// Shut the system down.
+	err_code = sd_power_system_off();
+}
+
 /*----------------------------------------------------------------------------
  * Main program functions
  * ----------------------------------------------------------------------------*/
@@ -692,6 +716,7 @@ int main(void)
 
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
 	peripheral_init(&on_peripheral_handlers);
+
 	// ANT+, BLE event handlers.
 	static ant_ble_evt_handlers_t ant_ble_handlers = {
 		on_ble_connected,
@@ -725,6 +750,9 @@ int main(void)
 	init_speed(PIN_FLYWHEEL);
 	if (m_user_profile.wheel_size_mm > 0)
 		set_wheel_size(m_user_profile.wheel_size_mm);
+
+	// Initialize the FIFO queue for holding events.
+	irt_power_meas_fifo_init(IRT_FIFO_SIZE);
 
 	// Start the main loop for reporting ble services.
 	application_timers_start();
