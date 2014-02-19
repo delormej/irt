@@ -6,32 +6,22 @@
  *
  */
 #include "irt_common.h"
-#include "app_fifo.h"
 #include "nrf_error.h"
 
 static irt_power_meas_t* 	mp_buf_power_meas;
-static uint8_t*				mp_buf_dummy;
-static app_fifo_t			m_fifo;
 static uint8_t				m_buf_size;
+static uint8_t				m_fifo_index;
 
 uint32_t irt_power_meas_fifo_init(uint8_t size)
 {
 	uint32_t err_code;
-
 	m_buf_size = size;
 
 	// Allocate buffer on the heap for events.
 	mp_buf_power_meas = (irt_power_meas_t*)calloc(size, sizeof(irt_power_meas_t));
-	mp_buf_dummy = (uint8_t*)calloc(size, sizeof(uint8_t));
 
-	if (mp_buf_power_meas == 0 || mp_buf_dummy == 0)
+	if (mp_buf_power_meas == 0)
 		return NRF_ERROR_NO_MEM;
-
-	// Initialize fifo.
-	err_code = app_fifo_init(&m_fifo, mp_buf_dummy, (uint16_t)(sizeof(uint8_t)*size));
-
-	if (err_code != NRF_SUCCESS)
-		return err_code;
 
 	return IRT_SUCCESS;
 }
@@ -40,7 +30,6 @@ void irt_power_meas_fifo_free()
 {
 	// Free up the heap.
 	free(mp_buf_power_meas);
-	free(mp_buf_dummy);
 }
 
 /*
@@ -53,39 +42,32 @@ void irt_power_meas_fifo_free()
 uint32_t irt_power_meas_fifo_op(irt_power_meas_t** first, irt_power_meas_t** next)
 {
 	uint32_t err_code;
-	uint8_t dummy_byte;	// Use a dummy byte for the FIFO queue.
+	int8_t idx_write;
 
-	// Is buffer full?
-	if (m_fifo.write_pos == (m_fifo.read_pos + m_buf_size))
-	{
-		// Set pointer of the first event in the FIFO.
-		*first = &mp_buf_power_meas[m_fifo.read_pos];
+	// Increment the index.
+	m_fifo_index++;
 
-		// Pop off the first event to make room for a write.
-		err_code = app_fifo_get(&m_fifo, &dummy_byte);
+	// Determine index to write.
+	idx_write = m_fifo_index % m_buf_size;
 
-		if (err_code != NRF_SUCCESS)
-		{
-			return err_code;
-		}
-	}
-	else
+	// Determine index to read.
+	if (m_fifo_index < m_buf_size-1)
 	{
 		// FIFO isn't full, so don't return a first one yet.
 		*first = 0x0;
 	}
-
-	// Set pointer of the current event to write.
-	*next = &mp_buf_power_meas[m_fifo.write_pos];
-
-	// Advance the index of where to write the next event.
-	err_code = app_fifo_put(&m_fifo, dummy_byte);
-
-	if (err_code == NRF_ERROR_NO_MEM)
+	else
 	{
-		// Something went wrong because we caught this earlier.
+		// Return the pointer to the n-th item back in the stack.
+		*first = &mp_buf_power_meas[idx_write-m_buf_size];
 	}
 
-	return err_code;
+	// Clear the bytes.
+	memset(&mp_buf_power_meas[idx_write], 0, sizeof(irt_power_meas_t));
+
+	// Set pointer of the current event to write.
+	*next = &mp_buf_power_meas[idx_write];
+
+	return IRT_SUCCESS;
 }
 

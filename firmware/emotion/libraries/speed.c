@@ -124,7 +124,7 @@ static uint16_t get_seconds_2048()
 	return seconds_2048;
 }
 
-static float get_speed_mps(float wheel_revolutions, uint16_t period_seconds_2048)
+float get_speed_mps(float wheel_revolutions, uint16_t period_seconds_2048)
 {
 	if (wheel_revolutions == 0 || period_seconds_2048 == 0)
 		return 0.0f;

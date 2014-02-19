@@ -291,6 +291,41 @@ static float get_sim_grade(uint8_t *buffer)
 	return percent * 0.45;
 }
 
+static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_meas_t* p_power_meas_current)
+{
+	// Make a local copy we can modify.
+	irt_power_meas_t power_meas = *p_power_meas_current;
+
+	if (p_power_meas_first != 0)
+	{
+		// Average the watts & speed.
+		power_meas.instant_speed_mps = get_speed_mps(
+				(p_power_meas_current->accum_wheel_revs - p_power_meas_first->accum_wheel_revs),
+				(p_power_meas_current->last_wheel_event_time - p_power_meas_first->last_wheel_event_time));
+
+		power_meas.instant_power =
+				(p_power_meas_current->instant_power + p_power_meas_first->instant_power) /2;
+	}
+
+	// If in erg or sim mode, adjust resistance accordingly.
+	switch (m_resistance_mode)
+	{
+		case RESISTANCE_SET_ERG:
+			m_servo_pos = set_resistance_erg(&m_user_profile,
+												&m_sim_forces,
+												&power_meas);
+			break;
+
+		case RESISTANCE_SET_SIM:
+			m_servo_pos = set_resistance_sim(&m_user_profile,
+												&m_sim_forces,
+												&power_meas);
+			break;
+
+		default:
+			break;
+	}
+}
 
 /*----------------------------------------------------------------------------
  * Main function for calculating power and transmiting.
@@ -400,24 +435,7 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 	// Transmit the power message.
 	cycling_power_send(p_power_meas_current);
 
-	// If in erg or sim mode, adjust resistance accordingly.
-	switch (m_resistance_mode)
-	{
-		case RESISTANCE_SET_ERG:
-			m_servo_pos = set_resistance_erg(&m_user_profile,
-												&m_sim_forces,
-												p_power_meas_current);
-			break;
-
-		case RESISTANCE_SET_SIM:
-			m_servo_pos = set_resistance_sim(&m_user_profile,
-												&m_sim_forces,
-												p_power_meas_current);
-			break;
-
-		default:
-			break;
-	}
+	resistance_adjust(p_power_meas_first, p_power_meas_current);
 
 	// TODO: ideally we run from a battery and we don't have
 	// to do this here.  This is just in case the cord some

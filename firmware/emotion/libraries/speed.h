@@ -70,6 +70,11 @@ void set_wheel_size(uint16_t wheel_size_mm);
 */
 void calc_speed(speed_event_t* current_speed_event);
 
+/**@brief 	Calculates the current speed in meters per second.
+*
+*/
+float get_speed_mps(float wheel_revolutions, uint16_t period_seconds_2048);
+
 /**@brief		Converts speed from meters per second to kilometers per hour.
  *					
  */
