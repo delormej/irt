@@ -51,15 +51,17 @@ uint32_t irt_power_meas_fifo_op(irt_power_meas_t** first, irt_power_meas_t** nex
 	idx_write = m_fifo_index % m_buf_size;
 
 	// Determine index to read.
-	if (m_fifo_index < m_buf_size-1)
+	if (m_fifo_index < m_buf_size)
 	{
 		// FIFO isn't full, so don't return a first one yet.
 		*first = 0x0;
 	}
 	else
 	{
+		int8_t idx_read = ((m_fifo_index - m_buf_size+1) % m_buf_size);
+
 		// Return the pointer to the n-th item back in the stack.
-		*first = &mp_buf_power_meas[idx_write-m_buf_size];
+		*first = &mp_buf_power_meas[idx_read];
 	}
 
 	// Clear the bytes.
