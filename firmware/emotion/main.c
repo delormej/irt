@@ -296,7 +296,7 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 	// Make a local copy we can modify.
 	irt_power_meas_t power_meas = *p_power_meas_current;
 
-	if (p_power_meas_first != 0x0)
+	if (p_power_meas_first != NULL)
 	{
 		// Average the speed.  A new average power will get calculated based on this.
 		power_meas.instant_speed_mps = get_speed_mps(
@@ -432,7 +432,12 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 	// Transmit the power message.
 	cycling_power_send(p_power_meas_current);
 
-	resistance_adjust(p_power_meas_first, p_power_meas_current);
+	// If in erg or sim mode, adjusts the resistance.
+	if (m_resistance_mode == RESISTANCE_SET_ERG ||
+			m_resistance_mode == RESISTANCE_SET_SIM)
+	{
+		resistance_adjust(p_power_meas_first, p_power_meas_current);
+	}
 
 	// TODO: ideally we run from a battery and we don't have
 	// to do this here.  This is just in case the cord some

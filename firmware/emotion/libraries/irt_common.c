@@ -44,31 +44,26 @@ uint32_t irt_power_meas_fifo_op(irt_power_meas_t** first, irt_power_meas_t** nex
 	uint32_t err_code;
 	int8_t idx_write;
 
-	// Increment the index.
-	m_fifo_index++;
-
 	// Determine index to write.
 	idx_write = m_fifo_index % m_buf_size;
 
 	// Determine index to read.
-	if (m_fifo_index < m_buf_size)
-	{
-		// FIFO isn't full, so don't return a first one yet.
-		*first = 0x0;
-	}
-	else
+	if (m_fifo_index >= m_buf_size)
 	{
 		int8_t idx_read = ((m_fifo_index - m_buf_size+1) % m_buf_size);
 
-		// Return the pointer to the n-th item back in the stack.
+		// Return the pointer to the oldest event in the stack.
 		*first = &mp_buf_power_meas[idx_read];
 	}
 
-	// Clear the bytes.
+	// Clear the bytes for the next write.
 	memset(&mp_buf_power_meas[idx_write], 0, sizeof(irt_power_meas_t));
 
 	// Set pointer of the current event to write.
 	*next = &mp_buf_power_meas[idx_write];
+
+	// Increment the index.
+	m_fifo_index++;
 
 	return IRT_SUCCESS;
 }
