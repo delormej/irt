@@ -167,6 +167,18 @@ uint16_t set_resistance_erg(user_profile_t *p_user_profile,
 	
 	pwm_set_servo(servo_position);
 
+#if defined(BLE_NUS_ENABLED)
+		static const char format[] = "s,0f,fn,sp:%f,%f,%f,%i";
+		char message[32];
+		memset(&message, 0, sizeof(message));
+		uint8_t length = sprintf(message, format,
+								p_power_meas->instant_speed_mps,
+								mag0_force,
+								needed_force,
+								servo_position);
+		debug_send(message, sizeof(message));
+#endif
+
 	return servo_position;
 }
 
