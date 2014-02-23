@@ -304,6 +304,10 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 				(p_power_meas_current->last_wheel_event_time - p_power_meas_first->last_wheel_event_time));
 	}
 
+	// Don't attempt to adjust if stopped.
+	if (power_meas.instant_speed_mps == 0.0f)
+		return;
+
 	// If in erg or sim mode, adjust resistance accordingly.
 	switch (m_resistance_mode)
 	{
@@ -325,7 +329,7 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 }
 
 /*----------------------------------------------------------------------------
- * Main function for calculating power and transmiting.
+ * Main function for calculating power and transmitting.
  * ----------------------------------------------------------------------------*/
 
 /**@brief	Transmits the ant+ and ble power messages, returns speed & power stats.
