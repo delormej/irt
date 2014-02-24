@@ -452,6 +452,7 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		profile_update();
 }
 
+#if defined(SIM_SPEED)
 static void simulate_speed_timeout_handler(void)
 {
 	const float wheel_size_m = 2.07f;
@@ -486,6 +487,7 @@ static void simlate_speed_stop(void)
 {
 	app_timer_stop(&m_simulate_speed_timer_id);
 }
+#endif
 
 /**@brief Function for starting the application timers.
  */
@@ -723,9 +725,6 @@ int main(void)
 	// initialize the user profile.
 	profile_init();
 
-	// Initialize the scheduler.
-	scheduler_init();
-
 	// Initialize timers.
 	timers_init();
 
@@ -758,6 +757,9 @@ int main(void)
 	// Initializes the soft device, Bluetooth and ANT stacks.
 	ble_ant_init(&ant_ble_handlers);
 
+	// Initialize the scheduler.
+	scheduler_init();
+
     // Subscribe for system events.
 	uint32_t err_code;
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
@@ -781,8 +783,10 @@ int main(void)
 	// Start the main loop for reporting ble services.
 	application_timers_start();
 
+#if defined(SIM_SPEED)
 	// DEBUG ONLY:
 	simulate_speed_start(0.0f);
+#endif
 
     // Enter main loop
     for (;;)
