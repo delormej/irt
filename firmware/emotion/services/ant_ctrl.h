@@ -33,7 +33,7 @@ typedef struct
 typedef void(*ctrl_evt_handler_t(ctrl_evt_t));
 
 // Initializes the module.
-void ant_ctrl_tx_init(ctrl_evt_handler_t on_ctrl_command);
+void ant_ctrl_tx_init(uint8_t channel_id, ctrl_evt_handler_t on_ctrl_command);
 
 // Opens the channel and starts sending master broadcasts.
 void ant_ctrl_tx_start(void);

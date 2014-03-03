@@ -2,21 +2,22 @@
 */
 
 #include "ant_ctrl.h"
+#include "ble_ant.h"
+#include "app_error.h"
+#include "ant_parameters.h"
+#include "ant_interface.h"
+#include "irt_emotion.h"
 
 //
 // Module specific defines.
 //
-#define ANT_DEVICE_NUMBER			0x01		// TODO: this needs to be defined centraly (irt.h)
-#define ANT_RF_FREQ					0x39		// TODO: this needs to be defined centraly as well.
-
-#define ANT_CTRL_TX_CHANNEL			3u
 #define ANT_CTRL_CHANNEL_TYPE		0x10                                         
 #define ANT_CTRL_DEVICE_TYPE		0x10
 #define ANT_CTRL_TRANS_TYPE			0x05	
 #define ANT_CTRL_MSG_PERIOD			0x0020		// 8192/32768 (4hz)
 #define ANT_CTRL_EXT_ASSIGN			0
 
-#define GENERIC_CONTROL_SUPPORT		(0x1 < 4)	// Generic control supported
+#define GENERIC_CONTROL_SUPPORT		(0x01 << 4)	// Generic control supported
 
 #define CTRL_COMMAND_PAGE			0x49		// Page Number 73
 
@@ -44,12 +45,16 @@ typedef struct
 //
 // Module specific initialized state.
 //
+static uint8_t						m_channel_id;
 static ant_ctrl_data_page2_t		m_data_page2;
 static ctrl_evt_handler_t			m_on_ctrl_command;
 
-void ant_ctrl_tx_init(ctrl_evt_handler_t on_ctrl_command)
+void ant_ctrl_tx_init(uint8_t channel_id, ctrl_evt_handler_t on_ctrl_command)
 {
 	uint32_t err_code;
+
+	// Set the channel id to use.
+	m_channel_id = channel_id;
 
 	// Assign callback for when command message is processed.
 	m_on_ctrl_command = on_ctrl_command;
@@ -63,31 +68,31 @@ void ant_ctrl_tx_init(ctrl_evt_handler_t on_ctrl_command)
 	err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, m_ant_network_key);
 	APP_ERROR_CHECK(err_code);
 
-	err_code = sd_ant_channel_assign(ANT_CTRL_TX_CHANNEL,
+	err_code = sd_ant_channel_assign(m_channel_id,
 		ANT_CTRL_CHANNEL_TYPE,
 		ANTPLUS_NETWORK_NUMBER,
 		ANT_CTRL_EXT_ASSIGN);
 	
 	APP_ERROR_CHECK(err_code);
 
-	err_code = sd_ant_channel_id_set(ANT_CTRL_TX_CHANNEL,
+	err_code = sd_ant_channel_id_set(m_channel_id,
 		ANT_DEVICE_NUMBER,
 		ANT_CTRL_DEVICE_TYPE,
 		ANT_CTRL_TRANS_TYPE);
 	
 	APP_ERROR_CHECK(err_code);
 
-	err_code = sd_ant_channel_radio_freq_set(ANT_CTRL_TX_CHANNEL, ANTPLUS_RF_FREQ);
+	err_code = sd_ant_channel_radio_freq_set(m_channel_id, ANTPLUS_RF_FREQ);
 	APP_ERROR_CHECK(err_code);
 
-	err_code = sd_ant_channel_period_set(ANT_CTRL_TX_CHANNEL, ANT_CTRL_MSG_PERIOD);
+	err_code = sd_ant_channel_period_set(m_channel_id, ANT_CTRL_MSG_PERIOD);
 	APP_ERROR_CHECK(err_code);
 }
 
 void ant_ctrl_tx_start(void)
 {
 	// Open the ANT channel.
-	uint32_t err_code = sd_ant_channel_open(ANT_CTRL_TX_CHANNEL);
+	uint32_t err_code = sd_ant_channel_open(m_channel_id);
 	APP_ERROR_CHECK(err_code);
 }
 
@@ -96,7 +101,7 @@ void ant_ctrl_tx_stop(void)
 	uint32_t err_code;
 
 	// Close the ANT channel.
-	err_code = sd_ant_channel_close(ANT_CTRL_TX_CHANNEL);
+	err_code = sd_ant_channel_close(m_channel_id);
 	APP_ERROR_CHECK(err_code);
 }
 
@@ -107,9 +112,9 @@ void ant_ctrl_device_available(uint8_t notifications)
 	// Set notification status.
 	m_data_page2.notifications = notifications;
 
-	err_code = sd_ant_broadcast_message_tx(ANT_CTRL_TX_CHANNEL, 
-											TX_BUFFER_SIZE, 
-											(uint8_t*) &m_data_page2);
+	err_code = sd_ant_broadcast_message_tx(m_channel_id,
+										TX_BUFFER_SIZE, 
+										(uint8_t*) &m_data_page2);
 	
 	APP_ERROR_CHECK(err_code);
 }
