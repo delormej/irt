@@ -60,7 +60,6 @@
 
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;     /**< Handle of the current connection. */
 static bool                             m_is_advertising = false;                    /**< True when in advertising state, False otherwise. */
-static ble_gap_sec_params_t             m_sec_params;                                /**< Security requirements for this application. */
 
 #if defined(BLE_NUS_ENABLED)
 static ble_nus_t                       	m_nus;																			 // BLE UART service for debugging purposes.
@@ -236,21 +235,6 @@ static void services_init(void)
 	ant_ctrl_tx_init(ANT_CTRL_CHANNEL_ID, mp_ant_ble_evt_handlers->on_ant_ctrl_command);
 }
 
-
-/**@brief Initialize security parameters.
- */
-static void sec_params_init(void)
-{
-    m_sec_params.timeout      = SEC_PARAM_TIMEOUT;
-    m_sec_params.bond         = SEC_PARAM_BOND;
-    m_sec_params.mitm         = SEC_PARAM_MITM;
-    m_sec_params.io_caps      = SEC_PARAM_IO_CAPABILITIES;
-    m_sec_params.oob          = SEC_PARAM_OOB;  
-    m_sec_params.min_key_size = SEC_PARAM_MIN_KEY_SIZE;
-    m_sec_params.max_key_size = SEC_PARAM_MAX_KEY_SIZE;
-}
-
-
 /**@brief Start advertising.
  */
 static void advertising_start(void)
@@ -302,6 +286,26 @@ static void on_conn_params_evt(ble_conn_params_evt_t * p_evt)
     }
 }
 
+static void ble_sec_params_send()
+{
+	uint32_t err_code;
+	ble_gap_sec_params_t	sec_params;                                // Security requirements for this application. 
+	
+	sec_params.timeout = SEC_PARAM_TIMEOUT;
+	sec_params.bond = SEC_PARAM_BOND;
+	sec_params.mitm = SEC_PARAM_MITM;
+	sec_params.io_caps = SEC_PARAM_IO_CAPABILITIES;
+	sec_params.oob = SEC_PARAM_OOB;
+	sec_params.min_key_size = SEC_PARAM_MIN_KEY_SIZE;
+
+	sec_params.max_key_size = SEC_PARAM_MAX_KEY_SIZE;
+
+	err_code = sd_ble_gap_sec_params_reply(m_conn_handle,
+		BLE_GAP_SEC_STATUS_SUCCESS,
+		&sec_params);
+
+	APP_ERROR_CHECK(err_code);
+}
 
 /**@brief Connection Parameters module error handler.
  *
@@ -377,8 +381,6 @@ static void on_ant_evt(ant_evt_t * p_ant_evt)
  */
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
-    uint32_t err_code = NRF_SUCCESS;
-
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
@@ -394,10 +396,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             break;
 
         case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-            err_code = sd_ble_gap_sec_params_reply(m_conn_handle, 
-                                                   BLE_GAP_SEC_STATUS_SUCCESS, 
-                                                   &m_sec_params);
-            APP_ERROR_CHECK(err_code);
+			ble_sec_params_send();
             break;
 
         case BLE_GAP_EVT_TIMEOUT:
@@ -525,7 +524,6 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
     services_init();		
     advertising_init();
     conn_params_init();
-    sec_params_init();
 
     // Initialize ANT channels
     ant_bp_tx_init(mp_ant_ble_evt_handlers->on_set_resistance);
