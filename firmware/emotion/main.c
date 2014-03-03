@@ -701,6 +701,12 @@ static void on_set_resistance(rc_evt_t rc_evt)
 
 }
 
+// Invoked when a button is pushed on the remote control.
+static void on_ant_ctrl_command(ctrl_evt_t evt)
+{
+	// TODO: implementation.
+}
+
 // TODO: This event should be registered for a callback when it's time to
 // power the system down.
 static void on_power_down(void)
@@ -749,7 +755,8 @@ int main(void)
 		on_ble_uart,
 		on_ant_channel_closed,
 		on_ant_power_data,
-		on_set_resistance
+		on_set_resistance,
+		on_ant_ctrl_command
 	};
 
 	// TODO: Question should we have a separate method to initialize soft device?

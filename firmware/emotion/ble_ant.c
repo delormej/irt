@@ -242,6 +242,8 @@ static void services_init(void)
 	ble_dis_service_init();		// Discovery Service
 	ble_nus_service_init();		// Debug Info Service (BLE_UART)
 	ble_cps_service_init();		// Cycling Power Service
+	// Initialize the ANT+ remote control service.
+	ant_ctrl_tx_init(ANT_CTRL_CHANNEL_ID, mp_ant_ble_evt_handlers->on_ant_ctrl_command);
 }
 
 
@@ -511,7 +513,8 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 	
 	// Initialize S310 SoftDevice
     ble_ant_stack_init();
-		
+
+	// TODO: storage initialiation should be in MAIN, but it needs to happen after the SD is initialized, but before it's started I think.
     // Initialize persistent storage module.
     uint32_t err_code;
 	err_code = pstorage_init();
