@@ -1,12 +1,12 @@
 /* Copyright (c) 2014 Inside Ride Technologies, LLC. All Rights Reserved.
 */
 
+#include <string.h>
 #include "ant_ctrl.h"
 #include "ble_ant.h"
 #include "app_error.h"
-#include "ant_parameters.h"
-#include "ant_interface.h"
 #include "irt_emotion.h"
+#include "ant_interface.h"
 
 //
 // Module specific defines.
@@ -28,17 +28,17 @@ typedef struct
 {
 	uint8_t			page_number;
 	uint8_t			notifications;
-	uint8_t[5]		reserved;
+	uint8_t			reserved[5];
 	uint8_t			capabilities;
 } ant_ctrl_data_page2_t;
 
-typedef struct
+typedef struct 
 {
 	uint8_t			page_number;
-	uint8_t[2]		slave_serial;					// Serial number of the remote control
-	uint8_t[2]		slave_manufacturer;
+	uint8_t			slave_serial[2];				// Serial number of the remote control
+	uint8_t			slave_manufacturer[2];
 	uint8_t			sequence;
-	ctrl_command_t	command_lsb;					// All commands currently used are < 0xFF (1 byte), so our command is here.
+	ctrl_command_e	command_lsb;					// All commands currently used are < 0xFF (1 byte), so our command is here.
 	uint8_t			command_msb;					// Most significant byte of command (unused).
 } ant_ctrl_data_page73_t;
 
@@ -121,7 +121,7 @@ void ant_ctrl_device_available(uint8_t notifications)
 
 void ant_ctrl_rx_handle(ant_evt_t * p_ant_evt)
 {
-	ant_ctrl_data_page73_t page;
+	ant_ctrl_data_page73_t *p_page;
 	ctrl_evt_t evt;
 
 	// Only process page 73.
@@ -129,11 +129,11 @@ void ant_ctrl_rx_handle(ant_evt_t * p_ant_evt)
 		return;
 
 	// Make it easier to work with the data structure.
-	page = (ant_ctrl_data_page73_t)p_ant_evt->evt_buffer;
+	p_page = (ant_ctrl_data_page73_t*)p_ant_evt->evt_buffer;
 
 	// Assign the event data payload.
-	evt.sequence = page.sequence;
-	evt.command = page.command_lsb;
+	evt.sequence = p_page->sequence;
+	evt.command = p_page->command_lsb;
 
 	// Raise the control command event.
 	m_on_ctrl_command(evt);
