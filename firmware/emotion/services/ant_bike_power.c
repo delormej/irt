@@ -33,8 +33,6 @@
 #define ACCUMMULATED_TORQUE_LSB_INDEX		6u
 #define ACCUMMULATED_TORQUE_MSB_INDEX		7u
 
-#define TX_BUFFER_SIZE               		8u               
-
 #define BP_PAGE_1               		 0x01u   /**< Calibration message main data page. */
 #define BP_PAGE_STANDARD_POWER_ONLY  0x10u   /**< Standard Power only main data page. */
 #define BP_PAGE_TORQUE_AT_WHEEL		   0x11u   /**< Power reported as torque at wheel data page, which includes speed. */

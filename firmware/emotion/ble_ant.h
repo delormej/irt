@@ -6,6 +6,7 @@
 #include "ble_gatt.h"
 
 #define BLE_STACK_HANDLER_SCHED_EVT_SIZE	GATT_MTU_SIZE_DEFAULT
+#define TX_BUFFER_SIZE               		8u               
 
 #define ANTPLUS_NETWORK_NUMBER          0                                            /**< Network number. */
 #define ANTPLUS_RF_FREQ                 0x39                                         /**< Frequency, Decimal 57 (2457 MHz). */
