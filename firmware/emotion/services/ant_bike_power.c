@@ -46,7 +46,6 @@
 
 #define ANT_BP_CHANNEL_TYPE          0x10                                         /**< Channel Type TX. */
 #define ANT_BP_DEVICE_TYPE           0x0B                                         /**< Channel ID device type. */
-#define ANT_DEVICE_NUMBER         	 0x01                                         /**< TODO: need a unique Device Number derived from device serial no. */
 #define ANT_BP_TRANS_TYPE            0xA5 // is how we indicate WAHOO KICKR, normal is: 0x5                                         /**< Transmission Type. */
 #define ANT_BP_MSG_PERIOD            0x1FF6                                     	 /**< Message Periods, decimal 8182 (~4.00Hz) data is transmitted every 8182/32768 seconds. */
 #define ANT_BP_EXT_ASSIGN            0	                                          /**< ANT Ext Assign. */
