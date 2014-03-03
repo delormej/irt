@@ -91,8 +91,10 @@ void ant_ctrl_tx_init(uint8_t channel_id, ctrl_evt_handler_t on_ctrl_command)
 
 void ant_ctrl_tx_start(void)
 {
+	uint32_t err_code;
+
 	// Open the ANT channel.
-	uint32_t err_code = sd_ant_channel_open(m_channel_id);
+	err_code = sd_ant_channel_open(m_channel_id);
 	APP_ERROR_CHECK(err_code);
 }
 

@@ -1,4 +1,12 @@
 /* Copyright (c) 2014 Inside Ride Technologies, LLC. All Rights Reserved.
+*
+*	Encapsulates the interaction with the ANT+ Generic Control Profile v2.0
+*	Specifically this is designed to work with the 3 button o-synce bike
+*	remote control.  
+*
+*	6 functions are transmitted from the remote based on short & long button
+*	presses of the remote's 3 buttons.
+*
 */
 
 #ifndef ANT_CTRL_H__
