@@ -61,7 +61,6 @@
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;     /**< Handle of the current connection. */
 static bool                             m_is_advertising = false;                    /**< True when in advertising state, False otherwise. */
 static ble_gap_sec_params_t             m_sec_params;                                /**< Security requirements for this application. */
-static ble_gap_adv_params_t             m_adv_params;                                /**< Parameters to be passed to the stack when starting advertising. */
 
 #if defined(BLE_NUS_ENABLED)
 static ble_nus_t                       	m_nus;																			 // BLE UART service for debugging purposes.
@@ -158,15 +157,6 @@ static void advertising_init(void)
     
     err_code = ble_advdata_set(&advdata, &scanrsp);
     APP_ERROR_CHECK(err_code);
-		
-    // Initialize advertising parameters (used when starting advertising)
-    memset(&m_adv_params, 0, sizeof(m_adv_params));
-    
-    m_adv_params.type        = BLE_GAP_ADV_TYPE_ADV_IND;
-    m_adv_params.p_peer_addr = NULL;                           // Undirected advertisement
-    m_adv_params.fp          = BLE_GAP_ADV_FP_ANY;
-    m_adv_params.interval    = APP_ADV_INTERVAL;
-    m_adv_params.timeout     = APP_ADV_TIMEOUT_IN_SECONDS;		
 }
 
 static void ble_dis_service_init()
@@ -266,8 +256,18 @@ static void sec_params_init(void)
 static void advertising_start(void)
 {
     uint32_t err_code;
-    
-    err_code = sd_ble_gap_adv_start(&m_adv_params);
+	ble_gap_adv_params_t  adv_params;						// Parameters to be passed to the stack when starting advertising. */
+
+	// Initialize advertising parameters (used when starting advertising)
+	memset(&adv_params, 0, sizeof(ble_gap_adv_params_t));
+
+	adv_params.type = BLE_GAP_ADV_TYPE_ADV_IND;
+	adv_params.p_peer_addr = NULL;						// Undirected advertisement
+	adv_params.fp = BLE_GAP_ADV_FP_ANY;
+	adv_params.interval = APP_ADV_INTERVAL;
+	adv_params.timeout = APP_ADV_TIMEOUT_IN_SECONDS;
+
+	err_code = sd_ble_gap_adv_start(&adv_params);
     APP_ERROR_CHECK(err_code);
     
     m_is_advertising = true;
