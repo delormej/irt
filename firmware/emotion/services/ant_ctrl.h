@@ -7,6 +7,8 @@
 *	6 functions are transmitted from the remote based on short & long button
 *	presses of the remote's 3 buttons.
 *
+*	Required ANT common background pages (0x50, 0x51) must be sent as well.
+*
 */
 
 #ifndef ANT_CTRL_H__
@@ -53,7 +55,7 @@ void ant_ctrl_tx_stop(void);
 // Sends device availability message.
 // Notifications = 0 if no limit specificed or limit not reached.
 // Notifications = 1 if device cannot connect to additional remotes.
-void ant_ctrl_device_available(uint8_t notifications);
+void ant_ctrl_device_avail_tx(uint8_t notifications);
 
 // Handles events destined for this channel.
 void ant_ctrl_rx_handle(ant_evt_t * p_ant_evt);
