@@ -536,4 +536,7 @@ void ble_ant_start()
 		
 	// Open the ANT channel for transmitting power.
 	ant_bp_tx_start();
+
+	// Open the ANT channel to start broadcasting availability for remote control.
+	ant_ctrl_tx_start();
 }

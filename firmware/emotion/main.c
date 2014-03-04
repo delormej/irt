@@ -37,7 +37,9 @@
 #include "user_profile.h"
 #include "ble_ant.h"
 #include "nrf_delay.h"
+#include "ant_ctrl.h"
 
+#define ANT_CTRL_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  /**< Bike power measurement interval (ticks). */
 #define CYCLING_POWER_MEAS_INTERVAL		APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER) /**< Bike power measurement interval (ticks). */
 #define DEFAULT_WHEEL_SIZE_MM			2070u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
@@ -51,10 +53,13 @@ static resistance_mode_t				m_resistance_mode = RESISTANCE_SET_STANDARD;
 static uint16_t							m_servo_pos;
 static app_timer_id_t               	m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
 static app_timer_id_t               	m_simulate_speed_timer_id;
+static app_timer_id_t               	m_ant_ctrl_timer_id;
 
 static bool								mb_profile_dirty = false;
 static user_profile_t 					m_user_profile;
 static rc_sim_forces_t					m_sim_forces;
+
+static bool								mb_ant_ctrl_connected = false;
 
 /*----------------------------------------------------------------------------
  * Error Handlers
@@ -452,6 +457,12 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 		profile_update();
 }
 
+static void ant_ctrl_timeout_handler(void * p_context)
+{
+	UNUSED_PARAMETER(p_context);
+	ant_ctrl_device_avail_tx((uint8_t)mb_ant_ctrl_connected);
+}
+
 #if defined(SIM_SPEED)
 static void simulate_speed_timeout_handler(void)
 {
@@ -498,6 +509,9 @@ static void application_timers_start(void)
     // Start application timers
     err_code = app_timer_start(m_cycling_power_timer_id, CYCLING_POWER_MEAS_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
+
+	err_code = app_timer_start(m_ant_ctrl_timer_id, ANT_CTRL_INTERVAL, NULL);
+	APP_ERROR_CHECK(err_code);
 }
 
 static void application_timers_stop(void)
@@ -506,6 +520,9 @@ static void application_timers_stop(void)
 		
 	err_code = app_timer_stop(m_cycling_power_timer_id);
     APP_ERROR_CHECK(err_code);
+
+	err_code = app_timer_stop(m_ant_ctrl_timer_id);
+	APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Timer initialization.
@@ -516,14 +533,20 @@ static void timers_init(void)
 {
     uint32_t err_code;
 
-		// Initialize timer module
+	// Initialize timer module
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
 
     err_code = app_timer_create(&m_cycling_power_timer_id,
                                 APP_TIMER_MODE_REPEATED,
                                 cycling_power_meas_timeout_handler);
-    APP_ERROR_CHECK(err_code);
+    
+	APP_ERROR_CHECK(err_code);
 
+	err_code = app_timer_create(&m_ant_ctrl_timer_id,
+		APP_TIMER_MODE_REPEATED,
+		ant_ctrl_timeout_handler);
+	
+	APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Scheduler initialization.

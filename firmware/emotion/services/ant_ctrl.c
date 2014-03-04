@@ -14,7 +14,7 @@
 #define ANT_CTRL_CHANNEL_TYPE		0x10                                         
 #define ANT_CTRL_DEVICE_TYPE		0x10
 #define ANT_CTRL_TRANS_TYPE			0x05	
-#define ANT_CTRL_MSG_PERIOD			0x0020		// 8192/32768 (4hz)
+#define ANT_CTRL_MSG_PERIOD			0x2000		// 8192/32768 (4hz)
 #define ANT_CTRL_EXT_ASSIGN			0
 
 #define GENERIC_CONTROL_SUPPORT		(0x01 << 4)	// Generic control supported
@@ -89,7 +89,7 @@ typedef struct
 } ant_ctrl_data_page73_t;
 
 // Template for data page 2.  Using as a constant reduces stack size, we'll copy template when used.
-const ant_ctrl_data_page2_t			m_data_page2 = { CTRL_DEVICE_AVAIL_PAGE, 0, 0, GENERIC_CONTROL_SUPPORT };
+const ant_ctrl_data_page2_t			m_data_page2 = { CTRL_DEVICE_AVAIL_PAGE, 0, { 0, 0, 0, 0, 0 }, GENERIC_CONTROL_SUPPORT };
 
 //
 // Module specific initialized state.
