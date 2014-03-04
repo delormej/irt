@@ -52,7 +52,7 @@ void ant_ctrl_tx_start(void);
 // Stops sending the master broadcast and closes the channel.
 void ant_ctrl_tx_stop(void);
 
-// Sends device availability message.
+// Sends device availability message.  This should be called at ~4hz from a timer.
 // Notifications = 0 if no limit specificed or limit not reached.
 // Notifications = 1 if device cannot connect to additional remotes.
 void ant_ctrl_device_avail_tx(uint8_t notifications);
