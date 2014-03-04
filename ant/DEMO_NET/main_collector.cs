@@ -29,6 +29,7 @@ namespace ANT_Console_Demo
         const byte QUARQ_ANT_CHANNEL = 0;
         const byte EMOTION_ANT_CHANNEL = 1;
         const byte BIKE_SPEED_ANT_CHANNEL = 2;
+        const byte CTRL_ANT_CHANNEL = 3;
 
         const byte UPDATE_EVENT_COUNT_INDEX = 1;
 
@@ -60,6 +61,9 @@ namespace ANT_Console_Demo
 
         CollectorEventData m_last_event = new CollectorEventData();
         Calculator m_calculator = new Calculator();
+
+        ANT_Channel m_ctrl_channel = null;
+        byte m_ctrl_sequence = 0;
 
         public Collector()
         {
@@ -175,6 +179,34 @@ namespace ANT_Console_Demo
                 throw new Exception("Error opening channel");
         }
 
+        private void ConfigureRemoteControlChannel(ANT_Channel channel, ushort deviceNumber, byte transmissionType, dChannelResponseHandler ChannelResponse)
+        {
+            const ANT_ReferenceLibrary.ChannelType channelType = ANT_ReferenceLibrary.ChannelType.BASE_Slave_Receive_0x00;
+            const byte CtrlDeviceType = 0x10;
+            const byte AntFreq = 0x39;
+            const ushort CtrlChannelPeriod = 8192;
+
+            channel.channelResponse += ChannelResponse;  // Add channel response function to receive channel event messages
+
+            if (!channel.assignChannel(channelType, USER_NETWORK_NUM, 500))
+                throw new Exception("Error assigning channel");
+
+            if (!channel.setChannelID(deviceNumber, false, CtrlDeviceType, transmissionType, 500))  // Not using pairing bit
+                throw new Exception("Error configuring Channel ID");
+
+            if (!channel.setChannelFreq(AntFreq, 500))
+                throw new Exception("Error configuring Radio Frequency");
+
+            if (!channel.setChannelPeriod(CtrlChannelPeriod, 500))
+                throw new Exception("Error configuring Channel Period");
+
+            if (channel.openChannel(500))
+                Console.WriteLine("Channel opened");
+            else
+                throw new Exception("Error opening channel");
+        }
+
+
         private byte[] GetBroadcastMessagePayload(ANT_Response response)
         {
             switch ((ANT_ReferenceLibrary.ANTMessageID)response.responseID)
@@ -207,6 +239,47 @@ namespace ANT_Console_Demo
         void SpeedChannelResponse(ANT_Response response)
         {
             ProcessBikeSpeedResponse(response, BIKE_SPEED_ANT_CHANNEL);
+        }
+
+        bool m_remoteAvailable = false;
+
+        void RemoteControlResponse(ANT_Response response)
+        {
+            byte[] payload = GetBroadcastMessagePayload(response);
+            if (payload == null)
+                return;
+
+            // Just determines if the remote control is available.
+            byte page_number = payload[0];
+
+            switch (page_number)
+            {
+                case 0x02:
+                    if (payload[1] == 0)
+                        m_remoteAvailable = true;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        void RemoteControl(byte command)
+        {
+            if (m_ctrl_channel == null)
+                return;
+
+            byte[] data = {
+                              0x49, // Page 73
+                              0xA1, // Random slave serial number
+                              0xFE, // (con't)
+                              0xFB, // Random manufacturer ID
+                              0xFB, // (con't)
+                              m_ctrl_sequence++, // increment sequence
+                              command, // actual command
+                              0x00 // Unused (extra byte for command)
+                          };
+
+            m_ctrl_channel.sendAcknowledgedData(data);
         }
 
         private void ProcessBikeSpeedResponse(ANT_Response response, byte channelId)
@@ -327,7 +400,41 @@ namespace ANT_Console_Demo
             ANT_Channel bike_speed_channel = usb_ant_device.getChannel(BIKE_SPEED_ANT_CHANNEL);
             ConfigureBikeSpeedChannel(bike_speed_channel, speed_device_id, speed_transmission_type, SpeedChannelResponse);
 
+            m_ctrl_channel = usb_ant_device.getChannel(CTRL_ANT_CHANNEL);
+            ConfigureRemoteControlChannel(m_ctrl_channel, 0, 0, RemoteControlResponse);
+
             Console.WriteLine("Initialization was successful!");
+        }
+
+        static void InteractiveConsole(Collector collector)
+        {
+            string command = String.Empty;
+
+            Console.WriteLine("Enter your command...");
+
+            //Console.ReadKey();  // Any key to exit
+            while (command != "X")
+            {
+                command = Console.ReadLine();
+
+                if (command == "u")
+                {
+                    collector.RemoteControl(0x00);
+                    Console.WriteLine("Sent UP command.");
+                }
+                else if (command == "d")
+                {
+                    collector.RemoteControl(0x01);
+                    Console.WriteLine("Sent DOWN command.");
+                }
+                else if (command == "s")
+                {
+                    collector.RemoteControl(0x02);
+                    Console.WriteLine("Sent SELECT command.");
+                }
+            }
+
+            Console.WriteLine("Exiting...");
         }
 
         static void Main(string[] args)
@@ -340,9 +447,7 @@ namespace ANT_Console_Demo
                 using (Reporter reporter = new Reporter(collector))
                 {
                     reporter.Start();
-
-                    Console.ReadKey();  // Any key to exit
-                    Console.WriteLine("Exiting...");
+                    InteractiveConsole(collector);
                 }
             }
             catch (Exception e)
