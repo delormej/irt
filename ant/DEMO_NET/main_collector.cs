@@ -201,7 +201,7 @@ namespace ANT_Console_Demo
                 throw new Exception("Error configuring Channel Period");
 
             if (channel.openChannel(500))
-                Console.WriteLine("Channel opened");
+                Console.WriteLine("Remote Control Channel opened");
             else
                 throw new Exception("Error opening channel");
         }
