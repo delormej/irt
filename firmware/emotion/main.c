@@ -39,7 +39,7 @@
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 
-#define ANT_CTRL_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  /**< Bike power measurement interval (ticks). */
+#define ANT_CTRL_INTERVAL				APP_TIMER_TICKS(2000, APP_TIMER_PRESCALER)  /**< Remote control availability annoncement. */
 #define CYCLING_POWER_MEAS_INTERVAL		APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER) /**< Bike power measurement interval (ticks). */
 #define DEFAULT_WHEEL_SIZE_MM			2070u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
