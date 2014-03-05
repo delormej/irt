@@ -188,30 +188,6 @@ static __INLINE uint32_t manufacturer_page_transmit(void)
     return broadcast_message_transmit(tx_buffer); 
 }
 
-//
-// Send a message to indicate a manual set resistance override
-//
-static __INLINE uint32_t resistance_transmit(resistance_mode_t mode, uint16_t level)
-{
-		static uint8_t resistance_sequence = 0;
-	
-		// TODO: should we use this struct instead? ANTMsgWahoo240_t
-    uint8_t tx_buffer[TX_BUFFER_SIZE] = 
-    {
-        WF_ANT_RESPONSE_PAGE_ID, 
-        mode, 
-        WF_ANT_RESPONSE_FLAG, 
-        ++resistance_sequence, 								
-		LOW_BYTE(level), // 0x20, 	// Not sure why, but this is hardcoded to 0x20 for now.
-        HIGH_BYTE(level),
-        0x01, 	// Again, not sure why, but KICKR responds with this.
-        0x00
-    };       
-    
-    return acknolwedge_message_transmit(tx_buffer); 
-}
-
-
 // Right now all this method does is handle resistance control messages.
 // TODO: need to implement calibration requests as well.
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
@@ -337,11 +313,6 @@ void ant_bp_tx_send(irt_power_meas_t * p_cps_meas)
 		{
 			err_code = manufacturer_page_transmit();
 		}
-		else if (event_count % 2 == 0) // TODO: Placeholder... use scheduler instead.
-		{
-			err_code = resistance_transmit(p_cps_meas->resistance_mode, 
-																			p_cps_meas->resistance_level);
-		}		
 		else
 		{
 			// # Default broadcast message is torque.
@@ -353,3 +324,27 @@ void ant_bp_tx_send(irt_power_meas_t * p_cps_meas)
 		APP_ERROR_CHECK(err_code);
 }
 
+void ant_bp_resistance_tx_send(resistance_mode_t mode, uint8_t* level)
+{
+	// State required to be managed.
+	static uint8_t resistance_sequence = 0;
+
+	uint32_t err_code;
+
+	// TODO: should we use this struct instead? ANTMsgWahoo240_t
+	uint8_t tx_buffer[TX_BUFFER_SIZE] =
+	{
+		WF_ANT_RESPONSE_PAGE_ID,
+		mode,
+		WF_ANT_RESPONSE_FLAG,
+		++resistance_sequence,
+		level[0], // 0x20, 	// Not sure why, but this is hardcoded to 0x20 for now.
+		level[1],
+		0x01, 	// Again, not sure why, but KICKR responds with this.
+		0x00
+	};
+
+	err_code = acknolwedge_message_transmit(tx_buffer);
+
+	APP_ERROR_CHECK(err_code);
+}

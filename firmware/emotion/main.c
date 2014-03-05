@@ -665,7 +665,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	switch (rc_evt.operation)
 	{
 		case RESISTANCE_SET_STANDARD:
-			m_resistance_mode = rc_evt.operation;
+			m_resistance_mode = RESISTANCE_SET_STANDARD;
 			m_resistance_level = rc_evt.pBuffer[0];
 			m_servo_pos = set_resistance(m_resistance_level);
 			break;
@@ -673,35 +673,35 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		case RESISTANCE_SET_PERCENT:
 			// Reset state since we're not in standard mode any more.
 			m_resistance_level = 0;
-			m_resistance_mode = rc_evt.operation;
+			m_resistance_mode = RESISTANCE_SET_PERCENT;
 			
 			// Parse the buffer for percentage.
 			float percent = get_resistance_pct(rc_evt.pBuffer);
 			m_servo_pos = set_resistance_pct(percent);
 			break;
-		
-		case RESISTANCE_SET_SIM:
-			m_resistance_mode = rc_evt.operation;
-			set_sim_params(rc_evt.pBuffer);
-			break;
 
 		case RESISTANCE_SET_ERG:
 			// Assign target watt level.
-			m_resistance_mode = rc_evt.operation;
-			m_sim_forces.erg_watts = 
+			m_resistance_mode = RESISTANCE_SET_ERG;
+			m_sim_forces.erg_watts =
 				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u;
+			break;
+
+		case RESISTANCE_SET_SIM:
+			m_resistance_mode = RESISTANCE_SET_SIM;
+			set_sim_params(rc_evt.pBuffer);
 			break;
 			
 		case RESISTANCE_SET_SLOPE:
+			m_resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the slope.
 			m_sim_forces.grade = get_sim_grade(rc_evt.pBuffer);
-			m_resistance_mode = RESISTANCE_SET_SIM;
 			break;
 			
 		case RESISTANCE_SET_WIND:
+			m_resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the wind speed.
 			m_sim_forces.wind_speed_mps = get_sim_wind(rc_evt.pBuffer);
-			m_resistance_mode = RESISTANCE_SET_SIM;
 			break;
 			
 		case RESISTANCE_SET_WHEEL_CR:
@@ -712,6 +712,10 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		default:
 			break;
 	}
+
+	// Send acknowledgement. 
+	ant_bp_resistance_tx_send(m_resistance_mode, rc_evt.pBuffer);
+
 #if defined(BLE_NUS_ENABLED)
 		static const char format[] = "OP:%i,VAL:%i";
 		char message[16];
