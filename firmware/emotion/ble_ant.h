@@ -14,7 +14,7 @@
 
 // ANT Channels being used.
 #define ANT_BP_TX_CHANNEL     	 		1u                                           /**< Bicycle Speed TX ANT Channel. */
-#define ANT_CTRL_CHANNEL_ID				2u											 /**< ANT+ Remote Control Channel */
+#define ANT_CTRL_CHANNEL				2u											 /**< ANT+ Remote Control Channel */
 
 #define ANT_BUFFER_INDEX_MESG_ID        0x01                                         /**< Index for Message ID. */
 #define ANT_BUFFER_INDEX_MESG_DATA      0x03                                         /**< Index for Data. */

@@ -728,6 +728,19 @@ static void on_set_resistance(rc_evt_t rc_evt)
 static void on_ant_ctrl_command(ctrl_evt_t evt)
 {
 	// TODO: implementation.
+	switch (evt.command)
+	{
+		case Menu_Up:
+			on_button_iii(); 
+			break;
+
+		case Menu_Down:
+			on_button_ii();
+			break;
+
+		default:
+			break;
+	}
 }
 
 // TODO: This event should be registered for a callback when it's time to

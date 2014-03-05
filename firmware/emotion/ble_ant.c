@@ -232,7 +232,7 @@ static void services_init(void)
 	ble_nus_service_init();		// Debug Info Service (BLE_UART)
 	ble_cps_service_init();		// Cycling Power Service
 	// Initialize the ANT+ remote control service.
-	ant_ctrl_tx_init(ANT_CTRL_CHANNEL_ID, mp_ant_ble_evt_handlers->on_ant_ctrl_command);
+	ant_ctrl_tx_init(ANT_CTRL_CHANNEL, mp_ant_ble_evt_handlers->on_ant_ctrl_command);
 }
 
 /**@brief Start advertising.
@@ -370,6 +370,11 @@ static void on_ant_evt(ant_evt_t * p_ant_evt)
 			case ANT_BP_TX_CHANNEL:
 				ant_bp_rx_handle(p_ant_evt);
 				break;
+			
+			case ANT_CTRL_CHANNEL:
+				ant_ctrl_rx_handle(p_ant_evt);
+				break;
+
 			default:
 				break;
 		}

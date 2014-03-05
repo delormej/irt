@@ -102,6 +102,10 @@ static void on_command_page(ant_ctrl_data_page73_t* p_page)
 {
 	ctrl_evt_t evt;
 
+	// Only process if a new sequence.
+	if (p_page->sequence == m_ctrl_status.sequence)
+		return;
+
 	// Update internal state.
 	m_ctrl_status.page_number = CTRL_CMD_PAGE;
 	m_ctrl_status.last_command = p_page->command_lsb;
