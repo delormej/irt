@@ -50,7 +50,7 @@ namespace ANT_Console_Demo
 
         const byte SET_RESISTANCE_PAGE = 0xF0;
         const byte RESISTANCE_LEVEL_LSB_INDEX = 4;
-        //const byte RESISTANCE_LEVEL_MSB_INDEX = 5;
+        const byte RESISTANCE_LEVEL_MSB_INDEX = 5;
 
         byte m_last_quarq_instant_power_update = 0;
         byte m_last_emotion_instant_power_update = 0;
@@ -368,7 +368,8 @@ namespace ANT_Console_Demo
 
         private void ProcessEmotionResistanceMessage(byte[] payload)
         {
-            m_last_event.resistance_level = payload[RESISTANCE_LEVEL_LSB_INDEX];
+            m_last_event.resistance_level = (ushort)(payload[RESISTANCE_LEVEL_LSB_INDEX] |
+                            payload[RESISTANCE_LEVEL_MSB_INDEX] << 8);
         }
 
         private void DeviceResponse(ANT_Response response)
@@ -391,6 +392,9 @@ namespace ANT_Console_Demo
             byte speed_transmission_type = 0x01;
             byte speed_device_id = 0;
 
+            byte ctrl_transmission_type = 0x05;
+            byte ctrl_device_id = 0;
+
             ANT_Channel quarq_channel = usb_ant_device.getChannel(QUARQ_ANT_CHANNEL);    // Get channel from ANT device
             ConfigureBikePowerChannel(quarq_channel, quarq_device_id, quarq_tranmission_type, QuarqChannelResponse);
 
@@ -401,7 +405,7 @@ namespace ANT_Console_Demo
             ConfigureBikeSpeedChannel(bike_speed_channel, speed_device_id, speed_transmission_type, SpeedChannelResponse);
 
             m_ctrl_channel = usb_ant_device.getChannel(CTRL_ANT_CHANNEL);
-            ConfigureRemoteControlChannel(m_ctrl_channel, 0, 0, RemoteControlResponse);
+            ConfigureRemoteControlChannel(m_ctrl_channel, ctrl_device_id, ctrl_transmission_type, RemoteControlResponse);
 
             Console.WriteLine("Initialization was successful!");
         }

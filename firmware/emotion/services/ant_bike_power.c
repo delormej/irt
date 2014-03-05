@@ -202,8 +202,8 @@ static __INLINE uint32_t resistance_transmit(resistance_mode_t mode, uint16_t le
         mode, 
         WF_ANT_RESPONSE_FLAG, 
         ++resistance_sequence, 								
-        0x20, 	// Not sure why, but this is hardcoded to 0x20 for now.
-        0x00,
+		LOW_BYTE(level), // 0x20, 	// Not sure why, but this is hardcoded to 0x20 for now.
+        HIGH_BYTE(level),
         0x01, 	// Again, not sure why, but KICKR responds with this.
         0x00
     };       
