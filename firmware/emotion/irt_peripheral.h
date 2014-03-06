@@ -7,7 +7,7 @@
 #define BONDMNGR_DELETE_BUTTON_PIN      11                             /**< Button used for deleting all bonded masters during startup. */
 
 #define APP_TIMER_PRESCALER             0                                            /**< Value of the RTC1 PRESCALER register. */
-#define APP_TIMER_MAX_TIMERS            4                                            /**< Maximum number of simultaneously created timers. */
+#define APP_TIMER_MAX_TIMERS            5                                            /**< Maximum number of simultaneously created timers. */
 #define APP_TIMER_OP_QUEUE_SIZE         4                                            /**< Size of timer operation queues. */
 
 #define APP_GPIOTE_MAX_USERS            1                                         	 /**< Maximum number of users of the GPIOTE handler. */
@@ -51,5 +51,7 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);
 void set_led_red(void);
 void set_led_green(void);
 void clear_led(void);
+void blink_led_green_start(uint8_t interval_ms);
+void blink_led_green_stop(void);
 
 #endif // IRT_PERIPHERAL_H__

@@ -44,6 +44,8 @@
 #define DEFAULT_WHEEL_SIZE_MM			2070u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
 
+#define BLE_ADV_BLINK_RATE_MS			500u
+
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
 #define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
@@ -589,6 +591,7 @@ static void on_accelerometer(uint8_t source)
 
 static void on_ble_connected(void) 
 {
+	blink_led_green_stop();
 	set_led_green();
 }
 	
@@ -599,13 +602,12 @@ static void on_ble_disconnected(void)
 
 static void on_ble_timeout(void) 
 {
-	clear_led();
+	blink_led_green_stop();
 }
 
 static void on_ble_advertising(void)
 {
-	// TODO: this should invoke a timer and blink the LED.
-	set_led_green();
+	blink_led_green_start(BLE_ADV_BLINK_RATE_MS);
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
