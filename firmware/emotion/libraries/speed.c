@@ -188,6 +188,8 @@ void calc_speed(speed_event_t* speed_event)
 	static uint32_t last_accum_wheel_revs 		= 0;
 	static uint16_t last_event_time_2048 			= 0;
 	
+	uint16_t time_delta;
+
 	// Current time stamp.
 	uint16_t current_2048 = get_seconds_2048();
 		
@@ -199,10 +201,16 @@ void calc_speed(speed_event_t* speed_event)
 		// Calculate accumlated fractional wheel revolutions.
 		float fractional_wheel_revs = flywheel_revs / m_flywheel_to_wheel_revs;
 		
+		// Handle rollover situations.
+		if (current_2048 < last_event_time_2048)
+			time_delta = (last_event_time_2048 ^ 0xFFFF) + current_2048;
+		else
+			time_delta = current_2048 - last_event_time_2048;
+
 		// Calculate the current speed in meters per second.
 		speed_event->speed_mps = get_speed_mps(
 												fractional_wheel_revs - last_accum_wheel_revs, 							// # of wheel revs in the period
-												current_2048 		 	 - last_event_time_2048);								// Current time period in 1/2048 seconds.
+												time_delta);								// Current time period in 1/2048 seconds.
 		
 		// Determine time since a full wheel rev in 1/2048's of a second at this speed.
 		uint16_t time_since_full_rev_2048 = fractional_wheel_rev_time_2048(
