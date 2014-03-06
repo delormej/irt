@@ -75,17 +75,11 @@ static bool								mb_ant_ctrl_connected = false;
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
-    // TODO: temporarily IGNORE this message.  
-		if (error_code == 0x401F) //TRANSFER_IN_PROGRESS
-			return;
+    // TODO: HACK temporarily IGNORE this message.  
+	if (error_code == 0x401F) //TRANSFER_IN_PROGRESS
+		return;
 		
-		nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
-		
-		/* TODO: doesn't work, but we need to do something like this.
-		uint8_t data[64];
-		sprintf(data, "ERR: %i, LINE: %i, FILE: %s", 
-		error_code, line_num, *p_file_name);
-		//debug_send(data, sizeof(data)); */
+	nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
 
     // This call can be used for debug purposes during development of an application.
     // @note CAUTION: Activating this code will write the stack to flash on an error.
@@ -93,8 +87,11 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     //                It is intended STRICTLY for development/debugging purposes.
     //                The flash write will happen EVEN if the radio is active, thus interrupting
     //                any communication.
-    //                Use with care. Un-comment the line below to use.
-    // ble_debug_assert_handler(error_code, line_num, p_file_name);
+    //                Use with care. Define IRT_DEBUG to enable.
+#if defined(IRT_DEBUG)
+	// Not this function does not return - it will hang waiting for a debugger to attach.
+	ble_debug_assert_handler(error_code, line_num, p_file_name);
+#endif
 
     // On assert, the system can only recover with a reset.
     NVIC_SystemReset();
@@ -421,31 +418,24 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 	uint32_t err_code;
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
-
-	
+		
 #if defined(SIM_SPEED)
 	// DEBUG PURPOSES ONLY. Simulates speed for 1/4 second.
 	// 
 	// ((((speed_kmh / 3600) * 250) / wheel_size_m) * 18.5218325f);
 	// Where speed_kmh = 28.0f, ~17 revolutions per 1/4 of a second.
 	//
-	speed_simulate_flywheel_rev(17);
+	speed_simulate_flywheel_rev(34);
 
 #endif
 
 	// Get pointers to the event structures.
 	err_code = irt_power_meas_fifo_op(&p_power_meas_first, &p_power_meas_current);
-
-	// TODO: handle error here with more info.
-	if (err_code != IRT_SUCCESS)
-		return;
+	APP_ERROR_CHECK(err_code);
 
 	// Calculate the power.
 	err_code = calculate_power(p_power_meas_current);
-
-	// TODO: handle error here with more info.
-	if (err_code != IRT_SUCCESS)
-		return;
+	APP_ERROR_CHECK(err_code);
 
 	// TODO: this should return an err_code.
 	// Transmit the power message.
