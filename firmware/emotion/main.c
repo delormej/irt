@@ -40,7 +40,7 @@
 #include "ant_ctrl.h"
 
 #define ANT_CTRL_INTERVAL				APP_TIMER_TICKS(2000, APP_TIMER_PRESCALER)  /**< Remote control availability annoncement. */
-#define CYCLING_POWER_MEAS_INTERVAL		APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER) /**< Bike power measurement interval (ticks). */
+#define CYCLING_POWER_MEAS_INTERVAL		APP_TIMER_TICKS(250, APP_TIMER_PRESCALER) /**< Bike power measurement interval (ticks). */
 #define DEFAULT_WHEEL_SIZE_MM			2070u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
 
@@ -52,7 +52,6 @@ static uint8_t 							m_resistance_level = 0;
 static resistance_mode_t				m_resistance_mode = RESISTANCE_SET_STANDARD;
 static uint16_t							m_servo_pos;
 static app_timer_id_t               	m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
-static app_timer_id_t               	m_simulate_speed_timer_id;
 static app_timer_id_t               	m_ant_ctrl_timer_id;
 
 static bool								mb_profile_dirty = false;
@@ -423,6 +422,17 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 
+	
+#if defined(SIM_SPEED)
+	// DEBUG PURPOSES ONLY. Simulates speed for 1/4 second.
+	// 
+	// ((((speed_kmh / 3600) * 250) / wheel_size_m) * 18.5218325f);
+	// Where speed_kmh = 28.0f, ~17 revolutions per 1/4 of a second.
+	//
+	speed_simulate_flywheel_rev(17);
+
+#endif
+
 	// Get pointers to the event structures.
 	err_code = irt_power_meas_fifo_op(&p_power_meas_first, &p_power_meas_current);
 
@@ -462,43 +472,6 @@ static void ant_ctrl_timeout_handler(void * p_context)
 	UNUSED_PARAMETER(p_context);
 	ant_ctrl_device_avail_tx((uint8_t)mb_ant_ctrl_connected);
 }
-
-#if defined(SIM_SPEED)
-static void simulate_speed_timeout_handler(void)
-{
-	const float wheel_size_m = 2.07f;
-	const float wheel_to_flywheel_ratio = 18.5218325f;
-
-	float speed_kmh = 28.0f;
-
-	float wheel_revs_sec = ((speed_kmh/3600)*1000)/wheel_size_m;
-
-	// 2 times per second.
-	int flywheel_revs_sec = (int)((wheel_revs_sec * wheel_to_flywheel_ratio)/2);
-
-	speed_simulate_flywheel_rev(flywheel_revs_sec);
-}
-
-static void simulate_speed_start(float speed_kmh)
-{
-	// This function simulates the flywheel spinning for DEBUG purposes.
-	// It calculates what the speed of the flywheel would be and sets up a
-	// timer to simulate the flywheel revs on that frequency.
-	const uint32_t ticks = APP_TIMER_TICKS(500, APP_TIMER_PRESCALER);
-	uint32_t err_code;
-
-    err_code = app_timer_create(&m_simulate_speed_timer_id,
-                                APP_TIMER_MODE_REPEATED,
-                                simulate_speed_timeout_handler);
-
-    err_code = app_timer_start(m_simulate_speed_timer_id, ticks, NULL);
-}
-
-static void simlate_speed_stop(void)
-{
-	app_timer_stop(&m_simulate_speed_timer_id);
-}
-#endif
 
 /**@brief Function for starting the application timers.
  */
@@ -833,11 +806,6 @@ int main(void)
 
 	// Start the main loop for reporting ble services.
 	application_timers_start();
-
-#if defined(SIM_SPEED)
-	// DEBUG ONLY:
-	simulate_speed_start(0.0f);
-#endif
 
     // Enter main loop
     for (;;)
