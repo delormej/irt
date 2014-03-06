@@ -81,7 +81,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	if (error_code == 0x401F) //TRANSFER_IN_PROGRESS
 		return;
 		
-	nrf_gpio_pin_set(ASSERT_LED_PIN_NO);
+	set_led_red();
 
     // This call can be used for debug purposes during development of an application.
     // @note CAUTION: Activating this code will write the stack to flash on an error.
