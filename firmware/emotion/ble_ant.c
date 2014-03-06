@@ -235,31 +235,6 @@ static void services_init(void)
 	ant_ctrl_tx_init(ANT_CTRL_CHANNEL, mp_ant_ble_evt_handlers->on_ant_ctrl_command);
 }
 
-/**@brief Start advertising.
- */
-static void advertising_start(void)
-{
-    uint32_t err_code;
-	ble_gap_adv_params_t  adv_params;						// Parameters to be passed to the stack when starting advertising. */
-
-	// Initialize advertising parameters (used when starting advertising)
-	memset(&adv_params, 0, sizeof(ble_gap_adv_params_t));
-
-	adv_params.type = BLE_GAP_ADV_TYPE_ADV_IND;
-	adv_params.p_peer_addr = NULL;						// Undirected advertisement
-	adv_params.fp = BLE_GAP_ADV_FP_ANY;
-	adv_params.interval = APP_ADV_INTERVAL;
-	adv_params.timeout = APP_ADV_TIMEOUT_IN_SECONDS;
-
-	err_code = sd_ble_gap_adv_start(&adv_params);
-    APP_ERROR_CHECK(err_code);
-    
-    m_is_advertising = true;
-		
-	mp_ant_ble_evt_handlers->on_ble_advertising();
-}
-
-
 /**@brief Connection Parameters Module handler.
  *
  * @details This function will be called for all events in the Connection Parameters Module which
@@ -338,26 +313,6 @@ static void conn_params_init(void)
     err_code = ble_conn_params_init(&cp_init);
     APP_ERROR_CHECK(err_code);
 }
-
-/**@brief ANT CHANNEL_CLOSED event handler.
- */
-static void on_ant_evt_channel_closed(void)
-{
-    //uint32_t err_code;
-
-    if (!m_is_advertising && (m_conn_handle == BLE_CONN_HANDLE_INVALID))
-    {
-        // We do not have any activity on the radio at this time, so it is safe
-    	// persist to storage if we have to.
-        
-        // ANT channel was closed due to a BLE disconnection, restart advertising
-        advertising_start();
-    }
-
-    // Reopen ANT channel
-    ant_bp_tx_start();
-}
-
 
 /**@brief Application's TOP LEVEL Stack ANT event handler.
  *
@@ -480,12 +435,18 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas)
 {
 		uint32_t err_code;
 		
-		// Send ble message only if connected.
-		if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
-		{
-			err_code = ble_cps_cycling_power_measurement_send(&m_cps, p_cps_meas);
+		// TODO: THIS IS A HACK, BUT NEED TO REFACTOR.
+		static uint32_t event_count;
 
-			if (
+		// Only send BLE power every 4 messages (1hz vs. ANT is 4hz)
+		if (++event_count % 4 == 0)
+		{
+			// Send ble message only if connected.
+			if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+			{
+				err_code = ble_cps_cycling_power_measurement_send(&m_cps, p_cps_meas);
+
+				if (
 					(err_code != NRF_SUCCESS)
 					&&
 					(err_code != NRF_ERROR_INVALID_STATE)
@@ -493,11 +454,13 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas)
 					(err_code != BLE_ERROR_NO_TX_BUFFERS)
 					&&
 					(err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
-			)
-			{
+					)
+				{
 					APP_ERROR_HANDLER(err_code);
+				}
 			}
 		}
+
 		// Send ANT+ message.
 		ant_bp_tx_send(p_cps_meas);
 }
@@ -534,10 +497,34 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
     ant_bp_tx_init(mp_ant_ble_evt_handlers->on_set_resistance);
 }
 
+/**@brief Start advertising.
+*/
+void ble_advertising_start(void)
+{
+	uint32_t err_code;
+	ble_gap_adv_params_t  adv_params;						// Parameters to be passed to the stack when starting advertising. */
+
+	// Initialize advertising parameters (used when starting advertising)
+	memset(&adv_params, 0, sizeof(ble_gap_adv_params_t));
+
+	adv_params.type = BLE_GAP_ADV_TYPE_ADV_IND;
+	adv_params.p_peer_addr = NULL;						// Undirected advertisement
+	adv_params.fp = BLE_GAP_ADV_FP_ANY;
+	adv_params.interval = APP_ADV_INTERVAL;
+	adv_params.timeout = APP_ADV_TIMEOUT_IN_SECONDS;
+
+	err_code = sd_ble_gap_adv_start(&adv_params);
+	APP_ERROR_CHECK(err_code);
+
+	m_is_advertising = true;
+
+	mp_ant_ble_evt_handlers->on_ble_advertising();
+}
+
 void ble_ant_start()
 {
     // Start execution
-    advertising_start();
+	ble_advertising_start();
 		
 	// Open the ANT channel for transmitting power.
 	ant_bp_tx_start();

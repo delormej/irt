@@ -597,7 +597,11 @@ static void on_ble_connected(void)
 	
 static void on_ble_disconnected(void) 
 {
+	// Clear connection LED.
 	clear_led();
+	
+	// Restart advertising.
+	ble_advertising_start();
 }
 
 static void on_ble_timeout(void) 
