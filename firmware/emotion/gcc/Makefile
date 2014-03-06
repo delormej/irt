@@ -36,6 +36,7 @@ TEMPLATE_PATH = ../../gcc/
 CFLAGS = -g
 CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
+#CFLAGS += -DSIM_SPEED
 
 LDFLAGS += --specs=nano.specs 
 
