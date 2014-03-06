@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace ANT_Console_Demo
 {
@@ -207,11 +208,12 @@ namespace ANT_Console_Demo
         }
 
 
-        private byte[] GetBroadcastMessagePayload(ANT_Response response)
+        private byte[] GetMessagePayload(ANT_Response response)
         {
             switch ((ANT_ReferenceLibrary.ANTMessageID)response.responseID)
             {
                 case ANT_ReferenceLibrary.ANTMessageID.BROADCAST_DATA_0x4E:
+                case ANT_ReferenceLibrary.ANTMessageID.ACKNOWLEDGED_DATA_0x4F:
                     return response.getDataPayload();
                 default:
                     return null;
@@ -245,7 +247,7 @@ namespace ANT_Console_Demo
 
         void RemoteControlResponse(ANT_Response response)
         {
-            byte[] payload = GetBroadcastMessagePayload(response);
+            byte[] payload = GetMessagePayload(response);
             if (payload == null)
                 return;
 
@@ -284,7 +286,7 @@ namespace ANT_Console_Demo
 
         private void ProcessBikeSpeedResponse(ANT_Response response, byte channelId)
         {
-            byte[] payload = GetBroadcastMessagePayload(response);
+            byte[] payload = GetMessagePayload(response);
             if (payload == null)
                 return;
 
@@ -304,7 +306,7 @@ namespace ANT_Console_Demo
         private void ProcessBikePowerResponse(ANT_Response response, byte channelId)
         {
             // Determine if we have a power message to process.
-            byte[] payload = GetBroadcastMessagePayload(response);
+            byte[] payload = GetMessagePayload(response);
             if (payload == null)
                 return;
 
@@ -394,19 +396,19 @@ namespace ANT_Console_Demo
 
             byte ctrl_transmission_type = 0x05;
             byte ctrl_device_id = 0;
-
+            
             ANT_Channel quarq_channel = usb_ant_device.getChannel(QUARQ_ANT_CHANNEL);    // Get channel from ANT device
             ConfigureBikePowerChannel(quarq_channel, quarq_device_id, quarq_tranmission_type, QuarqChannelResponse);
-
+            
             ANT_Channel emotion_channel = usb_ant_device.getChannel(EMOTION_ANT_CHANNEL);    // Get channel from ANT device
             ConfigureBikePowerChannel(emotion_channel, emotion_device_id, emotion_tranmission_type, EmotionChannelResponse);
-
+            
             ANT_Channel bike_speed_channel = usb_ant_device.getChannel(BIKE_SPEED_ANT_CHANNEL);
             ConfigureBikeSpeedChannel(bike_speed_channel, speed_device_id, speed_transmission_type, SpeedChannelResponse);
-
+            
             m_ctrl_channel = usb_ant_device.getChannel(CTRL_ANT_CHANNEL);
             ConfigureRemoteControlChannel(m_ctrl_channel, ctrl_device_id, ctrl_transmission_type, RemoteControlResponse);
-
+            
             Console.WriteLine("Initialization was successful!");
         }
 
@@ -443,11 +445,15 @@ namespace ANT_Console_Demo
 
         static void Main(string[] args)
         {
+            Thread t = null;
+
             try
             {
                 Collector collector = new Collector();
-                collector.Start();
 
+                t = new Thread(new ThreadStart(collector.Start));
+                t.Start();
+                
                 using (Reporter reporter = new Reporter(collector))
                 {
                     reporter.Start();
@@ -457,7 +463,10 @@ namespace ANT_Console_Demo
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                t.Abort();
             }
+
+            t.Join(500);
         }
     }
 }

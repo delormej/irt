@@ -101,7 +101,7 @@ namespace ANT_Console_Demo
             if (wheel_ticks_delta == 0 || wheel_period_delta == 0)
                 return 0.0f;
 
-            // Calculate speed
+            // Calculate speed in meters per second.
             float speed = (wheel_ticks_delta * m_wheel_size_m) / (wheel_period_delta / 2048f);  
 
             return speed;
