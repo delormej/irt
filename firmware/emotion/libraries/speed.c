@@ -259,7 +259,7 @@ void set_wheel_size(uint16_t wheel_size_mm)
 /**@brief Simulates the flywheel moving. */
 void speed_simulate_flywheel_rev(uint8_t count)
 {
-	while (count--)
+	while (--count)
 		REVS_TIMER->TASKS_COUNT = 1;
 }
 
