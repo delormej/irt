@@ -12,7 +12,7 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <stdlib.h>
 #include <stdint.h>
 #include <float.h>
-#include "power.h"
+
 
 #define MAX_RESISTANCE_LEVELS 10						// Maximum resistance levels available.
 #define MIN_RESISTANCE_LEVEL	1500					// Minimum by which there is no longer resistance.
@@ -129,6 +129,7 @@ int main(int argc, char *argv [])
 	float speed_mps;
 	float force_needed;
 
+
 	printf("Press any key.");
 	scanf("Starting...");
 	/*
@@ -141,13 +142,23 @@ int main(int argc, char *argv [])
 
 	my_t* p_my	= NULL;
 	get_addr(&p_my);
-*/
+
 	weight_kg = 79.83219f;
 	speed_mps = 6.71f;
 	force_needed = 13.95185f;
 
 	position = calc_servo_pos(weight_kg, speed_mps, force_needed);
 	calc_power2(speed_mps, weight_kg, position, &watts);
+	*/
+
+	position = 5;
+
+	while (--position)
+		printf("count: %i\n", position);
+	/*
+	position = (33539 ^ 0xFFFF) + 8385;
+	watts = 0;mak
 
 	printf("val: %i||%i", position, watts);
+	*/
 }
