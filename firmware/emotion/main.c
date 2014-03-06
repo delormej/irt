@@ -473,8 +473,8 @@ static void simulate_speed_timeout_handler(void)
 
 	float wheel_revs_sec = ((speed_kmh/3600)*1000)/wheel_size_m;
 
-	// 3 times per second.
-	int flywheel_revs_sec = (int)((wheel_revs_sec * wheel_to_flywheel_ratio)/4);
+	// 2 times per second.
+	int flywheel_revs_sec = (int)((wheel_revs_sec * wheel_to_flywheel_ratio)/2);
 
 	speed_simulate_flywheel_rev(flywheel_revs_sec);
 }
@@ -484,7 +484,7 @@ static void simulate_speed_start(float speed_kmh)
 	// This function simulates the flywheel spinning for DEBUG purposes.
 	// It calculates what the speed of the flywheel would be and sets up a
 	// timer to simulate the flywheel revs on that frequency.
-	const uint32_t ticks = APP_TIMER_TICKS(250, APP_TIMER_PRESCALER);
+	const uint32_t ticks = APP_TIMER_TICKS(500, APP_TIMER_PRESCALER);
 	uint32_t err_code;
 
     err_code = app_timer_create(&m_simulate_speed_timer_id,
@@ -567,6 +567,7 @@ static void on_button_i(void)
 {
 	m_resistance_level = 0;
 	m_servo_pos = set_resistance(m_resistance_level);
+	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
 }
 
 static void on_button_ii(void)
@@ -580,6 +581,7 @@ static void on_button_ii(void)
 	if (m_resistance_level > 0)
 	{
 		m_servo_pos = set_resistance(--m_resistance_level);	
+		ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
 	}
 }
 
@@ -589,6 +591,7 @@ static void on_button_iii(void)
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 	{
 		m_servo_pos = set_resistance(++m_resistance_level);
+		ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
 	}
 }
 
@@ -596,6 +599,7 @@ static void on_button_iv(void)
 {
 	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
 	m_servo_pos = set_resistance(m_resistance_level);
+	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
 }
 
 static void on_accelerometer(uint8_t source)
