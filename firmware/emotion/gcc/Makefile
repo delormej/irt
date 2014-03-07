@@ -4,7 +4,6 @@ APPLICATION_SRCS += $(notdir $(wildcard ../**/*.c))
 
 # SDK libraries used.
 APPLICATION_SRCS += softdevice_handler.c
-APPLICATION_SRCS += ble_error_log.c
 APPLICATION_SRCS += ble_advdata.c
 APPLICATION_SRCS += ble_srv_common.c
 APPLICATION_SRCS += ble_dis.c
@@ -36,6 +35,7 @@ TEMPLATE_PATH = ../../gcc/
 CFLAGS = -g
 CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
+#CFLAGS += -DIRT_DEBUG
 #CFLAGS += -DSIM_SPEED
 
 LDFLAGS += --specs=nano.specs 
