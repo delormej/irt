@@ -55,6 +55,16 @@ static float calc_servo_force(float speed_mps, uint16_t servo_pos)
 	return force;
 }
 
+/* Calculates angular velocity based on wheel ticks and time.
+static float calc_angular_vel(uint8_t wheel_ticks, uint16_t period_2048)
+{
+	float value;
+
+	value = (2.0f * MATH_PI * wheel_ticks) / (period_2048 / 2048.0f);
+
+	return value;
+}*/
+
 uint8_t calc_power2(float speed_mps, float weight_kg, 
 	uint16_t servo_pos, int16_t* p_watts)
 {
