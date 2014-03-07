@@ -295,10 +295,9 @@ void ant_bp_tx_send(irt_power_meas_t * p_cps_meas)
 		static uint8_t power_page_interleave 					= POWER_PAGE_INTERLEAVE_COUNT;
 		static uint8_t product_page_interleave 				= PRODUCT_PAGE_INTERLEAVE_COUNT;
 		static uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
-		uint32_t err_code;		
+		uint32_t err_code = 0;		
 
-		// Increment global event_count.
-		event_count++;
+		event_count++;		// Increment event counter.
 
 		if (event_count % power_page_interleave == 0)
 		{
@@ -315,13 +314,14 @@ void ant_bp_tx_send(irt_power_meas_t * p_cps_meas)
 			err_code = manufacturer_page_transmit();
 		}
 		else
-		{
+		{ 
+			// Always send the torque transmission.
 			// # Default broadcast message is torque.
-			err_code = torque_transmit(p_cps_meas->accum_torque, 
-											p_cps_meas->last_wheel_event_time, 
-											p_cps_meas->accum_wheel_revs);
+			err_code = torque_transmit(p_cps_meas->accum_torque,
+				p_cps_meas->last_wheel_event_time,
+				p_cps_meas->accum_wheel_revs);
 		}
-		
+	
 		APP_ERROR_CHECK(err_code);
 }
 
