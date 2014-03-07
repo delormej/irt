@@ -348,17 +348,18 @@ static int32_t calculate_power(irt_power_meas_t* p_power_meas)
 		// the wrong spot to keep this.
 		static uint16_t 			m_accum_torque = 0;
 		uint32_t err_code;
-		
+		int16_t		watts;
+		uint16_t 	torque;
+
 		speed_event_t			speed_event;
 		memset(&speed_event, 0, sizeof(speed_event));
-
+		
 		// Calculate speed.
 		// TODO: use error handling here.
 		calc_speed(&speed_event);
-		float speed_mph = get_speed_mph(speed_event.speed_mps);
-		
+		/*float speed_mph = get_speed_mph(speed_event.speed_mps);
+
 		// Calculate power.
-		int16_t		watts					= 0;
 		/*err_code = calc_power(speed_mph, m_user_profile.total_weight_kg * 2.20462262, m_resistance_level, &watts);
 		// TODO: Handle the error for real here, not sure what the overall error 
 		// handling strategy will be, but this is not critical, just move on.
@@ -366,40 +367,42 @@ static int32_t calculate_power(irt_power_meas_t* p_power_meas)
 			return;		
 		*/
 		err_code = calc_power2(speed_event.speed_mps, m_user_profile.total_weight_kg, m_servo_pos, &watts);
-		// TODO: Handle the error for real here, not sure what the overall error 
-		// handling strategy will be, but this is not critical, just move on.
-		if (err_code != IRT_SUCCESS)
-			return err_code;
+		APP_ERROR_CHECK(err_code);
 			
 		// Calculate torque.
-		uint16_t 	torque				= 0;
 		err_code = calc_torque(watts, speed_event.period_2048, &torque);
-		if (err_code != IRT_SUCCESS)
-			// TODO: handle error here, or at least bubble up.
-			return err_code;
-		
+		APP_ERROR_CHECK(err_code);
+
 		// Store accumulated torque for the session.
 		m_accum_torque += torque;
 		
-		p_power_meas->instant_power 				= watts;
-		p_power_meas->accum_torque 				= m_accum_torque;
+		p_power_meas->instant_power 		= watts;
+		p_power_meas->accum_torque 			= m_accum_torque;
 		p_power_meas->accum_wheel_revs 		= speed_event.accum_wheel_revs;
-		p_power_meas->last_wheel_event_time= speed_event.event_time_2048;
+		p_power_meas->last_wheel_event_time	= speed_event.event_time_2048;
 		
-		p_power_meas->resistance_mode			= m_resistance_mode;
-		p_power_meas->resistance_level			= m_resistance_level;
-		p_power_meas->servo_position			= m_servo_pos;
+		p_power_meas->resistance_mode		= m_resistance_mode;
+		p_power_meas->resistance_level		= m_resistance_level;
+		p_power_meas->servo_position		= m_servo_pos;
 
 		p_power_meas->instant_speed_mps		= speed_event.speed_mps;
 
 #if defined(BLE_NUS_ENABLED)
-		static const char format[] = "r,w,l:%i,%i,%i";
+/*		static const char format[] = "r,w,l:%i,%i,%i";
 		char message[16];
 		memset(&message, 0, sizeof(message));
 		uint8_t length = sprintf(message, format, 
-															speed_event.accum_flywheel_revs, 
-															watts, 
-															m_resistance_level);
+								speed_event.accum_flywheel_revs, 
+								watts, 
+								m_resistance_level);
+								*/
+		static const char format[] = "t,w:%i,%i";
+		char message[16];
+		memset(&message, 0, sizeof(message));
+		uint8_t length = sprintf(message, format,
+			speed_event.event_time_2048,
+			speed_event.accum_wheel_revs);
+
 		debug_send(message, sizeof(message));
 #endif			
 
@@ -424,16 +427,6 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 		
-#if defined(SIM_SPEED)
-	// DEBUG PURPOSES ONLY. Simulates speed for 1/4 second.
-	// 
-	// ((((speed_kmh / 3600) * 250) / wheel_size_m) * 18.5218325f);
-	// Where speed_kmh = 28.0f, ~17 revolutions per 1/4 of a second.
-	//
-	speed_simulate_flywheel_rev(34);
-
-#endif
-
 	// Get pointers to the event structures.
 	err_code = irt_power_meas_fifo_op(&p_power_meas_first, &p_power_meas_current);
 	APP_ERROR_CHECK(err_code);
