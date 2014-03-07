@@ -14,6 +14,13 @@
 #include "app_error.h"
 #include "app_util.h"
 
+// RTC1 is based on a 32.768khz crystal, or in other words it oscillates
+// 32768 times per second.  The PRESCALER determins how often a tick gets
+// counted.  With a prescaler of 0, there are 32,768 ticks in 1 second
+// 1/2048th of a second would be 16 ticks (32768/2048)
+// # of 2048th's would then be ticks / 16.
+#define	TICK_FREQUENCY	(32768 / (NRF_RTC1->PRESCALER + 1))
+
 static uint16_t 	m_wheel_size;									// Wheel diameter size in mm.
 static float 			m_flywheel_to_wheel_revs;			// Number of flywheel revolutions for 1 wheel revolution.
 
@@ -105,21 +112,12 @@ static uint32_t get_flywheel_revs()
  */
 static uint16_t get_seconds_2048()
 {
-	// TODO: Optimize this out - only need to figure this out once.
-	
-	// RTC1 is based on a 32.768khz crystal, or in other words it oscillates
-	// 32768 times per second.  The PRESCALER determins how often a tick gets
-	// counted.  With a prescaler of 0, there are 32,768 ticks in 1 second
-	// 1/2048th of a second would be 16 ticks (32768/2048)
-	// # of 2048th's would then be ticks / 16.
-	float freq = 32768/(NRF_RTC1->PRESCALER+1);
-
 	// Get current tick count.
 	uint32_t ticks = NRF_RTC1->COUNTER;
 
 	// Based on frequence of ticks, calculate 1/2048 seconds.
 	// freq (hz) = times per second.
-	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (freq / 2048));
+	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (TICK_FREQUENCY / 2048));
 
 	return seconds_2048;
 }
