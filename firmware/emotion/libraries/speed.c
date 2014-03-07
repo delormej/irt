@@ -130,7 +130,7 @@ float get_speed_mps(float wheel_revolutions, uint16_t period_seconds_2048)
 	// Convert mm to meters, muliply by revs, multiply by 1,000 for km.
 	float distance_m = (((float)m_wheel_size) / 1000.0f) * wheel_revolutions;
 	// Get speed in meters per second.
-	float mps = distance_m / (period_seconds_2048 / 2048);
+	float mps = distance_m / (period_seconds_2048 / 2048.0f);
 
 	return mps;
 }
