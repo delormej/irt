@@ -114,7 +114,10 @@ static void sys_evt_dispatch(uint32_t sys_evt)
  * 		  speed module and updates the user profile.  */
 static void set_wheel_params(uint8_t *pBuffer)
 {
-	uint16_t wheel_size = pBuffer[0] | pBuffer[1] << 8u;
+	uint16_t wheel_size;
+	
+	// Comes as 20700 for example, we'll round to nearest mm.
+	wheel_size = (pBuffer[0] | pBuffer[1] << 8u) / 10;
 
 	if (m_user_profile.wheel_size_mm != wheel_size)
 	{
@@ -631,7 +634,7 @@ static void on_ant_power_data(void) {}
 static void on_set_resistance(rc_evt_t rc_evt)
 {
 	// TODO: Write a macro for extracting the 2 byte value with endianness.			
-	
+
 	// 
 	// Parse the messages and set state or resistance as appropriate.
 	//
