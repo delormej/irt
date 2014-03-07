@@ -55,11 +55,6 @@ typedef struct speed_event_s
 */
 void init_speed(uint32_t pin_flywheel_rev);
 
-/**@brief 	Simulates a number of flywheel revolutions.
-*
-*/
-void speed_simulate_flywheel_rev(uint8_t count);
-
 /**@brief 	Set's the wheel size.  Defaults to DEFAULT_WHEEL_SIZE_MM if not set.
 *
 */

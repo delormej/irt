@@ -97,6 +97,17 @@ static void revs_init_timer()
  */
 static uint32_t get_flywheel_revs()
 {
+// DEBUG ONLY CODE
+#if defined(SIM_SPEED)
+	// DEBUG PURPOSES ONLY. Simulates speed for 1/4 second.
+	// 
+	// ((((speed_kmh / 3600) * 250) / wheel_size_m) * 18.5218325f);
+	// Where speed_kmh = 28.0f, ~17 revolutions per 1/4 of a second.
+	//
+	static uint32_t r = 0;
+	return r+=28;
+#endif
+
 	uint32_t revs = 0;
 
 	REVS_TIMER->TASKS_CAPTURE[0] = 1;
@@ -252,13 +263,6 @@ void set_wheel_size(uint16_t wheel_size_mm)
 	const float ratio 						= (2.07/0.11176)/2.07;
 	// For every 1 wheel revolution the flywheel revolves this many times.
 	m_flywheel_to_wheel_revs 	= (wheel_size_mm/1000)*ratio;
-}
-
-/**@brief Simulates the flywheel moving. */
-void speed_simulate_flywheel_rev(uint8_t count)
-{
-	while (--count)
-		REVS_TIMER->TASKS_COUNT = 1;
 }
 
 void init_speed(uint32_t pin_flywheel_rev)
