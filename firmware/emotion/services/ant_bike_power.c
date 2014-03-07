@@ -124,34 +124,35 @@ static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 
 static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel_period_2048, uint8_t wheel_ticks)
 {
-		// Only update the event count if a new event occurred.
-		// NOTE: Torque message uses it's OWN event count, not to be confused with other message
-		// event counts.
-		if (m_torque_tx_buffer[WHEEL_TICKS_INDEX] != wheel_ticks)
-		{
-			++(m_torque_tx_buffer[EVENT_COUNT_INDEX]);
-		}
-    m_torque_tx_buffer[WHEEL_TICKS_INDEX]   					= wheel_ticks;
-    m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX]   			= LOW_BYTE(last_wheel_period_2048);   
-		m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX]   			= HIGH_BYTE(last_wheel_period_2048);   
-		m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(accumulated_torque);            
-    m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(accumulated_torque);                
+	// Always update the event count.
+	++(m_torque_tx_buffer[EVENT_COUNT_INDEX]);
 
-		return broadcast_message_transmit(m_torque_tx_buffer);
+	// If the wheel is not moving, wheel ticks AND wheel period should not increment.
+	// We determine if the wheel moved by seeing if wheel_ticks has changed.
+	if (m_torque_tx_buffer[WHEEL_TICKS_INDEX] != wheel_ticks)
+	{
+		m_torque_tx_buffer[WHEEL_TICKS_INDEX] = wheel_ticks;
+		m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX] = LOW_BYTE(last_wheel_period_2048);
+		m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX] = HIGH_BYTE(last_wheel_period_2048);
+		m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(accumulated_torque);
+		m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(accumulated_torque);
+	}
+		
+	return broadcast_message_transmit(m_torque_tx_buffer);
 }
 
 static uint32_t power_transmit(uint16_t watts)
 {	
-    static uint16_t accumulated_power                 = 0;            
-    accumulated_power                                += watts;
+	static uint16_t accumulated_power                 = 0;            
+	accumulated_power                                += watts;
 		
-    ++(m_power_tx_buffer[EVENT_COUNT_INDEX]);
-    m_power_tx_buffer[ACCUMMULATED_POWER_LSB_INDEX]   = LOW_BYTE(accumulated_power);        
-    m_power_tx_buffer[ACCUMMULATED_POWER_MSB_INDEX]   = HIGH_BYTE(accumulated_power);   
-    m_power_tx_buffer[INSTANT_POWER_LSB_INDEX]        = LOW_BYTE(watts);            
-    m_power_tx_buffer[INSTANT_POWER_MSB_INDEX]        = HIGH_BYTE(watts);                
+	++(m_power_tx_buffer[EVENT_COUNT_INDEX]);
+	m_power_tx_buffer[ACCUMMULATED_POWER_LSB_INDEX]   = LOW_BYTE(accumulated_power);        
+	m_power_tx_buffer[ACCUMMULATED_POWER_MSB_INDEX]   = HIGH_BYTE(accumulated_power);   
+	m_power_tx_buffer[INSTANT_POWER_LSB_INDEX]        = LOW_BYTE(watts);            
+	m_power_tx_buffer[INSTANT_POWER_MSB_INDEX]        = HIGH_BYTE(watts);                
 			
-		return broadcast_message_transmit(m_power_tx_buffer);
+	return broadcast_message_transmit(m_power_tx_buffer);
 }
 
 static __INLINE uint32_t product_page_transmit(void)
