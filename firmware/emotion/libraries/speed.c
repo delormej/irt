@@ -194,12 +194,11 @@ float get_speed_mph(float speed_mps)
 void calc_speed(speed_event_t* speed_event)
 {
 	static uint32_t last_accum_flywheel_revs 	= 0;
-	static uint32_t last_accum_wheel_revs 		= 0;
 	static uint16_t last_event_time_2048 			= 0;
 
 	uint16_t time_delta;
-	uint8_t accum_wheel_revs;
 	uint16_t current_2048;
+	uint32_t accum_wheel_revs;
 	uint32_t accum_flywheel_revs;
 	uint8_t flywheel_revs;
 	float wheel_revs_partial;
@@ -211,6 +210,9 @@ void calc_speed(speed_event_t* speed_event)
 	accum_flywheel_revs = get_flywheel_revs();
 	flywheel_revs = accum_flywheel_revs - last_accum_flywheel_revs;
 
+	// Accumlated wheel revolutions.
+	accum_wheel_revs = (uint32_t) (accum_flywheel_revs / m_flywheel_to_wheel_revs);
+
 	if (flywheel_revs > 0)
 	{
 		// Handle rollover situations.
@@ -218,9 +220,6 @@ void calc_speed(speed_event_t* speed_event)
 			time_delta = (last_event_time_2048 ^ 0xFFFF) + current_2048;
 		else
 			time_delta = current_2048 - last_event_time_2048;
-
-		// Accumlated wheel revolutions.
-		accum_wheel_revs = (uint8_t) (accum_flywheel_revs / m_flywheel_to_wheel_revs);
 
 		// Calculate partial wheel revs in the period.
 		wheel_revs_partial = ((float)flywheel_revs / m_flywheel_to_wheel_revs);
@@ -240,14 +239,13 @@ void calc_speed(speed_event_t* speed_event)
 		// The flywheel hasn't moved, so we're stopped.
 		speed_event->speed_mps = 0;
 		speed_event->event_time_2048 = current_2048;
-		speed_event->accum_wheel_revs = last_accum_wheel_revs;
+		speed_event->accum_wheel_revs = accum_wheel_revs;
 		speed_event->period_2048 = current_2048 - last_event_time_2048;
 	}
 	
 	speed_event->accum_flywheel_revs = flywheel_revs;	// for debug purposes only.
 	
 	// Save state in static variables for next calculation.
-	last_accum_wheel_revs = accum_wheel_revs;
 	last_event_time_2048 = current_2048;
 	last_accum_flywheel_revs = accum_flywheel_revs;
 }

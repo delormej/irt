@@ -303,7 +303,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_cps_meas)
 		// # Default broadcast message is torque.
 		err_code = torque_transmit(p_cps_meas->accum_torque,
 			p_cps_meas->last_wheel_event_time,
-			p_cps_meas->accum_wheel_revs);
+			(uint8_t)p_cps_meas->accum_wheel_revs);
 		
 		if (event_count % power_page_interleave == 0)
 		{

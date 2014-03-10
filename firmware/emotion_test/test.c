@@ -13,10 +13,9 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <stdint.h>
 #include <float.h>
 
-
 #define MAX_RESISTANCE_LEVELS 10						// Maximum resistance levels available.
 #define MIN_RESISTANCE_LEVEL	1500					// Minimum by which there is no longer resistance.
-
+#define	MATH_PI			3.14159265358979f
 
 static const uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = {
 	2107, // 0 - no resistance
@@ -120,11 +119,25 @@ static uint16_t calc_servo_pos(float weight_kg, float speed_mps, float force_nee
 	return servo_pos;
 }
 
+static float calc_angular_vel(uint8_t wheel_ticks, uint16_t period_2048)
+{
+	float value;
+
+	value = (2.0f * MATH_PI * wheel_ticks) / (period_2048 / 2048.0f);
+
+	return value;
+}
+
+static uint16_t calc_torque(int16_t watts, uint16_t period_seconds_2048)
+{
+	return (watts * period_seconds_2048) / (128 * MATH_PI);
+}
+
 
 int main(int argc, char *argv [])
 {
 	uint16_t position;
-	uint16_t watts;
+	uint16_t torque;
 	float weight_kg;
 	float speed_mps;
 	float force_needed;
@@ -151,10 +164,10 @@ int main(int argc, char *argv [])
 	calc_power2(speed_mps, weight_kg, position, &watts);
 	*/
 
-	position = 5;
-
-	while (--position)
-		printf("count: %i\n", position);
+	speed_mps = calc_angular_vel(2, 512);
+	torque = calc_torque(250, 512);
+	
+	printf("ang_vel: %f, %i \n", speed_mps, torque);
 	/*
 	position = (33539 ^ 0xFFFF) + 8385;
 	watts = 0;mak

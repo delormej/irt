@@ -378,7 +378,7 @@ static int32_t calculate_power(irt_power_meas_t* p_power_meas)
 		
 		p_power_meas->instant_power 		= watts;
 		p_power_meas->accum_torque 			= m_accum_torque;
-		p_power_meas->accum_wheel_revs 		= speed_event.accum_wheel_revs;
+		p_power_meas->accum_wheel_revs		= speed_event.accum_wheel_revs;
 		p_power_meas->last_wheel_event_time	= speed_event.event_time_2048;
 		
 		p_power_meas->resistance_mode		= m_resistance_mode;
