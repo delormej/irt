@@ -297,8 +297,14 @@ void ant_bp_tx_send(irt_power_meas_t * p_cps_meas)
 		static uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
 		uint32_t err_code = 0;		
 
-		event_count++;		// Increment event counter.
+		event_count++;		// Always increment event counter.
 
+		// Always send the torque transmission.
+		// # Default broadcast message is torque.
+		err_code = torque_transmit(p_cps_meas->accum_torque,
+			p_cps_meas->last_wheel_event_time,
+			p_cps_meas->accum_wheel_revs);
+		
 		if (event_count % power_page_interleave == 0)
 		{
 			// # Only transmit standard power message every 5th power message. 
@@ -313,15 +319,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_cps_meas)
 		{
 			err_code = manufacturer_page_transmit();
 		}
-		else
-		{ 
-			// Always send the torque transmission.
-			// # Default broadcast message is torque.
-			err_code = torque_transmit(p_cps_meas->accum_torque,
-				p_cps_meas->last_wheel_event_time,
-				p_cps_meas->accum_wheel_revs);
-		}
-	
+		
 		APP_ERROR_CHECK(err_code);
 }
 
