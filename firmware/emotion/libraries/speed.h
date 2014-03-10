@@ -48,6 +48,7 @@ typedef struct speed_event_s
 	uint32_t 	accum_wheel_revs;													// Count of accumulated wheel revolutions at this time stamp.
 	uint32_t 	accum_flywheel_revs;											// Count of flywheel revs.
 	float			speed_mps;																// Speed in meters per second.	
+	uint8_t		period_wheel_revs;
 } speed_event_t;
 
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.
