@@ -37,7 +37,7 @@ typedef struct irt_power_meas_s
 	uint16_t	top_dead_spot_angle;											// Unit is in degrees with a resolution of 1. 
 	uint16_t	bottom_dead_spot_angle;*/										// Unit is in degrees with a resolution of 1. 
 	uint16_t	accum_energy;															// Unit is in kilojoules with a resolution of 1.
-	uint16_t	period_2048;
+	uint16_t	wheel_period_2048;
 	float		instant_speed_mps;
 	// TODO: these should be removed & seperated from power measurement.  
 	// This is only temporary until we use the scheduler.

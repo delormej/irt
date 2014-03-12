@@ -124,20 +124,20 @@ static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 
 static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel_period_2048, uint8_t wheel_ticks)
 {
-	// Always update the event count.
-	++(m_torque_tx_buffer[EVENT_COUNT_INDEX]);
-
 	// If the wheel is not moving, wheel ticks AND wheel period should not increment.
 	// We determine if the wheel moved by seeing if wheel_ticks has changed.
 	if (m_torque_tx_buffer[WHEEL_TICKS_INDEX] != wheel_ticks)
 	{
+		// Only increment event count if there was wheel movement.
+		++(m_torque_tx_buffer[EVENT_COUNT_INDEX]);
+
 		m_torque_tx_buffer[WHEEL_TICKS_INDEX] = wheel_ticks;
 		m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX] = LOW_BYTE(last_wheel_period_2048);
 		m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX] = HIGH_BYTE(last_wheel_period_2048);
 		m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(accumulated_torque);
 		m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(accumulated_torque);
 	}
-		
+
 	return broadcast_message_transmit(m_torque_tx_buffer);
 }
 
@@ -289,38 +289,46 @@ void ant_bp_tx_start(void)
     APP_ERROR_CHECK(err_code);
 }
 
-void ant_bp_tx_send(irt_power_meas_t * p_cps_meas)
+void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 {
-		static uint16_t event_count										= 0;
-		static uint8_t power_page_interleave 					= POWER_PAGE_INTERLEAVE_COUNT;
-		static uint8_t product_page_interleave 				= PRODUCT_PAGE_INTERLEAVE_COUNT;
-		static uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
-		uint32_t err_code = 0;		
+	const uint8_t power_page_interleave = POWER_PAGE_INTERLEAVE_COUNT;
+	const uint8_t product_page_interleave 			= PRODUCT_PAGE_INTERLEAVE_COUNT;
+	const uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
 
-		event_count++;		// Always increment event counter.
+	static uint16_t event_count = 0;
+	uint32_t err_code = 0;		
 
-		// Always send the torque transmission.
+	//
+	// Using an EVENT-syncronous update methodology.  The last wheel time is 
+	// adjusted to when the last wheel rotation occured.  See section 8 of ANT+ 
+	// Bicycle Power Device Profile.
+	//
+
+	event_count++;		// Always increment event counter.
+
+	if (event_count % power_page_interleave == 0)
+	{
+		// # Only transmit standard power message every 5th power message. 
+		err_code = power_transmit(p_power_meas->instant_power);
+	}
+	else if (event_count % product_page_interleave == 0)
+	{			
+		// # Figures out which common message to submit at which time.
+		err_code = product_page_transmit();
+	}
+	else if (event_count % manufacturer_page_interleave == 0)
+	{
+		err_code = manufacturer_page_transmit();
+	}
+	else
+	{
 		// # Default broadcast message is torque.
-		err_code = torque_transmit(p_cps_meas->accum_torque,
-			p_cps_meas->last_wheel_event_time,
-			(uint8_t)p_cps_meas->accum_wheel_revs);
+		err_code = torque_transmit(p_power_meas->accum_torque,
+			p_power_meas->last_wheel_event_time,
+			(uint8_t) p_power_meas->accum_wheel_revs);
+	}
 		
-		if (event_count % power_page_interleave == 0)
-		{
-			// # Only transmit standard power message every 5th power message. 
-			err_code = power_transmit(p_cps_meas->instant_power);
-		}
-		else if (event_count % product_page_interleave == 0)
-		{			
-			// # Figures out which common message to submit at which time.
-			err_code = product_page_transmit();
-		}
-		else if (event_count % manufacturer_page_interleave == 0)
-		{
-			err_code = manufacturer_page_transmit();
-		}
-		
-		APP_ERROR_CHECK(err_code);
+	APP_ERROR_CHECK(err_code);
 }
 
 void ant_bp_resistance_tx_send(resistance_mode_t mode, uint8_t* level)

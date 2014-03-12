@@ -25,6 +25,7 @@ static uint16_t m_wheel_size;					// Wheel diameter size in mm.
 static float m_flywheel_to_wheel_revs;			// Ratio of flywheel revolutions for 1 wheel revolution.
 static uint32_t m_last_accum_flywheel_revs = 0;
 static uint16_t m_last_event_time_2048 = 0;
+static uint16_t m_last_wheel_event_time = 0;
 
 /**@brief	Configure GPIO input from flywheel revolution pin and create an 
  *				event on achannel. 
@@ -153,11 +154,11 @@ float get_speed_mps(float wheel_revolutions, uint16_t period_seconds_2048)
  *					Returns a value in 1/2048's of a second.
  *
  */
-static uint16_t fractional_wheel_rev_time_2048(float speed_mps, float wheel_revs)
+static uint16_t fractional_wheel_rev_time_2048(float wheel_revs, float speed_mps)
 {
 	uint16_t time_to_full_rev_2048 = 0;
 	
-	if (speed_mps > 0)
+	if (speed_mps > 0.0f)
 	{
 		// Get the speed in meters per 1/2048s.
 		float speed_2048 = speed_mps / 2048;
@@ -211,7 +212,9 @@ uint32_t calc_speed(irt_power_meas_t* p_power_meas)
 	uint32_t accum_flywheel_revs;
 	uint32_t flywheel_revs;
 	uint16_t time_since_full_rev_2048;
+	uint16_t event_period_2048;
 	float wheel_revs_partial;
+	float accum_wheel_revs_partial;
 
 	// Current time stamp.
 	event_time_2048 = get_seconds_2048();
@@ -225,39 +228,63 @@ uint32_t calc_speed(irt_power_meas_t* p_power_meas)
 	// Only calculate speed if the flywheel has rotated.
 	if (flywheel_revs > 0)
 	{
-		// Handle time rollover situations.
+		// Handle time rollover.
 		if (event_time_2048 < m_last_event_time_2048)
-			p_power_meas->period_2048 = (m_last_event_time_2048 ^ 0xFFFF) + event_time_2048;
+			event_period_2048 = (m_last_event_time_2048 ^ 0xFFFF) + event_time_2048;
 		else
-			p_power_meas->period_2048 = event_time_2048 - m_last_event_time_2048;
+			event_period_2048 = event_time_2048 - m_last_event_time_2048;
 
 		// Calculate partial wheel revs in the period.
-		wheel_revs_partial = ((float)flywheel_revs / m_flywheel_to_wheel_revs);
+		wheel_revs_partial = ((float) flywheel_revs / m_flywheel_to_wheel_revs);
 
 		// Calculate the current speed in meters per second.
 		p_power_meas->instant_speed_mps = get_speed_mps(
 			wheel_revs_partial,
-			p_power_meas->period_2048);	// Current time period in 1/2048 seconds.
+			event_period_2048);	// Current event time period in 1/2048 seconds.
+
+		// Total number of partial wheel revs.
+		accum_wheel_revs_partial = accum_flywheel_revs / m_flywheel_to_wheel_revs;
 
 		/*
 		 Speed (mps) is calculated based on flywheel revolutions.
 		 The Bicycle Power service only reports on full wheel revolutions,
-		 so we track two different event periods.
-		*/
+		 so we need to back up to the last full wheel rev.
+		 */
+
+		// Cast to int and truncate to last complete wheel rev.
+		p_power_meas->accum_wheel_revs = (uint32_t) accum_wheel_revs_partial;
+
 		// Determine time since a full wheel rev in 1/2048's of a second at this speed.
 		time_since_full_rev_2048 = fractional_wheel_rev_time_2048(
-			p_power_meas->instant_speed_mps,
-			wheel_revs_partial);
+			accum_wheel_revs_partial,
+			p_power_meas->instant_speed_mps);
 
-		// Assign the speed event to the last calculated complete wheel revolution.
+		// Time of the last complete wheel revolution.
 		p_power_meas->last_wheel_event_time = event_time_2048 - time_since_full_rev_2048;
-		
-		// Cast to int and truncate any partial wheel rev.
-		p_power_meas->accum_wheel_revs = 
-			(uint32_t) (accum_flywheel_revs / m_flywheel_to_wheel_revs);
 
+		// Amount of time since the prior reported complete wheel revolution.
+		if (p_power_meas->last_wheel_event_time < m_last_wheel_event_time)
+		{
+			p_power_meas->wheel_period_2048 = 
+				(m_last_wheel_event_time ^ 0xFFFF) + p_power_meas->last_wheel_event_time;
+		}
+		else
+		{
+			p_power_meas->wheel_period_2048 =
+				p_power_meas->last_wheel_event_time - m_last_wheel_event_time;
+		}
+		
+		//
 		// Save state for next calculation.
+		//
+
+		// Last time of a full wheel rev.
+		m_last_wheel_event_time = p_power_meas->last_wheel_event_time;
+		
+		// Last time event was calculated (used for speed in mps).
 		m_last_event_time_2048 = event_time_2048;
+		
+		// Last reported complete flywheel revs.
 		m_last_accum_flywheel_revs = accum_flywheel_revs;
 	}
 

@@ -370,7 +370,8 @@ static int32_t calculate_power(irt_power_meas_t* p_power_meas)
 			
 		// Calculate torque.
 		err_code = calc_torque(p_power_meas->instant_power, 
-			p_power_meas->period_2048, &torque);
+			p_power_meas->wheel_period_2048, 
+			&torque);
 		APP_ERROR_CHECK(err_code);
 
 		// Store accumulated torque for the session.
