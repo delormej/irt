@@ -39,17 +39,8 @@
 #include "nrf_assert.h"
 #include "nrf_gpiote.h"
 #include "nrf_gpio.h"
+#include "irt_common.h"
 
-/**@brief		Structure for holding the last speed event.*/
-typedef struct speed_event_s
-{
-	uint16_t	period_2048;															// Time period in 1/2048's of second since the prior event.
-	uint16_t 	event_time_2048;													// Time stamp of the associated wheel revolution in 1/2048's of a second.
-	uint32_t 	accum_wheel_revs;													// Count of accumulated wheel revolutions at this time stamp.
-	uint32_t 	accum_flywheel_revs;											// Count of flywheel revs.
-	float			speed_mps;																// Speed in meters per second.	
-	uint8_t		period_wheel_revs;
-} speed_event_t;
 
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.
 *
@@ -64,7 +55,7 @@ void set_wheel_size(uint16_t wheel_size_mm);
 /**@brief 	Calculates the current speed.
 *
 */
-void calc_speed(speed_event_t* current_speed_event);
+uint32_t calc_speed(irt_power_meas_t* p_power_meas);
 
 /**@brief 	Calculates the current speed in meters per second.
 *
