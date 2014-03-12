@@ -128,8 +128,8 @@ static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel
 	// We determine if the wheel moved by seeing if wheel_ticks has changed.
 	if (m_torque_tx_buffer[WHEEL_TICKS_INDEX] != wheel_ticks)
 	{
-		// Only increment event count if there was wheel movement.
-		++(m_torque_tx_buffer[EVENT_COUNT_INDEX]);
+		// Event-synchronous model.  Wheel ticks = event count.
+		m_torque_tx_buffer[EVENT_COUNT_INDEX] = wheel_ticks;
 
 		m_torque_tx_buffer[WHEEL_TICKS_INDEX] = wheel_ticks;
 		m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX] = LOW_BYTE(last_wheel_period_2048);
