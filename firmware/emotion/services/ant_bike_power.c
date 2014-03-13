@@ -304,28 +304,29 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	// Bicycle Power Device Profile.
 	//
 
+	
+	// # Default broadcast message is torque.
+	err_code = torque_transmit(p_power_meas->accum_torque,
+		p_power_meas->last_wheel_event_time,
+		(uint8_t) p_power_meas->accum_wheel_revs);
 	event_count++;		// Always increment event counter.
 
 	if (event_count % power_page_interleave == 0)
 	{
 		// # Only transmit standard power message every 5th power message. 
 		err_code = power_transmit(p_power_meas->instant_power);
+		event_count++;		// Always increment event counter.
 	}
 	else if (event_count % product_page_interleave == 0)
 	{			
 		// # Figures out which common message to submit at which time.
 		err_code = product_page_transmit();
+		event_count++;		// Always increment event counter.
 	}
 	else if (event_count % manufacturer_page_interleave == 0)
 	{
 		err_code = manufacturer_page_transmit();
-	}
-	else
-	{
-		// # Default broadcast message is torque.
-		err_code = torque_transmit(p_power_meas->accum_torque,
-			p_power_meas->last_wheel_event_time,
-			(uint8_t) p_power_meas->accum_wheel_revs);
+		event_count++;		// Always increment event counter.
 	}
 		
 	APP_ERROR_CHECK(err_code);
