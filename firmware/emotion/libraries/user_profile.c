@@ -37,7 +37,7 @@ uint32_t user_profile_init(void)
 	}
 
 	// We're smaller than the min block size, so use that.
-	param.block_size  = PSTORAGE_MIN_BLOCK_SIZE; // sizeof (user_profile_t)
+	param.block_size  = sizeof (user_profile_t);
     param.block_count = 1u;
     param.cb          = up_pstorage_cb_handler;
 
@@ -56,7 +56,7 @@ uint32_t user_profile_load(user_profile_t *p_user_profile)
 
     err_code = pstorage_load((uint8_t *)p_user_profile,
     						&m_user_profile_storage,
-    						sizeof(user_profile_t),
+    						sizeof (user_profile_t),
     						USER_PROFILE_OFFSET);
 
     return err_code;
@@ -65,15 +65,17 @@ uint32_t user_profile_load(user_profile_t *p_user_profile)
 uint32_t user_profile_store(user_profile_t *p_user_profile)
 {
     uint32_t err_code;
-    user_profile_t profile;
 
-    // Make an intermediate copy of the profile because any changes to source
-    // between now and the write could cause corruption.
-    profile = *p_user_profile;
+    // Seems like you have to clear pages before it will let you write to them.
+    err_code = pstorage_clear(&m_user_profile_storage, sizeof (user_profile_t));
+    if (err_code != NRF_SUCCESS)
+    {
+    	return err_code;
+    }
 
     err_code = pstorage_store(&m_user_profile_storage,
-                               (uint8_t *)&profile,
-                               sizeof(user_profile_t),
+                               (uint8_t *)p_user_profile,
+                               sizeof (user_profile_t),
                                USER_PROFILE_OFFSET);
 
 	return err_code;

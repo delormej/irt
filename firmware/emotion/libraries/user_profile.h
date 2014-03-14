@@ -17,6 +17,7 @@
 typedef struct user_profile_s {
 	float		total_weight_kg;
 	uint16_t	wheel_size_mm;
+	uint8_t		reserved[8]; // for block storage alignment.
 } user_profile_t;
 
 
