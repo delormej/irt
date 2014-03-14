@@ -221,12 +221,9 @@ static void profile_update(void)
 		// This method ensures the device is in a proper state in order to update
 		// the profile.
 		err_code = user_profile_store(&m_user_profile);
+		APP_ERROR_CHECK(err_code);
 
-		// If successful, clear the dirty flag.
-		if (err_code == NRF_SUCCESS)
-		{
-			mb_profile_dirty = false;
-		}
+		mb_profile_dirty = false;
 	}
 }
 
@@ -544,6 +541,10 @@ static void on_button_i(void)
 
 static void on_button_ii(void)
 {
+	/*uint32_t err_code;
+	err_code = user_profile_store(&m_user_profile);
+	APP_ERROR_CHECK(err_code);*/
+
 	// decrement
 	if (m_resistance_level > 0)
 	{
@@ -554,6 +555,10 @@ static void on_button_ii(void)
 
 static void on_button_iii(void)
 {
+	/*uint32_t err_code;
+	err_code = user_profile_load(&m_user_profile);
+	APP_ERROR_CHECK(err_code);*/
+
 	// increment
 	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 	{
