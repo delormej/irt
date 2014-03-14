@@ -15,9 +15,13 @@
 #include <stdint.h>
 
 typedef struct user_profile_s {
-	float			total_weight_kg;
+	float		total_weight_kg;
 	uint16_t	wheel_size_mm;
 } user_profile_t;
+
+
+/**@brief Initializes access to storage. */
+uint32_t user_profile_init(void);
 
 /**@brief Loads the user's profile from device persistent storage. */
 uint32_t user_profile_load(user_profile_t *p_user_profile);

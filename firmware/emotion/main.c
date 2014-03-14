@@ -29,6 +29,7 @@
 #include "softdevice_handler.h"
 #include "nrf_error.h"
 #include "app_scheduler.h"
+#include "pstorage.h"
 #include "irt_common.h"
 #include "irt_peripheral.h"
 #include "resistance.h"
@@ -41,8 +42,10 @@
 
 #define ANT_CTRL_INTERVAL				APP_TIMER_TICKS(2000, APP_TIMER_PRESCALER)  /**< Remote control availability annoncement. */
 #define CYCLING_POWER_MEAS_INTERVAL		APP_TIMER_TICKS(250, APP_TIMER_PRESCALER) /**< Bike power measurement interval (ticks). */
-#define DEFAULT_WHEEL_SIZE_MM			2070u
+#define DEFAULT_WHEEL_SIZE_MM			2069u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
+#define SIM_CRR							0.004f
+#define SIM_C							0.60f
 
 #define BLE_ADV_BLINK_RATE_MS			500u
 
@@ -103,7 +106,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
 	// TODO: Process storage events.
-	//pstorage_sys_event_handler(sys_evt);
+	pstorage_sys_event_handler(sys_evt);
 }
 
 /*----------------------------------------------------------------------------
@@ -171,21 +174,32 @@ static void profile_init(void)
 
 		uint32_t err_code;
 
+		err_code = user_profile_init();
+		APP_ERROR_CHECK(err_code);
+
 		// Initialize hard coded user profile for now.
 		memset(&m_user_profile, 0, sizeof(m_user_profile));
 		
-		err_code = user_profile_load(&m_user_profile);
+		// Initialize simulation forces structure.
+		memset(&m_sim_forces, 0, sizeof(m_sim_forces));
 
-		if (m_user_profile.wheel_size_mm == 0)
+		// Attempt to load stored profile from flash.
+		err_code = user_profile_load(&m_user_profile);
+		APP_ERROR_CHECK(err_code);
+
+		if (m_user_profile.wheel_size_mm == 0 ||
+				m_user_profile.wheel_size_mm == 0xFFFF)
+		{
 			// Wheel circumference in mm.
 			m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
+		}
 		
-		if (m_user_profile.total_weight_kg == 0.0f)
+		if (m_user_profile.total_weight_kg == 0.0f ||
+				((uint32_t)m_user_profile.total_weight_kg) == 0xFFFFFFFF)
+		{
 			// Total weight of rider + bike + shoes, clothing, etc...
 			m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
-		
-		// Initialize simulation forces structure.
-		memset(&m_sim_forces, 0, sizeof(m_sim_forces));	
+		}
 		
 	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004. 
 	 *
@@ -193,8 +207,8 @@ static void profile_init(void)
 	 *	coefficent (unitless); and Rho is the air density (kg/m^3). The default value 
 	 *	for A*Cw*Rho is 0.60. 	
 	 */
-		m_sim_forces.crr 								= 0.004f;
-		m_sim_forces.c 									= 0.60f;
+		m_sim_forces.crr = SIM_CRR;
+		m_sim_forces.c = SIM_C;
 }
 
 /**@brief Persists any updates the user profile. */
@@ -530,11 +544,6 @@ static void on_button_i(void)
 
 static void on_button_ii(void)
 {
-	/* TODO: wrap this in an ifdef for DEBUG.
-	uint8_t data[] = "button_ii_event";
-	debug_send(&data[0], sizeof(data));
-	*/
-	
 	// decrement
 	if (m_resistance_level > 0)
 	{
@@ -734,6 +743,8 @@ static void on_power_down(void)
  */
 int main(void)
 {
+	uint32_t err_code;
+
 	// initialize the user profile.
 	profile_init();
 
@@ -770,13 +781,12 @@ int main(void)
 	// Initializes the soft device, Bluetooth and ANT stacks.
 	ble_ant_init(&ant_ble_handlers);
 
-	// Initialize the scheduler.
-	scheduler_init();
-
     // Subscribe for system events.
-	uint32_t err_code;
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
     APP_ERROR_CHECK(err_code);
+
+	// Initialize the scheduler.
+	scheduler_init();
 
 	// Begin advertising and receiving ANT messages.
 	ble_ant_start();
@@ -787,8 +797,6 @@ int main(void)
 
 	// Initialize module to read speed from flywheel.
 	init_speed(PIN_FLYWHEEL);
-	if (m_user_profile.wheel_size_mm > 0)
-		set_wheel_size(m_user_profile.wheel_size_mm);
 
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);
