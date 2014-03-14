@@ -480,12 +480,6 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 	
 	// Initialize S310 SoftDevice
     ble_ant_stack_init();
-
-	// TODO: storage initialiation should be in MAIN, but it needs to happen after the SD is initialized, but before it's started I think.
-    // Initialize persistent storage module.
-    uint32_t err_code;
-	err_code = pstorage_init();
-    APP_ERROR_CHECK(err_code);		
     
     // Initialize Bluetooth stack parameters
     gap_params_init();
