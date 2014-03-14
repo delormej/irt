@@ -65,7 +65,7 @@ uint32_t user_profile_load(user_profile_t *p_user_profile)
 uint32_t user_profile_store(user_profile_t *p_user_profile)
 {
     uint32_t err_code;
-    uint8_t profile[8];
+    user_profile_t profile;
 
     // Make an intermediate copy of the profile because any changes to source
     // between now and the write could cause corruption.
