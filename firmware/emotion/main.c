@@ -59,11 +59,12 @@ static uint16_t							m_servo_pos;
 static app_timer_id_t               	m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
 static app_timer_id_t               	m_ant_ctrl_timer_id;
 
-static bool								mb_profile_dirty = false;
 static user_profile_t 					m_user_profile;
 static rc_sim_forces_t					m_sim_forces;
 
 static bool								mb_ant_ctrl_connected = false;
+
+static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 
 /*----------------------------------------------------------------------------
  * Error Handlers
@@ -125,7 +126,8 @@ static void set_wheel_params(uint8_t *pBuffer)
 	if (m_user_profile.wheel_size_mm != wheel_size)
 	{
 		m_user_profile.wheel_size_mm = wheel_size;
-		mb_profile_dirty = true;
+		// Schedule an update to persist the profile to flash.
+		app_sched_event_put(NULL, 0, profile_update_sched_handler);
 	}
 
 	// Call speed module to set the wheel size.
@@ -142,7 +144,9 @@ static void set_sim_params(uint8_t *pBuffer)
 	if (m_user_profile.total_weight_kg != weight)
 	{
 		m_user_profile.total_weight_kg = weight;
-		mb_profile_dirty = true; 	// flag that we have changes to save.
+
+		// Schedule an update to persist the profile to flash.
+		app_sched_event_put(NULL, 0, profile_update_sched_handler);
 	}
 
 	// Co-efficient for rolling resistance.
@@ -216,15 +220,10 @@ static void profile_update(void)
 {
 	uint32_t err_code;
 
-	if (mb_profile_dirty)
-	{
-		// This method ensures the device is in a proper state in order to update
-		// the profile.
-		err_code = user_profile_store(&m_user_profile);
-		APP_ERROR_CHECK(err_code);
-
-		mb_profile_dirty = false;
-	}
+	// This method ensures the device is in a proper state in order to update
+	// the profile.
+	err_code = user_profile_store(&m_user_profile);
+	APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Parses the resistance percentage out of the KICKR command.
@@ -412,6 +411,17 @@ static int32_t calculate_power(irt_power_meas_t* p_power_meas)
 		return IRT_SUCCESS;
 }
 
+/**@brief Function for handling profile update.
+ *
+ * @details This function will be called by the scheduler to update the profile.
+ * 			Writing to flash causes the radio to stop, so we don't want to do this
+ * 			too often, so we let the scheduler decide when.
+ */
+static void profile_update_sched_handler(void *p_event_data, uint16_t event_size)
+{
+	profile_update();
+}
+
 /*----------------------------------------------------------------------------
  * Timer functions
  * ----------------------------------------------------------------------------*/
@@ -453,14 +463,6 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 	{
 		resistance_adjust(p_power_meas_first, p_power_meas_current);
 	}
-
-	// TODO: ideally we run from a battery and we don't have
-	// to do this here.  This is just in case the cord some
-	// how gets yanked before it's time to shutdown.
-	// Only attempt this if dirty is set and every 10 transmits.
-	static uint8_t counter = 1;
-	if (mb_profile_dirty && (counter++ %10))
-		profile_update();
 }
 
 static void ant_ctrl_timeout_handler(void * p_context)
