@@ -282,7 +282,12 @@ namespace ANT_Console_Demo
                               0x00 // Unused (extra byte for command)
                           };
 
-            m_ctrl_channel.sendAcknowledgedData(data);
+            ANT_ReferenceLibrary.MessagingReturnCode code = m_ctrl_channel.sendAcknowledgedData(data, 500);
+
+            if (code == ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            {
+                return;
+            }
         }
 
         void SetWeight(float weight)
@@ -443,7 +448,7 @@ namespace ANT_Console_Demo
             ushort quarq_device_id = 52652;
             byte quarq_tranmission_type = 0x5;
 
-            ushort emotion_device_id = 1;
+            ushort emotion_device_id = 0;
             byte emotion_tranmission_type = 0xA5;
 
             byte speed_transmission_type = 0x01;
