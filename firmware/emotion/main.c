@@ -41,15 +41,12 @@
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 
-#define ANT_CTRL_INTERVAL				APP_TIMER_TICKS(2000, APP_TIMER_PRESCALER)  /**< Remote control availability annoncement. */
-#define CYCLING_POWER_MEAS_INTERVAL		APP_TIMER_TICKS(250, APP_TIMER_PRESCALER) /**< Bike power measurement interval (ticks). */
+#define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define DEFAULT_WHEEL_SIZE_MM			2069u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
 #define SIM_CRR							0.004f
 #define SIM_C							0.60f
-
 #define BLE_ADV_BLINK_RATE_MS			500u
-
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
 #define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
@@ -57,8 +54,7 @@
 static uint8_t 							m_resistance_level = 0;
 static resistance_mode_t				m_resistance_mode = RESISTANCE_SET_STANDARD;
 static uint16_t							m_servo_pos;
-static app_timer_id_t               	m_cycling_power_timer_id;                    /**< Cycling power measurement timer. */
-static app_timer_id_t               	m_ant_ctrl_timer_id;
+static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.
 
 static user_profile_t 					m_user_profile;
 static rc_sim_forces_t					m_sim_forces;
@@ -429,7 +425,7 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
  * @param[in]   p_context   Pointer used for passing some arbitrary information (context) from the
  *                          app_start_timer() call to the timeout handler.
  */
-static void cycling_power_meas_timeout_handler(void * p_context)
+static void ant_4hz_timeout_handler(void * p_context)
 {
 	UNUSED_PARAMETER(p_context);
 	uint32_t err_code;
@@ -459,11 +455,8 @@ static void cycling_power_meas_timeout_handler(void * p_context)
 	{
 		resistance_adjust(p_power_meas_first, p_power_meas_current);
 	}
-}
 
-static void ant_ctrl_timeout_handler(void * p_context)
-{
-	UNUSED_PARAMETER(p_context);
+	// Send remote control availability.
 	ant_ctrl_device_avail_tx((uint8_t)mb_ant_ctrl_connected);
 }
 
@@ -474,22 +467,16 @@ static void application_timers_start(void)
     uint32_t err_code;
 
     // Start application timers
-    err_code = app_timer_start(m_cycling_power_timer_id, CYCLING_POWER_MEAS_INTERVAL, NULL);
+    err_code = app_timer_start(m_ant_4hz_timer_id, ANT_4HZ_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
-
-	err_code = app_timer_start(m_ant_ctrl_timer_id, ANT_CTRL_INTERVAL, NULL);
-	APP_ERROR_CHECK(err_code);
 }
 
 static void application_timers_stop(void)
 {
 	uint32_t err_code;
 		
-	err_code = app_timer_stop(m_cycling_power_timer_id);
+	err_code = app_timer_stop(m_ant_4hz_timer_id);
     APP_ERROR_CHECK(err_code);
-
-	err_code = app_timer_stop(m_ant_ctrl_timer_id);
-	APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Timer initialization.
@@ -503,16 +490,10 @@ static void timers_init(void)
 	// Initialize timer module
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
 
-    err_code = app_timer_create(&m_cycling_power_timer_id,
+    err_code = app_timer_create(&m_ant_4hz_timer_id,
                                 APP_TIMER_MODE_REPEATED,
-                                cycling_power_meas_timeout_handler);
+                                ant_4hz_timeout_handler);
     
-	APP_ERROR_CHECK(err_code);
-
-	err_code = app_timer_create(&m_ant_ctrl_timer_id,
-		APP_TIMER_MODE_REPEATED,
-		ant_ctrl_timeout_handler);
-	
 	APP_ERROR_CHECK(err_code);
 }
 
