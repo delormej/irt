@@ -266,12 +266,16 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	err_code = torque_transmit(p_power_meas->accum_torque,
 		p_power_meas->last_wheel_event_time,
 		(uint8_t) p_power_meas->accum_wheel_revs);
+	APP_ERROR_CHECK(err_code);
+
 	event_count++;		// Always increment event counter.
 
 	if (event_count % power_page_interleave == 0)
 	{
 		// # Only transmit standard power message every 5th power message. 
 		err_code = power_transmit(p_power_meas->instant_power);
+		APP_ERROR_CHECK(err_code);
+
 		event_count++;		// Always increment event counter.
 	}
 	else if (event_count % product_page_interleave == 0)
@@ -285,8 +289,6 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
 		event_count++;		// Always increment event counter.
 	}
-		
-	APP_ERROR_CHECK(err_code);
 }
 
 void ant_bp_resistance_tx_send(resistance_mode_t mode, uint8_t* level)
