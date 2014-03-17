@@ -25,6 +25,9 @@
 #define CTRL_CMD_STATUS_PAGE		0x47		// Command status - Common Page 71
 #define CTRL_CMD_PAGE				0x49		// Generic Command Page - Common Data Page 73
 
+const uint8_t manufacturer_page_interleave = 65u;
+const uint8_t product_page_interleave = 130u;
+
 typedef enum 
 {
 	Req_Page		= 0x01,						// Request Data Page
@@ -116,6 +119,7 @@ static void on_command_page(ant_ctrl_data_page73_t* p_page)
 	// Assign the event data payload.
 	evt.sequence = p_page->sequence;
 	evt.command = p_page->command_lsb;
+	evt.remote_serial_no = p_page->slave_serial;
 
 	// Raise the control command event.
 	m_on_ctrl_command(evt);							// TODO: should this return a value to indicate success?
@@ -201,6 +205,7 @@ void ant_ctrl_tx_stop(void)
 
 void ant_ctrl_device_avail_tx(uint8_t notifications)
 {
+	static uint8_t event_count;		// Event count for interleaving common pages.
 	uint32_t err_code;
 
 	// Copy the template and set notification status.
@@ -210,8 +215,22 @@ void ant_ctrl_device_avail_tx(uint8_t notifications)
 	err_code = sd_ant_broadcast_message_tx(m_channel_id,
 		TX_BUFFER_SIZE, 
 		(uint8_t*) &page);
-	
-	APP_ERROR_CHECK(err_code); 
+	APP_ERROR_CHECK(err_code);
+
+	event_count++;	// Increment event count.
+
+	// Interleave common pages.
+	if (event_count % product_page_interleave == 0)
+	{
+		// # Figures out which common message to submit at which time.
+		ANT_COMMON_PAGE_TRANSMIT(m_channel_id, ant_product_page);
+		event_count++;		// Always increment event counter.
+	}
+	else if (event_count % manufacturer_page_interleave == 0)
+	{
+		ANT_COMMON_PAGE_TRANSMIT(m_channel_id, ant_manufacturer_page);
+		event_count++;		// Always increment event counter.
+	}
 }
 
 void ant_ctrl_rx_handle(ant_evt_t * p_ant_evt)

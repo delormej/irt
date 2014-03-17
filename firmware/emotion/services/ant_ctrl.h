@@ -38,6 +38,7 @@ typedef struct
 {
 	uint8_t			sequence;
 	ctrl_command_e	command;
+	uint16_t		remote_serial_no;
 } ctrl_evt_t;
 
 // Event Handler type.
