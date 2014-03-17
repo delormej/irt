@@ -11,6 +11,7 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <math.h>
 #include <float.h>
 
 #define MAX_RESISTANCE_LEVELS 10						// Maximum resistance levels available.
@@ -141,6 +142,8 @@ int main(int argc, char *argv [])
 	float weight_kg;
 	float speed_mps;
 	float force_needed;
+	float partial_wheel_rev;
+	float partial_wheel_rev2;
 
 
 	printf("Press any key.");
@@ -162,12 +165,17 @@ int main(int argc, char *argv [])
 
 	position = calc_servo_pos(weight_kg, speed_mps, force_needed);
 	calc_power2(speed_mps, weight_kg, position, &watts);
-	*/
+	
 
 	speed_mps = calc_angular_vel(2, 512);
 	torque = calc_torque(250, 512);
-	
-	printf("ang_vel: %f, %i \n", speed_mps, torque);
+	*/
+
+	partial_wheel_rev = fmod(1.8992, 1);
+	partial_wheel_rev2 = fmod(0.94996, 1);
+
+
+	printf("1,2: %f, %f \n", partial_wheel_rev, partial_wheel_rev2);
 	/*
 	position = (33539 ^ 0xFFFF) + 8385;
 	watts = 0;mak
@@ -175,3 +183,12 @@ int main(int argc, char *argv [])
 	printf("val: %i||%i", position, watts);
 	*/
 }
+
+// New speed module.
+
+static uint32_t accum_flywheel_revs;
+static uint16_t last_wheel_event_2048;
+
+// Returns the last flywheel revs.
+static uint32_t flywheel_revs_get();
+

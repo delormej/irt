@@ -63,6 +63,7 @@ namespace ANT_Console_Demo
         CollectorEventData m_last_event = new CollectorEventData();
         Calculator m_calculator = new Calculator();
 
+        ANT_Channel m_emotion_channel = null;
         ANT_Channel m_ctrl_channel = null;
         byte m_ctrl_sequence = 0;
 
@@ -284,6 +285,39 @@ namespace ANT_Console_Demo
             m_ctrl_channel.sendAcknowledgedData(data);
         }
 
+        void SetWeight(float weight)
+        {
+            /*
+            if (m_emotion_channel == null)
+                return;
+
+            int value = (int)(weight * 100);
+
+            uint8_t dataPage;   // SET_RESISTANCE_PAGE
+            uint8_t commandId;      // 0x43
+            uint8_t responseStatus; 
+            uint8_t // data starts here
+            uint8_t responseData0;
+            uint8_t responseData1;
+            uint8_t responseData2;
+            uint8_t responseData3;
+
+            // pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
+
+            byte[] data = {
+                              SET_RESISTANCE_PAGE, 
+                              0xA1, // Random slave serial number
+                              0xFE, // (con't)
+                              0xFB, // Random manufacturer ID
+                              0xFB, // (con't)
+                              m_ctrl_sequence++, // increment sequence
+                              command, // actual command
+                              0x00 // Unused (extra byte for command)
+                          };
+
+            m_emotion_channel.sendAcknowledgedData(data); */
+        }
+
         private void ProcessBikeSpeedResponse(ANT_Response response, byte channelId)
         {
             byte[] payload = GetMessagePayload(response);
@@ -370,8 +404,29 @@ namespace ANT_Console_Demo
 
         private void ProcessEmotionResistanceMessage(byte[] payload)
         {
-            m_last_event.resistance_level = (ushort)(payload[RESISTANCE_LEVEL_LSB_INDEX] |
-                            payload[RESISTANCE_LEVEL_MSB_INDEX] << 8);
+            // Only process set resistance standard acknowledgement.
+            switch (payload[1])
+            {
+                case 0x41:
+                    m_last_event.resistance_level = (ushort)(payload[RESISTANCE_LEVEL_LSB_INDEX] |
+                                payload[RESISTANCE_LEVEL_MSB_INDEX] << 8);
+                    break;
+
+                case 0x40:
+                case 0x42:
+                case 0x43:
+                case 0x44:
+                case 0x45:
+                case 0x46:
+                case 0x47:
+                    // Intentional fall through for any set resistance command other than standard.
+                    m_last_event.resistance_level = 0;
+                    break;
+
+                default:
+                    // All other messages should not impact resistance level.
+                    break;
+            }
         }
 
         private void DeviceResponse(ANT_Response response)
@@ -400,8 +455,8 @@ namespace ANT_Console_Demo
             ANT_Channel quarq_channel = usb_ant_device.getChannel(QUARQ_ANT_CHANNEL);    // Get channel from ANT device
             ConfigureBikePowerChannel(quarq_channel, quarq_device_id, quarq_tranmission_type, QuarqChannelResponse);
             
-            ANT_Channel emotion_channel = usb_ant_device.getChannel(EMOTION_ANT_CHANNEL);    // Get channel from ANT device
-            ConfigureBikePowerChannel(emotion_channel, emotion_device_id, emotion_tranmission_type, EmotionChannelResponse);
+            m_emotion_channel = usb_ant_device.getChannel(EMOTION_ANT_CHANNEL);    // Get channel from ANT device
+            ConfigureBikePowerChannel(m_emotion_channel, emotion_device_id, emotion_tranmission_type, EmotionChannelResponse);
             
             ANT_Channel bike_speed_channel = usb_ant_device.getChannel(BIKE_SPEED_ANT_CHANNEL);
             ConfigureBikeSpeedChannel(bike_speed_channel, speed_device_id, speed_transmission_type, SpeedChannelResponse);

@@ -78,7 +78,7 @@ namespace ANT_Console_Demo
 
             SpeedEvent previousEvent = events[0];
             SpeedEvent latestEvent = events[count - 1];
-            
+
             // Wheel ticks (revolutions)
             byte wheel_ticks_delta = 0;
             if (latestEvent.CumulativeWheelRevs < previousEvent.CumulativeWheelRevs)
@@ -102,7 +102,11 @@ namespace ANT_Console_Demo
                 return 0.0f;
 
             // Calculate speed in meters per second.
-            float speed = (wheel_ticks_delta * m_wheel_size_m) / (wheel_period_delta / 2048f);  
+            float speed = (wheel_ticks_delta * m_wheel_size_m) / (wheel_period_delta / 2048f);
+
+            /*Console.WriteLine(string.Format("Revs Previous: {0}, Last: {1}, Time Delta {2}, Speed: {3}",
+                previousEvent.CumulativeWheelRevs, latestEvent.CumulativeWheelRevs,
+                wheel_period_delta, speed));*/
 
             return speed;
         }

@@ -50,19 +50,10 @@ namespace ANT_Console_Demo
                 eventData.emotion_power,
                 eventData.quarq_power,
                 calculatedWatts,
-                eventData.resistance_level);
-
-            if (wheelTorqueEvents != null)
-            {
-                int i = wheelTorqueEvents.Length - 1;
-                /*
-                data +=
-                    String.Format(" Tq:{0}, T:{1}, R:{2}",
-                        wheelTorqueEvents[i].CumulativeTorque,
-                        wheelTorqueEvents[i].EventTime,
-                        wheelTorqueEvents[i].CumulativeWheelRevs);
-                 */
-            }
+                eventData.resistance_level
+                //wheelTorqueEvents != null ? wheelTorqueEvents[wheelTorqueEvents.Length - 1].CumulativeWheelRevs : 0,
+                //wheelTorqueEvents != null ? wheelTorqueEvents[wheelTorqueEvents.Length-1].EventTime : 0
+                );
 
             m_logFileWriter.WriteLine(data);
 
