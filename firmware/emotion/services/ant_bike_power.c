@@ -7,10 +7,6 @@
 #include "app_error.h"
 #include "ant_parameters.h"
 #include "ant_interface.h"
-#include "irt_emotion.h"
-
-#define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
-#define LOW_BYTE(word)               		(uint8_t)(word & 0x00FFu)                   /**< Get low byte of a uint16_t. */
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
 #define MANUFACTURER_PAGE_INTERLEAVE_COUNT	121u
@@ -36,11 +32,6 @@
 #define BP_PAGE_1               		 0x01u   /**< Calibration message main data page. */
 #define BP_PAGE_STANDARD_POWER_ONLY  0x10u   /**< Standard Power only main data page. */
 #define BP_PAGE_TORQUE_AT_WHEEL		   0x11u   /**< Power reported as torque at wheel data page, which includes speed. */
-#define COMMON_PAGE_80          		 0x50u   /**< Manufacturer's identification common data page. */
-#define COMMON_PAGE_81          		 0x51u   /**< Product information common data page. */
-//#define COMMON_PAGE_BATTERY_VOLTAGE 0x52u   /**< TODO: Optional battery voltage reporting. */
-
-#define BP_PAGE_RESERVE_BYTE    		 0xFFu   /**< Page reserved value. */
 
 #define ANT_BP_CHANNEL_TYPE          0x10                                         /**< Channel Type TX. */
 #define ANT_BP_DEVICE_TYPE           0x0B                                         /**< Channel ID device type. */
@@ -76,8 +67,8 @@ typedef struct
 } ANTMsgWahoo240_t;
 /*****************************************************************************/
 
-static uint8_t 					m_power_tx_buffer[TX_BUFFER_SIZE];
-static uint8_t 					m_torque_tx_buffer[TX_BUFFER_SIZE];
+static uint8_t m_power_tx_buffer[TX_BUFFER_SIZE];
+static uint8_t m_torque_tx_buffer[TX_BUFFER_SIZE];
 static rc_evt_handler_t m_on_set_resistance;
 
 // TODO: Implement required calibration page.
@@ -155,40 +146,6 @@ static uint32_t power_transmit(uint16_t watts)
 	return broadcast_message_transmit(m_power_tx_buffer);
 }
 
-static __INLINE uint32_t product_page_transmit(void)
-{
-    static const uint8_t tx_buffer[TX_BUFFER_SIZE] = 
-    {
-        COMMON_PAGE_81, 
-        BP_PAGE_RESERVE_BYTE, 
-        BP_PAGE_RESERVE_BYTE, 
-        SW_REVISION, 
-        (uint8_t)(SERIAL_NUMBER), 
-        (uint8_t)(SERIAL_NUMBER >> 8u), 
-        (uint8_t)(SERIAL_NUMBER >> 16u), 
-        (uint8_t)(SERIAL_NUMBER >> 24u)
-    };       
-        
-    return broadcast_message_transmit(tx_buffer); 	
-}
-
-static __INLINE uint32_t manufacturer_page_transmit(void)
-{    
-    static const uint8_t tx_buffer[TX_BUFFER_SIZE] = 
-    {
-        COMMON_PAGE_80, 
-        BP_PAGE_RESERVE_BYTE, 
-        BP_PAGE_RESERVE_BYTE, 
-        HW_REVISION, 
-        LOW_BYTE(MANUFACTURER_ID), 
-        HIGH_BYTE(MANUFACTURER_ID), 
-        LOW_BYTE(MODEL_NUMBER), 
-        HIGH_BYTE(MODEL_NUMBER)
-    };       
-    
-    return broadcast_message_transmit(tx_buffer); 
-}
-
 // Right now all this method does is handle resistance control messages.
 // TODO: need to implement calibration requests as well.
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
@@ -262,25 +219,25 @@ void ant_bp_tx_init(rc_evt_handler_t on_set_resistance)
     err_code = sd_ant_channel_period_set(ANT_BP_TX_CHANNEL, ANT_BP_MSG_PERIOD);
     APP_ERROR_CHECK(err_code);
 		
-		// Initialize power transmit buffer.
-    m_power_tx_buffer[PAGE_NUMBER_INDEX]              = BP_PAGE_STANDARD_POWER_ONLY;
-    m_power_tx_buffer[EVENT_COUNT_INDEX]              = 0;
-    m_power_tx_buffer[PEDAL_POWER_INDEX]              = BP_PAGE_RESERVE_BYTE;    
-    m_power_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;         
-		m_power_tx_buffer[ACCUMMULATED_POWER_LSB_INDEX]   = 0;        
-    m_power_tx_buffer[ACCUMMULATED_POWER_MSB_INDEX]   = 0;            
-    m_power_tx_buffer[INSTANT_POWER_LSB_INDEX]        = 0;
-    m_power_tx_buffer[INSTANT_POWER_MSB_INDEX]        = 0;      
+	// Initialize power transmit buffer.
+	m_power_tx_buffer[PAGE_NUMBER_INDEX]              = BP_PAGE_STANDARD_POWER_ONLY;
+	m_power_tx_buffer[EVENT_COUNT_INDEX]              = 0;
+	m_power_tx_buffer[PEDAL_POWER_INDEX]              = BP_PAGE_RESERVE_BYTE;
+	m_power_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;
+	m_power_tx_buffer[ACCUMMULATED_POWER_LSB_INDEX]   = 0;
+	m_power_tx_buffer[ACCUMMULATED_POWER_MSB_INDEX]   = 0;
+	m_power_tx_buffer[INSTANT_POWER_LSB_INDEX]        = 0;
+	m_power_tx_buffer[INSTANT_POWER_MSB_INDEX]        = 0;
 
-		// Initialize torque transmit buffer.
-    m_torque_tx_buffer[PAGE_NUMBER_INDEX]              = BP_PAGE_TORQUE_AT_WHEEL;
-    m_torque_tx_buffer[EVENT_COUNT_INDEX]              = 0;
-		m_torque_tx_buffer[WHEEL_TICKS_INDEX]              = 0;    
-		m_torque_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;         
-    m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX]         = 0;         
-		m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX]   			 = 0;        
-    m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX]  = 0;            
-    m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX]  = 0;
+	// Initialize torque transmit buffer.
+	m_torque_tx_buffer[PAGE_NUMBER_INDEX]              = BP_PAGE_TORQUE_AT_WHEEL;
+	m_torque_tx_buffer[EVENT_COUNT_INDEX]              = 0;
+	m_torque_tx_buffer[WHEEL_TICKS_INDEX]              = 0;
+	m_torque_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;
+	m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX]         = 0;
+	m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX]   	   = 0;
+	m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX]  = 0;
+	m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX]  = 0;
 }
 
 void ant_bp_tx_start(void)
@@ -320,12 +277,12 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	else if (event_count % product_page_interleave == 0)
 	{			
 		// # Figures out which common message to submit at which time.
-		err_code = product_page_transmit();
+		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_product_page);
 		event_count++;		// Always increment event counter.
 	}
 	else if (event_count % manufacturer_page_interleave == 0)
 	{
-		err_code = manufacturer_page_transmit();
+		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
 		event_count++;		// Always increment event counter.
 	}
 		
