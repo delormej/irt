@@ -404,6 +404,10 @@ namespace ANT_Console_Demo
                 case SET_RESISTANCE_PAGE:
                     ProcessEmotionResistanceMessage(payload);
                     break;
+
+                case 0x24:
+                    m_last_event.resistance_level = payload[5];
+                    break;
             }
         }
 

@@ -350,6 +350,14 @@ static int32_t calculate_power(irt_power_meas_t* p_power_meas)
 		uint32_t err_code;
 		uint16_t torque;
 
+		// Get current temperature.
+		p_power_meas->temp = temperature_read();
+
+		// Track current servo position & resistance mode.
+		p_power_meas->resistance_mode = m_resistance_mode;
+		p_power_meas->resistance_level = m_resistance_level;
+		p_power_meas->servo_position = m_servo_pos;
+
 		// Calculate speed.
 		err_code = calc_speed(p_power_meas);
 		APP_ERROR_CHECK(err_code);
@@ -418,7 +426,7 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
  * Timer functions
  * ----------------------------------------------------------------------------*/
 
-/**@brief Function for handling the cycling power measurement timer timeout.
+/**@brief Function for handling the ANT 4hz measurement timer timeout.
  *
  * @details This function will be called each timer expiration.
  *
