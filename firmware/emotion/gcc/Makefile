@@ -38,6 +38,17 @@ CFLAGS += -DBLE_NUS_ENABLED
 #CFLAGS += -DIRT_DEBUG
 #CFLAGS += -DSIM_SPEED
 
+############################################
+# Define the Software Revision.
+############################################
+CFLAGS += -DSW_REVISION=0x02
+
+############################################
+# Define the device ID.  
+# TODO: this should be done another way.
+############################################
+CFLAGS += -DANT_DEVICE_NUMBER=0x02
+
 LDFLAGS += --specs=nano.specs 
 
 GDB_PORT_NUMBER = 2331
