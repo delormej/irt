@@ -59,7 +59,7 @@ static app_timer_id_t               	m_ant_4hz_timer_id;                    		//
 static user_profile_t 					m_user_profile;
 static rc_sim_forces_t					m_sim_forces;
 
-static bool								mb_ant_ctrl_connected = false;
+static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 
@@ -456,8 +456,9 @@ static void ant_4hz_timeout_handler(void * p_context)
 		resistance_adjust(p_power_meas_first, p_power_meas_current);
 	}
 
-	// Send remote control availability.
-	ant_ctrl_device_avail_tx((uint8_t)mb_ant_ctrl_connected);
+	// Send remote control availability.  Notification flag is 1 if a serial number
+	// is connected, 0 if none are connected.
+	ant_ctrl_device_avail_tx((uint8_t) (m_ant_ctrl_remote_ser_no != 0));
 }
 
 /**@brief Function for starting the application timers.
@@ -690,8 +691,18 @@ static void on_set_resistance(rc_evt_t rc_evt)
 // Invoked when a button is pushed on the remote control.
 static void on_ant_ctrl_command(ctrl_evt_t evt)
 {
-	// Flag that we have a remote connected.
-	mb_ant_ctrl_connected = true;
+	// Remote can transmit no serial number as 0xFFFF, in which case
+	// we can't bond specifically, so we'll just process commands.
+	if (m_ant_ctrl_remote_ser_no == 0 && evt.remote_serial_no != 0xFFFF)
+	{
+		// Track the remote we're now connected to.
+		m_ant_ctrl_remote_ser_no = evt.remote_serial_no;
+	}
+	else if (m_ant_ctrl_remote_ser_no != evt.remote_serial_no)
+	{
+		// If already connected to a remote, don't process another's commands.
+		return;
+	}
 
 	switch (evt.command)
 	{
@@ -742,6 +753,9 @@ static void on_power_down(void)
 int main(void)
 {
 	uint32_t err_code;
+
+	// Initialize default remote serial number.
+	m_ant_ctrl_remote_ser_no = 0;
 
 	// initialize the user profile.
 	profile_init();

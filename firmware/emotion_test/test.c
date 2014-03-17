@@ -144,7 +144,14 @@ int main(int argc, char *argv [])
 	float force_needed;
 	float partial_wheel_rev;
 	float partial_wheel_rev2;
+	uint8_t data[2];
 
+	data[0] = 0xFA;
+	data[1] = 0xBC;
+
+	position = data[0] | (data[1] << 8);
+
+	printf("%i\n", position);
 
 	printf("Press any key.");
 	scanf("Starting...");
@@ -169,14 +176,14 @@ int main(int argc, char *argv [])
 
 	speed_mps = calc_angular_vel(2, 512);
 	torque = calc_torque(250, 512);
-	*/
+	
 
 	partial_wheel_rev = fmod(1.8992, 1);
 	partial_wheel_rev2 = fmod(0.94996, 1);
 
 
 	printf("1,2: %f, %f \n", partial_wheel_rev, partial_wheel_rev2);
-	/*
+	
 	position = (33539 ^ 0xFFFF) + 8385;
 	watts = 0;mak
 

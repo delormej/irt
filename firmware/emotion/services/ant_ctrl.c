@@ -119,7 +119,8 @@ static void on_command_page(ant_ctrl_data_page73_t* p_page)
 	// Assign the event data payload.
 	evt.sequence = p_page->sequence;
 	evt.command = p_page->command_lsb;
-	evt.remote_serial_no = p_page->slave_serial;
+	evt.remote_serial_no = p_page->slave_serial[0] |
+			(p_page->slave_serial[1] << 8);
 
 	// Raise the control command event.
 	m_on_ctrl_command(evt);							// TODO: should this return a value to indicate success?
