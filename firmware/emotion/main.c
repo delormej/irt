@@ -419,6 +419,8 @@ static int32_t calculate_power(irt_power_meas_t* p_power_meas)
  */
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size)
 {
+	UNUSED_PARAMETER(p_event_data);
+	UNUSED_PARAMETER(event_size);
 	profile_update();
 }
 
