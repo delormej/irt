@@ -107,7 +107,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 /**@brief	Handle Soft Device system events. */
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
-	// TODO: Process storage events.
+	// Process storage events.
 	pstorage_sys_event_handler(sys_evt);
 }
 
@@ -136,7 +136,6 @@ static void set_wheel_params(uint8_t *pBuffer)
 }
 
 // Parses the SET_SIM message from the KICKR and has user profile info.
-// TODO: move this to the user profile object.
 static void set_sim_params(uint8_t *pBuffer)
 {
 	// Weight comes through in KG as 8500 85.00kg for example.
@@ -172,11 +171,6 @@ static void set_sim_params(uint8_t *pBuffer)
  */
 static void profile_init(void)
 {
-		// TODO: Figure out the right time to store the profile.  I don't think you can write
-		// when the radio is active, so you either have to shut the radio down and store or
-		// wait until it's time to shut down the device.  However, if the device is plugged in
-		// the user could pull the cord before it formally shuts down.
-
 		uint32_t err_code;
 
 		err_code = user_profile_init();
