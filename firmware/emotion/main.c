@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "nordic_common.h"
 #include "softdevice_handler.h"
 #include "nrf_error.h"
@@ -198,8 +199,7 @@ static void profile_init(void)
 			m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
 		}
 		
-		if (m_user_profile.total_weight_kg == 0.0f ||
-				((uint32_t)m_user_profile.total_weight_kg) == 0xFFFFFFFF)
+		if (isnan(m_user_profile.total_weight_kg))
 		{
 			// Total weight of rider + bike + shoes, clothing, etc...
 			m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
