@@ -7,6 +7,7 @@
 #include "app_error.h"
 #include "irt_emotion.h"
 #include "ant_interface.h"
+#include "ant_parameters.h"
 
 //
 // Module specific defines.
@@ -215,15 +216,19 @@ void ant_ctrl_device_avail_tx(uint8_t notifications)
 
 void ant_ctrl_rx_handle(ant_evt_t * p_ant_evt)
 {
+	ANT_MESSAGE* p_mesg;
+
+	p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
+
 	// Switch on page number.
-	switch (p_ant_evt->evt_buffer[0])
+	switch (p_mesg->ANT_MESSAGE_aucPayload[0])
 	{
 		case CTRL_CMD_REQ_DATA_PAGE:
-			on_request_data_page((ant_ctrl_data_page70_t*) p_ant_evt->evt_buffer);
+			on_request_data_page((ant_ctrl_data_page70_t*) p_mesg->ANT_MESSAGE_aucPayload);
 			break;
 
 		case CTRL_CMD_PAGE:
-			on_command_page((ant_ctrl_data_page73_t*) p_ant_evt->evt_buffer);
+			on_command_page((ant_ctrl_data_page73_t*) p_mesg->ANT_MESSAGE_aucPayload);
 			break;
 
 		default:
