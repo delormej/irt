@@ -24,13 +24,13 @@
 typedef enum 
 {
 	// Button press.
-	Menu_Up = 0u,
-	Menu_Down = 1u,
-	Menu_Select = 2u,
+	ANT_CTRL_BUTTON_UP = 0u,		// Menu_Up	- Up button.
+	ANT_CTRL_BUTTON_DOWN = 1u,		// Menu_Down - Down button.
+	ANT_CTRL_BUTTON_MENU = 2u,		// Menu_Select - Middle button.
 	// Long button press.
-	Menu_Back = 3u,
-	Start = 32u,
-	Lap = 36u
+	ANT_CTRL_BUTTON_MAX = 3u,		// Menu_Back - Long hold of up.
+	ANT_CTRL_BUTTON_START = 32u,	// Start - Long hold of middle.
+	ANT_CTRL_BUTTON_MIN = 36u		// Lap - Long hold of down.
 } ctrl_command_e;
 
 // Payload of a command.

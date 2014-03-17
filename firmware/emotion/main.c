@@ -709,15 +709,29 @@ static void on_set_resistance(rc_evt_t rc_evt)
 // Invoked when a button is pushed on the remote control.
 static void on_ant_ctrl_command(ctrl_evt_t evt)
 {
-	// TODO: implementation.
+	// Flag that we have a remote connected.
+	mb_ant_ctrl_connected = true;
+
 	switch (evt.command)
 	{
-		case Menu_Up:
+		case ANT_CTRL_BUTTON_UP:
+			// Increment resistance.
 			on_button_iii(); 
 			break;
 
-		case Menu_Down:
+		case ANT_CTRL_BUTTON_DOWN:
+			// Decrement resistance.
 			on_button_ii();
+			break;
+
+		case ANT_CTRL_BUTTON_MAX:
+			// Set full resistance
+			on_button_iv();
+			break;
+
+		case ANT_CTRL_BUTTON_MIN:
+			// Turn off resistance
+			on_button_i();
 			break;
 
 		default:
