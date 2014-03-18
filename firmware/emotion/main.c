@@ -734,6 +734,20 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			on_button_i();
 			break;
 
+		case ANT_CTRL_BUTTON_MENU:
+			// Toggle between erg mode.
+			if (m_resistance_mode == RESISTANCE_SET_STANDARD)
+			{
+				m_resistance_mode = RESISTANCE_SET_ERG;
+				m_sim_forces.erg_watts = 200;
+			}
+			else
+			{
+				m_resistance_mode = RESISTANCE_SET_STANDARD;
+				on_button_i();
+			}
+			break;
+
 		default:
 			break;
 	}
