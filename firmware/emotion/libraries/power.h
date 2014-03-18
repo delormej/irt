@@ -17,27 +17,20 @@
 
 #define IRT_ERROR_INVALID_RESISTANCE_LEVEL					IRT_ERROR + 0x01
 
-uint8_t calc_power2(float speed_mps, float weight_kg, 
-	uint16_t servo_pos, int16_t* p_watts);
-
 /**@brief	Calculates an estimated power in watts based on current speed, rider
- *			profile including total weight (bike+gear+rider) in pounds and the
- *			current mag resistance level.
+ *			profile including total weight (bike+gear+rider) in kg and the
+ *			current magnet servo position.
+ */
+uint16_t power_watts_calc(float speed_mps, float weight_kg, uint16_t servo_pos);
+
+uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048);
+
+/**@brief	Determines speed and calculates an estimated power in watts based on
+ * 			current speed, rider profile including total weight (bike+gear+rider)
+ * 			in kg and the current magnet servo position.
  *
  * @return	IRT_SUCCESS if successful, otherwise and error code.
- *
- * @params[out]	p_watts	Power in watts..
- *
- * @note	Speed is miles per hour, weight is in pounds, resistance level is 0-9.
- *
  */
-uint8_t calc_power(float speed_mph, float total_weight_lb,
-	uint8_t resistance_level, int16_t* p_watts);
+int32_t power_measure(float total_weight_kg, irt_power_meas_t* p_power_meas);
 
-/**@brief	Calculates torque based on watts for a given period.  The period is
- *			in 1/2048th seconds.  Torque is returned in 1/32 nanometers.
- *
- */
-uint8_t calc_torque(int16_t watts, uint16_t period_seconds_2048, uint16_t* p_torque);
-
-#endif
+#endif // __POWER_H__

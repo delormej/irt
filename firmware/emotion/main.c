@@ -216,87 +216,6 @@ static void profile_update(void)
 	APP_ERROR_CHECK(err_code);
 }
 
-/**@brief Parses the resistance percentage out of the KICKR command.
- *
- */
-static float get_resistance_pct(uint8_t *buffer)
-{
-	/*	Not exactly sure why it is this way, but it seems that 2 bytes hold a
-	value that is a percentage of the MAX which seems arbitrarily to be 16383.
-	Use that value to calculate the percentage, for example:
-
-	10.7% example:
-	(16383-14630) / 16383 = .10700 = 10.7%
-	*/
-	static const float PCT_100 = 16383.0f;
-	uint16_t value = buffer[0] | buffer[1] << 8u;
-
-	float percent = (PCT_100 - value) / PCT_100;
-
-	return percent;
-}
-
-/**@brief Parses the simulated wind speed out of the KICKR command.
- * @note	This is the headwind in meters per second. A negative headwind 
- *				represents a tailwind. The range for mspWindSpeed is -30.0:30.0.
- */
-static float get_sim_wind(uint8_t *buffer)
-{
-	// Note this is a signed int.
-	int16_t value = buffer[0] | buffer[1] << 8u;
-	
-	// First bit is the sign.
-	bool negative = value >> 15u;
-	
-	if (negative)
-	{
-		// Remove the negative sign.
-		value = value & 0x7FFF;
-	}
-	else
-	{
-		value = (32768 - value) *-1;
-	}
-	
-	// Set the right scale.
-	return value / 1000.0f;
-}
-
-
-/**@brief Parses the simulated slope out of the KICKR command.
- *
- */
-static float get_sim_grade(uint8_t *buffer)
-{
-	uint16_t value = buffer[0] | buffer[1] << 8u;
-	
-	// First bit is the sign.
-	bool negative = value >> 15u;
-	
-	float percent = 0.0f;
-	
-	if (negative)
-	{
-		// Strip the negative sign bit.
-		value = value & 0x7FFF;
-		// results in a positive (uphill) grade.
-		percent = 1 - ((32768.0f - value) / 32768.0f);
-	}
-	else 
-	{
-		// results in a negative (downhill) grade.
-		percent = ((value - 32768.0f) / 32768.0f);
-	}
-
-	// Initial value sent on the wire from KICKR ranges from -1.0 to 1.0 and 
-	// represents a percentage of 45 degrees up/downhill.  
-	// e.g. 1.0% = 45 degree uphill, 
-	// -1.0% = 45 degree downhill, 
-	// 0% = flat, 
-	// 0.10% = 4.5% uphill grade.
-	return percent * 0.45;
-}
-
 static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_meas_t* p_power_meas_current)
 {
 	// Make a local copy we can modify.
@@ -318,95 +237,24 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 	switch (m_resistance_mode)
 	{
 		case RESISTANCE_SET_ERG:
-			m_servo_pos = set_resistance_erg(&m_user_profile,
-												&m_sim_forces,
-												&power_meas);
+			m_servo_pos = resistance_erg_set(
+					power_meas.instant_speed_mps,
+					m_user_profile.total_weight_kg,
+					m_servo_pos,
+					&m_sim_forces);
 			break;
 
 		case RESISTANCE_SET_SIM:
-			m_servo_pos = set_resistance_sim(&m_user_profile,
-												&m_sim_forces,
-												&power_meas);
+			m_servo_pos = resistance_sim_set(
+					power_meas.instant_speed_mps,
+					m_user_profile.total_weight_kg,
+					m_servo_pos,
+					&m_sim_forces);
 			break;
 
 		default:
 			break;
 	}
-}
-
-/*----------------------------------------------------------------------------
- * Main function for calculating power and transmitting.
- * ----------------------------------------------------------------------------*/
-
-/**@brief	Transmits the ant+ and ble power messages, returns speed & power stats.
- *
- */
-static int32_t calculate_power(irt_power_meas_t* p_power_meas)
-{
-		// Hang on to accumulated torque for a session duration.
-		// TODO: make sure this gets cleared at some point, probably
-		// the wrong spot to keep this.
-		static uint16_t 			m_accum_torque = 0;
-		uint32_t err_code;
-		uint16_t torque;
-
-		// Get current temperature.
-		p_power_meas->temp = temperature_read();
-
-		// Track current servo position & resistance mode.
-		p_power_meas->resistance_mode = m_resistance_mode;
-		p_power_meas->resistance_level = m_resistance_level;
-		p_power_meas->servo_position = m_servo_pos;
-
-		// Calculate speed.
-		err_code = calc_speed(p_power_meas);
-		APP_ERROR_CHECK(err_code);
-
-		/*float speed_mph = get_speed_mph(speed_event.speed_mps);
-		/*err_code = calc_power(speed_mph, m_user_profile.total_weight_kg * 2.20462262, m_resistance_level, &watts);
-		// TODO: Handle the error for real here, not sure what the overall error 
-		// handling strategy will be, but this is not critical, just move on.
-		if (err_code != IRT_SUCCESS)
-			return;		
-		*/
-
-		// Calculate power.
-		err_code = calc_power2(p_power_meas->instant_speed_mps, 
-			m_user_profile.total_weight_kg, 
-			m_servo_pos, &p_power_meas->instant_power);
-		APP_ERROR_CHECK(err_code);
-			
-		// Calculate torque.
-		err_code = calc_torque(p_power_meas->instant_power, 
-			p_power_meas->wheel_period_2048, 
-			&torque);
-		APP_ERROR_CHECK(err_code);
-
-		// Store accumulated torque for the session.
-		m_accum_torque += torque;
-		p_power_meas->accum_torque = m_accum_torque;
-
-#if defined(BLE_NUS_ENABLED)
-/*		static const char format[] = "r,w,l:%i,%i,%i";
-		char message[16];
-		memset(&message, 0, sizeof(message));
-		uint8_t length = sprintf(message, format, 
-								speed_event.accum_flywheel_revs, 
-								watts, 
-								m_resistance_level);
-								
-		static const char format[] = "t,w:%i,%i";
-		char message[16];
-		memset(&message, 0, sizeof(message));
-		uint8_t length = sprintf(message, format,
-			speed_event.event_time_2048,
-			speed_event.accum_wheel_revs);
-
-		debug_send(message, sizeof(message));
-		*/
-#endif			
-
-		return IRT_SUCCESS;
 }
 
 /**@brief Function for handling profile update.
@@ -449,8 +297,11 @@ static void ant_4hz_timeout_handler(void * p_context)
 	p_power_meas_current->resistance_level = m_resistance_level;
 	p_power_meas_current->servo_position = m_servo_pos;
 
+	// Get current temperature.
+	p_power_meas_current->temp = temperature_read();
+
 	// Calculate the power.
-	err_code = calculate_power(p_power_meas_current);
+	err_code = power_measure(m_user_profile.total_weight_kg, p_power_meas_current);
 	APP_ERROR_CHECK(err_code);
 
 	// TODO: this should return an err_code.
@@ -523,43 +374,66 @@ static void scheduler_init(void)
 static void on_button_i(void)
 {
 	m_resistance_level = 0;
-	m_servo_pos = set_resistance(m_resistance_level);
+	m_servo_pos = resistance_level_set(m_resistance_level);
 	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
 }
 
 static void on_button_ii(void)
 {
-	/*uint32_t err_code;
-	err_code = user_profile_store(&m_user_profile);
-	APP_ERROR_CHECK(err_code);*/
-
 	// decrement
-	if (m_resistance_level > 0)
+	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
+			m_resistance_level > 0)
 	{
-		m_servo_pos = set_resistance(--m_resistance_level);	
+		m_servo_pos = resistance_level_set(--m_resistance_level);
 		ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
+	}
+	else if (m_resistance_mode == RESISTANCE_SET_ERG &&
+			m_sim_forces.erg_watts > 100u)
+	{
+		// Decrement by 15 watts;
+		m_sim_forces.erg_watts -= 15u;
+		ant_bp_resistance_tx_send(m_resistance_mode, &m_sim_forces.erg_watts);
 	}
 }
 
 static void on_button_iii(void)
 {
-	/*uint32_t err_code;
-	err_code = user_profile_load(&m_user_profile);
-	APP_ERROR_CHECK(err_code);*/
-
 	// increment
-	if (m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
+	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
+			m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 	{
-		m_servo_pos = set_resistance(++m_resistance_level);
+		m_servo_pos = resistance_level_set(++m_resistance_level);
 		ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
+	}
+	else if (m_resistance_mode == RESISTANCE_SET_ERG)
+	{
+		// Increment by 15 watts;
+		m_sim_forces.erg_watts += 15u;
+		ant_bp_resistance_tx_send(m_resistance_mode, &m_sim_forces.erg_watts);
 	}
 }
 
 static void on_button_iv(void)
 {
 	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
-	m_servo_pos = set_resistance(m_resistance_level);
+	m_servo_pos = resistance_level_set(m_resistance_level);
 	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
+}
+
+static void on_button_menu(void)
+{
+	// Toggle between erg mode.
+	if (m_resistance_mode == RESISTANCE_SET_STANDARD)
+	{
+		m_resistance_mode = RESISTANCE_SET_ERG;
+		m_sim_forces.erg_watts = 175u;			// Start at 175 watts.
+		ant_bp_resistance_tx_send(m_resistance_mode, &m_sim_forces.erg_watts);
+	}
+	else
+	{
+		m_resistance_mode = RESISTANCE_SET_STANDARD;
+		on_button_i();
+	}
 }
 
 static void on_accelerometer(uint8_t source)
@@ -635,7 +509,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		case RESISTANCE_SET_STANDARD:
 			m_resistance_mode = RESISTANCE_SET_STANDARD;
 			m_resistance_level = rc_evt.pBuffer[0];
-			m_servo_pos = set_resistance(m_resistance_level);
+			m_servo_pos = resistance_level_set(m_resistance_level);
 			break;
 			
 		case RESISTANCE_SET_PERCENT:
@@ -644,8 +518,8 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			m_resistance_mode = RESISTANCE_SET_PERCENT;
 			
 			// Parse the buffer for percentage.
-			float percent = get_resistance_pct(rc_evt.pBuffer);
-			m_servo_pos = set_resistance_pct(percent);
+			float percent = wahoo_resistance_pct_parse(rc_evt.pBuffer);
+			m_servo_pos = resistance_pct_set(percent);
 			break;
 
 		case RESISTANCE_SET_ERG:
@@ -663,13 +537,13 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		case RESISTANCE_SET_SLOPE:
 			m_resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the slope.
-			m_sim_forces.grade = get_sim_grade(rc_evt.pBuffer);
+			m_sim_forces.grade = wahoo_sim_grade_parse(rc_evt.pBuffer);
 			break;
 			
 		case RESISTANCE_SET_WIND:
 			m_resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the wind speed.
-			m_sim_forces.wind_speed_mps = get_sim_wind(rc_evt.pBuffer);
+			m_sim_forces.wind_speed_mps = wahoo_sim_wind_parse(rc_evt.pBuffer);
 			break;
 			
 		case RESISTANCE_SET_WHEEL_CR:
@@ -693,7 +567,6 @@ static void on_set_resistance(rc_evt_t rc_evt)
 															(int16_t)(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u));
 		debug_send(message, sizeof(message));
 #endif		
-
 }
 
 // Invoked when a button is pushed on the remote control.
@@ -735,17 +608,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			break;
 
 		case ANT_CTRL_BUTTON_MENU:
-			// Toggle between erg mode.
-			if (m_resistance_mode == RESISTANCE_SET_STANDARD)
-			{
-				m_resistance_mode = RESISTANCE_SET_ERG;
-				m_sim_forces.erg_watts = 200;
-			}
-			else
-			{
-				m_resistance_mode = RESISTANCE_SET_STANDARD;
-				on_button_i();
-			}
+			on_button_menu();
 			break;
 
 		default:
@@ -757,13 +620,11 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 // power the system down.
 static void on_power_down(void)
 {
-	uint32_t err_code;
-
 	// Free heap allocation.
 	irt_power_meas_fifo_free();
 
 	// Shut the system down.
-	err_code = sd_power_system_off();
+	sd_power_system_off();
 }
 
 /*----------------------------------------------------------------------------
@@ -826,7 +687,7 @@ int main(void)
 	ble_ant_start();
 
 	// Start off with resistance at 0.
-	set_resistance(m_resistance_level);
+	resistance_level_set(m_resistance_level);
 	m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
 
 	// Initialize module to read speed from flywheel.

@@ -41,7 +41,7 @@ CFLAGS += -DBLE_NUS_ENABLED
 ############################################
 # Define the Software Revision.
 ############################################
-CFLAGS += -DSW_REVISION=0x02
+CFLAGS += -DSW_REVISION=0x03
 
 ############################################
 # Define the device ID.  

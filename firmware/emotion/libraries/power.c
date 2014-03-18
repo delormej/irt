@@ -7,11 +7,16 @@
 ********************************************************************************/
 
 #include "power.h"
+#include "app_error.h"
+#include "speed.h"
 
 #define	MATH_PI			3.14159265358979f
 
 static const float slope[10] = { 0, 2.6, 3.8, 5.0, 6.1, 7.1, 8.2, 9.2, 10.1, 11.0 };
 static const float intercept [10] = { 0, -9.60, -18.75, -25.00, -28.94, -29.99, -29.23, -26.87, -20.90, -13.34 };
+
+// Hang on to accumulated torque for a session duration.
+static uint16_t m_accum_torque = 0;
 
 int16_t __DEBUG_POWER[2];
 
@@ -65,32 +70,30 @@ static float calc_angular_vel(uint8_t wheel_ticks, uint16_t period_2048)
 	return value;
 }*/
 
-uint8_t calc_power2(float speed_mps, float weight_kg, 
-	uint16_t servo_pos, int16_t* p_watts)
+uint16_t power_watts_calc(float speed_mps, float weight_kg,	uint16_t servo_pos)
 {
-	int16_t power = 0;
+	int16_t watts;
 	
 	if (speed_mps == 0)
 	{
-		power = 0;
+		watts = 0;
 	}
 	else
 	{
 		float mag0_force = calc_mag0_force(weight_kg, speed_mps);
 		float servo_force = calc_servo_force(speed_mps, servo_pos);
-		power = (uint16_t) ((mag0_force + servo_force) * speed_mps);
+		watts = (uint16_t) ((mag0_force + servo_force) * speed_mps);
 	}
 
-	*p_watts = power;
-
-	return IRT_SUCCESS;
+	return watts;
 }
 
 // TODO: This only works if you have a predefined LEVEL 0-9.  I need to make it 
 // more dynamic given any position the servo might have from min->max.
 // We should also be able to calc power far more acurately based on flywheel revs
 // instead of speed.
-uint8_t calc_power(float speed_mph, float total_weight_lb, 
+/*
+uint8_t old_power_calc_watts(float speed_mph, float total_weight_lb,
 	uint8_t resistance_level, int16_t* p_watts)
 {
 	int16_t power = 0;
@@ -122,21 +125,60 @@ uint8_t calc_power(float speed_mph, float total_weight_lb,
 				slope[resistance_level] + intercept[resistance_level]);
 		}
 	}
-__DEBUG_POWER[0] = power;
 	*p_watts = power;
-__DEBUG_POWER[1] = *p_watts;
-	return IRT_SUCCESS;
-}
 
-uint8_t calc_torque(int16_t watts, uint16_t period_seconds_2048, uint16_t* p_torque)
+	return IRT_SUCCESS;
+}*/
+
+uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
 {
+	uint16_t torque;
+
 	if (watts == 0 || period_seconds_2048 == 0)
 	{
-		*p_torque = 0;
-		return IRT_SUCCESS;
+		torque = 0;
+	}
+	else
+	{
+		torque = (watts * period_seconds_2048) / (128 * MATH_PI);
 	}
 	
-	*p_torque = (watts * period_seconds_2048) / (128 * MATH_PI);
-	
+	return torque;
+}
+
+/**@brief	Reads speed and calculates power.
+ *
+ */
+int32_t power_measure(float total_weight_kg, irt_power_meas_t* p_power_meas)
+{
+	uint32_t err_code;
+	uint16_t torque;
+
+	// Calculate speed.
+	err_code = calc_speed(p_power_meas);
+	APP_ERROR_CHECK(err_code);
+
+	/*float speed_mph = get_speed_mph(speed_event.speed_mps);
+	/*err_code = calc_power(speed_mph, m_user_profile.total_weight_kg * 2.20462262, m_resistance_level, &watts);
+	// TODO: Handle the error for real here, not sure what the overall error
+	// handling strategy will be, but this is not critical, just move on.
+	if (err_code != IRT_SUCCESS)
+		return;
+	*/
+
+	// Calculate power.
+	p_power_meas->instant_power = power_watts_calc(
+			p_power_meas->instant_speed_mps,
+			total_weight_kg,
+			p_power_meas->servo_position);
+
+	// Calculate torque.
+	torque = power_torque_calc(p_power_meas->instant_power,
+			p_power_meas->wheel_period_2048);
+
+	// Store accumulated torque for the session.
+	m_accum_torque += torque;
+	p_power_meas->accum_torque = m_accum_torque;
+
 	return IRT_SUCCESS;
 }

@@ -102,25 +102,23 @@ typedef struct rc_sim_forces_s
  *
  *@note			Levels 0-9 allowable.
  */
-uint16_t set_resistance(uint8_t level);
+uint16_t resistance_level_set(uint8_t level);
 
 /**@brief		Sets the resistance to a value 0-100 percent.
  *
  */
-uint16_t set_resistance_pct(float percent);
+uint16_t resistance_pct_set(float percent);
 
 /**@brief		Sets/adjusts resistance to desired simulation parameters.  
  *
  */
-uint16_t set_resistance_sim(user_profile_t *p_user_profile, 
-												rc_sim_forces_t *p_sim_forces,
-												irt_power_meas_t *p_power_meas);
+uint16_t resistance_sim_set(float speed_mps, float weight_kg, uint16_t servo_pos,
+		rc_sim_forces_t *p_sim_forces);
 
 /**@brief		Sets/adjusts resistance to desired watts.
  *
  */
-uint16_t set_resistance_erg(user_profile_t *p_user_profile, 
-												rc_sim_forces_t *p_sim_forces,
-												irt_power_meas_t *p_power_meas);
+uint16_t resistance_erg_set(float speed_mps, float weight_kg, uint16_t servo_pos,
+		rc_sim_forces_t *p_sim_forces);
 
 #endif
