@@ -13,7 +13,7 @@
 /**@brief Parses the resistance percentage out of the KICKR command.
  *
  */
-float wahoo_resistance_pct_parse(uint8_t *buffer)
+float wahoo_resistance_pct_decode(uint8_t *buffer)
 {
 	/*	Not exactly sure why it is this way, but it seems that 2 bytes hold a
 	value that is a percentage of the MAX which seems arbitrarily to be 16383.
@@ -34,7 +34,7 @@ float wahoo_resistance_pct_parse(uint8_t *buffer)
  * @note	This is the headwind in meters per second. A negative headwind
  *				represents a tailwind. The range for mspWindSpeed is -30.0:30.0.
  */
-float wahoo_sim_wind_parse(uint8_t *buffer)
+float wahoo_sim_wind_decode(uint8_t *buffer)
 {
 	// Note this is a signed int.
 	int16_t value = buffer[0] | buffer[1] << 8u;
@@ -60,7 +60,7 @@ float wahoo_sim_wind_parse(uint8_t *buffer)
 /**@brief Parses the simulated slope out of the KICKR command.
  *
  */
-float wahoo_sim_grade_parse(uint8_t *buffer)
+float wahoo_sim_grade_decode(uint8_t *buffer)
 {
 	uint16_t value = buffer[0] | buffer[1] << 8u;
 

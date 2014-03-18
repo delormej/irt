@@ -518,7 +518,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			m_resistance_mode = RESISTANCE_SET_PERCENT;
 			
 			// Parse the buffer for percentage.
-			float percent = wahoo_resistance_pct_parse(rc_evt.pBuffer);
+			float percent = wahoo_resistance_pct_decode(rc_evt.pBuffer);
 			m_servo_pos = resistance_pct_set(percent);
 			break;
 
@@ -537,13 +537,13 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		case RESISTANCE_SET_SLOPE:
 			m_resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the slope.
-			m_sim_forces.grade = wahoo_sim_grade_parse(rc_evt.pBuffer);
+			m_sim_forces.grade = wahoo_sim_grade_decode(rc_evt.pBuffer);
 			break;
 			
 		case RESISTANCE_SET_WIND:
 			m_resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the wind speed.
-			m_sim_forces.wind_speed_mps = wahoo_sim_wind_parse(rc_evt.pBuffer);
+			m_sim_forces.wind_speed_mps = wahoo_sim_wind_decode(rc_evt.pBuffer);
 			break;
 			
 		case RESISTANCE_SET_WHEEL_CR:
