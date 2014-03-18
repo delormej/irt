@@ -459,6 +459,15 @@ static void on_accelerometer(uint8_t source)
 		nrf_delay_ms(300);
 		clear_led();
 	}*/
+
+#if defined(BLE_NUS_ENABLED)
+		static const char format[] = "ACL:%i";
+		char message[8];
+		memset(&message, 0, sizeof(message));
+		uint8_t length = sprintf(message, format,
+				source);
+		debug_send(message, sizeof(message));
+#endif
 }
 
 static void on_ble_connected(void) 
@@ -493,7 +502,9 @@ static void on_ble_uart(uint8_t * data, uint16_t length)
 #endif
 }
 
+// TODO: implement this behavior, reopen the channel, etc...?
 static void on_ant_channel_closed(void) {}
+// TODO: This is to handle when we pair to a power meter.
 static void on_ant_power_data(void) {}
 
 /*@brief	Event handler that the cycling power service calls when a set resistance

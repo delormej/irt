@@ -30,14 +30,11 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 		mp_on_peripheral_evt->on_button_iv();
 	else if (event_pins_high_to_low & (1 << PIN_SHAKE))
 	{
+		// Always read the source as this will clear the buffer
+		// so that the accelerometer will continue generating
+		// events.
 		uint8_t source = accelerometer_src();
 		mp_on_peripheral_evt->on_accelerometer_evt(source);
-		/*
-		set_led_red();
-		nrf_delay_ms(100);
-		clear_led();
-		//
-		*/
 	}
 }
 
@@ -68,7 +65,7 @@ static void irt_gpio_init()
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
-	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_LOW); 
+	//nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_LOW);
 
 	APP_GPIOTE_INIT(1);
 	
