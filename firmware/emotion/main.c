@@ -36,6 +36,7 @@
 #include "irt_peripheral.h"
 #include "temperature.h"
 #include "resistance.h"
+#include "accelerometer.h"
 #include "speed.h"
 #include "power.h"
 #include "user_profile.h"
@@ -439,34 +440,29 @@ static void on_button_menu(void)
 	}
 }
 
-static void on_accelerometer(uint8_t source)
+// This event is triggered when there is data to be read from accelerometer.
+static void on_accelerometer(void)
 {
-	/* Starving the CPU?
-	if (source & 0x01) // Wake
-	{
-		set_led_green();
-	}
-	else if (source & 0x80) // Sleep
-	{
-		// Blink red and go to sleep.
-		set_led_red();
-		nrf_delay_ms(300);
-		clear_led();
-	}
-	else
-	{
-		set_led_green();
-		nrf_delay_ms(300);
-		clear_led();
-	}*/
-
 #if defined(BLE_NUS_ENABLED)
-		static const char format[] = "ACL:%i";
-		char message[8];
+	uint32_t err_code;
+	accelerometer_data_t data;
+
+	// Read event data from the accelerometer.
+	err_code = accelerometer_data(&data);
+	APP_ERROR_CHECK(err_code);
+
+	// TODO: Remove the hard coding here.
+	if (data.source & 0x04)
+	{
+		// Event should contain data.
+		static const char format[] = "ACL:%i,%i";
+		char message[16];
 		memset(&message, 0, sizeof(message));
 		uint8_t length = sprintf(message, format,
-				source);
+				data.out_y_lsb,
+				data.out_y_msb);
 		debug_send(message, sizeof(message));
+	}
 #endif
 }
 

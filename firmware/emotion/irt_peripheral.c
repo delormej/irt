@@ -29,13 +29,7 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 	else if (event_pins_low_to_high & (1 << PIN_BUTTON_IV))
 		mp_on_peripheral_evt->on_button_iv();
 	else if (event_pins_high_to_low & (1 << PIN_SHAKE))
-	{
-		// Always read the source as this will clear the buffer
-		// so that the accelerometer will continue generating
-		// events.
-		uint8_t source = accelerometer_src();
-		mp_on_peripheral_evt->on_accelerometer_evt(source);
-	}
+		mp_on_peripheral_evt->on_accelerometer_evt();
 }
 
 static void blink_timeout_handler(void * p_context)

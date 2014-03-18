@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "irt_common.h"
 #include "accelerometer.h"
 #include "irt_peripheral.h"
 #include "twi_master.h"
@@ -281,25 +282,26 @@ void accelerometer_init(void)
 	read_test();
 }
 
-uint8_t accelerometer_src(void)
+uint32_t accelerometer_data(accelerometer_data_t* p_data)
 {
-	// TODO: return a more meaningful structure.
+	// Read the relevant source registers to clear for other events.
 
-	// Must read the interrupt source register to clear for other events.
+	accelerometer_read(REG8652_INT_SOURCE, &(p_data->source), sizeof(p_data->source));
 
-	uint8_t source = 0, mode = 0, data = 0;
-	accelerometer_read(REG8652_INT_SOURCE, &source, sizeof(source));
-
-	if (source & 0x04) // Free-fall / motion interrupt.
+	if (p_data->source & 0x04) // Free-fall / motion interrupt.
 	{
-		accelerometer_read(REG8652_FF_MT_SRC, &data, sizeof(data));
+		accelerometer_read(REG8652_FF_MT_SRC, &(p_data->data), sizeof(p_data->data));
+
+		// Read the actual data.
+		accelerometer_read(REG8652_OUT_Y_MSB, &(p_data->out_y_msb),sizeof(p_data->out_y_msb));
+		accelerometer_read(REG8652_OUT_Y_LSB, &(p_data->out_y_lsb),sizeof(p_data->out_y_lsb));
 	}
 	
-	if (source & 0x80) // Auto-sleep/wake interrupt.
+	if (p_data->source & 0x80) // Auto-sleep/wake interrupt.
 	{
 		// Service and clear the auto-sleep/wake interrupt.
-		accelerometer_read(REG8652_SYSMOD, &mode, sizeof(mode));
+		accelerometer_read(REG8652_SYSMOD, &(p_data->mode), sizeof(p_data->mode));
 	}
 	
-	return source;
+	return IRT_SUCCESS;
 }
