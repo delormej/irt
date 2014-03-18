@@ -337,7 +337,7 @@ void ant_bp_resistance_tx_send(resistance_mode_t mode, uint8_t* level)
 		mode,
 		WF_ANT_RESPONSE_FLAG,
 		++resistance_sequence,
-		level[0], // 0x20, 	// Not sure why, but this is hardcoded to 0x20 for now.
+		level[0],
 		level[1],
 		0x01, 	// Again, not sure why, but KICKR responds with this.
 		0x00
