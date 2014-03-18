@@ -66,6 +66,10 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_input(PIN_BUTTON_III, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_input(PIN_BUTTON_IV, NRF_GPIO_PIN_NOPULL);
 
+	// Enable the battery pins.
+	//nrf_gpio_cfg_input(PIN_BATTVOLT, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_output(PIN_ENBATT);
+
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_LOW); 

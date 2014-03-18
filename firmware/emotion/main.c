@@ -40,6 +40,7 @@
 #include "ble_ant.h"
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
+#include "battery.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define DEFAULT_WHEEL_SIZE_MM			2069u
@@ -376,6 +377,9 @@ static void on_button_i(void)
 	m_resistance_level = 0;
 	m_servo_pos = resistance_level_set(m_resistance_level);
 	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
+
+	// TODO: debug only.
+	battery_start();
 }
 
 static void on_button_ii(void)
@@ -616,6 +620,18 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 	}
 }
 
+static void on_battery_result(uint16_t battery_level)
+{
+#if defined(BLE_NUS_ENABLED)
+		static const char format[] = "BAT:%i";
+		char message[8];
+		memset(&message, 0, sizeof(message));
+		uint8_t length = sprintf(message, format,
+				battery_level);
+		debug_send(message, sizeof(message));
+#endif
+}
+
 // TODO: This event should be registered for a callback when it's time to
 // power the system down.
 static void on_power_down(void)
@@ -657,6 +673,9 @@ int main(void)
 
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
 	peripheral_init(&on_peripheral_handlers);
+
+	// TODO: this belongs in peripheral_init
+	battery_init(on_battery_result);
 
 	// ANT+, BLE event handlers.
 	static ant_ble_evt_handlers_t ant_ble_handlers = {
