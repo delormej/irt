@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "float.h"
 #include "nordic_common.h"
 #include "softdevice_handler.h"
 #include "nrf_error.h"
@@ -33,6 +34,7 @@
 #include "pstorage.h"
 #include "irt_common.h"
 #include "irt_peripheral.h"
+#include "temperature.h"
 #include "resistance.h"
 #include "speed.h"
 #include "power.h"
@@ -40,6 +42,7 @@
 #include "ble_ant.h"
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
+
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define DEFAULT_WHEEL_SIZE_MM			2069u

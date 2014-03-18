@@ -42,13 +42,14 @@ void temperature_init()
 						true);
 
 	// Test it out:
-	float temp  = temperature_read();
+	//float temp  = temperature_read();
 }
-
 
 // Reads the current temperature 12 bit value as a one-shot operation.
 float temperature_read()
 {
+	float temp;
+
 	uint8_t reg = REGNCT75_ONE_SHOT;
 	twi_master_transfer(NCT75_WRITE,
 						&reg,
@@ -75,10 +76,12 @@ float temperature_read()
 	{
 		// Remove the negative sign bit.
 		value &= 0x7FFF;
-		return (value - 4096.0f) / 16.0f;
+		temp = (float)((value - 4096.0f) / 16.0f);
 	}
 	else
 	{
-		return value / 16.0f;
+		temp = (float)(value / 16.0f);
 	}
+
+	return temp;
 }
