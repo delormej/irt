@@ -375,6 +375,20 @@ static void scheduler_init(void)
  * Event handlers
  * ----------------------------------------------------------------------------*/
 
+// TODO: This event should be registered for a callback when it's time to
+// power the system down.
+static void on_power_down(void)
+{
+	// Free heap allocation.
+	irt_power_meas_fifo_free();
+
+	// Blink red a couple of times to say good-night.
+	clear_led();
+
+	// Shut the system down.
+	sd_power_system_off();
+}
+
 static void on_button_i(void)
 {
 	m_resistance_level = 0;
@@ -607,18 +621,22 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			on_button_ii();
 			break;
 
-		case ANT_CTRL_BUTTON_MAX:
+		case ANT_CTRL_BUTTON_LONG_UP:
 			// Set full resistance
 			on_button_iv();
 			break;
 
-		case ANT_CTRL_BUTTON_MIN:
+		case ANT_CTRL_BUTTON_LONG_DOWN:
 			// Turn off resistance
 			on_button_i();
 			break;
 
-		case ANT_CTRL_BUTTON_MENU:
+		case ANT_CTRL_BUTTON_MIDDLE:
 			on_button_menu();
+			break;
+
+		case ANT_CTRL_BUTTON_LONG_MIDDLE:
+			on_power_down();
 			break;
 
 		default:
@@ -626,16 +644,6 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 	}
 }
 
-// TODO: This event should be registered for a callback when it's time to
-// power the system down.
-static void on_power_down(void)
-{
-	// Free heap allocation.
-	irt_power_meas_fifo_free();
-
-	// Shut the system down.
-	sd_power_system_off();
-}
 
 /*----------------------------------------------------------------------------
  * Main program functions
