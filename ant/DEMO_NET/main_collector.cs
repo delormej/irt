@@ -13,6 +13,8 @@ namespace ANT_Console_Demo
         public ushort emotion_power;
         public ushort quarq_power;
         public ushort resistance_level;
+        public ushort servo_position;
+        public ushort accelerometer_y;
     }
 
     public struct SpeedEvent
@@ -406,7 +408,9 @@ namespace ANT_Console_Demo
                     break;
 
                 case 0x24:
-                    m_last_event.resistance_level = payload[5];
+                    m_last_event.servo_position = 
+                        (ushort)(payload[2] | (payload[3] << 8));
+
                     break;
             }
         }
