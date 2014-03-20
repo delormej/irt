@@ -253,8 +253,8 @@ static uint32_t bond_info_store(central_bond_t * p_bond)
     if (err_code != NRF_SUCCESS)
     {
         return err_code;
-    }    
-   
+    }
+    
     // Write Bonding Information
     err_code = pstorage_store(&dest_block,
                               (uint8_t *)p_bond,
@@ -377,20 +377,20 @@ static uint32_t bonding_info_load_from_flash(central_bond_t * p_bond)
     {
         return err_code;
     }
-        
+    
     err_code = pstorage_load((uint8_t *)&crc, &source_block, sizeof(uint32_t), 0);
     if (err_code != NRF_SUCCESS)
     {
         return err_code;
     }
-
+    
     // Extract CRC from header.
     err_code = crc_extract(crc, &crc_header);
     if (err_code != NRF_SUCCESS)
     {
         return err_code;
     }
-
+    
     // Load central.
     err_code = pstorage_load((uint8_t *)p_bond,
                              &source_block,
@@ -496,11 +496,15 @@ static uint32_t flash_pages_erase(void)
 {
     uint32_t err_code;
 
-    err_code = pstorage_clear(&mp_flash_bond_info, MAX_BONDS_IN_FLASH);
+    err_code = pstorage_clear(&mp_flash_bond_info,
+                              (MAX_BONDS_IN_FLASH * (sizeof (central_bond_t)
+                              + sizeof (uint32_t))));
 
     if (err_code == NRF_SUCCESS)
     {
-        err_code = pstorage_clear(&mp_flash_sys_attr, MAX_BONDS_IN_FLASH);
+        err_code = pstorage_clear(&mp_flash_sys_attr,
+                                  (MAX_BONDS_IN_FLASH * (sizeof (central_sys_attr_t)\
+                                  + sizeof (uint32_t))));
     }
 
     return err_code;
@@ -1227,7 +1231,9 @@ uint32_t ble_bondmngr_bonded_centrals_store(void)
     if (bond_info_changed())
     {
         // Erase flash page.
-        err_code = pstorage_clear(&mp_flash_bond_info,MAX_BONDS_IN_FLASH);
+        err_code = pstorage_clear(&mp_flash_bond_info,
+                              (MAX_BONDS_IN_FLASH * (sizeof (central_bond_t)
+                              + sizeof (uint32_t))));
         if (err_code != NRF_SUCCESS)
         {
             return err_code;
@@ -1249,7 +1255,9 @@ uint32_t ble_bondmngr_bonded_centrals_store(void)
     if (sys_attr_changed())
     {
         // Erase flash page.
-        err_code = pstorage_clear(&mp_flash_sys_attr, MAX_BONDS_IN_FLASH);
+        err_code = pstorage_clear(&mp_flash_sys_attr,
+                                  (MAX_BONDS_IN_FLASH * (sizeof (central_sys_attr_t)\
+                                  + sizeof (uint32_t))));
         if (err_code != NRF_SUCCESS)
         {
             return err_code;
@@ -1324,7 +1332,9 @@ uint32_t ble_bondmngr_bonded_centrals_delete(void)
     m_centrals_in_db_count         = 0;
     m_bond_info_in_flash_count     = 0;
     m_sys_attr_in_flash_count      = 0;
-
+    m_irk_count                    = 0;
+    m_addr_count                   = 0;
+    
     return flash_pages_erase();
 }
 

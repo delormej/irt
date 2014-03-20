@@ -35,13 +35,13 @@ TEMPLATE_PATH = ../../gcc/
 CFLAGS = -g
 CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
-#CFLAGS += -DIRT_DEBUG
-#CFLAGS += -DSIM_SPEED
+CFLAGS += -DIRT_DEBUG
+CFLAGS += -DSIM_SPEED
 
 ############################################
 # Define the Software Revision.
 ############################################
-CFLAGS += -DSW_REVISION=0x03
+CFLAGS += -DSW_REVISION=0x05
 
 ############################################
 # Define the device ID.  

@@ -13,7 +13,7 @@
 #include "ble_rpc_event_decoder.h"
 #include "ble_rpc_cmd_encoder.h"
 #include "ble_rpc_defines.h"
-#include "hci_transport.h"
+#include "hal_transport.h"
 #include "app_error.h"
 #include <stdint.h>
 #include <stddef.h>
@@ -35,7 +35,7 @@ void hci_pkt_handler(hci_transport_evt_t hci_event)
         uint32_t err_code;
 
         uint8_t *   p_encoded_packet;
-        uint32_t    encoded_packet_length;
+        uint16_t    encoded_packet_length;
 
         err_code = hci_transport_rx_pkt_extract(&p_encoded_packet, &encoded_packet_length);
 

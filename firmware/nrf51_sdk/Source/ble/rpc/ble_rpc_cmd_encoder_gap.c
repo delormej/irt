@@ -15,7 +15,7 @@
 #include "app_util.h"
 #include "ble_rpc_cmd_encoder.h"
 #include "ble_rpc_defines.h"
-#include "hci_transport.h"
+#include "hal_transport.h"
 #include <string.h>
 
 // The following externals are defined in ble_rpc_dms_encoder.c.
@@ -536,6 +536,53 @@ uint32_t sd_ble_gap_sec_info_reply(uint16_t                          conn_handle
     }
 
     err_code = ble_rpc_cmd_resp_wait(SD_BLE_GAP_SEC_INFO_REPLY);
+    UNUSED_VARIABLE(hci_transport_rx_pkt_consume(g_cmd_response_buf));
+    return err_code;
+}
+
+uint32_t sd_ble_gap_address_set(ble_gap_addr_t const * const p_addr) 
+{
+    uint32_t index = 0;
+    
+    g_cmd_buffer[index++] = BLE_RPC_PKT_CMD;
+    g_cmd_buffer[index++] = SD_BLE_GAP_ADDRESS_SET;
+    if (p_addr != NULL) 
+    {
+        g_cmd_buffer[index++] = RPC_BLE_FIELD_PRESENT;
+        g_cmd_buffer[index++] = p_addr->addr_type;
+        memcpy(&g_cmd_buffer[index], p_addr->addr, BLE_GAP_ADDR_LEN);
+        index += BLE_GAP_ADDR_LEN;
+    }
+    else 
+    {
+        g_cmd_buffer[index++] = RPC_BLE_FIELD_NOT_PRESENT;
+    }
+    
+    uint32_t err_code = hci_transport_pkt_write(g_cmd_buffer, index);
+    if (err_code != NRF_SUCCESS) {
+        return err_code;
+    }
+    
+    err_code = ble_rpc_cmd_resp_wait(SD_BLE_GAP_ADDRESS_SET);
+    UNUSED_VARIABLE(hci_transport_rx_pkt_consume(g_cmd_response_buf));
+    
+    return err_code;
+}
+
+uint32_t sd_ble_gap_adv_stop(void)
+{
+    uint32_t index = 0;
+
+    g_cmd_buffer[index++] = BLE_RPC_PKT_CMD;
+    g_cmd_buffer[index++] = SD_BLE_GAP_ADV_STOP;
+    
+    uint32_t err_code = hci_transport_pkt_write(g_cmd_buffer, index);
+    if (err_code != NRF_SUCCESS)
+    {
+        return err_code;
+    }
+
+    err_code = ble_rpc_cmd_resp_wait(SD_BLE_GAP_ADV_STOP);
     UNUSED_VARIABLE(hci_transport_rx_pkt_consume(g_cmd_response_buf));
     return err_code;
 }

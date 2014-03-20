@@ -112,6 +112,7 @@ static ans_state_t           m_client_state = STATE_UNINITIALIZED;              
 static uint32_t              m_service_db[DISCOVERED_SERVICE_DB_SIZE];                     /**< Service database for bonded centrals (Word size aligned). */
 static alert_service_t *     mp_service_db;                                                /**< Pointer to start of discovered services database. */
 static alert_service_t       m_service;                                                    /**< Current service data. */
+static ble_ans_c_t *         m_ans_c_obj;                                                  /**< Pointer to the instantiated object. */
 
 
 /**@brief Function for passing any pending request from the buffer to the stack.
@@ -806,6 +807,10 @@ static void ans_pstorage_callback(pstorage_handle_t * handle,
                                   uint8_t           * p_data,
                                   uint32_t            param_len)
 {
+    if (reason != NRF_SUCCESS)
+    {
+        m_ans_c_obj->error_handler(reason);
+    }
 }
 
 
@@ -822,11 +827,13 @@ uint32_t ble_ans_c_init(ble_ans_c_t * p_ans, const ble_ans_c_init_t * p_ans_init
     p_ans->evt_handler         = p_ans_init->evt_handler;
     p_ans->error_handler       = p_ans_init->error_handler;
     p_ans->service_handle      = INVALID_SERVICE_HANDLE;
-    p_ans->central_handle       = INVALID_CENTRAL_HANDLE;
+    p_ans->central_handle      = INVALID_CENTRAL_HANDLE;
     p_ans->service_handle      = 0;
     p_ans->message_buffer_size = p_ans_init->message_buffer_size;
     p_ans->p_message_buffer    = p_ans_init->p_message_buffer;
     p_ans->conn_handle         = BLE_CONN_HANDLE_INVALID;
+    
+    m_ans_c_obj = p_ans;
 
     memset(&m_service, 0, sizeof(alert_service_t));
     memset(m_tx_buffer, 0, TX_BUFFER_SIZE);
@@ -1039,6 +1046,6 @@ uint32_t ble_ans_c_service_delete(void)
         return NRF_SUCCESS;
     }
 
-    return pstorage_clear(&m_flash_handle, 0);
+    return pstorage_clear(&m_flash_handle, (DISCOVERED_SERVICE_DB_SIZE * sizeof(uint32_t)));
 }
 

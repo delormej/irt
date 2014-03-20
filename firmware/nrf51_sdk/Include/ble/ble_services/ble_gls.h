@@ -44,9 +44,9 @@
 #define BLE_GLS_FEATURE_RES_HIGH_LOW                   0x0020  /**< Sensor Result High-Low Detection Supported */
 #define BLE_GLS_FEATURE_TEMP_HIGH_LOW                  0x0040  /**< Sensor Temperature High-Low Detection Supported */
 #define BLE_GLS_FEATURE_READ_INT                       0x0080  /**< Sensor Read Interrupt Detection Supported */
-#define BLE_GLS_FEATURE_GENERAL_FAULT                  0x0010  /**< General Device Fault Supported */
-#define BLE_GLS_FEATURE_TIME_FAULT                     0x0020  /**< Time Fault Supported */
-#define BLE_GLS_FEATURE_MULTI_BOND                     0x0040  /**< Multiple Bond Supported */
+#define BLE_GLS_FEATURE_GENERAL_FAULT                  0x0100  /**< General Device Fault Supported */
+#define BLE_GLS_FEATURE_TIME_FAULT                     0x0200  /**< Time Fault Supported */
+#define BLE_GLS_FEATURE_MULTI_BOND                     0x0400  /**< Multiple Bond Supported */
 
 /**@brief Glucose measurement flags */
 #define BLE_GLS_MEAS_FLAG_TIME_OFFSET                  0x01    /**< Time Offset Present */

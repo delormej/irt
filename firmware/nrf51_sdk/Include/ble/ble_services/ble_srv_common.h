@@ -142,7 +142,7 @@
 
 /**@brief Type definition for error handler function which will be called in case of an error in
  *        a service or a service library module. */
-typedef void (*ble_srv_error_handler_t)(uint32_t nrf_error);
+typedef void (*ble_srv_error_handler_t) (uint32_t nrf_error);
 
 /**@brief Value of a Report Reference descriptor. 
  *

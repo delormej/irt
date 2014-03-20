@@ -677,9 +677,6 @@ int main(void)
 	// Initialize default remote serial number.
 	m_ant_ctrl_remote_ser_no = 0;
 
-	// initialize the user profile.
-	profile_init();
-
 	// Initialize timers.
 	timers_init();
 
@@ -717,8 +714,11 @@ int main(void)
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
     APP_ERROR_CHECK(err_code);
 
-	// Initialize the scheduler.
+    // Initialize the scheduler.
 	scheduler_init();
+
+	// initialize the user profile.
+	profile_init();
 
 	// Begin advertising and receiving ANT messages.
 	ble_ant_start();

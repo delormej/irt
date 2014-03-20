@@ -398,7 +398,7 @@ uint32_t app_uart_init(const app_uart_comm_params_t * p_comm_params,
         // Configure pin.
         m_pin_cts_mask = (1 << p_comm_params->cts_pin_no);
         nrf_gpio_cfg_sense_input(p_comm_params->cts_pin_no, 
-                                 BUTTON_PULL, 
+                                 NRF_GPIO_PIN_PULLUP,
                                  NRF_GPIO_PIN_SENSE_LOW);
 
         gpiote_pin_low_high_mask = (1 << p_comm_params->cts_pin_no);

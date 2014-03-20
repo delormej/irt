@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include "hci_transport.h"
+#include "hal_transport.h"
 #include "ble_rpc_defines.h"
 #include "nrf_error.h"
 #include "app_util.h"
@@ -315,7 +315,7 @@ static uint32_t command_process(uint8_t * p_command, uint32_t command_len)
 void ble_rpc_cmd_handle(void * p_event_data, uint16_t event_size)
 {
     uint32_t  err_code;
-    uint32_t  rpc_cmd_length_read;
+    uint16_t  rpc_cmd_length_read;
     uint8_t * p_rpc_cmd_buffer;
 
     err_code = hci_transport_rx_pkt_extract(&p_rpc_cmd_buffer, &rpc_cmd_length_read);

@@ -17,7 +17,7 @@
 #include "ble.h"
 #include "nrf_soc.h"
 #include "app_util.h"
-#include "hci_transport.h"
+#include "hal_transport.h"
 #include "nordic_common.h"
 
 #define INVALID_OP_CODE 0xFF                 /**< Invalid operation code used for invalidating command response. */

@@ -7,18 +7,36 @@
   <vendorID>Nordic</vendorID>                                     <!-- Vendor ID -->
   <name>nRF51</name>                                              <!-- Official name of part or part series -->
   <series>nRF51</series>
-  <version>2.4C</version>                                         <!-- version of this description -->
+  <version>522</version>                                          <!-- Version of this description. It is the run of the automatic generation of SUS. -->
   <description>nRF51 reference description for radio MCU with ARM 32-bit Cortex-M0 Microcontroller at 16MHz CPU clock</description>
   <licenseText>
-    Copyright (c) 2009 Nordic Semiconductor. All Rights Reserved. \n
+    Copyright (c) 2013, Nordic Semiconductor ASA\n
+    All rights reserved.\n
     \n
-    The information contained herein is property of Nordic Semiconductor ASA. \n
-    Terms and conditions of usage are described in detail in NORDIC \n
-    SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT. \n
+    Redistribution and use in source and binary forms, with or without\n
+    modification, are permitted provided that the following conditions are met:\n
     \n
-    Licensees are granted free, non-transferable use of the information. NO \n
-    WARRANTY of ANY KIND is provided. This heading must NOT be removed from \n
-    the file. \n
+    * Redistributions of source code must retain the above copyright notice, this\n
+      list of conditions and the following disclaimer.\n
+    \n
+    * Redistributions in binary form must reproduce the above copyright notice,\n
+      this list of conditions and the following disclaimer in the documentation\n
+      and/or other materials provided with the distribution.\n
+    \n
+    * Neither the name of Nordic Semiconductor ASA nor the names of its\n
+      contributors may be used to endorse or promote products derived from\n
+      this software without specific prior written permission.\n
+    \n
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"\n
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\n
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\n
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\n
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\n
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\n
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\n
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n
   </licenseText>
 
   <!-- Register Properties Group -->
@@ -43,26 +61,15 @@
   <headerDefinitionsPrefix>NRF_</headerDefinitionsPrefix>        <!-- Prefix for all structs and #defines -->
 
   <vendorExtensions>
-    <FlashPageSize>1024</FlashPageSize>                                   <!-- A page is the smallest writable unit of the flash memory. [Byte/decimal] -->
-    <FlashBaseAddress>0x00000000</FlashBaseAddress>                       <!-- Flash memory start/base address. [32 bit hexadecimal] -->
-    <FlashSize>262144</FlashSize>
-    <FlashPageCount>256</FlashPageCount>                                  <!-- Number of pages of size FlashPageSize. [Decimal] -->
-    <FlashBlockSize>1024</FlashBlockSize>                                 <!-- A block is the smallest erasable unit of the flash memory. [Byte/decimal] -->
-    <FlashBlockCount>256</FlashBlockCount>                                <!-- Number of blocks of size FlashBlockSize. [Decimal] -->
-
-    <RamBaseAddress>0x20000000</RamBaseAddress>                           <!-- RAM start/base address. [32 bit hexadecimal] -->
-    <RamSize>16384</RamSize>                                              <!-- [Byte/decimal] -->
-    <StackSize>2048</StackSize>                                           <!-- Default stack size. [Byte/decimal] -->
-    <HeapSize>2048</HeapSize>                                             <!-- Default heap size. [Byte/decimal] -->
-
-    <InterruptVectorStartAddress>0x00000000</InterruptVectorStartAddress> <!-- Location of interrupt vectors. [32 bit hexadecimal] -->
+    <ExampleStackSize>2048</ExampleStackSize>                                           <!-- Default stack size used in Nordic's startup_nrf51.s files. [Byte/decimal] -->
+    <ExampleHeapSize>2048</ExampleHeapSize>                                             <!-- Default heap size used in Nordic's startup_nrf51.s files. [Byte/decimal] -->
   </vendorExtensions>
 
   <peripherals>
 
     <peripheral>
       <name>POWER</name>
-      <version>1.20</version>
+      <version>522</version>
       <description>Power Control.</description>
       <groupName>POWER</groupName>
       <baseAddress>0x40000000</baseAddress>
@@ -377,7 +384,7 @@
           <name>RAMON</name>
           <description>Ram on/off.</description>
           <addressOffset>0x524</addressOffset>
-          <resetValue>0x0000000F</resetValue>
+          <resetValue>0x00000003</resetValue>
           <fields>
             <field>
               <name>ONRAM0</name>
@@ -409,40 +416,6 @@
                 <enumeratedValue>
                   <name>RAM1On</name>
                   <description>RAM block 1 ON in ON mode.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>ONRAM2</name>
-              <description>RAM block 2 behaviour in ON mode.</description>
-              <lsb>2</lsb> <msb>2</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>RAM2Off</name>
-                  <description>RAM block 2 OFF in ON mode.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>RAM2On</name>
-                  <description>RAM block 2 ON in ON mode.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>ONRAM3</name>
-              <description>RAM block 3 behaviour in ON mode.</description>
-              <lsb>3</lsb> <msb>3</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>RAM3Off</name>
-                  <description>RAM block 3 OFF in ON mode.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>RAM3On</name>
-                  <description>RAM block 3 ON in ON mode.</description>
                   <value>1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -481,10 +454,78 @@
                 </enumeratedValue>
               </enumeratedValues>
             </field>
+          </fields>
+        </register>
+
+        <register>
+          <name>RESET</name>
+          <description>Pin reset functionality configuration register. This register is a retained register.</description>
+          <addressOffset>0x544</addressOffset>
+          <fields>
+            <field>
+              <name>RESET</name>
+              <description>Enable or disable pin reset in debug interface mode.</description>
+              <lsb>0</lsb> <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>Disabled</name>
+                  <description>Pin reset in debug interface mode disabled.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>Enabled</name>
+                  <description>Pin reset in debug interface mode enabled.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        
+        <register>
+          <name>RAMONB</name>
+          <description>Ram on/off.</description>
+          <addressOffset>0x554</addressOffset>
+          <resetValue>0x00000003</resetValue>
+          <fields>
+            <field>
+              <name>ONRAM2</name>
+              <description>RAM block 2 behaviour in ON mode.</description>
+              <lsb>0</lsb> <msb>0</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>RAM2Off</name>
+                  <description>RAM block 2 OFF in ON mode.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>RAM2On</name>
+                  <description>RAM block 2 ON in ON mode.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+            <field>
+              <name>ONRAM3</name>
+              <description>RAM block 3 behaviour in ON mode.</description>
+              <lsb>1</lsb> <msb>1</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>RAM3Off</name>
+                  <description>RAM block 33 OFF in ON mode.</description>
+                  <value>0</value>
+                </enumeratedValue>
+                <enumeratedValue>
+                  <name>RAM3On</name>
+                  <description>RAM block 3 ON in ON mode.</description>
+                  <value>1</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
             <field>
               <name>OFFRAM2</name>
               <description>RAM block 2 behaviour in OFF mode.</description>
-              <lsb>18</lsb> <msb>18</msb>
+              <lsb>16</lsb> <msb>16</msb>
               <enumeratedValues>
                 <enumeratedValue>
                   <name>RAM2Off</name>
@@ -501,7 +542,7 @@
             <field>
               <name>OFFRAM3</name>
               <description>RAM block 3 behaviour in OFF mode.</description>
-              <lsb>19</lsb> <msb>19</msb>
+              <lsb>17</lsb> <msb>17</msb>
               <enumeratedValues>
                 <enumeratedValue>
                   <name>RAM3Off</name>
@@ -511,31 +552,6 @@
                 <enumeratedValue>
                   <name>RAM3On</name>
                   <description>RAM block 3 ON in OFF mode.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-
-        <register>
-          <name>RESET</name>
-          <description>Pin reset functionality configuration register. This register is a retained register.</description>
-          <addressOffset>0x544</addressOffset>
-          <fields>
-            <field>
-              <name>RESET</name>
-              <description>Enable pin reset in debug interface mode.</description>
-              <lsb>0</lsb> <msb>0</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Pin reset in debug interface mode disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Pin reset in debug interface mode enabled.</description>
                   <value>1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -614,7 +630,7 @@
 
     <peripheral>
       <name>CLOCK</name>
-      <version>1.19A</version>
+      <version>522</version>
       <description>Clock control.</description>
       <groupName>CLOCK</groupName>
       <baseAddress>0x40000000</baseAddress>
@@ -689,12 +705,12 @@
         </register>
         <register>
           <name>EVENTS_DONE</name>
-          <description>Callibration of LFCLK RC oscillator completed.</description>
+          <description>Calibration of LFCLK RC oscillator completed.</description>
           <addressOffset>0x10C</addressOffset>
         </register>
         <register>
           <name>EVENTS_CTTO</name>
-          <description>Callibration timer timeout.</description>
+          <description>Calibration timer timeout.</description>
           <addressOffset>0x110</addressOffset>
         </register>
 
@@ -923,23 +939,23 @@
 
         <register>
           <name>HFCLKRUN</name>
-          <description>Task HFCLKSTART triggered status.</description>
+          <description>Task HFCLKSTART trigger status.</description>
           <addressOffset>0x408</addressOffset>
           <access>read-only</access>
           <fields>
             <field>
               <name>STATUS</name>
-              <description>Task HFCLKSTART triggered or not.</description>
+              <description>Task HFCLKSTART trigger status.</description>
               <lsb>0</lsb> <msb>0</msb>
               <enumeratedValues>
                 <enumeratedValue>
                   <name>NotTriggered</name>
-                  <description>Task HFCLKSTART not triggered.</description>
+                  <description>Task HFCLKSTART has not been triggered.</description>
                   <value>0</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Triggered</name>
-                  <description>Task HFCLKSTART not triggered.</description>
+                  <description>Task HFCLKSTART has been triggered.</description>
                   <value>1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -998,17 +1014,17 @@
           <fields>
             <field>
               <name>STATUS</name>
-              <description>Task LFCLKSTART triggered or not.</description>
+              <description>Task LFCLKSTART triggered status.</description>
               <lsb>0</lsb> <msb>0</msb>
               <enumeratedValues>
                 <enumeratedValue>
                   <name>NotTriggered</name>
-                  <description>Task LFCLKSTART not triggered.</description>
+                  <description>Task LFCLKSTART has not been triggered.</description>
                   <value>0</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Triggered</name>
-                  <description>Task LFCLKSTART not triggered.</description>
+                  <description>Task LFCLKSTART has been triggered.</description>
                   <value>1</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -1068,6 +1084,7 @@
           <name>LFCLKSRCCOPY</name>
           <description>Clock source for the LFCLK clock, set when task LKCLKSTART is triggered.</description>
           <addressOffset>0x41C</addressOffset>
+          <access>read-only</access>
           <fields>
             <field>
               <name>SRC</name>
@@ -1150,12 +1167,12 @@
               <enumeratedValues>
                 <enumeratedValue>
                   <name>16MHz</name>
-                  <description>16MHz xtal is used.</description>
+                  <description>16MHz xtal is used as source for the HFCLK oscillator.</description>
                   <value>0xFF</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>32MHz</name>
-                  <description>32MHz xtal is used.</description>
+                  <description>32MHz xtal is used as source for the HFCLK oscillator.</description>
                   <value>0x00</value>
                 </enumeratedValue>
               </enumeratedValues>
@@ -1167,7 +1184,7 @@
 
     <peripheral>
       <name>MPU</name>
-      <version>1.4</version>
+      <version>522</version>
       <description>Memory Protection Unit.</description>
       <groupName>MPU</groupName>
       <baseAddress>0x40000000</baseAddress>
@@ -1494,8 +1511,8 @@
               </enumeratedValues>
             </field>
             <field>
-              <name>LPCOMP_COMP</name>
-              <description>LPCOMP_COMP region configuration.</description>
+              <name>LPCOMP</name>
+              <description>LPCOMP region configuration.</description>
               <lsb>19</lsb> <msb>19</msb>
               <enumeratedValues>
                 <enumeratedValue>
@@ -1555,7 +1572,7 @@
         
         <register>
           <name>PROTENSET0</name>
-          <description>Protection bit enable set register for low addresses.</description>
+          <description>Erase and write protection bit enable set register.</description>
           <addressOffset>0x600</addressOffset>
           <fields>
             <field>
@@ -2395,7 +2412,7 @@
         
         <register>
           <name>PROTENSET1</name>
-          <description>Protection bit enable set register for high addresses.</description>
+          <description>Erase and write protection bit enable set register.</description>
           <addressOffset>0x604</addressOffset>
           <fields>
             <field>
@@ -3235,8 +3252,9 @@
         
         <register>
           <name>DISABLEINDEBUG</name>
-          <description>Disable protection mechanism in debug mode.</description>
+          <description>Disable erase and write protection mechanism in debug mode.</description>
           <addressOffset>0x608</addressOffset>
+          <resetValue>0x00000001</resetValue>
           <fields>
             <field>
               <name>DISABLEINDEBUG</name>
@@ -3259,6 +3277,26 @@
         </register>
         
         <register>
+          <name>PROTBLOCKSIZE</name>
+          <description>Erase and write protection block size.</description>
+          <addressOffset>0x60C</addressOffset>
+          <fields>
+            <field>
+              <name>PROTBLOCKSIZE</name>
+              <description>Erase and write protection block size.</description>
+              <lsb>0</lsb> <msb>1</msb>
+              <enumeratedValues>
+                <enumeratedValue>
+                  <name>4k</name>
+                  <description>Erase and write protection block size is 4k.</description>
+                  <value>0</value>
+                </enumeratedValue>
+              </enumeratedValues>
+            </field>
+          </fields>
+        </register>
+        
+        <register>
           <name>ENRBDREG</name>
           <description>Enable or disable RBD.</description>
           <addressOffset>0xA0C</addressOffset>
@@ -3271,12 +3309,12 @@
                 <enumeratedValue>
                   <name>Disabled</name>
                   <description>RBD disabled.</description>
-                  <value>0x0</value>
+                  <value>0</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Enabled</name>
                   <description>RBD enabled.</description>
-                  <value>0x1</value>
+                  <value>1</value>
                 </enumeratedValue>
               </enumeratedValues>
             </field>
@@ -3288,7 +3326,7 @@
 
     <peripheral>
       <name>PU</name>
-      <version>1.0</version>
+      <version>522</version>
       <description>Patch unit.</description>
       <groupName>PU</groupName>
       <baseAddress>0x40000000</baseAddress>
@@ -3906,7 +3944,7 @@
 
     <peripheral>
       <name>AMLI</name>
-      <version>1.0D</version>
+      <version>539</version>
       <description>AHB Multi-Layer Interface.</description>
       <groupName>AMLI</groupName>
       <baseAddress>0x40000000</baseAddress>
@@ -4076,6 +4114,194 @@
                 <name>RAM3</name>
                 <description>Configuration field for RAM block 3.</description>
                 <lsb>12</lsb> <msb>15</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM4</name>
+                <description>Configuration field for RAM block 4.</description>
+                <lsb>16</lsb> <msb>19</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM5</name>
+                <description>Configuration field for RAM block 5.</description>
+                <lsb>20</lsb> <msb>23</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM6</name>
+                <description>Configuration field for RAM block 6.</description>
+                <lsb>24</lsb> <msb>27</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM7</name>
+                <description>Configuration field for RAM block 7.</description>
+                <lsb>28</lsb> <msb>31</msb>
                 <enumeratedValues>
                   <enumeratedValue>
                     <name>Pri0</name>
@@ -4314,6 +4540,194 @@
                   </enumeratedValue>
                 </enumeratedValues>
               </field>
+              <field>
+                <name>RAM4</name>
+                <description>Configuration field for RAM block 4.</description>
+                <lsb>16</lsb> <msb>19</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM5</name>
+                <description>Configuration field for RAM block 5.</description>
+                <lsb>20</lsb> <msb>23</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM6</name>
+                <description>Configuration field for RAM block 6.</description>
+                <lsb>24</lsb> <msb>27</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM7</name>
+                <description>Configuration field for RAM block 7.</description>
+                <lsb>28</lsb> <msb>31</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
             </fields>
           </register>
           <register>
@@ -4466,6 +4880,194 @@
                 <name>RAM3</name>
                 <description>Configuration field for RAM block 3.</description>
                 <lsb>12</lsb> <msb>15</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM4</name>
+                <description>Configuration field for RAM block 4.</description>
+                <lsb>16</lsb> <msb>19</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM5</name>
+                <description>Configuration field for RAM block 5.</description>
+                <lsb>20</lsb> <msb>23</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM6</name>
+                <description>Configuration field for RAM block 6.</description>
+                <lsb>24</lsb> <msb>27</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM7</name>
+                <description>Configuration field for RAM block 7.</description>
+                <lsb>28</lsb> <msb>31</msb>
                 <enumeratedValues>
                   <enumeratedValue>
                     <name>Pri0</name>
@@ -4704,6 +5306,194 @@
                   </enumeratedValue>
                 </enumeratedValues>
               </field>
+              <field>
+                <name>RAM4</name>
+                <description>Configuration field for RAM block 4.</description>
+                <lsb>16</lsb> <msb>19</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM5</name>
+                <description>Configuration field for RAM block 5.</description>
+                <lsb>20</lsb> <msb>23</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM6</name>
+                <description>Configuration field for RAM block 6.</description>
+                <lsb>24</lsb> <msb>27</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM7</name>
+                <description>Configuration field for RAM block 7.</description>
+                <lsb>28</lsb> <msb>31</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
             </fields>
           </register>
           <register>
@@ -4856,6 +5646,194 @@
                 <name>RAM3</name>
                 <description>Configuration field for RAM block 3.</description>
                 <lsb>12</lsb> <msb>15</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM4</name>
+                <description>Configuration field for RAM block 4.</description>
+                <lsb>16</lsb> <msb>19</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM5</name>
+                <description>Configuration field for RAM block 5.</description>
+                <lsb>20</lsb> <msb>23</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM6</name>
+                <description>Configuration field for RAM block 6.</description>
+                <lsb>24</lsb> <msb>27</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM7</name>
+                <description>Configuration field for RAM block 7.</description>
+                <lsb>28</lsb> <msb>31</msb>
                 <enumeratedValues>
                   <enumeratedValue>
                     <name>Pri0</name>
@@ -5094,6 +6072,194 @@
                   </enumeratedValue>
                 </enumeratedValues>
               </field>
+              <field>
+                <name>RAM4</name>
+                <description>Configuration field for RAM block 4.</description>
+                <lsb>16</lsb> <msb>19</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM5</name>
+                <description>Configuration field for RAM block 5.</description>
+                <lsb>20</lsb> <msb>23</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM6</name>
+                <description>Configuration field for RAM block 6.</description>
+                <lsb>24</lsb> <msb>27</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
+              <field>
+                <name>RAM7</name>
+                <description>Configuration field for RAM block 7.</description>
+                <lsb>28</lsb> <msb>31</msb>
+                <enumeratedValues>
+                  <enumeratedValue>
+                    <name>Pri0</name>
+                    <description>Priority 0.</description>
+                    <value>0x0</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri2</name>
+                    <description>Priority 2.</description>
+                    <value>0x2</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri4</name>
+                    <description>Priority 4.</description>
+                    <value>0x4</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri6</name>
+                    <description>Priority 6.</description>
+                    <value>0x6</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri8</name>
+                    <description>Priority 8.</description>
+                    <value>0x8</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri10</name>
+                    <description>Priority 10.</description>
+                    <value>0xA</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri12</name>
+                    <description>Priority 12.</description>
+                    <value>0xC</value>
+                  </enumeratedValue>
+                  <enumeratedValue>
+                    <name>Pri14</name>
+                    <description>Priority 14.</description>
+                    <value>0xE</value>
+                  </enumeratedValue>
+                </enumeratedValues>
+              </field>
             </fields>
           </register>
         </cluster>
@@ -5104,7 +6270,7 @@
     
     <peripheral>
       <name>RADIO</name>
-      <version>3.5</version>
+      <version>522</version>
       <description>The radio.</description>
       <baseAddress>0x40001000</baseAddress>
       <groupName>RADIO</groupName>
@@ -5226,7 +6392,7 @@
 
         <register>
           <name>SHORTS</name>
-          <description>Shortcut for the radio.</description>
+          <description>Shortcuts for the radio.</description>
           <addressOffset>0x200</addressOffset>
           <fields>
             <field>
@@ -5876,6 +7042,21 @@
             </field>
           </fields>
         </register>
+        
+        <register>
+          <name>CD</name>
+          <description>Carrier detect.</description>
+          <addressOffset>0x404</addressOffset>
+          <access>read-only</access>
+          <fields>
+            <field>
+              <name>CD</name>
+              <description>Carrier detect.</description>
+              <lsb>0</lsb> <msb>0</msb>
+            </field>
+          </fields>
+        </register>
+        
         <register>
           <name>RXMATCH</name>
           <description>Received address.</description>
@@ -5889,6 +7070,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>RXCRC</name>
           <description>Received CRC.</description>
@@ -5907,10 +7089,11 @@
           <name>DAI</name>
           <description>Device address match index.</description>
           <addressOffset>0x410</addressOffset>
+          <access>read-only</access>
           <fields>
             <field>
               <name>DAI</name>
-              <description>Index (n) of device address (see DAB[n] and DAP[n]) that got an address match.</description>
+              <description>Index (n) of device address (see DAB[n] and DAP[n]) that obtained an address match.</description>
               <lsb>0</lsb> <msb>2</msb>
             </field>
           </fields>
@@ -5921,6 +7104,7 @@
           <description>Packet pointer. Decision point: START task.</description>
           <addressOffset>0x504</addressOffset>
         </register>
+        
         <register>
           <name>FREQUENCY</name>
           <description>Frequency.</description>
@@ -6352,7 +7536,7 @@
               </enumeratedValues>
             </field>
             <field>
-              <name>SKIP_ADDR</name>
+              <name>SKIPADDR</name>
               <description>Leave packet address field out of the CRC calculation. Decision point: START task.</description>
               <lsb>8</lsb> <msb>8</msb>
               <enumeratedValues>
@@ -6378,7 +7562,7 @@
             <field>
               <name>CRCPOLY</name>
               <description>CRC polynomial. Decision point: START task.</description>
-              <lsb>1</lsb> <msb>23</msb>
+              <lsb>0</lsb> <msb>23</msb>
             </field>
           </fields>
         </register>
@@ -6400,7 +7584,7 @@
           <addressOffset>0x540</addressOffset>
           <fields>
             <field>
-              <name>CONST_CARRIER</name>
+              <name>CONSTCARRIER</name>
               <description>Constant carrier. Decision point: TXEN task.</description>
               <lsb>0</lsb> <msb>0</msb>
               <enumeratedValues>
@@ -6417,7 +7601,7 @@
               </enumeratedValues>
             </field>
             <field>
-              <name>PLL_LOCK</name>
+              <name>PLLLOCK</name>
               <description>PLL lock. Decision point: TXEN or RXEN task.</description>
               <lsb>1</lsb> <msb>1</msb>
               <enumeratedValues>
@@ -6453,6 +7637,7 @@
           <name>RSSISAMPLE</name>
           <description>RSSI sample.</description>
           <addressOffset>0x548</addressOffset>
+          <access>read-only</access>
           <fields>
             <field>
               <name>RSSISAMPLE</name>
@@ -6530,7 +7715,7 @@
             <field>
               <name>DATAWHITEIV</name>
               <description>Data whitening initial value. Bit 0 corresponds to Position 0 of the LSFR, Bit 1 to position 5... Decision point: TXEN or RXEN task.</description>
-              <lsb>0</lsb> <msb>5</msb>
+              <lsb>0</lsb> <msb>6</msb>
             </field>
           </fields>
         </register>
@@ -6755,7 +7940,7 @@
           <fields>
             <field>
               <name>OVERRIDE0</name>
-              <description>Trim value override register 0.</description>
+              <description>Trim value override 0.</description>
               <lsb>0</lsb> <msb>31</msb>
             </field>
           </fields>
@@ -6767,7 +7952,7 @@
           <fields>
             <field>
               <name>OVERRIDE1</name>
-              <description>Trim value override register 1.</description>
+              <description>Trim value override 1.</description>
               <lsb>0</lsb> <msb>31</msb>
             </field>
           </fields>
@@ -6779,7 +7964,7 @@
           <fields>
             <field>
               <name>OVERRIDE2</name>
-              <description>Trim value override register 2.</description>
+              <description>Trim value override 2.</description>
               <lsb>0</lsb> <msb>31</msb>
             </field>
           </fields>
@@ -6791,7 +7976,7 @@
           <fields>
             <field>
               <name>OVERRIDE3</name>
-              <description>Trim value override register 3.</description>
+              <description>Trim value override 3.</description>
               <lsb>0</lsb> <msb>31</msb>
             </field>
           </fields>
@@ -6803,7 +7988,7 @@
           <fields>
             <field>
               <name>OVERRIDE4</name>
-              <description>Trim value override register 4.</description>
+              <description>Trim value override 4.</description>
               <lsb>0</lsb> <msb>27</msb>
             </field>
             <field>
@@ -6856,7 +8041,7 @@
 
     <peripheral>
       <name>UART0</name>
-      <version>3.1A</version>
+      <version>522</version>
       <description>Universal Asynchronous Receiver/Transmitter.</description>
       <baseAddress>0x40002000</baseAddress>
       <groupName>UART</groupName>
@@ -6940,7 +8125,7 @@
 
         <register>
           <name>SHORTS</name>
-          <description>Shortcuts for TWI.</description>
+          <description>Shortcuts for UART.</description>
           <addressOffset>0x200</addressOffset>
           <fields>
             <field>
@@ -7662,7 +8847,7 @@
 
     <peripheral>
       <name>SPI0</name>
-      <version>1.15</version>
+      <version>522</version>
       <description>SPI master 0.</description>
       <baseAddress>0x40003000</baseAddress>
       <groupName>SPI</groupName>
@@ -7804,6 +8989,7 @@
           <name>RXD</name>
           <description>RX data.</description>
           <addressOffset>0x518</addressOffset>
+          <access>read-only</access>
           <fields>
             <field>
               <name>RXD</name>
@@ -7963,7 +9149,7 @@
 
     <peripheral>
       <name>TWI0</name>
-      <version>1.5</version>
+      <version>522</version>
       <description>Two-wire interface master 0.</description>
       <baseAddress>0x40003000</baseAddress>
       <groupName>TWI</groupName>
@@ -8517,6 +9703,7 @@
           <name>RXD</name>
           <description>RX data register.</description>
           <addressOffset>0x518</addressOffset>
+          <access>read-only</access>
           <fields>
             <field>
               <name>RXD</name>
@@ -8611,7 +9798,7 @@
 
     <peripheral derivedFrom="SPI0">
       <name>SPI1</name>
-      <version>1.15</version>
+      <version>522</version>
       <description>SPI master 1.</description>
       <baseAddress>0x40004000</baseAddress>
       <groupName>SPI</groupName>
@@ -8625,7 +9812,7 @@
 
     <peripheral derivedFrom="TWI0">
       <name>TWI1</name>
-      <version>1.5</version>
+      <version>522</version>
       <description>Two-wire interface master 1.</description>
       <baseAddress>0x40004000</baseAddress>
       <groupName>TWI</groupName>
@@ -8640,7 +9827,7 @@
     
     <peripheral>
       <name>SPIS1</name>
-      <version>1.6</version>
+      <version>522</version>
       <description>SPI slave 1.</description>
       <baseAddress>0x40004000</baseAddress>
       <groupName>SPIS</groupName>
@@ -8996,6 +10183,7 @@
           <name>AMOUNTRX</name>
           <description>Number of bytes received in last granted transaction.</description>
           <addressOffset>0x53C</addressOffset>
+          <access>read-only</access>
           <fields>
             <field>
               <name>AMOUNTRX</name>
@@ -9026,6 +10214,7 @@
           <name>AMOUNTTX</name>
           <description>Number of bytes transmitted in last granted transaction.</description>
           <addressOffset>0x54C</addressOffset>
+          <access>read-only</access>
           <fields>
             <field>
               <name>AMOUNTTX</name>
@@ -9149,7 +10338,7 @@
 
     <peripheral>
       <name>GPIOTE</name>
-      <version>1.7</version>
+      <version>522</version>
       <description>GPIO tasks and events.</description>
       <baseAddress>0x40006000</baseAddress>
       <groupName>GPIOTE</groupName>
@@ -9574,7 +10763,7 @@
 
     <peripheral>
       <name>ADC</name>
-      <version>1.11</version>
+      <version>522</version>
       <description>Analog to digital converter.</description>
       <baseAddress>0x40007000</baseAddress>
       <groupName>ADC</groupName>
@@ -9937,7 +11126,7 @@
 
     <peripheral>
       <name>TIMER0</name>
-      <version>1.7</version>
+      <version>522</version>
       <description>Timer 0.</description>
       <baseAddress>0x40008000</baseAddress>
       <groupName>TIMER</groupName>
@@ -10486,7 +11675,7 @@
 
     <peripheral derivedFrom="TIMER0">
       <name>TIMER1</name>
-      <version>1.7</version>
+      <version>522</version>
       <description>Timer 1.</description>
       <baseAddress>0x40009000</baseAddress>
       <groupName>TIMER</groupName>
@@ -10500,7 +11689,7 @@
 
     <peripheral derivedFrom="TIMER0">
       <name>TIMER2</name>
-      <version>1.7</version>
+      <version>522</version>
       <description>Timer 2.</description>
       <baseAddress>0x4000A000</baseAddress>
       <groupName>TIMER</groupName>
@@ -10514,7 +11703,7 @@
 
     <peripheral>
       <name>RTC0</name>
-      <version>1.5</version>
+      <version>522</version>
       <description>Real time counter 0.</description>
       <baseAddress>0x4000B000</baseAddress>
       <groupName>RTC</groupName>
@@ -11345,6 +12534,7 @@
           <name>COUNTER</name>
           <description>Current COUNTER value.</description>
           <addressOffset>0x504</addressOffset>
+          <access>read-only</access>
           <fields>
             <field>
               <name>COUNTER</name>
@@ -11353,6 +12543,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>PRESCALER</name>
           <description>12-bit prescaler for COUNTER frequency (32768/(PRESCALER+1)). Must be written when RTC is STOPed.</description>
@@ -11412,7 +12603,7 @@
 
     <peripheral>
       <name>TEMP</name>
-      <version>1.2</version>
+      <version>522</version>
       <description>Temperature Sensor.</description>
       <groupName>TEMP</groupName>
       <baseAddress>0x4000C000</baseAddress>
@@ -11555,7 +12746,7 @@
 
     <peripheral>
       <name>RNG</name>
-      <version>1.6</version>
+      <version>522</version>
       <description>Random Number Generator.</description>
       <baseAddress>0x4000D000</baseAddress>
       <groupName>RNG</groupName>
@@ -11595,12 +12786,12 @@
 
         <register>
           <name>SHORTS</name>
-          <description>Shortcut for the RNG.</description>
+          <description>Shortcuts for the RNG.</description>
           <addressOffset>0x200</addressOffset>
           <fields>
             <field>
               <name>VALRDY_STOP</name>
-              <description>Short-cut between VALRDY event and STOP task.</description>
+              <description>Shortcut between VALRDY event and STOP task.</description>
               <lsb>0</lsb> <msb>0</msb>
               <enumeratedValues>
                 <enumeratedValue>
@@ -11754,7 +12945,7 @@
 
     <peripheral>
       <name>ECB</name>
-      <version>1.5</version>
+      <version>522</version>
       <description>AES ECB Mode Encryption.</description>
       <baseAddress>0x4000E000</baseAddress>
       <groupName>ECB</groupName>
@@ -11952,7 +13143,7 @@
 
     <peripheral>
       <name>AAR</name>
-      <version>1.11</version>
+      <version>522</version>
       <description>Accelerated Address Resolver.</description>
       <baseAddress>0x4000F000</baseAddress>
       <groupName>AAR</groupName>
@@ -12185,6 +13376,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>ENABLE</name>
           <description>Enable AAR.</description>
@@ -12209,6 +13401,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>NIRK</name>
           <description>Number of Identity root Keys in the IRK data structure.</description>
@@ -12222,6 +13415,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>IRKPTR</name>
           <description>Pointer to the IRK data structure.</description>
@@ -12234,7 +13428,7 @@
         </register>
         <register>
           <name>SCRATCHPTR</name>
-          <description>Pointer to "scratch" data area used for temporary storage during resolution. A minimum of 3 bytes must be reserved.</description>
+          <description>Pointer to a "scratch" data area used for temporary storage during resolution. A minimum of 3 bytes must be reserved.</description>
           <addressOffset>0x514</addressOffset>
         </register>
         
@@ -12268,7 +13462,7 @@
 
     <peripheral>
       <name>CCM</name>
-      <version>1.8</version>
+      <version>522</version>
       <description>AES CCM Mode Encryption.</description>
       <baseAddress>0x4000F000</baseAddress>
       <groupName>CCM</groupName>
@@ -12325,12 +13519,12 @@
 
         <register>
           <name>SHORTS</name>
-          <description>Shortcut for the CCM.</description>
+          <description>Shortcuts for the CCM.</description>
           <addressOffset>0x200</addressOffset>
           <fields>
             <field>
               <name>ENDKSGEN_CRYPT</name>
-              <description>Short-cut between ENDKSGEN event and CRYPT task.</description>
+              <description>Shortcut between ENDKSGEN event and CRYPT task.</description>
               <lsb>0</lsb> <msb>0</msb>
               <enumeratedValues>
                 <enumeratedValue>
@@ -12595,24 +13789,25 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>CNFPTR</name>
-          <description>Pointer to data structure holding AES key and NONCE vector.</description>
+          <description>Pointer to a data structure holding AES key and NONCE vector.</description>
           <addressOffset>0x508</addressOffset>
         </register>
         <register>
           <name>INPTR</name>
-          <description>Pointer to input packet.</description>
+          <description>Pointer to the input packet.</description>
           <addressOffset>0x50C</addressOffset>
         </register>
         <register>
           <name>OUTPTR</name>
-          <description>Pointer to output packet.</description>
+          <description>Pointer to the output packet.</description>
           <addressOffset>0x510</addressOffset>
         </register>
         <register>
           <name>SCRATCHPTR</name>
-          <description>Pointer to "scratch" data area used for temporary storage during resolution. A minimum of 43 bytes must be reserved.</description>
+          <description>Pointer to a "scratch" data area used for temporary storage during resolution. A minimum of 43 bytes must be reserved.</description>
           <addressOffset>0x514</addressOffset>
         </register>
         
@@ -12646,7 +13841,7 @@
 
     <peripheral>
       <name>WDT</name>
-      <version>1.3</version>
+      <version>522</version>
       <description>Watchdog Timer.</description>
       <groupName>WDT</groupName>
       <baseAddress>0x40010000</baseAddress>
@@ -13166,7 +14361,7 @@
 
     <peripheral derivedFrom="RTC0">
       <name>RTC1</name>
-      <version>1.5</version>
+      <version>522</version>
       <description>Real time counter 1.</description>
       <baseAddress>0x40011000</baseAddress>
       <groupName>RTC</groupName>
@@ -13180,7 +14375,7 @@
 
     <peripheral>
       <name>QDEC</name>
-      <version>2.5</version>
+      <version>522</version>
       <description>Rotary decoder.</description>
       <groupName>QDEC</groupName>
       <baseAddress>0x40012000</baseAddress>
@@ -13236,12 +14431,12 @@
 
         <register>
           <name>SHORTS</name>
-          <description>Shortcut for the QDEC.</description>
+          <description>Shortcuts for the QDEC.</description>
           <addressOffset>0x200</addressOffset>
           <fields>
             <field>
               <name>REPORTRDY_READCLRACC</name>
-              <description>Short-cut between REPORTRDY event and READCLRACC task.</description>
+              <description>Shortcut between REPORTRDY event and READCLRACC task.</description>
               <lsb>0</lsb> <msb>0</msb>
               <enumeratedValues>
                 <enumeratedValue>
@@ -13258,7 +14453,7 @@
             </field>
             <field>
               <name>SAMPLERDY_STOP</name>
-              <description>Short-cut between SAMPLERDY event and STOP task.</description>
+              <description>Shortcut between SAMPLERDY event and STOP task.</description>
               <lsb>1</lsb> <msb>1</msb>
               <enumeratedValues>
                 <enumeratedValue>
@@ -13551,6 +14746,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>SAMPLE</name>
           <description>Motion sample value.</description>
@@ -13565,6 +14761,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>REPORTPER</name>
           <description>Number of samples to generate an EVENT_REPORTRDY.</description>
@@ -13627,6 +14824,7 @@
           <access>read-only</access>
           <dataType>int32_t</dataType>
         </register>
+        
         <register>
           <name>ACCREAD</name>
           <description>Snapshot of ACC register. Value generated by the TASKS_READCLEACC task.</description>
@@ -13678,15 +14876,17 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>LEDPRE</name>
           <description>Time LED is switched ON before the sample.</description>
           <addressOffset>0x540</addressOffset>
+          <resetValue>0x00000010</resetValue>
           <fields>
             <field>
               <name>LEDPRE</name>
               <description>Period in us the LED in switched on prior to sampling.</description>
-              <lsb>0</lsb> <msb>7</msb>
+              <lsb>0</lsb> <msb>8</msb>
             </field>
           </fields>
         </register>
@@ -13704,6 +14904,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>ACCDBLREAD</name>
           <description>Snapshot of ACCDBL register. Value generated by the TASKS_READCLEACC task.</description>
@@ -13748,8 +14949,8 @@
 
     <peripheral>
       <name>LPCOMP</name>
-      <version>1.4</version>
-      <description>Wakeup Comparator.</description>
+      <version>522</version>
+      <description>Low power comparator.</description>
       <groupName>LPCOMP</groupName>
       <baseAddress>0x40013000</baseAddress>
       <size>32</size>
@@ -13762,7 +14963,7 @@
       </addressBlock>
 
       <interrupt>
-        <name>LPCOMP_COMP</name>
+        <name>LPCOMP</name>
         <value>19</value>
       </interrupt>
 
@@ -13809,12 +15010,12 @@
 
         <register>
           <name>SHORTS</name>
-          <description>Shortcut for the LPCOMP.</description>
+          <description>Shortcuts for the LPCOMP.</description>
           <addressOffset>0x200</addressOffset>
           <fields>
             <field>
               <name>READY_SAMPLE</name>
-              <description>Short-cut between READY event and SAMPLE task.</description>
+              <description>Shortcut between READY event and SAMPLE task.</description>
               <lsb>0</lsb> <msb>0</msb>
               <enumeratedValues>
                 <enumeratedValue>
@@ -13831,7 +15032,7 @@
             </field>
             <field>
               <name>READY_STOP</name>
-              <description>Short-cut between RADY event and STOP task.</description>
+              <description>Shortcut between RADY event and STOP task.</description>
               <lsb>1</lsb> <msb>1</msb>
               <enumeratedValues>
                 <enumeratedValue>
@@ -13848,7 +15049,7 @@
             </field>
             <field>
               <name>DOWN_STOP</name>
-              <description>Short-cut between DOWN event and STOP task.</description>
+              <description>Shortcut between DOWN event and STOP task.</description>
               <lsb>2</lsb> <msb>2</msb>
               <enumeratedValues>
                 <enumeratedValue>
@@ -13865,7 +15066,7 @@
             </field>
             <field>
               <name>UP_STOP</name>
-              <description>Short-cut between UP event and STOP task.</description>
+              <description>Shortcut between UP event and STOP task.</description>
               <lsb>3</lsb> <msb>3</msb>
               <enumeratedValues>
                 <enumeratedValue>
@@ -13882,7 +15083,7 @@
             </field>
             <field>
               <name>CROSS_STOP</name>
-              <description>Short-cut between CROSS event and STOP task.</description>
+              <description>Shortcut between CROSS event and STOP task.</description>
               <lsb>4</lsb> <msb>4</msb>
               <enumeratedValues>
                 <enumeratedValue>
@@ -14227,6 +15428,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>REFSEL</name>
           <description>Reference select.</description>
@@ -14281,6 +15483,7 @@
             </field>
           </fields>
         </register>
+        
         <register>
           <name>EXTREFSEL</name>
           <description>External reference select.</description>
@@ -14363,648 +15566,10 @@
         
       </registers>
     </peripheral>
-    
-    <peripheral>
-      <name>COMP</name>
-      <version>1.1</version>
-      <description>Comparator.</description>
-      <groupName>COMP</groupName>
-      <baseAddress>0x40013000</baseAddress>
-      <alternatePeripheral>LPCOMP</alternatePeripheral>
-      <size>32</size>
-      <access>read-write</access>
-
-      <addressBlock>
-        <offset>0</offset>
-        <size>0x1000</size>
-        <usage>registers</usage>
-      </addressBlock>
-
-      <interrupt>
-        <name>LPCOMP_COMP</name>
-        <value>19</value>
-      </interrupt>
-
-      <registers>
-        <register>
-          <name>TASKS_START</name>
-          <description>Start the comparator.</description>
-          <addressOffset>0x000</addressOffset>
-          <access>write-only</access>
-        </register>
-        <register>
-          <name>TASKS_STOP</name>
-          <description>Stop the comparator.</description>
-          <addressOffset>0x004</addressOffset>
-          <access>write-only</access>
-        </register>
-        <register>
-          <name>TASKS_SAMPLE</name>
-          <description>Sample comparator value.</description>
-          <addressOffset>0x008</addressOffset>
-          <access>write-only</access>
-        </register>
-
-        <register>
-          <name>EVENTS_READY</name>
-          <description>COMP is ready and output is valid.</description>
-          <addressOffset>0x100</addressOffset>
-        </register>
-        <register>
-          <name>EVENTS_DOWN</name>
-          <description>Input voltage crossed the threshold going down.</description>
-          <addressOffset>0x104</addressOffset>
-        </register>
-        <register>
-          <name>EVENTS_UP</name>
-          <description>Input voltage crossed the threshold going up.</description>
-          <addressOffset>0x108</addressOffset>
-        </register>
-        <register>
-          <name>EVENTS_CROSS</name>
-          <description>Input voltage crossed the threshold in any direction.</description>
-          <addressOffset>0x10C</addressOffset>
-        </register>
-
-        <register>
-          <name>SHORTS</name>
-          <description>Shortcut for the COMP.</description>
-          <addressOffset>0x200</addressOffset>
-          <fields>
-            <field>
-              <name>READY_SAMPLE</name>
-              <description>Short-cut between READY event and SAMPLE task.</description>
-              <lsb>0</lsb> <msb>0</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Shortcut disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Shortcut enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>READY_STOP</name>
-              <description>Short-cut between RADY event and STOP task.</description>
-              <lsb>1</lsb> <msb>1</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Shortcut disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Shortcut enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>DOWN_STOP</name>
-              <description>Short-cut between DOWN event and STOP task.</description>
-              <lsb>2</lsb> <msb>2</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Shortcut disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Shortcut enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>UP_STOP</name>
-              <description>Short-cut between UP event and STOP task.</description>
-              <lsb>3</lsb> <msb>3</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Shortcut disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Shortcut enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>CROSS_STOP</name>
-              <description>Short-cut between CROSS event and STOP task.</description>
-              <lsb>4</lsb> <msb>4</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Shortcut disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Shortcut enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-
-        <register>
-          <name>INTENSET</name>
-          <description>Interrupt enable set register.</description>
-          <addressOffset>0x304</addressOffset>
-          <fields>
-            <field>
-              <name>READY</name>
-              <description>Enable interrupt on READY event.</description>
-              <lsb>0</lsb> <msb>0</msb>
-              <enumeratedValues>
-                <usage>read</usage>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Interrupt disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Interrupt enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-              <enumeratedValues>
-                <usage>write</usage>
-                <enumeratedValue>
-                  <name>Set</name>
-                  <description>Enable interrupt on write.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>DOWN</name>
-              <description>Enable interrupt on DOWN event.</description>
-              <lsb>1</lsb> <msb>1</msb>
-              <enumeratedValues>
-                <usage>read</usage>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Interrupt disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Interrupt enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-              <enumeratedValues>
-                <usage>write</usage>
-                <enumeratedValue>
-                  <name>Set</name>
-                  <description>Enable interrupt on write.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>UP</name>
-              <description>Enable interrupt on UP event.</description>
-              <lsb>2</lsb> <msb>2</msb>
-              <enumeratedValues>
-                <usage>read</usage>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Interrupt disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Interrupt enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-              <enumeratedValues>
-                <usage>write</usage>
-                <enumeratedValue>
-                  <name>Set</name>
-                  <description>Enable interrupt on write.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>CROSS</name>
-              <description>Enable interrupt on CROSS event.</description>
-              <lsb>3</lsb> <msb>3</msb>
-              <enumeratedValues>
-                <usage>read</usage>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Interrupt disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Interrupt enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-              <enumeratedValues>
-                <usage>write</usage>
-                <enumeratedValue>
-                  <name>Set</name>
-                  <description>Enable interrupt on write.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>INTENCLR</name>
-          <description>Interrupt enable clear register.</description>
-          <addressOffset>0x308</addressOffset>
-          <fields>
-            <field>
-              <name>READY</name>
-              <description>Disable interrupt on READY event.</description>
-              <lsb>0</lsb> <msb>0</msb>
-              <enumeratedValues>
-                <usage>read</usage>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Interrupt disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Interrupt enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-              <enumeratedValues>
-                <usage>write</usage>
-                <enumeratedValue>
-                  <name>Clear</name>
-                  <description>Disable interrupt on write.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>DOWN</name>
-              <description>Disable interrupt on DOWN event.</description>
-              <lsb>1</lsb> <msb>1</msb>
-              <enumeratedValues>
-                <usage>read</usage>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Interrupt disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Interrupt enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-              <enumeratedValues>
-                <usage>write</usage>
-                <enumeratedValue>
-                  <name>Clear</name>
-                  <description>Disable interrupt on write.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>UP</name>
-              <description>Disable interrupt on UP event.</description>
-              <lsb>2</lsb> <msb>2</msb>
-              <enumeratedValues>
-                <usage>read</usage>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Interrupt disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Interrupt enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-              <enumeratedValues>
-                <usage>write</usage>
-                <enumeratedValue>
-                  <name>Clear</name>
-                  <description>Disable interrupt on write.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>CROSS</name>
-              <description>Disable interrupt on CROSS event.</description>
-              <lsb>3</lsb> <msb>3</msb>
-              <enumeratedValues>
-                <usage>read</usage>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Interrupt disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Interrupt enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-              <enumeratedValues>
-                <usage>write</usage>
-                <enumeratedValue>
-                  <name>Clear</name>
-                  <description>Disable interrupt on write.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-
-        <register>
-          <name>RESULT</name>
-          <description>Compare result.</description>
-          <addressOffset>0x400</addressOffset>
-          <access>read-only</access>
-          <fields>
-            <field>
-              <name>RESULT</name>
-              <description>Result of last compare. Decision point SAMPLE task.</description>
-              <lsb>0</lsb> <msb>0</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Bellow</name>
-                  <description>Input voltage is bellow the reference threshold.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Above</name>
-                  <description>Input voltage is above the reference threshold.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        
-        <register>
-          <name>ENABLE</name>
-          <description>Enable the COMP.</description>
-          <addressOffset>0x500</addressOffset>
-          <fields>
-            <field>
-              <name>ENABLE</name>
-              <description>Enable or disable COMP.</description>
-              <lsb>0</lsb> <msb>1</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Disabled COMP.</description>
-                  <value>0x00</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Enable COMP.</description>
-                  <value>0x02</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        
-        <register>
-          <name>PSEL</name>
-          <description>Input pin select.</description>
-          <addressOffset>0x504</addressOffset>
-          <fields>
-            <field>
-              <name>PSEL</name>
-              <description>Analog input pin select.</description>
-              <lsb>0</lsb> <msb>2</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>AnalogInput0</name>
-                  <description>Use analog input 0 as analog input.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>AnalogInput1</name>
-                  <description>Use analog input 1 as analog input.</description>
-                  <value>1</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>AnalogInput2</name>
-                  <description>Use analog input 2 as analog input.</description>
-                  <value>2</value>
-                </enumeratedValue><enumeratedValue>
-                  <name>AnalogInput3</name>
-                  <description>Use analog input 3 as analog input.</description>
-                  <value>3</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>AnalogInput4</name>
-                  <description>Use analog input 4 as analog input.</description>
-                  <value>4</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>AnalogInput5</name>
-                  <description>Use analog input 5 as analog input.</description>
-                  <value>5</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>AnalogInput6</name>
-                  <description>Use analog input 6 as analog input.</description>
-                  <value>6</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>AnalogInput7</name>
-                  <description>Use analog input 7 as analog input.</description>
-                  <value>7</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>REFSEL</name>
-          <description>Reference select.</description>
-          <addressOffset>0x508</addressOffset>
-          <fields>
-            <field>
-              <name>REFSEL</name>
-              <description>Reference select.</description>
-              <lsb>0</lsb> <msb>2</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Int1V5</name>
-                  <description>Use internal 1V5 as reference.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Int2V0</name>
-                  <description>Use internal 2V0 as reference.</description>
-                  <value>1</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Int2V5</name>
-                  <description>Use internal 2V5 as reference.</description>
-                  <value>2</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Supply</name>
-                  <description>Use supply as reference.</description>
-                  <value>4</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>ARef</name>
-                  <description>Use external analog reference as reference.</description>
-                  <value>5</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>EXTREFSEL</name>
-          <description>External reference select.</description>
-          <addressOffset>0x50C</addressOffset>
-          <fields>
-            <field>
-              <name>EXTREFSEL</name>
-              <description>External analog reference pin selection.</description>
-              <lsb>0</lsb> <msb>0</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>AnalogReference0</name>
-                  <description>Use analog reference 0 as reference.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>AnalogReference1</name>
-                  <description>Use analog reference 1 as reference.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>          
-          </fields>
-        </register>
-        
-        <register>
-          <name>TH</name>
-          <description>Threshold configuration for hysteresis unit.</description>
-          <addressOffset>0x530</addressOffset>
-          <fields>
-            <field>
-              <name>THUP</name>
-              <description>VUP configuration.</description>
-              <lsb>0</lsb> <msb>5</msb>
-            </field>
-            <field>
-              <name>THDOWN</name>
-              <description>VDOWN configuration.</description>
-              <lsb>8</lsb> <msb>13</msb>
-            </field>
-          </fields>
-        </register>
-        <register>
-          <name>MODE</name>
-          <description>Mode configuration.</description>
-          <addressOffset>0x534</addressOffset>
-          <fields>
-            <field>
-              <name>SP</name>
-              <description>Speed and power mode.</description>
-              <lsb>0</lsb> <msb>1</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Low</name>
-                  <description>Low power mode.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Normal</name>
-                  <description>Normal mode.</description>
-                  <value>1</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>High</name>
-                  <description>High speed mode.</description>
-                  <value>2</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-            <field>
-              <name>MAIN</name>
-              <description>Main operation mode.</description>
-              <lsb>8</lsb> <msb>8</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Single</name>
-                  <description>Single ended mode.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Diff</name>
-                  <description>Differential mode.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        
-        <register>
-          <name>POWER</name>
-          <description>Peripheral power control.</description>
-          <addressOffset>0xFFC</addressOffset>
-          <fields>
-            <field>
-              <name>POWER</name>
-              <description>Peripheral power control.</description>
-              <lsb>0</lsb> <msb>0</msb>
-              <enumeratedValues>
-                <enumeratedValue>
-                  <name>Disabled</name>
-                  <description>Module power disabled.</description>
-                  <value>0</value>
-                </enumeratedValue>
-                <enumeratedValue>
-                  <name>Enabled</name>
-                  <description>Module power enabled.</description>
-                  <value>1</value>
-                </enumeratedValue>
-              </enumeratedValues>
-            </field>
-          </fields>
-        </register>
-        
-      </registers>
-    </peripheral>
-       
+      
     <peripheral>
       <name>SWI</name>
-      <version>1.0</version>
+      <version>522</version>
       <description>SW Interrupts.</description>
       <groupName>SWI</groupName>
       <baseAddress>0x40014000</baseAddress>
@@ -15054,7 +15619,7 @@
 
     <peripheral>
       <name>NVMC</name>
-      <version>1.6</version>
+      <version>522</version>
       <description>Non Volatile Memory Controller.</description>
       <groupName>NVMC</groupName>
       <baseAddress>0x4001E000</baseAddress>
@@ -15190,7 +15755,7 @@
    
     <peripheral>
       <name>PPI</name>
-      <version>1.5</version>
+      <version>522</version>
       <description>PPI controller.</description>
       <baseAddress>0x4001F000</baseAddress>
       <groupName>PPI</groupName>
@@ -17692,7 +18257,7 @@
 
     <peripheral>
       <name>FICR</name>
-      <version>1.10A</version>
+      <version>522</version>
       <description>Factory Information Configuration.</description>
       <groupName>FICR</groupName>
       <baseAddress>0x10000000</baseAddress>
@@ -17726,17 +18291,17 @@
             <field>
               <name>RBD</name>
               <description>RBD.</description>
-              <lsb>0</lsb> <msb>0</msb>
+              <lsb>0</lsb> <msb>31</msb>
               <enumeratedValues>
                 <enumeratedValue>
                   <name>NoRoyalty</name>
                   <description>No royalty.</description>
-                  <value>0x0</value>
+                  <value>0xFFFFFFFE</value>
                 </enumeratedValue>
                 <enumeratedValue>
                   <name>Royalty</name>
                   <description>Royalty.</description>
-                  <value>0x1</value>
+                  <value>0xFFFFFFFF</value>
                 </enumeratedValue>
               </enumeratedValues>
             </field>
@@ -17779,14 +18344,20 @@
           <addressOffset>0x034</addressOffset>
         </register>
         <register>
+          <name>SIZERAMBLOCKS</name>
+          <description>Size of RAM blocks in bytes.</description>
+          <addressOffset>0x038</addressOffset>
+        </register>
+        <register>
           <dim>4</dim>
           <dimIncrement>0x04</dimIncrement>
           <dimIndex>0-3</dimIndex>
           <name>SIZERAMBLOCK[%s]</name>
-          <description>Size of RAM block in bytes.</description>
+          <description>Deprecated array of size of RAM block in bytes. This name is kept for backward compatinility purposes. Use SIZERAMBLOCKS instead.</description>
           <addressOffset>0x038</addressOffset>
+          <alternateRegister>SIZERAMBLOCKS</alternateRegister>
         </register>
-
+        
         <register>
           <name>CONFIGID</name>
           <description>Configuration identifier.</description>
@@ -17930,7 +18501,7 @@
 
     <peripheral>
       <name>UICR</name>
-      <version>1.11</version>
+      <version>522</version>
       <description>User Information Configuration.</description>
       <groupName>UICR</groupName>
       <baseAddress>0x10001000</baseAddress>
@@ -17950,6 +18521,7 @@
           <description>Length of code region 0.</description>
           <addressOffset>0x000</addressOffset>
         </register>
+        
         <register>
           <name>RBPCONF</name>
           <description>Readback protection configuration.</description>
@@ -18042,7 +18614,7 @@
 
     <peripheral>
       <name>GPIO</name>
-      <version>1.15</version>
+      <version>522</version>
       <description>General purpose input and output.</description>
       <baseAddress>0x50000000</baseAddress>
       <groupName>GPIO</groupName>
@@ -23077,7 +23649,7 @@
           <name>PIN_CNF[%s]</name>
           <description>Configuration of GPIO pins.</description>
           <addressOffset>0x700</addressOffset>
-          <resetValue>0x00000010</resetValue>
+          <resetValue>0x00000002</resetValue>
           <fields>
             <field>
               <name>DIR</name>

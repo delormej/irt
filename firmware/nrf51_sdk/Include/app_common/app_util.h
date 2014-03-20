@@ -27,7 +27,7 @@
 #include "nrf51.h"
 #include "app_error.h"
 
-/**@brief The interrupt priorities available to the application while the softdevice is active. */
+/**@brief The interrupt priorities available to the application while the SoftDevice is active. */
 typedef enum
 {
     APP_IRQ_PRIORITY_HIGH = 1,

@@ -22,7 +22,7 @@
 #include "nrf_error.h"
 #include "ble.h"
 #include "app_util.h"
-#include "hci_transport.h"
+#include "hal_transport.h"
 
 #define EVENT_QUEUE_SIZE                    3                     /**< Event queue size for the event decoder. If the queue is full an error is returned. @note This value should be 1 less than the number of RX buffers defined as \ref RX_BUF_QUEUE_SIZE in \ref hci_mem_pool.c to always allow a command response to be received. */
 #define EVENT_ID_POSITION                   1                     /**< Position in encoded packet for the Event Id. */

@@ -19,7 +19,7 @@
 #include "app_util.h"
 #include "ble_gap.h"
 #include "nrf_error.h"
-#include "hci_transport.h"
+#include "hal_transport.h"
 
 
 void ble_rpc_event_handle(ble_evt_t * p_ble_evt)

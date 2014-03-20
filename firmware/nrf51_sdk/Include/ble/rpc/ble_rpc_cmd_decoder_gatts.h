@@ -38,7 +38,7 @@
  * @param[in]   op_code        Operation code of the command.
  * @param[in]   command_len    Length of the encoded command.
  *
- * @retval      NRF_SUCCESS    If the decoding of the command was successful, the soft device API
+ * @retval      NRF_SUCCESS    If the decoding of the command was successful, the SoftDevice API
  *                             was called, and the command response was sent to peer, otherwise an
  *                             error code.
  *                             If the transport layer returns an error code while sending

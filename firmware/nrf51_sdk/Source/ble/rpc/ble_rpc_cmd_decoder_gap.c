@@ -841,7 +841,7 @@ uint32_t ble_rpc_cmd_gap_decode(uint8_t * p_command, uint8_t op_code, uint32_t c
         case SD_BLE_GAP_SEC_INFO_REPLY:
             err_code = gap_sec_info_reply_handle(p_command, command_len);
             break;
-
+            
         default:
             err_code = ble_rpc_cmd_resp_send(op_code, NRF_ERROR_NOT_SUPPORTED);
             break;

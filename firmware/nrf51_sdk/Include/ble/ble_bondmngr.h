@@ -171,8 +171,8 @@ typedef void (*ble_bondmngr_evt_handler_t) (ble_bondmngr_evt_t * p_evt);
  *        initialization of the Bond Manager module. */
 typedef struct
 {
-    uint8_t                     flash_page_num_bond;            /**< Flash page number to use for storing Bonding Information. */
-    uint8_t                     flash_page_num_sys_attr;        /**< Flash page number to use for storing System Attributes. */
+    uint8_t                     flash_page_num_bond;            /**< Deprecated: Flash page number to use for storing Bonding Information. */
+    uint8_t                     flash_page_num_sys_attr;        /**< Deprecated: Flash page number to use for storing System Attributes. */
     bool                        bonds_delete;                   /**< TRUE if bonding and System Attributes for all centrals is to be deleted from flash during initialization, FALSE otherwise. */
     ble_bondmngr_evt_handler_t  evt_handler;                    /**< Event handler to be called for handling events in bond manager. */
     ble_srv_error_handler_t     error_handler;                  /**< Function to be called in case of an error. */
@@ -320,7 +320,7 @@ uint32_t ble_bondmngr_bonded_central_delete(uint16_t central_id);
  *              database and then call this function.
  *
  * @warning     Currently the central id paramater is unused and is added only for future extension.
- *              As, today only one link is permitted for the peripheral device, status of current
+ *              As of today, only one link is permitted for the peripheral device, status of current
  *              link is provided. In future, with more possibilities in the topology, central_id
  *              will be needed to identify the central.
  *

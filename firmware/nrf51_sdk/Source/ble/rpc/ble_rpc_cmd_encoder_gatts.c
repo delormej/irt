@@ -15,7 +15,7 @@
 #include "app_util.h"
 #include "ble_rpc_cmd_encoder.h"
 #include "ble_rpc_defines.h"
-#include "hci_transport.h"
+#include "hal_transport.h"
 #include "nordic_common.h"
 
                                      /**< These externals come from from the ble_rpc_dms_encoder.c file. */
@@ -428,7 +428,6 @@ uint32_t sd_ble_gatts_characteristic_add(uint16_t                    service_han
     return err_code;
 }
 
-
 uint32_t sd_ble_gatts_value_set(uint16_t              handle,
                                 uint16_t              offset,
                                 uint16_t * const      p_len,
@@ -542,4 +541,46 @@ uint32_t sd_ble_gatts_descriptor_add(uint16_t                       char_handle,
 {
     // Not implemented yet.
     return NRF_ERROR_NOT_SUPPORTED;
+}
+
+uint32_t sd_ble_gatts_value_get(uint16_t handle,
+        uint16_t offset,
+        uint16_t * const p_len,
+        uint8_t  * const p_data) {
+    uint32_t index = 0;
+
+    g_cmd_buffer[index++] = BLE_RPC_PKT_CMD;
+    g_cmd_buffer[index++] = SD_BLE_GATTS_VALUE_GET;
+    index += uint16_encode(handle, &g_cmd_buffer[index]);
+    index += uint16_encode(offset, &g_cmd_buffer[index]);
+
+    if (p_len != NULL) {
+        g_cmd_buffer[index++] = RPC_BLE_FIELD_PRESENT;
+        index += uint16_encode(*p_len, &g_cmd_buffer[index]);
+
+        if (p_data != NULL) {
+            g_cmd_buffer[index++] = RPC_BLE_FIELD_PRESENT;
+        } else {
+            g_cmd_buffer[index++] = RPC_BLE_FIELD_NOT_PRESENT;
+        }
+    } else {
+        g_cmd_buffer[index++] = RPC_BLE_FIELD_NOT_PRESENT;
+
+        // @note: If length field is omitted value field must also be omitted.
+        g_cmd_buffer[index++] = RPC_BLE_FIELD_NOT_PRESENT;
+    }
+
+    uint32_t err_code = hci_transport_pkt_write(g_cmd_buffer, index);
+    if (err_code != NRF_SUCCESS) {
+        return err_code;
+    }
+
+    err_code = ble_rpc_cmd_resp_wait(SD_BLE_GATTS_VALUE_GET);
+
+    if (p_len != NULL) {
+        *p_len = g_cmd_response_buf[BLE_OP_CODE_SIZE + BLE_PKT_TYPE_SIZE + RPC_ERR_CODE_SIZE];
+    }
+
+    UNUSED_VARIABLE(hci_transport_rx_pkt_consume(g_cmd_response_buf));
+    return err_code;
 }

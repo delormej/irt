@@ -23,12 +23,21 @@
 #ifndef BLE_RPC_DEFINES_H__
 #define BLE_RPC_DEFINES_H__
 
+#define RPC_PKT_TYPE_POS                        0                      /**< Position of Packet type in the serialized packet buffer.*/
+#define RPC_PKT_OP_CODE_POS                     1                      /**< Position of Op Code in the serialized packet buffer.*/
+
 #define RPC_CMD_OP_CODE_POS                     0                      /**< Position of the Op Code in the command buffer.*/
 #define RPC_CMD_DATA_POS                        1                      /**< Position of the data in the command buffer.*/
 
 #define RPC_CMD_RESP_PKT_TYPE_POS               0                      /**< Position of Packet type  in the command response buffer.*/
 #define RPC_CMD_RESP_OP_CODE_POS                1                      /**< Position of the Op Code in the command response buffer.*/
 #define RPC_CMD_RESP_STATUS_POS                 2                      /**< Position of the status field in the command response buffer.*/
+
+#define RPC_DTM_CMD_OP_CODE_POS                 0                      /**< Position of the Op Code in the DTM command buffer.*/
+#define RPC_DTM_DATA_POS                        1                      /**< Position of the data in the DTM command buffer.*/
+
+#define RPC_DTM_RESP_OP_CODE_POS                1                      /**< Position of the Op Code in the DTM command response buffer.*/
+#define RPC_DTM_RESP_STATUS_POS                 2                      /**< Position of the status field in the DTM command response buffer.*/
 
 #define RPC_BLE_FIELD_LEN                       1                      /**< Optional field length size in bytes. */
 #define RPC_BLE_FIELD_PRESENT                   0x01                   /**< Value to indicate that an optional field is encoded in the serialized packet, e.g. white list. */
@@ -47,6 +56,8 @@ typedef enum
     BLE_RPC_PKT_CMD,                                                   /**< Command packet type. */
     BLE_RPC_PKT_RESP,                                                  /**< Command Response packet type. */
     BLE_RPC_PKT_EVT,                                                   /**< Event packet type. */
+    BLE_RPC_PKT_DTM_CMD,                                               /**< DTM Command packet type. */
+    BLE_RPC_PKT_DTM_RESP,                                              /**< DTM Response packet type. */
     BLE_RPC_PKT_TYPE_MAX                                               /**< Upper bound. */
 } ble_rpc_pkt_type_t;
 

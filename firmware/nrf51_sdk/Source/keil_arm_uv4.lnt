@@ -5,6 +5,7 @@ C:\Keil\ARM\BIN\CO-RV.LNT
 
 
 +fdi
++fan
 +macros // Double maximum allowed macro size
 -w2
 -wlib(2)
