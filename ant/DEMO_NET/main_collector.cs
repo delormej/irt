@@ -15,6 +15,7 @@ namespace ANT_Console_Demo
         public ushort resistance_level;
         public ushort servo_position;
         public short accelerometer_y;
+        public byte temperature;
     }
 
     public struct SpeedEvent
@@ -412,7 +413,7 @@ namespace ANT_Console_Demo
                         (ushort)(payload[2] | (payload[3] << 8));
                     m_last_event.accelerometer_y =
                         (short)(payload[4] | (payload[5] << 8));
-
+                    m_last_event.temperature = payload[6];
                     break;
             }
         }

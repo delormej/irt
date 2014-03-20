@@ -9,7 +9,7 @@ namespace ANT_Console_Demo
         Collector m_collector;
         Calculator m_calculator;
         StreamWriter m_logFileWriter;
-        const string report_format = "{0:H:mm:ss.fff}, {1:N4}, {2:N4}, {3:N1}, {4:g}, {5:g}, {6:g}, {7:g}, {8:g}";
+        const string report_format = "{0:H:mm:ss.fff}, {1:N4}, {2:N4}, {3:N1}, {4:g}, {5:g}, {6:g}, {7:g}, {8:g}, {9:g}";
 
         public Reporter(Collector collector)
         {
@@ -22,7 +22,7 @@ namespace ANT_Console_Demo
         public void Start()
         {
             Console.WriteLine("Starting....");
-            m_logFileWriter.WriteLine("event_time, bike_speed_mps, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power, calc_power, servo_pos, accelerometer_y");
+            m_logFileWriter.WriteLine("event_time, bike_speed_mps, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power, calc_power, servo_pos, accelerometer_y, temperature");
             System.Timers.Timer timer = new System.Timers.Timer(1000);
             timer.Elapsed += Reporter_Elapsed;
             timer.Start();
@@ -51,7 +51,8 @@ namespace ANT_Console_Demo
                 eventData.quarq_power,
                 calculatedWatts,
                 eventData.servo_position,
-                eventData.accelerometer_y
+                eventData.accelerometer_y,
+                eventData.temperature
                 //wheelTorqueEvents != null ? wheelTorqueEvents[wheelTorqueEvents.Length - 1].CumulativeWheelRevs : 0,
                 //wheelTorqueEvents != null ? wheelTorqueEvents[wheelTorqueEvents.Length-1].EventTime : 0
                 );
