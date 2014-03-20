@@ -48,6 +48,7 @@
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define DEFAULT_WHEEL_SIZE_MM			2069u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
+#define DEFAULT_ERG_WATTS				175u
 #define SIM_CRR							0.004f
 #define SIM_C							0.60f
 #define BLE_ADV_BLINK_RATE_MS			500u
@@ -391,6 +392,7 @@ static void on_power_down(void)
 
 static void on_button_i(void)
 {
+	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = 0;
 	m_servo_pos = resistance_level_set(m_resistance_level);
 	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
@@ -433,6 +435,7 @@ static void on_button_iii(void)
 
 static void on_button_iv(void)
 {
+	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
 	m_servo_pos = resistance_level_set(m_resistance_level);
 	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
@@ -444,7 +447,10 @@ static void on_button_menu(void)
 	if (m_resistance_mode == RESISTANCE_SET_STANDARD)
 	{
 		m_resistance_mode = RESISTANCE_SET_ERG;
-		m_sim_forces.erg_watts = 175u;			// Start at 175 watts.
+		if (m_sim_forces.erg_watts == 0)
+		{
+			m_sim_forces.erg_watts = DEFAULT_ERG_WATTS;
+		}
 		ant_bp_resistance_tx_send(m_resistance_mode, &m_sim_forces.erg_watts);
 	}
 	else
