@@ -137,18 +137,6 @@ uint16_t resistance_erg_set(float speed_mps, float weight_kg, uint16_t servo_pos
 	
 	pwm_set_servo(servo_position);
 
-#if defined(BLE_NUS_ENABLED)
-		static const char format[] = "s,0f,fn,sp:%f,%f,%f,%i";
-		char message[32];
-		memset(&message, 0, sizeof(message));
-		uint8_t length = sprintf(message, format,
-								speed_mps,
-								mag0_force,
-								needed_force,
-								servo_position);
-		debug_send(message, sizeof(message));
-#endif
-
 	return servo_position;
 }
 

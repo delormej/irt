@@ -54,7 +54,7 @@ else
     USE_SOFTDEVICE = blank
 endif
 
-LINKER_SCRIPT ?= gcc_nrf51_$(USE_SOFTDEVICE).ld
+LINKER_SCRIPT ?= gcc_nrf51_$(USE_SOFTDEVICE)_xxaa.ld
 OUTPUT_NAME ?= $(addsuffix _$(USE_SOFTDEVICE), $(PROJECT_NAME))
 
 ifdef USE_EXT_SENSORS
@@ -96,7 +96,7 @@ include $(TEMPLATE_PATH)Makefile.posix
 endif
 
 $(HEX): $(OBJS) $(OBJS_AS)
-	$(LD) $(LDFLAGS) $(OBJS_AS) $(OBJS) -o $(ELF)
+	$(LD) $(LDFLAGS) $(OBJS_AS) $(OBJS) -o $(ELF) -lm
 	$(OBJCOPY) -Oihex $(ELF) $(HEX)
 	$(OBJCOPY) -Obinary $(ELF) $(BIN)
 	$(SIZE) $(ELF)
