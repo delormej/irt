@@ -33,4 +33,6 @@ uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048);
  */
 int32_t power_measure(float total_weight_kg, irt_power_meas_t* p_power_meas);
 
+uint16_t power_servo_pos_calc(float weight_kg, float speed_mps, float force_needed);
+
 #endif // __POWER_H__

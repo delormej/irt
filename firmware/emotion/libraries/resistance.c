@@ -39,40 +39,15 @@ static void init_resistance()
 	m_initialized = true;
 }
 
-//
-// Calculates the desired servo position given speed in mps, weight in kg
-// and additional needed force in newton meters.
-//
-static uint16_t calc_servo_pos(float weight_kg, float speed_mps, float force_needed)
-{
-#define SERVO_FORCE_A_SLOPE 			-24.66803762f
-#define SERVO_FORCE_A_INTERCEPT 	1489.635063f
-#define SERVO_FORCE_A_SPEED			 	8.94f
-#define SERVO_FORCE_B_SLOPE 			-26.68991676f
-#define SERVO_FORCE_B_INTERCEPT 	1468.153562f
-#define SERVO_FORCE_B_SPEED			 	4.47f
-
-	float value = (force_needed * SERVO_FORCE_A_SLOPE + SERVO_FORCE_A_INTERCEPT) -
-		(((force_needed * SERVO_FORCE_A_SLOPE + SERVO_FORCE_A_INTERCEPT) -
-		(force_needed * SERVO_FORCE_B_SLOPE + SERVO_FORCE_B_INTERCEPT)) /
-		SERVO_FORCE_A_SPEED - SERVO_FORCE_B_SPEED)*(SERVO_FORCE_A_SPEED - speed_mps);
-
-	// Round the position.
-	uint16_t servo_pos = (uint16_t) value; //  ceil(value);
-
-	// Enforce min/max position.
-	if (servo_pos > RESISTANCE_LEVEL[0])
-		servo_pos = RESISTANCE_LEVEL[0];
-	else if (servo_pos < RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS - 1])
-		servo_pos = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS - 1];
-
-	return servo_pos;
-}
-
 uint16_t resistance_level_set(uint8_t level)
 {
 	// Sets the resistance to a standard 0-9 level.
 	INIT_RESISTANCE();
+	if (level >= MAX_RESISTANCE_LEVELS)
+	{
+		level = MAX_RESISTANCE_LEVELS - 1;
+	}
+
 	pwm_set_servo(RESISTANCE_LEVEL[level]);
 
 	return RESISTANCE_LEVEL[level];
@@ -145,7 +120,7 @@ uint16_t resistance_erg_set(float speed_mps, float weight_kg, uint16_t servo_pos
 	needed_force = (((float)p_sim_forces->erg_watts) / speed_mps) - mag0_force;
 	
 	// Determine the correct servo position for that force given speed & weight.
-	servo_position = calc_servo_pos(weight_kg, speed_mps, needed_force);
+	servo_position = power_servo_pos_calc(weight_kg, speed_mps, needed_force);
 								
 	//
 	// Ensure we don't move the servo beyond it's min and max.
