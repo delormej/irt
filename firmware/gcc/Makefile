@@ -96,7 +96,7 @@ include $(TEMPLATE_PATH)Makefile.posix
 endif
 
 $(HEX): $(OBJS) $(OBJS_AS)
-	$(LD) $(LDFLAGS) $(OBJS_AS) $(OBJS) -o $(ELF) -lm
+	$(LD) $(LDFLAGS) $(OBJS_AS) $(OBJS) -o $(ELF) 
 	$(OBJCOPY) -Oihex $(ELF) $(HEX)
 	$(OBJCOPY) -Obinary $(ELF) $(BIN)
 	$(SIZE) $(ELF)
