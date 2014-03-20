@@ -1,6 +1,8 @@
 #ifndef ACCELEROMETER_H
 #define ACCELEROMETER_H
 
+#define ACCELEROMETER_SRC_FF_MT	0x04
+
 typedef struct
 {
 	uint8_t mode;

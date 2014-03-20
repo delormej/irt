@@ -63,6 +63,7 @@ static app_timer_id_t               	m_ant_4hz_timer_id;                    		//
 
 static user_profile_t 					m_user_profile;
 static rc_sim_forces_t					m_sim_forces;
+static accelerometer_data_t 			m_accelerometer_data;
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
@@ -305,6 +306,16 @@ static void ant_4hz_timeout_handler(void * p_context)
 	// Get current temperature.
 	p_power_meas_current->temp = temperature_read();
 
+	// Report on accelerometer data.
+	if (m_accelerometer_data.source & ACCELEROMETER_SRC_FF_MT)
+	{
+		p_power_meas_current->accel_y_lsb = m_accelerometer_data.out_y_lsb;
+		p_power_meas_current->accel_y_msb = m_accelerometer_data.out_y_msb;
+
+		// Clear the source now that we've read it.
+		m_accelerometer_data.source = 0;
+	}
+
 	// Calculate the power.
 	err_code = power_measure(m_user_profile.total_weight_kg, p_power_meas_current);
 	APP_ERROR_CHECK(err_code);
@@ -463,14 +474,16 @@ static void on_button_menu(void)
 // This event is triggered when there is data to be read from accelerometer.
 static void on_accelerometer(void)
 {
-#if defined(BLE_NUS_ENABLED)
 	uint32_t err_code;
-	accelerometer_data_t data;
+
+	// Clear the struct.
+	memset(&m_accelerometer_data, 0, sizeof(m_accelerometer_data));
 
 	// Read event data from the accelerometer.
-	err_code = accelerometer_data(&data);
+	err_code = accelerometer_data(&m_accelerometer_data);
 	APP_ERROR_CHECK(err_code);
 
+	/*#if defined(BLE_NUS_ENABLED)
 	// TODO: Remove the hard coding here.
 	if (data.source & 0x04)
 	{
@@ -483,7 +496,7 @@ static void on_accelerometer(void)
 				data.out_y_msb);
 		debug_send(message, sizeof(message));
 	}
-#endif
+#endif*/
 }
 
 static void on_ble_connected(void) 

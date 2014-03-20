@@ -46,6 +46,8 @@ typedef struct irt_power_meas_s
 	uint16_t	servo_position;
 	uint32_t	accum_flywheel_revs;
 	float		temp;
+	uint8_t		accel_y_lsb;
+	uint8_t		accel_y_msb;
 } irt_power_meas_t;
 
 // Abstracts a FIFO queue of events.

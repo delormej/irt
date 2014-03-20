@@ -26,16 +26,16 @@
 #define EXTRA_INFO_FLYWHEEL_REVS		1u
 #define EXTRA_INFO_SERVO_POS_LSB		2u
 #define EXTRA_INFO_SERVO_POS_MSB		3u
-#define EXTRA_INFO_RES_MODE				4u
-#define EXTRA_INFO_RES_LEVEL			5u
+#define EXTRA_INFO_ACCEL_LSB			4u
+#define EXTRA_INFO_ACCEL_MSB			5u
 #define EXTRA_INFO_TEMP					6u
 
 // Standard Wheel Torque Main Data Page (0x11)
-#define WHEEL_TICKS_INDEX								2u
-#define	WHEEL_PERIOD_LSB_INDEX					4u
-#define	WHEEL_PERIOD_MSB_INDEX					5u
-#define ACCUMMULATED_TORQUE_LSB_INDEX		6u
-#define ACCUMMULATED_TORQUE_MSB_INDEX		7u
+#define WHEEL_TICKS_INDEX				2u
+#define	WHEEL_PERIOD_LSB_INDEX			4u
+#define	WHEEL_PERIOD_MSB_INDEX			5u
+#define ACCUMMULATED_TORQUE_LSB_INDEX	6u
+#define ACCUMMULATED_TORQUE_MSB_INDEX	7u
 
 #define BP_PAGE_1               	 0x01u   /**< Calibration message main data page. */
 #define BP_PAGE_STANDARD_POWER_ONLY  0x10u   /**< Standard Power only main data page. */
@@ -165,8 +165,8 @@ static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 	buffer[EXTRA_INFO_FLYWHEEL_REVS]	= (uint8_t)(p_power_meas->accum_flywheel_revs);
 	buffer[EXTRA_INFO_SERVO_POS_LSB]	= LOW_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_SERVO_POS_MSB]	= HIGH_BYTE(p_power_meas->servo_position);
-	buffer[EXTRA_INFO_RES_MODE]			= p_power_meas->resistance_mode;
-	buffer[EXTRA_INFO_RES_LEVEL]		= p_power_meas->resistance_level;
+	buffer[EXTRA_INFO_ACCEL_LSB]		= p_power_meas->accel_y_lsb;
+	buffer[EXTRA_INFO_ACCEL_MSB]		= p_power_meas->accel_y_msb;
 	buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
 	buffer[7]							= 0xFF;
 

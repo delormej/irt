@@ -204,7 +204,7 @@ static void enable_interrupt(void)
 	// Set the minimum time period of inactivity required to switch the part
 	// between Wake and Sleep status.
 	//
-	ret = accelerometer_write(REG8652_ASLP_COUNT, 0x10); // Set auto-sleep wait period to 5s (5s/0.32s=~16)
+	ret = accelerometer_write(REG8652_ASLP_COUNT, 0xFF); // Set auto-sleep wait period to 81seconds (255/0.32s=~81.6s)
 
 	//
 	// Set the debounce count.
@@ -288,7 +288,7 @@ uint32_t accelerometer_data(accelerometer_data_t* p_data)
 
 	accelerometer_read(REG8652_INT_SOURCE, &(p_data->source), sizeof(p_data->source));
 
-	if (p_data->source & 0x04) // Free-fall / motion interrupt.
+	if (p_data->source & ACCELEROMETER_SRC_FF_MT) // Free-fall / motion interrupt.
 	{
 		accelerometer_read(REG8652_FF_MT_SRC, &(p_data->data), sizeof(p_data->data));
 
