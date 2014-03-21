@@ -45,32 +45,42 @@ static void blink_timeout_handler(void * p_context)
 static void irt_gpio_init()
 {
 	uint32_t err_code;
-	uint32_t  pins_low_to_high_mask, pins_high_to_low_mask;
+	uint32_t pins_low_to_high_mask, pins_high_to_low_mask;
+	app_gpiote_user_id_t p_user_id;
 
 	// Initialize the LED pins.
 	nrf_gpio_cfg_output(PIN_LED_A);		// Green
 	nrf_gpio_cfg_output(PIN_LED_B);		// Red
 
+	// Initialize the pin to wake the device on movement from the accelerometer.
+	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
+	//nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_LOW);
+
+	// These pins are used for UART on boards where there is no RXD.
+#ifndef UART
 	// Initialize the button inputs from the RXD4140.
 	nrf_gpio_cfg_input(PIN_BUTTON_I, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_input(PIN_BUTTON_II, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_input(PIN_BUTTON_III, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_input(PIN_BUTTON_IV, NRF_GPIO_PIN_NOPULL);
-
-	// Initialize the pin to wake the device on movement from the accelerometer.
-	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
-	//nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_LOW);
-
-	APP_GPIOTE_INIT(1);
 	
 	pins_low_to_high_mask = (1 << PIN_BUTTON_I |
 		1 << PIN_BUTTON_II |
 		1 << PIN_BUTTON_III |
 		1 << PIN_BUTTON_IV);
-	
+#else
+	// Configure pins for UART.
+	nrf_gpio_cfg_input(PIN_UART_RXD, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_input(PIN_UART_CTS, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_output(PIN_UART_RTS);
+	nrf_gpio_cfg_output(PIN_UART_TXD);
+
+	pins_low_to_high_mask = 0;
+#endif
+
 	pins_high_to_low_mask = 1 << PIN_SHAKE;
 
-	app_gpiote_user_id_t p_user_id;
+	APP_GPIOTE_INIT(1);
 
 	err_code = app_gpiote_user_register(&p_user_id,
 		pins_low_to_high_mask,

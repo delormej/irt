@@ -29,6 +29,12 @@
 #define PIN_SDA													14	// Bidirectional signal from I2C bus
 #define PIN_SCL													15	// Clock signal for I2C bus.
 
+#define PIN_UART_RTS			8
+#define PIN_UART_CTS			9
+#define PIN_UART_TXD			10
+#define PIN_UART_RXD			11
+#define UART_HWFC				false
+
 // Port pins P0.16-P0.18 and P0.21-P0.23 are brought out to test points for possible use.
 
 // Until I update the code. 										

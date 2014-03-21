@@ -43,6 +43,7 @@
 #include "ble_ant.h"
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
+#include "simple_uart.h"
 
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
@@ -705,6 +706,10 @@ int main(void)
 		on_ant_ctrl_command
 	};
 
+#ifdef UART
+	simple_uart_config(PIN_UART_RTS, PIN_UART_TXD, PIN_UART_CTS, PIN_UART_RXD, UART_HWFC);
+	simple_uart_putstring((const uint8_t *)" \n\rStart: ");
+#endif
 	// TODO: Question should we have a separate method to initialize soft device?
 
 	// Initializes the soft device, Bluetooth and ANT stacks.

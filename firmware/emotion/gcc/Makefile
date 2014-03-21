@@ -13,6 +13,7 @@ APPLICATION_SRCS += ble_conn_params.c
 APPLICATION_SRCS += ble_debug_assert_handler.c
 APPLICATION_SRCS += pstorage.c
 APPLICATION_SRCS += nrf_delay.c
+APPLICATION_SRCS += simple_uart.c
 
 SOURCE_PATHS +=  ../libraries/
 SOURCE_PATHS +=  ../services/
@@ -37,6 +38,7 @@ CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
 CFLAGS += -DIRT_DEBUG
 CFLAGS += -DSIM_SPEED
+CFLAGS += -DUART
 
 ############################################
 # Define the Software Revision.
