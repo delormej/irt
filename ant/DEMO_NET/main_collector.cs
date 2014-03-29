@@ -483,17 +483,94 @@ namespace ANT_Console_Demo
             Console.WriteLine("Initialization was successful!");
         }
 
+        static void SetWeightCommand(Collector collector)
+        {
+            // Propmt user for weight in lbs.
+            
+            string prompt = "<enter weight in lbs:>";
+            Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
+            ConsoleColor lastColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(prompt);
+            Console.ForegroundColor = lastColor;
+            Console.SetCursorPosition(prompt.Length + 2, Console.CursorTop);
+
+            float weight;
+
+            if (float.TryParse(Console.ReadLine(), out weight))
+            {
+                if (weight < 100 || weight > 300)
+                {
+                    WriteCommand("Weight in lbs should be > 100 and < 300.");
+                    return;
+                }
+
+                // Convert lb to kg.
+                float weightKg = weight / 2.2f;
+
+                collector.SetWeight(weightKg);
+                WriteCommand(string.Format("Set Weight to {0:N1}kg.", weightKg));
+            }
+            else
+            {
+                WriteCommand("Invalid weight value.");
+            }
+        }
+
         static void WriteCommand(string message)
         {
+            inCommand = true;
+
             ConsoleColor last = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(message);
             Console.ForegroundColor = last;
+
+            inCommand = false;
+        }
+
+        static void OnReport(object o, string data)
+        {
+            // Leave 2 rows at the bottom for command.
+            int lastLine = Console.CursorTop;
+
+            // Do we need to scroll?
+            if (lastLine > Console.WindowHeight - 2)
+            {
+                // Buffer space to scroll? 
+                if ((Console.WindowTop + Console.WindowHeight) >= Console.BufferHeight - 1)
+                {
+                    // We're out of buffer space, so flush.
+                    Console.MoveBufferArea(Console.WindowLeft,
+                        Console.WindowTop,
+                        Console.WindowWidth,
+                        Console.WindowHeight,
+                        Console.WindowLeft,
+                        0);
+
+                    Console.SetWindowPosition(Console.WindowLeft, 0);
+                    lastLine = Console.WindowHeight - 1;
+                }
+                else
+                {
+                    // Scroll
+                    Console.SetWindowPosition(Console.WindowLeft, Console.WindowTop + 1);
+                }
+            }
+
+            // Position the cursor at the bottom of the screen to write the command line.
+            Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
+            Console.Write("<enter cmd>");
+            Console.SetCursorPosition(Console.WindowLeft, lastLine);
+            Console.WriteLine(data);
         }
 
         static void InteractiveConsole(Collector collector)
         {
             ConsoleKeyInfo cki;
+
+            Console.CursorVisible = false;
+            Console.WriteLine("Starting....");
 
             do
             {
@@ -516,6 +593,10 @@ namespace ANT_Console_Demo
                         WriteCommand("Sent SELECT command.");
                         break;
 
+                    case ConsoleKey.W:
+                        SetWeightCommand(collector);
+                        break;
+
                     case ConsoleKey.X:
                         WriteCommand("Exiting...");
                         break;
@@ -525,7 +606,9 @@ namespace ANT_Console_Demo
                         break;
                 }
             } while (cki.Key != ConsoleKey.X);
-        } 
+        }
+
+        static bool inCommand = false;
 
         static void Main(string[] args)
         {
@@ -540,6 +623,7 @@ namespace ANT_Console_Demo
                 
                 using (Reporter reporter = new Reporter(collector))
                 {
+                    reporter.OnReport += OnReport;
                     reporter.Start();
                     InteractiveConsole(collector);
                 }

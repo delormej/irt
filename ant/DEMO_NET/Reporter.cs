@@ -11,6 +11,10 @@ namespace ANT_Console_Demo
         StreamWriter m_logFileWriter;
         const string report_format = "{0:H:mm:ss.fff}, {1:N4}, {2:N4}, {3:N1}, {4:g}, {5:g}, {6:g}, {7:g}, {8:g}, {9:g}";
 
+        public delegate void DataEventHandler(object o, string message);
+
+        public event DataEventHandler OnReport;
+
         public Reporter(Collector collector)
         {
             m_calculator = new Calculator();
@@ -21,9 +25,6 @@ namespace ANT_Console_Demo
 
         public void Start()
         {
-            Console.CursorVisible = false;
-            
-            Console.WriteLine("Starting....");
             m_logFileWriter.WriteLine("event_time, bike_speed_mps, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power, calc_power, servo_pos, accelerometer_y, temperature");
             System.Timers.Timer timer = new System.Timers.Timer(1000);
             timer.Elapsed += Reporter_Elapsed;
@@ -61,38 +62,10 @@ namespace ANT_Console_Demo
 
             m_logFileWriter.WriteLine(data);
 
-            // Leave 2 rows at the bottom for command.
-            int lastLine = Console.CursorTop;
-
-            // Do we need to scroll?
-            if (lastLine > Console.WindowHeight - 2)
+            if (OnReport != null)
             {
-                // Buffer space to scroll? 
-                if ((Console.WindowTop + Console.WindowHeight) >= Console.BufferHeight-1)
-                {
-                    // We're out of buffer space, so flush.
-                    Console.MoveBufferArea(Console.WindowLeft, 
-                        Console.WindowTop, 
-                        Console.WindowWidth, 
-                        Console.WindowHeight,
-                        Console.WindowLeft, 
-                        0);
-
-                    Console.SetWindowPosition(Console.WindowLeft, 0);
-                    lastLine = Console.WindowHeight - 1;
-                }
-                else
-                {
-                    // Scroll
-                    Console.SetWindowPosition(Console.WindowLeft, Console.WindowTop + 1);
-                }
+                OnReport(this, data);
             }
-
-            // Position the cursor at the bottom of the screen to write the command line.
-            Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
-            Console.Write("<enter cmd>");
-            Console.SetCursorPosition(Console.WindowLeft, lastLine);
-            Console.WriteLine(data);
         }
 
         public void Dispose()
