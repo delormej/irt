@@ -573,6 +573,26 @@ namespace ANT_Console_Demo
             Console.WriteLine(data);
         }
 
+        static void ShowHelp()
+        {
+            m_inCommand = true;
+
+            ConsoleColor color = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Green;
+
+            Console.WriteLine("{KEY} [Command]\n" +
+                "H [Help]\n" +
+                "W [Set Weight]\n" +
+                "U [Send Up Command]\n" +
+                "D [Send Down Command]\n" +
+                "S [Send Select Command]\n" +
+                "X [Exit]");
+
+            Console.ForegroundColor = color;
+
+            m_inCommand = false;
+        }
+        
         static void InteractiveConsole(Collector collector)
         {
             ConsoleKeyInfo cki;
@@ -605,12 +625,17 @@ namespace ANT_Console_Demo
                         SetWeightCommand(collector);
                         break;
 
+                    case ConsoleKey.H:
+                        ShowHelp();
+                        break;
+
                     case ConsoleKey.X:
                         WriteCommand("Exiting...");
                         break;
 
                     default:
                         WriteCommand("Unrecognized command.");
+                        ShowHelp();
                         break;
                 }
             } while (cki.Key != ConsoleKey.X);
