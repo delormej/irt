@@ -21,6 +21,7 @@ namespace ANT_Console_Demo
 
         public void Start()
         {
+            Console.CursorVisible = false;
             Console.WriteLine("Starting....");
             m_logFileWriter.WriteLine("event_time, bike_speed_mps, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power, calc_power, servo_pos, accelerometer_y, temperature");
             System.Timers.Timer timer = new System.Timers.Timer(1000);
@@ -59,19 +60,19 @@ namespace ANT_Console_Demo
 
             m_logFileWriter.WriteLine(data);
 
-            /* Write current speed, watts & servo_position to the last line in a different color.
+            // Leave 2 rows at the bottom for command.
+            int lastLine = Console.CursorTop;
 
-            Console.SetBufferSize(Console.BufferWidth, Console.BufferHeight - 4);
+            if (lastLine > Console.WindowHeight - 2)
+            {
+                // Scroll
+                Console.SetWindowPosition(Console.WindowLeft, Console.WindowTop + 1);
+            }
 
-            // Save the current top.
-            int top = Console.CursorTop;
-
-            Console.SetCursorPosition(0, Console.WindowHeight - 1);
-            Console.WriteLine("Test");
-
-            // Restore position back.
-            Console.CursorTop = top;
-            */
+            // Position the cursor at the bottom of the screen to write the command line.
+            Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
+            Console.Write("<enter cmd>");
+            Console.SetCursorPosition(Console.WindowLeft, lastLine);
             Console.WriteLine(data);
         }
 

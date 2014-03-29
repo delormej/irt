@@ -487,8 +487,6 @@ namespace ANT_Console_Demo
         {
             string command = String.Empty;
 
-            Console.WriteLine("Enter your command...");
-
             //Console.ReadKey();  // Any key to exit
             while (command != "X")
             {
