@@ -22,6 +22,7 @@ namespace ANT_Console_Demo
         public void Start()
         {
             Console.CursorVisible = false;
+            
             Console.WriteLine("Starting....");
             m_logFileWriter.WriteLine("event_time, bike_speed_mps, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power, calc_power, servo_pos, accelerometer_y, temperature");
             System.Timers.Timer timer = new System.Timers.Timer(1000);
@@ -63,10 +64,28 @@ namespace ANT_Console_Demo
             // Leave 2 rows at the bottom for command.
             int lastLine = Console.CursorTop;
 
+            // Do we need to scroll?
             if (lastLine > Console.WindowHeight - 2)
             {
-                // Scroll
-                Console.SetWindowPosition(Console.WindowLeft, Console.WindowTop + 1);
+                // Buffer space to scroll? 
+                if ((Console.WindowTop + Console.WindowHeight) >= Console.BufferHeight-1)
+                {
+                    // We're out of buffer space, so flush.
+                    Console.MoveBufferArea(Console.WindowLeft, 
+                        Console.WindowTop, 
+                        Console.WindowWidth, 
+                        Console.WindowHeight,
+                        Console.WindowLeft, 
+                        0);
+
+                    Console.SetWindowPosition(Console.WindowLeft, 0);
+                    lastLine = Console.WindowHeight - 1;
+                }
+                else
+                {
+                    // Scroll
+                    Console.SetWindowPosition(Console.WindowLeft, Console.WindowTop + 1);
+                }
             }
 
             // Position the cursor at the bottom of the screen to write the command line.

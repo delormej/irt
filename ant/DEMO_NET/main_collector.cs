@@ -508,13 +508,15 @@ namespace ANT_Console_Demo
                         Console.WriteLine("Sent SELECT command.");
                         break;
 
+                    case ConsoleKey.X:
+                        Console.WriteLine("Exiting...");
+                        break;
+
                     default:
                         Console.WriteLine("Unrecognized command.");
                         break;
                 }
             } while (cki.Key != ConsoleKey.X);
-            
-            Console.WriteLine("Exiting...");
         } 
 
         static void Main(string[] args)
