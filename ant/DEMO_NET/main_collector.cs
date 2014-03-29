@@ -485,32 +485,37 @@ namespace ANT_Console_Demo
 
         static void InteractiveConsole(Collector collector)
         {
-            string command = String.Empty;
+            ConsoleKeyInfo cki;
 
-            //Console.ReadKey();  // Any key to exit
-            while (command != "X")
+            do
             {
-                command = Console.ReadLine();
+                cki = Console.ReadKey(true);
 
-                if (command == "u")
+                switch (cki.Key)
                 {
-                    collector.RemoteControl(0x00);
-                    Console.WriteLine("Sent UP command.");
-                }
-                else if (command == "d")
-                {
-                    collector.RemoteControl(0x01);
-                    Console.WriteLine("Sent DOWN command.");
-                }
-                else if (command == "s")
-                {
-                    collector.RemoteControl(0x02);
-                    Console.WriteLine("Sent SELECT command.");
-                }
-            }
+                    case ConsoleKey.U:
+                        collector.RemoteControl(0x00);
+                        Console.WriteLine("Sent UP command.");
+                        break;
 
+                    case ConsoleKey.D:
+                        collector.RemoteControl(0x01);
+                        Console.WriteLine("Sent DOWN command.");
+                        break;
+
+                    case ConsoleKey.S:
+                        collector.RemoteControl(0x02);
+                        Console.WriteLine("Sent SELECT command.");
+                        break;
+
+                    default:
+                        Console.WriteLine("Unrecognized command.");
+                        break;
+                }
+            } while (cki.Key != ConsoleKey.X);
+            
             Console.WriteLine("Exiting...");
-        }
+        } 
 
         static void Main(string[] args)
         {
