@@ -56,6 +56,9 @@ namespace ANT_Console_Demo
         const byte RESISTANCE_LEVEL_LSB_INDEX = 4;
         const byte RESISTANCE_LEVEL_MSB_INDEX = 5;
 
+        //TODO: Set the actual weight command ID.
+        const byte SET_WEIGHT_COMMAND = 0x00;
+
         byte m_last_quarq_instant_power_update = 0;
         byte m_last_emotion_instant_power_update = 0;
         byte m_last_emotion_torque_update = 0;
@@ -295,12 +298,12 @@ namespace ANT_Console_Demo
 
         void SetWeight(float weight)
         {
-            /*
+
             if (m_emotion_channel == null)
                 return;
 
             int value = (int)(weight * 100);
-
+            /*
             uint8_t dataPage;   // SET_RESISTANCE_PAGE
             uint8_t commandId;      // 0x43
             uint8_t responseStatus; 
@@ -311,19 +314,19 @@ namespace ANT_Console_Demo
             uint8_t responseData3;
 
             // pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
-
+            */
             byte[] data = {
-                              SET_RESISTANCE_PAGE, 
-                              0xA1, // Random slave serial number
-                              0xFE, // (con't)
-                              0xFB, // Random manufacturer ID
-                              0xFB, // (con't)
-                              m_ctrl_sequence++, // increment sequence
-                              command, // actual command
-                              0x00 // Unused (extra byte for command)
-                          };
+                SET_RESISTANCE_PAGE, 
+                SET_WEIGHT_COMMAND,
+                0x00, // TBD
+                (byte)(value << 8), // Weight LSB
+                (byte)(value), // Weight MSB
+                m_ctrl_sequence++, // increment sequence
+                0x00, // TBD
+                0x00  // TBD
+            };
 
-            m_emotion_channel.sendAcknowledgedData(data); */
+            m_emotion_channel.sendAcknowledgedData(data); 
         }
 
         private void ProcessBikeSpeedResponse(ANT_Response response, byte channelId)
@@ -492,10 +495,11 @@ namespace ANT_Console_Demo
             string prompt = "<enter weight in lbs:>";
             Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
             ConsoleColor lastColor = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Red;
+            Console.ForegroundColor = ConsoleColor.Green;
             Console.Write(prompt);
             Console.ForegroundColor = lastColor;
             Console.SetCursorPosition(prompt.Length + 2, Console.CursorTop);
+            Console.CursorVisible = true;
 
             float weight;
 
@@ -519,6 +523,7 @@ namespace ANT_Console_Demo
                 WriteCommand("Invalid weight value.");
             }
 
+            Console.CursorVisible = false;
             m_inCommand = false;
         }
 
