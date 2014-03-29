@@ -485,7 +485,9 @@ namespace ANT_Console_Demo
 
         static void SetWeightCommand(Collector collector)
         {
-            // Propmt user for weight in lbs.
+            m_inCommand = true;
+
+            // Propmt user for weight in lbs
             
             string prompt = "<enter weight in lbs:>";
             Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
@@ -502,35 +504,41 @@ namespace ANT_Console_Demo
                 if (weight < 100 || weight > 300)
                 {
                     WriteCommand("Weight in lbs should be > 100 and < 300.");
-                    return;
                 }
+                else
+                {
+                    // Convert lb to kg.
+                    float weightKg = weight / 2.2f;
 
-                // Convert lb to kg.
-                float weightKg = weight / 2.2f;
-
-                collector.SetWeight(weightKg);
-                WriteCommand(string.Format("Set Weight to {0:N1}kg.", weightKg));
+                    collector.SetWeight(weightKg);
+                    WriteCommand(string.Format("Set Weight to {0:N1}kg.", weightKg));
+                }
             }
             else
             {
                 WriteCommand("Invalid weight value.");
             }
+
+            m_inCommand = false;
         }
 
         static void WriteCommand(string message)
         {
-            inCommand = true;
+            m_inCommand = true;
 
             ConsoleColor last = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine(message);
             Console.ForegroundColor = last;
 
-            inCommand = false;
+            m_inCommand = false;
         }
 
         static void OnReport(object o, string data)
         {
+            if (m_inCommand)
+                return;
+
             // Leave 2 rows at the bottom for command.
             int lastLine = Console.CursorTop;
 
@@ -608,7 +616,7 @@ namespace ANT_Console_Demo
             } while (cki.Key != ConsoleKey.X);
         }
 
-        static bool inCommand = false;
+        static bool m_inCommand = false;
 
         static void Main(string[] args)
         {
