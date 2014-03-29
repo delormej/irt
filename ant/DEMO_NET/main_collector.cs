@@ -483,6 +483,14 @@ namespace ANT_Console_Demo
             Console.WriteLine("Initialization was successful!");
         }
 
+        static void WriteCommand(string message)
+        {
+            ConsoleColor last = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(message);
+            Console.ForegroundColor = last;
+        }
+
         static void InteractiveConsole(Collector collector)
         {
             ConsoleKeyInfo cki;
@@ -495,25 +503,25 @@ namespace ANT_Console_Demo
                 {
                     case ConsoleKey.U:
                         collector.RemoteControl(0x00);
-                        Console.WriteLine("Sent UP command.");
+                        WriteCommand("Sent UP command.");
                         break;
 
                     case ConsoleKey.D:
                         collector.RemoteControl(0x01);
-                        Console.WriteLine("Sent DOWN command.");
+                        WriteCommand("Sent DOWN command.");
                         break;
 
                     case ConsoleKey.S:
                         collector.RemoteControl(0x02);
-                        Console.WriteLine("Sent SELECT command.");
+                        WriteCommand("Sent SELECT command.");
                         break;
 
                     case ConsoleKey.X:
-                        Console.WriteLine("Exiting...");
+                        WriteCommand("Exiting...");
                         break;
 
                     default:
-                        Console.WriteLine("Unrecognized command.");
+                        WriteCommand("Unrecognized command.");
                         break;
                 }
             } while (cki.Key != ConsoleKey.X);
