@@ -45,14 +45,11 @@
 #include "app_timer.h"
 #include "app_gpiote.h"
 #include "nrf_error.h"
-#include "boards.h"
+//#include "boards.h"
 #include "ble_debug_assert_handler.h"
 #include "softdevice_handler.h"
 #include "pstorage_platform.h"
-
-#define BOOTLOADER_BUTTON_PIN           24 //TODO this is temporary                                                /**< Button used to enter SW update mode. */
-#define LED_ERR													12
-#define LED_STATUS											13
+#include "main.h"
 
 #define APP_GPIOTE_MAX_USERS            1                                                       /**< Number of GPIOTE users in total. Used by button module and dfu_transport_serial module (flow control). */
 
@@ -90,7 +87,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     // ble_debug_assert_handler(error_code, line_num, p_file_name);
 
     // On assert, the system can only recover on reset.
-    NVIC_SystemReset();
+    // NVIC_SystemReset();
 }
 
 
@@ -222,12 +219,13 @@ int main(void)
     ble_stack_init();
     scheduler_init();
 
-    bootloader_is_pushed = ((nrf_gpio_pin_read(BOOTLOADER_BUTTON_PIN) == 0)? true: false);
-    
-    if (bootloader_is_pushed || (!bootloader_app_is_valid(DFU_BANK_0_REGION_START)))
+    //bootloader_is_pushed = false; // ((nrf_gpio_pin_read(BOOTLOADER_BUTTON_PIN) == 0)? true: false);
+    bootloader_is_pushed = !bootloader_app_is_valid(DFU_BANK_0_REGION_START);
+		
+    if (bootloader_is_pushed) // || (!bootloader_app_is_valid(DFU_BANK_0_REGION_START)))
     {
-        nrf_gpio_pin_clear(LED_ERR);
-				nrf_gpio_pin_set(LED_STATUS);
+		nrf_gpio_pin_clear(LED_ERR);
+		nrf_gpio_pin_set(LED_STATUS);
 
         // Initiate an update of the firmware.
         err_code = bootloader_dfu_start();

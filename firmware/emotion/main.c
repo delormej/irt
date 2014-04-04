@@ -693,6 +693,11 @@ int main(void)
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
 	peripheral_init(&on_peripheral_handlers);
 
+#ifdef UART
+	simple_uart_config(PIN_UART_RTS, PIN_UART_TXD, PIN_UART_CTS, PIN_UART_RXD, UART_HWFC);
+	simple_uart_putstring((const uint8_t *)" \n\rStart: ");
+#endif
+
 	// ANT+, BLE event handlers.
 	static ant_ble_evt_handlers_t ant_ble_handlers = {
 		on_ble_connected,
@@ -706,10 +711,6 @@ int main(void)
 		on_ant_ctrl_command
 	};
 
-#ifdef UART
-	simple_uart_config(PIN_UART_RTS, PIN_UART_TXD, PIN_UART_CTS, PIN_UART_RXD, UART_HWFC);
-	simple_uart_putstring((const uint8_t *)" \n\rStart: ");
-#endif
 	// TODO: Question should we have a separate method to initialize soft device?
 
 	// Initializes the soft device, Bluetooth and ANT stacks.
