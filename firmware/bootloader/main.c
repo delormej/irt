@@ -75,7 +75,7 @@
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {   
-		nrf_gpio_pin_clear(LED_STATUS);	
+	nrf_gpio_pin_clear(LED_STATUS);	
     nrf_gpio_pin_set(LED_ERR);
     // This call can be used for debug purposes during application development.
     // @note CAUTION: Activating this code will write the stack to flash on an error.
@@ -218,7 +218,7 @@ int main(void)
     buttons_init();
     ble_stack_init();
     scheduler_init();
-
+	
     //bootloader_is_pushed = false; // ((nrf_gpio_pin_read(BOOTLOADER_BUTTON_PIN) == 0)? true: false);
     bootloader_is_pushed = !bootloader_app_is_valid(DFU_BANK_0_REGION_START);
 		
