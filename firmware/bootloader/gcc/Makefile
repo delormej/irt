@@ -15,8 +15,8 @@ APPLICATION_SRCS :=
 APPLICATION_SRCS += main.c
 APPLICATION_SRCS += bootloader.c
 APPLICATION_SRCS += bootloader_util_gcc.c
-#APPLICATION_SRCS += dfu_dual_bank.c # Image too big for dual bank right now.
-APPLICATION_SRCS += dfu_single_bank.c
+APPLICATION_SRCS += dfu_dual_bank.c # Image too big for dual bank right now.
+#APPLICATION_SRCS += dfu_single_bank.c
 
 # Services
 APPLICATION_SRCS += ble_dfu.c

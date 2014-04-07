@@ -220,9 +220,11 @@ int main(void)
     scheduler_init();
 	
     //bootloader_is_pushed = false; // ((nrf_gpio_pin_read(BOOTLOADER_BUTTON_PIN) == 0)? true: false);
-    bootloader_is_pushed = !bootloader_app_is_valid(DFU_BANK_0_REGION_START);
-		
-    if (bootloader_is_pushed) // || (!bootloader_app_is_valid(DFU_BANK_0_REGION_START)))
+    //bootloader_is_pushed = !bootloader_app_is_valid(DFU_BANK_0_REGION_START);
+	
+	bootloader_is_pushed = (NRF_POWER->GPREGRET == 0x1);
+
+    if (bootloader_is_pushed || (!bootloader_app_is_valid(DFU_BANK_0_REGION_START)))
     {
 		nrf_gpio_pin_clear(LED_ERR);
 		nrf_gpio_pin_set(LED_STATUS);
