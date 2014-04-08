@@ -66,6 +66,8 @@ static const uint8_t ant_manufacturer_page[TX_BUFFER_SIZE] =
         APP_ERROR_CHECK(ERR_CODE);											\
     } while (0)																\
 
+typedef void(*ant_bp_evt_dfu_enable)(void);
+
 //
 // Event callbacks needed for program flow and control.
 //
@@ -79,6 +81,7 @@ typedef struct ant_ble_evt_handlers_s {
 	void (*on_ant_power_data)(void); // This will have a parameter.
 	rc_evt_handler_t on_set_resistance;
 	ctrl_evt_handler_t on_ant_ctrl_command;
+	ant_bp_evt_dfu_enable on_enable_dfu_mode;
 } ant_ble_evt_handlers_t;
 
 // Public methods.

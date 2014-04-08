@@ -32,8 +32,10 @@ USE_SOFTDEVICE = s310
 SDK_PATH = ../../nrf51_sdk/
 TEMPLATE_PATH = ../../gcc/
 
-#CFLAGS = -Os
-CFLAGS = -g
+# Enable optimizing for file size.
+CFLAGS = -Os
+# Enable debug flags.
+#CFLAGS = -g
 CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
 CFLAGS += -DIRT_DEBUG

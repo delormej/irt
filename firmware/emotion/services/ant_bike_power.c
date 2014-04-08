@@ -79,6 +79,7 @@ typedef struct
 static uint8_t m_power_tx_buffer[TX_BUFFER_SIZE];
 static uint8_t m_torque_tx_buffer[TX_BUFFER_SIZE];
 static rc_evt_handler_t m_on_set_resistance;
+static ant_bp_evt_dfu_enable m_on_enable_dfu_mode;
 
 // TODO: Implement required calibration page.
 
@@ -174,30 +175,23 @@ static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 }
 
 // Right now all this method does is handle resistance control messages.
-// TODO: need to implement calibration requests as well.
-void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
+static void handle_burst(ant_evt_t * p_ant_evt)
 {
-	static bool 							receiving_burst_resistance 	= false;
+	static bool 							receiving_burst_resistance = false;
 	static resistance_mode_t	resistance_mode = RESISTANCE_SET_STANDARD;
-	
-	// Only interested in BURST events right now for processing resistance control.
-	if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] != MESG_BURST_DATA_ID)
-	{
-			return;
-	}
-	
+
 	// TODO: there is probably a more defined way to deal with burst data, but this
 	// should work for now.  i.e. use  some derivation of sd_ant_burst_handler_request
 	// Although that method looks as though it's for sending bursts, not receiving.
 	uint8_t message_sequence_id = p_ant_evt->evt_buffer[2];			// third byte.
-	uint8_t message_id 					= p_ant_evt->evt_buffer[3];			// forth byte.
-	
+	uint8_t message_id = p_ant_evt->evt_buffer[3];			// forth byte.
+
 	if (message_sequence_id == 0x01 && message_id == ANT_BURST_MSG_ID_SET_RESISTANCE)
 	{
 		// Burst has begun, fifth byte has the mode, need to wait for subsequent messages
 		// to parse the level.
-		receiving_burst_resistance 		= true;
-		resistance_mode								= (resistance_mode_t)p_ant_evt->evt_buffer[4];
+		receiving_burst_resistance = true;
+		resistance_mode = (resistance_mode_t) p_ant_evt->evt_buffer[4];
 	}
 	else if (message_sequence_id == 0x21)
 	{
@@ -208,22 +202,52 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 		// Value for the operation exists in this message sequence.  
 
 		rc_evt_t evt;
-		evt.operation 	= resistance_mode;
-		evt.pBuffer			= &(p_ant_evt->evt_buffer[3]);
+		evt.operation = resistance_mode;
+		evt.pBuffer = &(p_ant_evt->evt_buffer[3]);
 
 		// Reset state.
-		receiving_burst_resistance = false;		
-		
+		receiving_burst_resistance = false;
+
 		m_on_set_resistance(evt);
 	}
 }
 
-void ant_bp_tx_init(rc_evt_handler_t on_set_resistance)
+// TODO: need to implement calibration requests as well.
+void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
+{
+	// Only interested in BURST events right now for processing resistance control.
+	if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] == MESG_BURST_DATA_ID)
+	{
+		handle_burst(p_ant_evt);
+	}
+	// TODO: remove these hard coded array position values and create defines.
+	else if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] == MESG_ACKNOWLEDGED_DATA_ID &&
+		p_ant_evt->evt_buffer[3] == WF_ANT_RESPONSE_PAGE_ID)
+	{
+		// Determine the "command". 
+		switch (p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET])
+		{
+			case ANT_BP_SET_WEIGHT_COMMAND:	// Set Weight
+				// TODO: implement callback for weight.
+				break;
+			
+			case ANT_BP_ENABLE_DFU_COMMAND:	// Invoke device firmware update mode.
+				m_on_enable_dfu_mode();
+				break;
+
+			default:
+				break;
+		}
+	}
+}
+
+void ant_bp_tx_init(rc_evt_handler_t on_set_resistance, ant_bp_evt_dfu_enable on_enable_dfu_mode)
 {
     uint32_t err_code;
     
-		// Assign callback for when resistance message is processed.	
-		m_on_set_resistance = on_set_resistance;
+	// Assign callback for when resistance message is processed.	
+	m_on_set_resistance = on_set_resistance;
+	m_on_enable_dfu_mode = on_enable_dfu_mode;
 		
     err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, m_ant_network_key);
     APP_ERROR_CHECK(err_code);

@@ -57,7 +57,8 @@ namespace ANT_Console_Demo
         const byte RESISTANCE_LEVEL_MSB_INDEX = 5;
 
         //TODO: Set the actual weight command ID.
-        const byte SET_WEIGHT_COMMAND = 0x00;
+        const byte SET_WEIGHT_COMMAND = 0x60;
+        const byte SET_DFU_MODE_COMMAND = 0x64;
 
         byte m_last_quarq_instant_power_update = 0;
         byte m_last_emotion_instant_power_update = 0;
@@ -329,6 +330,25 @@ namespace ANT_Console_Demo
             m_emotion_channel.sendAcknowledgedData(data); 
         }
 
+        void SetFirmwareUpdateMode()
+        {
+            if (m_emotion_channel == null)
+                return;
+
+            byte[] data = {
+                SET_RESISTANCE_PAGE, 
+                SET_DFU_MODE_COMMAND,
+                0x00, // TBD
+                0x00, // TBD
+                0x00, // TBD
+                0x00, // TBD
+                0x00, // TBD
+                0x00  // TBD
+            };
+
+            m_emotion_channel.sendAcknowledgedData(data);
+        }
+
         private void ProcessBikeSpeedResponse(ANT_Response response, byte channelId)
         {
             byte[] payload = GetMessagePayload(response);
@@ -591,6 +611,7 @@ namespace ANT_Console_Demo
                 "U [Send Up Command]\n" +
                 "D [Send Down Command]\n" +
                 "S [Send Select Command]\n" +
+                "F [Enable Device Firmware Update Mode]\n" +
                 "X [Exit]");
 
             Console.ForegroundColor = color;
@@ -632,6 +653,11 @@ namespace ANT_Console_Demo
 
                     case ConsoleKey.H:
                         ShowHelp();
+                        break;
+
+                    case ConsoleKey.F:
+                        collector.SetFirmwareUpdateMode();
+                        WriteCommand("Enabling DEVICE FIRMWARE UPDATE MODE...");
                         break;
 
                     case ConsoleKey.X:

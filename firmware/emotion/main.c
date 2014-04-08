@@ -664,6 +664,21 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 	}
 }
 
+// Called when instructed to enable device firmware update mode.
+static void on_enable_dfu_mode(void)
+{
+	uint32_t err_code;
+
+	// TODO: share the mask here in a common include file with bootloader.
+	// bootloader needs to share PWM, device name / manuf, etc... so we need
+	// to refactor anyways.
+	err_code = sd_power_gpregret_set(0x1);
+	APP_ERROR_CHECK(err_code);
+
+	// Resets the CPU to start in DFU mode.
+	NVIC_SystemReset();
+}
+
 
 /*----------------------------------------------------------------------------
  * Main program functions
@@ -708,7 +723,8 @@ int main(void)
 		on_ant_channel_closed,
 		on_ant_power_data,
 		on_set_resistance,
-		on_ant_ctrl_command
+		on_ant_ctrl_command,
+		on_enable_dfu_mode
 	};
 
 	// TODO: Question should we have a separate method to initialize soft device?
