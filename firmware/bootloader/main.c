@@ -63,6 +63,7 @@
 
 #define SCHED_QUEUE_SIZE                20                                                      /**< Maximum number of events in the scheduler queue. */
 
+#define GPREG_DFU_UPDATE_MASK			0x1														// DFU UPDATE mode flagged.
 
 /**@brief Function for error handling, which is called when an error has occurred. 
  *
@@ -201,7 +202,9 @@ static void scheduler_init(void)
 int main(void)
 {
     uint32_t err_code;
-    bool     bootloader_is_pushed = false;
+	uint32_t gp_power_reg;
+
+	bool     bootloader_is_pushed = false;
     
     leds_init();
 
@@ -222,7 +225,12 @@ int main(void)
     //bootloader_is_pushed = false; // ((nrf_gpio_pin_read(BOOTLOADER_BUTTON_PIN) == 0)? true: false);
     //bootloader_is_pushed = !bootloader_app_is_valid(DFU_BANK_0_REGION_START);
 	
-	bootloader_is_pushed = (NRF_POWER->GPREGRET == 0x1);
+	// Read the general purpose power register for a flag.
+	err_code = sd_power_gpregret_get(&gp_power_reg);
+	APP_ERROR_CHECK(err_code);
+
+	//  (NRF_POWER->GPREGRET == 0x1);
+	bootloader_is_pushed = (gp_power_reg & GPREG_DFU_UPDATE_MASK); 
 
     if (bootloader_is_pushed || (!bootloader_app_is_valid(DFU_BANK_0_REGION_START)))
     {
@@ -234,6 +242,11 @@ int main(void)
         APP_ERROR_CHECK(err_code);
 
         nrf_gpio_pin_clear(LED_STATUS);
+
+		// Assuming we made it this far, the firmware update took so clear the flag.
+		//NRF_POWER->GPREGRET = 0x0;
+		err_code = sd_power_gpregret_clr(GPREG_DFU_UPDATE_MASK);
+		APP_ERROR_CHECK(err_code);
     }
 
     if (bootloader_app_is_valid(DFU_BANK_0_REGION_START))
