@@ -34,18 +34,22 @@ TEMPLATE_PATH = ../../gcc/
 
 # Enable optimizing for file size.
 CFLAGS = -Os
-# Enable debug flags.
-#CFLAGS = -g
 CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
+
+############################################
+# For debugging purposes
+############################################
+#CFLAGS += -DSIM_SPEED
 CFLAGS += -DIRT_DEBUG
-CFLAGS += -DSIM_SPEED
 CFLAGS += -DUART
+# Enable debug flags.
+#CFLAGS = -g
 
 ############################################
 # Define the Software Revision.
 ############################################
-CFLAGS += -DSW_REVISION=0x05
+CFLAGS += -DSW_REVISION=0x06
 
 ############################################
 # Define the device ID.  
