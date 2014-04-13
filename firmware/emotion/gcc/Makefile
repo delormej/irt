@@ -21,6 +21,7 @@ LIBRARY_PATHS += ../libraries/
 LIBRARY_PATHS += ../services/
 
 PROJECT_NAME = $(shell basename "$(realpath ../)")
+DEPLOY_DIR = '/USERS/jason/SkyDrive/InsideRide/'
 
 DEVICE = NRF51
 BOARD = BOARD_IRT_REV_A
@@ -62,3 +63,6 @@ LDFLAGS += --specs=nano.specs
 GDB_PORT_NUMBER = 2331
 
 include $(TEMPLATE_PATH)Makefile
+
+deploy:
+	cp $(BIN) $(DEPLOY_DIR)$(OUTPUT_NAME).bin
