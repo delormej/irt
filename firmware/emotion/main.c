@@ -85,6 +85,11 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
+#ifdef UART
+	simple_uart_putstring((const uint8_t *)" \n\rERROR in: ");
+	simple_uart_putstring(p_file_name);
+#endif
+
     // TODO: HACK temporarily IGNORE this message.  
 	if (error_code == 0x401F) //TRANSFER_IN_PROGRESS
 		return;
@@ -162,9 +167,9 @@ static void set_sim_params(uint8_t *pBuffer)
 		char message[16];
 		memset(&message, 0, sizeof(message));
 		uint8_t length = sprintf(message, format, 
-															(uint16_t)m_user_profile.total_weight_kg,
-															((uint16_t)m_sim_forces.crr)*10000, 
-															((uint16_t)m_sim_forces.c)*1000);
+		(uint16_t)m_user_profile.total_weight_kg,
+		((uint16_t)m_sim_forces.crr)*10000, 
+		((uint16_t)m_sim_forces.c)*1000);
 		debug_send(message, sizeof(message));
 #endif		
 }
@@ -710,7 +715,7 @@ int main(void)
 
 #ifdef UART
 	simple_uart_config(PIN_UART_RTS, PIN_UART_TXD, PIN_UART_CTS, PIN_UART_RXD, UART_HWFC);
-	simple_uart_putstring((const uint8_t *)" \n\rStart: ");
+	simple_uart_putstring((const uint8_t *)" \n\rDevice Starting\n\r: ");
 #endif
 
 	// ANT+, BLE event handlers.
@@ -761,7 +766,7 @@ int main(void)
     // Enter main loop
     for (;;)
     {
-    	app_sched_execute();
+		app_sched_execute();
     	power_manage();
     }
 }
