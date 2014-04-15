@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ANT_Console_Demo
 {
@@ -27,6 +28,8 @@ namespace ANT_Console_Demo
 
     public class Collector
     {
+        static bool m_inCommand = false;
+
         static readonly byte[] USER_NETWORK_KEY = { 0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45 };
         const byte USER_NETWORK_NUM = 0;         // The network key is assigned to this network number
 
@@ -672,18 +675,20 @@ namespace ANT_Console_Demo
             } while (cki.Key != ConsoleKey.X);
         }
 
-        static bool m_inCommand = false;
-
         static void Main(string[] args)
         {
-            Thread t = null;
+            Task task = null;
 
             try
             {
                 Collector collector = new Collector();
 
-                t = new Thread(new ThreadStart(collector.Start));
-                t.Start();
+                // Kick off the seperate thread and assign an exception handler.
+                task = new Task(collector.Start);
+                task.ContinueWith(
+                    t => ExceptionHandler(t.Exception),
+                    TaskContinuationOptions.OnlyOnFaulted);
+                task.Start();
                 
                 using (Reporter reporter = new Reporter(collector))
                 {
@@ -691,14 +696,22 @@ namespace ANT_Console_Demo
                     reporter.Start();
                     InteractiveConsole(collector);
                 }
+
+                task.Wait();
+                //t.Join(500);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                t.Abort();
+                ExceptionHandler(e);
             }
+        }
 
-            t.Join(500);
+        static void ExceptionHandler(Exception e)
+        {
+            Console.WriteLine(e);
+
+            Console.WriteLine("Press any key to close.");
+            Console.ReadKey();
         }
     }
 }

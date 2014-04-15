@@ -6,9 +6,12 @@ namespace ANT_Console_Demo
 
     public class Reporter : IDisposable
     {
+        const int REPORT_INTERVAL_MS = 1000;
+
         Collector m_collector;
         Calculator m_calculator;
         StreamWriter m_logFileWriter;
+        System.Timers.Timer m_timer;
         const string report_format = "{0:H:mm:ss.fff}, {1:N4}, {2:N4}, {3:N1}, {4:g}, {5:g}, {6:g}, {7:g}, {8:g}, {9:g}";
 
         public delegate void DataEventHandler(object o, string message);
@@ -21,14 +24,15 @@ namespace ANT_Console_Demo
             m_collector = collector;
             m_logFileWriter = new StreamWriter("log.csv");
             m_logFileWriter.AutoFlush = true;
+            m_timer = new System.Timers.Timer(REPORT_INTERVAL_MS);
         }
 
         public void Start()
         {
             m_logFileWriter.WriteLine("event_time, bike_speed_mps, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power, calc_power, servo_pos, accelerometer_y, temperature");
-            System.Timers.Timer timer = new System.Timers.Timer(1000);
-            timer.Elapsed += Reporter_Elapsed;
-            timer.Start();
+          
+            m_timer.Elapsed += Reporter_Elapsed;
+            m_timer.Start();
         }
 
         void Reporter_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -70,6 +74,7 @@ namespace ANT_Console_Demo
 
         public void Dispose()
         {
+            m_timer.Stop();
             m_logFileWriter.Flush();
             m_logFileWriter.Close();
         }
