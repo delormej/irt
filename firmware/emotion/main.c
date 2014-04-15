@@ -673,7 +673,9 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 static void on_enable_dfu_mode(void)
 {
 	uint32_t err_code;
-
+#ifdef UART
+	simple_uart_putstring((const uint8_t *)" \n\rEnabling DFU mode.\n\r");
+#endif
 	// TODO: share the mask here in a common include file with bootloader.
 	// bootloader needs to share PWM, device name / manuf, etc... so we need
 	// to refactor anyways.
