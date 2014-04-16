@@ -31,6 +31,7 @@
 
 #define REVS_CHANNEL_TASK_TOGGLE	2
 
+// TOOD: this belongs in common configuration.
 #define DEFAULT_WHEEL_SIZE_MM 	2070u						// Defaults to a road wheel which is typically 2,070mm.
 
 #include <stdbool.h>
