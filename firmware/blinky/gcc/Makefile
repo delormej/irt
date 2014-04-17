@@ -14,6 +14,8 @@ APPLICATION_SRCS :=
 # Bootloader Application
 APPLICATION_SRCS += main.c
 APPLICATION_SRCS += nrf_delay.c
+APPLICATION_SRCS += app_gpiote.c
+APPLICATION_SRCS += simple_uart.c
 
 # Use shell to find name of root folder. Possible but horrible to do in make.
 PROJECT_NAME := $(shell basename "$(realpath ../)")
