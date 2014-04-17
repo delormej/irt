@@ -677,41 +677,24 @@ namespace ANT_Console_Demo
 
         static void Main(string[] args)
         {
-            Task task = null;
-
             try
             {
                 Collector collector = new Collector();
+                collector.Start();
 
-                // Kick off the seperate thread and assign an exception handler.
-                task = new Task(collector.Start);
-                task.ContinueWith(
-                    t => ExceptionHandler(t.Exception),
-                    TaskContinuationOptions.OnlyOnFaulted);
-                task.Start();
-                
                 using (Reporter reporter = new Reporter(collector))
                 {
                     reporter.OnReport += OnReport;
                     reporter.Start();
                     InteractiveConsole(collector);
                 }
-
-                task.Wait();
-                //t.Join(500);
             }
             catch (Exception e)
             {
-                ExceptionHandler(e);
+                WriteCommand("Error occured: " + e.Message);
+                Console.WriteLine("Press any key to continue.");
+                Console.ReadKey();
             }
-        }
-
-        static void ExceptionHandler(Exception e)
-        {
-            Console.WriteLine(e);
-
-            Console.WriteLine("Press any key to close.");
-            Console.ReadKey();
         }
     }
 }
