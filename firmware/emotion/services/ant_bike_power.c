@@ -174,6 +174,16 @@ static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
 }
 
+static void handle_set_weight(ant_evt_t * p_ant_evt)
+{
+	// TODO: currently this is in the resistance command.
+	rc_evt_t evt;
+
+	evt.operation = RESISTANCE_SET_SIM;
+	evt.pBuffer = &(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
+	m_on_set_resistance(evt);
+}
+
 // Right now all this method does is handle resistance control messages.
 static void handle_burst(ant_evt_t * p_ant_evt)
 {
@@ -228,7 +238,7 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 		switch (p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET])
 		{
 			case ANT_BP_SET_WEIGHT_COMMAND:	// Set Weight
-				// TODO: implement callback for weight.
+				handle_set_weight(p_ant_evt);
 				break;
 			
 			case ANT_BP_ENABLE_DFU_COMMAND:	// Invoke device firmware update mode.
