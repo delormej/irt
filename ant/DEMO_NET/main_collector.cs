@@ -692,6 +692,7 @@ namespace ANT_Console_Demo
             catch (Exception e)
             {
                 WriteCommand("Error occured: " + e.Message);
+                Console.WriteLine(e.StackTrace);
                 Console.WriteLine("Press any key to continue.");
                 Console.ReadKey();
             }
