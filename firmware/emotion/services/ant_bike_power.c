@@ -182,6 +182,13 @@ static void handle_set_weight(ant_evt_t * p_ant_evt)
 	evt.operation = RESISTANCE_SET_SIM;
 	evt.pBuffer = &(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
 	m_on_set_resistance(evt);
+
+#ifdef UART
+	simple_uart_putstring((const uint8_t *)"Setting weight: 0x");
+	simple_uart_put(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
+	simple_uart_put(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+3]);
+	simple_uart_putstring((const uint8_t *)"\n\r");
+#endif
 }
 
 // Right now all this method does is handle resistance control messages.
