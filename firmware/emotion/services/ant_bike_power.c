@@ -174,20 +174,38 @@ static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
 }
 
+static void handle_move_servo(ant_evt_t * p_ant_evt)
+{
+	rc_evt_t evt;
+
+	evt.operation = RESISTANCE_SET_SERVO_POS;
+	evt.pBuffer = &(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
+	m_on_set_resistance(evt);
+
+#ifdef UART
+	simple_uart_putstring((const uint8_t *)"Moving servo to position: 0x");
+	simple_uart_put(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
+	simple_uart_put(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+3]);
+	simple_uart_putstring((const uint8_t *)"\n\r");
+#endif
+}
+
 static void handle_set_weight(ant_evt_t * p_ant_evt)
 {
 	// TODO: currently this is in the resistance command.
 	rc_evt_t evt;
 
-	evt.operation = RESISTANCE_SET_SIM;
+	evt.operation = RESISTANCE_SET_WEIGHT;
 	evt.pBuffer = &(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
 	m_on_set_resistance(evt);
 
 #ifdef UART
-	simple_uart_putstring((const uint8_t *)"Setting weight: 0x");
-	simple_uart_put(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
-	simple_uart_put(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+3]);
-	simple_uart_putstring((const uint8_t *)"\n\r");
+	static const char format[] = "Setting Weight: %i\r\n\0";
+	char message[16];
+	memset(&message, 0, sizeof(message));
+	uint8_t length = sprintf(message, format,
+							(int16_t)(evt.pBuffer[0] | evt.pBuffer[1] << 8u));
+	simple_uart_putstring(message);
 #endif
 }
 
@@ -250,6 +268,10 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 			
 			case ANT_BP_ENABLE_DFU_COMMAND:	// Invoke device firmware update mode.
 				m_on_enable_dfu_mode();
+				break;
+
+			case ANT_BP_MOVE_SERVO_COMMAND: // Move the servo to a specific position.
+				handle_move_servo(p_ant_evt);
 				break;
 
 			default:

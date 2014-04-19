@@ -322,10 +322,10 @@ namespace ANT_Console_Demo
 
         void SetWeight(float weight)
         {
-            int value = (int)(weight * 100);
+            ushort value = (ushort)(weight * 100);
             byte[] data = {
-                (byte)(value << 8), // Weight LSB
-                (byte)(value), // Weight MSB
+                (byte)value, // Weight LSB
+                (byte)(value >> 8), // Weight MSB
             };
 
             SetResistanceCommand(SET_WEIGHT_COMMAND, data);
@@ -340,8 +340,8 @@ namespace ANT_Console_Demo
         private void MoveServo(int position)
         {
             byte[] data = {
-                (byte)(position << 8), // Position LSB
-                (byte)(position), // Position MSB
+                (byte)(position), // Position LSB
+                (byte)(position >> 8), // Position MSB
             };
             SetResistanceCommand(MOVE_SERVO_COMMAND, data);
         }

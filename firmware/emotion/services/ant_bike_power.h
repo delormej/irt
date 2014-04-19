@@ -6,6 +6,7 @@
 
 #define ANT_BP_COMMAND_OFFSET			4u
 #define ANT_BP_SET_WEIGHT_COMMAND		0x60
+#define ANT_BP_MOVE_SERVO_COMMAND		0x61
 #define ANT_BP_ENABLE_DFU_COMMAND		0x64
 
 #include "ble_ant.h"

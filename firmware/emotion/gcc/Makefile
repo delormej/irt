@@ -34,7 +34,7 @@ SDK_PATH = ../../nrf51_sdk/
 TEMPLATE_PATH = ../../gcc/
 
 # Enable optimizing for file size.
-CFLAGS = -Os
+#CFLAGS = -Os
 CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
 
@@ -45,12 +45,12 @@ CFLAGS += -DBLE_NUS_ENABLED
 CFLAGS += -DIRT_DEBUG
 CFLAGS += -DUART
 # Enable debug flags.
-#CFLAGS = -g
+#CFLAGS += -g
 
 ############################################
 # Define the Software Revision.
 ############################################
-CFLAGS += -DSW_REVISION=0x06
+CFLAGS += -DSW_REVISION=0x07
 
 ############################################
 # Define the device ID.  

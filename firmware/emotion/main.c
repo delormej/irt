@@ -162,7 +162,7 @@ static void set_sim_params(uint8_t *pBuffer)
 	// Co-efficient of drag.
 	m_sim_forces.c = (pBuffer[4] | pBuffer[5] << 8u) / 1000.0f;
 
-#if defined(BLE_NUS_ENABLED)
+#if defined(UART)
 		static const char format[] = "k,r,c:%i,%i,%i";
 		char message[16];
 		memset(&message, 0, sizeof(message));
@@ -600,6 +600,16 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			set_wheel_params(rc_evt.pBuffer);
 			break;
 			
+		case RESISTANCE_SET_SERVO_POS:
+			// Move the servo to a specific position.
+			pwm_set_servo(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u);
+			break;
+
+		case RESISTANCE_SET_WEIGHT:
+			// Set sim params without changing the mode.
+			set_sim_params(rc_evt.pBuffer);
+			break;
+
 		default:
 			break;
 	}
