@@ -21,7 +21,7 @@ LIBRARY_PATHS += ../libraries/
 LIBRARY_PATHS += ../services/
 
 PROJECT_NAME = $(shell basename "$(realpath ../)")
-DEPLOY_DIR = '/USERS/jason/SkyDrive/InsideRide/'
+DEPLOY_DIR = '../../../../../SkyDrive/InsideRide/'
 
 DEVICE = NRF51
 BOARD = BOARD_IRT_REV_A
