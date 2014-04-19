@@ -34,7 +34,7 @@ SDK_PATH = ../../nrf51_sdk/
 TEMPLATE_PATH = ../../gcc/
 
 # Enable optimizing for file size.
-#CFLAGS = -Os
+CFLAGS = -Os
 CFLAGS += -DLOOPBACK
 CFLAGS += -DBLE_NUS_ENABLED
 
