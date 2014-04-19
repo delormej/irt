@@ -14,7 +14,7 @@ namespace ANT_Console_Demo
         System.Timers.Timer m_timer;
         const string report_format = "{0:H:mm:ss.fff}, {1:N4}, {2:N4}, {3:N1}, {4:g}, {5:g}, {6:g}, {7:g}, {8:g}, {9:g}";
 
-        public delegate void DataEventHandler(object o, string message);
+        public delegate void DataEventHandler(object o, CollectorEventData data);
 
         public event DataEventHandler OnReport;
 
@@ -68,7 +68,7 @@ namespace ANT_Console_Demo
 
             if (OnReport != null)
             {
-                OnReport(this, data);
+                OnReport(this, eventData);
             }
         }
 

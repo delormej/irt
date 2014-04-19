@@ -603,10 +603,12 @@ namespace ANT_Console_Demo
             m_inCommand = false;
         }
 
-        static void OnReport(object o, string data)
+        static void OnReport(object o, CollectorEventData data)
         {
             if (m_inCommand)
                 return;
+
+            string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0}";
 
             // Leave 2 rows at the bottom for command.
             int lastLine = Console.CursorTop;
@@ -639,7 +641,12 @@ namespace ANT_Console_Demo
             Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
             Console.Write("<enter cmd>");
             Console.SetCursorPosition(Console.WindowLeft, lastLine);
-            Console.WriteLine(data);
+            Console.WriteLine(format, 
+                DateTime.Now,
+                data.emotion_speed * 2.23694f, // Convert MPS to MPH
+                data.emotion_power,
+                data.quarq_power,
+                data.servo_position);
         }
 
         static void ShowHelp()
@@ -666,10 +673,12 @@ namespace ANT_Console_Demo
         
         static void InteractiveConsole(Collector collector)
         {
+            const string header = "Time         |  mph  | Watts | Watts2| Servo";
             ConsoleKeyInfo cki;
 
             Console.CursorVisible = false;
             Console.WriteLine("Starting....");
+            Console.WriteLine(header);
 
             do
             {
