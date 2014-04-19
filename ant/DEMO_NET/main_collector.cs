@@ -340,8 +340,8 @@ namespace ANT_Console_Demo
         private void MoveServo(int position)
         {
             byte[] data = {
-                (byte)(position << 8), // Weight LSB
-                (byte)(position), // Weight MSB
+                (byte)(position << 8), // Position LSB
+                (byte)(position), // Position MSB
             };
             SetResistanceCommand(MOVE_SERVO_COMMAND, data);
         }
