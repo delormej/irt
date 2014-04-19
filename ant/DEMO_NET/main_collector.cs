@@ -61,6 +61,7 @@ namespace ANT_Console_Demo
 
         //TODO: Set the actual weight command ID.
         const byte SET_WEIGHT_COMMAND = 0x60;
+        const byte MOVE_SERVO_COMMAND = 0x61;
         const byte SET_DFU_MODE_COMMAND = 0x64;
 
         byte m_last_quarq_instant_power_update = 0;
@@ -300,31 +301,17 @@ namespace ANT_Console_Demo
             }
         }
 
-        void SetWeight(float weight)
+        void SetResistanceCommand(byte command, byte[] value)
         {
-
             if (m_emotion_channel == null)
                 return;
 
-            int value = (int)(weight * 100);
-            /*
-            uint8_t dataPage;   // SET_RESISTANCE_PAGE
-            uint8_t commandId;      // 0x43
-            uint8_t responseStatus; 
-            uint8_t // data starts here
-            uint8_t responseData0;
-            uint8_t responseData1;
-            uint8_t responseData2;
-            uint8_t responseData3;
-
-            // pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
-            */
             byte[] data = {
                 SET_RESISTANCE_PAGE, 
-                SET_WEIGHT_COMMAND,
+                command,
                 0x00, // TBD
-                (byte)(value << 8), // Weight LSB
-                (byte)(value), // Weight MSB
+                value[0],
+                value[1],
                 m_ctrl_sequence++, // increment sequence
                 0x00, // TBD
                 0x00  // TBD
@@ -333,23 +320,30 @@ namespace ANT_Console_Demo
             m_emotion_channel.sendAcknowledgedData(data); 
         }
 
-        void SetFirmwareUpdateMode()
+        void SetWeight(float weight)
         {
-            if (m_emotion_channel == null)
-                return;
-
+            int value = (int)(weight * 100);
             byte[] data = {
-                SET_RESISTANCE_PAGE, 
-                SET_DFU_MODE_COMMAND,
-                0x00, // TBD
-                0x00, // TBD
-                0x00, // TBD
-                0x00, // TBD
-                0x00, // TBD
-                0x00  // TBD
+                (byte)(value << 8), // Weight LSB
+                (byte)(value), // Weight MSB
             };
 
-            m_emotion_channel.sendAcknowledgedData(data);
+            SetResistanceCommand(SET_WEIGHT_COMMAND, data);
+        }
+
+        void SetFirmwareUpdateMode()
+        {
+            byte[] data = { 0x00, 0x00 };
+            SetResistanceCommand(SET_DFU_MODE_COMMAND, data);
+        }
+
+        private void MoveServo(int position)
+        {
+            byte[] data = {
+                (byte)(position << 8), // Weight LSB
+                (byte)(position), // Weight MSB
+            };
+            SetResistanceCommand(MOVE_SERVO_COMMAND, data);
         }
 
         private void ProcessBikeSpeedResponse(ANT_Response response, byte channelId)
@@ -532,15 +526,41 @@ namespace ANT_Console_Demo
             return result;
         }
 
-        static void SetServoCommand(Collector collector)
-        { 
+        static void MoveServoCommand(Collector collector)
+        {
+            string prompt = "<enter servo position:>";
+            int position = 0;
+            bool success = InteractiveCommand(prompt, () =>
+                {
+                    if (int.TryParse(Console.ReadLine(), out position))
+                    {
+                        if (position < 699 || position > 2107)
+                        {
+                            WriteCommand("Servo position should be > 699 and < 2107.");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        WriteCommand("Invalid servo position.");
+                        return false;
+                    }
+
+                    return true;
+                });
+
+            if (success)
+            {
+                collector.MoveServo(position);
+                WriteCommand(string.Format("Moving servo to {0}.", position));
+            }
         }
 
         static void SetWeightCommand(Collector collector)
         {
             string prompt = "<enter weight in lbs:>";
             float weight = 0.0f;
-            bool result = InteractiveCommand(prompt, () =>
+            bool success = InteractiveCommand(prompt, () =>
                 {
                     //float weight = float.NaN;
 
@@ -561,7 +581,7 @@ namespace ANT_Console_Demo
                     return true;
                 });
 
-            if (result)
+            if (success)
             {
                 // Convert lb to kg.
                 float weightKg = weight / 2.2f;
@@ -677,7 +697,7 @@ namespace ANT_Console_Demo
                         break;
 
                     case ConsoleKey.M:
-                        SetServoCommand(collector);
+                        MoveServoCommand(collector);
                         break;
 
                     case ConsoleKey.H:
