@@ -509,13 +509,13 @@ namespace ANT_Console_Demo
             Console.WriteLine("Initialization was successful!");
         }
 
-        static void SetWeightCommand(Collector collector)
+        //public delegate bool ParseFunc<T>(out T arg);
+
+        static bool InteractiveCommand(string prompt, Func<bool> Parser)
         {
             m_inCommand = true;
 
             // Propmt user for weight in lbs
-            
-            string prompt = "<enter weight in lbs:>";
             Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
             ConsoleColor lastColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Green;
@@ -524,30 +524,51 @@ namespace ANT_Console_Demo
             Console.SetCursorPosition(prompt.Length + 2, Console.CursorTop);
             Console.CursorVisible = true;
 
-            float weight;
-
-            if (float.TryParse(Console.ReadLine(), out weight))
-            {
-                if (weight < 100 || weight > 300)
-                {
-                    WriteCommand("Weight in lbs should be > 100 and < 300.");
-                }
-                else
-                {
-                    // Convert lb to kg.
-                    float weightKg = weight / 2.2f;
-
-                    collector.SetWeight(weightKg);
-                    WriteCommand(string.Format("Set Weight to {0:N1}kg.", weightKg));
-                }
-            }
-            else
-            {
-                WriteCommand("Invalid weight value.");
-            }
+            bool result = Parser();
 
             Console.CursorVisible = false;
             m_inCommand = false;
+
+            return result;
+        }
+
+        static void SetServoCommand(Collector collector)
+        { 
+        }
+
+        static void SetWeightCommand(Collector collector)
+        {
+            string prompt = "<enter weight in lbs:>";
+            float weight = 0.0f;
+            bool result = InteractiveCommand(prompt, () =>
+                {
+                    //float weight = float.NaN;
+
+                    if (float.TryParse(Console.ReadLine(), out weight))
+                    {
+                        if (weight < 100 || weight > 300)
+                        {
+                            WriteCommand("Weight in lbs should be > 100 and < 300.");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        WriteCommand("Invalid weight value.");
+                        return false;
+                    }
+
+                    return true;
+                });
+
+            if (result)
+            {
+                // Convert lb to kg.
+                float weightKg = weight / 2.2f;
+
+                collector.SetWeight(weightKg);
+                WriteCommand(string.Format("Set Weight to {0:N1}kg.", weightKg));
+            }
         }
 
         static void WriteCommand(string message)
@@ -614,6 +635,7 @@ namespace ANT_Console_Demo
                 "U [Send Up Command]\n" +
                 "D [Send Down Command]\n" +
                 "S [Send Select Command]\n" +
+                "M [Move Servo to position X]\n" +
                 "F [Enable Device Firmware Update Mode]\n" +
                 "X [Exit]");
 
@@ -652,6 +674,10 @@ namespace ANT_Console_Demo
 
                     case ConsoleKey.W:
                         SetWeightCommand(collector);
+                        break;
+
+                    case ConsoleKey.M:
+                        SetServoCommand(collector);
                         break;
 
                     case ConsoleKey.H:
