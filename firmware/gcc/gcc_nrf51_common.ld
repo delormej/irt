@@ -31,6 +31,18 @@ ENTRY(Reset_Handler)
 
 SECTIONS
 {
+	/* bootloader specific memory pinning. */
+    .bootloader_settings_block 0x0003FC00 :
+    {
+        KEEP(*(.bootloader_settings_sect))
+    } > bootloader_settings
+
+    .NRF_UICR_BOOT_START_BLOCK 0x10001014 :
+    {
+        KEEP(*(.NRF_UICR_BOOT_START_SECT))
+    } > NRF_UICR_BOOT_START
+	/* end bootloader settings */
+
 	.text :
 	{
 		KEEP(*(.isr_vector))
