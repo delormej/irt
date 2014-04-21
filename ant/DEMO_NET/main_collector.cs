@@ -3,10 +3,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace ANT_Console_Demo
 {
+
     public struct CollectorEventData
     {
         public float bike_speed;
@@ -38,6 +38,8 @@ namespace ANT_Console_Demo
         const byte BIKE_SPEED_ANT_CHANNEL = 2;
         const byte CTRL_ANT_CHANNEL = 3;
 
+        const uint ANT_BURST_WAIT = 250;
+
         const byte UPDATE_EVENT_COUNT_INDEX = 1;
 
         const byte SPEED_EVENT_TIME_LSB_INDEX = 4;
@@ -62,6 +64,7 @@ namespace ANT_Console_Demo
         //TODO: Set the actual weight command ID.
         const byte SET_WEIGHT_COMMAND = 0x60;
         const byte MOVE_SERVO_COMMAND = 0x61;
+        const byte SET_BUTTON_STOPS = 0x62;
         const byte SET_DFU_MODE_COMMAND = 0x64;
 
         byte m_last_quarq_instant_power_update = 0;
@@ -344,6 +347,52 @@ namespace ANT_Console_Demo
                 (byte)(position >> 8), // Position MSB
             };
             SetResistanceCommand(MOVE_SERVO_COMMAND, data);
+        }
+
+        private void SetButtonStops(ushort[] positionStops, ushort[] wattStops)
+        {
+            byte sequence = 1;
+            byte stopCount = (byte)positionStops.Length;
+            
+            // Message format.
+            // Message 1 - command, # of stops
+            byte[] message = {
+                    0x0,
+                    0x0,
+                    sequence++,
+                    SET_BUTTON_STOPS,
+                    stopCount,
+                    0x0,
+                    0x0,
+                    0x0
+            };
+
+            var result = m_emotion_channel.sendBurstTransfer(message, ANT_BURST_WAIT);
+            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            {
+                return;
+            }
+
+            // Message n - sequence+, standard stop, erg stop
+            for (byte i = 0; i < stopCount; i++)
+            {
+                byte[] stopMessage = {
+                    0x0,
+                    0x0,
+                    sequence++,
+                    SET_BUTTON_STOPS,
+                    (byte)positionStops[i],         // LSB
+                    (byte)(positionStops[i] >> 8),  // MSB
+                    (byte)wattStops[i],             // LSB
+                    (byte)(wattStops[i] >> 8)      // MSB
+                };
+
+                result = m_emotion_channel.sendBurstTransfer(stopMessage, ANT_BURST_WAIT);
+                if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+                {
+                    break;
+                }
+            }
         }
 
         private void ProcessBikeSpeedResponse(ANT_Response response, byte channelId)
@@ -748,6 +797,7 @@ namespace ANT_Console_Demo
             {
                 WriteCommand("Error occured: " + e.Message);
                 Console.WriteLine(e.StackTrace);
+                
                 Console.WriteLine("Press any key to continue.");
                 Console.ReadKey();
             }
