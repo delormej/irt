@@ -7,34 +7,6 @@ using System.Timers;
 
 namespace ANT_Console
 {
-    // Represents the datapoints being collected from various sensors.
-    class DataPoint
-    {
-        const string FORMAT = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:g}, {4:g}, {5:g}, {6:g}, {7:g}";
-
-        public DateTime Timestamp;
-        public float SpeedReference;
-        public float SpeedEMotion;
-        public short PowerReference;
-        public short PowerEMotion;
-        public ushort ServoPosition;
-        public short Accelerometer_y;
-        public byte Temperature;
-
-        public override string ToString()
-        {
-            return string.Format(FORMAT,
-                Timestamp,
-                SpeedReference,
-                SpeedEMotion,
-                PowerReference,
-                PowerEMotion,
-                ServoPosition,
-                Accelerometer_y,
-                Temperature);
-        }
-    }
-
     class Controller
     {
         static DataPoint m_data;
@@ -57,7 +29,7 @@ namespace ANT_Console
                 //m_services = new Dictionary<AntChannel, AntService>();
 
                 ConfigureServices();
-                ConfigureReporter();
+                ConfigureReporters();
 
                 InteractiveConsole();
             }
@@ -87,9 +59,10 @@ namespace ANT_Console
             eMotionPower.ResistanceEvent += ProcessMessage;
         }
 
-        private static void ConfigureReporter()
+        private static void ConfigureReporters()
         {
-            Reporter reporter = new Reporter();
+            // Temporary reporter.
+            IReporter reporter = new ConsoleReporter();
 
             Timer timer = new Timer(1000);
             timer.Elapsed += (o, e) =>
@@ -160,6 +133,48 @@ namespace ANT_Console
         private static void InteractiveConsole()
         {
             Console.ReadKey();
+        }
+    }
+
+    // Represents the datapoints being collected from various sensors.
+    public class DataPoint
+    {
+        const string FORMAT = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:g}, {4:g}, {5:g}, {6:g}, {7:g}";
+
+        public DateTime Timestamp;
+        public float SpeedReference;
+        public float SpeedEMotion;
+        public short PowerReference;
+        public short PowerEMotion;
+        public ushort ServoPosition;
+        public short Accelerometer_y;
+        public byte Temperature;
+
+        public override string ToString()
+        {
+            return string.Format(FORMAT,
+                Timestamp,
+                SpeedReference,
+                SpeedEMotion,
+                PowerReference,
+                PowerEMotion,
+                ServoPosition,
+                Accelerometer_y,
+                Temperature);
+        }
+    }
+
+    public class ConsoleReporter : IReporter
+    {
+        DateTime m_lastReport = DateTime.Now;
+
+        public void Report(DataPoint data)
+        {
+            if (data.Timestamp > m_lastReport)
+            {
+                Console.WriteLine(data);
+                m_lastReport = data.Timestamp;
+            }
         }
     }
 }

@@ -1,19 +1,7 @@
 ﻿using System;
 using System.Timers;
 
-namespace ANT_Console
+namespace ANT_Console.Collectors
 {
-    class Reporter
-    {
-        DateTime m_lastReport = DateTime.Now;
 
-       public void Report(DataPoint data)
-        {
-            if (data.Timestamp > m_lastReport)
-            {
-                Console.WriteLine(data);
-                m_lastReport = data.Timestamp;
-            }
-        }
-    }
 }

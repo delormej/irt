@@ -786,12 +786,12 @@ namespace ANT_Console_Demo
                 Collector collector = new Collector();
                 collector.Start();
 
-                using (Reporter reporter = new Reporter(collector))
-                {
-                    reporter.OnReport += OnReport;
-                    reporter.Start();
-                    InteractiveConsole(collector);
-                }
+                //using (Reporter reporter = new Reporter(collector))
+                //{
+                //    reporter.OnReport += OnReport;
+                //    reporter.Start();
+                //    InteractiveConsole(collector);
+                //}
             }
             catch (Exception e)
             {
