@@ -8,7 +8,7 @@
     <ProjectGuid>{73A108D9-6E34-4446-A5F4-45365C4390F8}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ANT_Console_Demo</RootNamespace>
+    <RootNamespace>ANT_Console</RootNamespace>
     <AssemblyName>ANT_Console</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -74,7 +74,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>ANT_Console_Demo.Collector</StartupObject>
+    <StartupObject>ANT_Console.Controller</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -93,10 +93,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Calculator.cs" />
+    <Compile Include="Collector.cs" />
+    <Compile Include="Controller.cs" />
     <Compile Include="demo.cs" />
     <Compile Include="main_collector.cs" />
+    <Compile Include="Messages.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reporter.cs" />
+    <Compile Include="Services\AntBikePower.cs" />
+    <Compile Include="Services\AntBikeSpeed.cs" />
+    <Compile Include="Services\AntControl.cs" />
+    <Compile Include="Services\AntService.cs" />
+    <Compile Include="Services\BleUart.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
