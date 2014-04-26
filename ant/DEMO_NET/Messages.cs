@@ -26,6 +26,12 @@ namespace ANT_Console.Messages
             byte[] payload = response.getDataPayload();
             return payload[PAGE_INDEX];
         }
+
+        // Helper method to convert two bytes to ushort.
+        public ushort BigEndian(byte lsb, byte msb)
+        {
+            return (ushort)(lsb | msb << 8);
+        }
     }
 
     public class SpeedMessage : Message
@@ -71,21 +77,46 @@ namespace ANT_Console.Messages
         internal ResistanceMessage(ANT_Response response) : base(response) { }
     }
 
-    public class InstantPowerMessage : Message
+    public class StandardPowerMessage : Message
     {
         public const byte Page = 0x10;
+
+        const byte UPDATE_EVENT_COUNT = 1;
+        const byte PEDAL_POWER_INDEX = 2;
+        const byte INSTANT_CADENCE_INDEX = 3;
+        const byte ACCUM_POWER_LSB_INDEX = 4;
+        const byte ACCUM_POWER_MSB_INDEX = 5;        
         const byte INSTANT_POWER_LSB_INDEX = 6;
         const byte INSTANT_POWER_MSB_INDEX = 7;
 
-        internal InstantPowerMessage(ANT_Response response) : base(response) { }
+        internal StandardPowerMessage(ANT_Response response) : base(response) { }
+
+        public byte EventCount
+        {
+            get { return m_payload[UPDATE_EVENT_COUNT]; }
+        }
+
+        public byte Cadence
+        {
+            get { return m_payload[INSTANT_CADENCE_INDEX]; }
+        }
+
+        public ushort AccumWatts
+        {
+            get
+            {
+                return BigEndian(m_payload[ACCUM_POWER_LSB_INDEX],
+                    m_payload[ACCUM_POWER_MSB_INDEX]);
+            }
+        }
 
         public ushort Watts
         {
             // Combine two bytes to make the watts.
             get
             {
-                return (ushort)(m_payload[INSTANT_POWER_LSB_INDEX] |
-                    m_payload[INSTANT_POWER_MSB_INDEX] << 8);
+                return BigEndian(m_payload[INSTANT_POWER_LSB_INDEX],
+                    m_payload[INSTANT_POWER_MSB_INDEX]);
             }
         }
     }

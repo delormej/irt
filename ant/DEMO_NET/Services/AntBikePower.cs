@@ -70,8 +70,8 @@ namespace ANT_Console.Services
 
             switch (Message.GetPage(response))
             {
-                case InstantPowerMessage.Page:
-                    ProcessMessage(new InstantPowerMessage(response));
+                case StandardPowerMessage.Page:
+                    ProcessMessage(new StandardPowerMessage(response));
                     break;
                 case TorqueMessage.Page:
                     ProcessMessage(new TorqueMessage(response));
@@ -102,7 +102,7 @@ namespace ANT_Console.Services
 
         }
 
-        protected virtual void ProcessMessage(InstantPowerMessage message)
+        protected virtual void ProcessMessage(StandardPowerMessage message)
         {
             // Report instant power.
             if (PowerReported != null)
