@@ -32,6 +32,23 @@ namespace ANT_Console.Messages
         {
             return (ushort)(lsb | msb << 8);
         }
+
+        protected short BigEndianSign(byte lsb, byte msb)
+        {
+            return (short)(lsb | msb << 8);
+        }
+    }
+
+    public abstract class UpdateEventMessage : Message
+    {
+        const byte UPDATE_EVENT_COUNT = 1;
+
+        internal UpdateEventMessage(ANT_Response response) : base(response) { }
+
+        public byte EventCount
+        {
+            get { return m_payload[UPDATE_EVENT_COUNT]; }
+        }
     }
 
     public class SpeedMessage : Message
@@ -39,11 +56,12 @@ namespace ANT_Console.Messages
         internal SpeedMessage(ANT_Response response) : base(response) { }
     }
 
-    public class TorqueMessage : Message
+    public class TorqueMessage : UpdateEventMessage
     {
         public const byte Page = 0x11;
 
         const byte WHEEL_TICKS_INDEX = 2;
+        const byte INSTANT_CADENCE_INDEX = 3;
         const byte WHEEL_PERIOD_LSB_INDEX = 4;
         const byte WHEEL_PERIOD_MSB_INDEX = 5;
         const byte ACCUM_TORQUE_LSB_INDEX = 6;
@@ -52,36 +70,30 @@ namespace ANT_Console.Messages
         internal TorqueMessage(ANT_Response response) : base(response) { }
 
         public byte WheelTicks { get { return m_payload[WHEEL_TICKS_INDEX]; } }
-    }
 
-    public class ResistanceMessage : Message 
-    {
-        public const byte Page = 0xF0;
+        public byte Cadence { get { return m_payload[INSTANT_CADENCE_INDEX];  } }
 
-        public static byte[] GetCommand(byte command, byte sequence, byte[] value)
+        public ushort WheelPeriod
         {
-            byte[] data = {
-                Page, 
-                command,
-                0x00, // TBD
-                value[0],
-                value[1],
-                sequence, // increment sequence
-                0x00, // TBD
-                0x00  // TBD
-            };
-
-            return data;
+            get
+            {
+                return BigEndian(m_payload[WHEEL_PERIOD_LSB_INDEX], m_payload[WHEEL_PERIOD_MSB_INDEX]);
+            }
         }
 
-        internal ResistanceMessage(ANT_Response response) : base(response) { }
+        public ushort AccumTorque
+        {
+            get
+            {
+                return BigEndian(m_payload[ACCUM_TORQUE_LSB_INDEX], m_payload[ACCUM_TORQUE_MSB_INDEX]);
+            }
+        }
     }
 
-    public class StandardPowerMessage : Message
+    public class StandardPowerMessage : UpdateEventMessage
     {
         public const byte Page = 0x10;
 
-        const byte UPDATE_EVENT_COUNT = 1;
         const byte PEDAL_POWER_INDEX = 2;
         const byte INSTANT_CADENCE_INDEX = 3;
         const byte ACCUM_POWER_LSB_INDEX = 4;
@@ -90,11 +102,6 @@ namespace ANT_Console.Messages
         const byte INSTANT_POWER_MSB_INDEX = 7;
 
         internal StandardPowerMessage(ANT_Response response) : base(response) { }
-
-        public byte EventCount
-        {
-            get { return m_payload[UPDATE_EVENT_COUNT]; }
-        }
 
         public byte Cadence
         {
@@ -121,47 +128,67 @@ namespace ANT_Console.Messages
         }
     }
 
-    // case 0x24:
+    public class ResistanceMessage : Message
+    {
+        public const byte Page = 0xF0;
+
+        public static byte[] GetCommand(byte command, byte sequence, byte[] value)
+        {
+            byte[] data = {
+                Page, 
+                command,
+                0x00, // TBD
+                value[0],
+                value[1],
+                sequence, // increment sequence
+                0x00, // TBD
+                0x00  // TBD
+            };
+
+            return data;
+        }
+
+        internal ResistanceMessage(ANT_Response response) : base(response) { }
+    }
+
     public class ExtraInfoMessage : Message
     {
+        public const byte Page = 0x24;
+
         internal ExtraInfoMessage(ANT_Response response) : base(response) { }
         
-        // Debugging information.
-        /*
-#define EXTRA_INFO_FLYWHEEL_REVS		1u
-#define EXTRA_INFO_SERVO_POS_LSB		2u
-#define EXTRA_INFO_SERVO_POS_MSB		3u
-#define EXTRA_INFO_ACCEL_LSB			4u
-#define EXTRA_INFO_ACCEL_MSB			5u
-#define EXTRA_INFO_TEMP					6u
-        */
+        const byte EXTRA_INFO_FLYWHEEL_REVS = 1;
+        const byte EXTRA_INFO_SERVO_POS_LSB	= 2;
+        const byte EXTRA_INFO_SERVO_POS_MSB	= 3;
+        const byte EXTRA_INFO_ACCEL_LSB	= 4;
+        const byte EXTRA_INFO_ACCEL_MSB = 5;
+        const byte EXTRA_INFO_TEMP = 6;
 
-        
         public byte FlyweelRevs
         {
-            get { return m_response.messageContents[1];  }
+            get { return m_payload[EXTRA_INFO_FLYWHEEL_REVS];  }
         }
 
         public ushort ServoPosition
         {
             get
             {
-                return (ushort)(m_response.messageContents[2] |
-                    (m_response.messageContents[3] << 8));
+                return BigEndian(m_payload[EXTRA_INFO_SERVO_POS_LSB], 
+                    m_payload[EXTRA_INFO_SERVO_POS_MSB]);
             }
         }
         public short Accelerometer_y
         {
             get
             {
-                return (short)(m_response.messageContents[4] |
-                    (m_response.messageContents[5] << 8));
+                return BigEndianSign(m_payload[EXTRA_INFO_ACCEL_LSB],
+                    m_payload[EXTRA_INFO_ACCEL_MSB]);
             }
         }
 
         public byte Temperature
         {
-            get {return m_response.messageContents[6];}
+            get { return m_payload[EXTRA_INFO_TEMP]; }
         }
     }
 }

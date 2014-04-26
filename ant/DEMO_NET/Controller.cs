@@ -10,7 +10,7 @@ namespace ANT_Console
     // Represents the datapoints being collected from various sensors.
     class DataPoint
     {
-        const string FORMAT = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:N0}, {4:N0}, {5:N0}, {6:g}";
+        const string FORMAT = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:N0}, {4:N0}, {5:g}, {6:g}, {7:g}";
 
         public DateTime Timestamp;
         public float SpeedReference;
@@ -18,7 +18,7 @@ namespace ANT_Console
         public ushort PowerReference;
         public ushort PowerEMotion;
         public ushort ServoPosition;
-        public ushort Accelerometer_y;
+        public short Accelerometer_y;
         public byte Temperature;
 
         public override string ToString()
@@ -30,7 +30,8 @@ namespace ANT_Console
                 PowerReference,
                 PowerEMotion,
                 ServoPosition,
-                Accelerometer_y);
+                Accelerometer_y,
+                Temperature);
         }
     }
 
@@ -74,11 +75,25 @@ namespace ANT_Console
 
             AntBikePower eMotionPower = new AntBikePower(
                 (int)AntChannel.EMotionPower, 0, emotion_tranmission_type);
+            
             eMotionPower.StandardPowerEvent += (m) =>
-            {
-                m_data.PowerEMotion = m.Watts;
-            }; 
+                {
+                    m_data.Timestamp = m.Source.timeReceived;
+                    m_data.PowerEMotion = m.Watts;
+                };
+            
+            eMotionPower.TorqueEvent += (m) =>
+                {
+                    int i = m.WheelTicks;
+                };
 
+            eMotionPower.ExtraInfoEvent += (m) =>
+                {
+                    m_data.Timestamp = m.Source.timeReceived;
+                    m_data.ServoPosition = m.ServoPosition;
+                    m_data.Temperature = m.Temperature;
+                    m_data.Accelerometer_y = m.Accelerometer_y;
+                };
         }
 
         private static void ConfigureReporter()

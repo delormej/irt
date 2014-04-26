@@ -19,14 +19,20 @@ namespace ANT_Console.Services
         ushort m_deviceId;
         byte m_sequence;
 
+        /*
+         * Events
+         * 
+         */
         public event MessageHandler<StandardPowerMessage> StandardPowerEvent;
         public event MessageHandler<TorqueMessage> TorqueEvent;
         public event MessageHandler<ResistanceMessage> ResistanceEvent;
+        public event MessageHandler<ExtraInfoMessage> ExtraInfoEvent;
 
         public AntBikePower(int channelId, ushort deviceId = 0, byte transmissionType = 0)
         {
             m_deviceId = deviceId;
 
+            // Configure the channel.
             AntConfig config = new AntConfig() {
                 ChannelId = channelId,
                 DeviceId = deviceId,
@@ -39,6 +45,10 @@ namespace ANT_Console.Services
             Configure(config);
         }
 
+        /*
+         *  Commands
+         *  
+         */
         public bool SetWeight(float weight)
         {
             ushort value = (ushort)(weight * 100);
@@ -55,6 +65,10 @@ namespace ANT_Console.Services
             return (ret == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
         }
 
+        /*
+         * Handle messages.
+         * 
+         */
         protected override void ProcessResponse(ANT_Response response)
         {
             // switch case based on the message ID.
@@ -73,6 +87,10 @@ namespace ANT_Console.Services
                 case ResistanceMessage.Page:
                     if (ResistanceEvent != null)
                         ResistanceEvent(new ResistanceMessage(response));
+                    break;
+                case ExtraInfoMessage.Page:
+                    if (ExtraInfoEvent != null)
+                        ExtraInfoEvent(new ExtraInfoMessage(response));
                     break;
                 default:
                     break;
