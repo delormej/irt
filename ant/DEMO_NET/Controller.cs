@@ -89,11 +89,17 @@ namespace ANT_Console
 
         private static void ConfigureReporter()
         {
+            DateTime m_lastReport = DateTime.Now;
+
             // Create a timer, every second spit out the current values from datapoint.
             Timer timer = new Timer(1000);
             timer.Elapsed += (o, e) =>
             {
-                Console.WriteLine(m_data);
+                if (m_data.Timestamp > m_lastReport)
+                {
+                    Console.WriteLine(m_data);
+                    m_lastReport = m_data.Timestamp;
+                }
             };
             timer.Start();
         }
@@ -132,6 +138,11 @@ namespace ANT_Console
             }
         }
 
+        /// <summary>
+        /// Represents messages that have additional debug information in them, 
+        /// such as Servo Position, temperature and accelerometer reading.
+        /// </summary>
+        /// <param name="m"></param>
         private static void ProcessMessage(ExtraInfoMessage m)
         {
             m_data.Timestamp = m.Source.timeReceived;
@@ -140,6 +151,11 @@ namespace ANT_Console
             m_data.Accelerometer_y = m.Accelerometer_y;
         }
 
+        /// <summary>
+        /// Wahoo messages for resistance control, plus additional messages added
+        /// by IRT and Trainer Road.
+        /// </summary>
+        /// <param name="m"></param>
         private static void ProcessMessage(ResistanceMessage m)
         {
             //

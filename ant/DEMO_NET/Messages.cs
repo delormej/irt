@@ -136,6 +136,11 @@ namespace ANT_Console.Messages
     {
         public const byte Page = 0xF0;
 
+        const byte MODE_INDEX = 1;
+        const byte SEQUENCE_INDEX = 3;
+        const byte LEVEL_LSB = 4;
+        const byte LEVEL_MSB = 5;
+
         public static byte[] GetCommand(byte command, byte sequence, byte[] value)
         {
             byte[] data = {
@@ -153,6 +158,18 @@ namespace ANT_Console.Messages
         }
 
         internal ResistanceMessage(ANT_Response response) : base(response) { }
+
+        public byte Mode { get { return m_payload[MODE_INDEX]; } }
+
+        public byte Sequence { get { return m_payload[SEQUENCE_INDEX]; } }
+
+        public ushort Level
+        {
+            get
+            {
+                return BigEndian(m_payload[LEVEL_LSB], m_payload[LEVEL_MSB]);
+            }
+        }
     }
 
     public class ExtraInfoMessage : Message
