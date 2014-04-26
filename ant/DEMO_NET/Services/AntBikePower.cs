@@ -7,7 +7,17 @@ namespace ANT_Console.Services
     // Encapsulates all ANT interactions.
     class AntBikePower : AntService
     {  
+        // Commands
+        enum Command : byte
+        {
+            SetWeight = 0x60,
+            MoveServo = 0x61,
+            SetButtonStops = 0x62,
+            SetDFUMode = 0x64
+        };
+
         ushort m_deviceId;
+        byte m_sequence;
 
         // Keep track of state.
         TorqueMessage m_lastTorque; // or we could have a list of torque messages here.
@@ -37,6 +47,22 @@ namespace ANT_Console.Services
             public ushort Watts;
         }
 
+        public bool SetWeight(float weight)
+        {
+            ushort value = (ushort)(weight * 100);
+            byte[] data = {
+                (byte)value, // Weight LSB
+                (byte)(value >> 8), // Weight MSB
+            };
+
+            byte[] command = ResistanceMessage.GetCommand(
+                (byte)Command.SetWeight, m_sequence++, data);
+
+            ANT_ReferenceLibrary.MessagingReturnCode ret = m_channel.sendAcknowledgedData(command, 500);
+
+            return (ret == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
+        }
+
         protected override void ProcessResponse(ANT_Response response)
         {
             // switch case based on the message ID.
@@ -49,6 +75,9 @@ namespace ANT_Console.Services
                     break;
                 case TorqueMessage.Page:
                     ProcessMessage(new TorqueMessage(response));
+                    break;
+                case ResistanceMessage.Page:
+                    ProcessMessage(new ResistanceMessage(response));
                     break;
                 default:
                     break;
@@ -64,7 +93,7 @@ namespace ANT_Console.Services
             // Dependingon the sequence # behave differently?
             byte sequence = response.getBurstSequenceNumber();
 
-            ProcessMessage(new ResistanceMessage(response));
+            
         }
 
         protected virtual void ProcessMessage(TorqueMessage message)

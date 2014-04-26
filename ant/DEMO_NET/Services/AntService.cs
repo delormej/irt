@@ -21,7 +21,7 @@ namespace ANT_Console.Services
         const byte USER_NETWORK_NUM = 0;         // The network key is assigned to this network number
 
         static ANT_Device m_device;
-        ANT_Channel m_channel;
+        protected ANT_Channel m_channel;
 
         public event EventHandler<EventArgs> Connected;
         public event EventHandler<EventArgs> Closing;

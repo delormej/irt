@@ -52,6 +52,22 @@ namespace ANT_Console.Messages
     {
         public const byte Page = 0xF0;
 
+        public static byte[] GetCommand(byte command, byte sequence, byte[] value)
+        {
+            byte[] data = {
+                Page, 
+                command,
+                0x00, // TBD
+                value[0],
+                value[1],
+                sequence, // increment sequence
+                0x00, // TBD
+                0x00  // TBD
+            };
+
+            return data;
+        }
+
         internal ResistanceMessage(ANT_Response response) : base(response) { }
     }
 
