@@ -10,7 +10,7 @@ namespace ANT_Console
     // Represents the datapoints being collected from various sensors.
     class DataPoint
     {
-        const string FORMAT = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:N0}, {4:N0}, {5:g}, {6:g}, {7:g}";
+        const string FORMAT = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:g}, {4:g}, {5:g}, {6:g}, {7:g}";
 
         public DateTime Timestamp;
         public float SpeedReference;
@@ -50,14 +50,21 @@ namespace ANT_Console
 
         public static void Main()
         {
-            // State   
-            m_data = new DataPoint();
-            //m_services = new Dictionary<AntChannel, AntService>();
+            try
+            {
+                // State   
+                m_data = new DataPoint();
+                //m_services = new Dictionary<AntChannel, AntService>();
 
-            ConfigureServices();
-            ConfigureReporter();
+                ConfigureServices();
+                ConfigureReporter();
 
-            InteractiveConsole();
+                InteractiveConsole();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         private static void ConfigureServices()
