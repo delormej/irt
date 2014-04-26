@@ -21,6 +21,7 @@ namespace ANT_Console.Services
 
         ushort m_deviceId;
         byte m_sequence;
+        short m_wheelSizeMM = 2107;
         TorqueMessage m_lastTorqueMessage;
 
         /*
@@ -48,6 +49,12 @@ namespace ANT_Console.Services
                 ChannelPeriod = 0x1FF6
             };
             Configure(config);
+        }
+
+        public short WheelSizeMM
+        {
+            get { return m_wheelSizeMM;  }
+            set { m_wheelSizeMM = value;  }
         }
 
         /*
@@ -106,30 +113,7 @@ namespace ANT_Console.Services
             //TODO: there is a lot of reuse opportunity here
             if (m_lastTorqueMessage != null)
             {
-                // Accumuldated Torque
-                int accum_torque_delta = 0;
-                if (message.AccumTorque < m_lastTorqueMessage.AccumTorque)
-                    // If we had a rollover.
-                    accum_torque_delta = (ushort)((m_lastTorqueMessage.AccumTorque ^ 0xFF) +
-                        message.AccumTorque);
-                else
-                    accum_torque_delta = (ushort)(message.AccumTorque -
-                        m_lastTorqueMessage.AccumTorque);
-
-                // Wheel period / event time.
-                ushort wheel_period_delta = 0;
-                if (message.WheelPeriod < m_lastTorqueMessage.WheelPeriod)
-                    // If we had a rollover.
-                    wheel_period_delta = (ushort)((m_lastTorqueMessage.WheelPeriod ^ 0xFFFF) +
-                        message.WheelPeriod);
-                else
-                    wheel_period_delta = (ushort)(message.WheelPeriod - m_lastTorqueMessage.WheelPeriod);
-
-                if (wheel_period_delta > 0)
-                {
-                    float value = (float)accum_torque_delta / (float)wheel_period_delta;
-                    message.CalculatedPower = (short)((128 * Math.PI) * value);
-                }
+                Calculate(message);
             }
 
             // Save state for next round.
@@ -137,6 +121,56 @@ namespace ANT_Console.Services
 
             if (TorqueEvent != null)
                 TorqueEvent(message);
+        }
+
+        // Calculate speed & power.
+        protected void Calculate(TorqueMessage message)
+        {
+            // Wheel period / event time
+            ushort wheel_period_delta = 0;
+            if (message.WheelPeriod < m_lastTorqueMessage.WheelPeriod)
+                // If we had a rollover.
+                wheel_period_delta = (ushort)((m_lastTorqueMessage.WheelPeriod ^ 0xFFFF) +
+                    message.WheelPeriod);
+            else
+                wheel_period_delta = (ushort)(message.WheelPeriod - m_lastTorqueMessage.WheelPeriod);
+
+            // Accumuldated Torque
+            int accum_torque_delta = 0;
+            if (message.AccumTorque < m_lastTorqueMessage.AccumTorque)
+                // If we had a rollover.
+                accum_torque_delta = (ushort)((m_lastTorqueMessage.AccumTorque ^ 0xFF) +
+                    message.AccumTorque);
+            else
+                accum_torque_delta = (ushort)(message.AccumTorque -
+                    m_lastTorqueMessage.AccumTorque);
+
+            // Wheel ticks (revolutions)
+            byte wheel_ticks_delta = 0;
+            if (message.WheelTicks < m_lastTorqueMessage.WheelTicks)
+                // If we had a rollover.
+                wheel_ticks_delta = (byte)((m_lastTorqueMessage.WheelTicks ^ 0xFF) +
+                    message.WheelTicks);
+            else
+                wheel_ticks_delta = (byte)(message.WheelTicks -
+                    m_lastTorqueMessage.WheelTicks);
+
+            if (wheel_period_delta > 0)
+            {
+                if (accum_torque_delta > 0)
+                {
+                    // Calculate power in watts.
+                    float value = (float)accum_torque_delta / (float)wheel_period_delta;
+                    message.CalculatedPower = (short)((128 * Math.PI) * value);
+                }
+                if (wheel_ticks_delta > 0)
+                {
+                    // Calculate speed in meters per second.
+                    float speed = (wheel_ticks_delta * (m_wheelSizeMM/1000.0f)) / (wheel_period_delta / 2048f);
+                    message.SpeedMps = speed;
+                    message.SpeedMph = speed * 2.23694f; // Convert to MPH
+                }
+            }
         }
     }
 }

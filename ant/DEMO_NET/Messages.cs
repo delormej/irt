@@ -90,6 +90,8 @@ namespace ANT_Console.Messages
         }
 
         public short CalculatedPower;
+        public float SpeedMps;
+        public float SpeedMph;
     }
 
     public class StandardPowerMessage : UpdateEventMessage

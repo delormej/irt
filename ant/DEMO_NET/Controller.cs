@@ -121,9 +121,11 @@ namespace ANT_Console
                 case AntChannel.EMotionPower:
                     m_data.Timestamp = m.Source.timeReceived;
                     m_data.PowerEMotion = m.CalculatedPower;
+                    m_data.SpeedEMotion = m.SpeedMph;
                     break;
                 case AntChannel.RefPower:
-                    
+                    m_data.Timestamp = m.Source.timeReceived;
+                    m_data.PowerReference = m.CalculatedPower;
                     break;
                 default:
                     break;
