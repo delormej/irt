@@ -68,32 +68,13 @@ namespace ANT_Console
             // Configure reference power.
             AntBikePower refPower = new AntBikePower(
                 (int)AntChannel.RefPower, 0, quarq_tranmission_type);
-            refPower.StandardPowerEvent += (m) =>
-            {
-                m_data.PowerReference = m.Watts;
-            };
+            refPower.StandardPowerEvent += ProcessMessage;
 
             AntBikePower eMotionPower = new AntBikePower(
                 (int)AntChannel.EMotionPower, 0, emotion_tranmission_type);
-            
-            eMotionPower.StandardPowerEvent += (m) =>
-                {
-                    m_data.Timestamp = m.Source.timeReceived;
-                    m_data.PowerEMotion = m.Watts;
-                };
-            
-            eMotionPower.TorqueEvent += (m) =>
-                {
-                    int i = m.WheelTicks;
-                };
-
-            eMotionPower.ExtraInfoEvent += (m) =>
-                {
-                    m_data.Timestamp = m.Source.timeReceived;
-                    m_data.ServoPosition = m.ServoPosition;
-                    m_data.Temperature = m.Temperature;
-                    m_data.Accelerometer_y = m.Accelerometer_y;
-                };
+            eMotionPower.StandardPowerEvent += ProcessMessage;
+            eMotionPower.TorqueEvent += ProcessMessage;
+            eMotionPower.ExtraInfoEvent += ProcessMessage;
         }
 
         private static void ConfigureReporter()
@@ -105,6 +86,35 @@ namespace ANT_Console
                 Console.WriteLine(m_data);
             };
             timer.Start();
+        }
+
+        private static void ProcessMessage(StandardPowerMessage m)
+        {
+            switch ((AntChannel)m.Source.antChannel)
+            {
+                case AntChannel.EMotionPower:
+                     m_data.Timestamp = m.Source.timeReceived;
+                     m_data.PowerEMotion = m.Watts;
+                     break;
+                case AntChannel.RefPower:
+                     m_data.PowerReference = m.Watts;
+                     break;
+                default:
+                     break;
+            }
+        }
+
+        private static void ProcessMessage(TorqueMessage m)
+        {
+            //
+        }
+
+        private static void ProcessMessage(ExtraInfoMessage m)
+        {
+            m_data.Timestamp = m.Source.timeReceived;
+            m_data.ServoPosition = m.ServoPosition;
+            m_data.Temperature = m.Temperature;
+            m_data.Accelerometer_y = m.Accelerometer_y;
         }
 
         private static void InteractiveConsole()
