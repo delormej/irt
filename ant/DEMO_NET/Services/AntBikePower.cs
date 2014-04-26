@@ -19,10 +19,9 @@ namespace ANT_Console.Services
         ushort m_deviceId;
         byte m_sequence;
 
-        // Keep track of state.
-        TorqueMessage m_lastTorque; // or we could have a list of torque messages here.
-
-        public event EventHandler<BikePowerEventArgs> PowerReported;
+        public event MessageHandler<StandardPowerMessage> StandardPowerEvent;
+        public event MessageHandler<TorqueMessage> TorqueEvent;
+        public event MessageHandler<ResistanceMessage> ResistanceEvent;
 
         public AntBikePower(int channelId, ushort deviceId = 0, byte transmissionType = 0)
         {
@@ -38,13 +37,6 @@ namespace ANT_Console.Services
                 ChannelPeriod = 0x1FF6
             };
             Configure(config);
-        }
-
-        public class BikePowerEventArgs : EventArgs
-        {
-            public DateTime TimeStamp;
-            public ushort DeviceId;
-            public ushort Watts;
         }
 
         public bool SetWeight(float weight)
@@ -71,51 +63,20 @@ namespace ANT_Console.Services
             switch (Message.GetPage(response))
             {
                 case StandardPowerMessage.Page:
-                    ProcessMessage(new StandardPowerMessage(response));
+                    if (StandardPowerEvent != null)
+                        StandardPowerEvent(new StandardPowerMessage(response));
                     break;
                 case TorqueMessage.Page:
-                    ProcessMessage(new TorqueMessage(response));
+                    if (TorqueEvent != null)
+                        TorqueEvent(new TorqueMessage(response));
                     break;
                 case ResistanceMessage.Page:
-                    ProcessMessage(new ResistanceMessage(response));
+                    if (ResistanceEvent != null)
+                        ResistanceEvent(new ResistanceMessage(response));
                     break;
                 default:
                     break;
             }
-        }
-
-        protected override void ProcessBurst(ANT_Response response)
-        {
-            // Does the page show up in the same place for a burst message?
-            if (Message.GetPage(response) != ResistanceMessage.Page)
-                return;
-            
-            // Dependingon the sequence # behave differently?
-            byte sequence = response.getBurstSequenceNumber();
-
-            
-        }
-
-        protected virtual void ProcessMessage(TorqueMessage message)
-        {
-            // Calculate power based on torque.
-
-        }
-
-        protected virtual void ProcessMessage(StandardPowerMessage message)
-        {
-            // Report instant power.
-            if (PowerReported != null)
-                PowerReported(this, new BikePowerEventArgs()
-                {
-                    TimeStamp = message.Source.timeReceived,
-                    Watts = message.Watts
-                });
-        }
-
-        protected virtual void ProcessMessage(ResistanceMessage message)
-        {
-
         }
     }
 }

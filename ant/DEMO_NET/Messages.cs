@@ -28,7 +28,7 @@ namespace ANT_Console.Messages
         }
 
         // Helper method to convert two bytes to ushort.
-        public ushort BigEndian(byte lsb, byte msb)
+        protected ushort BigEndian(byte lsb, byte msb)
         {
             return (ushort)(lsb | msb << 8);
         }

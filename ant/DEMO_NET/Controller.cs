@@ -67,17 +67,16 @@ namespace ANT_Console
             // Configure reference power.
             AntBikePower refPower = new AntBikePower(
                 (int)AntChannel.RefPower, 0, quarq_tranmission_type);
-            refPower.PowerReported += (o, e) =>
+            refPower.StandardPowerEvent += (m) =>
             {
-                m_data.PowerReference = e.Watts;
+                m_data.PowerReference = m.Watts;
             };
-            //m_services.Add(AntChannel.RefPower, refPower);
 
             AntBikePower eMotionPower = new AntBikePower(
                 (int)AntChannel.EMotionPower, 0, emotion_tranmission_type);
-            eMotionPower.PowerReported += (o, e) =>
+            eMotionPower.StandardPowerEvent += (m) =>
             {
-                m_data.PowerEMotion = e.Watts;
+                m_data.PowerEMotion = m.Watts;
             }; 
 
         }

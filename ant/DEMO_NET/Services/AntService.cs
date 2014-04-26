@@ -13,7 +13,9 @@ namespace ANT_Console.Services
         public byte DeviceType; //  = 0x0B;
         public byte AntFreq; // = 0x39;
         public ushort ChannelPeriod; //  = 0x1FF6;
-    }                
+    }
+
+    public delegate void MessageHandler<T>(T message) where T : Message;
 
     abstract class AntService
     {
@@ -27,9 +29,6 @@ namespace ANT_Console.Services
         public event EventHandler<EventArgs> Closing;
 
         protected abstract void ProcessResponse(ANT_Response response);
-
-        protected virtual void ProcessBurst(ANT_Response response)
-        { }
 
         // Generic function to get moved out of here and work for any ANT channel.
         protected virtual void Configure(AntConfig config)
@@ -67,12 +66,10 @@ namespace ANT_Console.Services
             {
                 case ANT_ReferenceLibrary.ANTMessageID.BROADCAST_DATA_0x4E:
                 case ANT_ReferenceLibrary.ANTMessageID.ACKNOWLEDGED_DATA_0x4F:
-                    // Process response.
-                    ProcessResponse(response);
-                    break;
                 case ANT_ReferenceLibrary.ANTMessageID.ADV_BURST_DATA_0x72:
                 case ANT_ReferenceLibrary.ANTMessageID.BURST_DATA_0x50:
-                    ProcessBurst(response);
+                    // Process response.
+                    ProcessResponse(response);
                     break;
                 default:
                     // Nothing to process.
