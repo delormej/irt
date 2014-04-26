@@ -15,8 +15,8 @@ namespace ANT_Console
         public DateTime Timestamp;
         public float SpeedReference;
         public float SpeedEMotion;
-        public ushort PowerReference;
-        public ushort PowerEMotion;
+        public short PowerReference;
+        public short PowerEMotion;
         public ushort ServoPosition;
         public short Accelerometer_y;
         public byte Temperature;
@@ -69,12 +69,15 @@ namespace ANT_Console
             AntBikePower refPower = new AntBikePower(
                 (int)AntChannel.RefPower, 0, quarq_tranmission_type);
             refPower.StandardPowerEvent += ProcessMessage;
+            refPower.TorqueEvent += ProcessMessage;
 
+            // Configure E-Motion power reporting.
             AntBikePower eMotionPower = new AntBikePower(
                 (int)AntChannel.EMotionPower, 0, emotion_tranmission_type);
             eMotionPower.StandardPowerEvent += ProcessMessage;
             eMotionPower.TorqueEvent += ProcessMessage;
             eMotionPower.ExtraInfoEvent += ProcessMessage;
+            eMotionPower.ResistanceEvent += ProcessMessage;
         }
 
         private static void ConfigureReporter()
@@ -93,8 +96,8 @@ namespace ANT_Console
             switch ((AntChannel)m.Source.antChannel)
             {
                 case AntChannel.EMotionPower:
-                     m_data.Timestamp = m.Source.timeReceived;
-                     m_data.PowerEMotion = m.Watts;
+                     //m_data.Timestamp = m.Source.timeReceived;
+                     //m_data.PowerEMotion = m.Watts;
                      break;
                 case AntChannel.RefPower:
                      m_data.PowerReference = m.Watts;
@@ -106,7 +109,18 @@ namespace ANT_Console
 
         private static void ProcessMessage(TorqueMessage m)
         {
-            //
+            switch ((AntChannel)m.Source.antChannel)
+            {
+                case AntChannel.EMotionPower:
+                    m_data.Timestamp = m.Source.timeReceived;
+                    m_data.PowerEMotion = m.CalculatedPower;
+                    break;
+                case AntChannel.RefPower:
+                    
+                    break;
+                default:
+                    break;
+            }
         }
 
         private static void ProcessMessage(ExtraInfoMessage m)
@@ -115,6 +129,11 @@ namespace ANT_Console
             m_data.ServoPosition = m.ServoPosition;
             m_data.Temperature = m.Temperature;
             m_data.Accelerometer_y = m.Accelerometer_y;
+        }
+
+        private static void ProcessMessage(ResistanceMessage m)
+        {
+            //
         }
 
         private static void InteractiveConsole()

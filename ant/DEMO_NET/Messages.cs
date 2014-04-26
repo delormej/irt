@@ -33,7 +33,7 @@ namespace ANT_Console.Messages
             return (ushort)(lsb | msb << 8);
         }
 
-        protected short BigEndianSign(byte lsb, byte msb)
+        protected short BigEndianSigned(byte lsb, byte msb)
         {
             return (short)(lsb | msb << 8);
         }
@@ -88,6 +88,8 @@ namespace ANT_Console.Messages
                 return BigEndian(m_payload[ACCUM_TORQUE_LSB_INDEX], m_payload[ACCUM_TORQUE_MSB_INDEX]);
             }
         }
+
+        public short CalculatedPower;
     }
 
     public class StandardPowerMessage : UpdateEventMessage
@@ -117,12 +119,12 @@ namespace ANT_Console.Messages
             }
         }
 
-        public ushort Watts
+        public short Watts
         {
             // Combine two bytes to make the watts.
             get
             {
-                return BigEndian(m_payload[INSTANT_POWER_LSB_INDEX],
+                return BigEndianSigned(m_payload[INSTANT_POWER_LSB_INDEX],
                     m_payload[INSTANT_POWER_MSB_INDEX]);
             }
         }
@@ -181,7 +183,7 @@ namespace ANT_Console.Messages
         {
             get
             {
-                return BigEndianSign(m_payload[EXTRA_INFO_ACCEL_LSB],
+                return BigEndianSigned(m_payload[EXTRA_INFO_ACCEL_LSB],
                     m_payload[EXTRA_INFO_ACCEL_MSB]);
             }
         }
