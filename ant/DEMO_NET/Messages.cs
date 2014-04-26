@@ -3,6 +3,34 @@ using ANT_Managed_Library;
 
 namespace ANT_Console.Messages
 {
+    // Represents the datapoints being collected from various sensors.
+    public class DataPoint
+    {
+        const string FORMAT = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:g}, {4:g}, {5:g}, {6:g}, {7:g}";
+
+        public DateTime Timestamp;
+        public float SpeedReference;
+        public float SpeedEMotion;
+        public short PowerReference;
+        public short PowerEMotion;
+        public ushort ServoPosition;
+        public short Accelerometer_y;
+        public byte Temperature;
+
+        public override string ToString()
+        {
+            return string.Format(FORMAT,
+                Timestamp,
+                SpeedReference,
+                SpeedEMotion,
+                PowerReference,
+                PowerEMotion,
+                ServoPosition,
+                Accelerometer_y,
+                Temperature);
+        }
+    }
+
     public abstract class Message
     {
         // Message format defines.
@@ -54,6 +82,13 @@ namespace ANT_Console.Messages
     public class SpeedMessage : Message
     {
         internal SpeedMessage(ANT_Response response) : base(response) { }
+
+        /* NOTE */
+        // The key difference between speed message and the calculated speed
+        // from the torque message is the wheel period unit.
+        // Speed messages use 1024, vs. torque is 2048:
+
+        //float speed = (cumulative_revs_delta * m_wheel_size_m) / (event_time_delta / 1024f);
     }
 
     public class TorqueMessage : UpdateEventMessage

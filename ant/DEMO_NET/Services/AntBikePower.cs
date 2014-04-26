@@ -69,12 +69,84 @@ namespace ANT_Console.Services
                 (byte)(value >> 8), // Weight MSB
             };
 
-            byte[] command = ResistanceMessage.GetCommand(
-                (byte)Command.SetWeight, m_sequence++, data);
+            return SendCommand(Command.SetWeight, data);
+        }
 
-            ANT_ReferenceLibrary.MessagingReturnCode ret = m_channel.sendAcknowledgedData(command, 500);
+        public void SetFirmwareUpdateMode()
+        {
+            SendCommand(Command.SetDFUMode);
+        }
+
+        public void MoveServo(int position)
+        {
+            byte[] data = {
+                (byte)(position), // Position LSB
+                (byte)(position >> 8), // Position MSB
+            };
+            SendCommand(Command.MoveServo, data);
+        }
+
+        public void SetButtonStops(ushort[] positionStops, ushort[] wattStops)
+        {
+            /*
+            byte sequence = 1;
+            byte stopCount = (byte)positionStops.Length;
+
+            // Message format.
+            // Message 1 - command, # of stops
+            byte[] message = {
+                    0x0,
+                    0x0,
+                    sequence++,
+                    SET_BUTTON_STOPS,
+                    stopCount,
+                    0x0,
+                    0x0,
+                    0x0
+            };
+
+            var result = m_emotion_channel.sendBurstTransfer(message, ANT_BURST_WAIT);
+            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            {
+                return;
+            }
+
+            // Message n - sequence+, standard stop, erg stop
+            for (byte i = 0; i < stopCount; i++)
+            {
+                byte[] stopMessage = {
+                    0x0,
+                    0x0,
+                    sequence++,
+                    SET_BUTTON_STOPS,
+                    (byte)positionStops[i],         // LSB
+                    (byte)(positionStops[i] >> 8),  // MSB
+                    (byte)wattStops[i],             // LSB
+                    (byte)(wattStops[i] >> 8)      // MSB
+                };
+
+                result = m_emotion_channel.sendBurstTransfer(stopMessage, ANT_BURST_WAIT);
+                if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+                {
+                    break;
+                }
+            }
+             */
+        }
+        bool SendCommand(Command command, byte[] value)
+        {
+            byte[] data = ResistanceMessage.GetCommand(
+                (byte)Command.SetWeight, m_sequence++, value);
+
+            ANT_ReferenceLibrary.MessagingReturnCode ret = m_channel.sendAcknowledgedData(data, 500);
 
             return (ret == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
+        }
+
+        bool SendCommand(Command command)
+        {
+            byte[] value = { 0, 0 };
+            return SendCommand(command, value);
         }
 
         /*

@@ -9,8 +9,10 @@ namespace ANT_Console
 {
     class Controller
     {
-        static DataPoint m_data;
-        //static Dictionary<AntChannel, AntService> m_services;
+        DataPoint m_data;
+        AntBikePower m_eMotionPower;
+        AntControl m_control;
+        InteractiveConsole m_console;
 
         enum AntChannel : byte // limited to 8 channels per device.
         {
@@ -24,14 +26,8 @@ namespace ANT_Console
         {
             try
             {
-                // State   
-                m_data = new DataPoint();
-                //m_services = new Dictionary<AntChannel, AntService>();
-
-                ConfigureServices();
-                ConfigureReporters();
-
-                InteractiveConsole();
+                Controller controller = new Controller();
+                controller.Run();
             }
             catch (Exception e)
             {
@@ -39,7 +35,20 @@ namespace ANT_Console
             }
         }
 
-        private static void ConfigureServices()
+        public Controller()
+        {
+            m_data = new DataPoint();
+        }
+
+        public void Run()
+        {
+            ConfigureServices();
+            m_console = new InteractiveConsole(m_eMotionPower, m_control);
+            ConfigureReporters();
+            m_console.Run();
+        }
+
+        private void ConfigureServices()
         {
             const byte emotion_tranmission_type = 0xA5;
             const byte quarq_tranmission_type = 0x5;
@@ -51,35 +60,41 @@ namespace ANT_Console
             refPower.TorqueEvent += ProcessMessage;
 
             // Configure E-Motion power reporting.
-            AntBikePower eMotionPower = new AntBikePower(
+            m_eMotionPower = new AntBikePower(
                 (int)AntChannel.EMotionPower, 0, emotion_tranmission_type);
-            eMotionPower.StandardPowerEvent += ProcessMessage;
-            eMotionPower.TorqueEvent += ProcessMessage;
-            eMotionPower.ExtraInfoEvent += ProcessMessage;
-            eMotionPower.ResistanceEvent += ProcessMessage;
+            m_eMotionPower.StandardPowerEvent += ProcessMessage;
+            m_eMotionPower.TorqueEvent += ProcessMessage;
+            m_eMotionPower.ExtraInfoEvent += ProcessMessage;
+            m_eMotionPower.ResistanceEvent += ProcessMessage;
+
+            // Configure the remote control service.
+            m_control = new AntControl((int)AntChannel.AntControl);
         }
 
-        private static void ConfigureReporters()
+        private void ConfigureReporters()
         {
             // Temporary reporter.
-            IReporter reporter = new ConsoleReporter();
+            IList<IReporter> reporters = new List<IReporter>(2);
+            reporters.Add(new LogReporter());
+            reporters.Add(m_console);
 
             Timer timer = new Timer(1000);
             timer.Elapsed += (o, e) =>
             {
-                reporter.Report(m_data);
+                foreach (var r in reporters)
+                    r.Report(m_data);
             };
 
             timer.Start();
         }
 
-        private static void ProcessMessage(StandardPowerMessage m)
+        private void ProcessMessage(StandardPowerMessage m)
         {
             switch ((AntChannel)m.Source.antChannel)
             {
                 case AntChannel.EMotionPower:
-                     //m_data.Timestamp = m.Source.timeReceived;
-                     //m_data.PowerEMotion = m.Watts;
+                     m_data.Timestamp = m.Source.timeReceived;
+                     m_data.PowerEMotion = m.Watts;
                      break;
                 case AntChannel.RefPower:
                      m_data.PowerReference = m.Watts;
@@ -89,7 +104,7 @@ namespace ANT_Console
             }
         }
 
-        private static void ProcessMessage(TorqueMessage m)
+        private void ProcessMessage(TorqueMessage m)
         {
             switch ((AntChannel)m.Source.antChannel)
             {
@@ -112,7 +127,7 @@ namespace ANT_Console
         /// such as Servo Position, temperature and accelerometer reading.
         /// </summary>
         /// <param name="m"></param>
-        private static void ProcessMessage(ExtraInfoMessage m)
+        private void ProcessMessage(ExtraInfoMessage m)
         {
             m_data.Timestamp = m.Source.timeReceived;
             m_data.ServoPosition = m.ServoPosition;
@@ -125,56 +140,9 @@ namespace ANT_Console
         /// by IRT and Trainer Road.
         /// </summary>
         /// <param name="m"></param>
-        private static void ProcessMessage(ResistanceMessage m)
+        private void ProcessMessage(ResistanceMessage m)
         {
             //
-        }
-
-        private static void InteractiveConsole()
-        {
-            Console.ReadKey();
-        }
-    }
-
-    // Represents the datapoints being collected from various sensors.
-    public class DataPoint
-    {
-        const string FORMAT = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:g}, {4:g}, {5:g}, {6:g}, {7:g}";
-
-        public DateTime Timestamp;
-        public float SpeedReference;
-        public float SpeedEMotion;
-        public short PowerReference;
-        public short PowerEMotion;
-        public ushort ServoPosition;
-        public short Accelerometer_y;
-        public byte Temperature;
-
-        public override string ToString()
-        {
-            return string.Format(FORMAT,
-                Timestamp,
-                SpeedReference,
-                SpeedEMotion,
-                PowerReference,
-                PowerEMotion,
-                ServoPosition,
-                Accelerometer_y,
-                Temperature);
-        }
-    }
-
-    public class ConsoleReporter : IReporter
-    {
-        DateTime m_lastReport = DateTime.Now;
-
-        public void Report(DataPoint data)
-        {
-            if (data.Timestamp > m_lastReport)
-            {
-                Console.WriteLine(data);
-                m_lastReport = data.Timestamp;
-            }
         }
     }
 }
