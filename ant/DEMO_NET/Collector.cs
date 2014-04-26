@@ -1,16 +1,19 @@
-﻿using ANT_Managed_Library;
-using System;
-using ANT_Console.Messages;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System;
+using System.Timers;
 
-namespace ANT_Console.Collectors
+namespace ANT_Console
 {
     class Reporter
     {
+        DateTime m_lastReport = DateTime.Now;
+
        public void Report(DataPoint data)
         {
-            Console.WriteLine(data);
+            if (data.Timestamp > m_lastReport)
+            {
+                Console.WriteLine(data);
+                m_lastReport = data.Timestamp;
+            }
         }
     }
 }

@@ -89,18 +89,14 @@ namespace ANT_Console
 
         private static void ConfigureReporter()
         {
-            DateTime m_lastReport = DateTime.Now;
+            Reporter reporter = new Reporter();
 
-            // Create a timer, every second spit out the current values from datapoint.
             Timer timer = new Timer(1000);
             timer.Elapsed += (o, e) =>
             {
-                if (m_data.Timestamp > m_lastReport)
-                {
-                    Console.WriteLine(m_data);
-                    m_lastReport = m_data.Timestamp;
-                }
+                reporter.Report(m_data);
             };
+
             timer.Start();
         }
 
