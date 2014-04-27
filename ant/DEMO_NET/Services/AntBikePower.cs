@@ -23,6 +23,8 @@ namespace ANT_Console.Services
         byte m_sequence;
         short m_wheelSizeMM = 2107;
         TorqueMessage m_lastTorqueMessage;
+        byte m_hw_major;
+        byte m_hw_minor;
 
         /*
          * Events
@@ -56,6 +58,9 @@ namespace ANT_Console.Services
             get { return m_wheelSizeMM;  }
             set { m_wheelSizeMM = value;  }
         }
+
+        public byte FirmwareVerMajor { get { return m_hw_major;  } }
+        public byte FirmwareVerMinor { get { return m_hw_minor; } }
 
         /*
          *  Commands
@@ -175,6 +180,9 @@ namespace ANT_Console.Services
                     if (ExtraInfoEvent != null)
                         ExtraInfoEvent(new ExtraInfoMessage(response));
                     break;
+                case ProductPage.Page:
+                    ProcessMessage(new ProductPage(response));
+                    break;
                 default:
                     break;
             }
@@ -193,6 +201,15 @@ namespace ANT_Console.Services
 
             if (TorqueEvent != null)
                 TorqueEvent(message);
+        }
+
+        protected virtual void ProcessMessage(ProductPage message)
+        {
+            if (m_hw_major == 0)
+            {
+                m_hw_major = message.SoftwareRevMajor;
+                m_hw_minor = message.SoftwareRevMinor;
+            }
         }
 
         // Calculate speed & power.
