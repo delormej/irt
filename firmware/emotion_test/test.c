@@ -18,6 +18,10 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #define MIN_RESISTANCE_LEVEL	1500					// Minimum by which there is no longer resistance.
 #define	MATH_PI			3.14159265358979f
 
+#define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
+#define LOW_BYTE(word)               		(uint8_t)(word & 0x00FFu)                   /**< Get low byte of a uint16_t. */
+
+
 static const uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = {
 	2107, // 0 - no resistance
 	1300,
@@ -137,6 +141,21 @@ static uint16_t calc_torque(int16_t watts, uint16_t period_seconds_2048)
 
 int main(int argc, char *argv [])
 {
+	uint8_t mode;
+	uint16_t level;
+	uint8_t output;
+
+	mode = 0x42 - 64u;
+	level = 190;
+
+	output = HIGH_BYTE(level);
+	output |= mode << 6;
+
+	printf("mode: %i\n", mode);
+	printf("MSB: %i\n", output);
+	printf("LSB: %i\n", LOW_BYTE(level));
+
+	/*
 	uint16_t position;
 	uint16_t torque;
 	float weight_kg;

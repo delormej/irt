@@ -306,7 +306,20 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Set current resistance state.
 	p_power_meas_current->resistance_mode = m_resistance_mode;
-	p_power_meas_current->resistance_level = m_resistance_level;
+
+	switch (m_resistance_mode)
+	{
+		case RESISTANCE_SET_STANDARD:
+			p_power_meas_current->resistance_level = m_resistance_level;
+			break;
+		case RESISTANCE_SET_ERG:
+		case RESISTANCE_SET_SIM:
+			p_power_meas_current->resistance_level = (uint16_t)(m_sim_forces.erg_watts);
+			break;
+		default:
+			break;
+	}
+
 	p_power_meas_current->servo_position = m_servo_pos;
 
 	// Get current temperature.
