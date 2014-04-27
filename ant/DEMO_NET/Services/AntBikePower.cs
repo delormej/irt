@@ -141,7 +141,7 @@ namespace ANT_Console.Services
         bool SendCommand(Command command, byte[] value)
         {
             byte[] data = ResistanceMessage.GetCommand(
-                (byte)Command.SetWeight, m_sequence++, value);
+                (byte)command, m_sequence++, value);
 
             ANT_ReferenceLibrary.MessagingReturnCode ret = m_channel.sendAcknowledgedData(data, 500);
 
