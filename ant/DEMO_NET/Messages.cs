@@ -16,6 +16,8 @@ namespace ANT_Console.Messages
         public ushort ServoPosition;
         public short Accelerometer_y;
         public byte Temperature;
+        public byte Mode;
+        public ushort TargetLevel;
 
         public override string ToString()
         {
@@ -290,6 +292,26 @@ namespace ANT_Console.Messages
                     m_payload[EXTRA_INFO_SERVO_POS_MSB]);
             }
         }
+
+        public ushort Level
+        {
+            get
+            {
+                // Mask out the 2 first bits as they contain mode.
+                byte msb = m_payload[EXTRA_INFO_ACCEL_MSB];
+                return BigEndian(m_payload[EXTRA_INFO_ACCEL_LSB], (byte)(msb & 0x3F));
+            }
+        }
+
+        public byte Mode
+        {
+            get
+            {
+                byte mode = m_payload[EXTRA_INFO_ACCEL_MSB];
+                return (byte)((mode >> 6) + 0x40);
+            }
+        }
+
         public short Accelerometer_y
         {
             get

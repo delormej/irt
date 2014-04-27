@@ -132,7 +132,9 @@ namespace ANT_Console
             m_data.Timestamp = m.Source.timeReceived;
             m_data.ServoPosition = m.ServoPosition;
             m_data.Temperature = m.Temperature;
-            m_data.Accelerometer_y = m.Accelerometer_y;
+            //m_data.Accelerometer_y = m.Accelerometer_y;
+            m_data.TargetLevel = m.Level;
+            m_data.Mode = m.Mode;
         }
 
         /// <summary>

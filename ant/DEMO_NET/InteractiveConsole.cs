@@ -88,7 +88,7 @@ namespace ANT_Console
             if (m_inCommand)
                 return;
 
-            string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0}";
+            string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5}:{6}";
 
             // Leave 2 rows at the bottom for command.
             int lastLine = Console.CursorTop;
@@ -126,7 +126,9 @@ namespace ANT_Console
                 data.SpeedEMotion,
                 data.PowerEMotion,
                 data.PowerReference,
-                data.ServoPosition);
+                data.ServoPosition,
+                data.Mode == 0x41 ? "S" : data.Mode == 0x42 ? "E" : "",
+                data.TargetLevel);
         }
 
         void ShowHelp()
