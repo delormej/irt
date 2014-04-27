@@ -145,13 +145,15 @@ int main(int argc, char *argv [])
 	uint16_t level;
 	uint8_t output;
 
-	mode = 0x43 - 64u;
-	level = 350;
+	mode = 0x42 - 64u;
+	level = 190;
 
 	output = HIGH_BYTE(level);
 	output |= mode << 6;
 
-	printf("output: %i\n", output);
+	printf("mode: %i\n", mode);
+	printf("MSB: %i\n", output);
+	printf("LSB: %i\n", LOW_BYTE(level));
 
 	/*
 	uint16_t position;
