@@ -97,6 +97,7 @@ namespace ANT_Console
                      m_data.PowerEMotion = m.Watts;
                      break;
                 case AntChannel.RefPower:
+                     m_data.Timestamp = m.Source.timeReceived;
                      m_data.PowerReference = m.Watts;
                      break;
                 default:
@@ -129,12 +130,11 @@ namespace ANT_Console
         /// <param name="m"></param>
         private void ProcessMessage(ExtraInfoMessage m)
         {
-            m_data.Timestamp = m.Source.timeReceived;
             m_data.ServoPosition = m.ServoPosition;
             m_data.Temperature = m.Temperature;
             //m_data.Accelerometer_y = m.Accelerometer_y;
             m_data.TargetLevel = m.Level;
-            m_data.Mode = m.Mode;
+            m_data.ResistanceMode = m.Mode;
         }
 
         /// <summary>
@@ -144,7 +144,8 @@ namespace ANT_Console
         /// <param name="m"></param>
         private void ProcessMessage(ResistanceMessage m)
         {
-            //
+            m_data.TargetLevel = m.Level;
+            m_data.ResistanceMode = m.Mode;
         }
     }
 }

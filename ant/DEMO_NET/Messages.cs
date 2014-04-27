@@ -16,7 +16,7 @@ namespace ANT_Console.Messages
         public ushort ServoPosition;
         public short Accelerometer_y;
         public byte Temperature;
-        public byte Mode;
+        public byte ResistanceMode;
         public ushort TargetLevel;
 
         public override string ToString()

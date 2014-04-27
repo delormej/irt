@@ -127,7 +127,7 @@ namespace ANT_Console
                 data.PowerEMotion,
                 data.PowerReference,
                 data.ServoPosition,
-                data.Mode == 0x41 ? "S" : data.Mode == 0x42 ? "E" : "",
+                data.ResistanceMode == 0x41 ? "S" : data.ResistanceMode == 0x42 ? "E" : "",
                 data.TargetLevel);
         }
 
