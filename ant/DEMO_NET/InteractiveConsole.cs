@@ -69,6 +69,12 @@ namespace ANT_Console
                         WriteCommand("Exiting...");
                         break;
 
+                    case ConsoleKey.V:
+                        WriteCommand(string.Format("Firmware version: {0}.{1}", 
+                            m_eMotion.FirmwareVerMajor, 
+                            m_eMotion.FirmwareVerMinor));
+                        break;
+
                     default:
                         WriteCommand("Unrecognized command.");
                         ShowHelp();
@@ -138,6 +144,7 @@ namespace ANT_Console
                 "S [Send Select Command]\n" +
                 "M [Move Servo to position X]\n" +
                 "F [Enable Device Firmware Update Mode]\n" +
+                "V [Display Firmware Version]\n" +
                 "X [Exit]");
 
             Console.ForegroundColor = color;
