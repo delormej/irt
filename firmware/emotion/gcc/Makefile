@@ -67,3 +67,4 @@ include $(TEMPLATE_PATH)Makefile
 
 deploy:
 	cp $(BIN) $(DEPLOY_DIR)$(OUTPUT_NAME).bin
+	cp $(HEX) $(DEPLOY_DIR)$(OUTPUT_NAME).hex
