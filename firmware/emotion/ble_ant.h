@@ -36,8 +36,8 @@ static const uint8_t ant_product_page[TX_BUFFER_SIZE] =
 {
 	ANT_COMMON_PAGE_81,
 	BP_PAGE_RESERVE_BYTE,
-	BP_PAGE_RESERVE_BYTE,
-	SW_REVISION,
+	SW_REVISION_MIN,
+	SW_REVISION_MAJ,
 	(uint8_t)(SERIAL_NUMBER),
 	(uint8_t)(SERIAL_NUMBER >> 8u),
 	(uint8_t)(SERIAL_NUMBER >> 16u),

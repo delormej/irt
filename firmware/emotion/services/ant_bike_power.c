@@ -26,8 +26,8 @@
 #define EXTRA_INFO_FLYWHEEL_REVS		1u
 #define EXTRA_INFO_SERVO_POS_LSB		2u
 #define EXTRA_INFO_SERVO_POS_MSB		3u
-#define EXTRA_INFO_ACCEL_LSB			4u
-#define EXTRA_INFO_ACCEL_MSB			5u
+#define EXTRA_INFO_TARGET_LSB			4u
+#define EXTRA_INFO_TARGET_MSB			5u
 #define EXTRA_INFO_TEMP					6u
 
 // Standard Wheel Torque Main Data Page (0x11)
@@ -156,6 +156,26 @@ static uint32_t power_transmit(uint16_t watts)
 	return broadcast_message_transmit(m_power_tx_buffer);
 }
 
+// Encodes the resistance mode into the 2 most significant bits.
+static uint8_t encode_resistance_level(irt_power_meas_t * p_power_meas)
+{
+	uint8_t target_msb;
+	uint8_t mode;
+
+	// Subtract 64 (0x40) from mode to use only 2 bits.
+	// Modes only go from 0x40 - 0x45 or so.
+	mode = p_power_meas->resistance_mode - 64u;
+
+	// Grab the most significant bits of the resistance level.
+	target_msb = HIGH_BYTE(p_power_meas->resistance_level);
+
+	// Use the 2 most significant bits for the mode and stuff them in the
+	// highest 2 bits.  Level should never need to use these 2 bits.
+	target_msb |= mode << 6;
+
+	return target_msb;
+}
+
 // Transmits extra info embedded in the power measurement.
 // TODO: Need a formal message/methodology for this.
 static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
@@ -166,8 +186,8 @@ static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 	buffer[EXTRA_INFO_FLYWHEEL_REVS]	= (uint8_t)(p_power_meas->accum_flywheel_revs);
 	buffer[EXTRA_INFO_SERVO_POS_LSB]	= LOW_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_SERVO_POS_MSB]	= HIGH_BYTE(p_power_meas->servo_position);
-	buffer[EXTRA_INFO_ACCEL_LSB]		= p_power_meas->accel_y_lsb;
-	buffer[EXTRA_INFO_ACCEL_MSB]		= p_power_meas->accel_y_msb;
+	buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
+	buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
 	buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
 	buffer[7]							= 0xFF;
 

@@ -16,6 +16,8 @@ namespace ANT_Console.Messages
         public ushort ServoPosition;
         public short Accelerometer_y;
         public byte Temperature;
+        public byte ResistanceMode;
+        public ushort TargetLevel;
 
         public override string ToString()
         {
@@ -207,6 +209,63 @@ namespace ANT_Console.Messages
         }
     }
 
+    public class ManufacturerPage : Message
+    {
+        public const byte Page = 0x50;
+
+        const byte HW_REV_INDEX = 3;
+        const byte MANUFACTUR_LSB_INDEX = 4;
+        const byte MANUFACTUR_MSB_INDEX = 5;
+        const byte MODEL_LSB_INDEX = 6;
+        const byte MODEL_MSB_INDEX = 7;
+
+        internal ManufacturerPage(ANT_Response response) : base(response) { }
+
+        public byte HardwareRevision { get { return m_payload[HW_REV_INDEX];  } }
+
+        public ushort Manufacturer
+        {
+            get 
+            { 
+                return BigEndian(m_payload[MANUFACTUR_LSB_INDEX], m_payload[MANUFACTUR_MSB_INDEX]); 
+            }
+        }
+
+        public ushort Model { get { return BigEndian(m_payload[MODEL_LSB_INDEX], m_payload[MODEL_MSB_INDEX]); } }
+    }
+
+    public class ProductPage : Message
+    {
+        public const byte Page = 0x51;
+
+        const byte SW_REV_SUP_INDEX = 2;
+        const byte SW_REV_MAIN_INDEX = 3;
+        const byte SERIAL1_INDEX = 4;
+        const byte SERIAL2_INDEX = 5;
+        const byte SERIAL3_INDEX = 6;
+        const byte SERIAL4_INDEX = 7;
+
+        internal ProductPage(ANT_Response response) : base(response) { }
+
+        public byte SoftwareRevMajor { get { return m_payload[SW_REV_MAIN_INDEX]; } }
+
+        public byte SoftwareRevMinor { get { return m_payload[SW_REV_SUP_INDEX]; } }
+    }
+
+    public class BatteryStatus : Message
+    {
+        public const byte Page = 0x52;
+
+        const byte BATT_ID_INDEX = 2;
+        const byte OP_TIME1_INDEX = 3;
+        const byte OP_TIME2_INDEX = 4;
+        const byte OP_TIME3_INDEX = 5;
+        const byte BATT_VOLT_INDEX = 6;
+        const byte DESC_BIT_INDEX = 7;
+
+        internal BatteryStatus(ANT_Response response) : base(response) { }
+    }
+
     public class ExtraInfoMessage : Message
     {
         public const byte Page = 0x24;
@@ -233,6 +292,26 @@ namespace ANT_Console.Messages
                     m_payload[EXTRA_INFO_SERVO_POS_MSB]);
             }
         }
+
+        public ushort Level
+        {
+            get
+            {
+                // Mask out the 2 first bits as they contain mode.
+                byte msb = m_payload[EXTRA_INFO_ACCEL_MSB];
+                return BigEndian(m_payload[EXTRA_INFO_ACCEL_LSB], (byte)(msb & 0x3F));
+            }
+        }
+
+        public byte Mode
+        {
+            get
+            {
+                byte mode = m_payload[EXTRA_INFO_ACCEL_MSB];
+                return (byte)((mode >> 6) + 0x40);
+            }
+        }
+
         public short Accelerometer_y
         {
             get

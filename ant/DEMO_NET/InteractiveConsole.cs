@@ -69,6 +69,12 @@ namespace ANT_Console
                         WriteCommand("Exiting...");
                         break;
 
+                    case ConsoleKey.V:
+                        WriteCommand(string.Format("Firmware version: {0}.{1}", 
+                            m_eMotion.FirmwareVerMajor, 
+                            m_eMotion.FirmwareVerMinor));
+                        break;
+
                     default:
                         WriteCommand("Unrecognized command.");
                         ShowHelp();
@@ -82,7 +88,7 @@ namespace ANT_Console
             if (m_inCommand)
                 return;
 
-            string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0}";
+            string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5}:{6}";
 
             // Leave 2 rows at the bottom for command.
             int lastLine = Console.CursorTop;
@@ -120,7 +126,9 @@ namespace ANT_Console
                 data.SpeedEMotion,
                 data.PowerEMotion,
                 data.PowerReference,
-                data.ServoPosition);
+                data.ServoPosition,
+                data.ResistanceMode == 0x41 ? "S" : data.ResistanceMode == 0x42 ? "E" : "",
+                data.TargetLevel);
         }
 
         void ShowHelp()
@@ -138,6 +146,7 @@ namespace ANT_Console
                 "S [Send Select Command]\n" +
                 "M [Move Servo to position X]\n" +
                 "F [Enable Device Firmware Update Mode]\n" +
+                "V [Display Firmware Version]\n" +
                 "X [Exit]");
 
             Console.ForegroundColor = color;
