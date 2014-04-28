@@ -51,7 +51,7 @@ CFLAGS += -DUART
 # Define the Software Revision.
 ############################################
 CFLAGS += -DSW_REVISION_MAJ=0x07
-CFLAGS += -DSW_REVISION_MIN=0x02
+CFLAGS += -DSW_REVISION_MIN=0x03
 
 ############################################
 # Define the device ID.  
