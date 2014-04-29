@@ -36,7 +36,7 @@ TEMPLATE_PATH = ../../gcc/
 # Enable optimizing for file size.
 CFLAGS = -Os
 CFLAGS += -DLOOPBACK
-CFLAGS += -DBLE_NUS_ENABLED
+#CFLAGS += -DBLE_NUS_ENABLED
 
 ############################################
 # For debugging purposes

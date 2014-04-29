@@ -130,40 +130,37 @@ static void advertising_init(void)
 {
     uint32_t      err_code;
     ble_advdata_t advdata;
-		ble_advdata_t scanrsp;
     uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
     
     ble_uuid_t adv_uuids[] = 
     {
-        {BLE_UUID_DEVICE_INFORMATION_SERVICE, 	BLE_UUID_TYPE_BLE},
-		{BLE_UUID_CYCLING_POWER_SERVICE, 		BLE_UUID_TYPE_BLE}
+		{BLE_UUID_CYCLING_POWER_SERVICE, 		BLE_UUID_TYPE_BLE},
 #if defined(BLE_NUS_ENABLED)
-		,{BLE_UUID_NUS_SERVICE, 				m_nus.uuid_type}
+		{BLE_UUID_NUS_SERVICE, 				m_nus.uuid_type},
 #endif
+		{BLE_UUID_DEVICE_INFORMATION_SERVICE, 	BLE_UUID_TYPE_BLE}
     };
 
     // Build and set advertising data
     memset(&advdata, 0, sizeof(advdata));
-    
     advdata.name_type               = BLE_ADVDATA_FULL_NAME;
-    advdata.include_appearance      = true;
+    advdata.include_appearance      = false;
     advdata.flags.size              = sizeof(flags);
     advdata.flags.p_data            = &flags;
+    // Show just the CYCLING_POWER_SERVICE in ServicesMoreAvailable (like the KICKR).
+    advdata.uuids_more_available.uuid_cnt = 1;
+    advdata.uuids_more_available.p_uuids = adv_uuids;
 
-    memset(&scanrsp, 0, sizeof(scanrsp));
-    scanrsp.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
-    scanrsp.uuids_complete.p_uuids  = adv_uuids;
-    
-    err_code = ble_advdata_set(&advdata, &scanrsp);
+    err_code = ble_advdata_set(&advdata, NULL);
     APP_ERROR_CHECK(err_code);
 }
 
 static void ble_dis_service_init()
 {
-		uint32_t       err_code;
-		ble_dis_init_t dis_init;
-    
-		// Initialize Device Information Service
+	uint32_t       err_code;
+	ble_dis_init_t dis_init;
+
+	// Initialize Device Information Service
     memset(&dis_init, 0, sizeof(dis_init));
     
     ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, MANUFACTURER_NAME);

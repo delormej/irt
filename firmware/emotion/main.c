@@ -86,8 +86,15 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
 #ifdef UART
-	simple_uart_putstring((const uint8_t *)" \n\rERROR in: ");
-	simple_uart_putstring(p_file_name);
+	static const char format[] = "ERR {%i}: %s:%i";
+	char message[128];
+	memset(&message, 0, sizeof(message));
+	sprintf(message, format,
+			error_code,
+			p_file_name,
+			line_num);
+
+	simple_uart_putstring(message);
 #endif
 
     // TODO: HACK temporarily IGNORE this message.  
