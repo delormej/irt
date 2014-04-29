@@ -144,41 +144,41 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
  */
 static uint32_t resistance_control_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 {
-    uint32_t						err_code;
-		ble_gatts_char_md_t char_md;
-    ble_gatts_attr_t    attr_char_value;
-    ble_uuid_t        	ble_uuid;
-    ble_gatts_attr_md_t attr_md;
-		
-		memset(&char_md, 0, sizeof(char_md));
-		
-		char_md.char_props.write = 1;
-		char_md.char_props.indicate = 1;
+	uint32_t						err_code;
+	ble_gatts_char_md_t char_md;
+	ble_gatts_attr_t    attr_char_value;
+	ble_uuid_t        	ble_uuid;
+	ble_gatts_attr_md_t attr_md;
+
+	memset(&char_md, 0, sizeof(char_md));
+
+	char_md.char_props.write = 1;
+	char_md.char_props.indicate = 1;
     char_md.p_char_user_desc = NULL;
     char_md.p_char_pf        = NULL;
     char_md.p_user_desc_md   = NULL;
     char_md.p_cccd_md        = NULL;
     char_md.p_sccd_md        = NULL;		
 
-		// 
-		// Set vendor specific UUID (A026E005-0A75-4AB3-97FA-F1500F9FEB8B)
-		//
-		const ble_uuid128_t WAHOO_UUID = { 0x8B, 0xEB, 0x9F, 0x0F, 0x50, 0xF1, 0xFA, 0x97, 0xB3, 0x4A, 0x7D, 0x0A, 0x00, 0x00, 0x26, 0xA0 };
-		const uint16_t WAHOO_CHAR = 0xE005;
-		uint8_t uuid_type = BLE_UUID_TYPE_VENDOR_BEGIN;
-		memset(&uuid_type, 0, sizeof(uuid_type));
-	
-		err_code = sd_ble_uuid_vs_add(&WAHOO_UUID, &uuid_type);
-		if (err_code != NRF_SUCCESS)
-		{
-			APP_ERROR_HANDLER(err_code);
-		}
+	//
+	// Set vendor specific UUID (A026E005-0A75-4AB3-97FA-F1500F9FEB8B)
+	//
+	const ble_uuid128_t WAHOO_UUID = { 0x8B, 0xEB, 0x9F, 0x0F, 0x50, 0xF1, 0xFA, 0x97, 0xB3, 0x4A, 0x7D, 0x0A, 0x00, 0x00, 0x26, 0xA0 };
+	const uint16_t WAHOO_CHAR = 0xE005;
+	uint8_t uuid_type = BLE_UUID_TYPE_VENDOR_BEGIN;
+	memset(&uuid_type, 0, sizeof(uuid_type));
 
-		ble_uuid.type = uuid_type;
-		ble_uuid.uuid = WAHOO_CHAR;
+	err_code = sd_ble_uuid_vs_add(&WAHOO_UUID, &uuid_type);
+	if (err_code != NRF_SUCCESS)
+	{
+		APP_ERROR_HANDLER(err_code);
+	}
 
-		// Set attribute metadata.
-		BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
+	ble_uuid.type = uuid_type;
+	ble_uuid.uuid = WAHOO_CHAR;
+
+	// Set attribute metadata.
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
     attr_md.vloc       = BLE_GATTS_VLOC_STACK;
     attr_md.rd_auth    = 0;
