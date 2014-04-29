@@ -144,7 +144,7 @@ static void advertising_init(void)
     // Build and set advertising data
     memset(&advdata, 0, sizeof(advdata));
     advdata.name_type               = BLE_ADVDATA_FULL_NAME;
-    advdata.include_appearance      = false;
+    advdata.include_appearance      = true;
     advdata.flags.size              = sizeof(flags);
     advdata.flags.p_data            = &flags;
     // Show just the CYCLING_POWER_SERVICE in ServicesMoreAvailable (like the KICKR).
@@ -503,7 +503,7 @@ void ble_advertising_start(void)
 	adv_params.p_peer_addr = NULL;						// Undirected advertisement
 	adv_params.fp = BLE_GAP_ADV_FP_ANY;
 	adv_params.interval = APP_ADV_INTERVAL;
-	adv_params.timeout = APP_ADV_TIMEOUT_IN_SECONDS;
+	adv_params.timeout = BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED; // APP_ADV_TIMEOUT_IN_SECONDS;
 
 	err_code = sd_ble_gap_adv_start(&adv_params);
 	APP_ERROR_CHECK(err_code);
