@@ -108,9 +108,9 @@ typedef struct
 	bool                         use_cycling_power_control_point;                     /**< Determines if cycling power control point is supported.  This is required if sensor supports wheel revolution data. */
 	bool                         use_cycling_power_vector;
 	uint8_t *                    p_sensor_location;                               		/**< Pointer to initial value of the Sensor Location characteristic. */
-	uint32_t 									 	 feature;																							/**< Bitmask of enabled features. */
-	irt_power_meas_t *						 p_cps_meas;																					/**< Initial cycling power service measurement structure. */
-	rc_evt_handler_t     				 rc_evt_handler;                                  		/**< Event handler to be called for handling resistance control event. */
+	uint32_t 					 feature;																							/**< Bitmask of enabled features. */
+	irt_power_meas_t *			 p_cps_meas;																					/**< Initial cycling power service measurement structure. */
+	rc_evt_handler_t     		 rc_evt_handler;                                  		/**< Event handler to be called for handling resistance control event. */
 	ble_sc_ctrlpt_evt_handler_t  ctrlpt_evt_handler;                    							/**< Control point event handler */
 	ble_srv_error_handler_t      error_handler;                         							/**< Function to be called in case of an error. */
 	ble_srv_security_mode_t      cps_cpf_attr_md;                                     /**< Initial security level for cycling power feature attribute */
@@ -123,17 +123,17 @@ typedef struct
 /**@brief Cycling Power Service structure. This contains various status information for the service. */
 typedef struct ble_cps_s
 {
-	rc_evt_handler_t        		 rc_evt_handler;                                      /**< Event handler to be called for handling events in the Cycling Power Service. */
-	uint16_t                     service_handle;                                      /**< Handle of Cycling Power Service (as provided by the BLE stack). */
-	uint32_t										 feature;																							/**< Bitmask of features enabled. */
-	ble_sc_ctrlpt_t              ctrl_pt;                               							/**< Data for cycling power control point. */
-	ble_gatts_char_handles_t     cpf_handles;                                         /**< Handles related to the Cycling Power Feature characteristic. */
-	ble_gatts_char_handles_t     cpm_handles;                                         /**< Handles related to the Cycling Power Measurement characteristic. */
-	ble_gatts_char_handles_t     sl_handles;                                          /**< Handles related to the Sensor Location characteristic. */
-	ble_gatts_char_handles_t     cpcp_handles;                                        /**< Handles related to the Cycling Power Control Point characteristic. */
-	ble_gatts_char_handles_t     cpv_handles;                                         /**< Handles related to the Cycling Power Vector characteristic. */
-	ble_gatts_char_handles_t     cprc_handles;                                        /**< Handles related to the Cycling Power Resistance Control characteristic. */
-	uint16_t                     conn_handle;                                         /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
+	rc_evt_handler_t        	rc_evt_handler;                                      /**< Event handler to be called for handling events in the Cycling Power Service. */
+	uint16_t                    service_handle;                                      /**< Handle of Cycling Power Service (as provided by the BLE stack). */
+	uint32_t					feature;											 /**< Bitmask of features enabled. */
+	ble_sc_ctrlpt_t             ctrl_pt;                               				 /**< Data for cycling power control point. */
+	ble_gatts_char_handles_t    cpf_handles;                                         /**< Handles related to the Cycling Power Feature characteristic. */
+	ble_gatts_char_handles_t    cpm_handles;                                         /**< Handles related to the Cycling Power Measurement characteristic. */
+	ble_gatts_char_handles_t    sl_handles;                                          /**< Handles related to the Sensor Location characteristic. */
+	ble_gatts_char_handles_t    cpcp_handles;                                        /**< Handles related to the Cycling Power Control Point characteristic. */
+	ble_gatts_char_handles_t    cpv_handles;                                         /**< Handles related to the Cycling Power Vector characteristic. */
+	ble_gatts_char_handles_t    cprc_handles;                                        /**< Handles related to the Cycling Power Resistance Control characteristic. */
+	uint16_t                    conn_handle;                                         /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
 } ble_cps_t;
 
 /**@brief Function for initializing the Cycling Power Service.
