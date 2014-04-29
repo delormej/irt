@@ -134,6 +134,9 @@ typedef struct ble_cps_s
 	ble_gatts_char_handles_t    cpv_handles;                                         /**< Handles related to the Cycling Power Vector characteristic. */
 	ble_gatts_char_handles_t    cprc_handles;                                        /**< Handles related to the Cycling Power Resistance Control characteristic. */
 	uint16_t                    conn_handle;                                         /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
+	uint16_t                    wahoo_svc_handle;                                    // Handle of the UNKNOWN WAHOO service.
+	ble_gatts_char_handles_t	wahoo1_handle;									 	 // Handles for UNKNOWN WAHOO specific char #1.
+	ble_gatts_char_handles_t	wahoo2_handle;									 	 // Handles for UNKNOWN WAHOO specific char #2.
 } ble_cps_t;
 
 /**@brief Function for initializing the Cycling Power Service.

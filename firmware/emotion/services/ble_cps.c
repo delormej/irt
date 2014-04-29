@@ -33,6 +33,9 @@
 // WAHOO specific UUID constants.
 const ble_uuid128_t WAHOO_UUID = { 0x8B, 0xEB, 0x9F, 0x0F, 0x50, 0xF1, 0xFA, 0x97, 0xB3, 0x4A, 0x7D, 0x0A, 0x00, 0x00, 0x26, 0xA0 };
 const uint16_t WAHOO_RESISTANCE_CONTROL_CHAR = 0xE005;
+const uint16_t WAHOO_UNKNOWN_SVC_UUID = 0xEE01;
+const uint16_t WAHOO_UNKNOWN_CHAR_1_UUID = 0xE002;
+const uint16_t WAHOO_UNKNOWN_CHAR_2_UUID = 0xE004;
 
 /**@brief Sets a WAHOO vendor specific UUID in the BLE stack's table.
  *
@@ -164,7 +167,7 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
  */
 static uint32_t resistance_control_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 {
-	uint32_t						err_code;
+	uint32_t			err_code;
 	ble_gatts_char_md_t char_md;
 	ble_gatts_attr_t    attr_char_value;
 	ble_uuid_t        	ble_uuid;
@@ -404,15 +407,112 @@ static uint32_t cycling_power_vector_char_add(ble_cps_t * p_cps, const ble_cps_i
 	return 0;
 }
 
+static void wahoo_unknown1_char_add(ble_cps_t * p_cps)
+{
+	uint32_t			err_code;
+	ble_gatts_char_md_t char_md;
+	ble_gatts_attr_t    attr_char_value;
+	ble_uuid_t        	ble_uuid;
+	ble_gatts_attr_md_t attr_md;
+
+	memset(&char_md, 0, sizeof(char_md));
+
+	char_md.char_props.write_wo_resp = 1;
+	char_md.char_props.notify = 1;
+    char_md.p_char_user_desc = NULL;
+    char_md.p_char_pf        = NULL;
+    char_md.p_user_desc_md   = NULL;
+    char_md.p_cccd_md        = NULL;
+    char_md.p_sccd_md        = NULL;
+
+	ble_uuid.type = BLE_UUID_TYPE_VENDOR_BEGIN;
+	ble_uuid.uuid = WAHOO_UNKNOWN_CHAR_1_UUID;
+
+	// Set attribute metadata.
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
+    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
+    attr_md.rd_auth    = 0;
+    attr_md.wr_auth    = 0;
+    attr_md.vlen       = 1;
+
+    attr_char_value.p_uuid       = &ble_uuid;
+    attr_char_value.p_attr_md    = &attr_md;
+    attr_char_value.init_len     = 0;
+    attr_char_value.init_offs    = 0;
+    attr_char_value.max_len      = 4;
+    attr_char_value.p_value      = NULL;
+
+    return sd_ble_gatts_characteristic_add(p_cps->wahoo_svc_handle,
+                                           &char_md,
+                                           &attr_char_value,
+                                           &p_cps->wahoo1_handle);
+    APP_ERROR_CHECK(err_code);
+}
+
+static void wahoo_unknown2_char_add(ble_cps_t * p_cps)
+{
+	uint32_t			err_code;
+	ble_gatts_char_md_t char_md;
+	ble_gatts_attr_t    attr_char_value;
+	ble_uuid_t        	ble_uuid;
+	ble_gatts_attr_md_t attr_md;
+
+	memset(&char_md, 0, sizeof(char_md));
+
+	char_md.char_props.notify = 1;
+    char_md.p_char_user_desc = NULL;
+    char_md.p_char_pf        = NULL;
+    char_md.p_user_desc_md   = NULL;
+    char_md.p_cccd_md        = NULL;
+    char_md.p_sccd_md        = NULL;
+
+	ble_uuid.type = BLE_UUID_TYPE_VENDOR_BEGIN;
+	ble_uuid.uuid = WAHOO_UNKNOWN_CHAR_2_UUID;
+
+	// Set attribute metadata.
+	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
+    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
+    attr_md.rd_auth    = 0;
+    attr_md.wr_auth    = 0;
+    attr_md.vlen       = 1;
+
+    attr_char_value.p_uuid       = &ble_uuid;
+    attr_char_value.p_attr_md    = &attr_md;
+    attr_char_value.init_len     = 0;
+    attr_char_value.init_offs    = 0;
+    attr_char_value.max_len      = 4;
+    attr_char_value.p_value      = NULL;
+
+    return sd_ble_gatts_characteristic_add(p_cps->wahoo_svc_handle,
+                                           &char_md,
+                                           &attr_char_value,
+                                           &p_cps->wahoo2_handle);
+    APP_ERROR_CHECK(err_code);
+}
+
+/**@brief Adds WAHOO specific BLE service.  Not 100% sure what this is right now.
+ *
+ */
 static void ble_wahoo_svc_init(ble_cps_t * p_cps)
 {
-    /* Add service
-    BLE_UUID_BLE_ASSIGN(ble_uuid, BLE_UUID_CYCLING_POWER_SERVICE);
+    uint32_t   err_code;
+    ble_uuid_t ble_uuid;
+
+    // UUID of the service.
+	ble_uuid.type = BLE_UUID_TYPE_VENDOR_BEGIN;
+	ble_uuid.uuid = WAHOO_UNKNOWN_SVC_UUID;
 
     err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,
-    		&ble_uuid, &p_cps->service_handle);
+    		&ble_uuid, &p_cps->wahoo_svc_handle);
     APP_ERROR_CHECK(err_code);
-	*/
+
+    // Add UNKNOWN characteristic #1
+    wahoo_unknown1_char_add(p_cps);
+
+    // Add UNKNOWN characteristic #2
+    wahoo_unknown2_char_add(p_cps);
 }
 
 
@@ -489,7 +589,8 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
     }
 
     // Add wahoo specific service.
-    ble_wahoo_svc_init(p_cps);
+    // TODO: not sure what these services do yet, so not adding them.
+    //ble_wahoo_svc_init(p_cps);
 
     return NRF_SUCCESS;	
 }
