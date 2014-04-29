@@ -144,6 +144,7 @@ namespace ANT_Console
         /// <param name="m"></param>
         private void ProcessMessage(ResistanceMessage m)
         {
+            m_data.Timestamp = m.Source.timeReceived;
             m_data.TargetLevel = m.Level;
             m_data.ResistanceMode = m.Mode;
         }

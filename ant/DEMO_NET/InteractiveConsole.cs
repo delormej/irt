@@ -88,7 +88,10 @@ namespace ANT_Console
             if (m_inCommand)
                 return;
 
-            string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5}:{6}";
+            if (data.Timestamp <= m_lastReport)
+                return;
+
+            const string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5}:{6}";
 
             // Leave 2 rows at the bottom for command.
             int lastLine = Console.CursorTop;
@@ -117,12 +120,15 @@ namespace ANT_Console
                 }
             }
 
+            // Record last reporting.
+            m_lastReport = data.Timestamp;
+
             // Position the cursor at the bottom of the screen to write the command line.
             Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
             Console.Write("<enter cmd>");
             Console.SetCursorPosition(Console.WindowLeft, lastLine);
             Console.WriteLine(format,
-                DateTime.Now,
+                data.Timestamp,
                 data.SpeedEMotion,
                 data.PowerEMotion,
                 data.PowerReference,
