@@ -339,6 +339,8 @@ static void on_ant_evt(ant_evt_t * p_ant_evt)
  */
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
+	uint32_t err_code;
+
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
