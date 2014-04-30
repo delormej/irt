@@ -364,11 +364,6 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             { 
                 m_is_advertising = false;
                 mp_ant_ble_evt_handlers->on_ble_timeout();
-                
-                /* Go to system-off mode (this function will not return; wakeup will cause a reset)
-                // Don't power off here - we'll do it when there is no motion/activity not here.
-                err_code = sd_power_system_off();
-                APP_ERROR_CHECK(err_code); */
             }
             break;
             
