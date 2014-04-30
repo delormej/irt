@@ -49,7 +49,7 @@
 #define MAX_CONN_PARAMS_UPDATE_COUNT    3                                            /**< Number of attempts before giving up the connection parameter negotiation. */
 
 #define SEC_PARAM_TIMEOUT               30                                           /**< Timeout for Pairing Request or Security Request (in seconds). */
-#define SEC_PARAM_BOND                  1                                            /**< Perform bonding. */
+#define SEC_PARAM_BOND                  0                                            /**< Perform bonding. */
 #define SEC_PARAM_MITM                  0                                            /**< Man In The Middle protection not required. */
 #define SEC_PARAM_IO_CAPABILITIES       BLE_GAP_IO_CAPS_NONE                         /**< No I/O capabilities. */
 #define SEC_PARAM_OOB                   0                                            /**< Out Of Band data not available. */
@@ -163,7 +163,7 @@ static void ble_dis_service_init()
 	// Initialize Device Information Service
     memset(&dis_init, 0, sizeof(dis_init));
     
-    ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, MANUFACTURER_NAME);
+    ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, (char *)MANUFACTURER_NAME);
 
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&dis_init.dis_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&dis_init.dis_attr_md.write_perm);
@@ -370,6 +370,11 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             }
             break;
             
+        case BLE_GATTS_EVT_SYS_ATTR_MISSING:
+            err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
+            APP_ERROR_CHECK(err_code);
+            break;
+
         default:
             break;
     }
