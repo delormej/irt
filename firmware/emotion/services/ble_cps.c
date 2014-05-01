@@ -4,6 +4,7 @@
 #include "ble_l2cap.h"
 #include "ble_srv_common.h"
 #include "app_util.h"
+#include "simple_uart.h"
 
 // https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
 #define BLE_UUID_SENSOR_LOCATION_CHAR							0x2A5D 		/**< Sensor Location UUID.  */
@@ -36,6 +37,9 @@ const uint16_t WAHOO_RESISTANCE_CONTROL_CHAR = 0xE005;
 const uint16_t WAHOO_UNKNOWN_SVC_UUID = 0xEE01;
 const uint16_t WAHOO_UNKNOWN_CHAR_1_UUID = 0xE002;
 const uint16_t WAHOO_UNKNOWN_CHAR_2_UUID = 0xE004;
+
+// Declaration of function for wahoo unknown service.
+uint32_t ble_cps_wahoo1_notify_send(ble_cps_t * p_cps);
 
 /**@brief Sets a WAHOO vendor specific UUID in the BLE stack's table.
  *
@@ -84,6 +88,8 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 
 	if (p_evt_write->handle == p_cps->cprc_handles.value_handle)
 	{
+		// Wahoo specific resistance control characteristic
+
 		rc_evt_t evt;
 		memset(&evt, 0, sizeof(evt));
 		evt.operation = (resistance_mode_t)p_evt_write->data[0];
@@ -94,6 +100,39 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 		{
 			p_cps->rc_evt_handler(evt);
 		}
+	}
+	else if (p_evt_write->handle == p_cps->cpcp_handles.value_handle)
+	{
+		// Cycling Power Control Point
+		//p_evt_write
+#ifdef UART
+	/*static const char format[] = "Got CPCP Write";
+	char message[128];
+	memset(&message, 0, sizeof(message));
+	sprintf(message, format,
+			error_code,
+			p_file_name,
+			line_num);
+	 */
+	simple_uart_putstring((const char*)"Got CPCP Write\r\n\0");
+#endif
+	}
+	else if (p_evt_write->handle == p_cps->wahoo1_handle.value_handle)
+	{
+		// Wahoo unknown value handle, just try blindly responding.
+		ble_cps_wahoo1_notify_send(p_cps);
+
+#ifdef UART
+		static const char format[] = "Got WAHOO1 Write, op: {%i}, len: {%i}, data: {%02X}\r\n";
+		char message[64];
+		memset(&message, 0, sizeof(message));
+		sprintf(message, format,
+				p_evt_write->op,
+				p_evt_write->len,
+				p_evt_write->data[0]);
+
+		simple_uart_putstring(message);
+#endif
 	}
 }
 
@@ -443,7 +482,7 @@ static void wahoo_unknown1_char_add(ble_cps_t * p_cps)
     attr_char_value.max_len      = 4;
     attr_char_value.p_value      = NULL;
 
-    return sd_ble_gatts_characteristic_add(p_cps->wahoo_svc_handle,
+    return sd_ble_gatts_characteristic_add(p_cps->conn_handle,
                                            &char_md,
                                            &attr_char_value,
                                            &p_cps->wahoo1_handle);
@@ -485,7 +524,7 @@ static void wahoo_unknown2_char_add(ble_cps_t * p_cps)
     attr_char_value.max_len      = 4;
     attr_char_value.p_value      = NULL;
 
-    return sd_ble_gatts_characteristic_add(p_cps->wahoo_svc_handle,
+    return sd_ble_gatts_characteristic_add(p_cps->conn_handle,
                                            &char_md,
                                            &attr_char_value,
                                            &p_cps->wahoo2_handle);
@@ -505,7 +544,7 @@ static void ble_wahoo_svc_init(ble_cps_t * p_cps)
 	ble_uuid.uuid = WAHOO_UNKNOWN_SVC_UUID;
 
     err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,
-    		&ble_uuid, &p_cps->wahoo_svc_handle);
+    		&ble_uuid, &p_cps->conn_handle);
     APP_ERROR_CHECK(err_code);
 
     // Add UNKNOWN characteristic #1
@@ -588,11 +627,45 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
         APP_ERROR_CHECK(err_code);
     }
 
-    // Add wahoo specific service.
-    // TODO: not sure what these services do yet, so not adding them.
+    // Add Wahoo specific service.
+    // TODO: not sure what this service does yet.
     //ble_wahoo_svc_init(p_cps);
 
     return NRF_SUCCESS;	
+}
+
+//
+// I don't know what this does, but I'm trying to send a notification back
+// in response to the wahoo1 unknown write.
+//
+uint32_t ble_cps_wahoo1_notify_send(ble_cps_t * p_cps)
+{
+	uint32_t err_code;
+	uint16_t len;
+	uint16_t hvx_len;
+	// 01-xx-08 where xx is the first byte of data that was sent.
+	uint8_t data[3] = { 0x01, 0x20, 0x08 };
+	ble_gatts_hvx_params_t hvx_params;
+
+	if (p_cps->conn_handle != BLE_CONN_HANDLE_INVALID)
+	{
+		memset(&hvx_params, 0, sizeof(hvx_params));
+		len = 3; // TODO: dummy hardcoding for now.
+		hvx_len = len;
+
+		hvx_params.handle = p_cps->wahoo1_handle.value_handle;
+		hvx_params.type   = BLE_GATT_HVX_INDICATION;
+		hvx_params.offset = 0;
+		hvx_params.p_len  = &hvx_len;
+		hvx_params.p_data = data;
+
+		err_code = sd_ble_gatts_hvx(p_cps->conn_handle, &hvx_params);
+		// Tends to return invalid state
+        if ((err_code == NRF_SUCCESS) && (hvx_len != len))
+        {
+            err_code = NRF_ERROR_DATA_SIZE;
+        }
+	}
 }
 
 uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_meas_t * p_cps_meas)
