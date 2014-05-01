@@ -199,7 +199,7 @@ static void ble_cps_service_init()
 	memset(&cps_init, 0, sizeof(cps_init));
 
 	cps_init.p_sensor_location = &sensor_location;
-	cps_init.feature = BLE_CPS_FEATURE_WHEEL_REV_BIT; /*BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT | */
+	cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT | BLE_CPS_FEATURE_WHEEL_REV_BIT;
 	cps_init.use_cycling_power_control_point = false;
 
 	cps_init.rc_evt_handler = mp_ant_ble_evt_handlers->on_set_resistance;
