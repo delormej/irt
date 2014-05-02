@@ -34,9 +34,9 @@
 // WAHOO specific UUID constants.
 const ble_uuid128_t WAHOO_UUID = { 0x8B, 0xEB, 0x9F, 0x0F, 0x50, 0xF1, 0xFA, 0x97, 0xB3, 0x4A, 0x7D, 0x0A, 0x00, 0x00, 0x26, 0xA0 };
 const uint16_t WAHOO_RESISTANCE_CONTROL_CHAR = 0xE005;
-const uint16_t WAHOO_UNKNOWN_SVC_UUID = 0xEE01;
-const uint16_t WAHOO_UNKNOWN_CHAR_1_UUID = 0xE002;
-const uint16_t WAHOO_UNKNOWN_CHAR_2_UUID = 0xE004;
+const uint16_t WAHOO_DFU_SVC_UUID = 0xEE01;
+const uint16_t WAHOO_DFU_CHAR_1_UUID = 0xE002;
+const uint16_t WAHOO_DFU_CHAR_2_UUID = 0xE004;
 
 // Declaration of function for wahoo unknown service.
 uint32_t ble_cps_wahoo1_notify_send(ble_cps_t * p_cps);
@@ -89,7 +89,6 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 	if (p_evt_write->handle == p_cps->cprc_handles.value_handle)
 	{
 		// Wahoo specific resistance control characteristic
-
 		rc_evt_t evt;
 		memset(&evt, 0, sizeof(evt));
 		evt.operation = (resistance_mode_t)p_evt_write->data[0];
@@ -120,7 +119,7 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 	else if (p_evt_write->handle == p_cps->wahoo1_handle.value_handle)
 	{
 		// Wahoo unknown value handle, just try blindly responding.
-		ble_cps_wahoo1_notify_send(p_cps);
+		//ble_cps_wahoo1_notify_send(p_cps);
 
 #ifdef UART
 		static const char format[] = "Got WAHOO1 Write, op: {%i}, len: {%i}, data: {%02X}\r\n";
@@ -465,7 +464,7 @@ static void wahoo_unknown1_char_add(ble_cps_t * p_cps)
     char_md.p_sccd_md        = NULL;
 
 	ble_uuid.type = BLE_UUID_TYPE_VENDOR_BEGIN;
-	ble_uuid.uuid = WAHOO_UNKNOWN_CHAR_1_UUID;
+	ble_uuid.uuid = WAHOO_DFU_CHAR_1_UUID;
 
 	// Set attribute metadata.
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
@@ -482,7 +481,7 @@ static void wahoo_unknown1_char_add(ble_cps_t * p_cps)
     attr_char_value.max_len      = 4;
     attr_char_value.p_value      = NULL;
 
-    return sd_ble_gatts_characteristic_add(p_cps->conn_handle,
+    return sd_ble_gatts_characteristic_add(p_cps->wahoo_svc_handle,
                                            &char_md,
                                            &attr_char_value,
                                            &p_cps->wahoo1_handle);
@@ -507,7 +506,7 @@ static void wahoo_unknown2_char_add(ble_cps_t * p_cps)
     char_md.p_sccd_md        = NULL;
 
 	ble_uuid.type = BLE_UUID_TYPE_VENDOR_BEGIN;
-	ble_uuid.uuid = WAHOO_UNKNOWN_CHAR_2_UUID;
+	ble_uuid.uuid = WAHOO_DFU_CHAR_2_UUID;
 
 	// Set attribute metadata.
 	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
@@ -524,7 +523,7 @@ static void wahoo_unknown2_char_add(ble_cps_t * p_cps)
     attr_char_value.max_len      = 4;
     attr_char_value.p_value      = NULL;
 
-    return sd_ble_gatts_characteristic_add(p_cps->conn_handle,
+    return sd_ble_gatts_characteristic_add(p_cps->wahoo_svc_handle,
                                            &char_md,
                                            &attr_char_value,
                                            &p_cps->wahoo2_handle);
@@ -534,17 +533,17 @@ static void wahoo_unknown2_char_add(ble_cps_t * p_cps)
 /**@brief Adds WAHOO specific BLE service.  Not 100% sure what this is right now.
  *
  */
-static void ble_wahoo_svc_init(ble_cps_t * p_cps)
+static void ble_wahoo_dfu_svc_init(ble_cps_t * p_cps)
 {
     uint32_t   err_code;
     ble_uuid_t ble_uuid;
 
     // UUID of the service.
 	ble_uuid.type = BLE_UUID_TYPE_VENDOR_BEGIN;
-	ble_uuid.uuid = WAHOO_UNKNOWN_SVC_UUID;
+	ble_uuid.uuid = WAHOO_DFU_SVC_UUID;
 
     err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,
-    		&ble_uuid, &p_cps->conn_handle);
+    		&ble_uuid, &p_cps->wahoo_svc_handle);
     APP_ERROR_CHECK(err_code);
 
     // Add UNKNOWN characteristic #1
@@ -627,9 +626,8 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
         APP_ERROR_CHECK(err_code);
     }
 
-    // Add Wahoo specific service.
-    // TODO: not sure what this service does yet.
-    //ble_wahoo_svc_init(p_cps);
+    // Add Wahoo specific firmware update service.
+    //ble_wahoo_dfu_svc_init(p_cps);
 
     return NRF_SUCCESS;	
 }
@@ -659,7 +657,7 @@ uint32_t ble_cps_wahoo1_notify_send(ble_cps_t * p_cps)
 		hvx_params.p_len  = &hvx_len;
 		hvx_params.p_data = data;
 
-		err_code = sd_ble_gatts_hvx(p_cps->conn_handle, &hvx_params);
+		err_code = sd_ble_gatts_hvx(p_cps->wahoo_svc_handle, &hvx_params);
 		// Tends to return invalid state
         if ((err_code == NRF_SUCCESS) && (hvx_len != len))
         {
@@ -693,7 +691,7 @@ uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_mea
         hvx_params.p_len    = &hvx_len;
         hvx_params.p_data   = encoded_cpm;
         
-        err_code = sd_ble_gatts_hvx(p_cps->conn_handle, &hvx_params);
+        err_code = sd_ble_gatts_hvx(p_cps->wahoo_svc_handle, &hvx_params);
         if ((err_code == NRF_SUCCESS) && (hvx_len != len))
         {
             err_code = NRF_ERROR_DATA_SIZE;

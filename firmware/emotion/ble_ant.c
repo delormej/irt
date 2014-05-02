@@ -164,6 +164,10 @@ static void ble_dis_service_init()
     memset(&dis_init, 0, sizeof(dis_init));
     
     ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, (char *)MANUFACTURER_NAME);
+    ble_srv_ascii_to_utf8(&dis_init.model_num_str, (char *)MODEL_NUMBER);
+    ble_srv_ascii_to_utf8(&dis_init.serial_num_str, (const char*)"666"); // TODO: need real SERIAL_NUMBER
+    ble_srv_ascii_to_utf8(&dis_init.hw_rev_str, (char *)HW_REVISION);
+    ble_srv_ascii_to_utf8(&dis_init.fw_rev_str, (char *)"0.1.0"); // TODO: need real fw version here
 
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&dis_init.dis_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&dis_init.dis_attr_md.write_perm);
@@ -200,7 +204,7 @@ static void ble_cps_service_init()
 
 	cps_init.p_sensor_location = &sensor_location;
 	cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT | BLE_CPS_FEATURE_WHEEL_REV_BIT;
-	cps_init.use_cycling_power_control_point = false;
+	cps_init.use_cycling_power_control_point = true;
 
 	cps_init.rc_evt_handler = mp_ant_ble_evt_handlers->on_set_resistance;
 
