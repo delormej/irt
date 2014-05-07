@@ -373,6 +373,9 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             
         case BLE_GATTS_EVT_SYS_ATTR_MISSING:
             err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
+#ifdef UART
+            simple_uart_putstring((const char*)"sd_ble_gatts_sys_attr_set\r\n");
+#endif
             APP_ERROR_CHECK(err_code);
             break;
 
@@ -450,14 +453,20 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas)
 			{
 				err_code = ble_cps_cycling_power_measurement_send(&m_cps, p_cps_meas);
 
-				if (
+				if (err_code == BLE_ERROR_GATTS_SYS_ATTR_MISSING)
+				{
+		            err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
+#ifdef UART
+		            simple_uart_putstring((const char*)"sd_ble_gatts_sys_attr_set\r\n");
+#endif
+		            APP_ERROR_CHECK(err_code);
+				}
+				else if (
 					(err_code != NRF_SUCCESS)
 					&&
 					(err_code != NRF_ERROR_INVALID_STATE)
 					&&
 					(err_code != BLE_ERROR_NO_TX_BUFFERS)
-					&&
-					(err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
 					)
 				{
 					APP_ERROR_HANDLER(err_code);

@@ -63,6 +63,9 @@ static void set_wahoo_uuid(void)
 static void on_connect(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 {
     p_cps->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+#ifdef UART
+	simple_uart_putstring((const char*)"BLE Connected\r\n");
+#endif
 }
 
 
@@ -75,6 +78,10 @@ static void on_disconnect(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 {
     UNUSED_PARAMETER(p_ble_evt);
     p_cps->conn_handle = BLE_CONN_HANDLE_INVALID;
+
+#ifdef UART
+	simple_uart_putstring((const char*)"BLE Disconnected\r\n");
+#endif
 }
 
 /**@brief Function for handling the Write event.
@@ -302,12 +309,13 @@ static uint32_t cycling_power_feature_char_add(ble_cps_t * p_cps, const ble_cps_
 static uint32_t cycling_power_measurement_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 {
     ble_gatts_char_md_t char_md;
-    ble_gatts_attr_md_t cccd_md;		
+    ble_gatts_attr_md_t cccd_md;
     ble_gatts_attr_t    attr_char_value;
     ble_uuid_t          ble_uuid;
     ble_gatts_attr_md_t attr_md;
 	irt_power_meas_t	initial_cpm;
 	uint8_t				encoded_cpm[MAX_CPM_LEN];
+	const char* 		user_desc = "CPM";
     
     memset(&cccd_md, 0, sizeof(cccd_md));
 
@@ -318,11 +326,11 @@ static uint32_t cycling_power_measurement_char_add(ble_cps_t * p_cps, const ble_
     memset(&char_md, 0, sizeof(char_md));
     
     char_md.char_props.notify = 1;
-    char_md.p_char_user_desc  = NULL;
-    char_md.p_char_pf         = NULL;
-    char_md.p_user_desc_md    = NULL;
+    char_md.p_char_user_desc = user_desc;
+    char_md.char_user_desc_max_size = strlen(user_desc);
+    char_md.char_user_desc_size = strlen(user_desc);
     char_md.p_cccd_md         = &cccd_md;
-    char_md.p_sccd_md         = NULL;
+    char_md.p_sccd_md         = &cccd_md; // NULL
     
     BLE_UUID_BLE_ASSIGN(ble_uuid, BLE_UUID_CYCLING_POWER_MEASUREMENT_CHAR);
     
@@ -696,6 +704,14 @@ uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_mea
         {
             err_code = NRF_ERROR_DATA_SIZE;
         }
+#ifdef UART
+    	char message[32];
+    	char format[] = "cps meas returned: %i\r\n";
+    	memset(&message, 0, sizeof(message));
+    	sprintf(message, format, err_code);
+
+        simple_uart_putstring(message);
+#endif
     }
     else
     {
