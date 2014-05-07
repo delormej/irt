@@ -34,12 +34,14 @@
 // WAHOO specific UUID constants.
 const ble_uuid128_t WAHOO_UUID = { 0x8B, 0xEB, 0x9F, 0x0F, 0x50, 0xF1, 0xFA, 0x97, 0xB3, 0x4A, 0x7D, 0x0A, 0x00, 0x00, 0x26, 0xA0 };
 const uint16_t WAHOO_RESISTANCE_CONTROL_CHAR = 0xE005;
+/*
 const uint16_t WAHOO_DFU_SVC_UUID = 0xEE01;
 const uint16_t WAHOO_DFU_CHAR_1_UUID = 0xE002;
 const uint16_t WAHOO_DFU_CHAR_2_UUID = 0xE004;
+*/
 
 // Declaration of function for wahoo unknown service.
-uint32_t ble_cps_wahoo1_notify_send(ble_cps_t * p_cps);
+//uint32_t ble_cps_wahoo1_notify_send(ble_cps_t * p_cps);
 
 /**@brief Sets a WAHOO vendor specific UUID in the BLE stack's table.
  *
@@ -123,6 +125,7 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 	simple_uart_putstring((const char*)"Got CPCP Write\r\n\0");
 #endif
 	}
+	/*
 	else if (p_evt_write->handle == p_cps->wahoo1_handle.value_handle)
 	{
 		// Wahoo unknown value handle, just try blindly responding.
@@ -139,7 +142,7 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 
 		simple_uart_putstring(message);
 #endif
-	}
+	}*/
 }
 
 /**@brief Function for encoding a Cycling Power Measurement.
@@ -453,6 +456,7 @@ static uint32_t cycling_power_vector_char_add(ble_cps_t * p_cps, const ble_cps_i
 	return 0;
 }
 
+/*
 static void wahoo_unknown1_char_add(ble_cps_t * p_cps)
 {
 	uint32_t			err_code;
@@ -536,11 +540,11 @@ static void wahoo_unknown2_char_add(ble_cps_t * p_cps)
                                            &attr_char_value,
                                            &p_cps->wahoo2_handle);
     APP_ERROR_CHECK(err_code);
-}
+}*/
 
 /**@brief Adds WAHOO specific BLE service.  Not 100% sure what this is right now.
  *
- */
+ *
 static void ble_wahoo_dfu_svc_init(ble_cps_t * p_cps)
 {
     uint32_t   err_code;
@@ -559,8 +563,7 @@ static void ble_wahoo_dfu_svc_init(ble_cps_t * p_cps)
 
     // Add UNKNOWN characteristic #2
     wahoo_unknown2_char_add(p_cps);
-}
-
+}*/
 
 
 void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
@@ -643,7 +646,7 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 //
 // I don't know what this does, but I'm trying to send a notification back
 // in response to the wahoo1 unknown write.
-//
+/*
 uint32_t ble_cps_wahoo1_notify_send(ble_cps_t * p_cps)
 {
 	uint32_t err_code;
@@ -672,7 +675,7 @@ uint32_t ble_cps_wahoo1_notify_send(ble_cps_t * p_cps)
             err_code = NRF_ERROR_DATA_SIZE;
         }
 	}
-}
+}*/
 
 uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_meas_t * p_cps_meas)
 {
@@ -699,7 +702,7 @@ uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_mea
         hvx_params.p_len    = &hvx_len;
         hvx_params.p_data   = encoded_cpm;
         
-        err_code = sd_ble_gatts_hvx(p_cps->wahoo_svc_handle, &hvx_params);
+        err_code = sd_ble_gatts_hvx(p_cps->conn_handle, &hvx_params);
         if ((err_code == NRF_SUCCESS) && (hvx_len != len))
         {
             err_code = NRF_ERROR_DATA_SIZE;
