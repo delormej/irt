@@ -42,8 +42,8 @@ CFLAGS += -DLOOPBACK
 # For debugging purposes
 ############################################
 #CFLAGS += -DSIM_SPEED
-CFLAGS += -DIRT_DEBUG
-CFLAGS += -DUART
+#CFLAGS += -DIRT_DEBUG
+#CFLAGS += -DUART
 # Enable debug flags.
 #CFLAGS += -g
 
