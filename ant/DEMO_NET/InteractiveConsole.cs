@@ -70,9 +70,8 @@ namespace ANT_Console
                         break;
 
                     case ConsoleKey.V:
-                        WriteCommand(string.Format("Firmware version: {0}.{1}", 
-                            m_eMotion.FirmwareVerMajor, 
-                            m_eMotion.FirmwareVerMinor));
+                        WriteCommand(string.Format("Firmware version: {0}", 
+                            m_eMotion.FirmwareVersion));
                         break;
 
                     default:
