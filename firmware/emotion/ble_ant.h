@@ -56,6 +56,7 @@ static const uint8_t ant_manufacturer_page[TX_BUFFER_SIZE] =
 	HIGH_BYTE(MODEL_NUMBER)
 };
 
+
 // MACRO for sending manufacturer and product pages.
 #define ANT_COMMON_PAGE_TRANSMIT(ANT_CHANNEL, COMMON_PAGE)					\
     do																		\

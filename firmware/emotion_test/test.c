@@ -21,6 +21,21 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
 #define LOW_BYTE(word)               		(uint8_t)(word & 0x00FFu)                   /**< Get low byte of a uint16_t. */
 
+#define SW_REV_TO_PCHAR(P_REV, P_CHAR)				\
+do												\
+	{												\
+	sprintf(P_CHAR, "%i.%i.%i", \
+	P_REV->major, \
+	P_REV->minor, \
+	P_REV->build);							\
+	} while (0)										\
+
+typedef struct sw_revision_s
+{
+	uint8_t		major:4;
+	uint8_t		minor:4;
+	uint8_t		build;
+} sw_revision_t;
 
 static const uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = {
 	2107, // 0 - no resistance
@@ -34,6 +49,30 @@ static const uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = {
 	775,
 	700}; // Max resistance
 
+static void sw_rev_to_pchar(sw_revision_t *p_rev, char *p_char)
+{
+	sprintf(p_char, "%i.%i.%i",
+		p_rev->major,
+		p_rev->minor,
+		p_rev->build);
+}
+
+void print_version(sw_revision_t *p_rev)
+{
+	uint8_t size;
+	char version[8];
+	size = sizeof(sw_revision_t);
+
+	SW_REV_TO_PCHAR(p_rev, version); //sw_rev_to_pchar(
+	printf(version);
+	/*
+	printf("Version: %i.%i.%i - obj size {%i}\n",
+		p_rev->major,
+		p_rev->minor,
+		p_rev->build,
+		size);
+		*/
+}
 
 float get_resistance_pct(uint8_t *buffer)
 {
@@ -141,19 +180,29 @@ static uint16_t calc_torque(int16_t watts, uint16_t period_seconds_2048)
 
 int main(int argc, char *argv [])
 {
-	uint8_t mode;
-	uint16_t level;
-	uint8_t output;
+	//uint8_t* mode = "HR";
+	uint16_t usModelNum;
+	uint16_t level = 0x5248;
+	sw_revision_t ver;
 
-	mode = 0x42 - 64u;
-	level = 190;
+	ver.major = 0;
+	ver.minor = 3;
+	ver.build = 78;
 
-	output = HIGH_BYTE(level);
-	output |= mode << 6;
+	print_version(&ver);
 
-	printf("mode: %i\n", mode);
-	printf("MSB: %i\n", output);
-	printf("LSB: %i\n", LOW_BYTE(level));
+	
+	//mode = 'H';
+	printf("Len: %i\n", strlen((char *) &level));
+	printf("As String: %s\n", (char *) &level);
+
+	printf("LSB: %x\n", LOW_BYTE(level));
+	printf("MSB: %x\n", HIGH_BYTE(level));
+
+	usModelNum = LOW_BYTE(level) | HIGH_BYTE(level) << 8;		// Model number
+
+	printf("Model: %i\n", usModelNum);
+
 
 	/*
 	uint16_t position;

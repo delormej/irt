@@ -50,14 +50,21 @@ CFLAGS += -DUART
 ############################################
 # Define the Software Revision.
 ############################################
-CFLAGS += -DSW_REVISION_MAJ=0x07
-CFLAGS += -DSW_REVISION_MIN=0x01
+SW_REVISION_MAJ := 0
+SW_REVISION_MIN := 8
+SW_REVISION_BLD := 1
+
+CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
+CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
+CFLAGS += -DSW_REVISION_BLD=$(SW_REVISION_BLD)
+CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_BLD)\""
 
 ############################################
-# Define the device ID.  
+# DEVICE specific data.  
 # TODO: this should be done another way.
 ############################################
 CFLAGS += -DANT_DEVICE_NUMBER=0x02
+CFLAGS += -DSERIAL_NUMBER=0xAA55AA55
 
 LDFLAGS += --specs=nano.specs 
 

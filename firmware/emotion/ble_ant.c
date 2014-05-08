@@ -26,7 +26,6 @@
 #include "ble_advdata.h"
 #include "ble_conn_params.h"
 #include "ble_sensorsim.h"
-#include "irt_emotion.h"
 #include "irt_peripheral.h"
 #include "ant_bike_power.h"
 #include "ble_dis.h"
@@ -157,17 +156,28 @@ static void advertising_init(void)
 
 static void ble_dis_service_init()
 {
-	uint32_t       err_code;
-	ble_dis_init_t dis_init;
+	uint32_t       		err_code;
+	ble_dis_init_t 		dis_init;
+	irt_device_info_t 	device_info;
+	char 				sw_revision[8];	//xx.xx.xx
 
 	// Initialize Device Information Service
     memset(&dis_init, 0, sizeof(dis_init));
-    
-    ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, (char *)MANUFACTURER_NAME);
-    ble_srv_ascii_to_utf8(&dis_init.model_num_str, (char *)MODEL_NUMBER);
-    ble_srv_ascii_to_utf8(&dis_init.serial_num_str, (const char*)"666"); // TODO: need real SERIAL_NUMBER
-    ble_srv_ascii_to_utf8(&dis_init.hw_rev_str, (char *)HW_REVISION);
-    ble_srv_ascii_to_utf8(&dis_init.fw_rev_str, (char *)"0.1.0"); // TODO: need real fw version here
+
+    SET_DEVICE_INFO(&device_info);
+	IRT_SW_REV_TO_CHAR(&device_info.sw_revision, &sw_revision);
+
+	ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, device_info.manufacturer_name);
+    ble_srv_ascii_to_utf8(&dis_init.fw_rev_str, sw_revision);
+
+    dis_init.model_num_str.length = sizeof(device_info.model);
+    dis_init.model_num_str.p_str = (char *) &device_info.model;
+
+    dis_init.serial_num_str.length = sizeof(device_info.serial_num);
+    dis_init.serial_num_str.p_str = (char *) &device_info.serial_num;
+
+    dis_init.hw_rev_str.length = sizeof(device_info.hw_revision);
+    dis_init.hw_rev_str.p_str = (char *) &device_info.hw_revision;
 
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&dis_init.dis_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&dis_init.dis_attr_md.write_perm);
@@ -228,7 +238,7 @@ static void ble_cps_service_init()
  *
  * @details Initialize the Heart Rate and Device Information services.
  */
-static void services_init(void)
+static void services_init()
 {
 	ble_dis_service_init();		// Discovery Service
 	ble_nus_service_init();		// Debug Info Service (BLE_UART)
@@ -496,13 +506,13 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
     
     // Initialize Bluetooth stack parameters
     gap_params_init();
-    services_init();		
+    services_init();
     advertising_init();
     conn_params_init();
 
     // Initialize ANT channels
     ant_bp_tx_init(mp_ant_ble_evt_handlers->on_set_resistance, 
-		mp_ant_ble_evt_handlers->on_enable_dfu_mode);
+	mp_ant_ble_evt_handlers->on_enable_dfu_mode);
 }
 
 /**@brief Start advertising.
