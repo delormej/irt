@@ -245,11 +245,22 @@ namespace ANT_Console.Messages
         const byte SERIAL3_INDEX = 6;
         const byte SERIAL4_INDEX = 7;
 
+        const byte REV_MAJ_MASK = 0xF0;
+        const byte REV_MIN_MASK = 0x0F;
+
         internal ProductPage(ANT_Response response) : base(response) { }
 
-        public byte SoftwareRevMajor { get { return m_payload[SW_REV_MAIN_INDEX]; } }
+        public byte SoftwareRevMajor
+        {
+            get { return (byte)(m_payload[SW_REV_MAIN_INDEX] & REV_MAJ_MASK); }
+        } // 4 most sig bits
 
-        public byte SoftwareRevMinor { get { return m_payload[SW_REV_SUP_INDEX]; } }
+        public byte SoftwareRevMinor
+        {
+            get { return (byte)(m_payload[SW_REV_MAIN_INDEX] & REV_MIN_MASK); }
+        } // 4 least sig bits
+
+        public byte SoftwareRevBuild { get { return m_payload[SW_REV_SUP_INDEX]; } }
     }
 
     public class BatteryStatus : Message

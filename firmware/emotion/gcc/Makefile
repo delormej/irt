@@ -36,28 +36,35 @@ TEMPLATE_PATH = ../../gcc/
 # Enable optimizing for file size.
 CFLAGS = -Os
 CFLAGS += -DLOOPBACK
-CFLAGS += -DBLE_NUS_ENABLED
+#CFLAGS += -DBLE_NUS_ENABLED
 
 ############################################
 # For debugging purposes
 ############################################
-CFLAGS += -DSIM_SPEED
-CFLAGS += -DIRT_DEBUG
-CFLAGS += -DUART
+#CFLAGS += -DSIM_SPEED
+#CFLAGS += -DIRT_DEBUG
+#CFLAGS += -DUART
 # Enable debug flags.
 #CFLAGS += -g
 
 ############################################
 # Define the Software Revision.
 ############################################
-CFLAGS += -DSW_REVISION_MAJ=0x07
-CFLAGS += -DSW_REVISION_MIN=0x03
+SW_REVISION_MAJ := 0
+SW_REVISION_MIN := 8
+SW_REVISION_BLD := 1
+
+CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
+CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
+CFLAGS += -DSW_REVISION_BLD=$(SW_REVISION_BLD)
+CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_BLD)\""
 
 ############################################
-# Define the device ID.  
+# DEVICE specific data.  
 # TODO: this should be done another way.
 ############################################
 CFLAGS += -DANT_DEVICE_NUMBER=0x02
+CFLAGS += -DSERIAL_NUMBER=0xAA55AA55
 
 LDFLAGS += --specs=nano.specs 
 
@@ -67,3 +74,4 @@ include $(TEMPLATE_PATH)Makefile
 
 deploy:
 	cp $(BIN) $(DEPLOY_DIR)$(OUTPUT_NAME).bin
+	cp $(HEX) $(DEPLOY_DIR)$(OUTPUT_NAME).hex

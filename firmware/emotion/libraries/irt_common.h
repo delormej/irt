@@ -50,6 +50,57 @@ typedef struct irt_power_meas_s
 	uint8_t		accel_y_msb;
 } irt_power_meas_t;
 
+//
+// 2 byte version supports 4 bits for major, 4 bits for minor, 8 bits for build #.
+//
+typedef struct irt_sw_revision_s
+{
+	uint8_t		major:4;
+	uint8_t		minor:4;
+	uint8_t		build;
+} sw_revision_t;
+
+//
+// Device information structure used by ANT & BLE stacks.
+//
+typedef struct irt_device_info_s
+{
+	char* 			device_name;
+	char* 			manufacturer_name;
+	uint16_t		manufacturer_id;
+	uint16_t		model;
+	uint8_t			ant_device_num;
+	uint8_t			hw_revision;
+	sw_revision_t	sw_revision;
+	uint32_t		serial_num;
+} irt_device_info_t;
+
+#define IRT_SW_REV_TO_CHAR(P_REV, P_CHAR)			\
+	do												\
+	{												\
+		sprintf(P_CHAR, "%i.%i.%i",					\
+			(P_REV)->major,							\
+			(P_REV)->minor,							\
+			(P_REV)->build);							\
+	} while(0)										\
+
+// Macro to populate device info.
+#define SET_DEVICE_INFO(P_DEVICE)							\
+	do 														\
+	{ 														\
+		memset((P_DEVICE), 0, sizeof(irt_device_info_t));	\
+		(P_DEVICE)->device_name = DEVICE_NAME; 				\
+		(P_DEVICE)->manufacturer_name = MANUFACTURER_NAME;	\
+		(P_DEVICE)->manufacturer_id = MANUFACTURER_ID;		\
+		(P_DEVICE)->model = MODEL_NUMBER;					\
+		(P_DEVICE)->ant_device_num = ANT_DEVICE_NUMBER;		\
+		(P_DEVICE)->hw_revision = HW_REVISION;				\
+		(P_DEVICE)->sw_revision.major = SW_REVISION_MAJ;	\
+		(P_DEVICE)->sw_revision.minor = SW_REVISION_MIN;	\
+		(P_DEVICE)->sw_revision.build = SW_REVISION_BLD;	\
+		(P_DEVICE)->serial_num = SERIAL_NUMBER;				\
+	} while(0) 												\
+
 // Abstracts a FIFO queue of events.
 uint32_t irt_power_meas_fifo_init(uint8_t size);
 void 	 irt_power_meas_fifo_free();

@@ -26,7 +26,6 @@
 #include "ble_advdata.h"
 #include "ble_conn_params.h"
 #include "ble_sensorsim.h"
-#include "irt_emotion.h"
 #include "irt_peripheral.h"
 #include "ant_bike_power.h"
 #include "ble_dis.h"
@@ -144,7 +143,7 @@ static void advertising_init(void)
     // Build and set advertising data
     memset(&advdata, 0, sizeof(advdata));
     advdata.name_type               = BLE_ADVDATA_FULL_NAME;
-    advdata.include_appearance      = false;
+    advdata.include_appearance      = true;
     advdata.flags.size              = sizeof(flags);
     advdata.flags.p_data            = &flags;
     // Show just the CYCLING_POWER_SERVICE in ServicesMoreAvailable (like the KICKR).
@@ -157,13 +156,28 @@ static void advertising_init(void)
 
 static void ble_dis_service_init()
 {
-	uint32_t       err_code;
-	ble_dis_init_t dis_init;
+	uint32_t       		err_code;
+	ble_dis_init_t 		dis_init;
+	irt_device_info_t 	device_info;
+	char 				sw_revision[8];	//xx.xx.xx
 
 	// Initialize Device Information Service
     memset(&dis_init, 0, sizeof(dis_init));
-    
-    ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, MANUFACTURER_NAME);
+
+    SET_DEVICE_INFO(&device_info);
+	IRT_SW_REV_TO_CHAR(&device_info.sw_revision, &sw_revision);
+
+	ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, device_info.manufacturer_name);
+    ble_srv_ascii_to_utf8(&dis_init.fw_rev_str, sw_revision);
+
+    dis_init.model_num_str.length = sizeof(device_info.model);
+    dis_init.model_num_str.p_str = (char *) &device_info.model;
+
+    dis_init.serial_num_str.length = sizeof(device_info.serial_num);
+    dis_init.serial_num_str.p_str = (char *) &device_info.serial_num;
+
+    dis_init.hw_rev_str.length = sizeof(device_info.hw_revision);
+    dis_init.hw_rev_str.p_str = (char *) &device_info.hw_revision;
 
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&dis_init.dis_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&dis_init.dis_attr_md.write_perm);
@@ -199,7 +213,8 @@ static void ble_cps_service_init()
 	memset(&cps_init, 0, sizeof(cps_init));
 
 	cps_init.p_sensor_location = &sensor_location;
-	cps_init.feature = BLE_CPS_FEATURE_WHEEL_REV_BIT; /*BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT | */
+	cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT | BLE_CPS_FEATURE_WHEEL_REV_BIT;
+	cps_init.use_cycling_power_control_point = true;
 
 	cps_init.rc_evt_handler = mp_ant_ble_evt_handlers->on_set_resistance;
 
@@ -223,7 +238,7 @@ static void ble_cps_service_init()
  *
  * @details Initialize the Heart Rate and Device Information services.
  */
-static void services_init(void)
+static void services_init()
 {
 	ble_dis_service_init();		// Discovery Service
 	ble_nus_service_init();		// Debug Info Service (BLE_UART)
@@ -338,6 +353,8 @@ static void on_ant_evt(ant_evt_t * p_ant_evt)
  */
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
+	uint32_t err_code;
+
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
@@ -361,14 +378,17 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             { 
                 m_is_advertising = false;
                 mp_ant_ble_evt_handlers->on_ble_timeout();
-                
-                /* Go to system-off mode (this function will not return; wakeup will cause a reset)
-                // Don't power off here - we'll do it when there is no motion/activity not here.
-                err_code = sd_power_system_off();
-                APP_ERROR_CHECK(err_code); */
             }
             break;
             
+        case BLE_GATTS_EVT_SYS_ATTR_MISSING:
+            err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
+#ifdef UART
+            simple_uart_putstring((const char*)"sd_ble_gatts_sys_attr_set\r\n");
+#endif
+            APP_ERROR_CHECK(err_code);
+            break;
+
         default:
             break;
     }
@@ -443,14 +463,20 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas)
 			{
 				err_code = ble_cps_cycling_power_measurement_send(&m_cps, p_cps_meas);
 
-				if (
+				if (err_code == BLE_ERROR_GATTS_SYS_ATTR_MISSING)
+				{
+		            err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
+#ifdef UART
+		            simple_uart_putstring((const char*)"sd_ble_gatts_sys_attr_set\r\n");
+#endif
+		            APP_ERROR_CHECK(err_code);
+				}
+				else if (
 					(err_code != NRF_SUCCESS)
 					&&
 					(err_code != NRF_ERROR_INVALID_STATE)
 					&&
 					(err_code != BLE_ERROR_NO_TX_BUFFERS)
-					&&
-					(err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)
 					)
 				{
 					APP_ERROR_HANDLER(err_code);
@@ -480,13 +506,13 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
     
     // Initialize Bluetooth stack parameters
     gap_params_init();
-    services_init();		
+    services_init();
     advertising_init();
     conn_params_init();
 
     // Initialize ANT channels
     ant_bp_tx_init(mp_ant_ble_evt_handlers->on_set_resistance, 
-		mp_ant_ble_evt_handlers->on_enable_dfu_mode);
+	mp_ant_ble_evt_handlers->on_enable_dfu_mode);
 }
 
 /**@brief Start advertising.
@@ -503,7 +529,7 @@ void ble_advertising_start(void)
 	adv_params.p_peer_addr = NULL;						// Undirected advertisement
 	adv_params.fp = BLE_GAP_ADV_FP_ANY;
 	adv_params.interval = APP_ADV_INTERVAL;
-	adv_params.timeout = APP_ADV_TIMEOUT_IN_SECONDS;
+	adv_params.timeout = BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED; // APP_ADV_TIMEOUT_IN_SECONDS;
 
 	err_code = sd_ble_gap_adv_start(&adv_params);
 	APP_ERROR_CHECK(err_code);
