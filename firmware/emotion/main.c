@@ -44,6 +44,7 @@
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 #include "simple_uart.h"
+#include "app_timer.h"
 
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
