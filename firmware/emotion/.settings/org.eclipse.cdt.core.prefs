@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.1191546991/PATH/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.1191546991/PATH/operation=append
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.1191546991/PATH/value=c\:\\Program Files (x86)\\GnuWin32\\bin;C\:\\Program Files (x86)\\GNU Tools ARM Embedded\\4.8 2013q4\\arm-non-eabi\\bin\\
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.1191546991/append=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.toolchain.base.1191546991/appendContributed=true
