@@ -1,3 +1,10 @@
+###############################################################################
+#
+# Primary Makefile for building E-Motion firmwaree. 
+# Uses slightly modified Pure GCC make from Nordic. 
+#
+###############################################################################
+
 # List all source files the application uses.
 APPLICATION_SRCS = $(notdir $(wildcard ../*.c))  
 APPLICATION_SRCS += $(notdir $(wildcard ../**/*.c))  
@@ -19,24 +26,27 @@ SOURCE_PATHS +=  ../libraries/
 SOURCE_PATHS +=  ../services/
 LIBRARY_PATHS += ../libraries/
 LIBRARY_PATHS += ../services/
+DEPLOY_PATH = '../../../../../SkyDrive/InsideRide/'
 
+############################################
+# Required for pure gcc from Nordic.
+############################################
 PROJECT_NAME = $(shell basename "$(realpath ../)")
-DEPLOY_DIR = '../../../../../SkyDrive/InsideRide/'
 
 DEVICE = NRF51
 BOARD = BOARD_IRT_REV_A
-#SEGGER_SERIAL = 
+#SEGGER_SERIAL =	# not used, we only have 1 segger attached 
 TARGET_DEVICE = nRF51422_xxAA
-
 USE_SOFTDEVICE = s310
-
 SDK_PATH = ../../nrf51_sdk/
 TEMPLATE_PATH = ../../gcc/
 
+############################################
+# Compiler optimizations.
+############################################
 # Enable optimizing for file size.
 CFLAGS = -Os
-CFLAGS += -DLOOPBACK
-#CFLAGS += -DBLE_NUS_ENABLED
+LDFLAGS += --specs=nano.specs
 
 ############################################
 # For debugging purposes
@@ -46,6 +56,9 @@ CFLAGS += -DLOOPBACK
 #CFLAGS += -DUART
 # Enable debug flags.
 #CFLAGS += -g
+#CFLAGS += -DLOOPBACK
+#CFLAGS += -DBLE_NUS_ENABLED
+GDB_PORT_NUMBER = 2331
 
 ############################################
 # Define the Software Revision.
@@ -66,13 +79,9 @@ CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_B
 CFLAGS += -DANT_DEVICE_NUMBER=0x02
 CFLAGS += -DSERIAL_NUMBER=0xAA55AA55
 
-LDFLAGS += --specs=nano.specs 
-
-GDB_PORT_NUMBER = 2331
-
 include $(TEMPLATE_PATH)Makefile
 
 deploy:
-	cp $(BIN) $(DEPLOY_DIR)$(OUTPUT_NAME).bin
-	cp $(HEX) $(DEPLOY_DIR)$(OUTPUT_NAME).hex
+	cp $(BIN) $(DEPLOY_PATH)$(OUTPUT_NAME).bin
+	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
 
