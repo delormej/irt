@@ -9,7 +9,9 @@
 APPLICATION_SRCS = $(notdir $(wildcard ../*.c))  
 APPLICATION_SRCS += $(notdir $(wildcard ../**/*.c))  
 
+############################################
 # SDK libraries used.
+############################################
 APPLICATION_SRCS += softdevice_handler.c
 APPLICATION_SRCS += ble_advdata.c
 APPLICATION_SRCS += ble_srv_common.c
@@ -54,7 +56,7 @@ LDFLAGS += --specs=nano.specs
 #CFLAGS += -DSIM_SPEED
 #CFLAGS += -DIRT_DEBUG
 #CFLAGS += -DUART
-# Enable debug flags.
+# Enable debug flags.  This roughly doubles the size of the output file.
 #CFLAGS += -g
 #CFLAGS += -DLOOPBACK
 #CFLAGS += -DBLE_NUS_ENABLED
