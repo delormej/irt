@@ -167,8 +167,10 @@ static bool twi_master_read(uint8_t *data, uint8_t data_length, bool issue_stop_
     }
     /** @snippet [TWI HW master read] */                    
 
+    timeout = MAX_TIMEOUT_LOOPS;   /* max loops to wait for event*/
+
     /* Wait until stop sequence is sent */
-    while(NRF_TWI1->EVENTS_STOPPED == 0)
+    while(NRF_TWI1->EVENTS_STOPPED == 0 && (--timeout))
     {
         // Do nothing.
     }
