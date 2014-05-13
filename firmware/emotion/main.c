@@ -730,6 +730,14 @@ static void on_enable_dfu_mode(void)
 	NVIC_SystemReset();
 }
 
+/**@brief	Configures power supervisor to warn and reset if power drops too low.
+ */
+static void config_power_supervisor()
+{
+	// Forces a reset if power drops below 2.7v.
+	NRF_POWER->POFCON = POWER_POFCON_POF_Enabled | POWER_POFCON_THRESHOLD_V27;
+}
+
 /**@brief	Check if there is a reset reason and log if enabled.
  */
 static uint32_t check_reset_reason()
@@ -738,12 +746,15 @@ static uint32_t check_reset_reason()
 
 	// Read the reset reason
 	reason = NRF_POWER->RESETREAS;
-	LOG("[MAIN]:Reset reason: %#08x\r\n", reason);
-
 	if (reason > 0)
 	{
 		// Clear the reason by writing 1 bits.
 		NRF_POWER->RESETREAS = reason;
+		LOG("[MAIN]:Reset reason: %#08x\r\n", reason);
+	}
+	else
+	{
+		LOG("[MAIN]:Normal power on.\r\n");
 	}
 
 	return reason;
@@ -769,6 +780,9 @@ int main(void)
 
 	// Determine what the reason for startup is and log appropriately.
 	check_reset_reason();
+
+	// Configure brown out support.
+	config_power_supervisor();
 
 	// Initialize timers.
 	timers_init();
