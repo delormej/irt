@@ -660,20 +660,23 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 {
 	// Remote can transmit no serial number as 0xFFFF, in which case
 	// we can't bond specifically, so we'll just process commands.
-	if (m_ant_ctrl_remote_ser_no == 0 && evt.remote_serial_no != 0xFFFF)
+	if (evt.remote_serial_no != 0xFFFF)
 	{
-		// Track the remote we're now connected to.
-		m_ant_ctrl_remote_ser_no = evt.remote_serial_no;
+		if (m_ant_ctrl_remote_ser_no == 0)
+		{
+			// Track the remote we're now connected to.
+			m_ant_ctrl_remote_ser_no = evt.remote_serial_no;
 
-		LOG("[MAIN]:on_ant_ctrl_command Remote {serial no:%i} now connected.\r\n",
-				evt.remote_serial_no);
-	}
-	else if (m_ant_ctrl_remote_ser_no != evt.remote_serial_no)
-	{
-		// If already connected to a remote, don't process another's commands.
-		LOG("[MAIN]:on_ant_ctrl_command received command from another serial no: %i\r\n",
-				evt.remote_serial_no);
-		return;
+			LOG("[MAIN]:on_ant_ctrl_command Remote {serial no:%i} now connected.\r\n",
+					evt.remote_serial_no);
+		}
+		else if (m_ant_ctrl_remote_ser_no != evt.remote_serial_no)
+		{
+			// If already connected to a remote, don't process another's commands.
+			LOG("[MAIN]:on_ant_ctrl_command received command from another serial no: %i\r\n",
+					evt.remote_serial_no);
+			return;
+		}
 	}
 
 	LOG("[MAIN]:on_ant_ctrl_command Command: %i\r\n", evt.command);

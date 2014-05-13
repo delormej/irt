@@ -6,6 +6,7 @@ namespace ANT_Console.Services
     class AntControl : AntService
     {
         byte m_ctrl_sequence;
+        byte[] serial_no = { 0xFF, 0xFF }; // No serial number - so device doesn't bond.
 
         public AntControl(int channelId, ushort deviceId = 0)
         {
@@ -28,8 +29,8 @@ namespace ANT_Console.Services
 
             byte[] data = {
                               0x49, // Page 73
-                              0xA1, // Random slave serial number
-                              0xFE, // (con't)
+                              serial_no[0], // Slave serial number
+                              serial_no[1], // (con't)
                               0xFB, // Random manufacturer ID
                               0xFB, // (con't)
                               m_ctrl_sequence++, // increment sequence
