@@ -257,22 +257,22 @@ static void enable_interrupt(void)
 
 static void read_test(void)
 {
-	uint8_t data = 0;
+	uint8_t data;
 
 	accelerometer_read(REG8652_WHO_AM_I, &data, sizeof(data));
 
-	if (data == 0x4a)
-		printf("Matches!\n");
+	//if (data == 0x4a)
+	//	printf("Matches!\n");
 
 	data = 0;
 	accelerometer_read(REG8652_INT_SOURCE, &data, sizeof(data));
-	if (data & (0x1 << 2))
-		printf("SRC_FF_MT\n");
+	//if (data & (0x1 << 2))
+	//	printf("SRC_FF_MT\n");
 
 	data = 0;
 	accelerometer_read(REG8652_SYSMOD, &data, sizeof(data));
-	if (data & 1)
-		printf("WAKE mode\n");
+	//if (data & 1)
+	//	printf("WAKE mode\n");
 }
 
 void accelerometer_init(void)

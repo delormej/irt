@@ -59,7 +59,7 @@ CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
 CFLAGS += -DENABLE_DEBUG_ASSERT		# This will block code on error and wait for debugger to attach.
 
 CFLAGS += -DSIM_SPEED					# Simulate speed.
-CFLAGS += -g							# Enable debug flags.  This roughly doubles the size of the output file.
+#CFLAGS += -g							# Enable debug flags.  This roughly doubles the size of the output file.
 
 # 
 # Old defines to clean up: BLE_NUS_ENABLED, LOOPBACK, UART, IRT_DEBUG

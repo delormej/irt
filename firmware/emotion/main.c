@@ -75,11 +75,11 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
 /**@brief Debug logging for main module.
  *
  */
-//#ifdef ENABLE_DEBUG_LOG
+#ifdef ENABLE_DEBUG_LOG
 #define LOG printf
-//#else
-//#define LOG(...)
-//#endif // ENABLE_DEBUG_LOG
+#else
+#define LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 /*----------------------------------------------------------------------------
  * Error Handlers
@@ -100,7 +100,8 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	if (error_code == 0x401F) //TRANSFER_IN_PROGRESS
 		return;
 
-	LOG("[MAIN]:app_error_handler {ERR:%i}: %s:%i\r\n", error_code, p_file_name, line_num);
+	LOG("[MAIN]:app_error_handler {HALTED ON ERRROR: %i}: %s:%i\r\n",
+			error_code, p_file_name, line_num);
 
     // This call can be used for debug purposes during development of an application.
     // @note CAUTION: Activating this code will write the stack to flash on an error.
@@ -747,7 +748,7 @@ int main(void)
 	// Initialize debug logging if enabled.
 	debug_init();
 
-	LOG("[MAIN] Device starting. Firmware version %s\r\n", SW_REVISION);
+	LOG("[MAIN]:Device starting, firmware version %s\r\n", SW_REVISION);
 
 	// Initialize default remote serial number.
 	m_ant_ctrl_remote_ser_no = 0;
