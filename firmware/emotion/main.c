@@ -46,6 +46,7 @@
 #include "app_timer.h"
 #include "ant_bike_power.h"
 #include "debug.h"
+#include "boards.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define DEFAULT_WHEEL_SIZE_MM			2069u
@@ -745,13 +746,13 @@ int main(void)
 {
 	uint32_t err_code;
 
+	// Initialize default remote serial number.
+	m_ant_ctrl_remote_ser_no = 0;
+
 	// Initialize debug logging if enabled.
 	debug_init();
 
 	LOG("[MAIN]:Device starting, firmware version %s\r\n", SW_REVISION);
-
-	// Initialize default remote serial number.
-	m_ant_ctrl_remote_ser_no = 0;
 
 	// Initialize timers.
 	timers_init();
@@ -800,9 +801,9 @@ int main(void)
 	// Begin advertising and receiving ANT messages.
 	ble_ant_start();
 
-	// Start off with resistance at 0.
-	resistance_level_set(m_resistance_level);
-	m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
+	// Initialize resistance module.
+	m_servo_pos = resistance_init(PIN_SERVO_SIGNAL);
+	m_resistance_level = 0;
 
 	// Initialize module to read speed from flywheel.
 	init_speed(PIN_FLYWHEEL, DEFAULT_WHEEL_SIZE_MM);

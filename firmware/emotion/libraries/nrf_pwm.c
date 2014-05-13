@@ -1,4 +1,4 @@
-/* Copyright (c) 2013 Jason De Lorme. All Rights Reserved.
+/* Copyright (c) 2014 Inside Ride Technologies, LLC. All Rights Reserved.
  *
  * Uses 3 compare registers: 	[0] Pulse Width in us (position of servo in microseconds)
  *														[1] Period Width of 20ms

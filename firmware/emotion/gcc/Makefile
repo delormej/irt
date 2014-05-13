@@ -50,13 +50,15 @@ TEMPLATE_PATH = ../../gcc/
 CFLAGS = -Os
 LDFLAGS += --specs=nano.specs
 
+CFLAGS += -D$(BOARD)					# Define board version being used.
+
 ############################################
 # For debugging purposes
 ############################################
 CFLAGS += -DENABLE_DEBUG_LOG			# Enable debug logging.
 CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
 #CFLAGS += -DBLE_UART					# Use Nordic BLE UART for logging.
-CFLAGS += -DENABLE_DEBUG_ASSERT		# This will block code on error and wait for debugger to attach.
+CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wait for debugger to attach.
 
 CFLAGS += -DSIM_SPEED					# Simulate speed.
 #CFLAGS += -g							# Enable debug flags.  This roughly doubles the size of the output file.
@@ -72,7 +74,7 @@ GDB_PORT_NUMBER = 2331					# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 2
+SW_REVISION_BLD := 3
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)

@@ -105,6 +105,12 @@ typedef struct rc_sim_forces_s
 	int16_t erg_watts;
 } rc_sim_forces_t;
 
+/**@brief		Initializes the pulse-width-modulation for the servo.
+ * 				Returns the position of the servo after initialization.
+ *
+ */
+uint16_t resistance_init(uint32_t servo_pin_number);
+
 /**@brief		Sets the resistance to a specific level by moving the servo to the 
  *					corresponding position.
  *

@@ -17,32 +17,18 @@
 
 #define	GRAVITY			9.8f
 
-static bool 				m_initialized = false;
-
-/**@brief 	Initializes the resistance object.
- *
- */
-#define INIT_RESISTANCE()																											\
-				do																																		\
-				{																																			\
-					if (!m_initialized) 																								\
-						init_resistance();																								\
-				} while (0)																																								
-
-static void init_resistance() 
+uint16_t resistance_init(uint32_t servo_pin_number)
 {
-	// TODO: get the servo signal passed in during this method and remove
-	// dependency on the hard linking here.  The desire is to have all 
-	// hw dependencies in irt_peripheral instead of scattered through code
-	// base.
-	pwm_init(PIN_SERVO_SIGNAL);	
-	m_initialized = true;
+	// Initialize pulse-width-modulation.
+	pwm_init(servo_pin_number);
+
+	// Always start off with resistance at level 0.
+	return resistance_level_set(0);
 }
 
 uint16_t resistance_level_set(uint8_t level)
 {
 	// Sets the resistance to a standard 0-9 level.
-	INIT_RESISTANCE();
 	if (level >= MAX_RESISTANCE_LEVELS)
 	{
 		level = MAX_RESISTANCE_LEVELS - 1;
@@ -65,8 +51,6 @@ uint16_t resistance_pct_set(float percent)
 	fpScale a float from 0.0 to 1.0 that represents the percentage the brake is
 	turned on (0.0 = brake turned off; 0.256 = 25.6% of brake; 1.0 = 100% brake force).
 	*/
-
-	INIT_RESISTANCE();
 	uint16_t position = 0;
 
 	if (percent == 0.0f)

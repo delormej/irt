@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "simple_uart.h"
-#include "irt_peripheral.h"
+#include "boards.h"
 
 struct __FILE { int handle; /* Add whatever you need here */ };
 FILE __stdout;

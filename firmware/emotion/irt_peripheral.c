@@ -10,6 +10,7 @@
 #include "app_button.h"
 #include "accelerometer.h"
 #include "temperature.h"
+#include "boards.h"
 
 static peripheral_evt_t *mp_on_peripheral_evt;
 static app_timer_id_t m_led_blink_timer_id;

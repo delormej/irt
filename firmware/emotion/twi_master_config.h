@@ -12,7 +12,7 @@
 #ifndef TWI_MASTER_CONFIG
 #define TWI_MASTER_CONFIG
 
-#include "irt_peripheral.h"
+#include "boards.h"
 
 #define TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER 			PIN_SCL
 #define TWI_MASTER_CONFIG_DATA_PIN_NUMBER 			PIN_SDA
