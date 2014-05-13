@@ -31,9 +31,6 @@
 
 #define REVS_CHANNEL_TASK_TOGGLE	2
 
-// TOOD: this belongs in common configuration.
-#define DEFAULT_WHEEL_SIZE_MM 	2070u						// Defaults to a road wheel which is typically 2,070mm.
-
 #include <stdbool.h>
 #include <stdint.h>
 #include "nrf.h"
@@ -46,7 +43,7 @@
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.
 *
 */
-void init_speed(uint32_t pin_flywheel_rev);
+void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm);
 
 /**@brief 	Set's the wheel size.  Defaults to DEFAULT_WHEEL_SIZE_MM if not set.
 *

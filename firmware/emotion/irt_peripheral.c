@@ -57,7 +57,7 @@ static void irt_gpio_init()
 	//nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_LOW);
 
 	// These pins are used for UART on boards where there is no RXD.
-#ifndef UART
+#ifndef SIMPLE_UART
 	// Initialize the button inputs from the RXD4140.
 	nrf_gpio_cfg_input(PIN_BUTTON_I, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_input(PIN_BUTTON_II, NRF_GPIO_PIN_NOPULL);
@@ -68,15 +68,9 @@ static void irt_gpio_init()
 		1 << PIN_BUTTON_II |
 		1 << PIN_BUTTON_III |
 		1 << PIN_BUTTON_IV);
-#else
-	// Configure pins for UART.
-	nrf_gpio_cfg_input(PIN_UART_RXD, NRF_GPIO_PIN_NOPULL);
-	nrf_gpio_cfg_input(PIN_UART_CTS, NRF_GPIO_PIN_NOPULL);
-	nrf_gpio_cfg_output(PIN_UART_RTS);
-	nrf_gpio_cfg_output(PIN_UART_TXD);
-
+#else // SIMPLE_UART
 	pins_low_to_high_mask = 0;
-#endif
+#endif // SIMPLE_UART
 
 	pins_high_to_low_mask = 1 << PIN_SHAKE;
 
@@ -110,7 +104,7 @@ void clear_led(void)
 	nrf_gpio_pin_clear(PIN_LED_B);
 }
 
-void blink_led_green_start(uint8_t interval_ms)
+void blink_led_green_start(uint16_t interval_ms)
 {
 	uint32_t err_code;
 	uint32_t interval_ticks;

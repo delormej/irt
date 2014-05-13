@@ -57,7 +57,7 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);
 void set_led_red(void);
 void set_led_green(void);
 void clear_led(void);
-void blink_led_green_start(uint8_t interval_ms);
+void blink_led_green_start(uint16_t interval_ms);
 void blink_led_green_stop(void);
 
 #endif // IRT_PERIPHERAL_H__

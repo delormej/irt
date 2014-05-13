@@ -306,9 +306,9 @@ void set_wheel_size(uint16_t wheel_size_mm)
 	m_flywheel_to_wheel_revs = (wheel_size_mm / 1000.0f) / FLYWHEEL_SIZE;
 }
 
-void init_speed(uint32_t pin_flywheel_rev)
+void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 {
-	set_wheel_size(DEFAULT_WHEEL_SIZE_MM);	
+	set_wheel_size(wheel_size_mm);
 	
 	revs_init_gpiote(pin_flywheel_rev);
 	revs_init_ppi();

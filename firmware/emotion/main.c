@@ -43,9 +43,9 @@
 #include "ble_ant.h"
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
-#include "simple_uart.h"
 #include "app_timer.h"
-
+#include "ant_bike_power.h"
+#include "debug.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define DEFAULT_WHEEL_SIZE_MM			2069u
@@ -71,6 +71,16 @@ static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote 
 
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 
+
+/**@brief Debug logging for main module.
+ *
+ */
+//#ifdef ENABLE_DEBUG_LOG
+#define LOG printf
+//#else
+//#define LOG(...)
+//#endif // ENABLE_DEBUG_LOG
+
 /*----------------------------------------------------------------------------
  * Error Handlers
  * ----------------------------------------------------------------------------*/
@@ -86,23 +96,11 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
-#ifdef UART
-	static const char format[] = "ERR {%i}: %s:%i";
-	char message[128];
-	memset(&message, 0, sizeof(message));
-	sprintf(message, format,
-			error_code,
-			p_file_name,
-			line_num);
-
-	simple_uart_putstring(message);
-#endif
-
     // TODO: HACK temporarily IGNORE this message.  
 	if (error_code == 0x401F) //TRANSFER_IN_PROGRESS
 		return;
-		
-	set_led_red();
+
+	LOG("[MAIN]:app_error_handler {ERR:%i}: %s:%i\r\n", error_code, p_file_name, line_num);
 
     // This call can be used for debug purposes during development of an application.
     // @note CAUTION: Activating this code will write the stack to flash on an error.
@@ -110,11 +108,13 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     //                It is intended STRICTLY for development/debugging purposes.
     //                The flash write will happen EVEN if the radio is active, thus interrupting
     //                any communication.
-    //                Use with care. Define IRT_DEBUG to enable.
-#if defined(IRT_DEBUG)
-	// Not this function does not return - it will hang waiting for a debugger to attach.
+    //                Use with care.
+#if defined(ENABLE_DEBUG_ASSERT)
+	set_led_red();
+
+	// Note this function does not return - it will hang waiting for a debugger to attach.
 	ble_debug_assert_handler(error_code, line_num, p_file_name);
-#endif
+#endif // ENABLE_DEBUG_ASSERT
 
     // On assert, the system can only recover with a reset.
     NVIC_SystemReset();
@@ -170,16 +170,10 @@ static void set_sim_params(uint8_t *pBuffer)
 	// Co-efficient of drag.
 	m_sim_forces.c = (pBuffer[4] | pBuffer[5] << 8u) / 1000.0f;
 
-#if defined(UART)
-		static const char format[] = "k,r,c:%i,%i,%i";
-		char message[16];
-		memset(&message, 0, sizeof(message));
-		uint8_t length = sprintf(message, format, 
+	LOG("[MAIN]:set_sim_params {weight:%i, crr:%i, c:%i}\r\n",
 		(uint16_t)m_user_profile.total_weight_kg,
 		((uint16_t)m_sim_forces.crr)*10000, 
 		((uint16_t)m_sim_forces.c)*1000);
-		debug_send(message, sizeof(message));
-#endif		
 }
 
 /**@brief	Initializes user profile and loads from flash.  Sets defaults for
@@ -223,12 +217,18 @@ static void profile_init(void)
 	 */
 		m_sim_forces.crr = SIM_CRR;
 		m_sim_forces.c = SIM_C;
+
+		LOG("[MAIN]:profile_init {weight:%f, wheel:%i}\r\n",
+				m_user_profile.total_weight_kg,
+				m_user_profile.wheel_size_mm);
 }
 
 /**@brief Persists any updates the user profile. */
 static void profile_update(void)
 {
 	uint32_t err_code;
+
+	LOG("[MAIN] Scheduling profile update.\r\n");
 
 	// This method ensures the device is in a proper state in order to update
 	// the profile.
@@ -248,6 +248,11 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 				(p_power_meas_current->accum_wheel_revs - p_power_meas_first->accum_wheel_revs),
 				(p_power_meas_current->last_wheel_event_time - p_power_meas_first->last_wheel_event_time));
 	}
+
+	LOG("[MAIN]:resistance_adjust {mode:%i, cur_servo:%i, cur_speed:%f} \r\n",
+			m_resistance_mode,
+			m_servo_pos,
+			power_meas.instant_speed_mps);
 
 	// Don't attempt to adjust if stopped.
 	if (power_meas.instant_speed_mps == 0.0f)
@@ -275,6 +280,9 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 		default:
 			break;
 	}
+
+	LOG("[MAIN]:resistance_adjust {new_servo_pos:%i} \r\n",
+			m_servo_pos);
 }
 
 /**@brief Function for handling profile update.
@@ -418,6 +426,8 @@ static void scheduler_init(void)
 // power the system down.
 static void on_power_down(void)
 {
+	LOG("[MAIN]:on_power_down \r\n");
+
 	// Free heap allocation.
 	irt_power_meas_fifo_free();
 
@@ -450,7 +460,7 @@ static void on_button_ii(void)
 	{
 		// Decrement by 15 watts;
 		m_sim_forces.erg_watts -= 15u;
-		ant_bp_resistance_tx_send(m_resistance_mode, &m_sim_forces.erg_watts);
+		ant_bp_resistance_tx_send(m_resistance_mode, (uint8_t*)&m_sim_forces.erg_watts);
 	}
 }
 
@@ -467,7 +477,7 @@ static void on_button_iii(void)
 	{
 		// Increment by 15 watts;
 		m_sim_forces.erg_watts += 15u;
-		ant_bp_resistance_tx_send(m_resistance_mode, &m_sim_forces.erg_watts);
+		ant_bp_resistance_tx_send(m_resistance_mode, (uint8_t*)&m_sim_forces.erg_watts);
 	}
 }
 
@@ -489,7 +499,7 @@ static void on_button_menu(void)
 		{
 			m_sim_forces.erg_watts = DEFAULT_ERG_WATTS;
 		}
-		ant_bp_resistance_tx_send(m_resistance_mode, &m_sim_forces.erg_watts);
+		ant_bp_resistance_tx_send(m_resistance_mode, (uint8_t*)&m_sim_forces.erg_watts);
 	}
 	else
 	{
@@ -530,6 +540,8 @@ static void on_ble_connected(void)
 {
 	blink_led_green_stop();
 	set_led_green();
+
+	LOG("[MAIN]:on_ble_connected\r\n");
 }
 	
 static void on_ble_disconnected(void) 
@@ -537,6 +549,8 @@ static void on_ble_disconnected(void)
 	// Clear connection LED.
 	clear_led();
 	
+	LOG("[MAIN]:on_ble_disconnected\r\n");
+
 	// Restart advertising.
 	ble_advertising_start();
 }
@@ -544,6 +558,7 @@ static void on_ble_disconnected(void)
 static void on_ble_timeout(void) 
 {
 	blink_led_green_stop();
+	LOG("[MAIN]:on_ble_timeout\r\n");
 }
 
 static void on_ble_advertising(void)
@@ -635,18 +650,12 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			break;
 	}
 
-	// Send acknowledgement. 
+	// Send acknowledgment.
 	ant_bp_resistance_tx_send(m_resistance_mode, rc_evt.pBuffer);
 
-#if defined(BLE_NUS_ENABLED)
-		static const char format[] = "OP:%i,VAL:%i";
-		char message[16];
-		memset(&message, 0, sizeof(message));
-		uint8_t length = sprintf(message, format, 
-															(uint8_t)rc_evt.operation,
-															(int16_t)(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u));
-		debug_send(message, sizeof(message));
-#endif		
+	LOG("[MAIN]:on_set_resistance {OP:%i,VAL:%i}\r\n",
+			(uint8_t)rc_evt.operation,
+			(int16_t)(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u));
 }
 
 // Invoked when a button is pushed on the remote control.
@@ -658,12 +667,19 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 	{
 		// Track the remote we're now connected to.
 		m_ant_ctrl_remote_ser_no = evt.remote_serial_no;
+
+		LOG("[MAIN]:on_ant_ctrl_command Remote {serial no:%i} now connected.\r\n",
+				evt.remote_serial_no);
 	}
 	else if (m_ant_ctrl_remote_ser_no != evt.remote_serial_no)
 	{
 		// If already connected to a remote, don't process another's commands.
+		LOG("[MAIN]:on_ant_ctrl_command received command from another serial no: %i\r\n",
+				evt.remote_serial_no);
 		return;
 	}
+
+	LOG("[MAIN]:on_ant_ctrl_command Command: %i\r\n", evt.command);
 
 	switch (evt.command)
 	{
@@ -704,9 +720,9 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 static void on_enable_dfu_mode(void)
 {
 	uint32_t err_code;
-#ifdef UART
-	simple_uart_putstring((const uint8_t *)" \n\rEnabling DFU mode.\n\r");
-#endif
+
+	LOG("Enabling DFU mode.\n\r");
+
 	// TODO: share the mask here in a common include file with bootloader.
 	// bootloader needs to share PWM, device name / manuf, etc... so we need
 	// to refactor anyways.
@@ -728,6 +744,11 @@ int main(void)
 {
 	uint32_t err_code;
 
+	// Initialize debug logging if enabled.
+	debug_init();
+
+	LOG("[MAIN] Device starting. Firmware version %s\r\n", SW_REVISION);
+
 	// Initialize default remote serial number.
 	m_ant_ctrl_remote_ser_no = 0;
 
@@ -745,11 +766,6 @@ int main(void)
 
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
 	peripheral_init(&on_peripheral_handlers);
-
-#ifdef UART
-	simple_uart_config(PIN_UART_RTS, PIN_UART_TXD, PIN_UART_CTS, PIN_UART_RXD, UART_HWFC);
-	simple_uart_putstring((const uint8_t *)" \n\rDevice Starting\n\r: ");
-#endif
 
 	// ANT+, BLE event handlers.
 	static ant_ble_evt_handlers_t ant_ble_handlers = {
@@ -788,7 +804,7 @@ int main(void)
 	m_servo_pos = RESISTANCE_LEVEL[m_resistance_level];
 
 	// Initialize module to read speed from flywheel.
-	init_speed(PIN_FLYWHEEL);
+	init_speed(PIN_FLYWHEEL, DEFAULT_WHEEL_SIZE_MM);
 
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);
