@@ -846,6 +846,8 @@ int main(void)
 	// Start the main loop for reporting ble services.
 	application_timers_start();
 
+	LOG("[MAIN]:Initialization done.\r\n");
+
     // Enter main loop
     for (;;)
     {
