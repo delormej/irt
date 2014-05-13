@@ -196,7 +196,7 @@ int32_t power_measure(float total_weight_kg, irt_power_meas_t* p_power_meas)
 	APP_ERROR_CHECK(err_code);
 
 	/*float speed_mph = get_speed_mph(speed_event.speed_mps);
-	/*err_code = calc_power(speed_mph, m_user_profile.total_weight_kg * 2.20462262, m_resistance_level, &watts);
+	//err_code = calc_power(speed_mph, m_user_profile.total_weight_kg * 2.20462262, m_resistance_level, &watts);
 	// TODO: Handle the error for real here, not sure what the overall error
 	// handling strategy will be, but this is not critical, just move on.
 	if (err_code != IRT_SUCCESS)
