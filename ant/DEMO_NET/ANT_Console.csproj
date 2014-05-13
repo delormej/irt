@@ -76,6 +76,9 @@
   <PropertyGroup>
     <StartupObject>ANT_Console.Controller</StartupObject>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>IR 1 red_alter4ICON.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -133,6 +136,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="IR 1 red_alter4ICON.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
