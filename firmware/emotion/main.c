@@ -116,10 +116,10 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 	// Note this function does not return - it will hang waiting for a debugger to attach.
 	ble_debug_assert_handler(error_code, line_num, p_file_name);
-#endif // ENABLE_DEBUG_ASSERT
-
+#else
     // On assert, the system can only recover with a reset.
     NVIC_SystemReset();
+#endif // ENABLE_DEBUG_ASSERT
 }
 
 /**@brief	Handle Soft Device system events. */
@@ -730,6 +730,24 @@ static void on_enable_dfu_mode(void)
 	NVIC_SystemReset();
 }
 
+/**@brief	Check if there is a reset reason and log if enabled.
+ */
+static uint32_t check_reset_reason()
+{
+	uint32_t reason;
+
+	// Read the reset reason
+	reason = NRF_POWER->RESETREAS;
+	LOG("[MAIN]:Reset reason: %#08x\r\n", reason);
+
+	if (reason > 0)
+	{
+		// Clear the reason by writing 1 bits.
+		NRF_POWER->RESETREAS = reason;
+	}
+
+	return reason;
+}
 
 /*----------------------------------------------------------------------------
  * Main program functions
@@ -748,6 +766,9 @@ int main(void)
 	debug_init();
 
 	LOG("[MAIN]:Device starting, firmware version %s\r\n", SW_REVISION);
+
+	// Determine what the reason for startup is and log appropriately.
+	check_reset_reason();
 
 	// Initialize timers.
 	timers_init();
