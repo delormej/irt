@@ -17,6 +17,15 @@
 
 #define	GRAVITY		9.8f
 
+/**@brief Debug logging for resistance control module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define RC_LOG printf
+#else
+#define RC_LOG(...)
+#endif // ENABLE_DEBUG_LOG
+
 /**@brief	Determines if there is a move.
  *
  */
@@ -25,6 +34,7 @@
 	{										\
 		if (m_servo_pos != POSITION)		\
 		{									\
+			RC_LOG("[RC]:SET_SERVO %i\r\n", POSITION); \
 			pwm_set_servo(POSITION);		\
 			m_servo_pos = POSITION;			\
 		}									\

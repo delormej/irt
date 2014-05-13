@@ -718,7 +718,7 @@ static void on_enable_dfu_mode(void)
 {
 	uint32_t err_code;
 
-	LOG("Enabling DFU mode.\n\r");
+	LOG("[MAIN]:Enabling DFU mode.\n\r");
 
 	// TODO: share the mask here in a common include file with bootloader.
 	// bootloader needs to share PWM, device name / manuf, etc... so we need
