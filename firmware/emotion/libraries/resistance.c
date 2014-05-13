@@ -1,8 +1,8 @@
 /*
 *******************************************************************************
 * 
-* By Jason De Lorme <jjdelorme@yahoo.com>
-* http://www.roadacious.com
+* By Jason De Lorme <jason@insideride.com>
+* Inside Ride Technologies, LLC
 *
 * This module is responsible for interacting with the e*Motion servo to control
 * magnetic resistance on the flywheel.  

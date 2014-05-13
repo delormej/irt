@@ -1,6 +1,8 @@
 #ifndef __DEBUG_H_
 #define __DEBUG_H_
 
+#include <stdio.h>
+
 #ifdef ENABLE_DEBUG_LOG
 
 /**
