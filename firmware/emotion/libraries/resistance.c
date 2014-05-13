@@ -15,7 +15,23 @@
 #include "nrf_pwm.h"
 #include "math.h"
 
-#define	GRAVITY			9.8f
+#define	GRAVITY		9.8f
+
+/**@brief	Determines if there is a move.
+ *
+ */
+#define SET_SERVO(POSITION)					\
+	do 										\
+	{										\
+		if (m_servo_pos != POSITION)		\
+		{									\
+			pwm_set_servo(POSITION);		\
+			m_servo_pos = POSITION;			\
+		}									\
+	} while(0)
+
+
+static uint16_t		m_servo_pos;		// State of current servo position.
 
 uint16_t resistance_init(uint32_t servo_pin_number)
 {
@@ -26,6 +42,17 @@ uint16_t resistance_init(uint32_t servo_pin_number)
 	return resistance_level_set(0);
 }
 
+uint16_t resistance_position_get()
+{
+	return m_servo_pos;
+}
+
+uint16_t resistance_position_set(uint16_t position)
+{
+	SET_SERVO(position);
+	return m_servo_pos;
+}
+
 uint16_t resistance_level_set(uint8_t level)
 {
 	// Sets the resistance to a standard 0-9 level.
@@ -34,9 +61,7 @@ uint16_t resistance_level_set(uint8_t level)
 		level = MAX_RESISTANCE_LEVELS - 1;
 	}
 
-	pwm_set_servo(RESISTANCE_LEVEL[level]);
-
-	return RESISTANCE_LEVEL[level];
+	return resistance_position_set(RESISTANCE_LEVEL[level]);
 }
 
 uint16_t resistance_pct_set(float percent)
@@ -51,41 +76,36 @@ uint16_t resistance_pct_set(float percent)
 	fpScale a float from 0.0 to 1.0 that represents the percentage the brake is
 	turned on (0.0 = brake turned off; 0.256 = 25.6% of brake; 1.0 = 100% brake force).
 	*/
-	uint16_t position = 0;
+	uint16_t position;
 
 	if (percent == 0.0f)
 	{
-		pwm_set_servo(RESISTANCE_LEVEL[0]);
 		position = RESISTANCE_LEVEL[0];
 	}
 	else if (percent > 99.9f)
 	{
-		pwm_set_servo(RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1]);
 		position = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
 	}
 	else
 	{
 		// Calculate the difference between easiest and hardest positions.
 		position = (uint16_t) (MIN_RESISTANCE_LEVEL -(
-															(MIN_RESISTANCE_LEVEL-RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1]) *
-															percent));
-		
-		pwm_set_servo(position);
+							(MIN_RESISTANCE_LEVEL-RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1]) *
+							percent));
 	}
 
-	return position;
+	return resistance_position_set(position);
 }
 
-/**@brief			Sets mag resistance to simulate desired erg watts.
+/**@brief		Sets mag resistance to simulate desired erg watts.
  * @returns 	Servo position.
  */
-uint16_t resistance_erg_set(float speed_mps, float weight_kg, uint16_t servo_pos,
-		rc_sim_forces_t *p_sim_forces)
+uint16_t resistance_erg_set(float speed_mps, float weight_kg, rc_sim_forces_t *p_sim_forces)
 {
 	int16_t mag0_watts;
 	float mag0_force;
 	float needed_force;
-	uint16_t servo_position;
+	uint16_t position;
 	
 	// TODO: who is going to handle calculating calibration? Whoever is, should keep track of 
 	// current reporting watts, vs. adjusted watts?
@@ -104,24 +124,22 @@ uint16_t resistance_erg_set(float speed_mps, float weight_kg, uint16_t servo_pos
 	needed_force = (((float)p_sim_forces->erg_watts) / speed_mps) - mag0_force;
 	
 	// Determine the correct servo position for that force given speed & weight.
-	servo_position = power_servo_pos_calc(weight_kg, speed_mps, needed_force);
+	position = power_servo_pos_calc(weight_kg, speed_mps, needed_force);
 								
 	//
 	// Ensure we don't move the servo beyond it's min and max.
 	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107 
 	//
-	if (servo_position < RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1])
+	if (position < RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1])
 	{
-		servo_position = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
+		position = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
 	}
-	else if (servo_position > RESISTANCE_LEVEL[0])
+	else if (position > RESISTANCE_LEVEL[0])
 	{
-		servo_position = RESISTANCE_LEVEL[0];
+		position = RESISTANCE_LEVEL[0];
 	}
 	
-	pwm_set_servo(servo_position);
-
-	return servo_position;
+	return resistance_position_set(position);
 }
 
 /**@brief	Puts the trainer in simulation mode.
@@ -133,8 +151,7 @@ uint16_t resistance_erg_set(float speed_mps, float weight_kg, uint16_t servo_pos
  *				wind resistance, wind speed, wheel circumference, and grade. 
  *				If these variables are not set, they will default to an "average" value.
  */
-uint16_t resistance_sim_set(float speed_mps, float weight_kg, uint16_t servo_pos,
-		rc_sim_forces_t *p_sim_forces)
+uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p_sim_forces)
 {
 	// sim is going to calculate the estimated watts required at grade + wind for
 	// the current speed and rider total weight.  It will then hand this off to
@@ -158,5 +175,5 @@ uint16_t resistance_sim_set(float speed_mps, float weight_kg, uint16_t servo_pos
 	p_sim_forces->erg_watts = (wind + rolling + gravitational) * speed_mps;
 	
 	// Same as erg mode now, set to a specific watt level.
-	return resistance_erg_set(speed_mps, weight_kg, servo_pos, p_sim_forces);
+	return resistance_erg_set(speed_mps, weight_kg, p_sim_forces);
 }

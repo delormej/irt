@@ -111,6 +111,16 @@ typedef struct rc_sim_forces_s
  */
 uint16_t resistance_init(uint32_t servo_pin_number);
 
+/**@brief		Gets the current position of the servo.
+ *
+ */
+uint16_t resistance_position_get(void);
+
+/**@brief		Sets the position of the servo.
+ *
+ */
+uint16_t resistance_position_set(uint16_t position);
+
 /**@brief		Sets the resistance to a specific level by moving the servo to the 
  *					corresponding position.
  *
@@ -126,13 +136,11 @@ uint16_t resistance_pct_set(float percent);
 /**@brief		Sets/adjusts resistance to desired simulation parameters.  
  *
  */
-uint16_t resistance_sim_set(float speed_mps, float weight_kg, uint16_t servo_pos,
-		rc_sim_forces_t *p_sim_forces);
+uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p_sim_forces);
 
 /**@brief		Sets/adjusts resistance to desired watts.
  *
  */
-uint16_t resistance_erg_set(float speed_mps, float weight_kg, uint16_t servo_pos,
-		rc_sim_forces_t *p_sim_forces);
+uint16_t resistance_erg_set(float speed_mps, float weight_kg, rc_sim_forces_t *p_sim_forces);
 
 #endif

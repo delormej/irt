@@ -59,9 +59,9 @@
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
 #define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
 
-static uint8_t 							m_resistance_level = 0;
-static resistance_mode_t				m_resistance_mode = RESISTANCE_SET_STANDARD;
-static uint16_t							m_servo_pos;
+static uint8_t 							m_resistance_level;
+static resistance_mode_t				m_resistance_mode;
+
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.
 
 static user_profile_t 					m_user_profile;
@@ -251,10 +251,10 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 				(p_power_meas_current->last_wheel_event_time - p_power_meas_first->last_wheel_event_time));
 	}
 
-	LOG("[MAIN]:resistance_adjust {mode:%i, cur_servo:%i, cur_speed:%f} \r\n",
+	LOG("[MAIN]:resistance_adjust {mode:%i, cur_servo:%i, cur_speed:%i} \r\n",
 			m_resistance_mode,
-			m_servo_pos,
-			power_meas.instant_speed_mps);
+			resistance_position_get(),
+			(uint16_t)(power_meas.instant_speed_mps * 100u));
 
 	// Don't attempt to adjust if stopped.
 	if (power_meas.instant_speed_mps == 0.0f)
@@ -264,27 +264,22 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 	switch (m_resistance_mode)
 	{
 		case RESISTANCE_SET_ERG:
-			m_servo_pos = resistance_erg_set(
+			resistance_erg_set(
 					power_meas.instant_speed_mps,
 					m_user_profile.total_weight_kg,
-					m_servo_pos,
 					&m_sim_forces);
 			break;
 
 		case RESISTANCE_SET_SIM:
-			m_servo_pos = resistance_sim_set(
+			resistance_sim_set(
 					power_meas.instant_speed_mps,
 					m_user_profile.total_weight_kg,
-					m_servo_pos,
 					&m_sim_forces);
 			break;
 
 		default:
 			break;
 	}
-
-	LOG("[MAIN]:resistance_adjust {new_servo_pos:%i} \r\n",
-			m_servo_pos);
 }
 
 /**@brief Function for handling profile update.
@@ -338,7 +333,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 			break;
 	}
 
-	p_power_meas_current->servo_position = m_servo_pos;
+	p_power_meas_current->servo_position = resistance_position_get();
 
 	// Get current temperature.
 	p_power_meas_current->temp = temperature_read();
@@ -444,7 +439,7 @@ static void on_button_i(void)
 {
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = 0;
-	m_servo_pos = resistance_level_set(m_resistance_level);
+	resistance_level_set(m_resistance_level);
 	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
 }
 
@@ -454,7 +449,7 @@ static void on_button_ii(void)
 	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
 			m_resistance_level > 0)
 	{
-		m_servo_pos = resistance_level_set(--m_resistance_level);
+		resistance_level_set(--m_resistance_level);
 		ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
 	}
 	else if (m_resistance_mode == RESISTANCE_SET_ERG &&
@@ -472,7 +467,7 @@ static void on_button_iii(void)
 	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
 			m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 	{
-		m_servo_pos = resistance_level_set(++m_resistance_level);
+		resistance_level_set(++m_resistance_level);
 		ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
 	}
 	else if (m_resistance_mode == RESISTANCE_SET_ERG)
@@ -487,7 +482,7 @@ static void on_button_iv(void)
 {
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
-	m_servo_pos = resistance_level_set(m_resistance_level);
+	resistance_level_set(m_resistance_level);
 	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
 }
 
@@ -596,7 +591,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		case RESISTANCE_SET_STANDARD:
 			m_resistance_mode = RESISTANCE_SET_STANDARD;
 			m_resistance_level = rc_evt.pBuffer[0];
-			m_servo_pos = resistance_level_set(m_resistance_level);
+			resistance_level_set(m_resistance_level);
 			break;
 			
 		case RESISTANCE_SET_PERCENT:
@@ -606,7 +601,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			
 			// Parse the buffer for percentage.
 			float percent = wahoo_resistance_pct_decode(rc_evt.pBuffer);
-			m_servo_pos = resistance_pct_set(percent);
+			resistance_pct_set(percent);
 			break;
 
 		case RESISTANCE_SET_ERG:
@@ -640,7 +635,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			
 		case RESISTANCE_SET_SERVO_POS:
 			// Move the servo to a specific position.
-			pwm_set_servo(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u);
+			resistance_position_set(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u);
 			break;
 
 		case RESISTANCE_SET_WEIGHT:
@@ -801,9 +796,11 @@ int main(void)
 	// Begin advertising and receiving ANT messages.
 	ble_ant_start();
 
-	// Initialize resistance module.
-	m_servo_pos = resistance_init(PIN_SERVO_SIGNAL);
+	// Initialize resistance module and initial values.
+	resistance_init(PIN_SERVO_SIGNAL);
+	// TODO: This state should be moved to resistance module.
 	m_resistance_level = 0;
+	m_resistance_mode = RESISTANCE_SET_STANDARD;
 
 	// Initialize module to read speed from flywheel.
 	init_speed(PIN_FLYWHEEL, DEFAULT_WHEEL_SIZE_MM);
