@@ -7,6 +7,7 @@
 #include "app_error.h"
 #include "ant_parameters.h"
 #include "ant_interface.h"
+#include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
 #define MANUFACTURER_PAGE_INTERLEAVE_COUNT	121u
@@ -51,6 +52,15 @@
 #define ANT_BURST_MSG_ID_SET_RESISTANCE		0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
 #define ANT_TRANSMIT_IN_PROGRESS 		 0x401F
 
+/**@brief Debug logging for module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define BP_LOG debug_log
+#else
+#define BP_LOG(...)
+#endif // ENABLE_DEBUG_LOG
+
 /******************************************************************************
 		
 		Trainer Road specific, from Wahoo Fitness
@@ -94,9 +104,7 @@ static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 		// from Trainer Road.  If we fix that, this condition shouldn't happen as often.
 		if (err_code == ANT_TRANSMIT_IN_PROGRESS)
 		{
-			uint8_t data[] = "Warning: Pending Transmit";
-			debug_send(data, sizeof(data));
-			
+			BP_LOG("[BP]:broadcast_message_transmit - Warning: Pending Transmit");
 			err_code = NRF_SUCCESS;
 		}
 		
@@ -114,9 +122,7 @@ static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 		// from Trainer Road.  If we fix that, this condition shouldn't happen as often.
 		if (err_code == ANT_TRANSMIT_IN_PROGRESS)
 		{
-			uint8_t data[] = "Warning: Pending Transmit";
-			debug_send(data, sizeof(data));
-			
+			BP_LOG("[BP]:acknolwedge_message_transmit - Warning: Pending Transmit\r\n");
 			err_code = NRF_SUCCESS;
 		}
 		
@@ -201,13 +207,6 @@ static void handle_move_servo(ant_evt_t * p_ant_evt)
 	evt.operation = RESISTANCE_SET_SERVO_POS;
 	evt.pBuffer = &(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
 	m_on_set_resistance(evt);
-
-#ifdef UART
-	simple_uart_putstring((const uint8_t *)"Moving servo to position: 0x");
-	simple_uart_put(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
-	simple_uart_put(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+3]);
-	simple_uart_putstring((const uint8_t *)"\n\r");
-#endif
 }
 
 static void handle_set_weight(ant_evt_t * p_ant_evt)
@@ -218,15 +217,6 @@ static void handle_set_weight(ant_evt_t * p_ant_evt)
 	evt.operation = RESISTANCE_SET_WEIGHT;
 	evt.pBuffer = &(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
 	m_on_set_resistance(evt);
-
-#ifdef UART
-	static const char format[] = "Setting Weight: %i\r\n\0";
-	char message[16];
-	memset(&message, 0, sizeof(message));
-	uint8_t length = sprintf(message, format,
-							(int16_t)(evt.pBuffer[0] | evt.pBuffer[1] << 8u));
-	simple_uart_putstring(message);
-#endif
 }
 
 // Right now all this method does is handle resistance control messages.

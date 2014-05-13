@@ -77,7 +77,7 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
  *
  */
 #ifdef ENABLE_DEBUG_LOG
-#define LOG printf
+#define LOG debug_log
 #else
 #define LOG(...)
 #endif // ENABLE_DEBUG_LOG
@@ -565,9 +565,7 @@ static void on_ble_advertising(void)
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
 {
-#ifdef LOOPBACK
-    debug_send(data, length);
-#endif
+	LOG("[MAIN]:on_ble_uart data: %*.*s\r\n", length, length, data);
 }
 
 // TODO: implement this behavior, reopen the channel, etc...?

@@ -60,6 +60,15 @@
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;     /**< Handle of the current connection. */
 static bool                             m_is_advertising = false;                    /**< True when in advertising state, False otherwise. */
 
+/**@brief Debug logging for module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define BA_LOG printf
+#else
+#define BA_LOG(...)
+#endif // ENABLE_DEBUG_LOG
+
 #if defined(BLE_NUS_ENABLED)
 static ble_nus_t                       	m_nus;																			 // BLE UART service for debugging purposes.
 #endif
@@ -383,9 +392,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             
         case BLE_GATTS_EVT_SYS_ATTR_MISSING:
             err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
-#ifdef UART
-            simple_uart_putstring((const char*)"sd_ble_gatts_sys_attr_set\r\n");
-#endif
+            BA_LOG("[BA]:on_ble_evt sd_ble_gatts_sys_attr_set\r\n");
             APP_ERROR_CHECK(err_code);
             break;
 
@@ -437,14 +444,6 @@ static void ble_ant_stack_init(void)
     APP_ERROR_CHECK(err_code);*/
 }
 
-void debug_send(uint8_t * data, uint16_t length)
-{
-#if defined(BLE_NUS_ENABLED)
-		data[length] = '\0';
-		ble_nus_send_string(&m_nus, data, length);
-#endif		
-}
-
 //
 // Sends ble & ant data messages.
 //
@@ -466,9 +465,7 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas)
 				if (err_code == BLE_ERROR_GATTS_SYS_ATTR_MISSING)
 				{
 		            err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
-#ifdef UART
-		            simple_uart_putstring((const char*)"sd_ble_gatts_sys_attr_set\r\n");
-#endif
+		            BA_LOG("[BA]:cycling_power_send sd_ble_gatts_sys_attr_set\r\n");
 		            APP_ERROR_CHECK(err_code);
 				}
 				else if (

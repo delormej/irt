@@ -57,14 +57,14 @@ CFLAGS += -D$(BOARD)					# Define board version being used.
 ############################################
 CFLAGS += -DENABLE_DEBUG_LOG			# Enable debug logging.
 CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
-#CFLAGS += -DBLE_UART					# Use Nordic BLE UART for logging.
+#CFLAGS += -DBLE_NUS_ENABLED			# Use Nordic BLE UART for logging.
 CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wait for debugger to attach.
 
 CFLAGS += -DSIM_SPEED					# Simulate speed.
-#CFLAGS += -g							# Enable debug flags.  This roughly doubles the size of the output file.
+CFLAGS += -g							# Enable debug symbols.  
 
 # 
-# Old defines to clean up: BLE_NUS_ENABLED, LOOPBACK, UART, IRT_DEBUG
+# Old defines to clean up: , UART, IRT_DEBUG
 #
 
 GDB_PORT_NUMBER = 2331					# Debugging port used by GDB.
@@ -74,7 +74,7 @@ GDB_PORT_NUMBER = 2331					# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 4
+SW_REVISION_BLD := 11
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)

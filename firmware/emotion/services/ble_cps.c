@@ -4,7 +4,7 @@
 #include "ble_l2cap.h"
 #include "ble_srv_common.h"
 #include "app_util.h"
-#include "simple_uart.h"
+#include "debug.h"
 
 // https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicsHome.aspx
 #define BLE_UUID_SENSOR_LOCATION_CHAR							0x2A5D 		/**< Sensor Location UUID.  */
@@ -30,6 +30,15 @@
 #define CPS_MEAS_FLAG_OFFSET_COMP_INDICATOR						(0x01 << 12)
 
 #define MAX_CPM_LEN												34	// TODO: This is unscientific? I just added up all the bytes of all possible fields in the structure.
+
+/**@brief Debug logging for module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define CPS_LOG debug_log
+#else
+#define CPS_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 // WAHOO specific UUID constants.
 const ble_uuid128_t WAHOO_UUID = { 0x8B, 0xEB, 0x9F, 0x0F, 0x50, 0xF1, 0xFA, 0x97, 0xB3, 0x4A, 0x7D, 0x0A, 0x00, 0x00, 0x26, 0xA0 };
@@ -65,9 +74,6 @@ static void set_wahoo_uuid(void)
 static void on_connect(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 {
     p_cps->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
-#ifdef UART
-	simple_uart_putstring((const char*)"BLE Connected\r\n");
-#endif
 }
 
 
@@ -80,10 +86,6 @@ static void on_disconnect(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 {
     UNUSED_PARAMETER(p_ble_evt);
     p_cps->conn_handle = BLE_CONN_HANDLE_INVALID;
-
-#ifdef UART
-	simple_uart_putstring((const char*)"BLE Disconnected\r\n");
-#endif
 }
 
 /**@brief Function for handling the Write event.
@@ -113,35 +115,13 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 	{
 		// Cycling Power Control Point
 		//p_evt_write
-#ifdef UART
-	/*static const char format[] = "Got CPCP Write";
-	char message[128];
-	memset(&message, 0, sizeof(message));
-	sprintf(message, format,
-			error_code,
-			p_file_name,
-			line_num);
-	 */
-	simple_uart_putstring((const char*)"Got CPCP Write\r\n\0");
-#endif
+		CPS_LOG("[CPS]:on_write Got CPCP Write\r\n");
 	}
 	/*
 	else if (p_evt_write->handle == p_cps->wahoo1_handle.value_handle)
 	{
 		// Wahoo unknown value handle, just try blindly responding.
 		//ble_cps_wahoo1_notify_send(p_cps);
-
-#ifdef UART
-		static const char format[] = "Got WAHOO1 Write, op: {%i}, len: {%i}, data: {%02X}\r\n";
-		char message[64];
-		memset(&message, 0, sizeof(message));
-		sprintf(message, format,
-				p_evt_write->op,
-				p_evt_write->len,
-				p_evt_write->data[0]);
-
-		simple_uart_putstring(message);
-#endif
 	}*/
 }
 
@@ -456,116 +436,6 @@ static uint32_t cycling_power_vector_char_add(ble_cps_t * p_cps, const ble_cps_i
 	return 0;
 }
 
-/*
-static void wahoo_unknown1_char_add(ble_cps_t * p_cps)
-{
-	uint32_t			err_code;
-	ble_gatts_char_md_t char_md;
-	ble_gatts_attr_t    attr_char_value;
-	ble_uuid_t        	ble_uuid;
-	ble_gatts_attr_md_t attr_md;
-
-	memset(&char_md, 0, sizeof(char_md));
-
-	char_md.char_props.write_wo_resp = 1;
-	char_md.char_props.notify = 1;
-    char_md.p_char_user_desc = NULL;
-    char_md.p_char_pf        = NULL;
-    char_md.p_user_desc_md   = NULL;
-    char_md.p_cccd_md        = NULL;
-    char_md.p_sccd_md        = NULL;
-
-	ble_uuid.type = BLE_UUID_TYPE_VENDOR_BEGIN;
-	ble_uuid.uuid = WAHOO_DFU_CHAR_1_UUID;
-
-	// Set attribute metadata.
-	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
-    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
-    attr_md.rd_auth    = 0;
-    attr_md.wr_auth    = 0;
-    attr_md.vlen       = 1;
-
-    attr_char_value.p_uuid       = &ble_uuid;
-    attr_char_value.p_attr_md    = &attr_md;
-    attr_char_value.init_len     = 0;
-    attr_char_value.init_offs    = 0;
-    attr_char_value.max_len      = 4;
-    attr_char_value.p_value      = NULL;
-
-    return sd_ble_gatts_characteristic_add(p_cps->wahoo_svc_handle,
-                                           &char_md,
-                                           &attr_char_value,
-                                           &p_cps->wahoo1_handle);
-    APP_ERROR_CHECK(err_code);
-}
-
-static void wahoo_unknown2_char_add(ble_cps_t * p_cps)
-{
-	uint32_t			err_code;
-	ble_gatts_char_md_t char_md;
-	ble_gatts_attr_t    attr_char_value;
-	ble_uuid_t        	ble_uuid;
-	ble_gatts_attr_md_t attr_md;
-
-	memset(&char_md, 0, sizeof(char_md));
-
-	char_md.char_props.notify = 1;
-    char_md.p_char_user_desc = NULL;
-    char_md.p_char_pf        = NULL;
-    char_md.p_user_desc_md   = NULL;
-    char_md.p_cccd_md        = NULL;
-    char_md.p_sccd_md        = NULL;
-
-	ble_uuid.type = BLE_UUID_TYPE_VENDOR_BEGIN;
-	ble_uuid.uuid = WAHOO_DFU_CHAR_2_UUID;
-
-	// Set attribute metadata.
-	BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
-    attr_md.vloc       = BLE_GATTS_VLOC_STACK;
-    attr_md.rd_auth    = 0;
-    attr_md.wr_auth    = 0;
-    attr_md.vlen       = 1;
-
-    attr_char_value.p_uuid       = &ble_uuid;
-    attr_char_value.p_attr_md    = &attr_md;
-    attr_char_value.init_len     = 0;
-    attr_char_value.init_offs    = 0;
-    attr_char_value.max_len      = 4;
-    attr_char_value.p_value      = NULL;
-
-    return sd_ble_gatts_characteristic_add(p_cps->wahoo_svc_handle,
-                                           &char_md,
-                                           &attr_char_value,
-                                           &p_cps->wahoo2_handle);
-    APP_ERROR_CHECK(err_code);
-}*/
-
-/**@brief Adds WAHOO specific BLE service.  Not 100% sure what this is right now.
- *
- *
-static void ble_wahoo_dfu_svc_init(ble_cps_t * p_cps)
-{
-    uint32_t   err_code;
-    ble_uuid_t ble_uuid;
-
-    // UUID of the service.
-	ble_uuid.type = BLE_UUID_TYPE_VENDOR_BEGIN;
-	ble_uuid.uuid = WAHOO_DFU_SVC_UUID;
-
-    err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,
-    		&ble_uuid, &p_cps->wahoo_svc_handle);
-    APP_ERROR_CHECK(err_code);
-
-    // Add UNKNOWN characteristic #1
-    wahoo_unknown1_char_add(p_cps);
-
-    // Add UNKNOWN characteristic #2
-    wahoo_unknown2_char_add(p_cps);
-}*/
-
-
 void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 {
     switch (p_ble_evt->header.evt_id)
@@ -643,40 +513,6 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
     return NRF_SUCCESS;	
 }
 
-//
-// I don't know what this does, but I'm trying to send a notification back
-// in response to the wahoo1 unknown write.
-/*
-uint32_t ble_cps_wahoo1_notify_send(ble_cps_t * p_cps)
-{
-	uint32_t err_code;
-	uint16_t len;
-	uint16_t hvx_len;
-	// 01-xx-08 where xx is the first byte of data that was sent.
-	uint8_t data[3] = { 0x01, 0x20, 0x08 };
-	ble_gatts_hvx_params_t hvx_params;
-
-	if (p_cps->conn_handle != BLE_CONN_HANDLE_INVALID)
-	{
-		memset(&hvx_params, 0, sizeof(hvx_params));
-		len = 3; // TODO: dummy hardcoding for now.
-		hvx_len = len;
-
-		hvx_params.handle = p_cps->wahoo1_handle.value_handle;
-		hvx_params.type   = BLE_GATT_HVX_INDICATION;
-		hvx_params.offset = 0;
-		hvx_params.p_len  = &hvx_len;
-		hvx_params.p_data = data;
-
-		err_code = sd_ble_gatts_hvx(p_cps->wahoo_svc_handle, &hvx_params);
-		// Tends to return invalid state
-        if ((err_code == NRF_SUCCESS) && (hvx_len != len))
-        {
-            err_code = NRF_ERROR_DATA_SIZE;
-        }
-	}
-}*/
-
 uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_meas_t * p_cps_meas)
 {
     uint32_t err_code;
@@ -707,17 +543,15 @@ uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_mea
         {
             err_code = NRF_ERROR_DATA_SIZE;
         }
-#ifdef UART
-    	char message[32];
-    	char format[] = "cps meas returned: %i\r\n";
-    	memset(&message, 0, sizeof(message));
-    	sprintf(message, format, err_code);
 
-        simple_uart_putstring(message);
-#endif
+        if (err_code != NRF_SUCCESS)
+        {
+        	CPS_LOG("[CPS]:ble_cps_cycling_power_measurement_send returned %i\r\n", err_code);
+        }
     }
     else
     {
+    	CPS_LOG("[CPS]:ble_cps_cycling_power_measurement_send Can't send, no ble connection.\r\n");
         err_code = NRF_ERROR_INVALID_STATE;
     }
 

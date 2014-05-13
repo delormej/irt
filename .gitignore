@@ -56,6 +56,10 @@
 *.ilk
 *.lastbuildstate
 
+# Eclipse Stuff #
+######################
+**/.settings/
+
 # Logs and databases #
 ######################
 *.log

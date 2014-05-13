@@ -24,6 +24,8 @@ namespace ANT_Console
 
         public static void Main()
         {
+            Console.Title = "IRT Debug Console";
+
             try
             {
                 Controller controller = new Controller();

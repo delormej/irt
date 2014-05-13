@@ -14,6 +14,7 @@
 #include "resistance.h"
 #include "nrf_pwm.h"
 #include "math.h"
+#include "debug.h"
 
 #define	GRAVITY		9.8f
 
@@ -21,7 +22,7 @@
  *
  */
 #ifdef ENABLE_DEBUG_LOG
-#define RC_LOG printf
+#define RC_LOG debug_log
 #else
 #define RC_LOG(...)
 #endif // ENABLE_DEBUG_LOG
