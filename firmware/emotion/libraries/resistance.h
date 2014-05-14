@@ -13,8 +13,8 @@
 #include "irt_common.h"
 #include "user_profile.h"
 
-#define MAX_RESISTANCE_LEVELS 	6 //10						// Maximum resistance levels available.
-#define MIN_RESISTANCE_LEVEL	1500					// Minimum by which there is no longer resistance.
+#define MAX_RESISTANCE_LEVELS 	6 //10					// Maximum resistance levels available.
+#define MIN_RESISTANCE_LEVEL	1900					// Minimum by which there is no longer resistance.
 
 /**@brief		Array representing the servo position in micrseconds (us) by 
  *					resistance level 0-9.
