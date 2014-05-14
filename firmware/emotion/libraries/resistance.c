@@ -18,8 +18,9 @@
 
 #define	GRAVITY		9.8f
 
+#define MIN_THRESHOLD_MOVE	3				// Minimum threshold for a servo move.
+
 /**@brief Debug logging for resistance control module.
- *
  */
 #ifdef ENABLE_DEBUG_LOG
 #define RC_LOG debug_log
@@ -27,20 +28,11 @@
 #define RC_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-/**@brief	Determines if there is a move.
- *
+/**@brief	Determines if the move is above the threshold for a servo move.
  */
-#define SET_SERVO(POSITION)					\
-	do 										\
-	{										\
-		if (m_servo_pos != POSITION)		\
-		{									\
-			RC_LOG("[RC]:SET_SERVO %i\r\n", POSITION); \
-			pwm_set_servo(POSITION);		\
-			m_servo_pos = POSITION;			\
-		}									\
-	} while(0)
-
+#define ABOVE_TRESHOLD(POS)										\
+		((POS - m_servo_pos) > MIN_THRESHOLD_MOVE || 			\
+				(m_servo_pos - POS > MIN_THRESHOLD_MOVE))		\
 
 static uint16_t		m_servo_pos;		// State of current servo position.
 
@@ -58,9 +50,18 @@ uint16_t resistance_position_get()
 	return m_servo_pos;
 }
 
+/**@brief	Determines if there is a move and move accordingly.
+ *
+ */
 uint16_t resistance_position_set(uint16_t position)
 {
-	SET_SERVO(position);
+	if (m_servo_pos != position && ABOVE_TRESHOLD(position) )
+	{
+		RC_LOG("[RC]:SET_SERVO %i\r\n", position);
+		pwm_set_servo(position);
+		m_servo_pos = position;
+	}
+
 	return m_servo_pos;
 }
 
