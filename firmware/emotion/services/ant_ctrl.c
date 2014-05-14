@@ -162,7 +162,7 @@ void ant_ctrl_tx_init(uint8_t channel_id, ctrl_evt_handler_t on_ctrl_command)
 	m_ctrl_status.sequence = 0xFF;
 	m_ctrl_status.status = 0xFF; 
 
-	err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, m_ant_network_key);
+	err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, (uint8_t *)m_ant_network_key);
 	APP_ERROR_CHECK(err_code);
 
 	err_code = sd_ant_channel_assign(m_channel_id,

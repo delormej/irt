@@ -10,7 +10,6 @@
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
 #define LOW_BYTE(word)               		(uint8_t)(word & 0x00FFu)                   /**< Get low byte of a uint16_t. */
 
-#define BLE_STACK_HANDLER_SCHED_EVT_SIZE	GATT_MTU_SIZE_DEFAULT
 #define TX_BUFFER_SIZE               		8u               
 
 #define ANTPLUS_NETWORK_NUMBER          	0                                            /**< Network number. */
@@ -28,9 +27,9 @@
 
 #define ANT_BUFFER_INDEX_MESG_ID        	0x01                                         /**< Index for Message ID. */
 #define ANT_BUFFER_INDEX_MESG_DATA      	0x03                                         /**< Index for Data. */
-#define ANT_NETWORK_KEY						{0xB9,0xA5,0x21,0xFB,0xBD,0x72,0xC3,0x45}	 /**< The default network key used. */
+#define ANT_NETWORK_KEY						{0xB9,0xA5,0x21,0xFB,0xBD,0x72,0xC3,0x45}
 
-static const uint8_t                    	m_ant_network_key[] = ANT_NETWORK_KEY;		 /**< ANT+ network key. */
+static const uint8_t m_ant_network_key[] = ANT_NETWORK_KEY;
 
 static const uint8_t ant_product_page[TX_BUFFER_SIZE] =
 {

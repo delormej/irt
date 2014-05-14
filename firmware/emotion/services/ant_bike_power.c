@@ -186,7 +186,7 @@ static uint8_t encode_resistance_level(irt_power_meas_t * p_power_meas)
 // TODO: Need a formal message/methodology for this.
 static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 {
-	uint8_t buffer[7];
+	uint8_t buffer[TX_BUFFER_SIZE];
 
 	buffer[PAGE_NUMBER_INDEX]			= BP_PAGE_EXTRA_INFO;
 	buffer[EXTRA_INFO_FLYWHEEL_REVS]	= (uint8_t)(p_power_meas->accum_flywheel_revs);
@@ -298,7 +298,7 @@ void ant_bp_tx_init(rc_evt_handler_t on_set_resistance, ant_bp_evt_dfu_enable on
 	m_on_set_resistance = on_set_resistance;
 	m_on_enable_dfu_mode = on_enable_dfu_mode;
 		
-    err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, m_ant_network_key);
+    err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, (uint8_t *)m_ant_network_key);
     APP_ERROR_CHECK(err_code);
     
     err_code = sd_ant_channel_assign(ANT_BP_TX_CHANNEL,

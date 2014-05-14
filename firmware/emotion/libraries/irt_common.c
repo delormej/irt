@@ -5,6 +5,9 @@
  *      Author: jasondel
  *
  */
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 #include "irt_common.h"
 #include "nrf_error.h"
 
@@ -14,7 +17,6 @@ static uint8_t				m_fifo_index;
 
 uint32_t irt_power_meas_fifo_init(uint8_t size)
 {
-	uint32_t err_code;
 	m_buf_size = size;
 
 	// Allocate buffer on the heap for events.
@@ -41,7 +43,6 @@ void irt_power_meas_fifo_free()
  */
 uint32_t irt_power_meas_fifo_op(irt_power_meas_t** first, irt_power_meas_t** next)
 {
-	uint32_t err_code;
 	int8_t idx_write;
 
 	// Determine index to write.

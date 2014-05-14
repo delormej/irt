@@ -40,11 +40,13 @@
 #include "speed.h"
 #include "power.h"
 #include "user_profile.h"
+#include "wahoo.h"
 #include "ble_ant.h"
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 #include "app_timer.h"
 #include "ant_bike_power.h"
+#include "ble_debug_assert_handler.h"
 #include "debug.h"
 #include "boards.h"
 
@@ -101,7 +103,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	if (error_code == 0x401F) //TRANSFER_IN_PROGRESS
 		return;
 
-	LOG("[MAIN]:app_error_handler {HALTED ON ERRROR: %i}: %s:%i\r\n",
+	LOG("[MAIN]:app_error_handler {HALTED ON ERRROR: %lu}: %s:%lu\r\n",
 			error_code, p_file_name, line_num);
 
     // This call can be used for debug purposes during development of an application.
@@ -751,7 +753,7 @@ static uint32_t check_reset_reason()
 	{
 		// Clear the reason by writing 1 bits.
 		NRF_POWER->RESETREAS = reason;
-		LOG("[MAIN]:Reset reason: %#08x\r\n", reason);
+		LOG("[MAIN]:Reset reason: %#08lx\r\n", reason);
 	}
 	else
 	{

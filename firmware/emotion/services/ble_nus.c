@@ -55,7 +55,7 @@ static void on_write(ble_nus_t * p_nus, ble_evt_t * p_ble_evt)
         (p_evt_write->len == 2)
     )
     {
-        uint16_t value = *(uint16_t *) p_evt_write->data;
+        uint16_t value = *p_evt_write->data;
         if (value == 0x001)
         {
             p_nus->is_notification_enabled = true;
@@ -207,7 +207,7 @@ uint32_t ble_nus_init(ble_nus_t * p_nus, const ble_nus_init_t * p_nus_init)
 {
     uint32_t   err_code;
     ble_uuid_t ble_uuid;
-    ble_uuid128_t nus_base_uuid = {0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0, 0x93, 0xF3, 0xA3, 0xB5, 0x00, 0x00, 0x40, 0x6E};
+    const ble_uuid128_t nus_base_uuid = {{0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0, 0x93, 0xF3, 0xA3, 0xB5, 0x00, 0x00, 0x40, 0x6E}};
     
     // Initialize service structure
     p_nus->conn_handle = BLE_CONN_HANDLE_INVALID;

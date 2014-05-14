@@ -174,19 +174,19 @@ static void ble_dis_service_init()
     memset(&dis_init, 0, sizeof(dis_init));
 
     SET_DEVICE_INFO(&device_info);
-	IRT_SW_REV_TO_CHAR(&device_info.sw_revision, &sw_revision);
+	IRT_SW_REV_TO_CHAR(&device_info.sw_revision, sw_revision);
 
 	ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, device_info.manufacturer_name);
     ble_srv_ascii_to_utf8(&dis_init.fw_rev_str, sw_revision);
 
     dis_init.model_num_str.length = sizeof(device_info.model);
-    dis_init.model_num_str.p_str = (char *) &device_info.model;
+    dis_init.model_num_str.p_str = (uint8_t *) &device_info.model;
 
     dis_init.serial_num_str.length = sizeof(device_info.serial_num);
-    dis_init.serial_num_str.p_str = (char *) &device_info.serial_num;
+    dis_init.serial_num_str.p_str = (uint8_t *) &device_info.serial_num;
 
     dis_init.hw_rev_str.length = sizeof(device_info.hw_revision);
-    dis_init.hw_rev_str.p_str = (char *) &device_info.hw_revision;
+    dis_init.hw_rev_str.p_str = (uint8_t *) &device_info.hw_revision;
 
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&dis_init.dis_attr_md.read_perm);
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&dis_init.dis_attr_md.write_perm);

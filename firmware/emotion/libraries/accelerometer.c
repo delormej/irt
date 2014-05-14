@@ -11,6 +11,7 @@
 #include "accelerometer.h"
 #include "irt_peripheral.h"
 #include "twi_master.h"
+#include "app_error.h"
 
 #define MMA8652FC_I2C_ADDRESS		0x1D
 #define MMA8652FC_WRITE				(MMA8652FC_I2C_ADDRESS << 1)	// 0x3A
@@ -64,6 +65,15 @@
 #define F_OVR					_BIT(7)
 #define F_WMRK					_BIT(6)
 #define F_COUNT					(0x3f)
+
+/**@brief	Checks return value and invokes app error handler if false.
+ */
+#define RET_CHECK(VAL)					\
+	do									\
+	{									\
+		if (!VAL)						\
+			APP_ERROR_HANDLER(-1);		\
+	} while(0)
 
 /* Register Map for the MMA8652FC. */
 enum {
@@ -176,20 +186,23 @@ static void enable_interrupt(void)
 		 
 		 Wake ODR (Output Data Rate) is set by CTRL_REG1[DR] bits.
 	 */
-	bool ret = false;
+	bool ret;
 
 	ret = accelerometer_reset();
+	RET_CHECK(ret);
 
 	//
 	// Set device to STANDBY by setting bit 0 to value 0 in CTRL_REG1.
 	//
 	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY);
+	RET_CHECK(ret);
 
 	//
 	// Configure motion detection on Y axis only.
 	// NOTE: When I tried setting additional axis, Y wasn't signaling.
 	//
 	ret = accelerometer_write(REG8652_FF_MT_CFG, (FF_MT_OAE | FF_MT_YEFE));
+	RET_CHECK(ret);
 
 	//
 	// Configure threshold for motion.
@@ -199,12 +212,14 @@ static void enable_interrupt(void)
 	// still detects up to ±8 g.
 	//
 	ret = accelerometer_write(REG8652_FF_MT_THS, 0x04);
+	RET_CHECK(ret);
 
 	//
 	// Set the minimum time period of inactivity required to switch the part
 	// between Wake and Sleep status.
 	//
 	ret = accelerometer_write(REG8652_ASLP_COUNT, 0xFF); // Set auto-sleep wait period to 81seconds (255/0.32s=~81.6s)
+	RET_CHECK(ret);
 
 	//
 	// Set the debounce count.
@@ -217,6 +232,7 @@ static void enable_interrupt(void)
 	// Enable Auto-Sleep.
 	//
 	ret = accelerometer_write(REG8652_CTRL_REG2, AUTO_SLEEP_ENABLE);
+	RET_CHECK(ret);
 
 	//
 	// CTRL_REG3 register is used to control the Auto-WAKE/SLEEP function by 
@@ -226,6 +242,7 @@ static void enable_interrupt(void)
 	// Configure interrupt polarity to be LOW to HIGH on interrupt.
 	//
 	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT | OPEN_DRAIN); //  | INT_POLARITY
+	RET_CHECK(ret);
 	
 	//
 	// Set CTRL_REG4's freefall/motion interrupt bit INT_EN_FF_MT .
@@ -233,6 +250,7 @@ static void enable_interrupt(void)
 	// Orientation Detection, Freefall/Motion, and Data Ready.
 	//
 	ret = accelerometer_write(REG8652_CTRL_REG4, INT_EN_ASLP | INT_EN_FF_MT);
+	RET_CHECK(ret);
 
 	//
 	// Configure +/-8g full scale range.
@@ -245,13 +263,15 @@ static void enable_interrupt(void)
 	// Set configuration in CTRL_REG5 to route interrupt to INT1.
 	//
 	ret = accelerometer_write(REG8652_CTRL_REG5, INT_CFG_ASLP | INT_CFG_FF_MT);
+	RET_CHECK(ret);
 	
 	//
 	// Set device to ACTIVE by setting bit 0 to value 1 in CTRL_REG1.
 	// Also set the data rate to 100hz to match NRF TWI defaults.
 	//
-	uint8_t data_rate = (1 << 4) | (1 << 3); // binary 011000
+	//uint8_t data_rate = (1 << 4) | (1 << 3); // binary 011000
 	ret = accelerometer_write(REG8652_CTRL_REG1, 0x99); // MMA8652FC_ACTIVE | data_rate); // 0x99 == ASLP ODR=6.25Hz, ODR=100 Hz, Active mode
+	RET_CHECK(ret);
 }
 
 

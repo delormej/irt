@@ -266,7 +266,7 @@ bool twi_master_init(void)
        master when the system is in OFF mode, and when the TWI master is 
        disabled, these pins must be configured in the GPIO peripheral.
     */
-	uint32_t err_code = 0;
+	uint32_t err_code;
 
     NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER] =     \
         (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos) \

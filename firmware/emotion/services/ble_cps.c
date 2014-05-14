@@ -41,7 +41,7 @@
 #endif // ENABLE_DEBUG_LOG
 
 // WAHOO specific UUID constants.
-const ble_uuid128_t WAHOO_UUID = { 0x8B, 0xEB, 0x9F, 0x0F, 0x50, 0xF1, 0xFA, 0x97, 0xB3, 0x4A, 0x7D, 0x0A, 0x00, 0x00, 0x26, 0xA0 };
+const ble_uuid128_t WAHOO_UUID = {{ 0x8B, 0xEB, 0x9F, 0x0F, 0x50, 0xF1, 0xFA, 0x97, 0xB3, 0x4A, 0x7D, 0x0A, 0x00, 0x00, 0x26, 0xA0 }};
 const uint16_t WAHOO_RESISTANCE_CONTROL_CHAR = 0xE005;
 /*
 const uint16_t WAHOO_DFU_SVC_UUID = 0xEE01;
@@ -150,7 +150,7 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
 	// Accumulated torque field
 	if (p_cps->feature & BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT)
 	{
-		if (p_cps_measurement->accum_torque != NULL)
+		if (p_cps_measurement->accum_torque > 0)
 		{
 			flags |= CPS_MEAS_FLAG_ACCUM_TORQUE_PRESENT;
 			// TODO: If reporting from crank, this flag bit should be 1: CPS_MEAS_FLAG_ACCUM_TORQUE_SOURCE
@@ -161,7 +161,7 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
 	// Wheel revolution data fields (sent as a pair)
 	if (p_cps->feature & BLE_CPS_FEATURE_WHEEL_REV_BIT)
 	{
-		if (p_cps_measurement->accum_wheel_revs != NULL)
+		if (p_cps_measurement->accum_wheel_revs > 0)
 		{
 			flags |= CPS_MEAS_FLAG_WHEEL_REV_PRESENT;
 			len += uint32_encode(p_cps_measurement->accum_wheel_revs, &p_encoded_buffer[len]);
@@ -174,7 +174,7 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
 
 	if (p_cps->feature & BLE_CPS_FEATURE_ACCUM_ENERGY_BIT)
 	{
-		if (p_cps_measurement->accum_energy != NULL)
+		if (p_cps_measurement->accum_energy > 0)
 		{
 			flags |= CPS_MEAS_FLAG_ACCUM_ENERGY_PRESENT;
 			len += uint16_encode(p_cps_measurement->accum_energy, &p_encoded_buffer[len]);
@@ -195,7 +195,6 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
  */
 static uint32_t resistance_control_char_add(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
 {
-	uint32_t			err_code;
 	ble_gatts_char_md_t char_md;
 	ble_gatts_attr_t    attr_char_value;
 	ble_uuid_t        	ble_uuid;
@@ -298,7 +297,7 @@ static uint32_t cycling_power_measurement_char_add(ble_cps_t * p_cps, const ble_
     ble_gatts_attr_md_t attr_md;
 	irt_power_meas_t	initial_cpm;
 	uint8_t				encoded_cpm[MAX_CPM_LEN];
-	const char* 		user_desc = "CPM";
+	uint8_t				user_desc[] = "CPM";
     
     memset(&cccd_md, 0, sizeof(cccd_md));
 
@@ -310,8 +309,8 @@ static uint32_t cycling_power_measurement_char_add(ble_cps_t * p_cps, const ble_
     
     char_md.char_props.notify = 1;
     char_md.p_char_user_desc = user_desc;
-    char_md.char_user_desc_max_size = strlen(user_desc);
-    char_md.char_user_desc_size = strlen(user_desc);
+    char_md.char_user_desc_max_size = strlen((const char*)user_desc);
+    char_md.char_user_desc_size = char_md.char_user_desc_max_size;
     char_md.p_cccd_md         = &cccd_md;
     char_md.p_sccd_md         = &cccd_md; // NULL
     
@@ -546,7 +545,7 @@ uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_mea
 
         if (err_code != NRF_SUCCESS)
         {
-        	CPS_LOG("[CPS]:ble_cps_cycling_power_measurement_send returned %i\r\n", err_code);
+        	CPS_LOG("[CPS]:ble_cps_cycling_power_measurement_send returned %lu\r\n", err_code);
         }
     }
     else
