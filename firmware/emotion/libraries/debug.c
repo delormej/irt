@@ -17,7 +17,7 @@ void debug_init(void)
 {
 #ifdef SIMPLE_UART
 	simple_uart_config(PIN_UART_RTS, PIN_UART_TXD, PIN_UART_CTS, PIN_UART_RXD, UART_HWFC);
-	simple_uart_putstring("[DBG]:Initialized with Simple UART\r\n");
+	simple_uart_putstring((const uint8_t*)"[DBG]:Initialized with Simple UART\r\n");
 }
 
 int _write(int fd, char * str, int len)

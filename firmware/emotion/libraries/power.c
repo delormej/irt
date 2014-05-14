@@ -40,8 +40,8 @@
 // Assuming no additional force exists beyond this servo position (mag off).
 #define MIN_SERVO_FORCE_POS				1489
 
-static const float slope[10] = { 0, 2.6, 3.8, 5.0, 6.1, 7.1, 8.2, 9.2, 10.1, 11.0 };
-static const float intercept [10] = { 0, -9.60, -18.75, -25.00, -28.94, -29.99, -29.23, -26.87, -20.90, -13.34 };
+//static const float slope[10] = { 0, 2.6, 3.8, 5.0, 6.1, 7.1, 8.2, 9.2, 10.1, 11.0 };
+//static const float intercept [10] = { 0, -9.60, -18.75, -25.00, -28.94, -29.99, -29.23, -26.87, -20.90, -13.34 };
 
 // Hang on to accumulated torque for a session duration.
 static uint16_t m_accum_torque = 0;

@@ -59,6 +59,8 @@
 
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;     /**< Handle of the current connection. */
 static bool                             m_is_advertising = false;                    /**< True when in advertising state, False otherwise. */
+static ble_cps_t                        m_cps;                                    	 /**< Structure used to identify the cycling power service. */
+static ant_ble_evt_handlers_t * 		mp_ant_ble_evt_handlers;
 
 /**@brief Debug logging for module.
  *
@@ -71,15 +73,12 @@ static bool                             m_is_advertising = false;               
 
 #if defined(BLE_NUS_ENABLED)
 static ble_nus_t                       	m_nus;																			 // BLE UART service for debugging purposes.
-#endif
-static ble_cps_t                        m_cps;                                    	 /**< Structure used to identify the cycling power service. */
-
-static ant_ble_evt_handlers_t * 				mp_ant_ble_evt_handlers;
 
 static void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length)
 {
 	mp_ant_ble_evt_handlers->on_ble_uart(data, length);
 }
+#endif
 
 /**@brief Assert macro callback function.
  *

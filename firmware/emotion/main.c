@@ -381,13 +381,14 @@ static void application_timers_start(void)
     APP_ERROR_CHECK(err_code);
 }
 
+/*//TODO: Currently not used, should it be used on sleep?
 static void application_timers_stop(void)
 {
 	uint32_t err_code;
 		
 	err_code = app_timer_stop(m_ant_4hz_timer_id);
     APP_ERROR_CHECK(err_code);
-}
+} */
 
 /**@brief Timer initialization.
  *
