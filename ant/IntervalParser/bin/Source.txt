@@ -1,0 +1,6 @@
+10,150,Warm-up
+1,350,Interval
+1,150,Rest
+2,300,Interval (standing)
+2,150,Rest
+10,150,Cool-down
