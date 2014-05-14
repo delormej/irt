@@ -55,17 +55,12 @@ CFLAGS += -D$(BOARD)					# Define board version being used.
 ############################################
 # For debugging purposes
 ############################################
-CFLAGS += -DENABLE_DEBUG_LOG			# Enable debug logging.
-CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
-#CFLAGS += -DBLE_NUS_ENABLED			# Use Nordic BLE UART for logging.
-CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wait for debugger to attach.
-
-CFLAGS += -DSIM_SPEED					# Simulate speed.
-CFLAGS += -g							# Enable debug symbols.  
-
-# 
-# Old defines to clean up: , UART, IRT_DEBUG
-#
+debug : CFLAGS += -DENABLE_DEBUG_LOG			# Enable debug logging.
+debug : CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
+#debug : CFLAGS += -DBLE_NUS_ENABLED			# Use Nordic BLE UART for logging.
+debug : CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wait for debugger to attach.
+debug : CFLAGS += -DSIM_SPEED					# Simulate speed.
+debug : CFLAGS += -g							# Enable debug symbols.
 
 GDB_PORT_NUMBER = 2331					# Debugging port used by GDB.
 
@@ -74,7 +69,7 @@ GDB_PORT_NUMBER = 2331					# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 13
+SW_REVISION_BLD := 14
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -90,7 +85,10 @@ CFLAGS += -DSERIAL_NUMBER=0xAA55AA55
 
 include $(TEMPLATE_PATH)Makefile
 
+debug: all
+
 deploy:
 	cp $(BIN) $(DEPLOY_PATH)$(OUTPUT_NAME).bin
 	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
 
+.PHONY: debug deploy
