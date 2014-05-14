@@ -68,11 +68,11 @@
 
 /**@brief	Checks return value and invokes app error handler if false.
  */
-#define RET_CHECK(VAL)					\
-	do									\
-	{									\
-		if (!VAL)						\
-			APP_ERROR_HANDLER(-1);		\
+#define RET_CHECK(VAL)											\
+	do															\
+	{															\
+		if (VAL == false)										\
+			APP_ERROR_CHECK_BOOL(IRT_ERROR_AC_BASE_NUM);		\
 	} while(0)
 
 /* Register Map for the MMA8652FC. */
@@ -323,5 +323,5 @@ uint32_t accelerometer_data(accelerometer_data_t* p_data)
 		accelerometer_read(REG8652_SYSMOD, &(p_data->mode), sizeof(p_data->mode));
 	}
 	
-	return IRT_SUCCESS;
+	return NRF_SUCCESS;
 }

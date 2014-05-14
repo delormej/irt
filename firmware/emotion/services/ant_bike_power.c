@@ -104,7 +104,7 @@ static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 		// from Trainer Road.  If we fix that, this condition shouldn't happen as often.
 		if (err_code == ANT_TRANSMIT_IN_PROGRESS)
 		{
-			BP_LOG("[BP]:broadcast_message_transmit - Warning: Pending Transmit");
+			BP_LOG("[BP]:broadcast_message_transmit WARN: Pending Transmit\r\n");
 			err_code = NRF_SUCCESS;
 		}
 		
@@ -122,7 +122,7 @@ static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 		// from Trainer Road.  If we fix that, this condition shouldn't happen as often.
 		if (err_code == ANT_TRANSMIT_IN_PROGRESS)
 		{
-			BP_LOG("[BP]:acknolwedge_message_transmit - Warning: Pending Transmit\r\n");
+			BP_LOG("[BP]:acknolwedge_message_transmit WARN: Pending Transmit\r\n");
 			err_code = NRF_SUCCESS;
 		}
 		

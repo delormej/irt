@@ -101,10 +101,22 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 {
     // TODO: HACK temporarily IGNORE this message.  
 	if (error_code == 0x401F) //TRANSFER_IN_PROGRESS
+	{
+		LOG("[MAIN]:app_error_handler WARN: Transfer in progress {%s:%lu}\r\n",
+				p_file_name, line_num);
 		return;
-
-	LOG("[MAIN]:app_error_handler {HALTED ON ERRROR: %lu}: %s:%lu\r\n",
-			error_code, p_file_name, line_num);
+	}
+	else if (error_code && IRT_ERROR_AC_BASE_NUM)
+	{
+		LOG("[MAIN]:app_error_handler WARN: Accelerometer fail line:{%lu}.\r\n",
+				line_num);
+		return;
+	}
+	else
+	{
+		LOG("[MAIN]:app_error_handler {HALTED ON ERRROR: %lu}: %s:%lu\r\n",
+				error_code, p_file_name, line_num);
+	}
 
     // This call can be used for debug purposes during development of an application.
     // @note CAUTION: Activating this code will write the stack to flash on an error.
@@ -252,11 +264,6 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 				(p_power_meas_current->accum_wheel_revs - p_power_meas_first->accum_wheel_revs),
 				(p_power_meas_current->last_wheel_event_time - p_power_meas_first->last_wheel_event_time));
 	}
-
-	LOG("[MAIN]:resistance_adjust {mode:%i, cur_servo:%i, cur_speed:%i} \r\n",
-			m_resistance_mode,
-			resistance_position_get(),
-			(uint16_t)(power_meas.instant_speed_mps * 100u));
 
 	// Don't attempt to adjust if stopped.
 	if (power_meas.instant_speed_mps == 0.0f)

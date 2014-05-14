@@ -9,12 +9,16 @@ All rights reserved.
 #define IRT_COMMON_H
 
 #include <stdint.h>
+#include "nrf_error.h"
 
 /*****************************************************************************
-* INSIDERIDE Defines
+* Inside Ride Defines
 *****************************************************************************/
-#define IRT_SUCCESS			0x0
-#define IRT_ERROR			0x1
+#define IRT_SUCCESS				NRF_SUCCESS
+#define IRT_ERROR_BASE_NUM      (0x80000)       				///< Error base, hopefully well away from anything else.
+#define IRT_ERROR_RC_BASE_NUM   IRT_ERROR_BASE_NUM + (0x100)   	///< Error base for Resistance Control
+#define IRT_ERROR_AC_BASE_NUM   IRT_ERROR_BASE_NUM + (0x200)   	///< Error base for Accelerometer
+
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 
 /**@brief Cycling Power Service measurement type. */

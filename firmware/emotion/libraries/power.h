@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include "irt_common.h"
 
-#define IRT_ERROR_INVALID_RESISTANCE_LEVEL					IRT_ERROR + 0x01
+#define IRT_ERROR_INVALID_RESISTANCE_LEVEL					IRT_ERROR_RC_BASE_NUM + 0x01
 
 /**@brief	Calculates an estimated power in watts based on current speed, rider
  *			profile including total weight (bike+gear+rider) in kg and the
@@ -29,7 +29,7 @@ uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048);
  * 			current speed, rider profile including total weight (bike+gear+rider)
  * 			in kg and the current magnet servo position.
  *
- * @return	IRT_SUCCESS if successful, otherwise and error code.
+ * @return	0 if successful, otherwise and error code.
  */
 int32_t power_measure(float total_weight_kg, irt_power_meas_t* p_power_meas);
 
