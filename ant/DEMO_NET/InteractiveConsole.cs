@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using ANT_Console.Services;
 using ANT_Console.Messages;
+using IntervalParser;
 
 namespace ANT_Console
 {
@@ -72,6 +73,10 @@ namespace ANT_Console
                     case ConsoleKey.V:
                         WriteCommand(string.Format("Firmware version: {0}", 
                             m_eMotion.FirmwareVersion));
+                        break;
+
+                    case ConsoleKey.P:
+                        ParseIntervalFileCommand();
                         break;
 
                     default:
@@ -243,6 +248,21 @@ namespace ANT_Console
                 m_eMotion.SetWeight(weightKg);
                 WriteCommand(string.Format("Set Weight to {0:N1}kg.", weightKg));
             }
+        }
+
+        void ParseIntervalFileCommand()
+        {
+            string prompt = "<enter interval source filename {defaults to Source.txt}>";
+            string filename = string.Empty;
+
+            InteractiveCommand(prompt, () =>
+            {
+                filename = Console.ReadLine();
+                return true;
+            });
+
+            IntervalParser.Parser.Parse(filename);
+            WriteCommand("Parsed interval file.");
         }
 
         void WriteCommand(string message)

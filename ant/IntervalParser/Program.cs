@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace IntervalParser
 {
@@ -31,9 +30,11 @@ namespace IntervalParser
         }
     }
 
-    class Program
+    public class Parser
     {
-        static List<Entry> ReadInput(string filename)
+        private Parser() { }
+
+        private static List<Entry> ReadInput(string filename)
         {
             var list = new List<Entry>();
 
@@ -59,7 +60,7 @@ namespace IntervalParser
             return list;
         }
 
-        static void WriteOuput(string filename, int ftp, List<Entry> list)
+        private static void WriteOuput(string filename, int ftp, List<Entry> list)
         {
             const string COURSE_HEADER = "[COURSE HEADER]\r\n" +
                 "VERSION=2\r\n" +
@@ -107,16 +108,20 @@ namespace IntervalParser
             File.WriteAllText(filename, formatted.ToString());
         }
 
-        static void Main(string[] args)
+        public static void Parse(string inputFilename = null, string outputFilename = null)
         {
-            string outputFilename = string.Format("{0:yyyyMMdd-HHmmss-F}.erg",
-                DateTime.Now);
+            if (string.IsNullOrEmpty(inputFilename))
+                inputFilename = "Source.txt";
+            if (string.IsNullOrEmpty(outputFilename))
+                outputFilename = string.Format("{0:yyyyMMdd-HHmmss-F}.erg",
+                    DateTime.Now);
             
-            var list = ReadInput(args[0]);
+            var list = ReadInput(inputFilename);
             WriteOuput(outputFilename, 300, list);
 
-            Console.Write("DONE.");
-            Console.ReadKey();
+            Console.Write("Parsed interval file {0} and output file {1}.",
+                inputFilename,
+                outputFilename);
         }
     }
 }
