@@ -19,8 +19,8 @@ namespace ANT_Console.Services
 
     abstract class AntService
     {
-        byte[] USER_NETWORK_KEY = { 0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45 };
-        const byte USER_NETWORK_NUM = 0;         // The network key is assigned to this network number
+        static byte[] USER_NETWORK_KEY = { 0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45 };
+        static byte USER_NETWORK_NUM = 0;         // The network key is assigned to this network number
 
         static ANT_Device m_device;
         protected ANT_Channel m_channel;
@@ -41,7 +41,7 @@ namespace ANT_Console.Services
 
             m_channel = m_device.getChannel(config.ChannelId);
             m_channel.channelResponse += OnResponse;
-
+            
             if (!m_channel.assignChannel(config.ChannelType, USER_NETWORK_NUM, 500))
                 throw new Exception("Error assigning channel");
 
@@ -70,6 +70,14 @@ namespace ANT_Console.Services
                 case ANT_ReferenceLibrary.ANTMessageID.BURST_DATA_0x50:
                     // Process response.
                     ProcessResponse(response);
+                    break;
+                case ANT_ReferenceLibrary.ANTMessageID.OPEN_CHANNEL_0x4B:
+                    if (Connected != null)
+                        Connected(this, null);
+                    break;
+                case ANT_ReferenceLibrary.ANTMessageID.CLOSE_CHANNEL_0x4C:
+                    if (Closing !=null)
+                        Closing(this, null);
                     break;
                 default:
                     // Nothing to process.

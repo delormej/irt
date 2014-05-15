@@ -60,6 +60,8 @@ namespace ANT_Console
                 (int)AntChannel.RefPower, 0, quarq_tranmission_type);
             refPower.StandardPowerEvent += ProcessMessage;
             refPower.TorqueEvent += ProcessMessage;
+            refPower.Connected += refPower_Connected;
+            refPower.Closing += refPower_Closing;
 
             // Configure E-Motion power reporting.
             m_eMotionPower = new AntBikePower(
@@ -68,10 +70,38 @@ namespace ANT_Console
             m_eMotionPower.TorqueEvent += ProcessMessage;
             m_eMotionPower.ExtraInfoEvent += ProcessMessage;
             m_eMotionPower.ResistanceEvent += ProcessMessage;
+            m_eMotionPower.Connected += m_eMotionPower_Connected;
+            m_eMotionPower.Closing += m_eMotionPower_Closing;
 
             // Configure the remote control service.
             m_control = new AntControl((int)AntChannel.AntControl);
         }
+
+        //
+        // These things never seem to get called, in here for future implementation.
+        //
+        void refPower_Closing(object sender, EventArgs e)
+        {
+            Console.WriteLine("refPower_Closing");
+        }
+
+        void refPower_Connected(object sender, EventArgs e)
+        {
+            Console.WriteLine("refPower_Connected");
+        }
+
+        void m_eMotionPower_Closing(object sender, EventArgs e)
+        {
+            Console.WriteLine("eMotionPower_Closing");
+        }
+
+        void m_eMotionPower_Connected(object sender, EventArgs e)
+        {
+            Console.WriteLine("eMotionPower_Connected");
+        }
+        //
+        // End
+        //
 
         private void ConfigureReporters()
         {
