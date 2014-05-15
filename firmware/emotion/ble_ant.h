@@ -6,6 +6,7 @@
 #include "ble_cps.h"
 #include "ble_gatt.h"
 #include "ant_ctrl.h"
+#include "ant_error.h"
 
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
 #define LOW_BYTE(word)               		(uint8_t)(word & 0x00FFu)                   /**< Get low byte of a uint16_t. */
@@ -55,6 +56,11 @@ static const uint8_t ant_manufacturer_page[TX_BUFFER_SIZE] =
 	HIGH_BYTE(MODEL_NUMBER)
 };
 
+/**@brief	Checks to see if this error could be treated as a warning.
+ */
+#define ANT_ERROR_AS_WARN(ERR) \
+		(ERR == NRF_ANT_ERROR_TRANSFER_BUSY || \
+			ERR == NRF_ANT_ERROR_TRANSFER_IN_PROGRESS)
 
 // MACRO for sending manufacturer and product pages.
 #define ANT_COMMON_PAGE_TRANSMIT(ANT_CHANNEL, COMMON_PAGE)					\
@@ -63,7 +69,8 @@ static const uint8_t ant_manufacturer_page[TX_BUFFER_SIZE] =
         uint32_t ERR_CODE = sd_ant_broadcast_message_tx((ANT_CHANNEL),		\
                                             TX_BUFFER_SIZE,					\
                                             (uint8_t*)&(COMMON_PAGE) );		\
-        APP_ERROR_CHECK(ERR_CODE);											\
+        if (!(ANT_ERROR_AS_WARN(ERR_CODE)))									\
+        	APP_ERROR_CHECK(ERR_CODE);										\
     } while (0)																\
 
 typedef void(*ant_bp_evt_dfu_enable)(void);

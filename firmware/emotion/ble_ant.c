@@ -424,8 +424,23 @@ static void ble_ant_stack_init(void) {
  */
 void ble_ant_resistance_ack(uint8_t op_code, uint16_t value)
 {
-	ant_bp_resistance_tx_send(op_code, value);
-	ble_cps_resistance_indicate(&m_cps, op_code, value);
+	uint32_t err_code;
+
+	err_code = ant_bp_resistance_tx_send(op_code, value);
+	APP_ERROR_CHECK(err_code);
+
+	if (m_cps.conn_handle != BLE_CONN_HANDLE_INVALID)
+	{
+		err_code = ble_cps_resistance_indicate(&m_cps, op_code, value);
+	}
+
+	if (err_code == NRF_ERROR_BUSY)
+	{
+		err_code = 0;
+		BA_LOG("[BA]:ble_ant_resistance_ack WARN: NRF_ERROR_BUSY.\r\n");
+	}
+
+	APP_ERROR_CHECK(err_code);
 }
 
 //

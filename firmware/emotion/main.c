@@ -98,16 +98,10 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
-    // TODO: HACK temporarily IGNORE this message.  
-	if (error_code == 0x401F) //TRANSFER_IN_PROGRESS
+    // Treat a few errors as warnings.
+	if (error_code == NRF_ERROR_NO_MEM)
 	{
-		LOG("[MAIN]:app_error_handler WARN: Transfer in progress {%s:%lu}\r\n",
-				p_file_name, line_num);
-		return;
-	}
-	else if ((error_code & IRT_ERROR_AC_BASE_NUM) == IRT_ERROR_AC_BASE_NUM)
-	{
-		LOG("[MAIN]:app_error_handler WARN: Accelerometer fail, %s line:{%lu}.\r\n",
+		LOG("[MAIN]:app_error_handler WARN: NRF_ERROR_NO_MEM in %s:{%lu}.\r\n",
 				p_file_name,
 				line_num);
 		return;
@@ -802,7 +796,9 @@ int main(void)
 	// Initialize debug logging if enabled.
 	debug_init();
 
+	LOG("**********************************************************************\r\n");
 	LOG("[MAIN]:Device starting, firmware version %s\r\n", SW_REVISION);
+	LOG("**********************************************************************\r\n");
 
 	// Determine what the reason for startup is and log appropriately.
 	check_reset_reason();

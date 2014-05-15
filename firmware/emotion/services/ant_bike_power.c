@@ -4,9 +4,10 @@
 #include <stdint.h>
 #include "stdio.h"
 #include "ant_bike_power.h"
-#include "app_error.h"
 #include "ant_parameters.h"
 #include "ant_interface.h"
+#include "ant_error.h"
+#include "app_error.h"
 #include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
@@ -50,7 +51,6 @@
 #define ANT_BP_EXT_ASSIGN            0	                                          /**< ANT Ext Assign. */
 
 #define ANT_BURST_MSG_ID_SET_RESISTANCE		0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
-#define ANT_TRANSMIT_IN_PROGRESS 		 0x401F
 
 /**@brief Debug logging for module.
  *
@@ -95,38 +95,32 @@ static ant_bp_evt_dfu_enable m_on_enable_dfu_mode;
 
 static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 {
-		uint32_t err_code;
+	uint32_t err_code;
+
+	err_code = sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+
+	if (ANT_ERROR_AS_WARN(err_code))
+	{
+		BP_LOG("[BP]:broadcast_message_transmit WARN:%lu\r\n", err_code);
+		err_code = NRF_SUCCESS;
+	}
 	
-		err_code = sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
-		
-		// TODO: this feels like a hack, but it works properly and the message does get sent.
-		// This is likely because we're sending so many ACKS to so many set-resistance commands
-		// from Trainer Road.  If we fix that, this condition shouldn't happen as often.
-		if (err_code == ANT_TRANSMIT_IN_PROGRESS)
-		{
-			BP_LOG("[BP]:broadcast_message_transmit WARN: Pending Transmit\r\n");
-			err_code = NRF_SUCCESS;
-		}
-		
-		return err_code;
+	return err_code;
 }
 
 static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 {
-		uint32_t err_code;
+	uint32_t err_code;
+
+	err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+
+	if (ANT_ERROR_AS_WARN(err_code))
+	{
+		BP_LOG("[BP]:acknolwedge_message_transmit WARN:%lu\r\n", err_code);
+		err_code = NRF_SUCCESS;
+	}
 	
-		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
-		
-		// TODO: this feels like a hack, but it works properly and the message does get sent.
-		// This is likely because we're sending so many ACKS to so many set-resistance commands
-		// from Trainer Road.  If we fix that, this condition shouldn't happen as often.
-		if (err_code == ANT_TRANSMIT_IN_PROGRESS)
-		{
-			BP_LOG("[BP]:acknolwedge_message_transmit WARN: Pending Transmit\r\n");
-			err_code = NRF_SUCCESS;
-		}
-		
-		return err_code;
+	return err_code;
 }
 
 static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel_period_2048, uint8_t wheel_ticks)
@@ -396,7 +390,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	}
 }
 
-void ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
+uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 {
 	// State required to be managed.
 	static uint8_t resistance_sequence = 0;
@@ -418,5 +412,5 @@ void ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 
 	err_code = acknolwedge_message_transmit(tx_buffer);
 
-	APP_ERROR_CHECK(err_code);
+	return err_code;
 }
