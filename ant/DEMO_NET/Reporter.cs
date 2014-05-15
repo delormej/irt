@@ -20,7 +20,7 @@ namespace ANT_Console
             string filename = string.Format("log-{0:yyyyMMdd-HHmmss-F}.csv",
                     DateTime.Now);
 
-            m_logFileWriter = new StreamWriter("filename");
+            m_logFileWriter = new StreamWriter(filename);
             m_logFileWriter.AutoFlush = true;
             m_logFileWriter.WriteLine("event_time, bike_speed_mps, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power, calc_power, servo_pos, accelerometer_y, temperature");
         }
