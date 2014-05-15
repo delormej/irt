@@ -174,6 +174,11 @@ void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt);
 */
 uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_meas_t * p_cps_meas);
 
+/**@brief	Sends a BLE indication to the attribute responsible for wahoo resistance
+ * 			control messages.
+ */
+uint32_t ble_cps_resistance_indicate(ble_cps_t * p_cps, uint8_t op_code, uint16_t value);
+
 #endif // BLE_CPS_H__
 
 /** @} */

@@ -88,8 +88,7 @@ typedef struct ant_ble_evt_handlers_s {
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers);
 void ble_ant_start(void);
 void ble_advertising_start(void);
-void power_manage(void);
 void cycling_power_send(irt_power_meas_t * p_cps_meas);
-void debug_send(uint8_t * data, uint16_t length);
+void ble_ant_resistance_ack(uint8_t op_code, uint16_t value);
 
 #endif // BLE_ANT_H__

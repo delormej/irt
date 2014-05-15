@@ -557,3 +557,14 @@ uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_mea
     return err_code;
 }
 
+uint32_t ble_cps_resistance_indicate(ble_cps_t * p_cps, uint8_t op_code, uint16_t value)
+{
+	uint32_t err_code;
+
+	// Send value if connected and notifying
+	if (p_cps->conn_handle != BLE_CONN_HANDLE_INVALID)
+	{
+	}
+
+	return err_code;
+}

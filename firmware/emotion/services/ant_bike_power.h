@@ -20,7 +20,7 @@ typedef struct ant_speed_sensor_s {
 void ant_bp_tx_init(rc_evt_handler_t on_set_resistance, ant_bp_evt_dfu_enable on_enable_dfu_mode);
 void ant_bp_tx_start(void);
 void ant_bp_tx_send(irt_power_meas_t * p_power_meas);
-void ant_bp_resistance_tx_send(resistance_mode_t mode, uint8_t* level);
+void ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value);
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt);
 
 #endif	// ANT_BIKE_POWER_H__

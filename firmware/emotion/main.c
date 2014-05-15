@@ -45,7 +45,6 @@
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 #include "app_timer.h"
-#include "ant_bike_power.h"
 #include "ble_debug_assert_handler.h"
 #include "debug.h"
 #include "boards.h"
@@ -457,7 +456,7 @@ static void on_button_i(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = 0;
 	resistance_level_set(m_resistance_level);
-	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
+	ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
 }
 
 static void on_button_ii(void)
@@ -467,14 +466,14 @@ static void on_button_ii(void)
 			m_resistance_level > 0)
 	{
 		resistance_level_set(--m_resistance_level);
-		ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
+		ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
 	}
 	else if (m_resistance_mode == RESISTANCE_SET_ERG &&
-			m_sim_forces.erg_watts > 100u)
+			m_sim_forces.erg_watts > 50u)
 	{
 		// Decrement by 15 watts;
 		m_sim_forces.erg_watts -= 15u;
-		ant_bp_resistance_tx_send(m_resistance_mode, (uint8_t*)&m_sim_forces.erg_watts);
+		ble_ant_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 }
 
@@ -485,13 +484,13 @@ static void on_button_iii(void)
 			m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
 	{
 		resistance_level_set(++m_resistance_level);
-		ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
+		ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
 	}
 	else if (m_resistance_mode == RESISTANCE_SET_ERG)
 	{
 		// Increment by 15 watts;
 		m_sim_forces.erg_watts += 15u;
-		ant_bp_resistance_tx_send(m_resistance_mode, (uint8_t*)&m_sim_forces.erg_watts);
+		ble_ant_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 }
 
@@ -500,7 +499,7 @@ static void on_button_iv(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
 	resistance_level_set(m_resistance_level);
-	ant_bp_resistance_tx_send(m_resistance_mode, &m_resistance_level);
+	ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
 }
 
 static void on_button_menu(void)
@@ -513,7 +512,7 @@ static void on_button_menu(void)
 		{
 			m_sim_forces.erg_watts = DEFAULT_ERG_WATTS;
 		}
-		ant_bp_resistance_tx_send(m_resistance_mode, (uint8_t*)&m_sim_forces.erg_watts);
+		ble_ant_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 	else
 	{
@@ -666,7 +665,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	}
 
 	// Send acknowledgment.
-	ant_bp_resistance_tx_send(m_resistance_mode, rc_evt.pBuffer);
+	ble_ant_resistance_ack(m_resistance_mode, (int16_t)*rc_evt.pBuffer);
 }
 
 // Invoked when a button is pushed on the remote control.
@@ -775,6 +774,16 @@ static uint32_t check_reset_reason()
 	}
 
 	return reason;
+}
+
+/**@brief Power manager.
+ */
+void power_manage(void)
+{
+    uint32_t err_code;
+
+    err_code = sd_app_evt_wait();
+    APP_ERROR_CHECK(err_code);
 }
 
 /*----------------------------------------------------------------------------

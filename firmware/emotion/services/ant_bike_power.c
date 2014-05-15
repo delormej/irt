@@ -396,7 +396,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	}
 }
 
-void ant_bp_resistance_tx_send(resistance_mode_t mode, uint8_t* level)
+void ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 {
 	// State required to be managed.
 	static uint8_t resistance_sequence = 0;
@@ -410,8 +410,8 @@ void ant_bp_resistance_tx_send(resistance_mode_t mode, uint8_t* level)
 		mode,
 		WF_ANT_RESPONSE_FLAG,
 		++resistance_sequence,
-		level[0],
-		level[1],
+		LOW_BYTE(value),
+		HIGH_BYTE(value),
 		0x01, 	// Again, not sure why, but KICKR responds with this.
 		0x00
 	};
