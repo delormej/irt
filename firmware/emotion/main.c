@@ -108,7 +108,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	}
 	else
 	{
-		LOG("[MAIN]:app_error_handler {HALTED ON ERRROR: %lu}: %s:%lu\r\n",
+		LOG("[MAIN]:app_error_handler {HALTED ON ERRROR: %#.8x}: %s:%lu\r\n",
 				error_code, p_file_name, line_num);
 	}
 
