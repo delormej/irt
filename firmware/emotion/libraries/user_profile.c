@@ -4,9 +4,19 @@
 #include "nrf_error.h"
 #include "app_error.h"
 #include "pstorage.h"
+#include "debug.h"
 
 #define USER_PROFILE_BLOCK_ID		0u
 #define USER_PROFILE_OFFSET			0u
+
+/**@brief Debug logging for main module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define UP_LOG debug_log
+#else
+#define UP_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 static pstorage_handle_t m_user_profile_storage;  // Internal pointer to persistent storage.
 
@@ -18,7 +28,7 @@ static void up_pstorage_cb_handler(pstorage_handle_t * handle,
 {
     if (result != NRF_SUCCESS)
     {
-        // TODO: assert some sort of error here.
+    	UP_LOG("[UP]:up_pstorage_cb_handler WARN: Error %lu\r\n", result);
     }
 }
 
@@ -59,6 +69,10 @@ uint32_t user_profile_load(user_profile_t *p_user_profile)
     						sizeof (user_profile_t),
     						USER_PROFILE_OFFSET);
 
+    UP_LOG("[UP]:user_profile_load {weight:%.2f, wheel:%i}\r\n",
+    		p_user_profile->total_weight_kg,
+    		p_user_profile->wheel_size_mm);
+
     return err_code;
 }
 
@@ -77,6 +91,10 @@ uint32_t user_profile_store(user_profile_t *p_user_profile)
                                (uint8_t *)p_user_profile,
                                sizeof (user_profile_t),
                                USER_PROFILE_OFFSET);
+
+    UP_LOG("[UP]:user_profile_store {weight:%.2f, wheel:%i}\r\n",
+    		p_user_profile->total_weight_kg,
+    		p_user_profile->wheel_size_mm);
 
 	return err_code;
 }

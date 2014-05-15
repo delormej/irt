@@ -108,7 +108,8 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	}
 	else if (error_code && IRT_ERROR_AC_BASE_NUM)
 	{
-		LOG("[MAIN]:app_error_handler WARN: Accelerometer fail line:{%lu}.\r\n",
+		LOG("[MAIN]:app_error_handler WARN: Accelerometer fail, %s line:{%lu}.\r\n",
+				p_file_name,
 				line_num);
 		return;
 	}
@@ -158,6 +159,8 @@ static void set_wheel_params(uint8_t *pBuffer)
 
 	if (m_user_profile.wheel_size_mm != wheel_size)
 	{
+		LOG("[MAIN]:set_wheel_params {wheel:%lu}\r\n", wheel_size);
+
 		m_user_profile.wheel_size_mm = wheel_size;
 		// Schedule an update to persist the profile to flash.
 		app_sched_event_put(NULL, 0, profile_update_sched_handler);
@@ -186,8 +189,8 @@ static void set_sim_params(uint8_t *pBuffer)
 	// Co-efficient of drag.
 	m_sim_forces.c = (pBuffer[4] | pBuffer[5] << 8u) / 1000.0f;
 
-	LOG("[MAIN]:set_sim_params {weight:%i, crr:%i, c:%i}\r\n",
-		(uint16_t)m_user_profile.total_weight_kg,
+	LOG("[MAIN]:set_sim_params {weight:%.2f, crr:%i, c:%i}\r\n",
+		m_user_profile.total_weight_kg,
 		((uint16_t)m_sim_forces.crr)*10000, 
 		((uint16_t)m_sim_forces.c)*1000);
 }
@@ -219,8 +222,10 @@ static void profile_init(void)
 			m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
 		}
 		
-		if (isnan(m_user_profile.total_weight_kg))
+		if (isnan(m_user_profile.total_weight_kg) || m_user_profile.total_weight_kg < 1.0f)
 		{
+			LOG("[MAIN]:profile_init using default weight.");
+
 			// Total weight of rider + bike + shoes, clothing, etc...
 			m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
 		}
@@ -234,7 +239,7 @@ static void profile_init(void)
 		m_sim_forces.crr = SIM_CRR;
 		m_sim_forces.c = SIM_C;
 
-		LOG("[MAIN]:profile_init {weight:%f, wheel:%i}\r\n",
+		LOG("[MAIN]:profile_init {weight:%.2f, wheel:%i}\r\n",
 				m_user_profile.total_weight_kg,
 				m_user_profile.wheel_size_mm);
 }
@@ -244,12 +249,14 @@ static void profile_update(void)
 {
 	uint32_t err_code;
 
-	LOG("[MAIN] Scheduling profile update.\r\n");
-
 	// This method ensures the device is in a proper state in order to update
 	// the profile.
 	err_code = user_profile_store(&m_user_profile);
 	APP_ERROR_CHECK(err_code);
+
+	LOG("[MAIN]:profile_update {weight: %.2f, wheel: %i}\r\n",
+			m_user_profile.total_weight_kg,
+			m_user_profile.wheel_size_mm);
 }
 
 static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_meas_t* p_power_meas_current)
@@ -591,6 +598,9 @@ static void on_set_resistance(rc_evt_t rc_evt)
 {
 	// TODO: Write a macro for extracting the 2 byte value with endianness.			
 
+	LOG("[MAIN]:on_set_resistance {OP:%i,VAL:%i}\r\n",
+			(uint8_t)rc_evt.operation,
+			(int16_t)(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u));
 	// 
 	// Parse the messages and set state or resistance as appropriate.
 	//
@@ -657,10 +667,6 @@ static void on_set_resistance(rc_evt_t rc_evt)
 
 	// Send acknowledgment.
 	ant_bp_resistance_tx_send(m_resistance_mode, rc_evt.pBuffer);
-
-	LOG("[MAIN]:on_set_resistance {OP:%i,VAL:%i}\r\n",
-			(uint8_t)rc_evt.operation,
-			(int16_t)(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u));
 }
 
 // Invoked when a button is pushed on the remote control.
