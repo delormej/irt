@@ -59,7 +59,7 @@
 #define BLE_ADV_BLINK_RATE_MS			500u
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
-#define SCHED_QUEUE_SIZE                10                                          /**< Maximum number of events in the scheduler queue. */
+#define SCHED_QUEUE_SIZE                16                                          /**< Maximum number of events in the scheduler queue. */
 
 static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
@@ -598,7 +598,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 {
 	// TODO: Write a macro for extracting the 2 byte value with endianness.			
 
-	LOG("[MAIN]:on_set_resistance {OP:%i,VAL:%i}\r\n",
+	LOG("[MAIN]:on_set_resistance {OP:%#.2x,VAL:%i}\r\n",
 			(uint8_t)rc_evt.operation,
 			(int16_t)(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u));
 	// 
