@@ -435,6 +435,16 @@ static uint32_t cycling_power_vector_char_add(ble_cps_t * p_cps, const ble_cps_i
 	return 0;
 }
 
+/**@brief	Encodes resistance control acknowledgement.
+ */
+static void resistance_ack_encode(uint8_t op_code, uint16_t value, uint8_t* p_encoded)
+{
+	p_encoded[0] = 0x01;				// Hard coded for now, not sure why it's always 1?
+	p_encoded[1] = op_code;				// 2nd byte contains the operation code.
+	uint16_encode(&value, p_encoded);	// Encode the actual value.
+}
+
+
 void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
 {
     switch (p_ble_evt->header.evt_id)
@@ -519,12 +529,12 @@ uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_mea
     // Send value if connected and notifying
     if (p_cps->conn_handle != BLE_CONN_HANDLE_INVALID)
     {
-        uint8_t								 encoded_cpm[MAX_CPM_LEN];
-        uint16_t               len;
-        uint16_t               hvx_len;
-        ble_gatts_hvx_params_t hvx_params;
+        uint8_t					encoded_cpm[MAX_CPM_LEN];
+        uint16_t               	len;
+        uint16_t               	hvx_len;
+        ble_gatts_hvx_params_t 	hvx_params;
         
-				memset(&encoded_cpm, 0, sizeof(encoded_cpm));
+		memset(&encoded_cpm, 0, sizeof(encoded_cpm));
 				
         len     = cps_measurement_encode(p_cps, p_cps_meas, encoded_cpm);
         hvx_len = len;
@@ -560,10 +570,38 @@ uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_mea
 uint32_t ble_cps_resistance_indicate(ble_cps_t * p_cps, uint8_t op_code, uint16_t value)
 {
 	uint32_t err_code;
+    uint8_t					encoded_ack[4];		// TODO: Hardcoded for now, but this message is only ever 4 bytes.
+    uint16_t               	hvx_len;
+	ble_gatts_hvx_params_t 	hvx_params;
 
-	// Send value if connected and notifying
 	if (p_cps->conn_handle != BLE_CONN_HANDLE_INVALID)
 	{
+		// Encode acknowledgement.
+		resistance_ack_encode(op_code, value, encoded_ack);
+		hvx_len = sizeof(encoded_ack);
+
+        memset(&hvx_params, 0, sizeof(hvx_params));
+
+        hvx_params.handle   = p_cps->cprc_handles.value_handle;
+        hvx_params.type     = BLE_GATT_HVX_INDICATION;
+        hvx_params.offset   = 0;
+        hvx_params.p_len    = &hvx_len;
+        hvx_params.p_data   = encoded_ack;
+
+        err_code = sd_ble_gatts_hvx(p_cps->conn_handle, &hvx_params);
+        if ((err_code == NRF_SUCCESS) && (hvx_len != sizeof(encoded_ack)))
+        {
+            err_code = NRF_ERROR_DATA_SIZE;
+        }
+
+        if (err_code != NRF_SUCCESS)
+        {
+        	CPS_LOG("[CPS]:ble_cps_cycling_power_measurement_send returned %lu\r\n", err_code);
+        }
+	}
+	else
+	{
+		err_code = NRF_ERROR_INVALID_STATE;
 	}
 
 	return err_code;
