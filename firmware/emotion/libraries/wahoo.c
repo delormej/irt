@@ -8,7 +8,7 @@
 *
 ********************************************************************************/
 #include "wahoo.h"
-#include <stdbool.h>
+#include "app_util.h"
 #include "debug.h"
 
 /**@brief Debug logging for main module.
@@ -20,6 +20,19 @@
 #define WH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
+/**@brief	Helper for decoding a float from buffer.*/
+#define DECODE_FLOAT(BUF, SCALE)	uint16_decode((const uint8_t*)BUF) / SCALE
+
+
+float wahoo_decode_crr(uint8_t *buffer)
+{
+	return DECODE_FLOAT(buffer, 10000.0f);
+}
+
+float wahoo_decode_c(uint8_t *buffer)
+{
+	return DECODE_FLOAT(buffer, 1000.0f);
+}
 
 /**@brief Parses the resistance percentage out of the KICKR command.
  *
@@ -80,7 +93,8 @@ float wahoo_sim_grade_decode(uint8_t *buffer)
 	// Note this is a signed int, change the endianness.
 	value = buffer[0] | buffer[1] << 8u;
 
-	// Flip the sign bit (negative == positive, and vice versa).
+	// For some reason the value seems to come across the wire backwards?
+	// FLIP the sign bit (negative == positive, and vice versa).
 	value ^= 1 << 15u;
 
 	WH_LOG("[WH]:wahoo_sim_grade_decode = %i / 32786\r\n", value);

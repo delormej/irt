@@ -13,6 +13,10 @@
 
 #include <stdint.h>
 
+float wahoo_decode_crr(uint8_t *buffer);
+
+float wahoo_decode_c(uint8_t *buffer);
+
 // Parses the simulation grade.
 float wahoo_sim_grade_decode(uint8_t *buffer);
 

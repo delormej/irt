@@ -16,9 +16,8 @@
 #include "math.h"
 #include "debug.h"
 
-#define	GRAVITY		9.8f
-
-#define MIN_THRESHOLD_MOVE	3				// Minimum threshold for a servo move.
+#define	GRAVITY				9.8f	// Co-efficent of gravity for Earth.  Change for other planets.
+#define MIN_THRESHOLD_MOVE	3		// Minimum threshold for a servo move.
 
 /**@brief Debug logging for resistance control module.
  */
@@ -184,8 +183,16 @@ uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p
 							p_sim_forces->grade;
 
 	// Total power required, which is rounded to nearest int for watts and assign.
-	p_sim_forces->erg_watts = (wind + rolling + gravitational) * speed_mps;
-	
+	p_sim_forces->erg_watts = (int16_t)((wind + rolling + gravitational) * speed_mps);
+	/*
+	RC_LOG("[RC]:grade: %.2f\r\n", p_sim_forces->grade);
+	RC_LOG("[RC]:speed: %.2f\r\n", speed_mps);
+	RC_LOG("[RC]:rolling: %.2f\r\n", rolling);
+	RC_LOG("[RC]:weight_kg: %.2f\r\n", weight_kg);
+	RC_LOG("[RC]:slope force: %.2f\r\n", gravitational);
+	RC_LOG("[RC]:watts: %i\r\n", p_sim_forces->erg_watts);
+	*/
+
 	// Same as erg mode now, set to a specific watt level.
 	return resistance_erg_set(speed_mps, weight_kg, p_sim_forces);
 }
