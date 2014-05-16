@@ -10,6 +10,7 @@
 #include "app_error.h"
 #include "speed.h"
 #include "resistance.h"
+#include "debug.h"
 
 #define	MATH_PI			3.14159265358979f
 
@@ -39,6 +40,15 @@
 
 // Assuming no additional force exists beyond this servo position (mag off).
 #define MIN_SERVO_FORCE_POS				1489
+
+/**@brief Debug logging for module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define PW_LOG debug_log
+#else
+#define PW_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 //static const float slope[10] = { 0, 2.6, 3.8, 5.0, 6.1, 7.1, 8.2, 9.2, 10.1, 11.0 };
 //static const float intercept [10] = { 0, -9.60, -18.75, -25.00, -28.94, -29.99, -29.23, -26.87, -20.90, -13.34 };
@@ -86,13 +96,19 @@ static float calc_angular_vel(uint8_t wheel_ticks, uint16_t period_2048)
 //
 uint16_t power_servo_pos_calc(float weight_kg, float speed_mps, float force_needed)
 {
-	float value = (force_needed * SERVO_FORCE_A_SLOPE + SERVO_FORCE_A_INTERCEPT) -
+	int16_t servo_pos;
+	float calculated;
+
+	// Use the model to calculate servo position.
+	calculated = (force_needed * SERVO_FORCE_A_SLOPE + SERVO_FORCE_A_INTERCEPT) -
 		(((force_needed * SERVO_FORCE_A_SLOPE + SERVO_FORCE_A_INTERCEPT) -
 		(force_needed * SERVO_FORCE_B_SLOPE + SERVO_FORCE_B_INTERCEPT)) /
 		SERVO_FORCE_A_SPEED - SERVO_FORCE_B_SPEED)*(SERVO_FORCE_A_SPEED - speed_mps);
 
+	//PW_LOG("[PW]:power_servo_pos_calc pos=%f\r\n", value);
+
 	// Round the position.
-	uint16_t servo_pos = (uint16_t) value; //  ceil(value);
+	servo_pos = (int16_t)calculated;
 
 	// Enforce min/max position.
 	if (servo_pos > RESISTANCE_LEVEL[0])

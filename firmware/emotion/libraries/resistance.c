@@ -136,7 +136,7 @@ uint16_t resistance_erg_set(float speed_mps, float weight_kg, rc_sim_forces_t *p
 	
 	// Determine the correct servo position for that force given speed & weight.
 	position = power_servo_pos_calc(weight_kg, speed_mps, needed_force);
-								
+
 	//
 	// Ensure we don't move the servo beyond it's min and max.
 	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107 
@@ -149,7 +149,7 @@ uint16_t resistance_erg_set(float speed_mps, float weight_kg, rc_sim_forces_t *p
 	{
 		position = RESISTANCE_LEVEL[0];
 	}
-	
+
 	return resistance_position_set(position);
 }
 
