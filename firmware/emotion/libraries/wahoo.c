@@ -21,20 +21,20 @@
 #endif // ENABLE_DEBUG_LOG
 
 
-float wahoo_decode_crr(uint8_t *buffer)
+float wahoo_decode_crr(uint8_t *p_buffer)
 {
-	return DECODE_FLOAT(buffer, 10000.0f);
+	return DECODE_FLOAT(p_buffer, 10000.0f);
 }
 
-float wahoo_decode_c(uint8_t *buffer)
+float wahoo_decode_c(uint8_t *p_buffer)
 {
-	return DECODE_FLOAT(buffer, 1000.0f);
+	return DECODE_FLOAT(p_buffer, 1000.0f);
 }
 
 /**@brief Parses the resistance percentage out of the KICKR command.
  *
  */
-float wahoo_resistance_pct_decode(uint8_t *buffer)
+float wahoo_resistance_pct_decode(uint8_t *p_buffer)
 {
 	/*	Not exactly sure why it is this way, but it seems that 2 bytes hold a
 	value that is a percentage of the MAX which seems arbitrarily to be 16383.
@@ -44,7 +44,7 @@ float wahoo_resistance_pct_decode(uint8_t *buffer)
 	(16383-14630) / 16383 = .10700 = 10.7%
 	*/
 	static const float PCT_100 = 16383.0f;
-	uint16_t value = buffer[0] | buffer[1] << 8u;
+	uint16_t value = uint16_decode(p_buffer);
 
 	float percent = (PCT_100 - value) / PCT_100;
 
@@ -55,25 +55,16 @@ float wahoo_resistance_pct_decode(uint8_t *buffer)
  * @note	This is the headwind in meters per second. A negative headwind
  *				represents a tailwind. The range for mspWindSpeed is -30.0:30.0.
  */
-float wahoo_sim_wind_decode(uint8_t *buffer)
+float wahoo_sim_wind_decode(uint8_t *p_buffer)
 {
 	// Note this is a signed int, change the endianness.
 	int16_t value;
 
-	value = uint16_decode(buffer);
+	value = uint16_decode(p_buffer);
 
-	// First bit is the sign.
-	bool negative = value >> 15u;
-
-	if (negative)
-	{
-		// Remove the negative sign.
-		value = value & 0x7FFF;
-	}
-	else
-	{
-		value = (32768 - value) *-1;
-	}
+	// For some reason the value seems to come across the wire backwards?
+	// FLIP the sign bit (negative == positive, and vice versa).
+	value ^= 1 << 15u;
 
 	// Set the right scale.
 	return value / 1000.0f;
@@ -85,12 +76,12 @@ float wahoo_sim_wind_decode(uint8_t *buffer)
  * 			represents a percentage of 45 degrees up/downhill.
  *
  */
-float wahoo_sim_grade_decode(uint8_t *buffer)
+float wahoo_sim_grade_decode(uint8_t *p_buffer)
 {
 	int16_t value;
 
 	// Note this is a signed int, change the endianness.
-	value = uint16_decode(buffer);
+	value = uint16_decode(p_buffer);
 
 	// For some reason the value seems to come across the wire backwards?
 	// FLIP the sign bit (negative == positive, and vice versa).

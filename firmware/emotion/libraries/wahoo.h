@@ -14,19 +14,19 @@
 #include <stdint.h>
 
 /**@brief	Helper for decoding a float from buffer.*/
-#define DECODE_FLOAT(BUF, SCALE)	uint16_decode((const uint8_t*)BUF) / SCALE
+#define DECODE_FLOAT(P_BUF, SCALE)	uint16_decode((const uint8_t*)P_BUF) / SCALE
 
-float wahoo_decode_crr(uint8_t *buffer);
+float wahoo_decode_crr(uint8_t *p_buffer);
 
-float wahoo_decode_c(uint8_t *buffer);
+float wahoo_decode_c(uint8_t *p_buffer);
 
 // Parses the simulation grade.
-float wahoo_sim_grade_decode(uint8_t *buffer);
+float wahoo_sim_grade_decode(uint8_t *p_buffer);
 
 // Parses the simulation wind speed.
-float wahoo_sim_wind_decode(uint8_t *buffer);
+float wahoo_sim_wind_decode(uint8_t *p_buffer);
 
 // Parses the wahoo resistance percentage.
-float wahoo_resistance_pct_decode(uint8_t *buffer);
+float wahoo_resistance_pct_decode(uint8_t *p_buffer);
 
 #endif // __WAHOO_H__
