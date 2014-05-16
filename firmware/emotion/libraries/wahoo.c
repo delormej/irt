@@ -58,7 +58,9 @@ float wahoo_resistance_pct_decode(uint8_t *buffer)
 float wahoo_sim_wind_decode(uint8_t *buffer)
 {
 	// Note this is a signed int, change the endianness.
-	int16_t value = buffer[0] | buffer[1] << 8u;
+	int16_t value;
+
+	value = uint16_decode(buffer);
 
 	// First bit is the sign.
 	bool negative = value >> 15u;
@@ -88,7 +90,7 @@ float wahoo_sim_grade_decode(uint8_t *buffer)
 	int16_t value;
 
 	// Note this is a signed int, change the endianness.
-	value = buffer[0] | buffer[1] << 8u;
+	value = uint16_decode(buffer);
 
 	// For some reason the value seems to come across the wire backwards?
 	// FLIP the sign bit (negative == positive, and vice versa).

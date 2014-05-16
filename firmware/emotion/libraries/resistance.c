@@ -171,7 +171,9 @@ uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p
 	// p_sim_forces->c is equal to A*Cw*Rho where A is effective frontal area (m^2); 
 	// Cw is drag coefficent (unitless); and Rho is the air density (kg/m^3). 
 	// The default value for A*Cw*Rho is 0.60.
-	float wind = 0.5f * (p_sim_forces->c * pow(speed_mps, 2));
+
+	// Note that we add HEAD and subtract TAIL wind speed in the speed calc here.
+	float wind = 0.5f * (p_sim_forces->c * pow(speed_mps + p_sim_forces->wind_speed_mps, 2));
 
 	// Weight * GRAVITY * Co-efficient of rolling resistance.
 	float rolling = weight_kg * GRAVITY * p_sim_forces->crr;
