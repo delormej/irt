@@ -9,6 +9,17 @@
 ********************************************************************************/
 #include "wahoo.h"
 #include <stdbool.h>
+#include "debug.h"
+
+/**@brief Debug logging for main module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define WH_LOG debug_log
+#else
+#define WH_LOG(...)
+#endif // ENABLE_DEBUG_LOG
+
 
 /**@brief Parses the resistance percentage out of the KICKR command.
  *
@@ -36,7 +47,7 @@ float wahoo_resistance_pct_decode(uint8_t *buffer)
  */
 float wahoo_sim_wind_decode(uint8_t *buffer)
 {
-	// Note this is a signed int.
+	// Note this is a signed int, change the endianness.
 	int16_t value = buffer[0] | buffer[1] << 8u;
 
 	// First bit is the sign.
@@ -57,36 +68,22 @@ float wahoo_sim_wind_decode(uint8_t *buffer)
 }
 
 
-/**@brief Parses the simulated slope out of the KICKR command.
+/**@brief 	Parses the simulated slope out of the KICKR command.
+ * 			Initial value sent on the wire from KICKR ranges from -1.0 to 1.0 and
+ * 			represents a percentage of 45 degrees up/downhill.
  *
  */
 float wahoo_sim_grade_decode(uint8_t *buffer)
 {
-	uint16_t value = buffer[0] | buffer[1] << 8u;
+	int16_t value;
 
-	// First bit is the sign.
-	bool negative = value >> 15u;
+	// Note this is a signed int, change the endianness.
+	value = buffer[0] | buffer[1] << 8u;
 
-	float percent = 0.0f;
+	// Flip the sign bit (negative == positive, and vice versa).
+	value ^= 1 << 15u;
 
-	if (negative)
-	{
-		// Strip the negative sign bit.
-		value = value & 0x7FFF;
-		// results in a positive (uphill) grade.
-		percent = 1 - ((32768.0f - value) / 32768.0f);
-	}
-	else
-	{
-		// results in a negative (downhill) grade.
-		percent = ((value - 32768.0f) / 32768.0f);
-	}
+	WH_LOG("[WH]:wahoo_sim_grade_decode = %i / 32786\r\n", value);
 
-	// Initial value sent on the wire from KICKR ranges from -1.0 to 1.0 and
-	// represents a percentage of 45 degrees up/downhill.
-	// e.g. 1.0% = 45 degree uphill,
-	// -1.0% = 45 degree downhill,
-	// 0% = flat,
-	// 0.10% = 4.5% uphill grade.
-	return percent * 0.45;
+	return value / 32768.0f;
 }
