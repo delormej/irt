@@ -53,7 +53,7 @@
 #define DEFAULT_WHEEL_SIZE_MM			2069u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
 #define DEFAULT_ERG_WATTS				175u
-#define SIM_CRR							0.004f
+#define SIM_CRR							0.0033f
 #define SIM_C							0.60f
 #define BLE_ADV_BLINK_RATE_MS			500u
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
@@ -180,9 +180,9 @@ static void set_sim_params(uint8_t *pBuffer)
 	}
 
 	// Co-efficient for rolling resistance.
-	crr = wahoo_decode_crr(pBuffer[2]);
+	crr = wahoo_decode_crr(pBuffer[2]);	//(uint8_t*)&
 	// Co-efficient of drag.
-	c = wahoo_decode_c(pBuffer[4]);
+	c = wahoo_decode_c(pBuffer[4]); //(uint8_t*)&
 
 	// Store and just precision if new values came across.
 	if (crr > 0)
@@ -293,13 +293,14 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 					m_user_profile.total_weight_kg,
 					&m_sim_forces);
 
-			/*LOG("[MAIN]:resistance_adjust SIM: %i-g, %i-mps, %i-c, %i-crr, %i-slope, %i-wind = %i-watts \r\n",
+			/*LOG("[MAIN]:resistance_adjust SIM: %i\r\n", m_sim_forces.erg_watts);
+			LOG("[MAIN]:resistance_adjust SIM: %i-g, %i-mps, %i-c, %i-crr, %i-slope, %i-wind = %i-watts \r\n",
 					(uint16_t)(m_user_profile.total_weight_kg * 100),
 					(uint16_t)(power_meas.instant_speed_mps * 100),
 					(uint16_t)(m_sim_forces.c * 1000),
 					(uint16_t)(m_sim_forces.crr * 10000),
 					(uint16_t)(m_sim_forces.grade * 1000),
-					(uint16_t)(m_sim_forces.wind_speed_mps * 100),
+					(uint16_t)(m_sim_forces.wind_speed_mps * 1000),
 					power_meas.instant_power);*/
 			break;
 
@@ -652,6 +653,8 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			m_resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the wind speed.
 			m_sim_forces.wind_speed_mps = wahoo_sim_wind_decode(rc_evt.pBuffer);
+			LOG("[MAIN]:on_set_resistance: set wind_speed_mps %i\r\n",
+					(uint16_t)(m_sim_forces.wind_speed_mps * 1000));
 			break;
 			
 		case RESISTANCE_SET_WHEEL_CR:
