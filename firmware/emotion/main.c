@@ -262,19 +262,23 @@ static void profile_update(void)
 
 static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_meas_t* p_power_meas_current)
 {
-	// Make a local copy we can modify.
-	irt_power_meas_t power_meas = *p_power_meas_current;
+	float speed_avg;
 
+	// If we have a range of events between first and current, we're able to do a moving average of speed.
 	if (p_power_meas_first != NULL)
 	{
 		// Average the speed.  A new average power will get calculated based on this.
-		power_meas.instant_speed_mps = get_speed_mps(
+		speed_avg = get_speed_mps(
 				(p_power_meas_current->accum_wheel_revs - p_power_meas_first->accum_wheel_revs),
 				(p_power_meas_current->last_wheel_event_time - p_power_meas_first->last_wheel_event_time));
 	}
+	else
+	{
+		speed_avg = p_power_meas_current->instant_speed_mps;
+	}
 
 	// Don't attempt to adjust if stopped.
-	if (power_meas.instant_speed_mps == 0.0f)
+	if (speed_avg == 0.0f)
 		return;
 
 	// If in erg or sim mode, adjust resistance accordingly.
@@ -282,14 +286,14 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 	{
 		case RESISTANCE_SET_ERG:
 			resistance_erg_set(
-					power_meas.instant_speed_mps,
+					speed_avg,
 					m_user_profile.total_weight_kg,
 					&m_sim_forces);
 			break;
 
 		case RESISTANCE_SET_SIM:
 			resistance_sim_set(
-					power_meas.instant_speed_mps,
+					speed_avg,
 					m_user_profile.total_weight_kg,
 					&m_sim_forces);
 
