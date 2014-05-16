@@ -20,9 +20,6 @@
 #define WH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-/**@brief	Helper for decoding a float from buffer.*/
-#define DECODE_FLOAT(BUF, SCALE)	uint16_decode((const uint8_t*)BUF) / SCALE
-
 
 float wahoo_decode_crr(uint8_t *buffer)
 {

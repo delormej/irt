@@ -148,7 +148,7 @@ static void set_wheel_params(uint8_t *pBuffer)
 	uint16_t wheel_size;
 	
 	// Comes as 20700 for example, we'll round to nearest mm.
-	wheel_size = (pBuffer[0] | pBuffer[1] << 8u) / 10;
+	wheel_size = uint16_decode(pBuffer) / 10;
 
 	if (m_user_profile.wheel_size_mm != wheel_size)
 	{
@@ -167,7 +167,9 @@ static void set_wheel_params(uint8_t *pBuffer)
 static void set_sim_params(uint8_t *pBuffer)
 {
 	// Weight comes through in KG as 8500 85.00kg for example.
-	float weight = (pBuffer[0] | pBuffer[1] << 8u) / 100.0f;
+	float weight, c, crr;
+
+	weight = DECODE_FLOAT(pBuffer, 100.0f);
 
 	if (m_user_profile.total_weight_kg != weight)
 	{
@@ -178,9 +180,15 @@ static void set_sim_params(uint8_t *pBuffer)
 	}
 
 	// Co-efficient for rolling resistance.
-	m_sim_forces.crr = (pBuffer[2] | pBuffer[3] << 8u) / 10000.0f;
+	crr = wahoo_decode_crr(pBuffer[2]);
 	// Co-efficient of drag.
-	m_sim_forces.c = (pBuffer[4] | pBuffer[5] << 8u) / 1000.0f;
+	c = wahoo_decode_c(pBuffer[4]);
+
+	// Store and just precision if new values came across.
+	if (crr > 0)
+		m_sim_forces.crr = crr;
+	if (c > 0)
+		m_sim_forces.c = c;
 
 	LOG("[MAIN]:set_sim_params {weight:%.2f, crr:%i, c:%i}\r\n",
 		m_user_profile.total_weight_kg,
@@ -284,6 +292,15 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 					power_meas.instant_speed_mps,
 					m_user_profile.total_weight_kg,
 					&m_sim_forces);
+
+			/*LOG("[MAIN]:resistance_adjust SIM: %i-g, %i-mps, %i-c, %i-crr, %i-slope, %i-wind = %i-watts \r\n",
+					(uint16_t)(m_user_profile.total_weight_kg * 100),
+					(uint16_t)(power_meas.instant_speed_mps * 100),
+					(uint16_t)(m_sim_forces.c * 1000),
+					(uint16_t)(m_sim_forces.crr * 10000),
+					(uint16_t)(m_sim_forces.grade * 1000),
+					(uint16_t)(m_sim_forces.wind_speed_mps * 100),
+					power_meas.instant_power);*/
 			break;
 
 		default:
@@ -589,11 +606,9 @@ static void on_ant_power_data(void) {}
  */
 static void on_set_resistance(rc_evt_t rc_evt)
 {
-	// TODO: Write a macro for extracting the 2 byte value with endianness.			
-
 	LOG("[MAIN]:on_set_resistance {OP:%#.2x,VAL:%i}\r\n",
 			(uint8_t)rc_evt.operation,
-			(int16_t)(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u));
+			uint16_decode(rc_evt.pBuffer));
 	// 
 	// Parse the messages and set state or resistance as appropriate.
 	//
@@ -618,10 +633,10 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		case RESISTANCE_SET_ERG:
 			// Assign target watt level.
 			m_resistance_mode = RESISTANCE_SET_ERG;
-			m_sim_forces.erg_watts =
-				rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u;
+			m_sim_forces.erg_watts = uint16_decode(rc_evt.pBuffer);
 			break;
 
+		// This message never seems to come via the apps?
 		case RESISTANCE_SET_SIM:
 			m_resistance_mode = RESISTANCE_SET_SIM;
 			set_sim_params(rc_evt.pBuffer);
@@ -644,9 +659,17 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			set_wheel_params(rc_evt.pBuffer);
 			break;
 			
+		case RESISTANCE_SET_BIKE_TYPE:
+			m_sim_forces.crr = wahoo_decode_crr(rc_evt.pBuffer);
+			break;
+
+		case RESISTANCE_SET_C:
+			m_sim_forces.c = wahoo_decode_c(rc_evt.pBuffer);
+			break;
+
 		case RESISTANCE_SET_SERVO_POS:
 			// Move the servo to a specific position.
-			resistance_position_set(rc_evt.pBuffer[0] | rc_evt.pBuffer[1] << 8u);
+			resistance_position_set(uint16_decode(rc_evt.pBuffer));
 			break;
 
 		case RESISTANCE_SET_WEIGHT:
