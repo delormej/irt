@@ -180,20 +180,20 @@ static void set_sim_params(uint8_t *pBuffer)
 	}
 
 	// Co-efficient for rolling resistance.
-	crr = wahoo_decode_crr(pBuffer[2]);	//(uint8_t*)&
+	crr = wahoo_decode_crr(&(pBuffer[2]));
 	// Co-efficient of drag.
-	c = wahoo_decode_c(pBuffer[4]); //(uint8_t*)&
+	c = wahoo_decode_c(&(pBuffer[4]));
 
 	// Store and just precision if new values came across.
-	if (crr > 0)
+	if (crr > 0.0f)
 		m_sim_forces.crr = crr;
-	if (c > 0)
+	if (c > 0.0f)
 		m_sim_forces.c = c;
 
 	LOG("[MAIN]:set_sim_params {weight:%.2f, crr:%i, c:%i}\r\n",
 		m_user_profile.total_weight_kg,
-		((uint16_t)m_sim_forces.crr)*10000, 
-		((uint16_t)m_sim_forces.c)*1000);
+		(uint16_t)(m_sim_forces.crr * 10000),
+		(uint16_t)(m_sim_forces.c * 1000) );
 }
 
 /**@brief	Initializes user profile and loads from flash.  Sets defaults for
@@ -667,10 +667,12 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			break;
 			
 		case RESISTANCE_SET_BIKE_TYPE:
+			m_resistance_mode = RESISTANCE_SET_SIM;
 			m_sim_forces.crr = wahoo_decode_crr(rc_evt.pBuffer);
 			break;
 
 		case RESISTANCE_SET_C:
+			m_resistance_mode = RESISTANCE_SET_SIM;
 			m_sim_forces.c = wahoo_decode_c(rc_evt.pBuffer);
 			break;
 

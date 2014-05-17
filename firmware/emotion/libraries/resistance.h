@@ -89,7 +89,7 @@ typedef enum
 typedef struct
 {
 	resistance_mode_t 	operation;				// Operation to perform or mode to set for resistance.
-	uint8_t							*pBuffer; 				// Pointer to values required for the operation.
+	uint8_t				*pBuffer; 				// Pointer to values required for the operation.
 } rc_evt_t;
 
 /**@brief Set resistance event handler type. */

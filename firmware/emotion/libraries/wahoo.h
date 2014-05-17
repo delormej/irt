@@ -13,7 +13,7 @@
 
 #include <stdint.h>
 
-/**@brief	Helper for decoding a float from buffer.*/
+/**@brief	Helper for decoding a float from a 2 byte buffer.*/
 #define DECODE_FLOAT(P_BUF, SCALE)	uint16_decode((const uint8_t*)P_BUF) / SCALE
 
 float wahoo_decode_crr(uint8_t *p_buffer);

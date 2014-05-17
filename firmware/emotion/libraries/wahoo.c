@@ -23,11 +23,13 @@
 
 float wahoo_decode_crr(uint8_t *p_buffer)
 {
+	WH_LOG("[WH]:wahoo_decode_crr [%.2x][%.2x]\r\n", p_buffer[0], p_buffer[1]);
 	return DECODE_FLOAT(p_buffer, 10000.0f);
 }
 
 float wahoo_decode_c(uint8_t *p_buffer)
 {
+	WH_LOG("[WH]:wahoo_decode_c [%.2x][%.2x]\r\n", p_buffer[0], p_buffer[1]);
 	return DECODE_FLOAT(p_buffer, 1000.0f);
 }
 

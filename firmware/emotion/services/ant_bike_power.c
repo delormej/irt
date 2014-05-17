@@ -247,6 +247,17 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 		// Reset state.
 		receiving_burst_resistance = false;
 
+		BP_LOG("[BP]:handle_burst [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+				p_ant_evt->evt_buffer[0],
+				p_ant_evt->evt_buffer[1],
+				p_ant_evt->evt_buffer[2],
+				p_ant_evt->evt_buffer[3],
+				p_ant_evt->evt_buffer[4],
+				p_ant_evt->evt_buffer[5],
+				p_ant_evt->evt_buffer[6],
+				p_ant_evt->evt_buffer[7],
+				p_ant_evt->evt_buffer[8]);
+
 		m_on_set_resistance(evt);
 	}
 }
