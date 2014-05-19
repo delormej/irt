@@ -441,7 +441,7 @@ static void resistance_ack_encode(uint8_t op_code, uint16_t value, uint8_t* p_en
 {
 	p_encoded[0] = 0x01;				// Hard coded for now, not sure why it's always 1?
 	p_encoded[1] = op_code;				// 2nd byte contains the operation code.
-	uint16_encode(&value, p_encoded);	// Encode the actual value.
+	uint16_encode(value, p_encoded);	// Encode the actual value.
 }
 
 
