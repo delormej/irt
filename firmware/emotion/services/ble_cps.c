@@ -435,7 +435,7 @@ static uint32_t cycling_power_vector_char_add(ble_cps_t * p_cps, const ble_cps_i
 	return 0;
 }
 
-/**@brief	Encodes resistance control acknowledgement.
+/**@brief	Encodes resistance control acknowledgment.
  */
 static void resistance_ack_encode(uint8_t op_code, uint16_t value, uint8_t* p_encoded)
 {
