@@ -49,6 +49,7 @@
 *.exp
 *.tlog
 *.filters
+*.csproj.user
 
 *.apc
 *.resx
