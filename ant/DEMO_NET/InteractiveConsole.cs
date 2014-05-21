@@ -157,6 +157,7 @@ namespace ANT_Console
                 "M [Move Servo to position X]\n" +
                 "F [Enable Device Firmware Update Mode]\n" +
                 "V [Display Firmware Version]\n" +
+                "P [Parse Interval file in format {mins},{watts},{text}]\n" +
                 "X [Exit]");
 
             Console.ForegroundColor = color;
