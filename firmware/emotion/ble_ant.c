@@ -32,6 +32,7 @@
 #include "ble_nus.h"
 #include "ble_cps.h"
 #include "ble_gap.h"
+#include "debug.h"
 
 #define APP_ADV_INTERVAL                40                                           /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                          /**< The advertising timeout in units of seconds. */
@@ -70,6 +71,7 @@ static ant_ble_evt_handlers_t * mp_ant_ble_evt_handlers;
 #else
 #define BA_LOG(...)
 #endif // ENABLE_DEBUG_LOG
+
 #if defined(BLE_NUS_ENABLED)
 static ble_nus_t m_nus;				// BLE UART service for debugging purposes.
 
@@ -132,14 +134,16 @@ static void gap_params_init(void) {
 static void advertising_init(void) {
 	uint32_t err_code;
 	ble_advdata_t advdata;
+	ble_advdata_t scanrsp;
 	uint8_t flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
 
-	ble_uuid_t adv_uuids[] = { { BLE_UUID_CYCLING_POWER_SERVICE,
-			BLE_UUID_TYPE_BLE },
+	ble_uuid_t adv_uuids[] = {
+			{ BLE_UUID_CYCLING_POWER_SERVICE, BLE_UUID_TYPE_BLE },
 #if defined(BLE_NUS_ENABLED)
-			{	BLE_UUID_NUS_SERVICE, m_nus.uuid_type},
+			{ BLE_UUID_NUS_SERVICE, m_nus.uuid_type},
 #endif
-			{ BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE } };
+			{ BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE }
+	};
 
 	// Build and set advertising data
 	memset(&advdata, 0, sizeof(advdata));
@@ -151,8 +155,12 @@ static void advertising_init(void) {
 	advdata.uuids_more_available.uuid_cnt = 1;
 	advdata.uuids_more_available.p_uuids = adv_uuids;
 
-	err_code = ble_advdata_set(&advdata, NULL);
-	APP_ERROR_CHECK(err_code);
+    memset(&scanrsp, 0, sizeof(scanrsp));
+    scanrsp.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
+    scanrsp.uuids_complete.p_uuids  = adv_uuids;
+
+    err_code = ble_advdata_set(&advdata, &scanrsp);
+    APP_ERROR_CHECK(err_code);
 }
 
 static void ble_dis_service_init() {
@@ -197,6 +205,11 @@ static void ble_nus_service_init() {
 
 	err_code = ble_nus_init(&m_nus, &nus_init);
 	APP_ERROR_CHECK(err_code);
+
+	BA_LOG("[BA]:ble_nus_service_init Initializing debug BLE.\r\n");
+
+	// Enable the logging to BLE.
+	// debug_ble_init(&m_nus);
 #endif
 }
 
@@ -256,18 +269,21 @@ static void services_init() {
  *
  * @param[in]   p_evt   Event received from the Connection Parameters Module.
  */
-static void on_conn_params_evt(ble_conn_params_evt_t * p_evt) {
+static void on_conn_params_evt(ble_conn_params_evt_t * p_evt)
+{
 	uint32_t err_code;
 
-	switch (p_evt->evt_type) {
-	case BLE_CONN_PARAMS_EVT_FAILED:
-		err_code = sd_ble_gap_disconnect(m_conn_handle,
-				BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
-		APP_ERROR_CHECK(err_code);
-		break;
+	switch (p_evt->evt_type)
+	{
+		case BLE_CONN_PARAMS_EVT_FAILED:
+			BA_LOG("[BA]:on_conn_params_evt BLE_CONN_PARAMS_EVT_FAILED, disconnecting.\r\n");
+			err_code = sd_ble_gap_disconnect(m_conn_handle,
+					BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
+			APP_ERROR_CHECK(err_code);
+			break;
 
-	default:
-		break;
+		default:
+			break;
 	}
 }
 
@@ -342,42 +358,66 @@ static void on_ant_evt(ant_evt_t * p_ant_evt) {
  *
  * @param[in]   p_ble_evt   Bluetooth stack event.
  */
-static void on_ble_evt(ble_evt_t * p_ble_evt) {
+static void on_ble_evt(ble_evt_t * p_ble_evt)
+{
 	uint32_t err_code;
+    static ble_gap_evt_auth_status_t m_auth_status;
+    ble_gap_enc_info_t *             p_enc_info;
 
-	switch (p_ble_evt->header.evt_id) {
-	case BLE_GAP_EVT_CONNECTED:
-		m_is_advertising = false;
-		mp_ant_ble_evt_handlers->on_ble_connected();
-		m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
-		break;
-
-	case BLE_GAP_EVT_DISCONNECTED:
-		mp_ant_ble_evt_handlers->on_ble_disconnected();
-		m_conn_handle = BLE_CONN_HANDLE_INVALID;
-
-		break;
-
-	case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-		ble_sec_params_send();
-		break;
-
-	case BLE_GAP_EVT_TIMEOUT:
-		if (p_ble_evt->evt.gap_evt.params.timeout.src
-				== BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT) {
+	switch (p_ble_evt->header.evt_id)
+	{
+		case BLE_GAP_EVT_CONNECTED:
 			m_is_advertising = false;
-			mp_ant_ble_evt_handlers->on_ble_timeout();
-		}
-		break;
+			mp_ant_ble_evt_handlers->on_ble_connected();
+			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+			break;
 
-	case BLE_GATTS_EVT_SYS_ATTR_MISSING:
-		err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
-		BA_LOG("[BA]:on_ble_evt sd_ble_gatts_sys_attr_set\r\n");
-		APP_ERROR_CHECK(err_code);
-		break;
+		case BLE_GAP_EVT_DISCONNECTED:
+			mp_ant_ble_evt_handlers->on_ble_disconnected();
+			m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
-	default:
-		break;
+			break;
+
+		case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
+			ble_sec_params_send();
+			break;
+
+		case BLE_GAP_EVT_TIMEOUT:
+			if (p_ble_evt->evt.gap_evt.params.timeout.src
+					== BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
+			{
+				m_is_advertising = false;
+				mp_ant_ble_evt_handlers->on_ble_timeout();
+			}
+			break;
+
+		case BLE_GATTS_EVT_SYS_ATTR_MISSING:
+			err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
+			BA_LOG("[BA]:on_ble_evt sd_ble_gatts_sys_attr_set\r\n");
+			APP_ERROR_CHECK(err_code);
+			break;
+
+		case BLE_GAP_EVT_AUTH_STATUS:
+            m_auth_status = p_ble_evt->evt.gap_evt.params.auth_status;
+            break;
+
+        case BLE_GAP_EVT_SEC_INFO_REQUEST:
+            p_enc_info = &m_auth_status.periph_keys.enc_info;
+            if (p_enc_info->div == p_ble_evt->evt.gap_evt.params.sec_info_request.div)
+            {
+                err_code = sd_ble_gap_sec_info_reply(m_conn_handle, p_enc_info, NULL);
+                APP_ERROR_CHECK(err_code);
+            }
+            else
+            {
+                // No keys found for this device
+                err_code = sd_ble_gap_sec_info_reply(m_conn_handle, NULL, NULL);
+                APP_ERROR_CHECK(err_code);
+            }
+            break;
+
+		default:
+			break;
 	}
 }
 
@@ -388,9 +428,10 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
  *
  * @param[in]   p_ble_evt   Stack Bluetooth event.
  */
-static void ble_evt_dispatch(ble_evt_t * p_ble_evt) {
-	ble_cps_on_ble_evt(&m_cps, p_ble_evt);
+static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
+{
 	ble_conn_params_on_ble_evt(p_ble_evt);
+	ble_cps_on_ble_evt(&m_cps, p_ble_evt);
 #if defined(BLE_NUS_ENABLED)
 	ble_nus_on_ble_evt(&m_nus, p_ble_evt);
 #endif		
@@ -401,7 +442,8 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt) {
  *
  * @details Initializes the SoftDevice and the stack event interrupt.
  */
-static void ble_ant_stack_init(void) {
+static void ble_ant_stack_init(void)
+{
 	// Initialize SoftDevice
 	SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, true);
 
@@ -429,24 +471,27 @@ void ble_ant_resistance_ack(uint8_t op_code, uint16_t value)
 	err_code = ant_bp_resistance_tx_send(op_code, value);
 	APP_ERROR_CHECK(err_code);
 
-	if (m_cps.conn_handle != BLE_CONN_HANDLE_INVALID)
+	if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
 	{
 		err_code = ble_cps_resistance_indicate(&m_cps, op_code, value);
 	}
 
-	if (err_code == NRF_ERROR_BUSY)
+	if (BLE_ERROR_AS_WARN(err_code))
 	{
-		err_code = 0;
-		BA_LOG("[BA]:ble_ant_resistance_ack WARN: NRF_ERROR_BUSY.\r\n");
+		BA_LOG("[BA]:ble_ant_resistance_ack WARN: %#.8lx.\r\n", err_code);
+		err_code = NRF_SUCCESS;
 	}
-
-	APP_ERROR_CHECK(err_code);
+	else
+	{
+		APP_ERROR_CHECK(err_code);
+	}
 }
 
 //
 // Sends ble & ant data messages.
 //
-void cycling_power_send(irt_power_meas_t * p_cps_meas) {
+void cycling_power_send(irt_power_meas_t * p_cps_meas)
+{
 	uint32_t err_code;
 
 	// TODO: THIS IS A HACK, BUT NEED TO REFACTOR.
@@ -455,18 +500,23 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas) {
 	// Only send BLE power every 4 messages (1hz vs. ANT is 4hz)
 	if (++event_count % 4 == 0) {
 		// Send ble message only if connected.
-		if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
-			err_code = ble_cps_cycling_power_measurement_send(&m_cps,
-					p_cps_meas);
+		if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+		{
+			err_code = ble_cps_cycling_power_measurement_send(&m_cps, p_cps_meas);
 
-			if (err_code == BLE_ERROR_GATTS_SYS_ATTR_MISSING) {
-				err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
-				BA_LOG("[BA]:cycling_power_send sd_ble_gatts_sys_attr_set\r\n");
-				APP_ERROR_CHECK(err_code);
-			} else if ((err_code != NRF_SUCCESS)
-					&& (err_code != NRF_ERROR_INVALID_STATE)
-					&& (err_code != BLE_ERROR_NO_TX_BUFFERS)) {
-				APP_ERROR_HANDLER(err_code);
+			if (err_code != NRF_SUCCESS)
+			{
+				if (err_code == BLE_ERROR_GATTS_SYS_ATTR_MISSING)
+				{
+					err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
+					BA_LOG("[BA]:cycling_power_send sd_ble_gatts_sys_attr_set\r\n");
+
+					APP_ERROR_CHECK(err_code);
+				}
+				else if (!(BLE_ERROR_AS_WARN(err_code)))
+				{
+					APP_ERROR_HANDLER(err_code);
+				}
 			}
 		}
 	}
@@ -475,7 +525,8 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas) {
 	ant_bp_tx_send(p_cps_meas);
 }
 
-void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers) {
+void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
+{
 	// Event pointers.
 	mp_ant_ble_evt_handlers = ant_ble_evt_handlers;
 
@@ -489,7 +540,8 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers) {
 	conn_params_init();
 
 	// Initialize ANT channels
-	ant_bp_tx_init(mp_ant_ble_evt_handlers->on_set_resistance,
+	ant_bp_tx_init(
+			mp_ant_ble_evt_handlers->on_set_resistance,
 			mp_ant_ble_evt_handlers->on_enable_dfu_mode);
 }
 

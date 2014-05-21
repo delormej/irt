@@ -56,11 +56,19 @@ static const uint8_t ant_manufacturer_page[TX_BUFFER_SIZE] =
 	HIGH_BYTE(MODEL_NUMBER)
 };
 
-/**@brief	Checks to see if this error could be treated as a warning.
+/**@brief	Checks to see if this ANT error could be treated as a warning.
  */
 #define ANT_ERROR_AS_WARN(ERR) \
 		(ERR == NRF_ANT_ERROR_TRANSFER_BUSY || \
 			ERR == NRF_ANT_ERROR_TRANSFER_IN_PROGRESS)
+
+
+/**@brief	Checks to see if this BLE error could be treated as a warning.
+ */
+#define BLE_ERROR_AS_WARN(ERR) \
+		(ERR ==  NRF_ERROR_INVALID_STATE || \
+			ERR == BLE_ERROR_NO_TX_BUFFERS || \
+			ERR == NRF_ERROR_BUSY)
 
 // MACRO for sending manufacturer and product pages.
 #define ANT_COMMON_PAGE_TRANSMIT(ANT_CHANNEL, COMMON_PAGE)					\
