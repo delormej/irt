@@ -209,7 +209,7 @@ static void ble_nus_service_init() {
 	BA_LOG("[BA]:ble_nus_service_init Initializing debug BLE.\r\n");
 
 	// Enable the logging to BLE.
-	// debug_ble_init(&m_nus);
+	debug_ble_init(&m_nus);
 #endif
 }
 

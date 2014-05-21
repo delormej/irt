@@ -57,7 +57,7 @@ CFLAGS += -D$(BOARD)					# Define board version being used.
 ############################################
 debug : CFLAGS += -DENABLE_DEBUG_LOG			# Enable debug logging.
 debug : CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
-#debug : CFLAGS += -DBLE_NUS_ENABLED			# Use Nordic BLE UART for logging.
+debug : CFLAGS += -DBLE_NUS_ENABLED			# Use Nordic BLE UART for logging.
 debug : CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wait for debugger to attach.
 debug : CFLAGS += -DSIM_SPEED					# Simulate speed.
 debug : CFLAGS += -g							# Enable debug symbols.
