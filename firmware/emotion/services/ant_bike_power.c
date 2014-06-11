@@ -25,12 +25,13 @@
 #define INSTANT_POWER_MSB_INDEX         7u                  /**< Index of the instantaneous power MSB field in the power-only main data page. */
 
 // Custom message fields.
-#define EXTRA_INFO_FLYWHEEL_REVS		1u
-#define EXTRA_INFO_SERVO_POS_LSB		2u
-#define EXTRA_INFO_SERVO_POS_MSB		3u
-#define EXTRA_INFO_TARGET_LSB			4u
-#define EXTRA_INFO_TARGET_MSB			5u
-#define EXTRA_INFO_TEMP					6u
+#define EXTRA_INFO_SERVO_POS_LSB		1u
+#define EXTRA_INFO_SERVO_POS_MSB		2u
+#define EXTRA_INFO_TARGET_LSB			3u
+#define EXTRA_INFO_TARGET_MSB			4u
+#define EXTRA_INFO_FLYWHEEL_REVS_LSB	5u
+#define EXTRA_INFO_FLYWHEEL_REVS_MSB	6u
+#define EXTRA_INFO_TEMP					7u
 
 // Standard Wheel Torque Main Data Page (0x11)
 #define WHEEL_TICKS_INDEX				2u
@@ -183,13 +184,13 @@ static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 	uint8_t buffer[TX_BUFFER_SIZE];
 
 	buffer[PAGE_NUMBER_INDEX]			= BP_PAGE_EXTRA_INFO;
-	buffer[EXTRA_INFO_FLYWHEEL_REVS]	= (uint8_t)(p_power_meas->accum_flywheel_revs);
 	buffer[EXTRA_INFO_SERVO_POS_LSB]	= LOW_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_SERVO_POS_MSB]	= HIGH_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
 	buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
+	buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]= LOW_BYTE((uint16_t)(p_power_meas->accum_flywheel_revs));
+	buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]= HIGH_BYTE((uint16_t)(p_power_meas->accum_flywheel_revs));
 	buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
-	buffer[7]							= 0xFF;
 
 	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
 }
@@ -375,7 +376,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	event_count++;		// Always increment event counter.
 
 	// DEBUG info, only send every 2 seconds.
-	if (event_count % 8 == 0)
+	if (event_count % 4 == 0)
 	{
 		extra_info_transmit(p_power_meas);
 	}

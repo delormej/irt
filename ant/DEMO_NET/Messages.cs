@@ -283,16 +283,21 @@ namespace ANT_Console.Messages
 
         internal ExtraInfoMessage(ANT_Response response) : base(response) { }
         
-        const byte EXTRA_INFO_FLYWHEEL_REVS = 1;
-        const byte EXTRA_INFO_SERVO_POS_LSB	= 2;
-        const byte EXTRA_INFO_SERVO_POS_MSB	= 3;
-        const byte EXTRA_INFO_ACCEL_LSB	= 4;
-        const byte EXTRA_INFO_ACCEL_MSB = 5;
-        const byte EXTRA_INFO_TEMP = 6;
+        const byte EXTRA_INFO_SERVO_POS_LSB	= 1;
+        const byte EXTRA_INFO_SERVO_POS_MSB	= 2;
+        const byte EXTRA_INFO_TARGET_LSB	= 3;
+        const byte EXTRA_INFO_TARGET_MSB = 4;
+        const byte EXTRA_INFO_FLYWHEEL_REVS_LSB = 5;
+        const byte EXTRA_INFO_FLYWHEEL_REVS_MSB = 6;
+        const byte EXTRA_INFO_TEMP = 7;
 
-        public byte FlyweelRevs
+        public ushort FlyweelRevs
         {
-            get { return m_payload[EXTRA_INFO_FLYWHEEL_REVS];  }
+            get 
+            { 
+                return BigEndian(m_payload[EXTRA_INFO_FLYWHEEL_REVS_LSB], 
+                    m_payload[EXTRA_INFO_FLYWHEEL_REVS_MSB]); 
+            }
         }
 
         public ushort ServoPosition
@@ -309,8 +314,8 @@ namespace ANT_Console.Messages
             get
             {
                 // Mask out the 2 first bits as they contain mode.
-                byte msb = m_payload[EXTRA_INFO_ACCEL_MSB];
-                return BigEndian(m_payload[EXTRA_INFO_ACCEL_LSB], (byte)(msb & 0x3F));
+                byte msb = m_payload[EXTRA_INFO_TARGET_MSB];
+                return BigEndian(m_payload[EXTRA_INFO_TARGET_LSB], (byte)(msb & 0x3F));
             }
         }
 
@@ -318,7 +323,8 @@ namespace ANT_Console.Messages
         {
             get
             {
-                byte mode = m_payload[EXTRA_INFO_ACCEL_MSB];
+                // First 2 bits of the MSB contain mode.
+                byte mode = m_payload[EXTRA_INFO_TARGET_MSB];
                 return (byte)((mode >> 6) + 0x40);
             }
         }
@@ -327,8 +333,8 @@ namespace ANT_Console.Messages
         {
             get
             {
-                return BigEndianSigned(m_payload[EXTRA_INFO_ACCEL_LSB],
-                    m_payload[EXTRA_INFO_ACCEL_MSB]);
+                return BigEndianSigned(m_payload[EXTRA_INFO_TARGET_LSB],
+                    m_payload[EXTRA_INFO_TARGET_MSB]);
             }
         }
 
