@@ -79,6 +79,10 @@ namespace ANT_Console
                         ParseIntervalFileCommand();
                         break;
 
+                    case ConsoleKey.T:
+                        ExecuteScriptFileCommand();
+                        break;
+
                     default:
                         WriteCommand("Unrecognized command.");
                         ShowHelp();
@@ -159,6 +163,7 @@ namespace ANT_Console
                 "F [Enable Device Firmware Update Mode]\n" +
                 "V [Display Firmware Version]\n" +
                 "P [Parse Interval file in format {mins},{watts},{text}]\n" +
+                "T [Execute script file in format {seconds},{servo_position}]\n" +
                 "X [Exit]");
 
             Console.ForegroundColor = color;
@@ -265,6 +270,41 @@ namespace ANT_Console
 
             IntervalParser.Parser.Parse(filename);
             WriteCommand("Parsed interval file.");
+        }
+
+        void ExecuteScriptFileCommand()
+        {
+            string prompt = "<enter script source filename>";
+            string filename = string.Empty;
+
+            InteractiveCommand(prompt, () =>
+            {
+                filename = Console.ReadLine();
+                return true;
+            });
+
+            ScriptHandler script = new ScriptHandler();
+            script.SetServo += script_SetServo;
+            script.ScriptComplete += (o, e) => { WriteCommand("Script complete."); };
+
+            try
+            {
+                using (System.IO.StreamReader reader = new System.IO.StreamReader(filename))
+                {
+                    script.Start(reader);
+                    WriteCommand("Script now executing.");
+                }
+            }
+            catch (Exception e)
+            {
+                WriteCommand("ERROR parsing script: " + e.Message);
+            }
+        }
+
+        void script_SetServo(int position)
+        {
+            m_eMotion.MoveServo(position);
+            WriteCommand(string.Format("<script> Moving servo to {0}.", position));
         }
 
         void WriteCommand(string message)

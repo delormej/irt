@@ -27,7 +27,7 @@ namespace ANT_Console.Services
         private Timer m_timer;
 
         // Hide constructor
-        private ScriptHandler() 
+        public ScriptHandler() 
         {
             m_queue = new Queue<ScriptSegment>();
             m_timer = new Timer();
@@ -57,23 +57,24 @@ namespace ANT_Console.Services
         
         protected virtual void ProcessSegment()
         {
-            var segment = m_queue.Dequeue();
+            if (m_queue.Count > 0)
+            {
+                var segment = m_queue.Dequeue();
 
-            if (segment == null)
+                // raise event
+                if (SetServo != null)
+                    SetServo(segment.ServoPosition);
+
+                // set next interval
+                m_timer.Interval = segment.IntervalDuration * 1000;  // convert to milliseconds
+                m_timer.Start();
+            }
+            else
             {
                 // Raise event that we're done.
                 if (ScriptComplete != null)
                     ScriptComplete(this, null);
-
-                return;
             }
-
-            // raise event
-            SetServoEvent(segment.ServoPosition);
-
-            // set next interval
-            m_timer.Interval = segment.IntervalDuration;
-            m_timer.Start();
         }
     }
 }
