@@ -361,10 +361,10 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	static uint16_t event_count = 0;
 	uint32_t err_code = 0;		
 
-	//
-	// Using an EVENT-syncronous update methodology.  The last wheel time is 
-	// adjusted to when the last wheel rotation occured.  See section 8 of ANT+ 
-	// Bicycle Power Device Profile.
+	// NOTE:
+	// Using an EVENT-synchronous update methodology.  The last wheel time is
+	// adjusted to when the last wheel rotation occurred based on current speed.
+	// See section 8 of ANT+ Bicycle Power Device Profile.
 	//
 
 	// # Default broadcast message is torque.
@@ -375,12 +375,11 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 
 	event_count++;		// Always increment event counter.
 
-	// DEBUG info, only send every 2 seconds.
+	// DEBUG info, only send every second.
 	if (event_count % 4 == 0)
 	{
 		extra_info_transmit(p_power_meas);
 	}
-
 	if (event_count % power_page_interleave == 0)
 	{
 		// # Only transmit standard power message every 5th power message. 
