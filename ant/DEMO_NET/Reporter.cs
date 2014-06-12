@@ -22,7 +22,7 @@ namespace ANT_Console
 
             m_logFileWriter = new StreamWriter(filename);
             m_logFileWriter.AutoFlush = true;
-            m_logFileWriter.WriteLine("event_time, bike_speed_mps, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power, calc_power, servo_pos, accelerometer_y, temperature");
+            m_logFileWriter.WriteLine("event_time, bike_speed_mps, emotion_speed_mps, emotion_speed_mph, emotion_power, quarq_power, calc_power, servo_pos, flywheel, temperature");
         }
 
         public void Report(DataPoint data)
@@ -36,7 +36,7 @@ namespace ANT_Console
                 data.PowerReference,
                 0 /* calc */,
                 data.ServoPosition,
-                data.Accelerometer_y,
+                data.FlywheelRevs,
                 data.Temperature
                 //wheelTorqueEvents != null ? wheelTorqueEvents[wheelTorqueEvents.Length - 1].CumulativeWheelRevs : 0,
                 //wheelTorqueEvents != null ? wheelTorqueEvents[wheelTorqueEvents.Length-1].EventTime : 0

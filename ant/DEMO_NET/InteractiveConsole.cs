@@ -21,7 +21,7 @@ namespace ANT_Console
 
         public void Run()
         {
-            const string header = "Time         |  mph  | Watts | Watts2| Servo";
+            const string header = "Time         |  mph  | Watts | Watts2| Servo  | Target | Flywheel";
             ConsoleKeyInfo cki;
 
             Console.CursorVisible = false;
@@ -95,7 +95,7 @@ namespace ANT_Console
             if (data.Timestamp <= m_lastReport)
                 return;
 
-            const string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5}:{6}";
+            const string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5,4}:{6} | {7}";
 
             // Leave 2 rows at the bottom for command.
             int lastLine = Console.CursorTop;
@@ -138,7 +138,8 @@ namespace ANT_Console
                 data.PowerReference,
                 data.ServoPosition,
                 data.ResistanceMode == 0x41 ? "S" : data.ResistanceMode == 0x42 ? "E" : "",
-                data.TargetLevel);
+                data.TargetLevel,
+                data.FlywheelRevs);
         }
 
         void ShowHelp()

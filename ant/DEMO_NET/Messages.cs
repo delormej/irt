@@ -18,6 +18,7 @@ namespace ANT_Console.Messages
         public byte Temperature;
         public byte ResistanceMode;
         public ushort TargetLevel;
+        public ushort FlywheelRevs;
 
         public override string ToString()
         {
@@ -333,8 +334,9 @@ namespace ANT_Console.Messages
         {
             get
             {
-                return BigEndianSigned(m_payload[EXTRA_INFO_TARGET_LSB],
-                    m_payload[EXTRA_INFO_TARGET_MSB]);
+                return 0;
+                /*return BigEndianSigned(m_payload[EXTRA_INFO_TARGET_LSB],
+                    m_payload[EXTRA_INFO_TARGET_MSB]);*/
             }
         }
 

@@ -162,9 +162,10 @@ namespace ANT_Console
         /// <param name="m"></param>
         private void ProcessMessage(ExtraInfoMessage m)
         {
+            System.Diagnostics.Debug.Write(string.Format("Received Extra_info: {0:HH:mm:ss.fff}\n", System.DateTime.Now));
             m_data.ServoPosition = m.ServoPosition;
             m_data.Temperature = m.Temperature;
-            //m_data.Accelerometer_y = m.Accelerometer_y;
+            m_data.FlywheelRevs = m.FlyweelRevs;
             m_data.TargetLevel = m.Level;
             m_data.ResistanceMode = m.Mode;
         }
