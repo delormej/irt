@@ -11,6 +11,7 @@
 #include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
+#define EXTRA_INFO_PAGE_INTERLEAVE_COUNT	8u
 #define MANUFACTURER_PAGE_INTERLEAVE_COUNT	121u
 #define PRODUCT_PAGE_INTERLEAVE_COUNT		242u
 #define BATTERY_PAGE_INTERLEAVE_COUNT		61u
@@ -365,9 +366,10 @@ void ant_bp_tx_start(void)
 
 void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 {
-	const uint8_t power_page_interleave = POWER_PAGE_INTERLEAVE_COUNT;
-	const uint8_t product_page_interleave 			= PRODUCT_PAGE_INTERLEAVE_COUNT;
+	const uint8_t power_page_interleave 		= POWER_PAGE_INTERLEAVE_COUNT;
+	const uint8_t product_page_interleave 		= PRODUCT_PAGE_INTERLEAVE_COUNT;
 	const uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
+	const uint8_t extra_info_page_interleave 	= EXTRA_INFO_PAGE_INTERLEAVE_COUNT;
 
 	static uint16_t event_count = 0;
 	uint32_t err_code = 0;		
@@ -378,37 +380,36 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	// See section 8 of ANT+ Bicycle Power Device Profile.
 	//
 
-	// # Default broadcast message is torque.
-	err_code = torque_transmit(p_power_meas->accum_torque,
-		p_power_meas->last_wheel_event_time,
-		(uint8_t) p_power_meas->accum_wheel_revs);
-	APP_ERROR_CHECK(err_code);
+	// Increment event counter.
+	event_count++;
 
-	event_count++;		// Always increment event counter.
-
-	// DEBUG info, send less frequently.
-	if (event_count % 4 == 0)
-	{
-		extra_info_transmit(p_power_meas);
-	}
-	if (event_count % power_page_interleave == 0)
-	{
-		// # Only transmit standard power message every 5th power message. 
-		err_code = power_transmit(p_power_meas->instant_power);
-		APP_ERROR_CHECK(err_code);
-
-		event_count++;		// Always increment event counter.
-	}
-	else if (event_count % product_page_interleave == 0)
+	if (event_count % product_page_interleave == 0)
 	{			
 		// # Figures out which common message to submit at which time.
 		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_product_page);
-		event_count++;		// Always increment event counter.
 	}
 	else if (event_count % manufacturer_page_interleave == 0)
 	{
 		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
-		event_count++;		// Always increment event counter.
+	}
+	else if (event_count % extra_info_page_interleave == 0)
+	{
+		// Send DEBUG info.
+		extra_info_transmit(p_power_meas);
+	}
+	else if (event_count % power_page_interleave == 0)
+	{
+		// # Only transmit standard power message every 5th power message.
+		err_code = power_transmit(p_power_meas->instant_power);
+		APP_ERROR_CHECK(err_code);
+	}
+	else
+	{
+		// # Default broadcast message is torque.
+		err_code = torque_transmit(p_power_meas->accum_torque,
+			p_power_meas->last_wheel_event_time,
+			(uint8_t) p_power_meas->accum_wheel_revs);
+		APP_ERROR_CHECK(err_code);
 	}
 }
 
