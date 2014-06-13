@@ -102,7 +102,18 @@ static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 
 	if (ANT_ERROR_AS_WARN(err_code))
 	{
-		BP_LOG("[BP]:broadcast_message_transmit WARN:%#.8x\r\n", err_code);
+		//BP_LOG("[BP]:broadcast_message_transmit WARN:%#.8x\r\n", err_code);
+		BP_LOG("[BP]:broadcast_message_transmit WARN:%#.8x\r\n\t[%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+				err_code,
+				p_buffer[0],
+				p_buffer[1],
+				p_buffer[2],
+				p_buffer[3],
+				p_buffer[4],
+				p_buffer[5],
+				p_buffer[6],
+				p_buffer[7],
+				p_buffer[8]);
 		err_code = NRF_SUCCESS;
 	}
 	
@@ -375,7 +386,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 
 	event_count++;		// Always increment event counter.
 
-	// DEBUG info, only send every second.
+	// DEBUG info, send less frequently.
 	if (event_count % 4 == 0)
 	{
 		extra_info_transmit(p_power_meas);
