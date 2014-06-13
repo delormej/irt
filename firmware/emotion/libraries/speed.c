@@ -222,6 +222,9 @@ uint32_t calc_speed(irt_power_meas_t* p_power_meas)
 	// Flywheel revolution count.
 	accum_flywheel_revs = get_flywheel_revs();
 
+	// Assign to the data payload, but only used for debugging purposes.
+	p_power_meas->accum_flywheel_revs = accum_flywheel_revs;
+
 	// Flywheel revolutions in current period.
 	flywheel_revs = accum_flywheel_revs - m_last_accum_flywheel_revs;
 
@@ -286,8 +289,6 @@ uint32_t calc_speed(irt_power_meas_t* p_power_meas)
 		
 		// Last reported complete flywheel revs.
 		m_last_accum_flywheel_revs = accum_flywheel_revs;
-
-		p_power_meas->accum_flywheel_revs = m_last_accum_flywheel_revs;
 	}
 
 	return IRT_SUCCESS;
