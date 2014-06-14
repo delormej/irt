@@ -8,6 +8,7 @@ namespace ANT_Console
 {
     class InteractiveConsole : IReporter
     {
+        bool m_scriptInfinite = false;
         bool m_inCommand = false;
         DateTime m_lastReport = DateTime.Now;
         AntBikePower m_eMotion;
@@ -81,6 +82,15 @@ namespace ANT_Console
 
                     case ConsoleKey.T:
                         ExecuteScriptFileCommand();
+                        break;
+
+                    case ConsoleKey.L:
+                        m_scriptInfinite = !m_scriptInfinite;
+                        WriteCommand("Toggled script infinite loop setting to: " + m_scriptInfinite);
+                        break;
+
+                    case ConsoleKey.Z:
+                        SetWheelSizeCommand();
                         break;
 
                     default:
@@ -160,6 +170,7 @@ namespace ANT_Console
                 "D [Send Down Command]\n" +
                 "S [Send Select Command]\n" +
                 "M [Move Servo to position X]\n" +
+                "Z [Set wheel size MM]\n" +
                 "F [Enable Device Firmware Update Mode]\n" +
                 "V [Display Firmware Version]\n" +
                 "P [Parse Interval file in format {mins},{watts},{text}]\n" +
@@ -257,6 +268,31 @@ namespace ANT_Console
             }
         }
 
+        void SetWheelSizeCommand()
+        {
+            string prompt = "<enter wheel size in MM:>";
+            int wheelSizeMM = 0;
+            bool success = InteractiveCommand(prompt, () =>
+            {
+                //float weight = float.NaN;
+
+                if (int.TryParse(Console.ReadLine(), out wheelSizeMM))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            });
+
+            if (success)
+            {
+                m_eMotion.SetWheelSize(wheelSizeMM);
+                WriteCommand(string.Format("Set wheel size to {0} mm.", wheelSizeMM));
+            }
+        }
+
         void ParseIntervalFileCommand()
         {
             string prompt = "<enter interval source filename {defaults to Source.txt}>";
@@ -284,14 +320,36 @@ namespace ANT_Console
             });
 
             ScriptHandler script = new ScriptHandler();
-            script.SetServo += script_SetServo;
-            script.ScriptComplete += (o, e) => { WriteCommand("Script complete."); };
+            script.SetServo += OnScriptSetServo;
+            script.ScriptComplete += (o, e) =>
+            {
+                //
+                WriteCommand("Script complete.");
 
+                if (m_scriptInfinite)
+                {
+                    // Restart.
+                    script.Start();
+                }
+            };
+
+            ParseScriptInput(script, filename);
+            script.Start();         
+        }
+
+        void OnScriptSetServo(int position)
+        {
+            m_eMotion.MoveServo(position);
+            WriteCommand(string.Format("<script> Moving servo to {0}.", position));
+        }
+
+        void ParseScriptInput(ScriptHandler script, string filename)
+        {
             try
             {
                 using (System.IO.StreamReader reader = new System.IO.StreamReader(filename))
                 {
-                    script.Start(reader);
+                    script.ParseInput(reader);
                     WriteCommand("Script now executing.");
                 }
             }
@@ -299,12 +357,6 @@ namespace ANT_Console
             {
                 WriteCommand("ERROR parsing script: " + e.Message);
             }
-        }
-
-        void script_SetServo(int position)
-        {
-            m_eMotion.MoveServo(position);
-            WriteCommand(string.Format("<script> Moving servo to {0}.", position));
         }
 
         void WriteCommand(string message)

@@ -23,19 +23,34 @@ namespace ANT_Console.Services
         // OnExecute Event for when the script is complete
         // OnEnd Event for when a segment is executed
 
-        private Queue<ScriptSegment> m_queue;
+        private List<ScriptSegment> m_queue;
         private Timer m_timer;
+        private int m_index;
 
         // Hide constructor
         public ScriptHandler() 
         {
-            m_queue = new Queue<ScriptSegment>();
+            m_queue = new List<ScriptSegment>();
             m_timer = new Timer();
             m_timer.AutoReset = false;
             m_timer.Elapsed += (o, e) => { ProcessSegment(); };
         }
 
-        public void Start(StreamReader input)
+        public void Start()
+        {
+            // Process the first item.
+            if (m_queue.Count > 0)
+            {
+                m_index = 0;
+                ProcessSegment();
+            }
+            else
+            {
+                throw new InvalidOperationException("No script segments to process.");
+            }
+        }
+
+        public void ParseInput(StreamReader input)
         {
             // Parses the input file and creates a queue of segments.
             while (!input.EndOfStream)
@@ -47,19 +62,15 @@ namespace ANT_Console.Services
                 segment.IntervalDuration = double.Parse(vals[0]);
                 segment.ServoPosition = int.Parse(vals[1]);
 
-                m_queue.Enqueue(segment);
+                m_queue.Add(segment);
             }
-
-            // Process the first item.
-            if (m_queue.Count > 0)
-                ProcessSegment();
         }
-        
+
         protected virtual void ProcessSegment()
         {
-            if (m_queue.Count > 0)
+            if (m_index < m_queue.Count)
             {
-                var segment = m_queue.Dequeue();
+                var segment = m_queue[m_index++];
 
                 // raise event
                 if (SetServo != null)

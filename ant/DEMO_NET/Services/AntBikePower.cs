@@ -86,6 +86,41 @@ namespace ANT_Console.Services
             return SendCommand(Command.SetWeight, data);
         }
 
+        public void SetWheelSize(int wheelSizeMM)
+        {
+            byte[] data = { 
+                // Message 1
+                0x48,
+                0x48, // set wheel size mode
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00, 
+                // Message 2
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00, 
+                0x00,
+                0x00, 
+                // Message 3
+                (byte)(wheelSizeMM),        // Wheel size LSB
+                (byte)(wheelSizeMM >> 8),   // Wheel size MSB          
+                0x00,
+                0x00,
+                0x00,
+                0x00, 
+                0x00,
+                0x00
+                          }; 
+
+            var result = m_channel.sendBurstTransfer(data, 300);
+        }
+
         public void SetFirmwareUpdateMode()
         {
             SendCommand(Command.SetDFUMode);
