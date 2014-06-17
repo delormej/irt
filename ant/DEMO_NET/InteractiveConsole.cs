@@ -340,7 +340,8 @@ namespace ANT_Console
         void OnScriptSetServo(int position)
         {
             m_eMotion.MoveServo(position);
-            WriteCommand(string.Format("<script> Moving servo to {0}.", position));
+            if (!m_inCommand)
+                WriteCommand(string.Format("<script> Moving servo to {0}.", position));
         }
 
         void ParseScriptInput(ScriptHandler script, string filename)
