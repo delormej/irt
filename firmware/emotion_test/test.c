@@ -64,7 +64,13 @@ void check(uint32_t err)
 int main(int argc, char *argv [])
 {
 	int16_t watts;
+	uint8_t i;
 	
+	i = 60 % 6;
+
+	printf("i = %i\r\n", i);
+
+
 	//watts = calc_watts(0.019f, 5.811f, 81.81f, 0.6f, 0.0033f);
 	watts = calc_watts(0.064f, 5.811f, 1.1176f, 81.36, 0.6f, 0.0033f);
 	printf("[LOG] Watts == %i\r\n", watts);
