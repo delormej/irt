@@ -131,6 +131,9 @@ namespace ANT_Console
                 case AntChannel.RefPower:
                      m_data.Timestamp = m.Source.timeReceived;
                      m_data.PowerReference = m.Watts;
+                     System.Diagnostics.Debug.Write(
+                                     string.Format("Received Ref Power: {0:HH:mm:ss.fff}, watts: {1}\n",
+                                     System.DateTime.Now, m.Watts));
                      break;
                 default:
                      break;
@@ -148,7 +151,10 @@ namespace ANT_Console
                     break;
                 case AntChannel.RefPower:
                     m_data.Timestamp = m.Source.timeReceived;
-                    m_data.PowerReference = m.CalculatedPower;
+                    //m_data.PowerReference = m.CalculatedPower;
+                    System.Diagnostics.Debug.Write(
+                                    string.Format("Received Ref Power: {0:HH:mm:ss.fff}, torque: {1}\n",
+                                    System.DateTime.Now, m.AccumTorque));
                     break;
                 default:
                     break;
