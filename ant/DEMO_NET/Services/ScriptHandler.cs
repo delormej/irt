@@ -52,6 +52,12 @@ namespace ANT_Console.Services
 
         public void ParseInput(StreamReader input)
         {
+            // Clear existing queue if one exists.
+            if (m_queue.Count > 0)
+            {
+                m_queue.Clear();
+            }
+
             // Parses the input file and creates a queue of segments.
             while (!input.EndOfStream)
             {
@@ -63,6 +69,19 @@ namespace ANT_Console.Services
                 segment.ServoPosition = int.Parse(vals[1]);
 
                 m_queue.Add(segment);
+            }
+        }
+
+        public bool IsRunning { get { return (m_timer != null && m_timer.Enabled); } }
+
+        public void TogglePause()
+        {
+            lock (m_timer)
+            {
+                if (m_timer.Enabled)
+                    m_timer.Stop();
+                else
+                    m_timer.Start();
             }
         }
 

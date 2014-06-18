@@ -10,6 +10,7 @@ namespace ANT_Console
     {
         bool m_scriptInfinite = false;
         bool m_inCommand = false;
+        ScriptHandler m_script;
         DateTime m_lastReport = DateTime.Now;
         AntBikePower m_eMotion;
         AntControl m_control;
@@ -310,6 +311,13 @@ namespace ANT_Console
 
         void ExecuteScriptFileCommand()
         {
+            if (m_script !=null)
+            {
+                m_script.TogglePause();
+                WriteCommand("Toggled script pause.");
+                return;
+            }
+
             string prompt = "<enter script source filename>";
             string filename = string.Empty;
 
@@ -319,9 +327,9 @@ namespace ANT_Console
                 return true;
             });
 
-            ScriptHandler script = new ScriptHandler();
-            script.SetServo += OnScriptSetServo;
-            script.ScriptComplete += (o, e) =>
+            m_script = new ScriptHandler();
+            m_script.SetServo += OnScriptSetServo;
+            m_script.ScriptComplete += (o, e) =>
             {
                 //
                 WriteCommand("Script complete.");
@@ -329,12 +337,16 @@ namespace ANT_Console
                 if (m_scriptInfinite)
                 {
                     // Restart.
-                    script.Start();
+                    m_script.Start();
+                }
+                else
+                {
+                    m_script = null;
                 }
             };
 
-            ParseScriptInput(script, filename);
-            script.Start();         
+            ParseScriptInput(filename);
+            m_script.Start();         
         }
 
         void OnScriptSetServo(int position)
@@ -344,13 +356,13 @@ namespace ANT_Console
                 WriteCommand(string.Format("<script> Moving servo to {0}.", position));
         }
 
-        void ParseScriptInput(ScriptHandler script, string filename)
+        void ParseScriptInput(string filename)
         {
             try
             {
                 using (System.IO.StreamReader reader = new System.IO.StreamReader(filename))
                 {
-                    script.ParseInput(reader);
+                    m_script.ParseInput(reader);
                     WriteCommand("Script now executing.");
                 }
             }
