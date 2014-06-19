@@ -13,12 +13,14 @@ namespace ANT_Console
         ScriptHandler m_script;
         DateTime m_lastReport = DateTime.Now;
         AntBikePower m_eMotion;
+        AntBikeSpeed m_refSpeed;
         AntControl m_control;
 
-        public InteractiveConsole(AntBikePower eMotion, AntControl control)
+        public InteractiveConsole(AntBikePower eMotion, AntControl control, AntBikeSpeed refSpeed)
         {
             m_eMotion = eMotion;
             m_control = control;
+            m_refSpeed = refSpeed;
         }
 
         public void Run()
@@ -148,7 +150,8 @@ namespace ANT_Console
             Console.SetCursorPosition(Console.WindowLeft, lastLine);
             Console.WriteLine(format,
                 data.Timestamp,
-                data.SpeedEMotion,
+                data.SpeedReference,
+                //data.SpeedEMotion,
                 data.PowerEMotion,
                 data.PowerReference,
                 data.ServoPosition,
@@ -289,7 +292,9 @@ namespace ANT_Console
 
             if (success)
             {
+                
                 m_eMotion.SetWheelSize(wheelSizeMM);
+                m_refSpeed.WheelSizeMM = (short)wheelSizeMM;
                 WriteCommand(string.Format("Set wheel size to {0} mm.", wheelSizeMM));
             }
         }

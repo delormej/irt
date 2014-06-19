@@ -12,6 +12,7 @@ namespace ANT_Console
         DataPoint m_data;
         AntBikePower m_eMotionPower;
         AntControl m_control;
+        AntBikeSpeed m_refSpeed;
         InteractiveConsole m_console;
 
         enum AntChannel : byte // limited to 8 channels per device.
@@ -45,27 +46,31 @@ namespace ANT_Console
         public void Run()
         {
             ConfigureServices();
-            m_console = new InteractiveConsole(m_eMotionPower, m_control);
+            m_console = new InteractiveConsole(m_eMotionPower, m_control, m_refSpeed);
             ConfigureReporters();
             m_console.Run();
         }
 
         private void ConfigureServices()
         {
-            const byte emotion_tranmission_type = 0xA5;
-            const byte quarq_tranmission_type = 0x5;
+            const byte emotion_transmission_type = 0xA5;
+            const byte quarq_transmission_type = 0x5;
 
             // Configure reference power.
             AntBikePower refPower = new AntBikePower(
-                (int)AntChannel.RefPower, 0, quarq_tranmission_type);
+                (int)AntChannel.RefPower, 0, quarq_transmission_type);
             refPower.StandardPowerEvent += ProcessMessage;
             refPower.TorqueEvent += ProcessMessage;
             refPower.Connected += refPower_Connected;
             refPower.Closing += refPower_Closing;
 
+            m_refSpeed = new AntBikeSpeed(
+                (int)AntChannel.RefSpeed, 0);
+            m_refSpeed.SpeedEvent += ProcessMessage;
+
             // Configure E-Motion power reporting.
             m_eMotionPower = new AntBikePower(
-                (int)AntChannel.EMotionPower, 0, emotion_tranmission_type);
+                (int)AntChannel.EMotionPower, 0, emotion_transmission_type);
             m_eMotionPower.StandardPowerEvent += ProcessMessage;
             m_eMotionPower.TorqueEvent += ProcessMessage;
             m_eMotionPower.ExtraInfoEvent += ProcessMessage;
@@ -151,6 +156,7 @@ namespace ANT_Console
                     break;
                 case AntChannel.RefPower:
                     m_data.Timestamp = m.Source.timeReceived;
+                    m_data.RefPowerAccumTorque = m.AccumTorque;
                     //m_data.PowerReference = m.CalculatedPower;
                     System.Diagnostics.Debug.Write(
                                     string.Format("Received Ref Power: {0:HH:mm:ss.fff}, torque: {1}\n",
@@ -188,6 +194,12 @@ namespace ANT_Console
             m_data.Timestamp = m.Source.timeReceived;
             m_data.TargetLevel = m.Level;
             m_data.ResistanceMode = m.Mode;
+        }
+
+        private void ProcessMessage(SpeedMessage m)
+        {
+            m_data.SpeedReference = m.SpeedMph;
+            m_data.RefSpeedWheelRevs = m.WheelRevs;
         }
     }
 }

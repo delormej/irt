@@ -21,7 +21,7 @@ namespace ANT_Console.Services
 
         ushort m_deviceId;
         byte m_sequence;
-        short m_wheelSizeMM = 2107;
+        short m_wheelSizeMM = 2096;
         TorqueMessage m_lastTorqueMessage;
         byte m_hw_major;
         byte m_hw_minor;
@@ -119,6 +119,9 @@ namespace ANT_Console.Services
                           }; 
 
             var result = m_channel.sendBurstTransfer(data, 300);
+
+            // Save local parameter.
+            m_wheelSizeMM = (short)wheelSizeMM;
         }
 
         public void SetFirmwareUpdateMode()

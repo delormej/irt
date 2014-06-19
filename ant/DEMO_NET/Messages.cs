@@ -19,6 +19,8 @@ namespace ANT_Console.Messages
         public byte ResistanceMode;
         public ushort TargetLevel;
         public ushort FlywheelRevs;
+        public ushort RefSpeedWheelRevs;
+        public ushort RefPowerAccumTorque;
 
         public override string ToString()
         {
@@ -86,12 +88,39 @@ namespace ANT_Console.Messages
     {
         internal SpeedMessage(ANT_Response response) : base(response) { }
 
+        public const byte Page = 0x0; // note that it's the last 7 bits, first bit is page toggle.
+        
+        const byte EVENT_TIME_LSB_INDEX = 4;
+        const byte EVENT_TIME_MSB_INDEX = 5;
+        const byte WHEEL_REV_LSB_INDEX = 6;
+        const byte WHEEL_REV_MSB_INDEX = 7;
+
         /* NOTE */
         // The key difference between speed message and the calculated speed
         // from the torque message is the wheel period unit.
         // Speed messages use 1024, vs. torque is 2048:
 
         //float speed = (cumulative_revs_delta * m_wheel_size_m) / (event_time_delta / 1024f);
+
+        // 1/1024 second, rolls over at 64 seconds. 
+        public ushort EventTime
+        {
+            get
+            {
+                return BigEndian(m_payload[EVENT_TIME_LSB_INDEX], m_payload[EVENT_TIME_MSB_INDEX]);
+            }
+        }
+
+        public ushort WheelRevs
+        {
+            get
+            {
+                return BigEndian(m_payload[WHEEL_REV_LSB_INDEX], m_payload[WHEEL_REV_MSB_INDEX]);
+            }
+        }
+
+        public float SpeedMps;
+        public float SpeedMph;
     }
 
     public class TorqueMessage : UpdateEventMessage
