@@ -40,6 +40,7 @@ typedef struct irt_power_meas_s
 	uint16_t	min_angle:12;																// Unit is in degrees with a resolution of 1. 
 	uint16_t	top_dead_spot_angle;											// Unit is in degrees with a resolution of 1. 
 	uint16_t	bottom_dead_spot_angle;*/										// Unit is in degrees with a resolution of 1. 
+	// TODO: accum_energy isn't getting set today?
 	uint16_t	accum_energy;															// Unit is in kilojoules with a resolution of 1.
 	uint16_t	wheel_period_2048;
 	float		instant_speed_mps;
