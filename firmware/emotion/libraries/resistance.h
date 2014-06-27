@@ -13,7 +13,7 @@
 #include "irt_common.h"
 #include "user_profile.h"
 
-#define MAX_RESISTANCE_LEVELS 	6 //10					// Maximum resistance levels available.
+#define MAX_RESISTANCE_LEVELS 	7 //10					// Maximum resistance levels available.
 #define MIN_RESISTANCE_LEVEL	1900					// Minimum by which there is no longer resistance.
 
 /**@brief		Array representing the servo position in micrseconds (us) by 
@@ -32,11 +32,12 @@ static const uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = {
 	775, 
 	700}; // Max resistance
 */ // TESTING 7 positions.
-	1273,
-	1150,
+	1300,
+	1200,
+	1100,
 	1000,
-	850,
-	699 };
+	900,
+	800 };
 
 /**@brief Bike types, used for predefined resistance coefficients. */
 typedef enum
