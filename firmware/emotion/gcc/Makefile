@@ -37,6 +37,8 @@ PROJECT_NAME = $(shell basename "$(realpath ../)")
 
 DEVICE = NRF51
 BOARD = BOARD_IRT_REV_A
+# Use the Dev board for debug builds right now.
+debug: BOARD = BOARD_DYN_BAT_N548
 #SEGGER_SERIAL =	# not used, we only have 1 segger attached 
 TARGET_DEVICE = nRF51422_xxAA
 USE_SOFTDEVICE = s310
