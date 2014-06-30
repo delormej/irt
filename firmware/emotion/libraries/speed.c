@@ -202,15 +202,12 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 		// Distance in meters.
 		distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
 
-		// Convert mm to meters, muliply by revs, multiply by 1,000 for km.
-		//float distance_m = (((float)m_wheel_size) / 1000.0f) * flywheel_ticks;
-
 		// Calculate speed in meters per second.
 		p_current->instant_speed_mps = distance_m / (event_period / 2048.0f);
 
 		// Calculate complete bicycle wheel revs based on wheel size.
 		p_current->accum_wheel_revs = p_last->accum_wheel_revs +
-				(uint16_t)(distance_m / (m_wheel_size * 1000));
+				(uint16_t)(distance_m / (((float)m_wheel_size) / 1000.0f));
 
 		// Increment the wheel period.
 		p_current->accum_wheel_period = p_last->accum_wheel_period + event_period;
