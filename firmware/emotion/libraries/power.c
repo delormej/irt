@@ -195,7 +195,7 @@ uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
 		torque = (watts * period_seconds_2048) / (128 * MATH_PI);
 	}
 	
-	PW_LOG("[PW] torque: %i\r\n", torque);
+	//PW_LOG("[PW] torque: %i\r\n", torque);
 
 	return torque;
 }

@@ -384,8 +384,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Record event time.
 	p_power_meas_current->event_time_2048 = seconds_2048_get();
-
-	LOG("[MAIN] event_time: %i\r\n", p_power_meas_current->event_time_2048);
+	//LOG("[MAIN] event_time: %i\r\n", p_power_meas_current->event_time_2048);
 
 	// Calculate speed.
 	err_code = speed_calc(p_power_meas_current, p_power_meas_last);

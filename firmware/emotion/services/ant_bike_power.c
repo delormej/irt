@@ -143,7 +143,7 @@ static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel
 {
 
 	// Time-synchronous model.  Increment the event count.
-	m_torque_tx_buffer[EVENT_COUNT_INDEX] = m_event_count++;
+	m_torque_tx_buffer[EVENT_COUNT_INDEX] = m_event_count;
 
 	m_torque_tx_buffer[WHEEL_TICKS_INDEX] = wheel_ticks;
 	m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX] = LOW_BYTE(last_wheel_period_2048);
@@ -159,7 +159,7 @@ static uint32_t power_transmit(uint16_t watts)
 	static uint16_t accumulated_power                 = 0;            
 	accumulated_power                                += watts;
 		
-	m_power_tx_buffer[EVENT_COUNT_INDEX]			  = m_event_count++;
+	m_power_tx_buffer[EVENT_COUNT_INDEX]			  = m_event_count;
 	m_power_tx_buffer[ACCUMMULATED_POWER_LSB_INDEX]   = LOW_BYTE(accumulated_power);        
 	m_power_tx_buffer[ACCUMMULATED_POWER_MSB_INDEX]   = HIGH_BYTE(accumulated_power);   
 	m_power_tx_buffer[INSTANT_POWER_LSB_INDEX]        = LOW_BYTE(watts);            
