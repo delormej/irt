@@ -50,7 +50,7 @@
 #include "boards.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
-#define DEFAULT_WHEEL_SIZE_MM			2069u
+#define DEFAULT_WHEEL_SIZE_MM			2096u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
 #define DEFAULT_ERG_WATTS				175u
 #define SIM_CRR							0.0033f

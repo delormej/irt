@@ -16,11 +16,11 @@
 
 /**@brief Debug logging for resistance control module.
  */
-#ifdef ENABLE_DEBUG_LOG
-#define SP_LOG debug_log
-#else
+//#ifdef ENABLE_DEBUG_LOG
+//#define SP_LOG debug_log
+//#else
 #define SP_LOG(...)
-#endif // ENABLE_DEBUG_LOG
+//#endif // ENABLE_DEBUG_LOG
 
 /*
  * Flywheel is actually 40cm in circumference, but transfers via belt to the drum (virtual road surface).
@@ -115,7 +115,7 @@ static uint32_t flywheel_ticks_get()
 	// Where speed_kmh = 28.0f, ~17 revolutions per 1/4 of a second.
 	//
 	static uint32_t r = 0;
-	return r+=13;
+	return r+=16;  // ~8mph
 #endif
 
 	uint32_t revs = 0;
@@ -180,13 +180,14 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 {
 	// Store delta between last event and current.
 	uint32_t flywheel_ticks;
-	uint16_t event_period;
 
 	float distance_m;
+	float wheel_revs;
 
 	// Get the flywheel ticks (2 per rev).
 	p_current->accum_flywheel_ticks = flywheel_ticks_get();
 
+	// TODO: Handle rollover, but this will be rare given 32 bit #.
 	// Ticks in the event period.
 	flywheel_ticks = p_current->accum_flywheel_ticks - p_last->accum_flywheel_ticks;
 
@@ -195,27 +196,30 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 	{
 		// Handle time rollover.
 		if (p_current->event_time_2048 < p_last->event_time_2048)
-			event_period = (p_last->event_time_2048 ^ 0xFFFF) + event_period;
+		{
+			p_current->wheel_period_2048 = (p_last->event_time_2048 ^ 0xFFFF) +
+				p_current->wheel_period_2048;
+		}
 		else
-			event_period = p_current->event_time_2048 - p_last->event_time_2048;
+		{
+			p_current->wheel_period_2048 = p_current->event_time_2048 - p_last->event_time_2048;
+		}
 
 		// Distance in meters.
 		distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
 
 		// Calculate speed in meters per second.
-		p_current->instant_speed_mps = distance_m / (event_period / 2048.0f);
+		p_current->instant_speed_mps = distance_m / (p_current->wheel_period_2048 / 2048.0f);
 
-		// Calculate complete bicycle wheel revs based on wheel size.
-		p_current->accum_wheel_revs = p_last->accum_wheel_revs +
-				(uint16_t)(distance_m / (((float)m_wheel_size) / 1000.0f));
+		// Calculate complete bicycle wheel revs based on wheel size and truncate to int.
+		p_current->accum_wheel_revs = (uint32_t)(p_current->accum_flywheel_ticks / m_flywheel_to_wheel_revs);
 
-		// Increment the wheel period.
-		p_current->accum_wheel_period = p_last->accum_wheel_period + event_period;
+		p_current->accum_wheel_period = p_last->accum_wheel_period + p_current->wheel_period_2048;
 
-		SP_LOG("[SP] dist:%.2f, period:%i, mps:%.2f\r\n",
+		/*SP_LOG("[SP] dist:%.2f, period:%i, mps:%.2f\r\n",
 				distance_m,
 				event_period,
-				p_current->instant_speed_mps);
+				p_current->instant_speed_mps);*/
 	}
 	else
 	{
