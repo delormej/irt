@@ -36,7 +36,8 @@ DEPLOY_PATH = '../../../../../SkyDrive/InsideRide/'
 PROJECT_NAME = $(shell basename "$(realpath ../)")
 
 DEVICE = NRF51
-BOARD = BOARD_IRT_REV_A
+#BOARD = BOARD_IRT_REV_A
+BOARD = BOARD_DYN_BAT_N548
 #SEGGER_SERIAL =	# not used, we only have 1 segger attached 
 TARGET_DEVICE = nRF51422_xxAA
 USE_SOFTDEVICE = s310
@@ -47,7 +48,7 @@ TEMPLATE_PATH = ../../gcc/
 # Compiler optimizations.
 ############################################
 # Enable optimizing for file size.
-CFLAGS = -Os
+#CFLAGS = -Os
 LDFLAGS += --specs=nano.specs
 
 CFLAGS += -D$(BOARD)					# Define board version being used.
@@ -70,7 +71,7 @@ GDB_PORT_NUMBER = 2331					# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 30
+SW_REVISION_BLD := 32
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)

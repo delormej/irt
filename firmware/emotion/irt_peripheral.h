@@ -26,4 +26,9 @@ void clear_led(void);
 void blink_led_green_start(uint16_t interval_ms);
 void blink_led_green_stop(void);
 
+/**@brief Get the current time in 1/2048s.
+ *
+ */
+uint16_t seconds_2048_get(void);
+
 #endif // IRT_PERIPHERAL_H__

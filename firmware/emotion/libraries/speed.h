@@ -43,22 +43,17 @@
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.
 *
 */
-void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm);
+void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm);
 
 /**@brief 	Set's the wheel size.  Defaults to DEFAULT_WHEEL_SIZE_MM if not set.
 *
 */
 void set_wheel_size(uint16_t wheel_size_mm);
 
-/**@brief 	Calculates the current speed.
-*
-*/
-uint32_t calc_speed(irt_power_meas_t* p_power_meas);
-
-/**@brief 	Calculates the current speed in meters per second.
-*
-*/
-float get_speed_mps(float wheel_revolutions, uint16_t period_seconds_2048);
+/**@brief	Calculates and records current speed measurement relative to last measurement
+ *
+ */
+uint32_t speed_calc(irt_power_meas_t * current, irt_power_meas_t * last);
 
 /**@brief		Converts speed from meters per second to kilometers per hour.
  *					

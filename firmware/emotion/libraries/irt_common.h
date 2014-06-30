@@ -24,34 +24,26 @@ All rights reserved.
 /**@brief Cycling Power Service measurement type. */
 typedef struct irt_power_meas_s
 {
-	uint16_t  	flags;																		// 16 bits defined here: https://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.cycling_power_measurement.xml
+	uint16_t	event_time_2048;											// Event time in 1/2048s.
 	int16_t		instant_power;         										// Note this is a SIGNED int16
-//	uint8_t		pedal_power_balance;
-	uint16_t	accum_torque;															// Unit is in newton metres with a resolution of 1/32
-	uint32_t	accum_wheel_revs;
-	uint16_t	last_wheel_event_time;										// Unit is in seconds with a resolution of 1/2048. 
-/*	uint16_t	accum_crank_rev;
-	uint16_t	last_crank_event_time;										// Unit is in seconds with a resolution of 1/1024. 
-	int16_t		max_force_magnitude;											// Unit is in newtons with a resolution of 1.
-	int16_t		min_force_magnitude;											// Unit is in newtons with a resolution of 1.
-	int16_t		max_torque_magnitude;											// Unit is in newton metres with a resolution of 1/32
-	int16_t		min_torque_magnitude;											// Unit is in newton metres with a resolution of 1/32
-	uint16_t	max_angle:12;																// Unit is in degrees with a resolution of 1. 
-	uint16_t	min_angle:12;																// Unit is in degrees with a resolution of 1. 
-	uint16_t	top_dead_spot_angle;											// Unit is in degrees with a resolution of 1. 
-	uint16_t	bottom_dead_spot_angle;*/										// Unit is in degrees with a resolution of 1. 
-	// TODO: accum_energy isn't getting set today?
-	uint16_t	accum_energy;															// Unit is in kilojoules with a resolution of 1.
-	uint16_t	wheel_period_2048;
 	float		instant_speed_mps;
-	// TODO: these should be removed & seperated from power measurement.  
-	// This is only temporary until we use the scheduler.
+	uint16_t	accum_torque;												// Unit is in newton meters with a resolution of 1/32
+	uint32_t	accum_wheel_revs;											// BLE uses 32bit value, ANT uses 8 bit.
+	uint16_t	accum_wheel_period;											// Increments of 1/2048s rolls over at 32 seconds.
+	uint32_t	accum_flywheel_ticks;										// Currently 2 ticks per flywheel rev.
+	// TODO: ble cps spec uses accum_energy but we haven't implmented it yet.
+	uint16_t	accum_energy;												// Unit is in kilojoules with a resolution of 1 (used by ble cps).
+
+	uint16_t	wheel_period_2048;											// Convenience storage of the calculated current period.  TODO: Do we need this?
+
+	// Resistance state.  TODO: Should this be refactored somewhere else? A pointer would save 8 bytes per entry.
 	uint8_t 	resistance_mode;
 	uint16_t	resistance_level;
 	uint16_t	servo_position;
-	uint32_t	accum_flywheel_revs;
-	float		temp;
-	uint8_t		accel_y_lsb;
+
+	// Additional values reported.
+	float		temp;														// Measured temperature in c.
+	uint8_t		accel_y_lsb;												// Accelerometer reading. TODO: determine if we're going to use.
 	uint8_t		accel_y_msb;
 } irt_power_meas_t;
 
@@ -107,8 +99,10 @@ typedef struct irt_device_info_s
 	} while(0) 												\
 
 // Abstracts a FIFO queue of events.
-uint32_t irt_power_meas_fifo_init(uint8_t size);
-void 	 irt_power_meas_fifo_free();
-uint32_t irt_power_meas_fifo_op(irt_power_meas_t** first, irt_power_meas_t** next);
+uint32_t 			irt_power_meas_fifo_init(uint8_t size);
+void 	 			irt_power_meas_fifo_free();
+irt_power_meas_t* 	irt_power_meas_fifo_next();
+irt_power_meas_t* 	irt_power_meas_fifo_first();
+irt_power_meas_t* 	irt_power_meas_fifo_last();
 
 #endif // IRT_COMMON_H

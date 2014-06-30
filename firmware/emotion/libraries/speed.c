@@ -12,20 +12,27 @@
 #include "nrf_sdm.h"
 #include "app_error.h"
 #include "app_util.h"
+#include "debug.h"
 
-// RTC1 is based on a 32.768khz crystal, or in other words it oscillates
-// 32768 times per second.  The PRESCALER determins how often a tick gets
-// counted.  With a prescaler of 0, there are 32,768 ticks in 1 second
-// 1/2048th of a second would be 16 ticks (32768/2048)
-// # of 2048th's would then be ticks / 16.
-#define	TICK_FREQUENCY	(32768 / (NRF_RTC1->PRESCALER + 1))
-#define FLYWHEEL_SIZE	0.11176f
+/**@brief Debug logging for resistance control module.
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define SP_LOG debug_log
+#else
+#define SP_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
-static uint16_t m_wheel_size;					// Wheel diameter size in mm.
-static float m_flywheel_to_wheel_revs;			// Ratio of flywheel revolutions for 1 wheel revolution.
-static uint32_t m_last_accum_flywheel_revs = 0;
-static uint16_t m_last_event_time_2048 = 0;
-static uint16_t m_last_wheel_event_time = 0;
+/*
+ * Flywheel is actually 40cm in circumference, but transfers via belt to the drum (virtual road surface).
+ * Flywheel to drum ratio creates a virtual road distance travelled of 11.176cm per revolution of the flywheel.
+ * 1 meter of travel is equal to 8.9477452 rotations (1 / 0.11176)
+ * Flywheel generates 2 ticks per revolution == 1 meter of travel is equal to 17.89549 flywheel ticks.
+ */
+#define FLYWHEEL_SIZE				0.11176f					// Size in meters.
+#define FLYWHEEL_TICK_PER_METER		(1 / FLYWHEEL_SIZE) * 2 	// 2 ticks per rev.
+
+static uint16_t m_wheel_size;									// Wheel diameter size in mm.
+static float m_flywheel_to_wheel_revs;							// Ratio of flywheel revolutions for 1 wheel revolution.
 
 /**@brief	Configure GPIO input from flywheel revolution pin and create an 
  *				event on achannel. 
@@ -98,7 +105,7 @@ static void revs_init_timer()
  *					counter started.
  *					
  */
-static uint32_t get_flywheel_revs()
+static uint32_t flywheel_ticks_get()
 {
 // DEBUG ONLY CODE
 #if defined(SIM_SPEED)
@@ -119,63 +126,6 @@ static uint32_t get_flywheel_revs()
 	return revs;
 }
 
-/**@brief 	Returns the count of 1/2048th seconds (2048 per second) since the 
- *					the counter started.  
- *
- * @note		This value rolls over at 32 seconds.
- */
-static uint16_t get_seconds_2048()
-{
-	// Get current tick count.
-	uint32_t ticks = NRF_RTC1->COUNTER;
-
-	// Based on frequence of ticks, calculate 1/2048 seconds.
-	// freq (hz) = times per second.
-	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (TICK_FREQUENCY / 2048));
-
-	return seconds_2048;
-}
-
-float get_speed_mps(float wheel_revolutions, uint16_t period_seconds_2048)
-{
-	if (wheel_revolutions == 0.0f || period_seconds_2048 == 0)
-		return 0.0f;
-	
-	// Convert mm to meters, muliply by revs, multiply by 1,000 for km.
-	float distance_m = (((float)m_wheel_size) / 1000.0f) * wheel_revolutions;
-	// Get speed in meters per second.
-	float mps = distance_m / (period_seconds_2048 / 2048.0f);
-
-	return mps;
-}
-
-/**@brief		Calculates how long it would have taken since the last complete 
- *					wheel revolution given current speed (in meters per second).  
- *					Returns a value in 1/2048's of a second.
- *
- */
-static uint16_t fractional_wheel_rev_time_2048(float wheel_revs, float speed_mps)
-{
-	uint16_t time_to_full_rev_2048 = 0;
-	
-	if (speed_mps > 0.0f)
-	{
-		// Get the speed in meters per 1/2048s.
-		float speed_2048 = speed_mps / 2048;
-	
-		// A single wheel rev at this speed would take this many 1/2048's of a second.	
-		float single_wheel_rev_time = (m_wheel_size / 1000.0f) / speed_2048;
-
-		// Difference between calculated partial wheel revs and the last full wheel rev.
-		float partial_wheel_rev = fmod(wheel_revs, 1);
-
-		// How long ago in 1/2048's of a second would the last full wheel rev have occurred?
-		time_to_full_rev_2048 = round(partial_wheel_rev * single_wheel_rev_time);
-	}
-	
-	return time_to_full_rev_2048;
-}
-
 
 /*****************************************************************************
 *
@@ -194,106 +144,6 @@ float get_speed_mph(float speed_mps)
 	return get_speed_kmh(speed_mps) * 0.621371;
 }
 
-//
-// Calculates the speed in meters per second and sets the following values:
-//		accumulated wheel revolutions
-//		last wheel event time (1/2048s second)
-//		current speed (meters per second)
-//		period length (last_period_2048)
-//
-// Maintains state for the last wheel event and accumulated flywheel revolutions
-// in order to cacluate the next event.
-//
-// Returns IRT_SUCCESS or error.
-//
-uint32_t calc_speed(irt_power_meas_t* p_power_meas)
-{
-	uint16_t event_time_2048;
-	uint32_t accum_flywheel_revs;
-	uint32_t flywheel_revs;
-	uint16_t time_since_full_rev_2048;
-	uint16_t event_period_2048;
-	float wheel_revs_partial;
-	float accum_wheel_revs_partial;
-
-	// Current time stamp.
-	event_time_2048 = get_seconds_2048();
-	
-	// Flywheel revolution count.
-	accum_flywheel_revs = get_flywheel_revs();
-
-	// Assign to the data payload, but only used for debugging purposes.
-	p_power_meas->accum_flywheel_revs = accum_flywheel_revs;
-
-	// Flywheel revolutions in current period.
-	flywheel_revs = accum_flywheel_revs - m_last_accum_flywheel_revs;
-
-	// Only calculate speed if the flywheel has rotated.
-	if (flywheel_revs > 0)
-	{
-		// Handle time rollover.
-		if (event_time_2048 < m_last_event_time_2048)
-			event_period_2048 = (m_last_event_time_2048 ^ 0xFFFF) + event_time_2048;
-		else
-			event_period_2048 = event_time_2048 - m_last_event_time_2048;
-
-		// Calculate partial wheel revs in the period.
-		wheel_revs_partial = ((float) flywheel_revs / m_flywheel_to_wheel_revs);
-
-		// Calculate the current speed in meters per second.
-		p_power_meas->instant_speed_mps = get_speed_mps(
-			wheel_revs_partial,
-			event_period_2048);	// Current event time period in 1/2048 seconds.
-
-		// Total number of partial wheel revs.
-		accum_wheel_revs_partial = accum_flywheel_revs / m_flywheel_to_wheel_revs;
-
-		/*
-		 Speed (mps) is calculated based on flywheel revolutions.
-		 The Bicycle Power service only reports on full wheel revolutions,
-		 so we need to back up to the last full wheel rev.
-		 */
-
-		// Cast to int and truncate to last complete wheel rev.
-		p_power_meas->accum_wheel_revs = (uint32_t) accum_wheel_revs_partial;
-
-		// Determine time since a full wheel rev in 1/2048's of a second at this speed.
-		time_since_full_rev_2048 = fractional_wheel_rev_time_2048(
-			accum_wheel_revs_partial,
-			p_power_meas->instant_speed_mps);
-
-		// Time of the last complete wheel revolution.
-		p_power_meas->last_wheel_event_time = event_time_2048 - time_since_full_rev_2048;
-
-		// Amount of time since the prior reported complete wheel revolution.
-		if (p_power_meas->last_wheel_event_time < m_last_wheel_event_time)
-		{
-			p_power_meas->wheel_period_2048 = 
-				(m_last_wheel_event_time ^ 0xFFFF) + p_power_meas->last_wheel_event_time;
-		}
-		else
-		{
-			p_power_meas->wheel_period_2048 =
-				p_power_meas->last_wheel_event_time - m_last_wheel_event_time;
-		}
-		
-		//
-		// Save state for next calculation.
-		//
-
-		// Last time of a full wheel rev.
-		m_last_wheel_event_time = p_power_meas->last_wheel_event_time;
-		
-		// Last time event was calculated (used for speed in mps).
-		m_last_event_time_2048 = event_time_2048;
-		
-		// Last reported complete flywheel revs.
-		m_last_accum_flywheel_revs = accum_flywheel_revs;
-	}
-
-	return IRT_SUCCESS;
-}
-
 void set_wheel_size(uint16_t wheel_size_mm)
 {
 	m_wheel_size = wheel_size_mm;
@@ -307,7 +157,7 @@ void set_wheel_size(uint16_t wheel_size_mm)
 	m_flywheel_to_wheel_revs = (wheel_size_mm / 1000.0f) / FLYWHEEL_SIZE;
 }
 
-void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
+void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 {
 	set_wheel_size(wheel_size_mm);
 	
@@ -322,3 +172,70 @@ void init_speed(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 	// Start the counter.
 	REVS_TIMER->TASKS_START = 1;
 }
+
+/**@brief	Calculates and records current speed measurement relative to last measurement
+ *
+ */
+uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
+{
+	// Store delta between last event and current.
+	uint32_t flywheel_ticks;
+	uint16_t event_period;
+
+	float distance_m;
+
+	// Get the flywheel ticks (2 per rev).
+	p_current->accum_flywheel_ticks = flywheel_ticks_get();
+
+	// Ticks in the event period.
+	flywheel_ticks = p_current->accum_flywheel_ticks - p_last->accum_flywheel_ticks;
+
+	// Only calculate speed if the flywheel has rotated since last.
+	if (flywheel_ticks > 0)
+	{
+		// Handle time rollover.
+		if (p_current->event_time_2048 < p_last->event_time_2048)
+			event_period = (p_last->event_time_2048 ^ 0xFFFF) + event_period;
+		else
+			event_period = p_current->event_time_2048 - p_last->event_time_2048;
+
+		// Distance in meters.
+		distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
+
+		// Convert mm to meters, muliply by revs, multiply by 1,000 for km.
+		//float distance_m = (((float)m_wheel_size) / 1000.0f) * flywheel_ticks;
+
+		// Calculate speed in meters per second.
+		p_current->instant_speed_mps = distance_m / (event_period / 2048.0f);
+
+		// Calculate complete bicycle wheel revs based on wheel size.
+		p_current->accum_wheel_revs = p_last->accum_wheel_revs +
+				(uint16_t)(distance_m / (m_wheel_size * 1000));
+
+		// Increment the wheel period.
+		p_current->accum_wheel_period = p_last->accum_wheel_period + event_period;
+
+		SP_LOG("[SP] dist:%.2f, period:%i, mps:%.2f\r\n",
+				distance_m,
+				event_period,
+				p_current->instant_speed_mps);
+	}
+	else
+	{
+		// From the ANT spec:
+		// To indicate zero rotational velocity, do not increment the accumulated wheel period and do not increment the wheel ticks.
+		// The update event count continues incrementing to indicate that updates are occurring, but since the wheel is not rotating
+		// the wheel ticks do not increase.
+		p_current->accum_wheel_revs = p_last->accum_wheel_revs;
+		p_current->accum_wheel_period = p_last->accum_wheel_period;
+
+		p_current->instant_speed_mps = 0.0f;
+
+		SP_LOG("[SP] Coasting... %i : %i\r\n", p_current->accum_flywheel_ticks, p_last->accum_flywheel_ticks);
+	}
+
+	// TODO: do we really need this? There is no error condition produced.
+	return IRT_SUCCESS;
+}
+
+

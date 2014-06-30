@@ -265,17 +265,17 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 	float speed_avg;
 
 	// If we have a range of events between first and current, we're able to do a moving average of speed.
-	if (p_power_meas_first != NULL)
+/*	if (p_power_meas_first != NULL)
 	{
 		// Average the speed.  A new average power will get calculated based on this.
-		speed_avg = get_speed_mps(
+		speed_avg = speed_mps_get(
 				(p_power_meas_current->accum_wheel_revs - p_power_meas_first->accum_wheel_revs),
-				(p_power_meas_current->last_wheel_event_time - p_power_meas_first->last_wheel_event_time));
+				(p_power_meas_current->event_time_2048 - p_power_meas_first->event_time_2048));
 	}
 	else
-	{
+	{*/
 		speed_avg = p_power_meas_current->instant_speed_mps;
-	}
+	//}
 
 	// Don't attempt to adjust if stopped.
 	if (speed_avg == 0.0f)
@@ -343,10 +343,13 @@ static void ant_4hz_timeout_handler(void * p_context)
 	uint32_t err_code;
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
+	irt_power_meas_t* p_power_meas_last 		= NULL;
 		
 	// Get pointers to the event structures.
-	err_code = irt_power_meas_fifo_op(&p_power_meas_first, &p_power_meas_current);
-	APP_ERROR_CHECK(err_code);
+	p_power_meas_current = irt_power_meas_fifo_next();
+	p_power_meas_first = irt_power_meas_fifo_first();
+	p_power_meas_last = irt_power_meas_fifo_last();
+
 
 	// Set current resistance state.
 	p_power_meas_current->resistance_mode = m_resistance_mode;
@@ -379,9 +382,16 @@ static void ant_4hz_timeout_handler(void * p_context)
 		m_accelerometer_data.source = 0;
 	}
 
-	// Calculate the power.
-	err_code = power_measure(m_user_profile.total_weight_kg, p_power_meas_current);
-	APP_ERROR_CHECK(err_code);
+	// Record event time.
+	p_power_meas_current->event_time_2048 = seconds_2048_get();
+
+	LOG("[MAIN] event_time: %i\r\n", p_power_meas_current->event_time_2048);
+
+	// Calculate speed.
+	err_code = speed_calc(p_power_meas_current, p_power_meas_last);
+
+	// Calculate power.
+	err_code = power_calc(p_power_meas_current, p_power_meas_last);
 
 	// TODO: this should return an err_code.
 	// Transmit the power message.
@@ -892,7 +902,10 @@ int main(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 
 	// Initialize module to read speed from flywheel.
-	init_speed(PIN_FLYWHEEL, DEFAULT_WHEEL_SIZE_MM);
+	speed_init(PIN_FLYWHEEL, DEFAULT_WHEEL_SIZE_MM);
+
+	// Initialize power module with user profile.
+	power_init(&m_user_profile);
 
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);
