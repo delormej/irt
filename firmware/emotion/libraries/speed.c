@@ -29,7 +29,7 @@
  * Flywheel generates 2 ticks per revolution == 1 meter of travel is equal to 17.89549 flywheel ticks.
  */
 #define FLYWHEEL_SIZE				0.11176f					// Size in meters.
-#define FLYWHEEL_TICK_PER_METER		(1 / FLYWHEEL_SIZE) * 2 	// 2 ticks per rev.
+#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_SIZE) * 2.0f)			// 17.89549f					// ((1.0f / FLYWHEEL_SIZE) * 2.0f) // 2 ticks per rev.
 
 static uint16_t m_wheel_size;									// Wheel diameter size in mm.
 static float m_flywheel_to_wheel_revs;							// Ratio of flywheel revolutions for 1 wheel revolution.
@@ -216,10 +216,14 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 
 		p_current->accum_wheel_period = p_last->accum_wheel_period + p_current->wheel_period_2048;
 
-		SP_LOG("[SP] accum_wheel_revs:%i, flywheel_ticks:%i, instant_mps:%.2f\r\n",
+		/*
+		SP_LOG("[SP] wheel:%i, dist:%.2f, flywh:%i, instant_mps:%.2f, period:%i, ratio:%.4f\r\n",
 				p_current->accum_wheel_revs,
+				distance_m,
 				flywheel_ticks,
-				p_current->instant_speed_mps);
+				p_current->instant_speed_mps,
+				p_current->wheel_period_2048,
+				FLYWHEEL_TICK_PER_METER);*/
 	}
 	else
 	{
