@@ -16,11 +16,11 @@
 
 /**@brief Debug logging for resistance control module.
  */
-//#ifdef ENABLE_DEBUG_LOG
-//#define SP_LOG debug_log
-//#else
+#ifdef ENABLE_DEBUG_LOG
+#define SP_LOG debug_log
+#else
 #define SP_LOG(...)
-//#endif // ENABLE_DEBUG_LOG
+#endif // ENABLE_DEBUG_LOG
 
 /*
  * Flywheel is actually 40cm in circumference, but transfers via belt to the drum (virtual road surface).
@@ -198,7 +198,7 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 		if (p_current->event_time_2048 < p_last->event_time_2048)
 		{
 			p_current->wheel_period_2048 = (p_last->event_time_2048 ^ 0xFFFF) +
-				p_current->wheel_period_2048;
+					p_current->event_time_2048;
 		}
 		else
 		{
@@ -216,10 +216,10 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 
 		p_current->accum_wheel_period = p_last->accum_wheel_period + p_current->wheel_period_2048;
 
-		/*SP_LOG("[SP] dist:%.2f, period:%i, mps:%.2f\r\n",
-				distance_m,
-				event_period,
-				p_current->instant_speed_mps);*/
+		SP_LOG("[SP] accum_wheel_revs:%i, flywheel_ticks:%i, instant_mps:%.2f\r\n",
+				p_current->accum_wheel_revs,
+				flywheel_ticks,
+				p_current->instant_speed_mps);
 	}
 	else
 	{
