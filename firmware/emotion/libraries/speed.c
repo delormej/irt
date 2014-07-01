@@ -220,10 +220,10 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 
 		p_current->accum_wheel_period = p_last->accum_wheel_period + avg_wheel_period;
 
-		SP_LOG("[SP] wheel_period:%i, speed:%.1f, period:%i\r\n",
+		/*SP_LOG("[SP] wheel_period:%i, speed:%.1f, period:%i\r\n",
 				avg_wheel_period,
 				p_current->instant_speed_mps,
-				p_current->wheel_period_2048);
+				p_current->wheel_period_2048);*/
 	}
 	else
 	{

@@ -216,6 +216,7 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 {
 	uint32_t err_code;
 	uint16_t torque;
+	uint16_t period_diff;
 
 	// Calculate power.
 	p_current->instant_power = power_watts_calc(
@@ -223,9 +224,22 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 			mp_user_profile->total_weight_kg,
 			p_current->servo_position);
 
+	// Handle time rollover.
+	// Accum wheel period is a calculated period representing the average time it takes
+	// in 1/2048s for a wheel revolution at the current speed.
+	if (p_current->accum_wheel_period < p_last->accum_wheel_period)
+	{
+		period_diff = (p_last->accum_wheel_period ^ 0xFFFF) +
+				p_current->accum_wheel_period;
+	}
+	else
+	{
+		period_diff = p_current->accum_wheel_period - p_last->accum_wheel_period;
+	}
+
 	// Calculate torque.
 	torque = power_torque_calc(p_current->instant_power,
-			p_current->wheel_period_2048);
+			period_diff);
 
 	// Accumulate torque from last measure.
 	p_current->accum_torque = p_last->accum_torque + torque;
