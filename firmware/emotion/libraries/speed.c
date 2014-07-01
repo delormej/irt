@@ -42,8 +42,8 @@ static void revs_init_gpiote(uint32_t pin_flywheel_rev)
 	nrf_gpio_cfg_input(pin_flywheel_rev, NRF_GPIO_PIN_NOPULL);
 	
 	nrf_gpiote_event_config(REVS_CHANNEL_TASK_TOGGLE, 
-													pin_flywheel_rev, 
-													NRF_GPIOTE_POLARITY_HITOLO);
+			pin_flywheel_rev,
+			NRF_GPIOTE_POLARITY_HITOLO);
 }
 
 /**@brief		Enable PPI channel 3, combined with previous settings.
@@ -55,8 +55,8 @@ static void revs_init_ppi()
 	
 	// Using hardcoded channel 3.
 	err_code = sd_ppi_channel_assign(3, 
-																&NRF_GPIOTE->EVENTS_IN[REVS_CHANNEL_TASK_TOGGLE], 
-																&REVS_TIMER->TASKS_COUNT);
+			&NRF_GPIOTE->EVENTS_IN[REVS_CHANNEL_TASK_TOGGLE],
+			&REVS_TIMER->TASKS_COUNT);
 	
 	if (err_code == NRF_ERROR_SOC_PPI_INVALID_CHANNEL)
 		APP_ERROR_HANDLER(NRF_ERROR_SOC_PPI_INVALID_CHANNEL);
@@ -109,10 +109,8 @@ static uint32_t flywheel_ticks_get()
 {
 // DEBUG ONLY CODE
 #if defined(SIM_SPEED)
+	//
 	// DEBUG PURPOSES ONLY. Simulates speed for 1/4 second.
-	// 
-	// ((((speed_kmh / 3600) * 250) / wheel_size_m) * 18.5218325f);
-	// Where speed_kmh = 28.0f, ~17 revolutions per 1/4 of a second.
 	//
 	static uint32_t r = 0;
 	return r+=32;  // ~16mph
