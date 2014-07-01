@@ -94,7 +94,7 @@ static rc_evt_handler_t m_on_set_resistance;
 static ant_bp_evt_dfu_enable m_on_enable_dfu_mode;
 
 // Shared event counter for all ANT BP messages.
-static uint16_t m_event_count;
+static uint8_t m_event_count;
 
 // TODO: Implement required calibration page.
 
@@ -139,17 +139,17 @@ static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 	return err_code;
 }
 
-static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel_period_2048, uint8_t wheel_ticks)
+static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_period_2048, uint8_t wheel_ticks)
 {
 
 	// Time-synchronous model.  Increment the event count.
 	m_torque_tx_buffer[EVENT_COUNT_INDEX] = m_event_count;
 
 	m_torque_tx_buffer[WHEEL_TICKS_INDEX] = wheel_ticks;
-	m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX] = LOW_BYTE(last_wheel_period_2048);
-	m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX] = HIGH_BYTE(last_wheel_period_2048);
-	m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(accumulated_torque);
-	m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(accumulated_torque);
+	m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX] = LOW_BYTE(accum_wheel_period_2048);
+	m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX] = HIGH_BYTE(accum_wheel_period_2048);
+	m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(accum_torque);
+	m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(accum_torque);
 
 	return broadcast_message_transmit(m_torque_tx_buffer);
 }
@@ -405,7 +405,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	{
 		// # Default broadcast message is torque.
 		err_code = torque_transmit(p_power_meas->accum_torque,
-			p_power_meas->event_time_2048,
+			p_power_meas->accum_wheel_period,
 			(uint8_t) p_power_meas->accum_wheel_revs);
 		APP_ERROR_CHECK(err_code);
 	}

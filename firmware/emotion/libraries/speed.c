@@ -28,11 +28,11 @@
  * 1 meter of travel is equal to 8.9477452 rotations (1 / 0.11176)
  * Flywheel generates 2 ticks per revolution == 1 meter of travel is equal to 17.89549 flywheel ticks.
  */
-#define FLYWHEEL_SIZE				0.11176f					// Size in meters.
-#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_SIZE) * 2.0f)			// 17.89549f					// ((1.0f / FLYWHEEL_SIZE) * 2.0f) // 2 ticks per rev.
+#define FLYWHEEL_SIZE				0.11176f						// Distance traveled in meters per complete flywheel rev.
+#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_SIZE) * 2.0f)	// 2 ticks per rev == 17.89549f.
 
-static uint16_t m_wheel_size;									// Wheel diameter size in mm.
-static float m_flywheel_to_wheel_revs;							// Ratio of flywheel revolutions for 1 wheel revolution.
+static uint16_t m_wheel_size;										// Wheel diameter size in mm.
+static float m_flywheel_to_wheel_revs;								// Ratio of flywheel revolutions for 1 wheel revolution.
 
 /**@brief	Configure GPIO input from flywheel revolution pin and create an 
  *				event on achannel. 
@@ -153,8 +153,8 @@ void set_wheel_size(uint16_t wheel_size_mm)
 		 0.01 miles = 16.09344 meters
 		 1 servo_rev = 0.11176 distance_meters (FLYWHEEL_SIZE)
 	*/
-	// For every 1 wheel revolution, the flywheel revolves this many times.
-	m_flywheel_to_wheel_revs = (wheel_size_mm / 1000.0f) / FLYWHEEL_SIZE;
+	// For every 1 wheel revolution, the flywheel revolves this many times *2 (we get 2 reads per rev).
+	m_flywheel_to_wheel_revs = (((wheel_size_mm / 1000.0f) / FLYWHEEL_SIZE) * 2.0f);
 }
 
 void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
@@ -183,6 +183,7 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 
 	float distance_m;
 	float wheel_revs;
+	uint16_t avg_wheel_period;
 
 	// Get the flywheel ticks (2 per rev).
 	p_current->accum_flywheel_ticks = flywheel_ticks_get();
@@ -214,16 +215,15 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 		// Calculate complete bicycle wheel revs based on wheel size and truncate to int.
 		p_current->accum_wheel_revs = (uint32_t)(p_current->accum_flywheel_ticks / m_flywheel_to_wheel_revs);
 
-		p_current->accum_wheel_period = p_last->accum_wheel_period + p_current->wheel_period_2048;
+		// Calculate average wheel period; the amount of time (1/2048s) it takes for a complete wheel rev.
+		avg_wheel_period = ((1 / (p_current->instant_speed_mps / m_wheel_size)) / 1000) * 2048;
 
-		/*
-		SP_LOG("[SP] wheel:%i, dist:%.2f, flywh:%i, instant_mps:%.2f, period:%i, ratio:%.4f\r\n",
-				p_current->accum_wheel_revs,
-				distance_m,
-				flywheel_ticks,
+		p_current->accum_wheel_period = p_last->accum_wheel_period + avg_wheel_period;
+
+		SP_LOG("[SP] wheel_period:%i, speed:%.1f, period:%i\r\n",
+				avg_wheel_period,
 				p_current->instant_speed_mps,
-				p_current->wheel_period_2048,
-				FLYWHEEL_TICK_PER_METER);*/
+				p_current->wheel_period_2048);
 	}
 	else
 	{
@@ -236,7 +236,7 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 
 		p_current->instant_speed_mps = 0.0f;
 
-		SP_LOG("[SP] Coasting... %i : %i\r\n", p_current->accum_flywheel_ticks, p_last->accum_flywheel_ticks);
+		// SP_LOG("[SP] Not moving? %i : %i\r\n", p_current->accum_flywheel_ticks, p_last->accum_flywheel_ticks);
 	}
 
 	// TODO: do we really need this? There is no error condition produced.
