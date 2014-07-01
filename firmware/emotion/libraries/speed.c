@@ -115,7 +115,7 @@ static uint32_t flywheel_ticks_get()
 	// Where speed_kmh = 28.0f, ~17 revolutions per 1/4 of a second.
 	//
 	static uint32_t r = 0;
-	return r+=16;  // ~8mph
+	return r+=32;  // ~16mph
 #endif
 
 	uint32_t revs = 0;
