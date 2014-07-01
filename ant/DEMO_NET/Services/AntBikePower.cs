@@ -237,17 +237,15 @@ namespace ANT_Console.Services
 
         protected virtual void ProcessMessage(TorqueMessage message)
         {
-            //TODO: there is a lot of reuse opportunity here
             if (m_lastTorqueMessage != null)
             {
                 Calculate(message);
-            }
 
+                if (TorqueEvent != null)
+                    TorqueEvent(message);
+            }
             // Save state for next round.
             m_lastTorqueMessage = message;
-
-            if (TorqueEvent != null)
-                TorqueEvent(message);
         }
 
         protected virtual void ProcessMessage(ProductPage message)
@@ -258,8 +256,24 @@ namespace ANT_Console.Services
         }
 
         // Calculate speed & power.
-        protected void Calculate(TorqueMessage message)
+        protected bool Calculate(TorqueMessage message)
         {
+            int event_delta = 0;
+            
+            // Handle rollover of the event count.
+            if (message.EventCount < m_lastTorqueMessage.EventCount)
+                // If we had a rollover.
+                event_delta = (byte)((m_lastTorqueMessage.EventCount ^ 0xFF) +
+                    message.EventCount);
+            else
+                event_delta = (byte)(message.EventCount -
+                    m_lastTorqueMessage.EventCount);
+
+            if (event_delta <= 0)
+            {
+                return false;
+            }
+
             // Wheel period / event time
             ushort wheel_period_delta = 0;
             if (message.WheelPeriod < m_lastTorqueMessage.WheelPeriod)
@@ -273,7 +287,7 @@ namespace ANT_Console.Services
             int accum_torque_delta = 0;
             if (message.AccumTorque < m_lastTorqueMessage.AccumTorque)
                 // If we had a rollover.
-                accum_torque_delta = (ushort)((m_lastTorqueMessage.AccumTorque ^ 0xFF) +
+                accum_torque_delta = (ushort)((m_lastTorqueMessage.AccumTorque ^ 0xFFFF) +
                     message.AccumTorque);
             else
                 accum_torque_delta = (ushort)(message.AccumTorque -
@@ -297,13 +311,21 @@ namespace ANT_Console.Services
                     float value = (float)accum_torque_delta / (float)wheel_period_delta;
                     message.CalculatedPower = (short)((128 * Math.PI) * value);
                 }
-                if (wheel_ticks_delta > 0)
-                {
-                    // Calculate speed in meters per second.
-                    float speed = (wheel_ticks_delta * (m_wheelSizeMM/1000.0f)) / (wheel_period_delta / 2048f);
-                    message.SpeedMps = speed;
-                    message.SpeedMph = speed * 2.23694f; // Convert to MPH
-                }
+                
+                // Speed is calculated from the wheel period.
+                message.SpeedMps = (2048 * (m_wheelSizeMM / 1000.0f) * event_delta) / wheel_period_delta;
+                message.SpeedMph = message.SpeedMps * 2.23694f;
+
+                //System.Diagnostics.Debug.Assert((message.SpeedMps > 0.5), 
+                //    string.Format("Events:{0} Period:{1}: Meters/Hr:{2}",
+                //        event_delta,
+                //        wheel_period_delta,
+                //        message.SpeedMps)); 
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
     }
