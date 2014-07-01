@@ -165,7 +165,7 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
 		{
 			flags |= CPS_MEAS_FLAG_WHEEL_REV_PRESENT;
 			len += uint32_encode(p_cps_measurement->accum_wheel_revs, &p_encoded_buffer[len]);
-			len += uint16_encode(p_cps_measurement->event_time_2048, &p_encoded_buffer[len]);
+			len += uint16_encode(p_cps_measurement->last_wheel_event_2048, &p_encoded_buffer[len]);
 		}
 	}
 
@@ -181,7 +181,7 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
 		}
 	}
 
-	// Take 16 bit flags field and seperate into 2 octets.
+	// Take 16 bit flags field and separate into 2 octets.
 	p_encoded_buffer[0] = (uint8_t) ((flags & 0x00FF) >> 0);
 	p_encoded_buffer[1] = (uint8_t) ((flags & 0xFF00) >> 8);
 		

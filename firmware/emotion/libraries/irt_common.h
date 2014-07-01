@@ -33,8 +33,7 @@ typedef struct irt_power_meas_s
 	uint32_t	accum_flywheel_ticks;										// Currently 2 ticks per flywheel rev.
 	// TODO: ble cps spec uses accum_energy but we haven't implmented it yet.
 	uint16_t	accum_energy;												// Unit is in kilojoules with a resolution of 1 (used by ble cps).
-
-	uint16_t	wheel_period_2048;											// Convenience storage of the calculated current period.  TODO: Do we need this?
+	uint16_t	last_wheel_event_2048;										// Last time the virtual wheel completed a rotation, basd on wheel size.
 
 	// Resistance state.  TODO: Should this be refactored somewhere else? A pointer would save 8 bytes per entry.
 	uint8_t 	resistance_mode;

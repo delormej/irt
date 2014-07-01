@@ -126,6 +126,25 @@ static uint32_t flywheel_ticks_get()
 	return revs;
 }
 
+/**@brief		Calculates how long it would have taken since the last complete 
+ *					wheel revolution given current speed (in meters per second).  
+ *					Returns a value in 1/2048's of a second.
+ *
+ */
+static uint16_t last_wheel_time_calc(float wheel_revs, float avg_wheel_period, uint16_t event_time)
+{
+	uint16_t time_to_full_rev_2048 = 0;
+	float partial_wheel_rev;
+	
+	// Difference between calculated partial wheel revs and the last full wheel rev.
+	partial_wheel_rev = fmod(wheel_revs, 1);
+
+	// How long ago in 1/2048's of a second would the last full wheel rev have occurred?
+	time_to_full_rev_2048 = round(partial_wheel_rev * avg_wheel_period);
+	
+	return (event_time - time_to_full_rev_2048);
+}
+
 
 /*****************************************************************************
 *
@@ -182,8 +201,9 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 	uint32_t flywheel_ticks;
 
 	float distance_m;
-	float wheel_revs;
+	float fractional_wheel_revs;
 	uint16_t avg_wheel_period;
+	uint16_t event_period;
 
 	// Get the flywheel ticks (2 per rev).
 	p_current->accum_flywheel_ticks = flywheel_ticks_get();
@@ -198,27 +218,34 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 		// Handle time rollover.
 		if (p_current->event_time_2048 < p_last->event_time_2048)
 		{
-			p_current->wheel_period_2048 = (p_last->event_time_2048 ^ 0xFFFF) +
+			event_period = (p_last->event_time_2048 ^ 0xFFFF) +
 					p_current->event_time_2048;
 		}
 		else
 		{
-			p_current->wheel_period_2048 = p_current->event_time_2048 - p_last->event_time_2048;
+			event_period = p_current->event_time_2048 - p_last->event_time_2048;
 		}
 
 		// Distance in meters.
 		distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
 
 		// Calculate speed in meters per second.
-		p_current->instant_speed_mps = distance_m / (p_current->wheel_period_2048 / 2048.0f);
+		p_current->instant_speed_mps = distance_m / (event_period / 2048.0f);
 
 		// Calculate complete bicycle wheel revs based on wheel size and truncate to int.
-		p_current->accum_wheel_revs = (uint32_t)(p_current->accum_flywheel_ticks / m_flywheel_to_wheel_revs);
+		fractional_wheel_revs = (p_current->accum_flywheel_ticks / m_flywheel_to_wheel_revs);
+		p_current->accum_wheel_revs = (uint32_t)fractional_wheel_revs;
 
 		// Calculate average wheel period; the amount of time (1/2048s) it takes for a complete wheel rev.
 		avg_wheel_period = ((1 / (p_current->instant_speed_mps / m_wheel_size)) / 1000) * 2048;
 
 		p_current->accum_wheel_period = p_last->accum_wheel_period + avg_wheel_period;
+
+		// Calculate when the last wheel revolution would have occurred.
+		p_current->last_wheel_event_2048 = last_wheel_time_calc(
+				fractional_wheel_revs,
+				avg_wheel_period,
+				p_current->event_time_2048);
 
 		/*SP_LOG("[SP] wheel_period:%i, speed:%.1f, period:%i\r\n",
 				avg_wheel_period,
