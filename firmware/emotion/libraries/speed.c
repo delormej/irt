@@ -29,7 +29,7 @@
  * Flywheel generates 2 ticks per revolution == 1 meter of travel is equal to 17.89549 flywheel ticks.
  */
 #define FLYWHEEL_SIZE				0.11176f						// Distance traveled in meters per complete flywheel rev.
-#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_SIZE) * 2.0f)	// 2 ticks per rev == 17.89549f.
+#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_SIZE) * 2.0f)	// 2 ticks per rev.
 
 static uint16_t m_wheel_size;										// Wheel diameter size in mm.
 static float m_flywheel_to_wheel_revs;								// Ratio of flywheel revolutions for 1 wheel revolution.
@@ -69,7 +69,7 @@ static void revs_init_ppi()
  */
 static void REVS_IRQHandler()
 {
-	REVS_TIMER->EVENTS_COMPARE[0] = 0;	// This stops the IRQHandler from getting called indefinetly.
+	REVS_TIMER->EVENTS_COMPARE[0] = 0;	// This stops the IRQHandler from getting called indefinitely.
 	/*
 	uint32_t revs = 0;
 
@@ -82,7 +82,7 @@ static void REVS_IRQHandler()
  */
 static void revs_init_timer()
 {
-	REVS_TIMER->MODE				=	TIMER_MODE_MODE_Counter;
+	REVS_TIMER->MODE		=	TIMER_MODE_MODE_Counter;
 	REVS_TIMER->BITMODE   	= TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
 	REVS_TIMER->TASKS_CLEAR = 1;
 	
@@ -150,18 +150,7 @@ static uint16_t last_wheel_time_calc(float wheel_revs, float avg_wheel_period, u
 *
 *****************************************************************************/
 
-float get_speed_kmh(float speed_mps)
-{
-	return speed_mps * 3.6;
-}
-
-float get_speed_mph(float speed_mps)
-{
-	// Convert km/h to mp/h.
-	return get_speed_kmh(speed_mps) * 0.621371;
-}
-
-void set_wheel_size(uint16_t wheel_size_mm)
+void speed_wheel_size_set(uint16_t wheel_size_mm)
 {
 	m_wheel_size = wheel_size_mm;
 	/*
@@ -176,7 +165,7 @@ void set_wheel_size(uint16_t wheel_size_mm)
 
 void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 {
-	set_wheel_size(wheel_size_mm);
+	speed_wheel_size_set(wheel_size_mm);
 	
 	revs_init_gpiote(pin_flywheel_rev);
 	revs_init_ppi();
@@ -231,7 +220,7 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 		p_current->instant_speed_mps = distance_m / (event_period / 2048.0f);
 
 		// Calculate complete bicycle wheel revs based on wheel size and truncate to int.
-		fractional_wheel_revs = (p_current->accum_flywheel_ticks / m_flywheel_to_wheel_revs);
+		fractional_wheel_revs = p_current->accum_flywheel_ticks / m_flywheel_to_wheel_revs;
 		p_current->accum_wheel_revs = (uint32_t)fractional_wheel_revs;
 
 		// Calculate average wheel period; the amount of time (1/2048s) it takes for a complete wheel rev.

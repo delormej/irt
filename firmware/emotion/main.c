@@ -159,7 +159,7 @@ static void set_wheel_params(uint8_t *pBuffer)
 	}
 
 	// Call speed module to set the wheel size.
-	set_wheel_size(m_user_profile.wheel_size_mm);
+	speed_wheel_size_set(m_user_profile.wheel_size_mm);
 }
 
 // Parses the SET_SIM message from the KICKR and has user profile info.

@@ -48,21 +48,12 @@ void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm);
 /**@brief 	Set's the wheel size.  Defaults to DEFAULT_WHEEL_SIZE_MM if not set.
 *
 */
-void set_wheel_size(uint16_t wheel_size_mm);
+void speed_wheel_size_set(uint16_t wheel_size_mm);
 
 /**@brief	Calculates and records current speed measurement relative to last measurement
  *
  */
 uint32_t speed_calc(irt_power_meas_t * current, irt_power_meas_t * last);
 
-/**@brief		Converts speed from meters per second to kilometers per hour.
- *					
- */
-float get_speed_kmh(float speed_mps);
-
-/**@brief		Converts speed from meters per second to miles per hour.
- *					
- */
-float get_speed_mph(float speed_mps);
 
 #endif
