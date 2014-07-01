@@ -108,8 +108,8 @@ namespace ANT_Console.Services
                 0x00,
                 0x00, 
                 // Message 3
-                (byte)(wheelSizeMM),        // Wheel size LSB
-                (byte)(wheelSizeMM >> 8),   // Wheel size MSB          
+                (byte)(wheelSizeMM*10),        // Wheel size LSB
+                (byte)((wheelSizeMM*10) >> 8),   // Wheel size MSB          
                 0x00,
                 0x00,
                 0x00,
