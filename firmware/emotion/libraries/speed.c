@@ -43,7 +43,7 @@ static void revs_init_gpiote(uint32_t pin_flywheel_rev)
 	
 	nrf_gpiote_event_config(REVS_CHANNEL_TASK_TOGGLE, 
 			pin_flywheel_rev,
-			NRF_GPIOTE_POLARITY_HITOLO);
+			NRF_GPIOTE_POLARITY_TOGGLE);
 }
 
 /**@brief		Enable PPI channel 3, combined with previous settings.
