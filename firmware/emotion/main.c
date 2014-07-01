@@ -58,7 +58,7 @@
 #define BLE_ADV_BLINK_RATE_MS			500u
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
-#define SCHED_QUEUE_SIZE                16                                          /**< Maximum number of events in the scheduler queue. */
+#define SCHED_QUEUE_SIZE                64                                          /**< Maximum number of events in the scheduler queue. */
 
 static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
@@ -98,13 +98,11 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
-    // Treat a few errors as warnings.
 	if (error_code == NRF_ERROR_NO_MEM)
 	{
-		LOG("[MAIN]:app_error_handler WARN: NRF_ERROR_NO_MEM in %s:{%lu}.\r\n",
+		LOG("[MAIN]:app_error_handler CRITICAL: NRF_ERROR_NO_MEM in %s:{%lu}. \r\n",
 				p_file_name,
 				line_num);
-		return;
 	}
 	else
 	{
@@ -126,6 +124,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	ble_debug_assert_handler(error_code, line_num, p_file_name);
 #else
     // On assert, the system can only recover with a reset.
+	LOG("[MAIN]:app_error_handler performing SystemReset()");
     NVIC_SystemReset();
 #endif // ENABLE_DEBUG_ASSERT
 }
