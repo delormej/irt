@@ -65,7 +65,7 @@ typedef struct irt_device_info_s
 	char* 			manufacturer_name;
 	uint16_t		manufacturer_id;
 	uint16_t		model;
-	uint8_t			ant_device_num;
+	uint16_t		ant_device_id;
 	uint8_t			hw_revision;
 	sw_revision_t	sw_revision;
 	uint32_t		serial_num;
@@ -89,7 +89,7 @@ typedef struct irt_device_info_s
 		(P_DEVICE)->manufacturer_name = MANUFACTURER_NAME;	\
 		(P_DEVICE)->manufacturer_id = MANUFACTURER_ID;		\
 		(P_DEVICE)->model = MODEL_NUMBER;					\
-		(P_DEVICE)->ant_device_num = ANT_DEVICE_NUMBER;		\
+		(P_DEVICE)->ant_device_id = ANT_DEVICE_NUMBER;		\
 		(P_DEVICE)->hw_revision = HW_REVISION;				\
 		(P_DEVICE)->sw_revision.major = SW_REVISION_MAJ;	\
 		(P_DEVICE)->sw_revision.minor = SW_REVISION_MIN;	\
