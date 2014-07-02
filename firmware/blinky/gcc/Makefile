@@ -35,7 +35,7 @@ LINKER_SCRIPT := $(TEMPLATE_PATH)gcc_nrf51_s310_xxaa.ld
 CFLAGS := -Os
 
 # Include debug symbols
-CFLAGS = -g
+CFLAGS += -g
 
 # Define the S310 stack requirement as this is used as a directive in the dfu_types.
 CFLAGS += -DS310_STACK  

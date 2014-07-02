@@ -91,6 +91,8 @@ int main(void)
     nrf_gpio_pin_set(LED_1);
     
     nrf_delay_ms(500);
+	
+	simple_uart_put('.');
     
     nrf_gpio_pin_clear(LED_1);
     nrf_gpio_pin_set(LED_0);
