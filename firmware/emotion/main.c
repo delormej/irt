@@ -264,17 +264,16 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 	float speed_avg;
 
 	// If we have a range of events between first and current, we're able to do a moving average of speed.
-/*	if (p_power_meas_first != NULL)
+	if (p_power_meas_first != NULL)
 	{
-		// Average the speed.  A new average power will get calculated based on this.
-		speed_avg = speed_mps_get(
-				(p_power_meas_current->accum_wheel_revs - p_power_meas_first->accum_wheel_revs),
-				(p_power_meas_current->event_time_2048 - p_power_meas_first->event_time_2048));
+		// Average the speed.
+		speed_avg = (p_power_meas_current->instant_speed_mps +
+				p_power_meas_current->instant_speed_mps) / 2.0f;
 	}
 	else
-	{*/
+	{
 		speed_avg = p_power_meas_current->instant_speed_mps;
-	//}
+	}
 
 	// Don't attempt to adjust if stopped.
 	if (speed_avg == 0.0f)
@@ -348,7 +347,6 @@ static void ant_4hz_timeout_handler(void * p_context)
 	p_power_meas_current = irt_power_meas_fifo_next();
 	p_power_meas_first = irt_power_meas_fifo_first();
 	p_power_meas_last = irt_power_meas_fifo_last();
-
 
 	// Set current resistance state.
 	p_power_meas_current->resistance_mode = m_resistance_mode;
@@ -554,8 +552,13 @@ static void on_accelerometer(void)
 	memset(&m_accelerometer_data, 0, sizeof(m_accelerometer_data));
 
 	// Read event data from the accelerometer.
-	err_code = accelerometer_data(&m_accelerometer_data);
+	err_code = accelerometer_data_get(&m_accelerometer_data);
 	APP_ERROR_CHECK(err_code);
+
+	LOG("[MAIN]:on_accelerometer source:%i y:%i \r\n",
+			m_accelerometer_data.source,
+			m_accelerometer_data.out_y_lsb |=
+					m_accelerometer_data.out_y_msb << 8);
 
 	/*#if defined(BLE_NUS_ENABLED)
 	// TODO: Remove the hard coding here.

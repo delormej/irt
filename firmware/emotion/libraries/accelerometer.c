@@ -302,7 +302,7 @@ void accelerometer_init(void)
 	read_test();
 }
 
-uint32_t accelerometer_data(accelerometer_data_t* p_data)
+uint32_t accelerometer_data_get(accelerometer_data_t* p_data)
 {
 	// Read the relevant source registers to clear for other events.
 
