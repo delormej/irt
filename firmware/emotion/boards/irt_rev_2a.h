@@ -3,8 +3,8 @@
  * @brief	Defines port pins and what they do for the IRT REV_A board.
  *
  */
-#ifndef IRT_REV_B_H
-#define IRT_REV_B_H
+#ifndef IRT_REV_2A_H
+#define IRT_REV_2A_H
 
 #define BONDMNGR_DELETE_BUTTON_PIN  11  /**< Button used for deleting all bonded masters during startup. */
 
@@ -34,4 +34,4 @@
 #define CONNECTED_LED_PIN_NO		PIN_LED_A
 #define ASSERT_LED_PIN_NO			PIN_LED_B
 
-#endif // IRT_REV_B_H
+#endif // IRT_REV_2A_H

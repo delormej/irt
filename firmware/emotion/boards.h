@@ -8,8 +8,8 @@
 
 #if defined(BOARD_IRT_REV_A)
   #include "boards/irt_rev_a.h"
-#elif defined(BOARD_IRT_REV_B)
-  #include "boards/irt_rev_b.h"
+#elif defined(BOARD_IRT_REV_2A)
+  #include "boards/irt_rev_2a.h"
 #elif defined(BOARD_DYN_BAT_N548)
   #include "boards/dyn_bat_N548.h"
 #else
