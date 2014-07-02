@@ -7,9 +7,9 @@
 #define BOARDS_H
 
 #if defined(BOARD_IRT_REV_A)
-  #include "boards/irt_rev_a.h"
-#elif defined(BOARD_IRT_REV_2A)
-  #include "boards/irt_rev_2a.h"
+  #include "boards/board_irt_rev_a.h"
+#elif defined(BOARD_IRT_V2_REV_A)
+  #include "boards/board_irt_v2a.h"
 #elif defined(BOARD_DYN_BAT_N548)
   #include "boards/dyn_bat_N548.h"
 #else

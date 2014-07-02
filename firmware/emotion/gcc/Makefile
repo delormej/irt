@@ -36,8 +36,8 @@ DEPLOY_PATH = '../../../../../SkyDrive/InsideRide/'
 PROJECT_NAME = $(shell basename "$(realpath ../)")
 
 DEVICE = NRF51
-BOARD = BOARD_IRT_REV_A
-# BOARD = BOARD_IRT_REV_2A
+#BOARD = BOARD_IRT_REV_A
+BOARD = BOARD_IRT_V2_REV_A
 debug : BOARD = BOARD_DYN_BAT_N548
 #SEGGER_SERIAL =	# not used, we only have 1 segger attached 
 TARGET_DEVICE = nRF51422_xxAA
