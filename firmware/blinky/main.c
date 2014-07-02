@@ -26,13 +26,17 @@
 #include "app_gpiote.h"
 #include "simple_uart.h"
 
-#define LED_0		12
-#define LED_1		13
+#define LED_0					12
+#define LED_1					13
+
+#define LED_2					18
+#define LED_3					19
+
 #define PIN_FLYWHEEL 										0		// This is the output of the optical sensor.
-#define PIN_UART_RTS			8
-#define PIN_UART_CTS			9
-#define PIN_UART_TXD			10
-#define PIN_UART_RXD			11
+#define PIN_UART_RTS			23
+#define PIN_UART_CTS			25
+#define PIN_UART_TXD			21
+#define PIN_UART_RXD			24
 #define UART_HWFC				false
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
