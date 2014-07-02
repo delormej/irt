@@ -238,8 +238,7 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 	}
 
 	// Calculate torque.
-	torque = power_torque_calc(p_current->instant_power,
-			period_diff);
+	torque = power_torque_calc(p_current->instant_power, period_diff);
 
 	// Accumulate torque from last measure.
 	p_current->accum_torque = p_last->accum_torque + torque;
