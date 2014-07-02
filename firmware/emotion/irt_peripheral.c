@@ -28,14 +28,8 @@ static app_timer_id_t m_led_blink_timer_id;
  */
 static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
 {
-	if (event_pins_low_to_high & (1 << PIN_BUTTON_I))
+	if (event_pins_low_to_high & (1 << PIN_PBSW))
 		mp_on_peripheral_evt->on_button_i();
-	else if (event_pins_low_to_high & (1 << PIN_BUTTON_II))
-		mp_on_peripheral_evt->on_button_ii();
-	else if (event_pins_low_to_high & (1 << PIN_BUTTON_III))
-		mp_on_peripheral_evt->on_button_iii();
-	else if (event_pins_low_to_high & (1 << PIN_BUTTON_IV))
-		mp_on_peripheral_evt->on_button_iv();
 	else if (event_pins_high_to_low & (1 << PIN_SHAKE))
 		mp_on_peripheral_evt->on_accelerometer_evt();
 }
@@ -59,6 +53,15 @@ static void irt_gpio_init()
 	// Initialize the LED pins.
 	nrf_gpio_cfg_output(PIN_LED_A);		// Green
 	nrf_gpio_cfg_output(PIN_LED_B);		// Red
+
+#ifdef IRT_REV_2A_H
+	nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
+	nrf_gpio_cfg_output(PIN_SLEEP_N);
+	// Enable servo / LED.
+	nrf_gpio_pin_set(PIN_EN_SERVO_PWR);
+	// Enable the power regulator.
+	nrf_gpio_pin_set(PIN_SLEEP_N);
+#endif
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);

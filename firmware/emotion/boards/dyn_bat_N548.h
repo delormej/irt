@@ -3,7 +3,7 @@
  * @brief	Defines port pins and what they do for the IRT REV_A board.
  *
  */
-#include "irt_rev_a.h"
+#include "board_irt_rev_a.h"
 
 #ifndef DYN_BAT_N548_H
 #define DYN_BAT_N548_H
