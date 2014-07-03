@@ -84,10 +84,10 @@ CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_B
 # TODO: this should be done another way.
 ############################################
 CFLAGS += -DUSE_BATTERY							# If this device is built to support battery or not.
-CFLAGS += -DANT_DEVICE_NUMBER=0x02
+CFLAGS += -DANT_DEVICE_NUMBER=0x03
 #CFLAGS += -DANT_DEVICE_NUMBER=0x02
 #CFLAGS += -DSERIAL_NUMBER=0xAA55AA55
-CFLAGS += -DSERIAL_NUMBER=0x0000000A
+CFLAGS += -DSERIAL_NUMBER=0x0000000B
 
 include $(TEMPLATE_PATH)Makefile
 

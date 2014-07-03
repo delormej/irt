@@ -460,7 +460,7 @@ static void scheduler_init(void)
 
 // TODO: This event should be registered for a callback when it's time to
 // power the system down.
-static void on_power_down(void)
+static void on_power_down(bool accelerometer_wake_disable)
 {
 	LOG("[MAIN]:on_power_down \r\n");
 
@@ -470,7 +470,7 @@ static void on_power_down(void)
 	// Blink red a couple of times to say good-night.
 	clear_led();
 
-	peripheral_powerdown();
+	peripheral_powerdown(accelerometer_wake_disable);
 
 	// TODO: should we be gracefully closing ANT and BLE channels here?
 
@@ -568,16 +568,23 @@ static void on_accelerometer(void)
 	err_code = accelerometer_data_get(&m_accelerometer_data);
 	APP_ERROR_CHECK(err_code);
 
+	LOG("[MAIN]:on_accelerometer source:%i y:%i \r\n",
+			m_accelerometer_data.source,
+			m_accelerometer_data.out_y_lsb |=
+					m_accelerometer_data.out_y_msb << 8);
+
 	// TODO: Use a constant here, but this is called when the device stops moving for a while.
 	if (m_accelerometer_data.source == 128)
 	{
-		LOG("[MAIN]:on_accelerometer source:%i y:%i \r\n",
-				m_accelerometer_data.source,
-				m_accelerometer_data.out_y_lsb |=
-						m_accelerometer_data.out_y_msb << 8);
 
-		// TODO: keeps waking up, so disabling for now.
-		//on_power_down();
+		LOG("[MAIN]:about to power down, PIN_SHAKE is:%i, config is:%i\r\n",
+				nrf_gpio_pin_read(PIN_SHAKE),
+				NRF_GPIO->PIN_CNF[PIN_SHAKE]);
+
+        NRF_GPIO->PIN_CNF[PIN_SHAKE] &= ~GPIO_PIN_CNF_SENSE_Msk;
+        NRF_GPIO->PIN_CNF[PIN_SHAKE] |= GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos;
+
+		on_power_down(false);
 	}
 }
 
@@ -763,11 +770,8 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_MIDDLE:
-			//TODO: Temporarily reading batt voltage here as well.
-			LOG("[MAIN] Reading battery voltage, then we'll shut down (testing).\r\n");
-			battery_read_start();
-			nrf_delay_ms(500);
-			on_power_down();
+			// Force a hard power down, accelerometer will not wake.
+			on_power_down(true);
 			break;
 
 		default:

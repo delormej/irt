@@ -34,6 +34,7 @@
 
 static peripheral_evt_t *mp_on_peripheral_evt;
 static app_timer_id_t m_led_blink_timer_id;
+static app_gpiote_user_id_t mp_user_id;
 
 /**@brief Function for handling interrupt events.
  *
@@ -44,9 +45,15 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 	//event_pins_low_to_high
 	// TODO: This button should be debounced.
 	if (event_pins_high_to_low & (1 << PIN_PBSW))
+	{
 		mp_on_peripheral_evt->on_button_pbsw();
+	}
 	else if (event_pins_high_to_low & (1 << PIN_SHAKE))
+	{
+		// testing - Turn off pin sense for a moment.
+		//app_gpiote_user_disable(mp_user_id);
 		mp_on_peripheral_evt->on_accelerometer_evt();
+	}
 }
 
 static void blink_timeout_handler(void * p_context)
@@ -63,7 +70,6 @@ static void irt_gpio_init()
 {
 	uint32_t err_code;
 	uint32_t pins_low_to_high_mask, pins_high_to_low_mask;
-	app_gpiote_user_id_t p_user_id;
 
 	// Initialize the LED pins.
 	nrf_gpio_cfg_output(PIN_LED_A);		// Green
@@ -90,41 +96,31 @@ static void irt_gpio_init()
 #endif
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
-	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
 
-	// These pins are used for UART on boards where there is no RXD.
-#ifndef SIMPLE_UART
-	// Initialize the button inputs from the RXD4140.
-	nrf_gpio_cfg_input(PIN_BUTTON_I, NRF_GPIO_PIN_NOPULL);
-	nrf_gpio_cfg_input(PIN_BUTTON_II, NRF_GPIO_PIN_NOPULL);
-	nrf_gpio_cfg_input(PIN_BUTTON_III, NRF_GPIO_PIN_NOPULL);
-	nrf_gpio_cfg_input(PIN_BUTTON_IV, NRF_GPIO_PIN_NOPULL);
-	
-	pins_low_to_high_mask = (1 << PIN_BUTTON_I |
-		1 << PIN_BUTTON_II |
-		1 << PIN_BUTTON_III |
-		1 << PIN_BUTTON_IV);
-#else // SIMPLE_UART
 	pins_low_to_high_mask = 0;
-#endif // SIMPLE_UART
-
 	pins_high_to_low_mask = (1 << PIN_SHAKE
 #ifdef IRT_REV_2A_H
 			| 1 << PIN_PBSW);
 #else
-	);
+			);
 #endif
 
 	APP_GPIOTE_INIT(1);
 
-	err_code = app_gpiote_user_register(&p_user_id,
+	err_code = app_gpiote_user_register(&mp_user_id,
 		pins_low_to_high_mask,
 		pins_high_to_low_mask,
 		interrupt_handler);
 	APP_ERROR_CHECK(err_code);
 
-	err_code = app_gpiote_user_enable(p_user_id);
+	err_code = app_gpiote_user_enable(mp_user_id);
 	APP_ERROR_CHECK(err_code);
+
+
+	PH_LOG("[PH] Pin config _SHAKE:%i, _PBSW:%i\r\n",
+		NRF_GPIO->PIN_CNF[PIN_SHAKE],
+		NRF_GPIO->PIN_CNF[PIN_PBSW]);
 }    
 
 void set_led_red(void)
@@ -192,10 +188,20 @@ uint16_t seconds_2048_get()
 	return seconds_2048;
 }
 
-// Cuts power to servo and optical sensor.
-void peripheral_powerdown()
+//
+// Cuts power to servo and optical sensor and other peripherals.
+// Optionally will put the accelerometer in standby and it will
+// not wake the device.
+//
+void peripheral_powerdown(bool accelerometer_off)
 {
 	PH_LOG("[PH] Powering down peripherals.\r\n");
+
+	if (accelerometer_off)
+	{
+		// Put accelerometer to sleep so we don't get awaken by it's AUTO-SLEEP/AUTO-WAKE interrupts.
+		accelerometer_standby();
+	}
 
 #ifdef IRT_REV_2A_H
 	// Disable servo / LED.

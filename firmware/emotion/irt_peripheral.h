@@ -1,6 +1,7 @@
 #ifndef IRT_PERIPHERAL_H__
 #define IRT_PERIPHERAL_H__
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #define APP_TIMER_PRESCALER         0   /**< Value of the RTC1 PRESCALER register. */
@@ -19,7 +20,7 @@ typedef struct peripheral_evt_s
 } peripheral_evt_t;
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);
-void peripheral_powerdown(void);
+void peripheral_powerdown(bool accelerometer_off);
 
 // LED functions.
 void set_led_red(void);
