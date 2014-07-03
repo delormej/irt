@@ -48,9 +48,10 @@
 #include "ble_debug_assert_handler.h"
 #include "debug.h"
 #include "boards.h"
+#include "battery.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
-#define DEFAULT_WHEEL_SIZE_MM			2069u
+#define DEFAULT_WHEEL_SIZE_MM			2096u
 #define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
 #define DEFAULT_ERG_WATTS				175u
 #define SIM_CRR							0.0033f
@@ -58,7 +59,7 @@
 #define BLE_ADV_BLINK_RATE_MS			500u
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
-#define SCHED_QUEUE_SIZE                16                                          /**< Maximum number of events in the scheduler queue. */
+#define SCHED_QUEUE_SIZE                64                                          /**< Maximum number of events in the scheduler queue. */
 
 static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
@@ -98,13 +99,11 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
-    // Treat a few errors as warnings.
 	if (error_code == NRF_ERROR_NO_MEM)
 	{
-		LOG("[MAIN]:app_error_handler WARN: NRF_ERROR_NO_MEM in %s:{%lu}.\r\n",
+		LOG("[MAIN]:app_error_handler CRITICAL: NRF_ERROR_NO_MEM in %s:{%lu}. \r\n",
 				p_file_name,
 				line_num);
-		return;
 	}
 	else
 	{
@@ -120,12 +119,13 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     //                any communication.
     //                Use with care.
 #if defined(ENABLE_DEBUG_ASSERT)
-	set_led_red();
+	set_led_red(0);
 
 	// Note this function does not return - it will hang waiting for a debugger to attach.
 	ble_debug_assert_handler(error_code, line_num, p_file_name);
 #else
     // On assert, the system can only recover with a reset.
+	LOG("[MAIN]:app_error_handler performing SystemReset()");
     NVIC_SystemReset();
 #endif // ENABLE_DEBUG_ASSERT
 }
@@ -160,7 +160,7 @@ static void set_wheel_params(uint8_t *pBuffer)
 	}
 
 	// Call speed module to set the wheel size.
-	set_wheel_size(m_user_profile.wheel_size_mm);
+	speed_wheel_size_set(m_user_profile.wheel_size_mm);
 }
 
 // Parses the SET_SIM message from the KICKR and has user profile info.
@@ -267,10 +267,9 @@ static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_me
 	// If we have a range of events between first and current, we're able to do a moving average of speed.
 	if (p_power_meas_first != NULL)
 	{
-		// Average the speed.  A new average power will get calculated based on this.
-		speed_avg = get_speed_mps(
-				(p_power_meas_current->accum_wheel_revs - p_power_meas_first->accum_wheel_revs),
-				(p_power_meas_current->last_wheel_event_time - p_power_meas_first->last_wheel_event_time));
+		// Average the speed.
+		speed_avg = (p_power_meas_current->instant_speed_mps +
+				p_power_meas_current->instant_speed_mps) / 2.0f;
 	}
 	else
 	{
@@ -343,10 +342,12 @@ static void ant_4hz_timeout_handler(void * p_context)
 	uint32_t err_code;
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
+	irt_power_meas_t* p_power_meas_last 		= NULL;
 		
 	// Get pointers to the event structures.
-	err_code = irt_power_meas_fifo_op(&p_power_meas_first, &p_power_meas_current);
-	APP_ERROR_CHECK(err_code);
+	p_power_meas_current = irt_power_meas_fifo_next();
+	p_power_meas_first = irt_power_meas_fifo_first();
+	p_power_meas_last = irt_power_meas_fifo_last();
 
 	// Set current resistance state.
 	p_power_meas_current->resistance_mode = m_resistance_mode;
@@ -379,9 +380,15 @@ static void ant_4hz_timeout_handler(void * p_context)
 		m_accelerometer_data.source = 0;
 	}
 
-	// Calculate the power.
-	err_code = power_measure(m_user_profile.total_weight_kg, p_power_meas_current);
-	APP_ERROR_CHECK(err_code);
+	// Record event time.
+	p_power_meas_current->event_time_2048 = seconds_2048_get();
+	//LOG("[MAIN] event_time: %i\r\n", p_power_meas_current->event_time_2048);
+
+	// Calculate speed.
+	err_code = speed_calc(p_power_meas_current, p_power_meas_last);
+
+	// Calculate power.
+	err_code = power_calc(p_power_meas_current, p_power_meas_last);
 
 	// TODO: this should return an err_code.
 	// Transmit the power message.
@@ -453,7 +460,7 @@ static void scheduler_init(void)
 
 // TODO: This event should be registered for a callback when it's time to
 // power the system down.
-static void on_power_down(void)
+static void on_power_down(bool accelerometer_wake_disable)
 {
 	LOG("[MAIN]:on_power_down \r\n");
 
@@ -461,7 +468,11 @@ static void on_power_down(void)
 	irt_power_meas_fifo_free();
 
 	// Blink red a couple of times to say good-night.
-	clear_led();
+	clear_led(0);
+
+	peripheral_powerdown(accelerometer_wake_disable);
+
+	// TODO: should we be gracefully closing ANT and BLE channels here?
 
 	// Shut the system down.
 	sd_power_system_off();
@@ -537,6 +548,14 @@ static void on_button_menu(void)
 	}
 }
 
+// This is the button on the board.
+static void on_button_pbsw(void)
+{
+	LOG("[MAIN] Push button switch pressed.\r\n");
+	// TODO: Temporarily calling battery from here.
+	battery_read_start();
+}
+
 // This event is triggered when there is data to be read from accelerometer.
 static void on_accelerometer(void)
 {
@@ -546,29 +565,39 @@ static void on_accelerometer(void)
 	memset(&m_accelerometer_data, 0, sizeof(m_accelerometer_data));
 
 	// Read event data from the accelerometer.
-	err_code = accelerometer_data(&m_accelerometer_data);
+	err_code = accelerometer_data_get(&m_accelerometer_data);
 	APP_ERROR_CHECK(err_code);
 
-	/*#if defined(BLE_NUS_ENABLED)
-	// TODO: Remove the hard coding here.
-	if (data.source & 0x04)
+	LOG("[MAIN]:on_accelerometer source:%i y:%i \r\n",
+			m_accelerometer_data.source,
+			m_accelerometer_data.out_y_lsb |=
+					m_accelerometer_data.out_y_msb << 8);
+
+	// TODO: Use a constant here, but this is called when the device stops moving for a while.
+	if (m_accelerometer_data.source == 128)
 	{
-		// Event should contain data.
-		static const char format[] = "ACL:%i,%i";
-		char message[16];
-		memset(&message, 0, sizeof(message));
-		uint8_t length = sprintf(message, format,
-				data.out_y_lsb,
-				data.out_y_msb);
-		debug_send(message, sizeof(message));
+
+		LOG("[MAIN]:about to power down, PIN_SHAKE is:%i, config is:%i\r\n",
+				nrf_gpio_pin_read(PIN_SHAKE),
+				NRF_GPIO->PIN_CNF[PIN_SHAKE]);
+
+        NRF_GPIO->PIN_CNF[PIN_SHAKE] &= ~GPIO_PIN_CNF_SENSE_Msk;
+        NRF_GPIO->PIN_CNF[PIN_SHAKE] |= GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos;
+
+		on_power_down(false);
 	}
-#endif*/
+}
+
+// Called when the power adapter is plugged in.
+static void on_power_plug(void)
+{
+	LOG("[MAIN] Power plugged in.\r\n");
 }
 
 static void on_ble_connected(void) 
 {
-	blink_led_green_stop();
-	set_led_green();
+	blink_led_green_stop(0);
+	set_led_green(0);
 
 	LOG("[MAIN]:on_ble_connected\r\n");
 }
@@ -576,7 +605,7 @@ static void on_ble_connected(void)
 static void on_ble_disconnected(void) 
 {
 	// Clear connection LED.
-	clear_led();
+	clear_led(0);
 	
 	LOG("[MAIN]:on_ble_disconnected\r\n");
 
@@ -586,13 +615,13 @@ static void on_ble_disconnected(void)
 
 static void on_ble_timeout(void) 
 {
-	blink_led_green_stop();
+	blink_led_green_stop(0);
 	LOG("[MAIN]:on_ble_timeout\r\n");
 }
 
 static void on_ble_advertising(void)
 {
-	blink_led_green_start(BLE_ADV_BLINK_RATE_MS);
+	blink_led_green_start(0, BLE_ADV_BLINK_RATE_MS);
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
@@ -747,7 +776,8 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_MIDDLE:
-			on_power_down();
+			// Force a hard power down, accelerometer will not wake.
+			on_power_down(true);
 			break;
 
 		default:
@@ -829,7 +859,8 @@ int main(void)
 	debug_init();
 
 	LOG("**********************************************************************\r\n");
-	LOG("[MAIN]:Device starting, firmware version %s\r\n", SW_REVISION);
+	LOG("[MAIN]:Starting ANT+ id: %i, firmware: %s, serial: %#.8x\r\n",
+			ANT_DEVICE_NUMBER, SW_REVISION, SERIAL_NUMBER);
 	LOG("**********************************************************************\r\n");
 
 	// Determine what the reason for startup is and log appropriately.
@@ -847,7 +878,9 @@ int main(void)
 		on_button_ii,
 		on_button_iii,
 		on_button_iv,
-		on_accelerometer
+		on_button_pbsw,
+		on_accelerometer,
+		on_power_plug
 	};
 
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
@@ -892,7 +925,10 @@ int main(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 
 	// Initialize module to read speed from flywheel.
-	init_speed(PIN_FLYWHEEL, DEFAULT_WHEEL_SIZE_MM);
+	speed_init(PIN_FLYWHEEL, DEFAULT_WHEEL_SIZE_MM);
+
+	// Initialize power module with user profile.
+	power_init(&m_user_profile);
 
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);

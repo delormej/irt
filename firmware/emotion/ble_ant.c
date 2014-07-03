@@ -225,8 +225,13 @@ static void ble_cps_service_init() {
 	memset(&cps_init, 0, sizeof(cps_init));
 
 	cps_init.p_sensor_location = &sensor_location;
-	cps_init.feature = BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT
-			| BLE_CPS_FEATURE_WHEEL_REV_BIT;
+	//
+	// NOTE on TORQUE:
+	// We don't use accumulated torque in BLE as the torque # we calc is based on complete
+	// wheel rev, for BLE we need to adjust the event time back to the last complete wheel
+	// rev which throws off accumulated torque, it would have to be recalculated.
+	//
+	cps_init.feature = BLE_CPS_FEATURE_WHEEL_REV_BIT; // | BLE_CPS_FEATURE_ACCUMULATED_TORQUE_BIT
 	cps_init.use_cycling_power_control_point = true;
 
 	cps_init.rc_evt_handler = mp_ant_ble_evt_handlers->on_set_resistance;

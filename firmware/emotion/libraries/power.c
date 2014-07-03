@@ -53,8 +53,7 @@
 //static const float slope[10] = { 0, 2.6, 3.8, 5.0, 6.1, 7.1, 8.2, 9.2, 10.1, 11.0 };
 //static const float intercept [10] = { 0, -9.60, -18.75, -25.00, -28.94, -29.99, -29.23, -26.87, -20.90, -13.34 };
 
-// Hang on to accumulated torque for a session duration.
-static uint16_t m_accum_torque = 0;
+user_profile_t* mp_user_profile;
 
 static float calc_mag0_force(float weight_kg, float speed_mps)
 {
@@ -196,42 +195,53 @@ uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
 		torque = (watts * period_seconds_2048) / (128 * MATH_PI);
 	}
 	
+	//PW_LOG("[PW] torque: %i\r\n", torque);
+
 	return torque;
 }
 
-/**@brief	Reads speed and calculates power.
+/**@brief	Initializes power module with a profile pointer that contains things like
+ * 			the total rider weight, calibration details, etc...
  *
  */
-int32_t power_measure(float total_weight_kg, irt_power_meas_t* p_power_meas)
+void power_init(user_profile_t* p_profile)
+{
+	mp_user_profile = p_profile;
+}
+
+/**@brief	Calculates and records current power measurement relative to last measurement.
+ *
+ */
+uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 {
 	uint32_t err_code;
 	uint16_t torque;
-
-	// Calculate speed.
-	err_code = calc_speed(p_power_meas);
-	APP_ERROR_CHECK(err_code);
-
-	/*float speed_mph = get_speed_mph(speed_event.speed_mps);
-	//err_code = calc_power(speed_mph, m_user_profile.total_weight_kg * 2.20462262, m_resistance_level, &watts);
-	// TODO: Handle the error for real here, not sure what the overall error
-	// handling strategy will be, but this is not critical, just move on.
-	if (err_code != IRT_SUCCESS)
-		return;
-	*/
+	uint16_t period_diff;
 
 	// Calculate power.
-	p_power_meas->instant_power = power_watts_calc(
-			p_power_meas->instant_speed_mps,
-			total_weight_kg,
-			p_power_meas->servo_position);
+	p_current->instant_power = power_watts_calc(
+			p_current->instant_speed_mps,
+			mp_user_profile->total_weight_kg,
+			p_current->servo_position);
+
+	// Handle time rollover.
+	// Accum wheel period is a calculated period representing the average time it takes
+	// in 1/2048s for a wheel revolution at the current speed.
+	if (p_current->accum_wheel_period < p_last->accum_wheel_period)
+	{
+		period_diff = (p_last->accum_wheel_period ^ 0xFFFF) +
+				p_current->accum_wheel_period;
+	}
+	else
+	{
+		period_diff = p_current->accum_wheel_period - p_last->accum_wheel_period;
+	}
 
 	// Calculate torque.
-	torque = power_torque_calc(p_power_meas->instant_power,
-			p_power_meas->wheel_period_2048);
+	torque = power_torque_calc(p_current->instant_power, period_diff);
 
-	// Store accumulated torque for the session.
-	m_accum_torque += torque;
-	p_power_meas->accum_torque = m_accum_torque;
+	// Accumulate torque from last measure.
+	p_current->accum_torque = p_last->accum_torque + torque;
 
 	return IRT_SUCCESS;
 }

@@ -17,9 +17,12 @@ typedef struct
  */ 
 void accelerometer_init(void);
 
+/**@brief Puts the accelerometer in standby mode. */
+void accelerometer_standby(void);
+
 /**@brief Clears and returns the interrupt source of the last event. */
 uint8_t accelerometer_src(void);
 
-uint32_t accelerometer_data(accelerometer_data_t* p_data);
+uint32_t accelerometer_data_get(accelerometer_data_t* p_data);
 
 #endif // ACCELEROMETER_H

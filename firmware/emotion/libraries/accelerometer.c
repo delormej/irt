@@ -194,8 +194,7 @@ static void enable_interrupt(void)
 	//
 	// Set device to STANDBY by setting bit 0 to value 0 in CTRL_REG1.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY);
-	RET_CHECK(ret);
+	accelerometer_standby();
 
 	//
 	// Configure motion detection on Y axis only.
@@ -241,7 +240,8 @@ static void enable_interrupt(void)
 	// signals on the same interrupt line.
 	// Configure interrupt polarity to be LOW to HIGH on interrupt.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT | OPEN_DRAIN); //  | INT_POLARITY
+	//ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT | OPEN_DRAIN); //  | INT_POLARITY
+	ret = accelerometer_write(REG8652_CTRL_REG3, WAKE_FF_MT);
 	RET_CHECK(ret);
 	
 	//
@@ -295,6 +295,17 @@ static void read_test(void)
 	//	printf("WAKE mode\n");
 }
 
+void accelerometer_standby(void)
+{
+	bool ret;
+
+	//
+	// Set device to STANDBY by setting bit 0 to value 0 in CTRL_REG1.
+	//
+	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY);
+	RET_CHECK(ret);
+}
+
 void accelerometer_init(void)
 {
 	twi_master_init();
@@ -302,7 +313,7 @@ void accelerometer_init(void)
 	read_test();
 }
 
-uint32_t accelerometer_data(accelerometer_data_t* p_data)
+uint32_t accelerometer_data_get(accelerometer_data_t* p_data)
 {
 	// Read the relevant source registers to clear for other events.
 

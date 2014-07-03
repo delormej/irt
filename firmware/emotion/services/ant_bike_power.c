@@ -93,6 +93,9 @@ static uint8_t m_torque_tx_buffer[TX_BUFFER_SIZE];
 static rc_evt_handler_t m_on_set_resistance;
 static ant_bp_evt_dfu_enable m_on_enable_dfu_mode;
 
+// Shared event counter for all ANT BP messages.
+static uint8_t m_event_count;
+
 // TODO: Implement required calibration page.
 
 static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
@@ -136,21 +139,17 @@ static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 	return err_code;
 }
 
-static uint32_t torque_transmit(uint16_t accumulated_torque, uint16_t last_wheel_period_2048, uint8_t wheel_ticks)
+static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_period_2048, uint8_t wheel_ticks)
 {
-	// If the wheel is not moving, wheel ticks AND wheel period should not increment.
-	// We determine if the wheel moved by seeing if wheel_ticks has changed.
-	if (m_torque_tx_buffer[WHEEL_TICKS_INDEX] != wheel_ticks)
-	{
-		// Event-synchronous model.  Wheel ticks = event count.
-		m_torque_tx_buffer[EVENT_COUNT_INDEX] = wheel_ticks;
 
-		m_torque_tx_buffer[WHEEL_TICKS_INDEX] = wheel_ticks;
-		m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX] = LOW_BYTE(last_wheel_period_2048);
-		m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX] = HIGH_BYTE(last_wheel_period_2048);
-		m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(accumulated_torque);
-		m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(accumulated_torque);
-	}
+	// Time-synchronous model.  Increment the event count.
+	m_torque_tx_buffer[EVENT_COUNT_INDEX] = m_event_count;
+
+	m_torque_tx_buffer[WHEEL_TICKS_INDEX] = wheel_ticks;
+	m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX] = LOW_BYTE(accum_wheel_period_2048);
+	m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX] = HIGH_BYTE(accum_wheel_period_2048);
+	m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(accum_torque);
+	m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(accum_torque);
 
 	return broadcast_message_transmit(m_torque_tx_buffer);
 }
@@ -160,7 +159,7 @@ static uint32_t power_transmit(uint16_t watts)
 	static uint16_t accumulated_power                 = 0;            
 	accumulated_power                                += watts;
 		
-	++(m_power_tx_buffer[EVENT_COUNT_INDEX]);
+	m_power_tx_buffer[EVENT_COUNT_INDEX]			  = m_event_count;
 	m_power_tx_buffer[ACCUMMULATED_POWER_LSB_INDEX]   = LOW_BYTE(accumulated_power);        
 	m_power_tx_buffer[ACCUMMULATED_POWER_MSB_INDEX]   = HIGH_BYTE(accumulated_power);   
 	m_power_tx_buffer[INSTANT_POWER_LSB_INDEX]        = LOW_BYTE(watts);            
@@ -200,8 +199,8 @@ static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 	buffer[EXTRA_INFO_SERVO_POS_MSB]	= HIGH_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
 	buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
-	buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]= LOW_BYTE((uint16_t)(p_power_meas->accum_flywheel_revs));
-	buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]= HIGH_BYTE((uint16_t)(p_power_meas->accum_flywheel_revs));
+	buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]= LOW_BYTE((uint16_t)(p_power_meas->accum_flywheel_ticks));
+	buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]= HIGH_BYTE((uint16_t)(p_power_meas->accum_flywheel_ticks));
 	buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
 
 	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
@@ -371,7 +370,6 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	const uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
 	const uint8_t extra_info_page_interleave 	= EXTRA_INFO_PAGE_INTERLEAVE_COUNT;
 
-	static uint16_t event_count = 0;
 	uint32_t err_code = 0;		
 
 	// NOTE:
@@ -381,23 +379,23 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	//
 
 	// Increment event counter.
-	event_count++;
+	m_event_count++;
 
-	if (event_count % product_page_interleave == 0)
+	if (m_event_count % product_page_interleave == 0)
 	{			
 		// # Figures out which common message to submit at which time.
 		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_product_page);
 	}
-	else if (event_count % manufacturer_page_interleave == 0)
+	else if (m_event_count % manufacturer_page_interleave == 0)
 	{
 		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
 	}
-	else if (event_count % extra_info_page_interleave == 0)
+	else if (m_event_count % extra_info_page_interleave == 0)
 	{
 		// Send DEBUG info.
 		extra_info_transmit(p_power_meas);
 	}
-	else if (event_count % power_page_interleave == 0)
+	else if (m_event_count % power_page_interleave == 0)
 	{
 		// # Only transmit standard power message every 5th power message.
 		err_code = power_transmit(p_power_meas->instant_power);
@@ -407,7 +405,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	{
 		// # Default broadcast message is torque.
 		err_code = torque_transmit(p_power_meas->accum_torque,
-			p_power_meas->last_wheel_event_time,
+			p_power_meas->accum_wheel_period,
 			(uint8_t) p_power_meas->accum_wheel_revs);
 		APP_ERROR_CHECK(err_code);
 	}

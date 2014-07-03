@@ -45,13 +45,18 @@ namespace ANT_Console
 
         public void Run()
         {
-            ConfigureServices();
+            // Check to see if we should connect to a specific E-Motion Device.
+            ushort deviceId = 0;
+            Console.Write("E-Motion Rollers Device ID or <ENTER>:");
+            ushort.TryParse(Console.ReadLine(), out deviceId);
+            ConfigureServices(deviceId);
+
             m_console = new InteractiveConsole(m_eMotionPower, m_control, m_refSpeed);
             ConfigureReporters();
             m_console.Run();
         }
 
-        private void ConfigureServices()
+        private void ConfigureServices(ushort deviceId = 0)
         {
             const byte emotion_transmission_type = 0xA5;
             const byte quarq_transmission_type = 0x5;
@@ -70,7 +75,7 @@ namespace ANT_Console
 
             // Configure E-Motion power reporting.
             m_eMotionPower = new AntBikePower(
-                (int)AntChannel.EMotionPower, 0, emotion_transmission_type);
+                (int)AntChannel.EMotionPower, deviceId, emotion_transmission_type);
             m_eMotionPower.StandardPowerEvent += ProcessMessage;
             m_eMotionPower.TorqueEvent += ProcessMessage;
             m_eMotionPower.ExtraInfoEvent += ProcessMessage;

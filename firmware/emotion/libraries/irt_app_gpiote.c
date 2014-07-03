@@ -85,6 +85,7 @@ static void sense_level_toggle(gpiote_user_t * p_user, uint32_t pins)
 void GPIOTE_IRQHandler(void)
 {
     uint8_t  i;
+    uint32_t pins_changed;
     uint32_t pins_state = NRF_GPIO->IN;
     
     // Clear event.
@@ -107,7 +108,27 @@ void GPIOTE_IRQHandler(void)
 
             // Toggle SENSE level for all pins that have changed state.
             sense_level_toggle(p_user, transition_pins);
-            
+
+            // Second read after setting sense.
+            // Check if any pins have changed while serving this interrupt.
+            pins_changed = NRF_GPIO->IN ^ pins_state;
+            if (pins_changed)
+            {
+                // Transition pins detected in late stage.
+                uint32_t late_transition_pins;
+
+                pins_state          |= pins_changed;
+
+                // Find set of pins on which there has been a transition.
+                late_transition_pins = (pins_state ^ ~p_user->sense_high_pins) & p_user->pins_mask;
+
+                // Toggle SENSE level for all pins that have changed state in last phase.
+                sense_level_toggle(p_user, late_transition_pins);
+
+                // Update pins that has changed state since the interrupt occurred.
+                transition_pins |= late_transition_pins;
+            }
+
             // Call user event handler if an event has occurred.
             event_high_to_low = (~pins_state & p_user->pins_high_to_low_mask) & transition_pins;
             event_low_to_high = (pins_state & p_user->pins_low_to_high_mask) & transition_pins;
@@ -307,3 +328,39 @@ uint32_t app_gpiote_pins_state_get(app_gpiote_user_id_t user_id, uint32_t * p_pi
     
     return NRF_SUCCESS;
 }
+
+#if defined(SVCALL_AS_NORMAL_FUNCTION) || defined(SER_CONNECTIVITY)
+uint32_t app_gpiote_input_event_handler_register(const uint8_t                    channel,
+                                                 const uint32_t                   pin,
+                                                 const uint32_t                   polarity,
+                                                 app_gpiote_input_event_handler_t event_handler)
+{
+    (void)sense_level_toggle(NULL, pin);
+    return NRF_ERROR_NOT_SUPPORTED;
+}
+
+uint32_t app_gpiote_input_event_handler_unregister(const uint8_t channel)
+{
+    return NRF_ERROR_NOT_SUPPORTED;
+}
+
+uint32_t app_gpiote_end_irq_event_handler_register(app_gpiote_input_event_handler_t event_handler)
+{
+    return NRF_ERROR_NOT_SUPPORTED;
+}
+
+uint32_t app_gpiote_end_irq_event_handler_unregister(void)
+{
+    return NRF_ERROR_NOT_SUPPORTED;
+}
+
+uint32_t app_gpiote_enable_interrupts(void)
+{
+    return NRF_ERROR_NOT_SUPPORTED;
+}
+
+uint32_t app_gpiote_disable_interrupts(void)
+{
+    return NRF_ERROR_NOT_SUPPORTED;
+}
+#endif // SVCALL_AS_NORMAL_FUNCTION || SER_CONNECTIVITY

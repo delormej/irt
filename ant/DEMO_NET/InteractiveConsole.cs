@@ -150,8 +150,8 @@ namespace ANT_Console
             Console.SetCursorPosition(Console.WindowLeft, lastLine);
             Console.WriteLine(format,
                 data.Timestamp,
-                data.SpeedReference,
-                //data.SpeedEMotion,
+                //data.SpeedReference,
+                data.SpeedEMotion,
                 data.PowerEMotion,
                 data.PowerReference,
                 data.ServoPosition,
