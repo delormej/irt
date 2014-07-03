@@ -11,6 +11,19 @@
 #include "accelerometer.h"
 #include "temperature.h"
 #include "boards.h"
+#include "debug.h"
+#ifdef USE_BATTERY
+#include "battery.h"
+#endif
+
+/**@brief Debug logging for main module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define PH_LOG debug_log
+#else
+#define PH_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 // RTC1 is based on a 32.768khz crystal, or in other words it oscillates
 // 32768 times per second.  The PRESCALER determins how often a tick gets
@@ -55,12 +68,19 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_output(PIN_LED_B);		// Red
 
 #ifdef IRT_REV_2A_H
-	nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
-	nrf_gpio_cfg_output(PIN_SLEEP_N);
 	// Enable servo / LED.
+	nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
 	nrf_gpio_pin_set(PIN_EN_SERVO_PWR);
-	// Enable the power regulator.
+
+	#ifdef USE_BATTERY
+	// Enable the power regulator if the board is configured for.
+	nrf_gpio_cfg_output(PIN_SLEEP_N);
 	nrf_gpio_pin_set(PIN_SLEEP_N);
+
+	// Enable the battery pins.
+	nrf_gpio_cfg_input(PIN_BATT_VOLT, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_output(PIN_ENBATT);
+	#endif
 #endif
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
@@ -158,6 +178,11 @@ uint16_t seconds_2048_get()
 	return seconds_2048;
 }
 
+void on_batt_volt(uint16_t battery_level)
+{
+	PH_LOG("[PH] Battery votlage: %i.\r\n", battery_level);
+}
+
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 {
 	uint32_t err_code;
@@ -177,6 +202,12 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	err_code = app_timer_create(&m_led_blink_timer_id,
 		APP_TIMER_MODE_REPEATED,
 		blink_timeout_handler);
+
+#ifdef USE_BATTERY
+	// Initialize battery.
+	battery_init(on_batt_volt, PIN_ENBATT);
+	PH_LOG("[PH] Initialized battery.\r\n");
+#endif
 
 	APP_ERROR_CHECK(err_code);
 }
