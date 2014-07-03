@@ -56,6 +56,8 @@ void ADC_IRQHandler(void)
         adc_result              = NRF_ADC->RESULT;
         NRF_ADC->TASKS_STOP     = 1;
 
+        NRF_ADC->ENABLE     	= ADC_ENABLE_ENABLE_Disabled;
+
     	nrf_gpio_pin_clear(m_pin_battery_read); // Stop reading voltage.
 
         batt_lvl_in_milli_volts = ADC_RESULT_IN_MILLI_VOLTS(adc_result) +
