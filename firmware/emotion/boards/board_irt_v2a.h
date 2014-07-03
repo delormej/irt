@@ -6,8 +6,6 @@
 #ifndef IRT_REV_2A_H
 #define IRT_REV_2A_H
 
-#define BONDMNGR_DELETE_BUTTON_PIN  11  /**< Button used for deleting all bonded masters during startup. */
-
 #define PIN_FLYWHEEL 				0	// This is the output of the optical sensor.
 #define PIN_SERVO_SIGNAL			1	// PWM signal to servo.
 #define PIN_BATT_VOLT				2	// Analog voltage resulting from dividing battery voltage by 2.5.

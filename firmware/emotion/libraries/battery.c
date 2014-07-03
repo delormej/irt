@@ -56,11 +56,14 @@ void ADC_IRQHandler(void)
         adc_result              = NRF_ADC->RESULT;
         NRF_ADC->TASKS_STOP     = 1;
 
+    	nrf_gpio_pin_clear(m_pin_battery_read); // Stop reading voltage.
+
         batt_lvl_in_milli_volts = ADC_RESULT_IN_MILLI_VOLTS(adc_result) +
                                   DIODE_FWD_VOLT_DROP_MILLIVOLTS;
         percentage_batt_lvl     = battery_level_in_percent(batt_lvl_in_milli_volts);
 
-        BY_LOG("[BY] Battery result %i, millivolts: %i, percent: %i\r\n", adc_result, batt_lvl_in_milli_volts, percentage_batt_lvl);
+        BY_LOG("[BY] Battery result on pin %i is: %i, millivolts: %i, percent: %i\r\n",
+        		m_pin_battery_read, adc_result, batt_lvl_in_milli_volts, percentage_batt_lvl);
 
 		if (m_on_battery_result != NULL)
 		{
@@ -99,8 +102,6 @@ void battery_read_start()
 
     NRF_ADC->EVENTS_END  = 0;    // Stop any running conversions.
     NRF_ADC->TASKS_START = 1;
-
-	nrf_gpio_pin_clear(m_pin_battery_read); // Stop reading voltage.
 }
 
 // Ensures the ADC is enabled.

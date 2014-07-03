@@ -70,6 +70,10 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_output(PIN_LED_B);		// Red
 
 #ifdef IRT_REV_2A_H
+	// User push button on the board.
+	// TODO: this needs to be debounced, using a pull-up not sure if that's required.
+	nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_PULLUP);
+
 	// Enable servo / LED.
 	nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
 	nrf_gpio_pin_set(PIN_EN_SERVO_PWR);
@@ -79,18 +83,14 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_output(PIN_SLEEP_N);
 	nrf_gpio_pin_set(PIN_SLEEP_N);
 
-	// Enable the battery pins.
-	nrf_gpio_cfg_input(PIN_BATT_VOLT, NRF_GPIO_PIN_NOPULL);
+	// Enable battery pin.
+	// When set enables the device to read battery voltage.
 	nrf_gpio_cfg_output(PIN_ENBATT);
 	#endif
 #endif
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
-	//nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_LOW);
-
-	// User push button on the board.
-	nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
 
 	// These pins are used for UART on boards where there is no RXD.
 #ifndef SIMPLE_UART
@@ -108,8 +108,12 @@ static void irt_gpio_init()
 	pins_low_to_high_mask = 0;
 #endif // SIMPLE_UART
 
-	pins_high_to_low_mask = (1 << PIN_SHAKE |
-			1 << PIN_PBSW);
+	pins_high_to_low_mask = (1 << PIN_SHAKE
+#ifdef IRT_REV_2A_H
+			| 1 << PIN_PBSW);
+#else
+	);
+#endif
 
 	APP_GPIOTE_INIT(1);
 
@@ -215,9 +219,13 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 
 	uint32_t val = nrf_gpio_pin_read(PIN_SHAKE);
 	if (val == 1)
+	{
 		set_led_red();
+	}
 	else
+	{
 		set_led_green();
+	}
 
 	// Create the timer for blinking led.
 	err_code = app_timer_create(&m_led_blink_timer_id,

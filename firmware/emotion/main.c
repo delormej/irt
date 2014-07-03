@@ -472,6 +472,8 @@ static void on_power_down(void)
 
 	peripheral_powerdown();
 
+	// TODO: should we be gracefully closing ANT and BLE channels here?
+
 	// Shut the system down.
 	sd_power_system_off();
 }
@@ -566,15 +568,16 @@ static void on_accelerometer(void)
 	err_code = accelerometer_data_get(&m_accelerometer_data);
 	APP_ERROR_CHECK(err_code);
 
-	LOG("[MAIN]:on_accelerometer source:%i y:%i \r\n",
-			m_accelerometer_data.source,
-			m_accelerometer_data.out_y_lsb |=
-					m_accelerometer_data.out_y_msb << 8);
-
 	// TODO: Use a constant here, but this is called when the device stops moving for a while.
 	if (m_accelerometer_data.source == 128)
 	{
-		on_power_down();
+		LOG("[MAIN]:on_accelerometer source:%i y:%i \r\n",
+				m_accelerometer_data.source,
+				m_accelerometer_data.out_y_lsb |=
+						m_accelerometer_data.out_y_msb << 8);
+
+		// TODO: keeps waking up, so disabling for now.
+		//on_power_down();
 	}
 }
 
@@ -760,6 +763,10 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_MIDDLE:
+			//TODO: Temporarily reading batt voltage here as well.
+			LOG("[MAIN] Reading battery voltage, then we'll shut down (testing).\r\n");
+			battery_read_start();
+			nrf_delay_ms(500);
 			on_power_down();
 			break;
 
