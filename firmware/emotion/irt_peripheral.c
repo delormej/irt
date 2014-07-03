@@ -137,8 +137,12 @@ void set_led_green(void)
 
 void clear_led(void)
 {
-	nrf_gpio_pin_clear(PIN_LED_A);
-	nrf_gpio_pin_clear(PIN_LED_B);
+	//nrf_gpio_pin_clear(PIN_LED_A);
+	//nrf_gpio_pin_clear(PIN_LED_B);
+
+	nrf_gpio_pin_set(PIN_LED_A);
+	nrf_gpio_pin_set(PIN_LED_B);
+
 }
 
 void blink_led_green_start(uint16_t interval_ms)
@@ -184,6 +188,21 @@ uint16_t seconds_2048_get()
 	return seconds_2048;
 }
 
+// Cuts power to servo and optical sensor.
+void peripheral_powerdown()
+{
+	PH_LOG("[PH] Powering down peripherals.\r\n");
+
+#ifdef IRT_REV_2A_H
+	// Disable servo / LED.
+	nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
+
+	#ifdef USE_BATTERY
+	// Enable the power regulator if the board is configured for.
+	nrf_gpio_pin_clear(PIN_SLEEP_N);
+	#endif
+#endif
+}
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 {

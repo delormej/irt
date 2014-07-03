@@ -470,6 +470,8 @@ static void on_power_down(void)
 	// Blink red a couple of times to say good-night.
 	clear_led();
 
+	peripheral_powerdown();
+
 	// Shut the system down.
 	sd_power_system_off();
 }
@@ -569,20 +571,11 @@ static void on_accelerometer(void)
 			m_accelerometer_data.out_y_lsb |=
 					m_accelerometer_data.out_y_msb << 8);
 
-	/*#if defined(BLE_NUS_ENABLED)
-	// TODO: Remove the hard coding here.
-	if (data.source & 0x04)
+	// TODO: Use a constant here, but this is called when the device stops moving for a while.
+	if (m_accelerometer_data.source == 128)
 	{
-		// Event should contain data.
-		static const char format[] = "ACL:%i,%i";
-		char message[16];
-		memset(&message, 0, sizeof(message));
-		uint8_t length = sprintf(message, format,
-				data.out_y_lsb,
-				data.out_y_msb);
-		debug_send(message, sizeof(message));
+		on_power_down();
 	}
-#endif*/
 }
 
 static void on_ble_connected(void) 

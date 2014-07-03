@@ -19,6 +19,7 @@ typedef struct peripheral_evt_s
 } peripheral_evt_t;
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);
+void peripheral_powerdown(void);
 
 // LED functions.
 void set_led_red(void);

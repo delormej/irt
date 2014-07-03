@@ -110,9 +110,6 @@ void battery_init(on_battery_result_t on_battery_result, uint8_t pin_battery_rea
 	// Save callback.
 	m_on_battery_result = on_battery_result;
 	m_pin_battery_read = pin_battery_read;
-
-	// Enable the ADC.
-	NRF_ADC->ENABLE = ADC_ENABLE_ENABLE_Enabled << ADC_ENABLE_ENABLE_Pos;
 }
 
 /**
