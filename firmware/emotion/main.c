@@ -849,7 +849,8 @@ int main(void)
 	debug_init();
 
 	LOG("**********************************************************************\r\n");
-	LOG("[MAIN]:Starting device id: %i, firmware version %s\r\n", ANT_DEVICE_NUMBER ,SW_REVISION);
+	LOG("[MAIN]:Starting ANT+ id: %i, firmware: %s, serial: %#.8x\r\n",
+			ANT_DEVICE_NUMBER, SW_REVISION, SERIAL_NUMBER);
 	LOG("**********************************************************************\r\n");
 
 	// Determine what the reason for startup is and log appropriately.
