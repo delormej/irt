@@ -77,6 +77,7 @@ void ADC_IRQHandler(void)
 // Starts a battery read operation.  on_battery_result() will be called with result.
 void battery_read_start()
 {
+#ifdef USE_BATTERY
     uint32_t err_code;
 
     // Enable reading voltage.
@@ -104,6 +105,9 @@ void battery_read_start()
 
     NRF_ADC->EVENTS_END  = 0;    // Stop any running conversions.
     NRF_ADC->TASKS_START = 1;
+#else
+    BY_LOG("[BY] WARN:Attempt to read battery on non-battery device.\r\n");
+#endif
 }
 
 // Ensures the ADC is enabled.
