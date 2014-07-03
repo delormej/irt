@@ -54,6 +54,11 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 		//app_gpiote_user_disable(mp_user_id);
 		mp_on_peripheral_evt->on_accelerometer_evt();
 	}
+	else if (event_pins_high_to_low & (1 << PIN_PG_N))
+	{
+		// Detects when the power adapter is plugged in.
+		mp_on_peripheral_evt->on_power_plug();
+	}
 }
 
 static void blink_timeout_handler(void * p_context)
@@ -78,7 +83,7 @@ static void irt_gpio_init()
 #ifdef IRT_REV_2A_H
 	// User push button on the board.
 	// TODO: this needs to be debounced, using a pull-up not sure if that's required.
-	nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_PULLUP);
+	nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
 
 	// Enable servo / LED.
 	nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
@@ -88,6 +93,9 @@ static void irt_gpio_init()
 	// Enable the power regulator if the board is configured for.
 	nrf_gpio_cfg_output(PIN_SLEEP_N);
 	nrf_gpio_pin_set(PIN_SLEEP_N);
+
+	// Configure pin to read if there is a power adapter.
+	nrf_gpio_cfg_input(PIN_PG_N, NRF_GPIO_PIN_NOPULL);
 
 	// Enable battery pin.
 	// When set enables the device to read battery voltage.
@@ -99,9 +107,10 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
 
 	pins_low_to_high_mask = 0;
-	pins_high_to_low_mask = (1 << PIN_SHAKE
+	pins_high_to_low_mask = ( 1 << PIN_SHAKE
 #ifdef IRT_REV_2A_H
-			| 1 << PIN_PBSW);
+			| 1 << PIN_PBSW
+			| 1 << PIN_PG_N	);
 #else
 			);
 #endif

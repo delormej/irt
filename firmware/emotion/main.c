@@ -588,6 +588,12 @@ static void on_accelerometer(void)
 	}
 }
 
+// Called when the power adapter is plugged in.
+static void on_power_plug(void)
+{
+	LOG("[MAIN] Power plugged in.\r\n");
+}
+
 static void on_ble_connected(void) 
 {
 	blink_led_green_stop();
@@ -873,7 +879,8 @@ int main(void)
 		on_button_iii,
 		on_button_iv,
 		on_button_pbsw,
-		on_accelerometer
+		on_accelerometer,
+		on_power_plug
 	};
 
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
