@@ -14,10 +14,8 @@ typedef struct peripheral_evt_s
 	void (*on_button_ii)(void);
 	void (*on_button_iii)(void);
 	void (*on_button_iv)(void);
+	void (*on_button_pbsw)(void);
 	void (*on_accelerometer_evt)(void);
-#ifdef USE_BATTERY
-	//(*on_batt_volt_evt)(on_battery_result_t);
-#endif
 } peripheral_evt_t;
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);

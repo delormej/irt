@@ -41,8 +41,10 @@ static app_timer_id_t m_led_blink_timer_id;
  */
 static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
 {
-	if (event_pins_low_to_high & (1 << PIN_PBSW))
-		mp_on_peripheral_evt->on_button_i();
+	//event_pins_low_to_high
+	// TODO: This button should be debounced.
+	if (event_pins_high_to_low & (1 << PIN_PBSW))
+		mp_on_peripheral_evt->on_button_pbsw();
 	else if (event_pins_high_to_low & (1 << PIN_SHAKE))
 		mp_on_peripheral_evt->on_accelerometer_evt();
 }
@@ -87,6 +89,9 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
 	//nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_SENSE_LOW);
 
+	// User push button on the board.
+	nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
+
 	// These pins are used for UART on boards where there is no RXD.
 #ifndef SIMPLE_UART
 	// Initialize the button inputs from the RXD4140.
@@ -103,7 +108,8 @@ static void irt_gpio_init()
 	pins_low_to_high_mask = 0;
 #endif // SIMPLE_UART
 
-	pins_high_to_low_mask = 1 << PIN_SHAKE;
+	pins_high_to_low_mask = (1 << PIN_SHAKE |
+			1 << PIN_PBSW);
 
 	APP_GPIOTE_INIT(1);
 
@@ -178,10 +184,6 @@ uint16_t seconds_2048_get()
 	return seconds_2048;
 }
 
-void on_batt_volt(uint16_t battery_level)
-{
-	PH_LOG("[PH] Battery votlage: %i.\r\n", battery_level);
-}
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 {
@@ -205,7 +207,7 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 
 #ifdef USE_BATTERY
 	// Initialize battery.
-	battery_init(on_batt_volt, PIN_ENBATT);
+	battery_init(NULL, PIN_ENBATT);
 	PH_LOG("[PH] Initialized battery.\r\n");
 #endif
 

@@ -48,6 +48,7 @@
 #include "ble_debug_assert_handler.h"
 #include "debug.h"
 #include "boards.h"
+#include "battery.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define DEFAULT_WHEEL_SIZE_MM			2096u
@@ -543,6 +544,14 @@ static void on_button_menu(void)
 	}
 }
 
+// This is the button on the board.
+static void on_button_pbsw(void)
+{
+	LOG("[MAIN] Push button switch pressed.\r\n");
+	// TODO: Temporarily calling battery from here.
+	battery_read_start();
+}
+
 // This event is triggered when there is data to be read from accelerometer.
 static void on_accelerometer(void)
 {
@@ -858,6 +867,7 @@ int main(void)
 		on_button_ii,
 		on_button_iii,
 		on_button_iv,
+		on_button_pbsw,
 		on_accelerometer
 	};
 

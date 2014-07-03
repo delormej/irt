@@ -13,10 +13,19 @@
 #include "nrf51_bitfields.h"
 #include "softdevice_handler.h"
 #include "app_util.h"
+#include "debug.h"
 
 #define ADC_REF_VOLTAGE_IN_MILLIVOLTS        1200                                      /**< Reference voltage (in milli volts) used by ADC while doing conversion. */
 #define ADC_PRE_SCALING_COMPENSATION         3                                         /**< The ADC is configured to use VDD with 1/3 prescaling as input. And hence the result of conversion is to be multiplied by 3 to get the actual value of the battery voltage.*/
 #define AIN_BATT_VOLT						 ADC_CONFIG_PSEL_AnalogInput2
+#define DIODE_FWD_VOLT_DROP_MILLIVOLTS       270                                       /**< Typical forward voltage drop of the diode (Part no: SD103ATW-7-F) that is connected in series with the voltage supply. This is the voltage drop when the forward current is 1mA. Source: Data sheet of 'SURFACE MOUNT SCHOTTKY BARRIER DIODE ARRAY' available at www.diodes.com. */
+
+#ifdef ENABLE_DEBUG_LOG
+#define BY_LOG debug_log
+#else
+#define BY_LOG(...)
+#endif // ENABLE_DEBUG_LOG
+
 
 /**@brief Macro to convert the result of ADC conversion in millivolts.
  *
@@ -47,9 +56,11 @@ void ADC_IRQHandler(void)
         adc_result              = NRF_ADC->RESULT;
         NRF_ADC->TASKS_STOP     = 1;
 
-        batt_lvl_in_milli_volts = ADC_RESULT_IN_MILLI_VOLTS(adc_result); // +
-                                  //DIODE_FWD_VOLT_DROP_MILLIVOLTS;
-        //percentage_batt_lvl     = battery_level_in_percent(batt_lvl_in_milli_volts);
+        batt_lvl_in_milli_volts = ADC_RESULT_IN_MILLI_VOLTS(adc_result) +
+                                  DIODE_FWD_VOLT_DROP_MILLIVOLTS;
+        percentage_batt_lvl     = battery_level_in_percent(batt_lvl_in_milli_volts);
+
+        BY_LOG("[BY] Battery result %i, millivolts: %i, percent: %i\r\n", adc_result, batt_lvl_in_milli_volts, percentage_batt_lvl);
 
 		if (m_on_battery_result != NULL)
 		{
