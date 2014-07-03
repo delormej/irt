@@ -43,22 +43,24 @@ static app_gpiote_user_id_t mp_user_id;
 static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
 {
 	//event_pins_low_to_high
-	// TODO: This button should be debounced.
-	if (event_pins_high_to_low & (1 << PIN_PBSW))
-	{
-		mp_on_peripheral_evt->on_button_pbsw();
-	}
-	else if (event_pins_high_to_low & (1 << PIN_SHAKE))
+	if (event_pins_high_to_low & (1 << PIN_SHAKE))
 	{
 		// testing - Turn off pin sense for a moment.
 		//app_gpiote_user_disable(mp_user_id);
 		mp_on_peripheral_evt->on_accelerometer_evt();
+	}
+#ifdef IRT_REV_2A_H
+	// TODO: This button should be debounced.
+	else if (event_pins_high_to_low & (1 << PIN_PBSW))
+	{
+		mp_on_peripheral_evt->on_button_pbsw();
 	}
 	else if (event_pins_high_to_low & (1 << PIN_PG_N))
 	{
 		// Detects when the power adapter is plugged in.
 		mp_on_peripheral_evt->on_power_plug();
 	}
+#endif
 }
 
 static void blink_timeout_handler(void * p_context)
@@ -128,11 +130,6 @@ static void irt_gpio_init()
 
 	err_code = app_gpiote_user_enable(mp_user_id);
 	APP_ERROR_CHECK(err_code);
-
-
-	PH_LOG("[PH] Pin config _SHAKE:%i, _PBSW:%i\r\n",
-		NRF_GPIO->PIN_CNF[PIN_SHAKE],
-		NRF_GPIO->PIN_CNF[PIN_PBSW]);
 }    
 
 void set_led_red(uint8_t led_mask)
