@@ -119,7 +119,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     //                any communication.
     //                Use with care.
 #if defined(ENABLE_DEBUG_ASSERT)
-	set_led_red();
+	set_led_red(0);
 
 	// Note this function does not return - it will hang waiting for a debugger to attach.
 	ble_debug_assert_handler(error_code, line_num, p_file_name);
@@ -468,7 +468,7 @@ static void on_power_down(bool accelerometer_wake_disable)
 	irt_power_meas_fifo_free();
 
 	// Blink red a couple of times to say good-night.
-	clear_led();
+	clear_led(0);
 
 	peripheral_powerdown(accelerometer_wake_disable);
 
@@ -596,8 +596,8 @@ static void on_power_plug(void)
 
 static void on_ble_connected(void) 
 {
-	blink_led_green_stop();
-	set_led_green();
+	blink_led_green_stop(0);
+	set_led_green(0);
 
 	LOG("[MAIN]:on_ble_connected\r\n");
 }
@@ -605,7 +605,7 @@ static void on_ble_connected(void)
 static void on_ble_disconnected(void) 
 {
 	// Clear connection LED.
-	clear_led();
+	clear_led(0);
 	
 	LOG("[MAIN]:on_ble_disconnected\r\n");
 
@@ -615,13 +615,13 @@ static void on_ble_disconnected(void)
 
 static void on_ble_timeout(void) 
 {
-	blink_led_green_stop();
+	blink_led_green_stop(0);
 	LOG("[MAIN]:on_ble_timeout\r\n");
 }
 
 static void on_ble_advertising(void)
 {
-	blink_led_green_start(BLE_ADV_BLINK_RATE_MS);
+	blink_led_green_start(0, BLE_ADV_BLINK_RATE_MS);
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)

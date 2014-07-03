@@ -24,11 +24,11 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);
 void peripheral_powerdown(bool accelerometer_off);
 
 // LED functions.
-void set_led_red(void);
-void set_led_green(void);
-void clear_led(void);
-void blink_led_green_start(uint16_t interval_ms);
-void blink_led_green_stop(void);
+void set_led_red(uint8_t led_mask);
+void set_led_green(uint8_t led_mask);
+void clear_led(uint8_t led_mask);
+void blink_led_green_start(uint8_t led_mask, uint16_t interval_ms);
+void blink_led_green_stop(uint8_t led_mask);
 
 /**@brief Get the current time in 1/2048s.
  *

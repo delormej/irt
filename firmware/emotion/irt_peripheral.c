@@ -66,7 +66,8 @@ static void blink_timeout_handler(void * p_context)
 	UNUSED_PARAMETER(p_context);
 
 	// Toggle the green LED on/off.
-	nrf_gpio_pin_toggle(PIN_LED_A);
+//	nrf_gpio_pin_toggle(PIN_LED_A);
+	nrf_gpio_pin_toggle(PIN_LED_B);
 }
 
 /**@brief Initialize all peripherial pins.
@@ -79,8 +80,10 @@ static void irt_gpio_init()
 	// Initialize the LED pins.
 	nrf_gpio_cfg_output(PIN_LED_A);		// Green
 	nrf_gpio_cfg_output(PIN_LED_B);		// Red
-
 #ifdef IRT_REV_2A_H
+	nrf_gpio_cfg_output(PIN_LED_C);		// Red #2
+	nrf_gpio_cfg_output(PIN_LED_D);		// Green #2
+
 	// User push button on the board.
 	// TODO: this needs to be debounced, using a pull-up not sure if that's required.
 	nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
@@ -132,29 +135,40 @@ static void irt_gpio_init()
 		NRF_GPIO->PIN_CNF[PIN_PBSW]);
 }    
 
-void set_led_red(void)
+void set_led_red(uint8_t led_mask)
 {
 	nrf_gpio_pin_clear(PIN_LED_A);
 	nrf_gpio_pin_set(PIN_LED_B);
+
+#ifdef IRT_REV_2A_H
+	nrf_gpio_pin_clear(PIN_LED_D);
+	nrf_gpio_pin_set(PIN_LED_C);
+#endif
 }
 
-void set_led_green(void)
+void set_led_green(uint8_t led_mask)
 {
 	nrf_gpio_pin_clear(PIN_LED_B);
 	nrf_gpio_pin_set(PIN_LED_A);
+
+#ifdef IRT_REV_2A_H
+	nrf_gpio_pin_clear(PIN_LED_C);
+	nrf_gpio_pin_set(PIN_LED_D);
+#endif
 }
 
-void clear_led(void)
+void clear_led(uint8_t led_mask)
 {
-	//nrf_gpio_pin_clear(PIN_LED_A);
-	//nrf_gpio_pin_clear(PIN_LED_B);
-
 	nrf_gpio_pin_set(PIN_LED_A);
 	nrf_gpio_pin_set(PIN_LED_B);
 
+#ifdef IRT_REV_2A_H
+	nrf_gpio_pin_set(PIN_LED_C);
+	nrf_gpio_pin_set(PIN_LED_D);
+#endif
 }
 
-void blink_led_green_start(uint16_t interval_ms)
+void blink_led_green_start(uint8_t led_mask, uint16_t interval_ms)
 {
 	uint32_t err_code;
 	uint32_t interval_ticks;
@@ -163,21 +177,21 @@ void blink_led_green_start(uint16_t interval_ms)
 	interval_ticks = APP_TIMER_TICKS(interval_ms, APP_TIMER_PRESCALER);
 
 	// Stop any current LED flash.
-	clear_led();
+	clear_led(0);
 
 	// Start the timer.
 	err_code = app_timer_start(m_led_blink_timer_id, interval_ticks, NULL);
 	APP_ERROR_CHECK(err_code);
 }
 
-void blink_led_green_stop(void)
+void blink_led_green_stop(uint8_t led_mask)
 {
 	uint32_t err_code;
 
 	err_code = app_timer_stop(m_led_blink_timer_id);
 	APP_ERROR_CHECK(err_code);
 
-	clear_led();
+	clear_led(0);
 }
 
 /**@brief 	Returns the count of 1/2048th seconds (2048 per second) since the
@@ -221,6 +235,9 @@ void peripheral_powerdown(bool accelerometer_off)
 	nrf_gpio_pin_clear(PIN_SLEEP_N);
 	#endif
 #endif
+
+	// Shut down the leds.
+	clear_led(0);
 }
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
@@ -235,11 +252,11 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	uint32_t val = nrf_gpio_pin_read(PIN_SHAKE);
 	if (val == 1)
 	{
-		set_led_red();
+		set_led_red(0);
 	}
 	else
 	{
-		set_led_green();
+		set_led_green(0);
 	}
 
 	// Create the timer for blinking led.
