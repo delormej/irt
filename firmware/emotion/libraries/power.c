@@ -55,19 +55,40 @@
 
 user_profile_t* mp_user_profile;
 
+
+static float inline slope_calc(float y, float slope, float intercept)
+{
+	float x;
+	 x = y * slope + intercept;
+
+	return x;
+}
+
+
 static float calc_mag0_force(float weight_kg, float speed_mps)
 {
-	float force = (speed_mps*SPEED_FORCE_A_SLOPE + SPEED_FORCE_A_INTERCEPT) -
+	//TODO: hardcoded for testing.
+	#define MAG0_SLOPE 	0.000484f
+	#define MAG0_ICPT	0.025081f
+	#define GRAVITY		9.81f
+
+	float force;
+
+	/*
+	force = (speed_mps*SPEED_FORCE_A_SLOPE + SPEED_FORCE_A_INTERCEPT) -
 		(((speed_mps*SPEED_FORCE_A_SLOPE + SPEED_FORCE_A_INTERCEPT) -
 		(speed_mps*SPEED_FORCE_B_SLOPE + SPEED_FORCE_B_INTERCEPT)) / (SPEED_FORCE_A_WEIGHT - SPEED_FORCE_B_WEIGHT))*
 		(SPEED_FORCE_A_WEIGHT - weight_kg);
+	 */
+
+	force = weight_kg * GRAVITY * (speed_mps * MAG0_SLOPE + MAG0_ICPT);
 
 	return force;
 }
 
 static float calc_servo_force(float speed_mps, uint16_t servo_pos)
 {
-
+	/*
 	if (servo_pos > MIN_SERVO_FORCE_POS)
 		return 0;
 
@@ -75,6 +96,34 @@ static float calc_servo_force(float speed_mps, uint16_t servo_pos)
 		(((servo_pos*FORCE_SERVO_A_SLOPE + FORCE_SERVO_A_INTERCEPT) -
 		(servo_pos*FORCE_SERVO_B_SLOPE + FORCE_SERVO_B_INTERCEPT)) / (FORCE_SERVO_A_SPEED - FORCE_SERVO_B_SPEED))*
 		(FORCE_SERVO_A_SPEED - speed_mps);
+
+	return force;
+	*/
+
+	float force;
+
+	//
+	// Manual multiple linear regression hack.
+	//
+	if (servo_pos > 1500)
+	{
+		force = 0.0f;
+	}
+	else if (servo_pos > 1300)
+	{
+		// 1,500 - 1,300
+		force = slope_calc(servo_pos, -0.02098f, 31.9982f);
+	}
+	else if (servo_pos > 900)
+	{
+		// 1,300 - 900
+		force = slope_calc(servo_pos, -0.09138f, 123.0521f);
+	}
+	else if (servo_pos >= 699)
+	{
+		// 900 - 700
+		force = slope_calc(servo_pos, -0.02238f, 61.1305f);
+	}
 
 	return force;
 }
@@ -96,6 +145,7 @@ static float calc_angular_vel(uint8_t wheel_ticks, uint16_t period_2048)
 uint16_t power_servo_pos_calc(float weight_kg, float speed_mps, float force_needed)
 {
 	int16_t servo_pos;
+	/*
 	float calculated;
 
 	// Use the model to calculate servo position.
@@ -118,6 +168,41 @@ uint16_t power_servo_pos_calc(float weight_kg, float speed_mps, float force_need
 	{
 		servo_pos = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS - 1];
 	}
+	*/
+
+	//
+	// Manual multiple linear regression hack.
+	//
+	if (force_needed < 0.832566f)
+	{
+		servo_pos = 1500;
+	}
+	else if (force_needed < 5.028207f)
+	{
+		// 1,500 - 1,300
+		servo_pos = (uint16_t)slope_calc(force_needed, -44.8841f, 1517.988f);
+	}
+	else if (force_needed < 40.51667f)
+	{
+		// 1,300 - 900
+		servo_pos = (uint16_t)slope_calc(force_needed, -10.9038f, 1345.708f);
+	}
+	else if (force_needed < 44.9931f)
+	{
+		// 900 - 700
+		servo_pos = (uint16_t)slope_calc(force_needed, -39.4606f, 2505.677f);
+	}
+	else
+	{
+		// Max
+		servo_pos = 700;
+	}
+
+	// Protect min/max.
+	if (servo_pos < 700)
+		servo_pos = 700;
+	else if (servo_pos > 1500)
+		servo_pos = 1500;
 
 	return servo_pos;
 }
