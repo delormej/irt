@@ -171,7 +171,7 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
 
 	// NOTE: Skipping Crank revolution, NOT USED.
 	// NOTE: Skipping Extreme force, torque and angles, top and bottom dead spot, NONE USED.
-
+	/* NOT IMPLEMENTED RIGHT NOW.
 	if (p_cps->feature & BLE_CPS_FEATURE_ACCUM_ENERGY_BIT)
 	{
 		if (p_cps_measurement->accum_energy > 0)
@@ -179,7 +179,7 @@ static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
 			flags |= CPS_MEAS_FLAG_ACCUM_ENERGY_PRESENT;
 			len += uint16_encode(p_cps_measurement->accum_energy, &p_encoded_buffer[len]);
 		}
-	}
+	}*/
 
 	// Take 16 bit flags field and separate into 2 octets.
 	p_encoded_buffer[0] = (uint8_t) ((flags & 0x00FF) >> 0);
