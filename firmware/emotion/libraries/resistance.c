@@ -16,7 +16,6 @@
 #include "math.h"
 #include "debug.h"
 
-#define	GRAVITY				9.8f	// Co-efficent of gravity for Earth.  Change for other planets.
 #define MIN_THRESHOLD_MOVE	3		// Minimum threshold for a servo move.
 
 /**@brief Debug logging for resistance control module.
@@ -33,8 +32,23 @@
 		((POS - m_servo_pos) > MIN_THRESHOLD_MOVE || 			\
 				(m_servo_pos - POS > MIN_THRESHOLD_MOVE))		\
 
-static uint16_t		m_servo_pos;		// State of current servo position.
+static uint16_t	m_servo_pos;		// State of current servo position.
 
+/**@brief	Sets the servo by specifying magnet force required.
+ */
+static uint16_t position_set_by_force(float mag_force)
+{
+	uint16_t servo_pos;
+
+	// Determine the required servo position for desired watts.
+	servo_pos = power_servo_pos_calc(mag_force);
+
+	// Move the servo.
+	return resistance_position_set(servo_pos);
+}
+
+/**@brief	Initializes the resistance module which controls the servo.
+ */
 uint16_t resistance_init(uint32_t servo_pin_number)
 {
 	// Initialize pulse-width-modulation.
@@ -44,6 +58,8 @@ uint16_t resistance_init(uint32_t servo_pin_number)
 	return resistance_level_set(0);
 }
 
+/**@brief	Returns the last known position of the servo.
+ */
 uint16_t resistance_position_get()
 {
 	return m_servo_pos;
@@ -52,13 +68,26 @@ uint16_t resistance_position_get()
 /**@brief	Determines if there is a move and move accordingly.
  *
  */
-uint16_t resistance_position_set(uint16_t position)
+uint16_t resistance_position_set(uint16_t servo_pos)
 {
-	if (m_servo_pos != position && ABOVE_TRESHOLD(position) )
+	//
+	// Ensure we don't move the servo beyond it's min and max.
+	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107
+	//
+	if (servo_pos < RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1])
 	{
-		RC_LOG("[RC]:SET_SERVO %i\r\n", position);
-		pwm_set_servo(position);
-		m_servo_pos = position;
+		servo_pos = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
+	}
+	else if (servo_pos > RESISTANCE_LEVEL[0])
+	{
+		servo_pos = RESISTANCE_LEVEL[0];
+	}
+
+	if ( (m_servo_pos != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
+	{
+		RC_LOG("[RC]:SET_SERVO %i\r\n", servo_pos);
+		pwm_set_servo(servo_pos);
+		m_servo_pos = servo_pos;
 	}
 
 	return m_servo_pos;
@@ -111,46 +140,21 @@ uint16_t resistance_pct_set(float percent)
 /**@brief		Sets mag resistance to simulate desired erg watts.
  * @returns 	Servo position.
  */
-uint16_t resistance_erg_set(float speed_mps, float weight_kg, rc_sim_forces_t *p_sim_forces)
+uint16_t resistance_erg_set(int16_t target_watts, float speed_mps)
 {
-	int16_t mag0_watts;
-	float mag0_force;
-	float needed_force;
-	uint16_t position;
-	
-	// TODO: who is going to handle calculating calibration? Whoever is, should keep track of 
-	// current reporting watts, vs. adjusted watts?
-
-	// TODO: since we already do this in the calculation, we should store this value
-	// in p_power_meas instead of recalcuating here.
-	// Calculate the current watts with no mag.
-	mag0_watts = power_watts_calc(speed_mps,
-			weight_kg,
-			RESISTANCE_LEVEL[0]);	// mag 0 (off) position
-
-	// Calculate mag0 force.
-	mag0_force = ((float)mag0_watts) / speed_mps;
-	
-	// Calculate the incremental force required.
-	needed_force = (((float)p_sim_forces->erg_watts) / speed_mps) - mag0_force;
-	
-	// Determine the correct servo position for that force given speed & weight.
-	position = power_servo_pos_calc(weight_kg, speed_mps, needed_force);
+	float mag_force;
 
 	//
-	// Ensure we don't move the servo beyond it's min and max.
-	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107 
+	// Calculate the required incremental magnet force required (if any).
+	// By finding the total force required at current speed and backing
+	// out the baseline force of rolling resistance.
 	//
-	if (position < RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1])
-	{
-		position = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
-	}
-	else if (position > RESISTANCE_LEVEL[0])
-	{
-		position = RESISTANCE_LEVEL[0];
-	}
+	// TODO: We could get smarter here and deal with 'erg-ing out' or if the user
+	// stops pedaling deal with them starting back up.
+	//
+	mag_force = ( (((float)target_watts) / speed_mps) - power_rr_force() );
 
-	return resistance_position_set(position);
+	return position_set_by_force(mag_force);
 }
 
 /**@brief	Puts the trainer in simulation mode.
@@ -164,6 +168,8 @@ uint16_t resistance_erg_set(float speed_mps, float weight_kg, rc_sim_forces_t *p
  */
 uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p_sim_forces)
 {
+	float mag_force;
+
 	// sim is going to calculate the estimated watts required at grade + wind for
 	// the current speed and rider total weight.  It will then hand this off to
 	// the same functions that 'erg' mode uses to find the right servo position.
@@ -184,8 +190,8 @@ uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p
 	float gravitational = weight_kg * GRAVITY *
 							p_sim_forces->grade;
 
-	// Total power required, which is rounded to nearest int for watts and assign.
-	p_sim_forces->erg_watts = (int16_t)((wind + rolling + gravitational) * speed_mps);
+	// Determine the additional force required from the magnet if necessary.
+	mag_force = ( (wind + rolling + gravitational) - power_rr_force() );
 /*
 	RC_LOG("[RC]:grade: %.2f\r\n", p_sim_forces->grade);
 	RC_LOG("[RC]:speed: %.2f\r\n", speed_mps);
@@ -195,7 +201,50 @@ uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p
 	RC_LOG("[RC]:wind_speed: %.2f\r\n", p_sim_forces->wind_speed_mps);
 	RC_LOG("[RC]:watts: %i\r\n", p_sim_forces->erg_watts);
 */
-
-	// Same as erg mode now, set to a specific watt level.
-	return resistance_erg_set(speed_mps, weight_kg, p_sim_forces);
+	// Move the servo to the required position.
+	return 	position_set_by_force(mag_force);
 }
+
+/**@brief	Adjusts the magnetic resistance accordingly for erg & sim modes.
+ *
+ */
+void resistance_adjust(irt_power_meas_t* p_power_meas_first,
+		irt_power_meas_t* 	p_power_meas_current,
+		rc_sim_forces_t* 	p_sim_forces,
+		resistance_mode_t 	resistance_mode,
+		float 				weight_kg)
+{
+	float speed_avg;
+
+	// If we have a range of events between first and current, we're able to do a moving average of speed.
+	if (p_power_meas_first != NULL)
+	{
+		// Average the speed.
+		speed_avg = ( (p_power_meas_current->instant_speed_mps +
+				p_power_meas_first->instant_speed_mps) / 2.0f );
+	}
+	else
+	{
+		speed_avg = p_power_meas_current->instant_speed_mps;
+	}
+
+	// Don't attempt to adjust if stopped.
+	if (speed_avg == 0.0f)
+		return;
+
+	// If in erg or sim mode, adjust resistance accordingly.
+	switch (resistance_mode)
+	{
+		case RESISTANCE_SET_ERG:
+			resistance_erg_set(p_sim_forces->erg_watts, speed_avg);
+			break;
+
+		case RESISTANCE_SET_SIM:
+			resistance_sim_set(speed_avg, weight_kg, p_sim_forces);
+			break;
+
+		default:
+			break;
+	}
+}
+

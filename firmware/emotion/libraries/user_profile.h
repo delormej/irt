@@ -33,9 +33,7 @@ typedef struct user_profile_s {
 	float		total_weight_kg;
 	uint16_t	wheel_size_mm;
 	uint32_t	settings;					// Bitmask of settings.
-	uint16_t	calibration_offset_slope;	// Calibration offsets
-	uint16_t	calibration_offset_itcpt;	//
-	uint8_t		reserved[8]; 				// for block storage alignment.
+	uint16_t	calibration_crr;			// Calibration offset (1/10,000 value).
 } user_profile_t;
 
 

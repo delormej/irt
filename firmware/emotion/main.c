@@ -51,20 +51,25 @@
 #include "battery.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
-#define DEFAULT_WHEEL_SIZE_MM			2096u
-#define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
-#define DEFAULT_ERG_WATTS				175u
-#define SIM_CRR							0.0033f
-#define SIM_C							0.60f
 #define BLE_ADV_BLINK_RATE_MS			500u
+#define SCHED_QUEUE_SIZE                64                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
-#define SCHED_QUEUE_SIZE                64                                          /**< Maximum number of events in the scheduler queue. */
+//
+// Default profile and simulation values.
+//
+#define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
+#define DEFAULT_TOTAL_WEIGHT_KG			(180.0f * 0.453592)							// Default weight (convert lbs to KG).
+#define DEFAULT_ERG_WATTS				175u										// Default erg target_watts when not otherwise set.
+#define DEFAULT_CRR						2838ul										// Default co-efficient for roller's resistance (0.02838) stored as 1/100000.
+#define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
+#define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
+
 
 static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
 
-static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.
+static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 
 static user_profile_t 					m_user_profile;
 static rc_sim_forces_t					m_sim_forces;
@@ -72,8 +77,8 @@ static accelerometer_data_t 			m_accelerometer_data;
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
+// Type declaration for profile updating.
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
-
 
 /**@brief Debug logging for main module.
  *
@@ -231,6 +236,11 @@ static void profile_init(void)
 			m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
 		}
 		
+		if (m_user_profile.calibration_crr == 0xFFFF)
+		{
+			m_user_profile.calibration_crr = DEFAULT_CRR;
+		}
+
 	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004. 
 	 *
 	 *	fC is equal to A*Cw*Rho where A is effective frontal area (m^2); Cw is drag 
@@ -240,12 +250,11 @@ static void profile_init(void)
 		m_sim_forces.crr = SIM_CRR;
 		m_sim_forces.c = SIM_C;
 
-		LOG("[MAIN]:profile_init VALUES:\r\n\t weight:%.2f\r\n\t wheel:%i \r\n\t settings:%lu \r\n",
+		LOG("[MAIN]:profile_init:\r\n\t weight: %.2f\r\n\t wheel: %i \r\n\t settings: %lu \r\n\t crr: %i \r\n",
 				m_user_profile.total_weight_kg,
 				m_user_profile.wheel_size_mm,
-				m_user_profile.settings);
-				//m_user_profile.calibration_offset_slope,
-				//m_user_profile.calibration_offset_itcpt);
+				m_user_profile.settings,
+				m_user_profile.calibration_crr);
 }
 
 /**@brief Persists any updates the user profile. */
@@ -261,58 +270,6 @@ static void profile_update(void)
 	LOG("[MAIN]:profile_update {weight: %.2f, wheel: %i}\r\n",
 			m_user_profile.total_weight_kg,
 			m_user_profile.wheel_size_mm);
-}
-
-static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_meas_t* p_power_meas_current)
-{
-	float speed_avg;
-
-	// If we have a range of events between first and current, we're able to do a moving average of speed.
-	if (p_power_meas_first != NULL)
-	{
-		// Average the speed.
-		speed_avg = (p_power_meas_current->instant_speed_mps +
-				p_power_meas_current->instant_speed_mps) / 2.0f;
-	}
-	else
-	{
-		speed_avg = p_power_meas_current->instant_speed_mps;
-	}
-
-	// Don't attempt to adjust if stopped.
-	if (speed_avg == 0.0f)
-		return;
-
-	// If in erg or sim mode, adjust resistance accordingly.
-	switch (m_resistance_mode)
-	{
-		case RESISTANCE_SET_ERG:
-			resistance_erg_set(
-					speed_avg,
-					m_user_profile.total_weight_kg,
-					&m_sim_forces);
-			break;
-
-		case RESISTANCE_SET_SIM:
-			resistance_sim_set(
-					speed_avg,
-					m_user_profile.total_weight_kg,
-					&m_sim_forces);
-
-			/*LOG("[MAIN]:resistance_adjust SIM: %i\r\n", m_sim_forces.erg_watts);
-			LOG("[MAIN]:resistance_adjust SIM: %i-g, %i-mps, %i-c, %i-crr, %i-slope, %i-wind = %i-watts \r\n",
-					(uint16_t)(m_user_profile.total_weight_kg * 100),
-					(uint16_t)(power_meas.instant_speed_mps * 100),
-					(uint16_t)(m_sim_forces.c * 1000),
-					(uint16_t)(m_sim_forces.crr * 10000),
-					(uint16_t)(m_sim_forces.grade * 1000),
-					(uint16_t)(m_sim_forces.wind_speed_mps * 1000),
-					power_meas.instant_power);*/
-			break;
-
-		default:
-			break;
-	}
 }
 
 /**@brief Function for handling profile update.
@@ -398,10 +355,10 @@ static void ant_4hz_timeout_handler(void * p_context)
 	cycling_power_send(p_power_meas_current);
 
 	// If in erg or sim mode, adjusts the resistance.
-	if (m_resistance_mode == RESISTANCE_SET_ERG ||
-			m_resistance_mode == RESISTANCE_SET_SIM)
+	if (m_resistance_mode == RESISTANCE_SET_ERG || m_resistance_mode == RESISTANCE_SET_SIM)
 	{
-		resistance_adjust(p_power_meas_first, p_power_meas_current);
+		resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces,
+				m_resistance_mode, m_user_profile.total_weight_kg);
 	}
 
 	// Send remote control availability.  Notification flag is 1 if a serial number

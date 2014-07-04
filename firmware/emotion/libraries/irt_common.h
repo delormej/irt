@@ -11,6 +11,12 @@ All rights reserved.
 #include <stdint.h>
 #include "nrf_error.h"
 
+//
+// Global defines.
+//
+#define	GRAVITY						9.8f		// Co-efficent of gravity for Earth.  Change for other planets.
+#define	MATH_PI						3.14159f
+
 /*****************************************************************************
 * Inside Ride Defines
 *****************************************************************************/
@@ -32,7 +38,7 @@ typedef struct irt_power_meas_s
 	uint16_t	accum_wheel_period;											// Increments of 1/2048s rolls over at 32 seconds.
 	uint32_t	accum_flywheel_ticks;										// Currently 2 ticks per flywheel rev.
 	// TODO: ble cps spec uses accum_energy but we haven't implmented it yet.
-	uint16_t	accum_energy;												// Unit is in kilojoules with a resolution of 1 (used by ble cps).
+	// uint16_t	accum_energy;												// Unit is in kilojoules with a resolution of 1 (used by ble cps).
 	uint16_t	last_wheel_event_2048;										// Last time the virtual wheel completed a rotation, basd on wheel size.
 
 	// Resistance state.  TODO: Should this be refactored somewhere else? A pointer would save 8 bytes per entry.

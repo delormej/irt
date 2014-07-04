@@ -14,14 +14,14 @@
 #include "user_profile.h"
 
 #define MAX_RESISTANCE_LEVELS 	7 //10					// Maximum resistance levels available.
-#define MIN_RESISTANCE_LEVEL	1900					// Minimum by which there is no longer resistance.
+#define MIN_RESISTANCE_LEVEL	1700					// Minimum by which there is no longer resistance.
 
 /**@brief		Array representing the servo position in micrseconds (us) by 
  *					resistance level 0-9.
  *
  */
 static const uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = { 
-	2107, // 0 - no resistance
+	2000, // 0 - no resistance
 /*	1300,
 	1225,
 	1150,
@@ -42,8 +42,8 @@ static const uint16_t RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS] = {
 /**@brief Bike types, used for predefined resistance coefficients. */
 typedef enum
 {
-	BIKE_ROAD				= 0x21,
-	BIKE_MOUNT			= 0x2E
+	BIKE_ROAD					= 0x21,
+	BIKE_MOUNT					= 0x2E
 } bike_type_t;
 
 /**@brief Resistance modes. */
@@ -142,6 +142,15 @@ uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p
 /**@brief		Sets/adjusts resistance to desired watts.
  *
  */
-uint16_t resistance_erg_set(float speed_mps, float weight_kg, rc_sim_forces_t *p_sim_forces);
+uint16_t resistance_erg_set(int16_t target_watts, float speed_mps);
+
+/**@brief		Adjusts magnetic resistance for erg and simulation modes.
+ *
+ */
+void resistance_adjust(irt_power_meas_t* p_power_meas_first,
+		irt_power_meas_t* p_power_meas_current,
+		rc_sim_forces_t *p_sim_forces,
+		resistance_mode_t resistance_mode,
+		float weight_kg);
 
 #endif
