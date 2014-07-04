@@ -14,10 +14,28 @@
 
 #include <stdint.h>
 
+//
+// Available device features. Default setting should result in 0.
+//
+#define FEATURE_DEFAULT					0xFFFFFFFF
+#define FEATURE_SIM_SPEED				1UL
+#define FEATURE_ACCEL_SLEEP_OFF			2UL
+// FUTURE features:
+// BTLE_OFF
+// ANT_CTRL_OFF
+// ANT_BP_OFF
+// ANT_SEND_EXTRA_INFO
+
+#define FEATURE_IS_SET(SETTINGS, FEATURE) \
+	((SETTINGS & FEATURE) == FEATURE)
+
 typedef struct user_profile_s {
 	float		total_weight_kg;
 	uint16_t	wheel_size_mm;
-	uint8_t		reserved[8]; // for block storage alignment.
+	uint32_t	settings;					// Bitmask of settings.
+	uint16_t	calibration_offset_slope;	// Calibration offsets
+	uint16_t	calibration_offset_itcpt;	//
+	uint8_t		reserved[8]; 				// for block storage alignment.
 } user_profile_t;
 
 

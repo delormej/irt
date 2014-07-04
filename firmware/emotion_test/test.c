@@ -120,9 +120,11 @@ int main(int argc, char *argv [])
 {
 	int16_t servo_pos;
 	float force_needed;
-	
-	force_needed = 8.3f;
-	servo_pos = power_servo_pos_calc(force_needed);
+	int32_t features;
+	int8_t feature;
 
-	printf("servo_pos = %i\r\n", servo_pos);
+	feature = 1;
+	features = 16;
+
+	printf("result = %i\r\n", ((features & feature) == feature));
 }

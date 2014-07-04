@@ -240,9 +240,12 @@ static void profile_init(void)
 		m_sim_forces.crr = SIM_CRR;
 		m_sim_forces.c = SIM_C;
 
-		LOG("[MAIN]:profile_init {weight:%.2f, wheel:%i}\r\n",
+		LOG("[MAIN]:profile_init VALUES:\r\n\t weight:%.2f\r\n\t wheel:%i \r\n\t settings:%lu \r\n",
 				m_user_profile.total_weight_kg,
-				m_user_profile.wheel_size_mm);
+				m_user_profile.wheel_size_mm,
+				m_user_profile.settings);
+				//m_user_profile.calibration_offset_slope,
+				//m_user_profile.calibration_offset_itcpt);
 }
 
 /**@brief Persists any updates the user profile. */
@@ -573,18 +576,21 @@ static void on_accelerometer(void)
 			m_accelerometer_data.out_y_lsb |=
 					m_accelerometer_data.out_y_msb << 8);
 
-	// TODO: Use a constant here, but this is called when the device stops moving for a while.
-	if (m_accelerometer_data.source == 128)
+	// Received a sleep interrupt from the accelerometer meaning no motion for a while.
+	if (m_accelerometer_data.source == ACCELEROMETER_SRC_WAKE_SLEEP)
 	{
-
-		LOG("[MAIN]:about to power down, PIN_SHAKE is:%i, config is:%i\r\n",
-				nrf_gpio_pin_read(PIN_SHAKE),
-				NRF_GPIO->PIN_CNF[PIN_SHAKE]);
-
+		LOG("[MAIN]:about to power down from accelerometer sleep.\r\n");;
+		//
+		// This is a workaround to deal with GPIOTE toggling the SENSE bits which forces
+		// the device to wake up immediately after going to sleep without this.
+		//
         NRF_GPIO->PIN_CNF[PIN_SHAKE] &= ~GPIO_PIN_CNF_SENSE_Msk;
         NRF_GPIO->PIN_CNF[PIN_SHAKE] |= GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos;
 
-		on_power_down(false);
+        if (!(FEATURE_IS_SET(m_user_profile.settings, FEATURE_ACCEL_SLEEP_OFF)))
+        {
+        	on_power_down(false);
+        }
 	}
 }
 

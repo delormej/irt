@@ -73,6 +73,19 @@ uint32_t user_profile_load(user_profile_t *p_user_profile)
     		p_user_profile->total_weight_kg,
     		p_user_profile->wheel_size_mm);
 
+#ifdef SETTINGS
+		// If there was a build override on settings.
+    	p_user_profile->settings = SETTINGS;
+#else
+		//
+    	// By default we'll get all 1's if nothing was previously stored.
+    	//
+		if (p_user_profile->settings == FEATURE_DEFAULT)
+		{
+			p_user_profile->settings = 0;
+		}
+#endif
+
     return err_code;
 }
 
