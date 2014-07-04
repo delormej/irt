@@ -25,8 +25,8 @@
 #ifndef __REVOLUTIONS_H__
 #define __REVOLUTIONS_H__
 
-#define REVS_TIMER 				NRF_TIMER1
-#define REVS_IRQHandler		TIMER1_IRQHandler
+#define REVS_TIMER 					NRF_TIMER1
+#define REVS_IRQHandler				TIMER1_IRQHandler
 #define REVS_IRQn					TIMER1_IRQn
 
 #define REVS_CHANNEL_TASK_TOGGLE	2
@@ -37,13 +37,14 @@
 #include "nrf_assert.h"
 #include "nrf_gpiote.h"
 #include "nrf_gpio.h"
+#include "user_profile.h"
 #include "irt_common.h"
 
 
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.
 *
 */
-void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm);
+void speed_init(user_profile_t* p_profile, uint32_t pin_flywheel_rev);
 
 /**@brief 	Set's the wheel size.  Defaults to DEFAULT_WHEEL_SIZE_MM if not set.
 *

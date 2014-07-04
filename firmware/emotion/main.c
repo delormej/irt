@@ -931,7 +931,7 @@ int main(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 
 	// Initialize module to read speed from flywheel.
-	speed_init(PIN_FLYWHEEL, DEFAULT_WHEEL_SIZE_MM);
+	speed_init(&m_user_profile, PIN_FLYWHEEL);
 
 	// Initialize power module with user profile.
 	power_init(&m_user_profile);

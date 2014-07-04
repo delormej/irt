@@ -18,7 +18,7 @@
 // Available device features. Default setting should result in 0.
 //
 #define FEATURE_DEFAULT					0xFFFFFFFF
-#define FEATURE_SIM_SPEED				1UL
+#define FEATURE_RESERVED				1UL
 #define FEATURE_ACCEL_SLEEP_OFF			2UL
 // FUTURE features:
 // BTLE_OFF
