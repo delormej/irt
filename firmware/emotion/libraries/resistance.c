@@ -216,6 +216,13 @@ void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 {
 	float speed_avg;
 
+	if (p_power_meas_current->instant_speed_mps < 2.0f)
+	{
+		RC_LOG("[RC] resistance_adjust: not adjusting, too slow: %.2f \r\n",
+				p_power_meas_current->instant_speed_mps);
+		return;
+	}
+
 	// If we have a range of events between first and current, we're able to do a moving average of speed.
 	if (p_power_meas_first != NULL)
 	{
