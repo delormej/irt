@@ -100,6 +100,10 @@ namespace ANT_Console
                         SetSettingsCommand();
                         break;
 
+                    case ConsoleKey.R:
+                        GetParameterCommand();
+                        break;
+
                     default:
                         WriteCommand("Unrecognized command.");
                         ShowHelp();
@@ -183,6 +187,8 @@ namespace ANT_Console
                 "V [Display Firmware Version]\n" +
                 "P [Parse Interval file in format {mins},{watts},{text}]\n" +
                 "T [Execute script file in format {seconds},{servo_position}]\n" +
+                "G [Set Settings]\n" +
+                "R [Request Parameter]\n" +
                 "X [Exit]");
 
             Console.ForegroundColor = color;
@@ -325,6 +331,30 @@ namespace ANT_Console
             {
                 m_eMotion.SetSettings(settings);
                 WriteCommand("Set settings.");
+            }
+        }
+
+        void GetParameterCommand()
+        {
+            string prompt = "<enter subpage (parameter) number>";
+            SubPages subPage = 0;
+            bool success = InteractiveCommand(prompt, () =>
+            {
+                try
+                {
+                    subPage = (SubPages)Enum.Parse(typeof(SubPages), Console.ReadLine(), true);
+                    return true;
+                }
+                catch 
+                {
+                    return false;
+                }
+            });
+
+            if (success)
+            {
+                m_eMotion.RequestDeviceParameter(subPage);
+                WriteCommand("Requested setting.");
             }
         }
 

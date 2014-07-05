@@ -148,6 +148,12 @@ namespace ANT_Console.Services
             SendCommand(Command.MoveServo, data);
         }
 
+        public void RequestDeviceParameter(SubPages subPage)
+        {
+            RequestDataMessage message = new RequestDataMessage(subPage);
+            m_channel.sendAcknowledgedData(message.AsBytes());
+        }
+
         public void SetButtonStops(ushort[] positionStops, ushort[] wattStops)
         {
             /*

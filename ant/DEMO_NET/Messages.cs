@@ -379,7 +379,7 @@ namespace ANT_Console.Messages
     {
         CrankParameters = 0x01,
         // Custom defined parameters - starting at 16u
-        Calibrated_Crr = 16,
+        Crr = 16,
         Settings = 17,
         TotalWeight = 18,
         WheelSize = 19, // I'm sure this is defined in a standard message somewhere.
@@ -440,11 +440,17 @@ namespace ANT_Console.Messages
     public class RequestDataMessage : Message
     {
         public const byte Page = 0x46;
-        // 2 bytes are 0xFFFF
-        public const ushort Reserved = 0xFFFF;
         
+        public RequestDataMessage(SubPages subPage)
+        {
+            CommandType = 0x01;
+            RequestedPage = GetSetMessage.Page; // Always use the get/set parameter page.
+            SubPage = subPage;
+            RequestTransmissionResponse = 0;
+        }
+
         // Use this value to requesting a specific subpage.  First byte should be the value, last byte might be 0xFF?
-        public ushort SubPage;
+        public SubPages SubPage;
 
         // Type of response the device should send back.
         /*
@@ -460,5 +466,21 @@ namespace ANT_Console.Messages
 
         // The type of command, i.e. 0x01 for Requesting a Data Page, 0x02 for Setting parameters.
         public byte CommandType; 
+
+        public byte[] AsBytes()
+        {
+            byte[] data = {
+                              Page,
+                              0xFF,
+                              0xFF,
+                              (byte)SubPage,
+                              0xFF,
+                              RequestTransmissionResponse,
+                              RequestedPage,
+                              CommandType
+                          };
+
+            return data;
+        }
     }
 }
