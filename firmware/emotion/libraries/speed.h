@@ -37,14 +37,12 @@
 #include "nrf_assert.h"
 #include "nrf_gpiote.h"
 #include "nrf_gpio.h"
-#include "user_profile.h"
 #include "irt_common.h"
-
 
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.
 *
 */
-void speed_init(user_profile_t* p_profile, uint32_t pin_flywheel_rev);
+void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm);
 
 /**@brief 	Set's the wheel size.  Defaults to DEFAULT_WHEEL_SIZE_MM if not set.
 *

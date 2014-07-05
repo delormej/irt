@@ -1,8 +1,8 @@
 /*
 *******************************************************************************
 *
-* By Jason De Lorme <jjdelorme@yahoo.com>
-* http://www.roadacious.com
+* By Jason De Lorme <jason@insideride.com>
+* http://www.insideride.com
 *
 * This module is responsible for calculating power based on rider profile 
 * e.g. weight, current speed and resistance.
@@ -33,7 +33,7 @@ typedef struct user_profile_s {
 	float		total_weight_kg;
 	uint16_t	wheel_size_mm;
 	uint32_t	settings;					// Bitmask of settings.
-	uint16_t	calibration_crr;			// Calibration offset (1/10,000 value).
+	uint16_t	calibrated_crr;				// Calibrated co-efficient of rolling resistance (1/10,000 value). e.g. value = 0.02823f
 } user_profile_t;
 
 

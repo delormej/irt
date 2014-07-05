@@ -162,13 +162,15 @@ static void set_wheel_params(uint8_t *pBuffer)
 		m_user_profile.wheel_size_mm = wheel_size;
 		// Schedule an update to persist the profile to flash.
 		app_sched_event_put(NULL, 0, profile_update_sched_handler);
-	}
 
-	// Call speed module to set the wheel size.
-	speed_wheel_size_set(m_user_profile.wheel_size_mm);
+		// Call speed module to update the wheel size.
+		speed_wheel_size_set(m_user_profile.wheel_size_mm);
+	}
 }
 
-// Parses the SET_SIM message from the KICKR and has user profile info.
+/**@brief	Parses the SET_SIM message from the KICKR and has user profile info.
+ * 			Reinitializes the power module if weight changed.
+ */
 static void set_sim_params(uint8_t *pBuffer)
 {
 	// Weight comes through in KG as 8500 85.00kg for example.
@@ -182,6 +184,9 @@ static void set_sim_params(uint8_t *pBuffer)
 
 		// Schedule an update to persist the profile to flash.
 		app_sched_event_put(NULL, 0, profile_update_sched_handler);
+
+		// Re-initialize the power module with updated weight.
+		power_init(m_user_profile.total_weight_kg, m_user_profile.calibrated_crr);
 	}
 
 	// Co-efficient for rolling resistance.
@@ -236,9 +241,9 @@ static void profile_init(void)
 			m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
 		}
 		
-		if (m_user_profile.calibration_crr == 0xFFFF)
+		if (m_user_profile.calibrated_crr == 0xFFFF)
 		{
-			m_user_profile.calibration_crr = DEFAULT_CRR;
+			m_user_profile.calibrated_crr = DEFAULT_CRR;
 		}
 
 	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004. 
@@ -254,7 +259,7 @@ static void profile_init(void)
 				m_user_profile.total_weight_kg,
 				m_user_profile.wheel_size_mm,
 				m_user_profile.settings,
-				m_user_profile.calibration_crr);
+				m_user_profile.calibrated_crr);
 }
 
 /**@brief Persists any updates the user profile. */
@@ -884,16 +889,16 @@ int main(void)
 	ble_ant_start();
 
 	// Initialize resistance module and initial values.
-	resistance_init(&m_user_profile, PIN_SERVO_SIGNAL);
+	resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
 	// TODO: This state should be moved to resistance module.
 	m_resistance_level = 0;
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 
 	// Initialize module to read speed from flywheel.
-	speed_init(&m_user_profile, PIN_FLYWHEEL);
+	speed_init(PIN_FLYWHEEL, m_user_profile.wheel_size_mm);
 
 	// Initialize power module with user profile.
-	power_init(&m_user_profile);
+	power_init(m_user_profile.total_weight_kg, m_user_profile.calibrated_crr);
 
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);

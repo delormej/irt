@@ -50,7 +50,7 @@ static uint16_t position_set_by_force(float mag_force)
 
 /**@brief	Initializes the resistance module which controls the servo.
  */
-uint16_t resistance_init(user_profile_t* p_user_profile, uint32_t servo_pin_number)
+uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile)
 {
 	mp_user_profile = p_user_profile;
 

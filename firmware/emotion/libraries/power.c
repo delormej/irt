@@ -20,7 +20,7 @@
 #define PW_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-static user_profile_t* mp_user_profile;
+static float m_rr_force;
 
 /* Calculates angular velocity based on wheel ticks and time.
 static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
@@ -138,22 +138,12 @@ uint16_t power_servo_pos_calc(float force_needed)
 	return servo_pos;
 }
 
-/**@brief 	Calculates the force of rolling resistance using profile crr and weight.
- * @returns Force in Newtons typical range
+/**@brief 	Returns the force of rolling resistance using profile crr and weight.
+ * @returns Force in Newtons typical range 13.0 : 30.0
  */
-float power_rr_force(void)
+float power_rr_force()
 {
-	float crr;
-
-	//
-	// TODO: this should be stored once and we can recalculate only when user
-	// profile changes.
-	//
-
-	// Convert to the right unit.
-	crr = (float)(mp_user_profile->calibration_crr / 100000.0f);
-
-	return (GRAVITY * mp_user_profile->total_weight_kg * crr);
+	return m_rr_force;
 }
 
 
@@ -161,9 +151,14 @@ float power_rr_force(void)
  * 			the total rider weight, calibration details, etc...
  *
  */
-void power_init(user_profile_t* p_profile)
+void power_init(float total_weight_kg, uint16_t calibrated_crr)
 {
-	mp_user_profile = p_profile;
+	float crr;
+
+	// Convert to the right unit.
+	crr = (float)(calibrated_crr / 100000.0f);
+
+	m_rr_force = (GRAVITY * total_weight_kg * crr);
 }
 
 /**@brief	Calculates and records current power measurement relative to last measurement.
@@ -173,16 +168,14 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 {
 	uint16_t torque;
 	uint16_t period_diff;
-	float rr;
 	float servo;
 
-	rr = power_rr_force();
 	servo = servo_force(p_current->servo_position);
 
 	// Calculate power.
-	p_current->instant_power = ( (rr + servo) * p_current->instant_speed_mps );
+	p_current->instant_power = ( (m_rr_force + servo) * p_current->instant_speed_mps );
 
-	PW_LOG("[PW] rr: %.2f, servo: %.2f, watts: %i\r\n", rr, servo, p_current->instant_power);
+	PW_LOG("[PW] rr: %.2f, servo: %.2f, watts: %i\r\n", m_rr_force, servo, p_current->instant_power);
 
 	// Handle time rollover.
 	// Accum wheel period is a calculated period representing the average time it takes

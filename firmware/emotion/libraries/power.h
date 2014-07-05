@@ -14,14 +14,6 @@
 
 #include <stdint.h>
 #include "irt_common.h"
-#include "user_profile.h"
-
-
-/**@brief	Initializes power module with a profile pointer that contains things like
- * 			the total rider weight, calibration details, etc...
- *
- */
-void power_init(user_profile_t* p_profile);
 
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *
@@ -37,6 +29,11 @@ uint16_t power_servo_pos_calc(float force_needed);
 /**@brief 	Calculates the force of rolling resistance using profile crr and weight.
  * @returns Force in Newtons typical range
  */
-float power_rr_force(void);
+float power_rr_force();
+
+/**@brief	Initializes power module with the total rider weight & calibrated rolling resistance.
+ *
+ */
+void power_init(float total_weight_kg, uint16_t crr);
 
 #endif // __POWER_H__

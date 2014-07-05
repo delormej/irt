@@ -110,7 +110,7 @@ typedef struct rc_sim_forces_s
  * 				Returns the position of the servo after initialization.
  *
  */
-uint16_t resistance_init(user_profile_t* p_user_profile, uint32_t servo_pin_number);
+uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile);
 
 /**@brief		Gets the current position of the servo.
  *
