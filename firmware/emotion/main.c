@@ -884,7 +884,7 @@ int main(void)
 	ble_ant_start();
 
 	// Initialize resistance module and initial values.
-	resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
+	resistance_init(&m_user_profile, PIN_SERVO_SIGNAL);
 	// TODO: This state should be moved to resistance module.
 	m_resistance_level = 0;
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
