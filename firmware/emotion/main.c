@@ -303,10 +303,9 @@ static void ant_4hz_timeout_handler(void * p_context)
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 	irt_power_meas_t* p_power_meas_last 		= NULL;
-		
+
 	// Get pointers to the event structures.
 	p_power_meas_current = irt_power_meas_fifo_next();
-	p_power_meas_first = irt_power_meas_fifo_first();
 	p_power_meas_last = irt_power_meas_fifo_last();
 
 	// Set current resistance state.
@@ -317,7 +316,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 		case RESISTANCE_SET_STANDARD:
 			p_power_meas_current->resistance_level = m_resistance_level;
 			break;
-		case RESISTANCE_SET_ERG:
+		case RESISTANCE_SET_ERG: // TOOD: not sure why we're falling through here with SIM?
 		case RESISTANCE_SET_SIM:
 			p_power_meas_current->resistance_level = (uint16_t)(m_sim_forces.erg_watts);
 			break;
@@ -357,6 +356,8 @@ static void ant_4hz_timeout_handler(void * p_context)
 	// If in erg or sim mode, adjusts the resistance.
 	if (m_resistance_mode == RESISTANCE_SET_ERG || m_resistance_mode == RESISTANCE_SET_SIM)
 	{
+		// Use the oldest record we have to average with.
+		p_power_meas_first = irt_power_meas_fifo_first();
 		resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces,
 				m_resistance_mode, m_user_profile.total_weight_kg);
 	}

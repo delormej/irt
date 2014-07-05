@@ -107,20 +107,11 @@ static void revs_init_timer()
  */
 static uint32_t flywheel_ticks_get()
 {
-// DEBUG ONLY CODE
-#if defined(SIM_SPEED)
-	//
-	// DEBUG PURPOSES ONLY. Simulates speed for 1/4 second.
-	//
-	static uint32_t r = 0;
-	return r+=32;  // ~16mph
-#endif
-
-	uint32_t revs = 0;
+	uint32_t revs;
 
 	REVS_TIMER->TASKS_CAPTURE[0] = 1;
 	revs = REVS_TIMER->CC[0]; 
-	
+
 	return revs;
 }
 
@@ -193,8 +184,14 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 	uint16_t avg_wheel_period;
 	uint16_t event_period;
 
+#ifdef SIM_SPEED
+	// DEBUG ONLY, simulate ~16mph.
+	p_current->accum_flywheel_ticks = 32u + (p_last->accum_flywheel_ticks);
+	//SP_LOG("[SP] accum_flywheel_ticks %lu \r\n", p_current->accum_flywheel_ticks);
+#else
 	// Get the flywheel ticks (2 per rev).
 	p_current->accum_flywheel_ticks = flywheel_ticks_get();
+#endif
 
 	// TODO: Handle rollover, but this will be rare given 32 bit #.
 	// Ticks in the event period.
@@ -235,10 +232,10 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 				avg_wheel_period,
 				p_current->event_time_2048);
 
-		/*SP_LOG("[SP] wheel_period:%i, speed:%.1f, period:%i\r\n",
-				avg_wheel_period,
+		/*SP_LOG("[SP] flywheel:%i, speed:%.1f, period:%i\r\n",
+				p_current->accum_flywheel_ticks,
 				p_current->instant_speed_mps,
-				p_current->wheel_period_2048);*/
+				event_period);*/
 	}
 	else
 	{
@@ -248,10 +245,10 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 		// the wheel ticks do not increase.
 		p_current->accum_wheel_revs = p_last->accum_wheel_revs;
 		p_current->accum_wheel_period = p_last->accum_wheel_period;
-
+		p_current->last_wheel_event_2048 = p_last->last_wheel_event_2048;
 		p_current->instant_speed_mps = 0.0f;
 
-		// SP_LOG("[SP] Not moving? %i : %i\r\n", p_current->accum_flywheel_ticks, p_last->accum_flywheel_ticks);
+		SP_LOG("[SP] Not moving? %i : %i\r\n", p_current->accum_flywheel_ticks, p_last->accum_flywheel_ticks);
 	}
 
 	// TODO: do we really need this? There is no error condition produced.
