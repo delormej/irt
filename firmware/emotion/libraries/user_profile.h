@@ -20,11 +20,15 @@
 #define FEATURE_DEFAULT					0xFFFFFFFF
 #define FEATURE_RESERVED				1UL
 #define FEATURE_ACCEL_SLEEP_OFF			2UL
+#define FEATURE_BIG_MAG					4UL
+#define FEATURE_SMALL_MAG				8UL
+#define FEATURE_OTHER_MAG				16UL
 // FUTURE features:
 // BTLE_OFF
 // ANT_CTRL_OFF
 // ANT_BP_OFF
 // ANT_SEND_EXTRA_INFO
+// Number of wheel revs to flywheel?
 
 #define FEATURE_IS_SET(SETTINGS, FEATURE) \
 	((SETTINGS & FEATURE) == FEATURE)

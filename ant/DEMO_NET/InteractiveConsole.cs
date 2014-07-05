@@ -96,6 +96,10 @@ namespace ANT_Console
                         SetWheelSizeCommand();
                         break;
 
+                    case ConsoleKey.G:
+                        SetSettingsCommand();
+                        break;
+
                     default:
                         WriteCommand("Unrecognized command.");
                         ShowHelp();
@@ -296,6 +300,31 @@ namespace ANT_Console
                 m_eMotion.SetWheelSize(wheelSizeMM);
                 m_refSpeed.WheelSizeMM = (short)wheelSizeMM;
                 WriteCommand(string.Format("Set wheel size to {0} mm.", wheelSizeMM));
+            }
+        }
+
+        void SetSettingsCommand()
+        {
+            string prompt = "<enter 32 bit integer of settings>";
+            uint settings = 0;
+            bool success = InteractiveCommand(prompt, () =>
+            {
+                //float weight = float.NaN;
+
+                if (uint.TryParse(Console.ReadLine(), out settings))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            });
+
+            if (success)
+            {
+                m_eMotion.SetSettings(settings);
+                WriteCommand("Set settings.");
             }
         }
 

@@ -86,6 +86,7 @@ namespace ANT_Console.Services
             return SendCommand(Command.SetWeight, data);
         }
 
+        // This uses the WAHOO method with a burst message.
         public void SetWheelSize(int wheelSizeMM)
         {
             byte[] data = { 
@@ -122,6 +123,15 @@ namespace ANT_Console.Services
 
             // Save local parameter.
             m_wheelSizeMM = (short)wheelSizeMM;
+        }
+
+        public void SetSettings(UInt32 settings)
+        {
+            GetSetMessage message = new GetSetMessage(SubPages.Settings);
+            message.SetPayLoad(settings);
+            byte[] data = message.AsBytes();
+
+            m_channel.sendAcknowledgedData(data);
         }
 
         public void SetFirmwareUpdateMode()
