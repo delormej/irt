@@ -33,6 +33,7 @@
 				(m_servo_pos - POS > MIN_THRESHOLD_MOVE))		\
 
 static uint16_t	m_servo_pos;		// State of current servo position.
+static user_profile_t* mp_user_profile;
 
 /**@brief	Sets the servo by specifying magnet force required.
  */
@@ -49,8 +50,10 @@ static uint16_t position_set_by_force(float mag_force)
 
 /**@brief	Initializes the resistance module which controls the servo.
  */
-uint16_t resistance_init(uint32_t servo_pin_number)
+uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile)
 {
+	mp_user_profile = p_user_profile;
+
 	// Initialize pulse-width-modulation.
 	pwm_init(servo_pin_number);
 
@@ -166,7 +169,7 @@ uint16_t resistance_erg_set(int16_t target_watts, float speed_mps)
  *				wind resistance, wind speed, wheel circumference, and grade. 
  *				If these variables are not set, they will default to an "average" value.
  */
-uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p_sim_forces)
+uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_forces)
 {
 	float mag_force;
 
@@ -182,12 +185,12 @@ uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p
 	float wind = 0.5f * (p_sim_forces->c * pow((speed_mps + p_sim_forces->wind_speed_mps), 2));
 
 	// Weight * GRAVITY * Co-efficient of rolling resistance.
-	float rolling = weight_kg * GRAVITY * p_sim_forces->crr;
+	float rolling = mp_user_profile->total_weight_kg * GRAVITY * p_sim_forces->crr;
 
 	// fGrade is the slope of the hill (slope = rise / run). Should be from -1.0 : 1.0, 
 	// where -1.0 is a 45 degree downhill slope, 0.0 is flat ground, and 1.0 is a 45 
 	// degree uphil slope. 
-	float gravitational = weight_kg * GRAVITY *
+	float gravitational = mp_user_profile->total_weight_kg * GRAVITY *
 							p_sim_forces->grade;
 
 	// Determine the additional force required from the magnet if necessary.
@@ -211,17 +214,9 @@ uint16_t resistance_sim_set(float speed_mps, float weight_kg, rc_sim_forces_t *p
 void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 		irt_power_meas_t* 	p_power_meas_current,
 		rc_sim_forces_t* 	p_sim_forces,
-		resistance_mode_t 	resistance_mode,
-		float 				weight_kg)
+		resistance_mode_t 	resistance_mode)
 {
 	float speed_avg;
-
-	if (p_power_meas_current->instant_speed_mps < 2.0f)
-	{
-		RC_LOG("[RC] resistance_adjust: not adjusting, too slow: %.2f \r\n",
-				p_power_meas_current->instant_speed_mps);
-		return;
-	}
 
 	// If we have a range of events between first and current, we're able to do a moving average of speed.
 	if (p_power_meas_first != NULL)
@@ -235,9 +230,13 @@ void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 		speed_avg = p_power_meas_current->instant_speed_mps;
 	}
 
-	// Don't attempt to adjust if stopped.
-	if (speed_avg == 0.0f)
+	// Don't attempt to adjust if stopped or going too slow.
+	if (speed_avg < 2.0f)
+	{
+		RC_LOG("[RC] resistance_adjust: not adjusting, too slow: %.2f \r\n",
+				p_power_meas_current->instant_speed_mps);
 		return;
+	}
 
 	// If in erg or sim mode, adjust resistance accordingly.
 	switch (resistance_mode)
@@ -247,7 +246,7 @@ void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 			break;
 
 		case RESISTANCE_SET_SIM:
-			resistance_sim_set(speed_avg, weight_kg, p_sim_forces);
+			resistance_sim_set(speed_avg, p_sim_forces);
 			break;
 
 		default:

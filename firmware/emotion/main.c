@@ -345,9 +345,11 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Calculate speed.
 	err_code = speed_calc(p_power_meas_current, p_power_meas_last);
+	APP_ERROR_CHECK(err_code);
 
 	// Calculate power.
 	err_code = power_calc(p_power_meas_current, p_power_meas_last);
+	APP_ERROR_CHECK(err_code);
 
 	// TODO: this should return an err_code.
 	// Transmit the power message.
@@ -358,8 +360,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 	{
 		// Use the oldest record we have to average with.
 		p_power_meas_first = irt_power_meas_fifo_first();
-		resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces,
-				m_resistance_mode, m_user_profile.total_weight_kg);
+		resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces, m_resistance_mode);
 	}
 
 	// Send remote control availability.  Notification flag is 1 if a serial number
@@ -883,7 +884,7 @@ int main(void)
 	ble_ant_start();
 
 	// Initialize resistance module and initial values.
-	resistance_init(PIN_SERVO_SIGNAL);
+	resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
 	// TODO: This state should be moved to resistance module.
 	m_resistance_level = 0;
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
