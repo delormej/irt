@@ -17,7 +17,7 @@ typedef struct ant_speed_sensor_s {
 	
 } ant_speed_sensor_t;
 
-void ant_bp_tx_init(rc_evt_handler_t on_set_resistance, ant_bp_evt_dfu_enable on_enable_dfu_mode);
+void ant_bp_tx_init(ant_ble_evt_handlers_t * evt_handlers);
 void ant_bp_tx_start(void);
 void ant_bp_tx_send(irt_power_meas_t * p_power_meas);
 uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value);

@@ -14,11 +14,11 @@
 /**@brief Debug logging for module.
  *
  */
-#ifdef ENABLE_DEBUG_LOG
-#define PW_LOG debug_log
-#else
+//#ifdef ENABLE_DEBUG_LOG
+//#define PW_LOG debug_log
+//#else
 #define PW_LOG(...)
-#endif // ENABLE_DEBUG_LOG
+//#endif // ENABLE_DEBUG_LOG
 
 static float m_rr_force;
 

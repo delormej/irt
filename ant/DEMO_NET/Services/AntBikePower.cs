@@ -129,9 +129,7 @@ namespace ANT_Console.Services
         {
             GetSetMessage message = new GetSetMessage(SubPages.Settings);
             message.SetPayLoad(settings);
-            byte[] data = message.AsBytes();
-
-            m_channel.sendAcknowledgedData(data);
+            m_channel.sendAcknowledgedData(message.AsBytes());
         }
 
         public void SetFirmwareUpdateMode()

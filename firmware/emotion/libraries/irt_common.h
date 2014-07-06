@@ -25,6 +25,17 @@ All rights reserved.
 #define IRT_ERROR_RC_BASE_NUM   IRT_ERROR_BASE_NUM + (0x100)   	///< Error base for Resistance Control
 #define IRT_ERROR_AC_BASE_NUM   IRT_ERROR_BASE_NUM + (0x200)   	///< Error base for Accelerometer
 
+//
+// Parameter identifiers for ANT get/set parameters.
+//
+#define IRT_MSG_PAGE2_SUBPAGE_INDEX			1u					// Index of the subpage in the message buffer.
+#define IRT_MSG_PAGE2_DATA_INDEX			2u					// Index of the data in the message buffer.
+#define IRT_MSG_SUBPAGE_CRR					16u
+#define IRT_MSG_SUBPAGE_SETTINGS			17u
+#define IRT_MSG_SUBPAGE_WEIGHT				18u
+#define IRT_MSG_SUBPAGE_WHEEL_SIZE			19u
+#define IRT_MSG_SUBPAGE_BUTTON_STOPS		20u
+
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 
 /**@brief Cycling Power Service measurement type. */

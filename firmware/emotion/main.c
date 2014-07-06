@@ -599,11 +599,6 @@ static void on_ble_uart(uint8_t * data, uint16_t length)
 	LOG("[MAIN]:on_ble_uart data: %*.*s\r\n", length, length, data);
 }
 
-// TODO: implement this behavior, reopen the channel, etc...?
-static void on_ant_channel_closed(void) {}
-// TODO: This is to handle when we pair to a power meter.
-static void on_ant_power_data(void) {}
-
 /*@brief	Event handler that the cycling power service calls when a set resistance
  *				command is received.
  *
@@ -772,6 +767,30 @@ static void on_enable_dfu_mode(void)
 	NVIC_SystemReset();
 }
 
+/**@brief	Device receives page (0x46) requesting data page.
+ */
+static void on_request_data(uint8_t* buffer)
+{
+	LOG("[MAIN] Request to get data page (subpage): %#x\r\n", (uint8_t)buffer[3]);
+}
+
+/**@brief	Device receives page (0x02) with values to set.
+ */
+static void on_set_parameter(uint8_t* buffer)
+{
+	// SubPage index
+	switch (buffer[IRT_MSG_PAGE2_SUBPAGE_INDEX])
+	{
+		case IRT_MSG_SUBPAGE_SETTINGS:
+			// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
+			LOG("[MAIN] Request to update settings to: %i\r\n", (uint32_t)buffer[IRT_MSG_PAGE2_DATA_INDEX]);
+			break;
+
+		default:
+			break;
+	}
+}
+
 /**@brief	Configures power supervisor to warn and reset if power drops too low.
  */
 static void config_power_supervisor()
@@ -863,11 +882,11 @@ int main(void)
 		on_ble_timeout,
 		on_ble_advertising,
 		on_ble_uart,
-		on_ant_channel_closed,
-		on_ant_power_data,
 		on_set_resistance,
 		on_ant_ctrl_command,
-		on_enable_dfu_mode
+		on_enable_dfu_mode,
+		on_request_data,
+		on_set_parameter
 	};
 
 	// TODO: Question should we have a separate method to initialize soft device?
