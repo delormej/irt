@@ -110,13 +110,14 @@ void battery_read_start()
 #endif
 }
 
-// Ensures the ADC is enabled.
-// TODO: Should this happen only when we initiate a read? Sample seems to do this once and only once in main.
-void battery_init(on_battery_result_t on_battery_result, uint8_t pin_battery_read)
+/**@brief	Initializes the battery module with a callback when a read is complete and
+ * 			the pin used to enable reading (not the analog pin used for actual reading).
+ */
+void battery_init(uint8_t pin_battery_enable, on_battery_result_t on_battery_result)
 {
 	// Save callback.
 	m_on_battery_result = on_battery_result;
-	m_pin_battery_read = pin_battery_read;
+	m_pin_battery_read = pin_battery_enable;
 }
 
 /**

@@ -384,6 +384,7 @@ namespace ANT_Console.Messages
         TotalWeight = 18,
         WheelSize = 19, // I'm sure this is defined in a standard message somewhere.
         ButtonStops = 20, // Ability to configure custom button stops on the servo.
+        Battery = 0x52
         
         // Should we send commands this way, i.e.:
         // Move servo

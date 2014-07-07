@@ -802,6 +802,11 @@ static void on_request_data(uint8_t* buffer)
 			memcpy(&response, &m_user_profile.calibrated_crr, sizeof(uint16_t));
 			break;
 
+		case ANT_PAGE_BATTERY_STATUS:
+			LOG("[MAIN] Requested battery status. \r\n");
+			battery_read_start();
+			return;
+
 		default:
 			LOG("[MAIN] Unrecognized page request. \r\n");
 			return;
@@ -858,6 +863,16 @@ static void on_set_parameter(uint8_t* buffer)
 			LOG("[MAIN] on_set_parameter: Invalid setting, skipping. \r\n");
 			return;
 	}
+}
+
+/**@brief	Called when the result of the battery is determined.
+ *
+ */
+static void on_battery_result(uint16_t battery_level)
+{
+	LOG("[MAIN] on_battery_result. \r\n");
+	// TODO: temporarily sending page 2, need to send page 0x52.
+	ant_bp_page2_tx_send(0x52, &battery_level, 0);
 }
 
 /**@brief	Configures power supervisor to warn and reset if power drops too low.
@@ -993,6 +1008,7 @@ int main(void)
 
 	// Get a read from the battery.
 #if USE_BATTERY
+	battery_init(PIN_ENBATT, on_battery_result);
 	battery_read_start();
 #endif
 

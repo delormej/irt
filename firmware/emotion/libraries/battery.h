@@ -14,6 +14,6 @@ typedef void (*on_battery_result_t)(uint16_t battery_level);
 void battery_read_start(void);
 
 // Enables the Analog to Digital Converter and registers a callback for results. 
-void battery_init(on_battery_result_t on_battery_result, uint8_t pin_battery_read);
+void battery_init(uint8_t pin_battery_enable, on_battery_result_t on_battery_result);
 
 #endif // BATTERY_H

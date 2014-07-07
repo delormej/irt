@@ -189,7 +189,7 @@ namespace ANT_Console
                 "V [Display Firmware Version]\n" +
                 "P [Parse Interval file in format {mins},{watts},{text}]\n" +
                 "T [Execute script file in format {seconds},{servo_position}]\n" +
-                "G [Set Settings]\n" +
+                "G [Set Parameter]\n" +
                 "R [Request Parameter]\n" +
                 "X [Exit]");
 

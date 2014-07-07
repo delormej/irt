@@ -9,6 +9,18 @@
 #define ANT_BP_MOVE_SERVO_COMMAND		0x61
 #define ANT_BP_ENABLE_DFU_COMMAND		0x64
 
+// ANT Bike Power specific pages.
+#define ANT_BP_PAGE_1               	0x01   /**< Calibration message main data page. */
+#define ANT_BP_PAGE_STANDARD_POWER_ONLY 0x10   /**< Standard Power only main data page. */
+#define ANT_BP_PAGE_TORQUE_AT_WHEEL		0x11   /**< Power reported as torque at wheel data page, which includes speed. */
+#define ANT_BP_PAGE_EXTRA_INFO			0x24   // TODO: My custom page.  Look for better page no for this.
+
+// Generic ANT pages.
+#define ANT_PAGE_GETSET_PARAMETERS		0x02
+#define ANT_PAGE_REQUEST_DATA			0x46
+#define ANT_PAGE_BATTERY_STATUS			0x52
+
+
 #include "ble_ant.h"
 #include "ant_stack_handler_types.h"
 

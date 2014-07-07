@@ -41,11 +41,6 @@
 #define ACCUMMULATED_TORQUE_LSB_INDEX	6u
 #define ACCUMMULATED_TORQUE_MSB_INDEX	7u
 
-#define BP_PAGE_1               	 0x01u   /**< Calibration message main data page. */
-#define BP_PAGE_STANDARD_POWER_ONLY  0x10u   /**< Standard Power only main data page. */
-#define BP_PAGE_TORQUE_AT_WHEEL		 0x11u   /**< Power reported as torque at wheel data page, which includes speed. */
-#define BP_PAGE_EXTRA_INFO			 0x24u   // TODO: My custom page.  Look for better page no for this.
-
 #define ANT_BP_CHANNEL_TYPE          0x10                                         /**< Channel Type TX. */
 #define ANT_BP_DEVICE_TYPE           0x0B                                         /**< Channel ID device type. */
 #define ANT_BP_TRANS_TYPE            0xA5 	// is how we indicate WAHOO KICKR, normal is: 0x5                                         /**< Transmission Type. */
@@ -53,9 +48,6 @@
 #define ANT_BP_EXT_ASSIGN            0	                                          /**< ANT Ext Assign. */
 
 #define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
-
-#define ANT_PAGE_GETSET_PARAMETERS		0x02
-#define ANT_PAGE_REQUEST_DATA			0x46
 
 /**@brief Debug logging for module.
  *
@@ -197,7 +189,7 @@ static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 {
 	uint8_t buffer[TX_BUFFER_SIZE];
 
-	buffer[PAGE_NUMBER_INDEX]			= BP_PAGE_EXTRA_INFO;
+	buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_EXTRA_INFO;
 	buffer[EXTRA_INFO_SERVO_POS_LSB]	= LOW_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_SERVO_POS_MSB]	= HIGH_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
@@ -375,7 +367,7 @@ void ant_bp_tx_init(ant_ble_evt_handlers_t * evt_handlers)
     APP_ERROR_CHECK(err_code);
 		
 	// Initialize power transmit buffer.
-	m_power_tx_buffer[PAGE_NUMBER_INDEX]              = BP_PAGE_STANDARD_POWER_ONLY;
+	m_power_tx_buffer[PAGE_NUMBER_INDEX]              = ANT_BP_PAGE_STANDARD_POWER_ONLY;
 	m_power_tx_buffer[EVENT_COUNT_INDEX]              = 0;
 	m_power_tx_buffer[PEDAL_POWER_INDEX]              = BP_PAGE_RESERVE_BYTE;
 	m_power_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;
@@ -385,7 +377,7 @@ void ant_bp_tx_init(ant_ble_evt_handlers_t * evt_handlers)
 	m_power_tx_buffer[INSTANT_POWER_MSB_INDEX]        = 0;
 
 	// Initialize torque transmit buffer.
-	m_torque_tx_buffer[PAGE_NUMBER_INDEX]              = BP_PAGE_TORQUE_AT_WHEEL;
+	m_torque_tx_buffer[PAGE_NUMBER_INDEX]              = ANT_BP_PAGE_TORQUE_AT_WHEEL;
 	m_torque_tx_buffer[EVENT_COUNT_INDEX]              = 0;
 	m_torque_tx_buffer[WHEEL_TICKS_INDEX]              = 0;
 	m_torque_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;
