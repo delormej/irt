@@ -843,10 +843,12 @@ static void on_set_parameter(uint8_t* buffer)
 						FEATURE_IS_SET(m_user_profile.settings, FEATURE_BIG_MAG),
 						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ANT_EXTRA_INFO),
 						FEATURE_IS_SET(m_user_profile.settings, FEATURE_TEST));
+			// Schedule update to the profile.
+			profile_update_sched();
 			break;
 
 		case IRT_MSG_SUBPAGE_CRR:
-			// Update CRR.
+			// Update CRR, note this doesn't update the profile in flash.
 			memcpy(&m_user_profile.calibrated_crr, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
 					sizeof(uint16_t));
 			LOG("[MAIN] Updated CRR:%i \r\n", m_user_profile.calibrated_crr);
@@ -856,9 +858,6 @@ static void on_set_parameter(uint8_t* buffer)
 			LOG("[MAIN] on_set_parameter: Invalid setting, skipping. \r\n");
 			return;
 	}
-
-	// Schedule update to the profile.
-	profile_update_sched();
 }
 
 /**@brief	Configures power supervisor to warn and reset if power drops too low.
