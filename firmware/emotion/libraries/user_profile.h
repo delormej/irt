@@ -35,11 +35,15 @@
 #define FEATURE_IS_SET(SETTINGS, FEATURE) \
 	((SETTINGS & FEATURE) == FEATURE)
 
+/**@brief	Structure used to for storing/reading user profile.
+ * 			NOTE: This must be divisable by 4 (sizeof(uin32_t).
+ */
 typedef struct user_profile_s {
-	float		total_weight_kg;
+	uint16_t	total_weight_kg;
 	uint16_t	wheel_size_mm;
 	uint32_t	settings;					// Bitmask of settings.
 	uint16_t	calibrated_crr;				// Calibrated co-efficient of rolling resistance (1/10,000 value). e.g. value = 0.02823f
+	uint8_t		reserved[6];
 } user_profile_t;
 
 /**@brief Initializes access to storage. */

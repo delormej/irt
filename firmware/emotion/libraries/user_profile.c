@@ -69,9 +69,11 @@ uint32_t user_profile_load(user_profile_t *p_user_profile)
     						sizeof (user_profile_t),
     						USER_PROFILE_OFFSET);
 
-    UP_LOG("[UP]:user_profile_load {weight:%.2f, wheel:%i}\r\n",
+    UP_LOG("[UP]:user_profile_load {weight:%i, wheel:%i, settings:%i, crr:%i}\r\n",
     		p_user_profile->total_weight_kg,
-    		p_user_profile->wheel_size_mm);
+    		p_user_profile->wheel_size_mm,
+    		p_user_profile->settings,
+    		p_user_profile->calibrated_crr);
 
 //TODO: Remove this, just for testing.
 #ifdef SETTINGS
@@ -106,7 +108,7 @@ uint32_t user_profile_store(user_profile_t *p_user_profile)
                                sizeof (user_profile_t),
                                USER_PROFILE_OFFSET);
 
-    UP_LOG("[UP]:user_profile_store {weight:%.2f, wheel:%i, settings:%i, crr:%i}\r\n",
+    UP_LOG("[UP]:user_profile_store {weight:%i, wheel:%i, settings:%i, crr:%i}\r\n",
     		p_user_profile->total_weight_kg,
     		p_user_profile->wheel_size_mm,
     		p_user_profile->settings,

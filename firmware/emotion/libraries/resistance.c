@@ -185,12 +185,12 @@ uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_forces)
 	float wind = 0.5f * (p_sim_forces->c * pow((speed_mps + p_sim_forces->wind_speed_mps), 2));
 
 	// Weight * GRAVITY * Co-efficient of rolling resistance.
-	float rolling = mp_user_profile->total_weight_kg * GRAVITY * p_sim_forces->crr;
+	float rolling = (mp_user_profile->total_weight_kg / 100.0f) * GRAVITY * p_sim_forces->crr;
 
 	// fGrade is the slope of the hill (slope = rise / run). Should be from -1.0 : 1.0, 
 	// where -1.0 is a 45 degree downhill slope, 0.0 is flat ground, and 1.0 is a 45 
 	// degree uphil slope. 
-	float gravitational = mp_user_profile->total_weight_kg * GRAVITY *
+	float gravitational = (mp_user_profile->total_weight_kg / 100.0f) * GRAVITY *
 							p_sim_forces->grade;
 
 	// Determine the additional force required from the magnet if necessary.

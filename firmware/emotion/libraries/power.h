@@ -34,6 +34,6 @@ float power_rr_force();
 /**@brief	Initializes power module with the total rider weight & calibrated rolling resistance.
  *
  */
-void power_init(float total_weight_kg, uint16_t crr);
+void power_init(uint16_t total_weight_kg, uint16_t crr);
 
 #endif // __POWER_H__

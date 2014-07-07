@@ -60,7 +60,7 @@
 // Default profile and simulation values.
 //
 #define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
-#define DEFAULT_TOTAL_WEIGHT_KG			(180.0f * 0.453592)							// Default weight (convert lbs to KG).
+#define DEFAULT_TOTAL_WEIGHT_KG			8180ul 										// Default weight (convert 180.0lbs to KG).
 #define DEFAULT_ERG_WATTS				175u										// Default erg target_watts when not otherwise set.
 #define DEFAULT_CRR						2838ul										// Default co-efficient for roller's resistance (0.02838) stored as 1/100000.
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
@@ -176,9 +176,10 @@ static void set_wheel_params(uint8_t *pBuffer)
 static void set_sim_params(uint8_t *pBuffer)
 {
 	// Weight comes through in KG as 8500 85.00kg for example.
-	float weight, c, crr;
+	float c, crr;
+	uint16_t weight;
 
-	weight = DECODE_FLOAT(pBuffer, 100.0f);
+	weight = uint16_decode(pBuffer);
 
 	if (m_user_profile.total_weight_kg != weight)
 	{
@@ -203,7 +204,7 @@ static void set_sim_params(uint8_t *pBuffer)
 		m_sim_forces.c = c;
 
 	LOG("[MAIN]:set_sim_params {weight:%.2f, crr:%i, c:%i}\r\n",
-		m_user_profile.total_weight_kg,
+		(m_user_profile.total_weight_kg / 100.0f),
 		(uint16_t)(m_sim_forces.crr * 10000),
 		(uint16_t)(m_sim_forces.c * 1000) );
 }
@@ -235,7 +236,8 @@ static void profile_init(void)
 			m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
 		}
 		
-		if (isnan(m_user_profile.total_weight_kg) || m_user_profile.total_weight_kg < 1.0f)
+		if (m_user_profile.total_weight_kg == 0 ||
+				m_user_profile.total_weight_kg == 0xFFFF)
 		{
 			LOG("[MAIN]:profile_init using default weight.");
 
@@ -257,7 +259,7 @@ static void profile_init(void)
 		m_sim_forces.crr = SIM_CRR;
 		m_sim_forces.c = SIM_C;
 
-		LOG("[MAIN]:profile_init:\r\n\t weight: %.2f\r\n\t wheel: %i \r\n\t settings: %lu \r\n\t crr: %i \r\n",
+		LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t crr: %i \r\n",
 				m_user_profile.total_weight_kg,
 				m_user_profile.wheel_size_mm,
 				m_user_profile.settings,
@@ -282,9 +284,11 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
 	err_code = user_profile_store(&m_user_profile);
 	APP_ERROR_CHECK(err_code);
 
-	LOG("[MAIN]:profile_update {weight: %.2f, wheel: %i}\r\n",
+	LOG("[MAIN]:profile_update:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t crr: %i \r\n",
 			m_user_profile.total_weight_kg,
-			m_user_profile.wheel_size_mm);
+			m_user_profile.wheel_size_mm,
+			m_user_profile.settings,
+			m_user_profile.calibrated_crr);
 }
 
 /**@brief Schedules an update to the profile.  See notes above in handler.

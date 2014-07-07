@@ -151,14 +151,14 @@ float power_rr_force()
  * 			the total rider weight, calibration details, etc...
  *
  */
-void power_init(float total_weight_kg, uint16_t calibrated_crr)
+void power_init(uint16_t total_weight_kg, uint16_t calibrated_crr)
 {
 	float crr;
 
 	// Convert to the right unit.
 	crr = (float)(calibrated_crr / 100000.0f);
 
-	m_rr_force = (GRAVITY * total_weight_kg * crr);
+	m_rr_force = (GRAVITY * (total_weight_kg / 100.0f) * crr);
 }
 
 /**@brief	Calculates and records current power measurement relative to last measurement.
