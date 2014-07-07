@@ -67,6 +67,7 @@
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 
+#define REQUEST_RETRY					12ul										// Number of times to retry sending broadcast data requests.
 
 static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
@@ -848,7 +849,7 @@ static void on_request_data(uint8_t* buffer)
 
 	// # of times to send message - byte 5, bits 0:6 - just hard coding for now.
 	// Number of times to send.
-	for (uint8_t i = 0; i < 4; i++)
+	for (uint8_t i = 0; i < REQUEST_RETRY; i++)
 	{
 		ant_bp_page2_tx_send(subpage, response, 0);
 	}
