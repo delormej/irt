@@ -21,7 +21,7 @@ void ant_bp_tx_init(ant_ble_evt_handlers_t * evt_handlers);
 void ant_bp_tx_start(void);
 void ant_bp_tx_send(irt_power_meas_t * p_power_meas);
 uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value);
-void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type, uint8_t tx_count);	// Sends data page 2.
+void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type);	// Sends data page 2.
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt);
 
 #endif	// ANT_BIKE_POWER_H__

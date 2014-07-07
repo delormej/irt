@@ -807,7 +807,12 @@ static void on_request_data(uint8_t* buffer)
 			return;
 	}
 
-	ant_bp_page2_tx_send(subpage, response, 0, 4);
+	// # of times to send message - byte 5, bits 0:6 - just hard coding for now.
+	// Number of times to send.
+	for (uint8_t i = 0; i < 4; i++)
+	{
+		ant_bp_page2_tx_send(subpage, response, 0);
+	}
 }
 
 /**@brief	Device receives page (0x02) with values to set.

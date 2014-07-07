@@ -481,7 +481,7 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
  * 			The power meter shall be able to support all requested transmission response types; however, the ANT+ bicycle power device profile further stipulates that the display shall only request broadcast messages from a power meter sensor.
  *
  */
-void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type, uint8_t tx_count)
+void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 {
 	uint32_t err_code;
 
@@ -507,10 +507,6 @@ void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type, u
 			tx_buffer[6],
 			tx_buffer[7]);
 
-	// Number of times to send.
-	for (uint8_t i = 0; i< tx_count; i++)
-	{
-		err_code = broadcast_message_transmit(tx_buffer);
-		APP_ERROR_CHECK(err_code);
-	}
+	err_code = broadcast_message_transmit(tx_buffer);
+	APP_ERROR_CHECK(err_code);
 }
