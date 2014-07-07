@@ -906,8 +906,13 @@ static void on_set_parameter(uint8_t* buffer)
 static void on_battery_result(uint16_t battery_level)
 {
 	LOG("[MAIN] on_battery_result. \r\n");
-	// TODO: temporarily sending page 2, need to send page 0x52.
-	ant_bp_page2_tx_send(0x52, &battery_level, 0);
+
+	// Number of times to send.
+	for (uint8_t i = 0; i < REQUEST_RETRY; i++)
+	{
+		// TODO: temporarily sending page 2, need to send page 0x52.
+		ant_bp_page2_tx_send(0x52, &battery_level, 0);
+	}
 }
 
 /**@brief	Configures power supervisor to warn and reset if power drops too low.

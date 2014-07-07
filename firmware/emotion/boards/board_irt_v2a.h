@@ -17,12 +17,7 @@
 #define PIN_TP19					8	// TP19, not currently used.
 
 #define PIN_STAT1					9	// Battery Status Indicators
-#define PIN_STAT2					11
-/*			STAT1	STAT2
-			0		1
-			1		0
-			1		1	Fault = No battery, charger off, overvoltage, timer fault, suspended
- */
+#define PIN_STAT2					11	// See battery.h for details
 
 #define	PIN_LED_B					12	/* LED_A and LED_B control the STATUS LED. If they are both  */
 #define PIN_LED_A					13	/* the same value, the LED is off. If LEDA is a 1 and LEDB is a 

@@ -105,9 +105,23 @@ void battery_read_start()
 
     NRF_ADC->EVENTS_END  = 0;    // Stop any running conversions.
     NRF_ADC->TASKS_START = 1;
+
+    BY_LOG("[BY] Battery Charger status: %i \r\n", battery_charge_status());
 #else
     BY_LOG("[BY] WARN:Attempt to read battery on non-battery device.\r\n");
 #endif
+}
+
+/**@brief	Reads the current battery charge status.
+ */
+uint8_t battery_charge_status()
+{
+	uint8_t status;
+
+	status = nrf_gpio_pin_read(PIN_STAT1);
+	status |= (nrf_gpio_pin_read(PIN_STAT2) << 1);
+
+	return status;
 }
 
 /**@brief	Initializes the battery module with a callback when a read is complete and

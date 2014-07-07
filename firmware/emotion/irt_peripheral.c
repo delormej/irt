@@ -105,6 +105,15 @@ static void irt_gpio_init()
 	// Enable battery pin.
 	// When set enables the device to read battery voltage.
 	nrf_gpio_cfg_output(PIN_ENBATT);
+
+	// Configure pins for battery charger status.
+	nrf_gpio_cfg_input(PIN_STAT1, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_input(PIN_STAT2, NRF_GPIO_PIN_NOPULL);
+
+	// Configure pin for enabling or disabling battery charger. 0=on, 1=off
+	nrf_gpio_cfg_output(PIN_CHG_EN_N);
+	//nrf_gpio_pin_clear(PIN_CHG_EN_N);		// On by default.
+
 	#endif
 #endif
 
