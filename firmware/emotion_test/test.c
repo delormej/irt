@@ -118,13 +118,8 @@ uint16_t power_servo_pos_calc(float force_needed)
 
 int main(int argc, char *argv [])
 {
-	int16_t servo_pos;
-	float force_needed;
-	int32_t features;
-	int8_t feature;
+	//				  [       uint32_t     ], [       uint32_t     ]
+	uint8_t arr[] = { 0x00, 0x00, 0x03, 0x00, 0x00, 0x05, 0x00, 0x00 };
 
-	feature = 1;
-	features = 16;
-
-	printf("result = %i\r\n", ((features & feature) == feature));
+	printf("result = %i\r\n", *(uint32_t*)&arr[4]);
 }

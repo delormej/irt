@@ -772,23 +772,48 @@ static void on_enable_dfu_mode(void)
 static void on_request_data(uint8_t* buffer)
 {
 	LOG("[MAIN] Request to get data page (subpage): %#x\r\n", (uint8_t)buffer[3]);
+	LOG("[MAIN]:request data message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+			buffer[0],
+			buffer[1],
+			buffer[2],
+			buffer[3],
+			buffer[4],
+			buffer[5],
+			buffer[6],
+			buffer[7]);
 }
 
 /**@brief	Device receives page (0x02) with values to set.
  */
 static void on_set_parameter(uint8_t* buffer)
 {
+	uint16_t value;
+
 	// SubPage index
 	switch (buffer[IRT_MSG_PAGE2_SUBPAGE_INDEX])
 	{
 		case IRT_MSG_SUBPAGE_SETTINGS:
 			// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
-			LOG("[MAIN] Request to update settings to: %i\r\n", (uint32_t)buffer[IRT_MSG_PAGE2_DATA_INDEX]);
+			//value = *(uint16_t*)&buffer[IRT_MSG_PAGE2_DATA_INDEX];
+			memcpy(&value, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
+
+			LOG("[MAIN] Request to update settings to: ACCEL:%i, BIG_MAG:%i \r\n",
+					FEATURE_IS_SET(value, FEATURE_ACCEL_SLEEP_OFF),
+					FEATURE_IS_SET(value, FEATURE_BIG_MAG));
 			break;
 
 		default:
 			break;
 	}
+	LOG("[MAIN]:set param message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+			buffer[0],
+			buffer[1],
+			buffer[2],
+			buffer[3],
+			buffer[4],
+			buffer[5],
+			buffer[6],
+			buffer[7]);
 }
 
 /**@brief	Configures power supervisor to warn and reset if power drops too low.
@@ -921,6 +946,11 @@ int main(void)
 
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);
+
+	// Get a read from the battery.
+#if USE_BATTERY
+	battery_read_start();
+#endif
 
 	// Start the main loop for reporting ble services.
 	application_timers_start();

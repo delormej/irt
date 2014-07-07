@@ -27,6 +27,7 @@
 // BTLE_OFF
 // ANT_CTRL_OFF
 // ANT_BP_OFF
+// ANT_FEC_OFF
 // ANT_SEND_EXTRA_INFO
 // Number of wheel revs to flywheel?
 
@@ -39,7 +40,6 @@ typedef struct user_profile_s {
 	uint32_t	settings;					// Bitmask of settings.
 	uint16_t	calibrated_crr;				// Calibrated co-efficient of rolling resistance (1/10,000 value). e.g. value = 0.02823f
 } user_profile_t;
-
 
 /**@brief Initializes access to storage. */
 uint32_t user_profile_init(void);

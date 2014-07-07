@@ -314,7 +314,7 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 	// TODO: remove these hard coded array position values and create defines.
 	else if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] == MESG_ACKNOWLEDGED_DATA_ID)
 	{
-		switch (p_ant_evt->evt_buffer[3])
+		switch (p_ant_evt->evt_buffer[3])  // Switch on the page number.
 		{
 			case WF_ANT_RESPONSE_PAGE_ID:
 				handle_wahoo_page(p_ant_evt);
@@ -322,12 +322,12 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 
 			case ANT_PAGE_GETSET_PARAMETERS:
 				BP_LOG("[BP]:ANT GET/SET Page Sent.\r\n");
-				mp_evt_handlers->on_set_parameter(p_ant_evt->evt_buffer);
+				mp_evt_handlers->on_set_parameter(&(p_ant_evt->evt_buffer[3]));
 				break;
 
 			case ANT_PAGE_REQUEST_DATA:
 				BP_LOG("[BP]:ANT Data Request Page.\r\n");
-				mp_evt_handlers->on_request_data(p_ant_evt->evt_buffer);
+				mp_evt_handlers->on_request_data(&(p_ant_evt->evt_buffer[3]));
 				break;
 
 			default:

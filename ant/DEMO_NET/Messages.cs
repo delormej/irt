@@ -412,10 +412,11 @@ namespace ANT_Console.Messages
 
         public void SetPayLoad(UInt32 payload)
         {
-            Payload[0] = (byte)((payload & 0xFF000000) >> 24);
-            Payload[1] = (byte)((payload & 0x00FF0000) >> 16);
-            Payload[2] = (byte)((payload & 0x0000FF00) >> 8);
-            Payload[3] = (byte)payload;
+            // Adjust for endianness of the ARM Cortex M0 device.
+            Payload[3] = (byte)((payload & 0xFF000000) >> 24);
+            Payload[2] = (byte)((payload & 0x00FF0000) >> 16);
+            Payload[1] = (byte)((payload & 0x0000FF00) >> 8);
+            Payload[0] = (byte)payload;
         }
 
         public byte[] AsBytes()
