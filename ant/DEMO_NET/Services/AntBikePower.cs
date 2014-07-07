@@ -126,10 +126,10 @@ namespace ANT_Console.Services
             m_wheelSizeMM = (short)wheelSizeMM;
         }
 
-        public void SetSettings(UInt32 settings)
+        public void SetParameter(SubPages subpage, UInt32 value)
         {
-            GetSetMessage message = new GetSetMessage(SubPages.Settings);
-            message.SetPayLoad(settings);
+            GetSetMessage message = new GetSetMessage(subpage);
+            message.SetPayLoad(value);
             m_channel.sendAcknowledgedData(message.AsBytes());
         }
 

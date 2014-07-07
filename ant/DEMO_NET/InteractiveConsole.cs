@@ -10,11 +10,13 @@ namespace ANT_Console
     {
         bool m_scriptInfinite = false;
         bool m_inCommand = false;
+        SubPages m_lastSubPage;                     // Stores last subpage requested - used for setting parameters.
         ScriptHandler m_script;
         DateTime m_lastReport = DateTime.Now;
         AntBikePower m_eMotion;
         AntBikeSpeed m_refSpeed;
         AntControl m_control;
+        
 
         public InteractiveConsole(AntBikePower eMotion, AntControl control, AntBikeSpeed refSpeed)
         {
@@ -97,7 +99,7 @@ namespace ANT_Console
                         break;
 
                     case ConsoleKey.G:
-                        SetSettingsCommand();
+                        SetParameterCommand();
                         break;
 
                     case ConsoleKey.R:
@@ -309,15 +311,15 @@ namespace ANT_Console
             }
         }
 
-        void SetSettingsCommand()
+        void SetParameterCommand()
         {
-            string prompt = "<enter 32 bit integer of settings>";
-            uint settings = 0;
-            bool success = InteractiveCommand(prompt, () =>
+            string prompt = "<enter parameter value to set {0}>";
+            uint value = 0;
+            bool success = InteractiveCommand(string.Format(prompt, m_lastSubPage), () =>
             {
                 //float weight = float.NaN;
 
-                if (uint.TryParse(Console.ReadLine(), out settings))
+                if (uint.TryParse(Console.ReadLine(), out value))
                 {
                     return true;
                 }
@@ -329,20 +331,19 @@ namespace ANT_Console
 
             if (success)
             {
-                m_eMotion.SetSettings(settings);
-                WriteCommand("Set settings.");
+                m_eMotion.SetParameter(m_lastSubPage, value);
+                WriteCommand("Set parameter.");
             }
         }
 
         void GetParameterCommand()
         {
             string prompt = "<enter subpage (parameter) number>";
-            SubPages subPage = 0;
             bool success = InteractiveCommand(prompt, () =>
             {
                 try
                 {
-                    subPage = (SubPages)Enum.Parse(typeof(SubPages), Console.ReadLine(), true);
+                    m_lastSubPage = (SubPages)Enum.Parse(typeof(SubPages), Console.ReadLine(), true);
                     return true;
                 }
                 catch 
@@ -353,7 +354,7 @@ namespace ANT_Console
 
             if (success)
             {
-                m_eMotion.RequestDeviceParameter(subPage);
+                m_eMotion.RequestDeviceParameter(m_lastSubPage);
                 WriteCommand("Requested setting.");
             }
         }
