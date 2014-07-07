@@ -80,6 +80,7 @@ namespace ANT_Console
             m_eMotionPower.TorqueEvent += ProcessMessage;
             m_eMotionPower.ExtraInfoEvent += ProcessMessage;
             m_eMotionPower.ResistanceEvent += ProcessMessage;
+            m_eMotionPower.GetSetParameterEvent += ProcessMessage;
             m_eMotionPower.Connected += m_eMotionPower_Connected;
             m_eMotionPower.Closing += m_eMotionPower_Closing;
 
@@ -205,6 +206,23 @@ namespace ANT_Console
         {
             m_data.SpeedReference = m.SpeedMph;
             m_data.RefSpeedWheelRevs = m.WheelRevs;
+        }
+
+        /// <summary>
+        /// Happens when the get/set parameters is sent from the device.
+        /// </summary>
+        /// <param name="m"></param>
+        private void ProcessMessage(GetSetMessage m)
+        {
+            byte[] buffer = m.AsBytes();
+
+            Console.WriteLine("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
+                buffer[2],
+                buffer[3],
+                buffer[4],
+                buffer[5],
+                buffer[6],
+                buffer[7]);
         }
     }
 }

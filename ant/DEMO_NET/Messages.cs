@@ -396,40 +396,43 @@ namespace ANT_Console.Messages
     {
         public const byte Page = 0x02;
 
+        private byte m_subpage;
+
         public GetSetMessage(SubPages subPage) 
         {
-            Payload = new byte[6];
+            m_payload = new byte[6];
             SubPage = (byte)subPage;
         }
 
         internal GetSetMessage(ANT_Response response) : base(response) 
         {  }
 
-        public byte SubPage { private set; get; }
-        
-        // Rest of the contents.
-        public byte[] Payload;
+        public byte SubPage
+        {
+            private set { m_subpage = value; }
+            get { return m_payload[1]; }
+        }
 
         public void SetPayLoad(UInt32 payload)
         {
             // Adjust for endianness of the ARM Cortex M0 device.
-            Payload[3] = (byte)((payload & 0xFF000000) >> 24);
-            Payload[2] = (byte)((payload & 0x00FF0000) >> 16);
-            Payload[1] = (byte)((payload & 0x0000FF00) >> 8);
-            Payload[0] = (byte)payload;
+            m_payload[3] = (byte)((payload & 0xFF000000) >> 24);
+            m_payload[2] = (byte)((payload & 0x00FF0000) >> 16);
+            m_payload[1] = (byte)((payload & 0x0000FF00) >> 8);
+            m_payload[0] = (byte)payload;
         }
 
         public byte[] AsBytes()
         {
             byte[] data = new byte[] {
                 Page,
-                SubPage,
-                Payload[0],
-                Payload[1],
-                Payload[2],
-                Payload[3],
-                Payload[4],
-                Payload[5]
+                m_subpage,
+                m_payload[0],
+                m_payload[1],
+                m_payload[2],
+                m_payload[3],
+                m_payload[4],
+                m_payload[5]
             };
 
             return data;

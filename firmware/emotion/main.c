@@ -42,6 +42,7 @@
 #include "user_profile.h"
 #include "wahoo.h"
 #include "ble_ant.h"
+#include "ant_bike_power.h"
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 #include "app_timer.h"
@@ -77,8 +78,9 @@ static accelerometer_data_t 			m_accelerometer_data;
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
-// Type declaration for profile updating.
+// Type declarations for profile updating.
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
+static void profile_update_sched(void);
 
 /**@brief Debug logging for main module.
  *
@@ -161,7 +163,7 @@ static void set_wheel_params(uint8_t *pBuffer)
 
 		m_user_profile.wheel_size_mm = wheel_size;
 		// Schedule an update to persist the profile to flash.
-		app_sched_event_put(NULL, 0, profile_update_sched_handler);
+		profile_update_sched();
 
 		// Call speed module to update the wheel size.
 		speed_wheel_size_set(m_user_profile.wheel_size_mm);
@@ -183,7 +185,7 @@ static void set_sim_params(uint8_t *pBuffer)
 		m_user_profile.total_weight_kg = weight;
 
 		// Schedule an update to persist the profile to flash.
-		app_sched_event_put(NULL, 0, profile_update_sched_handler);
+		profile_update_sched();
 
 		// Re-initialize the power module with updated weight.
 		power_init(m_user_profile.total_weight_kg, m_user_profile.calibrated_crr);
@@ -262,9 +264,17 @@ static void profile_init(void)
 				m_user_profile.calibrated_crr);
 }
 
-/**@brief Persists any updates the user profile. */
-static void profile_update(void)
+/**@brief Function for handling profile update.
+ *
+ * @details This function will be called by the scheduler to update the profile.
+ * 			Writing to flash causes the radio to stop, so we don't want to do this
+ * 			too often, so we let the scheduler decide when.
+ */
+static void profile_update_sched_handler(void *p_event_data, uint16_t event_size)
 {
+	UNUSED_PARAMETER(p_event_data);
+	UNUSED_PARAMETER(event_size);
+
 	uint32_t err_code;
 
 	// This method ensures the device is in a proper state in order to update
@@ -277,17 +287,12 @@ static void profile_update(void)
 			m_user_profile.wheel_size_mm);
 }
 
-/**@brief Function for handling profile update.
+/**@brief Schedules an update to the profile.  See notes above in handler.
  *
- * @details This function will be called by the scheduler to update the profile.
- * 			Writing to flash causes the radio to stop, so we don't want to do this
- * 			too often, so we let the scheduler decide when.
  */
-static void profile_update_sched_handler(void *p_event_data, uint16_t event_size)
+static void profile_update_sched(void)
 {
-	UNUSED_PARAMETER(p_event_data);
-	UNUSED_PARAMETER(event_size);
-	profile_update();
+	app_sched_event_put(NULL, 0, profile_update_sched_handler);
 }
 
 /*----------------------------------------------------------------------------
@@ -771,7 +776,12 @@ static void on_enable_dfu_mode(void)
  */
 static void on_request_data(uint8_t* buffer)
 {
-	LOG("[MAIN] Request to get data page (subpage): %#x\r\n", (uint8_t)buffer[3]);
+	uint8_t subpage;
+	uint8_t response[6];
+
+	memset(&response, 0, sizeof(response));
+	subpage = (uint8_t)buffer[3];
+	LOG("[MAIN] Request to get data page (subpage): %#x\r\n", subpage);
 	LOG("[MAIN]:request data message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 			buffer[0],
 			buffer[1],
@@ -781,30 +791,29 @@ static void on_request_data(uint8_t* buffer)
 			buffer[5],
 			buffer[6],
 			buffer[7]);
+
+	switch (subpage)
+	{
+		case IRT_MSG_SUBPAGE_SETTINGS:
+			memcpy(&response, &m_user_profile.settings, sizeof(uint32_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_CRR:
+			memcpy(&response, &m_user_profile.calibrated_crr, sizeof(uint16_t));
+			break;
+
+		default:
+			LOG("[MAIN] Unrecognized page request. \r\n");
+			return;
+	}
+
+	ant_bp_page2_tx_send(subpage, response, 0, 4);
 }
 
 /**@brief	Device receives page (0x02) with values to set.
  */
 static void on_set_parameter(uint8_t* buffer)
 {
-	uint16_t value;
-
-	// SubPage index
-	switch (buffer[IRT_MSG_PAGE2_SUBPAGE_INDEX])
-	{
-		case IRT_MSG_SUBPAGE_SETTINGS:
-			// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
-			//value = *(uint16_t*)&buffer[IRT_MSG_PAGE2_DATA_INDEX];
-			memcpy(&value, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
-
-			LOG("[MAIN] Request to update settings to: ACCEL:%i, BIG_MAG:%i \r\n",
-					FEATURE_IS_SET(value, FEATURE_ACCEL_SLEEP_OFF),
-					FEATURE_IS_SET(value, FEATURE_BIG_MAG));
-			break;
-
-		default:
-			break;
-	}
 	LOG("[MAIN]:set param message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 			buffer[0],
 			buffer[1],
@@ -814,6 +823,37 @@ static void on_set_parameter(uint8_t* buffer)
 			buffer[5],
 			buffer[6],
 			buffer[7]);
+
+	// SubPage index
+	switch (buffer[IRT_MSG_PAGE2_SUBPAGE_INDEX])
+	{
+		case IRT_MSG_SUBPAGE_SETTINGS:
+			// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
+			// Need to use memcpy, Cortex-M proc doesn't support unaligned casting of 32bit int.
+			memcpy(&m_user_profile.settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
+					sizeof(uint32_t));
+
+			LOG("[MAIN] Request to update settings to: ACCEL:%i, BIG_MAG:%i, EXTRA_INFO:%i, TEST:%i \r\n",
+						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ACCEL_SLEEP_OFF),
+						FEATURE_IS_SET(m_user_profile.settings, FEATURE_BIG_MAG),
+						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ANT_EXTRA_INFO),
+						FEATURE_IS_SET(m_user_profile.settings, FEATURE_TEST));
+			break;
+
+		case IRT_MSG_SUBPAGE_CRR:
+			// Update CRR.
+			memcpy(&m_user_profile.calibrated_crr, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
+					sizeof(uint16_t));
+			LOG("[MAIN] Updated CRR:%i \r\n", m_user_profile.calibrated_crr);
+			break;
+
+		default:
+			LOG("[MAIN] on_set_parameter: Invalid setting, skipping. \r\n");
+			return;
+	}
+
+	// Schedule update to the profile.
+	profile_update_sched();
 }
 
 /**@brief	Configures power supervisor to warn and reset if power drops too low.

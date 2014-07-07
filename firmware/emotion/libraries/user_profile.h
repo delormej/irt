@@ -28,7 +28,8 @@
 // ANT_CTRL_OFF
 // ANT_BP_OFF
 // ANT_FEC_OFF
-// ANT_SEND_EXTRA_INFO
+#define FEATURE_ANT_EXTRA_INFO			65536UL			// Set a mid bit
+#define FEATURE_TEST					0x80000000		// Set the highest bit
 // Number of wheel revs to flywheel?
 
 #define FEATURE_IS_SET(SETTINGS, FEATURE) \

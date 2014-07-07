@@ -473,3 +473,44 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 
 	return err_code;
 }
+
+/**@brief	Sends get/set parameters page.  This is sent in response to a
+ * 			Page 0x46 (Request Data Page) message.  Returns a broadcast message.
+ *
+ *@note		Transmission type: (from 16.2.1.2 in the spec) - not fully implemented here.
+ * 			The power meter shall be able to support all requested transmission response types; however, the ANT+ bicycle power device profile further stipulates that the display shall only request broadcast messages from a power meter sensor.
+ *
+ */
+void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type, uint8_t tx_count)
+{
+	uint32_t err_code;
+
+	uint8_t tx_buffer[TX_BUFFER_SIZE] =
+	{
+		ANT_PAGE_GETSET_PARAMETERS,
+		subpage,
+		buffer[0],
+		buffer[1],
+		buffer[2],
+		buffer[3],
+		buffer[4],
+		buffer[5]
+	};
+
+	BP_LOG("[BP]:Sending page 2 response [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+			tx_buffer[0],
+			tx_buffer[1],
+			tx_buffer[2],
+			tx_buffer[3],
+			tx_buffer[4],
+			tx_buffer[5],
+			tx_buffer[6],
+			tx_buffer[7]);
+
+	// Number of times to send.
+	for (uint8_t i = 0; i< tx_count; i++)
+	{
+		err_code = broadcast_message_transmit(tx_buffer);
+		APP_ERROR_CHECK(err_code);
+	}
+}

@@ -35,6 +35,7 @@ namespace ANT_Console.Services
         public event MessageHandler<TorqueMessage> TorqueEvent;
         public event MessageHandler<ResistanceMessage> ResistanceEvent;
         public event MessageHandler<ExtraInfoMessage> ExtraInfoEvent;
+        public event MessageHandler<GetSetMessage> GetSetParameterEvent;
 
         public AntBikePower(int channelId, ushort deviceId = 0, byte transmissionType = 0)
         {
@@ -243,6 +244,11 @@ namespace ANT_Console.Services
                     break;
                 case ProductPage.Page:
                     ProcessMessage(new ProductPage(response));
+                    break;
+                case GetSetMessage.Page:
+                    
+                    if (GetSetParameterEvent != null)
+                        GetSetParameterEvent(new GetSetMessage(response));
                     break;
                 default:
                     break;
