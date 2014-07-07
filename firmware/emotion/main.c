@@ -802,6 +802,15 @@ static void on_request_data(uint8_t* buffer)
 			memcpy(&response, &m_user_profile.calibrated_crr, sizeof(uint16_t));
 			break;
 
+		case IRT_MSG_SUBPAGE_WEIGHT:
+			memcpy(&response, &m_user_profile.total_weight_kg, sizeof(uint16_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_WHEEL_SIZE:
+			memcpy(&response, &m_user_profile.wheel_size_mm, sizeof(uint16_t));
+			break;
+
+		// TODO: just a quick hack for right now for getting battery info.
 		case ANT_PAGE_BATTERY_STATUS:
 			LOG("[MAIN] Requested battery status. \r\n");
 			battery_read_start();
