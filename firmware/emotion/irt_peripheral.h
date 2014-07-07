@@ -11,10 +11,6 @@
 
 typedef struct peripheral_evt_s
 {
-	void (*on_button_i)(void);
-	void (*on_button_ii)(void);
-	void (*on_button_iii)(void);
-	void (*on_button_iv)(void);
 	void (*on_button_pbsw)(void);
 	void (*on_accelerometer_evt)(void);
 	void (*on_power_plug)(void);

@@ -80,6 +80,8 @@ static accelerometer_data_t 			m_accelerometer_data;
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
+static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
+
 // Type declarations for profile updating.
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 static void profile_update_sched(void);
@@ -452,6 +454,46 @@ static void scheduler_init(void)
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 }
 
+
+/**@brief	Sends data page 2 response.
+ */
+static void send_data_page2(uint8_t subpage)
+{
+	uint8_t response[6];
+
+	memset(&response, 0, sizeof(response));
+
+	switch (subpage)
+	{
+		case IRT_MSG_SUBPAGE_SETTINGS:
+			memcpy(&response, &m_user_profile.settings, sizeof(uint32_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_CRR:
+			memcpy(&response, &m_user_profile.calibrated_crr, sizeof(uint16_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_WEIGHT:
+			memcpy(&response, &m_user_profile.total_weight_kg, sizeof(uint16_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_WHEEL_SIZE:
+			memcpy(&response, &m_user_profile.wheel_size_mm, sizeof(uint16_t));
+			break;
+
+		default:
+			LOG("[MAIN] Unrecognized page request. \r\n");
+			return;
+	}
+
+	// # of times to send message - byte 5, bits 0:6 - just hard coding for now.
+	// Number of times to send.
+	for (uint8_t i = 0; i < REQUEST_RETRY; i++)
+	{
+		ant_bp_page2_tx_send(subpage, response, 0);
+	}
+}
+
 /*----------------------------------------------------------------------------
  * Event handlers
  * ----------------------------------------------------------------------------*/
@@ -476,7 +518,7 @@ static void on_power_down(bool accelerometer_wake_disable)
 	sd_power_system_off();
 }
 
-static void on_button_i(void)
+static void on_resistance_off(void)
 {
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = 0;
@@ -484,7 +526,7 @@ static void on_button_i(void)
 	ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
 }
 
-static void on_button_ii(void)
+static void on_resistance_dec(void)
 {
 	// decrement
 	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
@@ -502,7 +544,7 @@ static void on_button_ii(void)
 	}
 }
 
-static void on_button_iii(void)
+static void on_resistance_inc(void)
 {
 	// increment
 	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
@@ -519,7 +561,7 @@ static void on_button_iii(void)
 	}
 }
 
-static void on_button_iv(void)
+static void on_resistance_max(void)
 {
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
@@ -542,7 +584,7 @@ static void on_button_menu(void)
 	else
 	{
 		m_resistance_mode = RESISTANCE_SET_STANDARD;
-		on_button_i();
+		on_resistance_off();
 	}
 }
 
@@ -748,32 +790,74 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 	switch (evt.command)
 	{
 		case ANT_CTRL_BUTTON_UP:
-			// Increment resistance.
-			on_button_iii(); 
+			if (m_crr_adjust_mode)
+			{
+				power_init(m_user_profile.total_weight_kg,
+						m_user_profile.calibrated_crr += 50);
+				send_data_page2(IRT_MSG_SUBPAGE_CRR);
+			}
+			else
+			{
+				// Increment resistance.
+				on_resistance_inc();
+			}
 			break;
 
 		case ANT_CTRL_BUTTON_DOWN:
-			// Decrement resistance.
-			on_button_ii();
+			if (m_crr_adjust_mode)
+			{
+				if (m_user_profile.calibrated_crr > 50)
+				{
+					power_init(m_user_profile.total_weight_kg,
+							m_user_profile.calibrated_crr -= 50);
+					send_data_page2(IRT_MSG_SUBPAGE_CRR);
+				}
+			}
+			else
+			{
+				// Decrement resistance.
+				on_resistance_dec();
+			}
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_UP:
 			// Set full resistance
-			on_button_iv();
+			on_resistance_max();
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_DOWN:
 			// Turn off resistance
-			on_button_i();
+			on_resistance_off();
 			break;
 
 		case ANT_CTRL_BUTTON_MIDDLE:
-			on_button_menu();
+			if (m_crr_adjust_mode)
+			{
+				// Exit crr mode.
+				m_crr_adjust_mode = false;
+				clear_led(2);
+			}
+			else
+			{
+				on_button_menu();
+			}
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_MIDDLE:
-			// Force a hard power down, accelerometer will not wake.
-			on_power_down(true);
+			// Requires double long push of middle to shut down.
+			if (m_crr_adjust_mode)
+			{
+				// Force a hard power down, accelerometer will not wake.
+				on_power_down(true);
+			}
+			else
+			{
+				// Change into crr mode.
+				// Set the state, start blinking the LED RED
+				m_crr_adjust_mode = true;
+				set_led_red(2);
+			}
+
 			break;
 
 		default:
@@ -803,9 +887,6 @@ static void on_enable_dfu_mode(void)
 static void on_request_data(uint8_t* buffer)
 {
 	uint8_t subpage;
-	uint8_t response[6];
-
-	memset(&response, 0, sizeof(response));
 	subpage = (uint8_t)buffer[3];
 	LOG("[MAIN] Request to get data page (subpage): %#x\r\n", subpage);
 	LOG("[MAIN]:request data message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
@@ -818,41 +899,16 @@ static void on_request_data(uint8_t* buffer)
 			buffer[6],
 			buffer[7]);
 
-	switch (subpage)
+	// TODO: just a quick hack for right now for getting battery info.
+	if (subpage == ANT_PAGE_BATTERY_STATUS)
 	{
-		case IRT_MSG_SUBPAGE_SETTINGS:
-			memcpy(&response, &m_user_profile.settings, sizeof(uint32_t));
-			break;
-
-		case IRT_MSG_SUBPAGE_CRR:
-			memcpy(&response, &m_user_profile.calibrated_crr, sizeof(uint16_t));
-			break;
-
-		case IRT_MSG_SUBPAGE_WEIGHT:
-			memcpy(&response, &m_user_profile.total_weight_kg, sizeof(uint16_t));
-			break;
-
-		case IRT_MSG_SUBPAGE_WHEEL_SIZE:
-			memcpy(&response, &m_user_profile.wheel_size_mm, sizeof(uint16_t));
-			break;
-
-		// TODO: just a quick hack for right now for getting battery info.
-		case ANT_PAGE_BATTERY_STATUS:
-			LOG("[MAIN] Requested battery status. \r\n");
-			battery_read_start();
-			return;
-
-		default:
-			LOG("[MAIN] Unrecognized page request. \r\n");
-			return;
+		LOG("[MAIN] Requested battery status. \r\n");
+		battery_read_start();
+		return;
 	}
 
-	// # of times to send message - byte 5, bits 0:6 - just hard coding for now.
-	// Number of times to send.
-	for (uint8_t i = 0; i < REQUEST_RETRY; i++)
-	{
-		ant_bp_page2_tx_send(subpage, response, 0);
-	}
+	// Process and send response.
+	send_data_page2(subpage);
 }
 
 /**@brief	Device receives page (0x02) with values to set.
@@ -905,12 +961,12 @@ static void on_set_parameter(uint8_t* buffer)
  */
 static void on_battery_result(uint16_t battery_level)
 {
-	LOG("[MAIN] on_battery_result. \r\n");
+	LOG("[MAIN] on_battery_result %i \r\n", battery_level);
 
+	// TODO: temporarily sending page 2, need to send page 0x52.
 	// Number of times to send.
 	for (uint8_t i = 0; i < REQUEST_RETRY; i++)
 	{
-		// TODO: temporarily sending page 2, need to send page 0x52.
 		ant_bp_page2_tx_send(0x52, &battery_level, 0);
 	}
 }
@@ -987,10 +1043,6 @@ int main(void)
 
 	// Peripheral interrupt event handlers.
 	static peripheral_evt_t on_peripheral_handlers = {
-		on_button_i,
-		on_button_ii,
-		on_button_iii,
-		on_button_iv,
 		on_button_pbsw,
 		on_accelerometer,
 		on_power_plug

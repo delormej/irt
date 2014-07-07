@@ -33,7 +33,8 @@
 #define	TICK_FREQUENCY	(32768 / (NRF_RTC1->PRESCALER + 1))
 
 static peripheral_evt_t *mp_on_peripheral_evt;
-static app_timer_id_t m_led_blink_timer_id;
+static app_timer_id_t m_led1_blink_timer_id;
+static app_timer_id_t m_led2_blink_timer_id;
 static app_gpiote_user_id_t mp_user_id;
 
 /**@brief Function for handling interrupt events.
@@ -143,12 +144,22 @@ static void irt_gpio_init()
 
 void set_led_red(uint8_t led_mask)
 {
-	nrf_gpio_pin_clear(PIN_LED_A);
-	nrf_gpio_pin_set(PIN_LED_B);
-
+	// led_mask =
+	// 0 led 1 only (backwards compat)
+	// 1 led 1 only
+	// 2 led 2 only
+	// 3 both
+	if (led_mask <= 1)
+	{
+		nrf_gpio_pin_clear(PIN_LED_A);
+		nrf_gpio_pin_set(PIN_LED_B);
+	}
 #ifdef IRT_REV_2A_H
-	nrf_gpio_pin_clear(PIN_LED_D);
-	nrf_gpio_pin_set(PIN_LED_C);
+	if ((led_mask | 2) == led_mask)
+	{
+		nrf_gpio_pin_clear(PIN_LED_C);
+		nrf_gpio_pin_set(PIN_LED_D);
+	}
 #endif
 }
 
@@ -165,12 +176,17 @@ void set_led_green(uint8_t led_mask)
 
 void clear_led(uint8_t led_mask)
 {
-	nrf_gpio_pin_set(PIN_LED_A);
-	nrf_gpio_pin_set(PIN_LED_B);
-
+	if (led_mask <= 1)
+	{
+		nrf_gpio_pin_set(PIN_LED_A);
+		nrf_gpio_pin_set(PIN_LED_B);
+	}
 #ifdef IRT_REV_2A_H
-	nrf_gpio_pin_set(PIN_LED_C);
-	nrf_gpio_pin_set(PIN_LED_D);
+	if ((led_mask | 2) == led_mask)
+	{
+		nrf_gpio_pin_set(PIN_LED_C);
+		nrf_gpio_pin_set(PIN_LED_D);
+	}
 #endif
 }
 
@@ -186,7 +202,7 @@ void blink_led_green_start(uint8_t led_mask, uint16_t interval_ms)
 	clear_led(0);
 
 	// Start the timer.
-	err_code = app_timer_start(m_led_blink_timer_id, interval_ticks, NULL);
+	err_code = app_timer_start(m_led1_blink_timer_id, interval_ticks, NULL);
 	APP_ERROR_CHECK(err_code);
 }
 
@@ -194,11 +210,23 @@ void blink_led_green_stop(uint8_t led_mask)
 {
 	uint32_t err_code;
 
-	err_code = app_timer_stop(m_led_blink_timer_id);
+	err_code = app_timer_stop(m_led1_blink_timer_id);
 	APP_ERROR_CHECK(err_code);
 
 	clear_led(0);
 }
+
+/*
+void blink_led_red_start(uint8_t led_mask, uint16_t interval_ms)
+{
+
+}
+
+void blink_led_red_stop(uint8_t led_mask)
+{
+
+}
+*/
 
 /**@brief 	Returns the count of 1/2048th seconds (2048 per second) since the
  *			the counter started.
@@ -243,7 +271,7 @@ void peripheral_powerdown(bool accelerometer_off)
 #endif
 
 	// Shut down the leds.
-	clear_led(0);
+	clear_led(3);
 }
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
@@ -255,20 +283,24 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
     accelerometer_init();
 	temperature_init();
 
-	uint32_t val = nrf_gpio_pin_read(PIN_SHAKE);
-	if (val == 1)
-	{
-		set_led_red(0);
-	}
-	else
-	{
-		set_led_green(0);
-	}
+	// Blink both LEDS
+	set_led_green(3);
+	nrf_delay_ms(10);
+	clear_led(3);
 
-	// Create the timer for blinking led.
-	err_code = app_timer_create(&m_led_blink_timer_id,
+	// Create the timer for blinking led #1.
+	err_code = app_timer_create(&m_led1_blink_timer_id,
 		APP_TIMER_MODE_REPEATED,
 		blink_timeout_handler);
+	APP_ERROR_CHECK(err_code);
+
+	/*
+	// Create the timer for blinking led #2.
+	err_code = app_timer_create(&m_led2_blink_timer_id,
+		APP_TIMER_MODE_REPEATED,
+		blink_timeout_handler);
+	APP_ERROR_CHECK(err_code); */
+
 
 #ifdef USE_BATTERY
 	// Initialize battery.
@@ -276,5 +308,4 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	PH_LOG("[PH] Initialized battery.\r\n");
 #endif
 
-	APP_ERROR_CHECK(err_code);
 }
