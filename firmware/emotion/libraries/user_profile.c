@@ -69,25 +69,12 @@ uint32_t user_profile_load(user_profile_t *p_user_profile)
     						sizeof (user_profile_t),
     						USER_PROFILE_OFFSET);
 
-    UP_LOG("[UP]:user_profile_load {weight:%i, wheel:%i, settings:%i, crr:%i}\r\n",
+    UP_LOG("[UP]:user_profile_load {version: %i, weight:%i, wheel:%i, settings:%i, crr:%i}\r\n",
+    		p_user_profile->version,
     		p_user_profile->total_weight_kg,
     		p_user_profile->wheel_size_mm,
     		p_user_profile->settings,
     		p_user_profile->calibrated_crr);
-
-//TODO: Remove this, just for testing.
-#ifdef SETTINGS
-		// If there was a build override on settings.
-    	p_user_profile->settings = SETTINGS;
-#else
-		//
-    	// By default we'll get all 1's if nothing was previously stored.
-    	//
-		if (p_user_profile->settings == FEATURE_DEFAULT)
-		{
-			p_user_profile->settings = 0;
-		}
-#endif
 
     return err_code;
 }

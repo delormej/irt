@@ -84,7 +84,6 @@ CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_B
 # TODO: this should be done another way.
 ############################################
 CFLAGS += -DUSE_BATTERY							# If this device is built to support battery or not.
-#CFLAGS += -DSETTINGS=0x02						# Bit mask of features/settings.
 CFLAGS += -DANT_DEVICE_NUMBER=0x06
 #CFLAGS += -DANT_DEVICE_NUMBER=0x02
 #CFLAGS += -DSERIAL_NUMBER=0xAA55AA55

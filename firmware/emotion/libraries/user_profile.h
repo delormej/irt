@@ -14,6 +14,8 @@
 
 #include <stdint.h>
 
+#define PROFILE_VERSION					2u	// Current version of the profile.
+
 //
 // Available device features. Default setting should result in 0.
 //
@@ -39,11 +41,12 @@
  * 			NOTE: This must be divisable by 4 (sizeof(uin32_t).
  */
 typedef struct user_profile_s {
+	uint8_t		version;					// Version of the profile for future compatibility purposes.
 	uint16_t	total_weight_kg;
 	uint16_t	wheel_size_mm;
 	uint32_t	settings;					// Bitmask of settings.
 	uint16_t	calibrated_crr;				// Calibrated co-efficient of rolling resistance (1/10,000 value). e.g. value = 0.02823f
-	uint8_t		reserved[6];
+	uint8_t		reserved[5];
 } user_profile_t;
 
 /**@brief Initializes access to storage. */

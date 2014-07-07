@@ -63,6 +63,7 @@
 #define DEFAULT_TOTAL_WEIGHT_KG			8180ul 										// Default weight (convert 180.0lbs to KG).
 #define DEFAULT_ERG_WATTS				175u										// Default erg target_watts when not otherwise set.
 #define DEFAULT_CRR						2838ul										// Default co-efficient for roller's resistance (0.02838) stored as 1/100000.
+#define DEFAULT_SETTINGS				0ul											// Default 32bit field of settings.
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 
@@ -229,25 +230,45 @@ static void profile_init(void)
 		err_code = user_profile_load(&m_user_profile);
 		APP_ERROR_CHECK(err_code);
 
-		if (m_user_profile.wheel_size_mm == 0 ||
-				m_user_profile.wheel_size_mm == 0xFFFF)
+		//
+		// Check the version of the profile, if it's not the current version
+		// set the default parameters.
+		//
+		if (m_user_profile.version != PROFILE_VERSION)
 		{
-			// Wheel circumference in mm.
-			m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
-		}
-		
-		if (m_user_profile.total_weight_kg == 0 ||
-				m_user_profile.total_weight_kg == 0xFFFF)
-		{
-			LOG("[MAIN]:profile_init using default weight.");
+			LOG("[MAIN]: Older profile version %i. Loading defaults and upgrading\r\n.",
+					m_user_profile.version);
+			m_user_profile.version			= PROFILE_VERSION;
+			m_user_profile.wheel_size_mm 	= DEFAULT_WHEEL_SIZE_MM;
+			m_user_profile.total_weight_kg 	= DEFAULT_TOTAL_WEIGHT_KG;
+			m_user_profile.calibrated_crr 	= DEFAULT_CRR;
+			m_user_profile.settings 		= DEFAULT_SETTINGS;
 
-			// Total weight of rider + bike + shoes, clothing, etc...
-			m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
+			// Schedule an update.
+			profile_update_sched();
 		}
-		
-		if (m_user_profile.calibrated_crr == 0xFFFF)
+		else
 		{
-			m_user_profile.calibrated_crr = DEFAULT_CRR;
+			if (m_user_profile.wheel_size_mm == 0 ||
+					m_user_profile.wheel_size_mm == 0xFFFF)
+			{
+				// Wheel circumference in mm.
+				m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
+			}
+
+			if (m_user_profile.total_weight_kg == 0 ||
+					m_user_profile.total_weight_kg == 0xFFFF)
+			{
+				LOG("[MAIN]:profile_init using default weight.");
+
+				// Total weight of rider + bike + shoes, clothing, etc...
+				m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
+			}
+
+			if (m_user_profile.calibrated_crr == 0xFFFF)
+			{
+				m_user_profile.calibrated_crr = DEFAULT_CRR;
+			}
 		}
 
 	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004. 
