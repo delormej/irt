@@ -465,6 +465,7 @@ namespace ANT_Console
         {
             Utility.SetThreadExecutionState(
                 Utility.ThreadExecutionState.CONTINUOUS | 
+                Utility.ThreadExecutionState.DISPLAY_REQUIRED |
                 Utility.ThreadExecutionState.SYSTEM_REQUIRED);
         }
     }
