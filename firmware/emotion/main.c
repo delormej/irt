@@ -1045,7 +1045,8 @@ int main(void)
 	static peripheral_evt_t on_peripheral_handlers = {
 		on_button_pbsw,
 		on_accelerometer,
-		on_power_plug
+		on_power_plug,
+		on_battery_result
 	};
 
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
@@ -1098,16 +1099,17 @@ int main(void)
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);
 
-	// Get a read from the battery.
-#if USE_BATTERY
-	battery_init(PIN_ENBATT, on_battery_result);
-	battery_read_start();
-#endif
-
 	// Start the main loop for reporting ble services.
 	application_timers_start();
 
 	LOG("[MAIN]:Initialization done.\r\n");
+
+#ifdef USE_BATTERY
+	// TODO: This is just temporary, this will move to a regular event.
+	// Can't be done as part of peripheral_init because soft device isn't enabled yet.
+	// Get an initial read from the battery.
+	battery_read_start();
+#endif
 
     // Enter main loop
     for (;;)

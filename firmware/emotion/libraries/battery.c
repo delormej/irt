@@ -48,6 +48,8 @@ static on_battery_result_t m_on_battery_result;
 
 // Separate pin used for enabling voltage read on Analog Input 2.
 static uint8_t m_pin_battery_read;
+// Pin used to tell the charger to stop.
+static uint8_t m_pin_charge_stop;
 
 /**@brief Function for handling the ADC interrupt.
  * @details  This function will fetch the conversion result from the ADC, convert the value into
@@ -122,6 +124,9 @@ void battery_read_start()
 }
 
 /**@brief	Reads the current battery charge status.
+ * @returns	BATTERY_CHARGE_COMPLETE
+ * 			BATTERY_CHARGING
+ * 			BATTERY_CHARGE_FAULT
  */
 uint8_t battery_charge_status()
 {
@@ -133,14 +138,25 @@ uint8_t battery_charge_status()
 	return status;
 }
 
+/**@brief	Stops or starts the battery charge process.
+ * 			Use battery_charge_status to read current status.
+ */
+void battery_charge_toggle()
+{
+#ifdef USE_BATTERY
+	nrf_gpio_pin_toggle(m_pin_charge_stop);
+#endif
+}
+
 /**@brief	Initializes the battery module with a callback when a read is complete and
  * 			the pin used to enable reading (not the analog pin used for actual reading).
  */
-void battery_init(uint8_t pin_battery_enable, on_battery_result_t on_battery_result)
+void battery_init(uint8_t pin_battery_enable, uint8_t pin_charge_stop, on_battery_result_t on_battery_result)
 {
 #ifdef USE_BATTERY
 	m_on_battery_result = on_battery_result;
 	m_pin_battery_read = pin_battery_enable;
+	m_pin_charge_stop = pin_charge_stop;
 
     // Configure ADC
     NRF_ADC->INTENSET   = ADC_INTENSET_END_Msk;
