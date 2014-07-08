@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ANT_Console.Services;
 using ANT_Console.Messages;
 using IntervalParser;
+using System.Runtime.InteropServices;
 
 namespace ANT_Console
 {
@@ -27,6 +28,8 @@ namespace ANT_Console
 
         public void Run()
         {
+            PreventShutdown();
+
             const string header = "Time         |  mph  | Watts | Watts2| Servo  | Target | Flywheel";
             ConsoleKeyInfo cki;
 
@@ -456,6 +459,26 @@ namespace ANT_Console
                 Console.WriteLine(data);
                 m_lastReport = data.Timestamp;
             }
+        }
+
+        private void PreventShutdown()
+        {
+            Utility.SetThreadExecutionState(
+                Utility.ThreadExecutionState.CONTINUOUS | 
+                Utility.ThreadExecutionState.SYSTEM_REQUIRED);
+        }
+    }
+
+    public static class Utility
+    {
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern ThreadExecutionState SetThreadExecutionState(ThreadExecutionState esFlags);
+        [FlagsAttribute]
+        public enum ThreadExecutionState : uint
+        {
+            CONTINUOUS = 0x80000000,
+            DISPLAY_REQUIRED = 0x00000002,
+            SYSTEM_REQUIRED = 0x00000001
         }
     }
 }
