@@ -950,6 +950,14 @@ static void on_set_parameter(uint8_t* buffer)
 			LOG("[MAIN] Updated CRR:%i \r\n", m_user_profile.calibrated_crr);
 			break;
 
+#ifdef USE_BATTERY
+		case IRT_MSG_SUBPAGE_SET_CHARGER:
+			// TODO: This shouldn't be sent this way it should really be sent using
+			// Common Data Page 72: Command Burst
+			LOG("[MAIN] Toggling battery charger on/off. \r\n");
+			battery_charge_toggle();
+			break;
+#endif
 		default:
 			LOG("[MAIN] on_set_parameter: Invalid setting, skipping. \r\n");
 			return;
@@ -967,7 +975,7 @@ static void on_battery_result(uint16_t battery_level)
 	// Number of times to send.
 	for (uint8_t i = 0; i < REQUEST_RETRY; i++)
 	{
-		ant_bp_page2_tx_send(0x52, &battery_level, 0);
+		ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, 0);
 	}
 }
 

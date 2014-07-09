@@ -145,6 +145,8 @@ void battery_charge_toggle()
 {
 #ifdef USE_BATTERY
 	nrf_gpio_pin_toggle(m_pin_charge_stop);
+
+	BY_LOG("[BY] Toggled charge, new status is: %i. \r\n", battery_charge_status());
 #endif
 }
 
