@@ -14,13 +14,15 @@
 /**@brief Debug logging for module.
  *
  */
-//#ifdef ENABLE_DEBUG_LOG
-//#define PW_LOG debug_log
-//#else
+#ifdef ENABLE_DEBUG_LOG
+#define PW_LOG debug_log
+#else
 #define PW_LOG(...)
-//#endif // ENABLE_DEBUG_LOG
+#endif // ENABLE_DEBUG_LOG
 
 static float m_rr_force;
+static float m_ca_slope;			// calibration parameters
+static float m_ca_intercept;
 
 /* Calculates angular velocity based on wheel ticks and time.
 static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
@@ -61,6 +63,22 @@ static float inline slope_calc(float y, float slope, float intercept)
 	 x = y * slope + intercept;
 
 	return x;
+}
+
+/**@brief 	Returns the force of rolling resistance using profile crr and weight.
+ * @returns Force in Newtons typical range 13.0 : 30.0
+ */
+static float power_rr_force(float speed_mps)
+{
+	if (m_ca_slope != 0xFFFF)
+	{
+		// return a calibrated value.
+		return (speed_mps * m_ca_slope + m_ca_intercept);
+	}
+	else
+	{
+		return m_rr_force;
+	}
 }
 
 /**@brief	Calculates the force applied by the servo at a given position.
@@ -138,44 +156,45 @@ uint16_t power_servo_pos_calc(float force_needed)
 	return servo_pos;
 }
 
-/**@brief 	Returns the force of rolling resistance using profile crr and weight.
- * @returns Force in Newtons typical range 13.0 : 30.0
- */
-float power_rr_force()
-{
-	return m_rr_force;
-}
-
-
 /**@brief	Initializes power module with a profile pointer that contains things like
  * 			the total rider weight, calibration details, etc...
  *
  */
-void power_init(uint16_t total_weight_kg, uint16_t calibrated_crr)
+void power_init(user_profile_t* p_profile)
 {
-	float crr;
+	if (p_profile->ca_slope != 0xFFFF)
+	{
+		m_ca_slope = (p_profile->ca_slope / 10000.0f);
+		m_ca_intercept = (p_profile->ca_intercept / 1000.0f);
+		m_rr_force = 0;
 
-	// Convert to the right unit.
-	crr = (float)(calibrated_crr / 100000.0f);
-
-	m_rr_force = (GRAVITY * (total_weight_kg / 100.0f) * crr);
+		PW_LOG("[PW] Initializing power with slope: %.4f intercept %.3f \r\n",
+				m_ca_slope, m_ca_intercept);
+	}
+	else
+	{
+		m_rr_force = (GRAVITY * (p_profile->total_weight_kg / 100.0f) * (DEFAULT_CRR));
+		m_ca_slope = 0xFFFF;
+		m_ca_intercept = 0xFFFF;
+	}
 }
 
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *
  */
-uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
+uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last, float* p_rr_force)
 {
 	uint16_t torque;
 	uint16_t period_diff;
 	float servo;
 
 	servo = servo_force(p_current->servo_position);
+	*p_rr_force =  power_rr_force(p_current->instant_speed_mps);
 
 	// Calculate power.
-	p_current->instant_power = ( (m_rr_force + servo) * p_current->instant_speed_mps );
+	p_current->instant_power = ( *p_rr_force + servo ) * p_current->instant_speed_mps;
 
-	PW_LOG("[PW] rr: %.2f, servo: %.2f, watts: %i\r\n", m_rr_force, servo, p_current->instant_power);
+	//PW_LOG("[PW] rr: %.2f, servo: %.2f, watts: %i\r\n", *p_rr_force, servo, p_current->instant_power);
 
 	// Handle time rollover.
 	// Accum wheel period is a calculated period representing the average time it takes

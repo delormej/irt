@@ -62,7 +62,6 @@
 #define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
 #define DEFAULT_TOTAL_WEIGHT_KG			8180ul 										// Default weight (convert 180.0lbs to KG).
 #define DEFAULT_ERG_WATTS				175u										// Default erg target_watts when not otherwise set.
-#define DEFAULT_CRR						2838ul										// Default co-efficient for roller's resistance (0.02838) stored as 1/100000.
 #define DEFAULT_SETTINGS				0ul											// Default 32bit field of settings.
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
@@ -193,7 +192,7 @@ static void set_sim_params(uint8_t *pBuffer)
 		profile_update_sched();
 
 		// Re-initialize the power module with updated weight.
-		power_init(m_user_profile.total_weight_kg, m_user_profile.calibrated_crr);
+		power_init(&m_user_profile);
 	}
 
 	// Co-efficient for rolling resistance.
@@ -244,7 +243,6 @@ static void profile_init(void)
 			m_user_profile.version			= PROFILE_VERSION;
 			m_user_profile.wheel_size_mm 	= DEFAULT_WHEEL_SIZE_MM;
 			m_user_profile.total_weight_kg 	= DEFAULT_TOTAL_WEIGHT_KG;
-			m_user_profile.calibrated_crr 	= DEFAULT_CRR;
 			m_user_profile.settings 		= DEFAULT_SETTINGS;
 
 			// Schedule an update.
@@ -268,9 +266,9 @@ static void profile_init(void)
 				m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
 			}
 
-			if (m_user_profile.calibrated_crr == 0xFFFF)
+			if (m_user_profile.ca_slope == 0xFFFF)
 			{
-				m_user_profile.calibrated_crr = DEFAULT_CRR;
+				m_user_profile.ca_slope = DEFAULT_CRR;
 			}
 		}
 
@@ -283,11 +281,12 @@ static void profile_init(void)
 		m_sim_forces.crr = SIM_CRR;
 		m_sim_forces.c = SIM_C;
 
-		LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t crr: %i \r\n",
+		LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t ca_slope: %i \r\n\t ca_intercept: %i \r\n",
 				m_user_profile.total_weight_kg,
 				m_user_profile.wheel_size_mm,
 				m_user_profile.settings,
-				m_user_profile.calibrated_crr);
+				m_user_profile.ca_slope,
+				m_user_profile.ca_intercept);
 }
 
 /**@brief Function for handling profile update.
@@ -308,11 +307,12 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
 	err_code = user_profile_store(&m_user_profile);
 	APP_ERROR_CHECK(err_code);
 
-	LOG("[MAIN]:profile_update:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t crr: %i \r\n",
+	LOG("[MAIN]:profile_update:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t slope: %i \r\n\t intercept: %i \r\n",
 			m_user_profile.total_weight_kg,
 			m_user_profile.wheel_size_mm,
 			m_user_profile.settings,
-			m_user_profile.calibrated_crr);
+			m_user_profile.ca_slope,
+			m_user_profile.ca_intercept);
 }
 
 /**@brief Schedules an update to the profile.  See notes above in handler.
@@ -338,6 +338,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 {
 	UNUSED_PARAMETER(p_context);
 	uint32_t err_code;
+	float rr_force;	// Calculated rolling resistance force.
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 	irt_power_meas_t* p_power_meas_last 		= NULL;
@@ -385,8 +386,8 @@ static void ant_4hz_timeout_handler(void * p_context)
 	err_code = speed_calc(p_power_meas_current, p_power_meas_last);
 	APP_ERROR_CHECK(err_code);
 
-	// Calculate power.
-	err_code = power_calc(p_power_meas_current, p_power_meas_last);
+	// Calculate power and get back the rolling resistance force for use in adjusting resistance.
+	err_code = power_calc(p_power_meas_current, p_power_meas_last, &rr_force);
 	APP_ERROR_CHECK(err_code);
 
 	// TODO: this should return an err_code.
@@ -398,7 +399,8 @@ static void ant_4hz_timeout_handler(void * p_context)
 	{
 		// Use the oldest record we have to average with.
 		p_power_meas_first = irt_power_meas_fifo_first();
-		resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces, m_resistance_mode);
+		resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces,
+				m_resistance_mode, rr_force);
 	}
 
 	// Send remote control availability.  Notification flag is 1 if a serial number
@@ -470,7 +472,8 @@ static void send_data_page2(uint8_t subpage)
 			break;
 
 		case IRT_MSG_SUBPAGE_CRR:
-			memcpy(&response, &m_user_profile.calibrated_crr, sizeof(uint16_t));
+			memcpy(&response, &m_user_profile.ca_slope, sizeof(uint16_t));
+			memcpy(&response[2], &m_user_profile.ca_intercept, sizeof(uint16_t));
 			break;
 
 		case IRT_MSG_SUBPAGE_WEIGHT:
@@ -792,8 +795,8 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 		case ANT_CTRL_BUTTON_UP:
 			if (m_crr_adjust_mode)
 			{
-				power_init(m_user_profile.total_weight_kg,
-						m_user_profile.calibrated_crr += 50);
+				m_user_profile.ca_slope += 50;
+				power_init(&m_user_profile);
 				send_data_page2(IRT_MSG_SUBPAGE_CRR);
 			}
 			else
@@ -806,10 +809,10 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 		case ANT_CTRL_BUTTON_DOWN:
 			if (m_crr_adjust_mode)
 			{
-				if (m_user_profile.calibrated_crr > 50)
+				if (m_user_profile.ca_slope > 50)
 				{
-					power_init(m_user_profile.total_weight_kg,
-							m_user_profile.calibrated_crr -= 50);
+					m_user_profile.ca_slope -= 50;
+					power_init(&m_user_profile);
 					send_data_page2(IRT_MSG_SUBPAGE_CRR);
 				}
 			}
@@ -945,9 +948,14 @@ static void on_set_parameter(uint8_t* buffer)
 
 		case IRT_MSG_SUBPAGE_CRR:
 			// Update CRR, note this doesn't update the profile in flash.
-			memcpy(&m_user_profile.calibrated_crr, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
+			memcpy(&m_user_profile.ca_slope, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
 					sizeof(uint16_t));
-			LOG("[MAIN] Updated CRR:%i \r\n", m_user_profile.calibrated_crr);
+			memcpy(&m_user_profile.ca_intercept, &buffer[IRT_MSG_PAGE2_DATA_INDEX+2],
+					sizeof(uint16_t));
+			LOG("[MAIN] Updated slope:%i intercept:%i \r\n",
+					m_user_profile.ca_slope, m_user_profile.ca_intercept);
+			// Reinitialize power.
+			power_init(&m_user_profile);
 			break;
 
 #ifdef USE_BATTERY
@@ -1102,7 +1110,7 @@ int main(void)
 	speed_init(PIN_FLYWHEEL, m_user_profile.wheel_size_mm);
 
 	// Initialize power module with user profile.
-	power_init(m_user_profile.total_weight_kg, m_user_profile.calibrated_crr);
+	power_init(&m_user_profile);
 
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);

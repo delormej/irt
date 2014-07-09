@@ -143,7 +143,7 @@ uint16_t resistance_pct_set(float percent)
 /**@brief		Sets mag resistance to simulate desired erg watts.
  * @returns 	Servo position.
  */
-uint16_t resistance_erg_set(int16_t target_watts, float speed_mps)
+static uint16_t resistance_erg_set(int16_t target_watts, float speed_mps, float rr_force)
 {
 	float mag_force;
 
@@ -155,7 +155,7 @@ uint16_t resistance_erg_set(int16_t target_watts, float speed_mps)
 	// TODO: We could get smarter here and deal with 'erg-ing out' or if the user
 	// stops pedaling deal with them starting back up.
 	//
-	mag_force = ( (((float)target_watts) / speed_mps) - power_rr_force() );
+	mag_force = ( (((float)target_watts) / speed_mps) - rr_force );
 
 	return position_set_by_force(mag_force);
 }
@@ -169,7 +169,7 @@ uint16_t resistance_erg_set(int16_t target_watts, float speed_mps)
  *				wind resistance, wind speed, wheel circumference, and grade. 
  *				If these variables are not set, they will default to an "average" value.
  */
-uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_forces)
+static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_forces, float rr_force)
 {
 	float mag_force;
 
@@ -194,7 +194,7 @@ uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_forces)
 							p_sim_forces->grade;
 
 	// Determine the additional force required from the magnet if necessary.
-	mag_force = ( (wind + rolling + gravitational) - power_rr_force() );
+	mag_force = ( (wind + rolling + gravitational) - rr_force );
 /*
 	RC_LOG("[RC]:grade: %.2f\r\n", p_sim_forces->grade);
 	RC_LOG("[RC]:speed: %.2f\r\n", speed_mps);
@@ -214,7 +214,8 @@ uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_forces)
 void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 		irt_power_meas_t* 	p_power_meas_current,
 		rc_sim_forces_t* 	p_sim_forces,
-		resistance_mode_t 	resistance_mode)
+		resistance_mode_t 	resistance_mode,
+		float 				rr_force)
 {
 	float speed_avg;
 
@@ -242,11 +243,11 @@ void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 	switch (resistance_mode)
 	{
 		case RESISTANCE_SET_ERG:
-			resistance_erg_set(p_sim_forces->erg_watts, speed_avg);
+			resistance_erg_set(p_sim_forces->erg_watts, speed_avg, rr_force);
 			break;
 
 		case RESISTANCE_SET_SIM:
-			resistance_sim_set(speed_avg, p_sim_forces);
+			resistance_sim_set(speed_avg, p_sim_forces, rr_force);
 			break;
 
 		default:

@@ -96,7 +96,7 @@ typedef struct
 /**@brief Set resistance event handler type. */
 typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);
 
-/**@brief Factors used when caculated simulation forces. */
+/**@brief Factors used when calculating simulation forces. */
 typedef struct rc_sim_forces_s
 {
 	float 	crr;
@@ -134,22 +134,13 @@ uint16_t resistance_level_set(uint8_t level);
  */
 uint16_t resistance_pct_set(float percent);
 
-/**@brief		Sets/adjusts resistance to desired simulation parameters.  
- *
- */
-uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_forces);
-
-/**@brief		Sets/adjusts resistance to desired watts.
- *
- */
-uint16_t resistance_erg_set(int16_t target_watts, float speed_mps);
-
 /**@brief		Adjusts magnetic resistance for erg and simulation modes.
  *
  */
 void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 		irt_power_meas_t* p_power_meas_current,
 		rc_sim_forces_t *p_sim_forces,
-		resistance_mode_t resistance_mode);
+		resistance_mode_t resistance_mode,
+		float 				rr_force);
 
 #endif

@@ -42,11 +42,12 @@
  */
 typedef struct user_profile_s {
 	uint8_t		version;					// Version of the profile for future compatibility purposes.
-	uint16_t	total_weight_kg;
+	uint16_t	total_weight_kg;			// Stored in int format 1/100, e.g. 8181 = 81.81kg
 	uint16_t	wheel_size_mm;
-	uint32_t	settings;					// Bitmask of settings.
-	uint16_t	calibrated_crr;				// Calibrated co-efficient of rolling resistance (1/10,000 value). e.g. value = 0.02823f
-	uint8_t		reserved[5];
+	uint32_t	settings;					// Bitmask of feature/settings to turn on/off.
+	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/10,000 e.g. 3870 = 0.3870
+	uint16_t	ca_intercept;				// Calibration intercept.  Stored in 1/1,000 e.g. 15897 = 15.879
+	uint8_t		reserved[3];				// Padding for word alignment.
 } user_profile_t;
 
 /**@brief Initializes access to storage. */
