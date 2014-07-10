@@ -334,8 +334,15 @@ namespace ANT_Console
 
             if (success)
             {
-                m_eMotion.SetParameter(m_lastSubPage, value);
-                WriteCommand("Set parameter.");
+                try
+                {
+                    m_eMotion.SetParameter(m_lastSubPage, value);
+                    WriteCommand("Set parameter.");
+                }
+                catch (Exception e)
+                {
+                    WriteCommand(e.Message);
+                }
             }
         }
 
@@ -351,14 +358,22 @@ namespace ANT_Console
                 }
                 catch 
                 {
+                    WriteCommand("Unrecognized setting.");
                     return false;
                 }
             });
 
             if (success)
             {
-                m_eMotion.RequestDeviceParameter(m_lastSubPage);
-                WriteCommand("Requested setting.");
+                try
+                {
+                    m_eMotion.RequestDeviceParameter(m_lastSubPage);
+                    WriteCommand("Requested " + m_lastSubPage.ToString());
+                }
+                catch (Exception e)
+                {
+                    WriteCommand(e.Message);
+                }
             }
         }
 

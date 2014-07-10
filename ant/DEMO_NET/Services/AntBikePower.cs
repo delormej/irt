@@ -9,7 +9,9 @@ namespace ANT_Console.Services
     // service context.
     //
     class AntBikePower : AntService
-    {  
+    {
+        const uint ACK_TIMEOUT = 5000;
+
         // Commands
         enum Command : byte
         {
@@ -130,7 +132,11 @@ namespace ANT_Console.Services
         {
             GetSetMessage message = new GetSetMessage(subpage);
             message.SetPayLoad(value);
-            m_channel.sendAcknowledgedData(message.AsBytes());
+            var result = m_channel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
+            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            {
+                throw new ApplicationException(string.Format("Unable to send set parameter, return result: {0}.", result));
+            }
         }
 
         public void SetFirmwareUpdateMode()
@@ -150,7 +156,11 @@ namespace ANT_Console.Services
         public void RequestDeviceParameter(SubPages subPage)
         {
             RequestDataMessage message = new RequestDataMessage(subPage);
-            m_channel.sendAcknowledgedData(message.AsBytes());
+            var result = m_channel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
+            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            {
+                throw new ApplicationException(string.Format("Unable to request parameter, return result: {0}.", result));
+            }
         }
 
         public void SetButtonStops(ushort[] positionStops, ushort[] wattStops)
