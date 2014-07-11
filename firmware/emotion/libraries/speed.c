@@ -248,7 +248,7 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 		p_current->last_wheel_event_2048 = p_last->last_wheel_event_2048;
 		p_current->instant_speed_mps = 0.0f;
 
-		SP_LOG("[SP] Not moving? %i : %i\r\n", p_current->accum_flywheel_ticks, p_last->accum_flywheel_ticks);
+		//SP_LOG("[SP] Not moving? %i : %i\r\n", p_current->accum_flywheel_ticks, p_last->accum_flywheel_ticks);
 	}
 
 	// TODO: do we really need this? There is no error condition produced.

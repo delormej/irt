@@ -336,12 +336,16 @@ static void profile_update_sched(void)
  */
 static void ant_4hz_timeout_handler(void * p_context)
 {
+	static uint8_t event_count;
 	UNUSED_PARAMETER(p_context);
 	uint32_t err_code;
 	float rr_force;	// Calculated rolling resistance force.
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 	irt_power_meas_t* p_power_meas_last 		= NULL;
+
+	// Maintain a static event count, we don't do everything each time.
+	event_count++;
 
 	// Get pointers to the event structures.
 	p_power_meas_current = irt_power_meas_fifo_next();
@@ -365,8 +369,16 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	p_power_meas_current->servo_position = resistance_position_get();
 
-	// Get current temperature.
-	p_power_meas_current->temp = temperature_read();
+	// Every 32 seconds.
+	if (event_count % 128 == 0)
+	{
+		// Get current temperature.
+		p_power_meas_current->temp = temperature_read();
+	}
+	else
+	{
+		p_power_meas_current->temp = p_power_meas_last->temp;
+	}
 
 	// Report on accelerometer data.
 	if (m_accelerometer_data.source & ACCELEROMETER_SRC_FF_MT)
@@ -397,10 +409,14 @@ static void ant_4hz_timeout_handler(void * p_context)
 	// If in erg or sim mode, adjusts the resistance.
 	if (m_resistance_mode == RESISTANCE_SET_ERG || m_resistance_mode == RESISTANCE_SET_SIM)
 	{
-		// Use the oldest record we have to average with.
-		p_power_meas_first = irt_power_meas_fifo_first();
-		resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces,
-				m_resistance_mode, rr_force);
+		// Twice per second adjust resistance.
+		if (event_count % 2 == 0)
+		{
+			// Use the oldest record we have to average with.
+			p_power_meas_first = irt_power_meas_fifo_first();
+			resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces,
+					m_resistance_mode, rr_force);
+		}
 	}
 
 	// Send remote control availability.  Notification flag is 1 if a serial number
@@ -594,9 +610,10 @@ static void on_button_menu(void)
 // This is the button on the board.
 static void on_button_pbsw(void)
 {
+	// TODO: this button needs to be debounced and a LONG press should power down.
 	LOG("[MAIN] Push button switch pressed.\r\n");
-	// TODO: Temporarily calling battery from here.
-	battery_read_start();
+	// Shutting device down.
+	on_power_down(true);
 }
 
 // This event is triggered when there is data to be read from accelerometer.
