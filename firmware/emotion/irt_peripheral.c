@@ -278,7 +278,7 @@ void peripheral_powerdown(bool accelerometer_off)
 	nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
 
 	#ifdef USE_BATTERY
-	// Enable the power regulator if the board is configured for.
+	// Disable the power regulator if the board is configured for.
 	nrf_gpio_pin_clear(PIN_SLEEP_N);
 	#endif
 
