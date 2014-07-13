@@ -979,8 +979,9 @@ static void on_set_parameter(uint8_t* buffer)
 		case IRT_MSG_SUBPAGE_SET_CHARGER:
 			// TODO: This shouldn't be sent this way it should really be sent using
 			// Common Data Page 72: Command Burst
+			battery_charge_set( (BATTERY_CHARGE_OFF) );
 			LOG("[MAIN] Toggling battery charger on/off. \r\n");
-			battery_charge_toggle();
+
 			break;
 #endif
 		default:
