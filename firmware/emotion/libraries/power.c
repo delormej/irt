@@ -10,6 +10,8 @@
 #include "app_error.h"
 #include "resistance.h"
 #include "debug.h"
+#include "math.h"
+#include "nrf_delay.h"
 
 /**@brief Debug logging for module.
  *
@@ -56,14 +58,14 @@ static uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
 }
 
 /**@brief	Helper function to calculate x = y * slope + intercept.
- */
+
 static float inline slope_calc(float y, float slope, float intercept)
 {
 	float x;
 	 x = y * slope + intercept;
 
 	return x;
-}
+}*/
 
 /**@brief 	Returns the force of rolling resistance using profile crr and weight.
  * @returns Force in Newtons typical range 13.0 : 30.0
@@ -86,7 +88,7 @@ static float power_rr_force(float speed_mps)
 static float servo_force(uint16_t servo_pos)
 {
 	float force;
-
+	/*
 	//
 	// Manual multiple linear regression hack.
 	//
@@ -109,16 +111,33 @@ static float servo_force(uint16_t servo_pos)
 		// 900 - 700
 		force = slope_calc(servo_pos, -0.02238f, 61.1305f);
 	}
+	*/
+
+	if (servo_pos > MIN_RESISTANCE_LEVEL)
+	{
+		// Mag OFF
+		force = 0.0f;
+	}
+	else
+	{
+		force = (
+				-0.0000000000012401 * pow(servo_pos,5)
+				+0.0000000067486647 * pow(servo_pos,4)
+				-0.0000141629606351 * pow(servo_pos,3)
+				+0.0142639827784839 * pow(servo_pos,2)
+				-6.92836459712442 * servo_pos
+				+1351.463567618);
+	}
 
 	return force;
 }
 
 /**@brief	Calculates the required servo position given force needed.
  */
-uint16_t power_servo_pos_calc(float force_needed)
+uint16_t power_servo_pos_calc(float force)
 {
 	int16_t servo_pos;
-
+	/*
 	//
 	// Manual multiple linear regression hack.
 	//
@@ -152,6 +171,15 @@ uint16_t power_servo_pos_calc(float force_needed)
 		servo_pos = 700;
 	else if (servo_pos > 1500)
 		servo_pos = 1500;
+	*/
+
+	servo_pos = (
+			-0.0000940913669469 * pow(force,5)
+			+ 0.0108240213514885 * pow(force,4)
+			-0.46173964201648 * pow(force,3)
+			+8.9640144624266 * pow(force,2)
+			-87.5217493343533 * force
+			+1558.47782198543);
 
 	return servo_pos;
 }
@@ -189,7 +217,7 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last, flo
 	float servo;
 
 	servo = servo_force(p_current->servo_position);
-	*p_rr_force =  power_rr_force(p_current->instant_speed_mps);
+	*p_rr_force = power_rr_force(p_current->instant_speed_mps);
 
 	// Calculate power.
 	p_current->instant_power = ( *p_rr_force + servo ) * p_current->instant_speed_mps;
