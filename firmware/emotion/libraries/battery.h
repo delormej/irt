@@ -21,6 +21,10 @@ All rights reserved.
 #define BATTERY_CHARGING			2u
 #define BATTERY_CHARGE_FAULT		3u	//
 
+/**@brief Returns true if battery charger is off.
+ */
+#define BATTERY_CHARGE_OFF 			(battery_charge_status() == BATTERY_CHARGE_FAULT)
+
 typedef void (*on_battery_result_t)(uint16_t battery_level);
 
 // Begins a read of the battery voltage.
@@ -30,10 +34,9 @@ void battery_read_start(void);
 // TODO: Connect this with PPI to one of the LEDs.
 uint8_t battery_charge_status(void);
 
-/**@brief	Stops or starts the battery charge process.
- * 			Use battery_charge_status to read current status.
+/**@brief	Starts or stops the battery charge process.
  */
-void battery_charge_toggle(void);
+void battery_charge_set(bool turn_on);
 
 // Enables the Analog to Digital Converter and registers a callback for results. 
 void battery_init(uint8_t pin_battery_enable, uint8_t pin_charge_stop, on_battery_result_t on_battery_result);

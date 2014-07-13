@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 #include "battery.h"
 #include "irt_peripheral.h"
 #include "nordic_common.h"
@@ -13,6 +14,7 @@
 #include "nrf51_bitfields.h"
 #include "softdevice_handler.h"
 #include "app_util.h"
+#include "nrf_delay.h"
 #include "debug.h"
 
 #define ADC_REF_VOLTAGE_IN_MILLIVOLTS        1200                           /**< Reference voltage (in milli volts) used by ADC while doing conversion. */
@@ -138,13 +140,19 @@ uint8_t battery_charge_status()
 	return status;
 }
 
-/**@brief	Stops or starts the battery charge process.
- * 			Use battery_charge_status to read current status.
+/**@brief	Starts or stops the battery charge process.
  */
-void battery_charge_toggle()
+void battery_charge_set(bool turn_on)
 {
 #ifdef USE_BATTERY
-	nrf_gpio_pin_toggle(m_pin_charge_stop);
+	if (turn_on)
+	{
+		nrf_gpio_pin_clear(m_pin_charge_stop);
+	}
+	else
+	{
+		nrf_gpio_pin_set(m_pin_charge_stop);
+	}
 
 	BY_LOG("[BY] Toggled charge, new status is: %i. \r\n", battery_charge_status());
 #endif

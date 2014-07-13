@@ -34,7 +34,7 @@
 
 static peripheral_evt_t *mp_on_peripheral_evt;
 static app_timer_id_t m_led1_blink_timer_id;
-static app_timer_id_t m_led2_blink_timer_id;
+//static app_timer_id_t m_led2_blink_timer_id;
 static app_gpiote_user_id_t mp_user_id;
 
 /**@brief Function for handling interrupt events.
@@ -73,6 +73,13 @@ static void blink_timeout_handler(void * p_context)
 	nrf_gpio_pin_toggle(PIN_LED_B);
 }
 
+/**@brief	Returns 0 = adapter power, 1= no adapter.
+ */
+static __INLINE uint32_t ac_adapter_off(void)
+{
+	return nrf_gpio_pin_read(PIN_PG_N);
+}
+
 /**@brief Initialize all peripherial pins.
  */
 static void irt_gpio_init()
@@ -88,7 +95,7 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_output(PIN_LED_D);		// Green #2
 
 	// User push button on the board.
-	// TODO: this needs to be debounced, using a pull-up not sure if that's required.
+	// TODO: this needs to be debounced.
 	nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
 
 	// Enable servo / LED.
@@ -110,25 +117,31 @@ static void irt_gpio_init()
 	// Configure pins for battery charger status.
 	nrf_gpio_cfg_input(PIN_STAT1, NRF_GPIO_PIN_NOPULL);
 	nrf_gpio_cfg_input(PIN_STAT2, NRF_GPIO_PIN_NOPULL);
+	#endif
 
+	#ifdef USE_BATTERY_CHARGER
 	// Configure pin for enabling or disabling battery charger. 0=on, 1=off
 	nrf_gpio_cfg_output(PIN_CHG_EN_N);
-	//nrf_gpio_pin_clear(PIN_CHG_EN_N);		// On by default.
-
 	#endif
+
 #endif
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
 
-	pins_low_to_high_mask = 0;
+	pins_low_to_high_mask =
+#ifdef USE_BATTERY
+		1 << PIN_STAT1;				// On battery charger status changing.
+#else
+		0;
+#endif
+
 	pins_high_to_low_mask = ( 1 << PIN_SHAKE
 #ifdef IRT_REV_2A_H
-			| 1 << PIN_PBSW
-			| 1 << PIN_PG_N	);
-#else
-			);
+			| 1 << PIN_PBSW			// On user push button switch
+			| 1 << PIN_PG_N			// On power adapter plugged in
 #endif
+			);
 
 	APP_GPIOTE_INIT(1);
 
@@ -265,9 +278,18 @@ void peripheral_powerdown(bool accelerometer_off)
 	nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
 
 	#ifdef USE_BATTERY
-	// Enable the power regulator if the board is configured for.
+	// Disable the power regulator if the board is configured for.
 	nrf_gpio_pin_clear(PIN_SLEEP_N);
 	#endif
+
+	#ifdef USE_BATTERY_CHARGER
+	// Check if AC power is plugged in.  If not, cut power to charger.
+	if (ac_adapter_off())
+	{
+		battery_charge_set(false);
+	}
+	#endif
+
 #endif
 
 	// Shut down the leds.
