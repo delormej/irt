@@ -42,6 +42,7 @@
 #include "user_profile.h"
 #include "wahoo.h"
 #include "ble_ant.h"
+#include "ant_bike_power.h"
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 #include "app_timer.h"
@@ -51,20 +52,26 @@
 #include "battery.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
-#define DEFAULT_WHEEL_SIZE_MM			2096u
-#define DEFAULT_TOTAL_WEIGHT_KG			(178.0f * 0.453592)	// Convert lbs to KG
-#define DEFAULT_ERG_WATTS				175u
-#define SIM_CRR							0.0033f
-#define SIM_C							0.60f
 #define BLE_ADV_BLINK_RATE_MS			500u
+#define SCHED_QUEUE_SIZE                16                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
-#define SCHED_QUEUE_SIZE                64                                          /**< Maximum number of events in the scheduler queue. */
+//
+// Default profile and simulation values.
+//
+#define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
+#define DEFAULT_TOTAL_WEIGHT_KG			8180ul 										// Default weight (convert 180.0lbs to KG).
+#define DEFAULT_ERG_WATTS				175u										// Default erg target_watts when not otherwise set.
+#define DEFAULT_SETTINGS				0ul											// Default 32bit field of settings.
+#define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
+#define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
+
+#define REQUEST_RETRY					12ul										// Number of times to retry sending broadcast data requests.
 
 static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
 
-static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.
+static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 
 static user_profile_t 					m_user_profile;
 static rc_sim_forces_t					m_sim_forces;
@@ -72,8 +79,11 @@ static accelerometer_data_t 			m_accelerometer_data;
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
-static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
+static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
+// Type declarations for profile updating.
+static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
+static void profile_update_sched(void);
 
 /**@brief Debug logging for main module.
  *
@@ -119,7 +129,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     //                any communication.
     //                Use with care.
 #if defined(ENABLE_DEBUG_ASSERT)
-	set_led_red(0);
+	set_led_red(3);
 
 	// Note this function does not return - it will hang waiting for a debugger to attach.
 	ble_debug_assert_handler(error_code, line_num, p_file_name);
@@ -156,27 +166,33 @@ static void set_wheel_params(uint8_t *pBuffer)
 
 		m_user_profile.wheel_size_mm = wheel_size;
 		// Schedule an update to persist the profile to flash.
-		app_sched_event_put(NULL, 0, profile_update_sched_handler);
-	}
+		profile_update_sched();
 
-	// Call speed module to set the wheel size.
-	speed_wheel_size_set(m_user_profile.wheel_size_mm);
+		// Call speed module to update the wheel size.
+		speed_wheel_size_set(m_user_profile.wheel_size_mm);
+	}
 }
 
-// Parses the SET_SIM message from the KICKR and has user profile info.
+/**@brief	Parses the SET_SIM message from the KICKR and has user profile info.
+ * 			Reinitializes the power module if weight changed.
+ */
 static void set_sim_params(uint8_t *pBuffer)
 {
 	// Weight comes through in KG as 8500 85.00kg for example.
-	float weight, c, crr;
+	float c, crr;
+	uint16_t weight;
 
-	weight = DECODE_FLOAT(pBuffer, 100.0f);
+	weight = uint16_decode(pBuffer);
 
 	if (m_user_profile.total_weight_kg != weight)
 	{
 		m_user_profile.total_weight_kg = weight;
 
 		// Schedule an update to persist the profile to flash.
-		app_sched_event_put(NULL, 0, profile_update_sched_handler);
+		profile_update_sched();
+
+		// Re-initialize the power module with updated weight.
+		power_init(&m_user_profile);
 	}
 
 	// Co-efficient for rolling resistance.
@@ -191,7 +207,7 @@ static void set_sim_params(uint8_t *pBuffer)
 		m_sim_forces.c = c;
 
 	LOG("[MAIN]:set_sim_params {weight:%.2f, crr:%i, c:%i}\r\n",
-		m_user_profile.total_weight_kg,
+		(m_user_profile.total_weight_kg / 100.0f),
 		(uint16_t)(m_sim_forces.crr * 10000),
 		(uint16_t)(m_sim_forces.c * 1000) );
 }
@@ -216,21 +232,46 @@ static void profile_init(void)
 		err_code = user_profile_load(&m_user_profile);
 		APP_ERROR_CHECK(err_code);
 
-		if (m_user_profile.wheel_size_mm == 0 ||
-				m_user_profile.wheel_size_mm == 0xFFFF)
+		//
+		// Check the version of the profile, if it's not the current version
+		// set the default parameters.
+		//
+		if (m_user_profile.version != PROFILE_VERSION)
 		{
-			// Wheel circumference in mm.
-			m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
-		}
-		
-		if (isnan(m_user_profile.total_weight_kg) || m_user_profile.total_weight_kg < 1.0f)
-		{
-			LOG("[MAIN]:profile_init using default weight.");
+			LOG("[MAIN]: Older profile version %i. Loading defaults and upgrading\r\n.",
+					m_user_profile.version);
+			m_user_profile.version			= PROFILE_VERSION;
+			m_user_profile.wheel_size_mm 	= DEFAULT_WHEEL_SIZE_MM;
+			m_user_profile.total_weight_kg 	= DEFAULT_TOTAL_WEIGHT_KG;
+			m_user_profile.settings 		= DEFAULT_SETTINGS;
 
-			// Total weight of rider + bike + shoes, clothing, etc...
-			m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
+			// Schedule an update.
+			profile_update_sched();
 		}
-		
+		else
+		{
+			if (m_user_profile.wheel_size_mm == 0 ||
+					m_user_profile.wheel_size_mm == 0xFFFF)
+			{
+				// Wheel circumference in mm.
+				m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
+			}
+
+			if (m_user_profile.total_weight_kg == 0 ||
+					m_user_profile.total_weight_kg == 0xFFFF)
+			{
+				LOG("[MAIN]:profile_init using default weight.");
+
+				// Total weight of rider + bike + shoes, clothing, etc...
+				m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
+			}
+
+			if (m_user_profile.ca_slope == 0xFFFF)
+			{
+				m_user_profile.ca_slope = DEFAULT_CRR;
+			}
+		}
+
 	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004. 
 	 *
 	 *	fC is equal to A*Cw*Rho where A is effective frontal area (m^2); Cw is drag 
@@ -240,76 +281,12 @@ static void profile_init(void)
 		m_sim_forces.crr = SIM_CRR;
 		m_sim_forces.c = SIM_C;
 
-		LOG("[MAIN]:profile_init {weight:%.2f, wheel:%i}\r\n",
+		LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t ca_slope: %i \r\n\t ca_intercept: %i \r\n",
 				m_user_profile.total_weight_kg,
-				m_user_profile.wheel_size_mm);
-}
-
-/**@brief Persists any updates the user profile. */
-static void profile_update(void)
-{
-	uint32_t err_code;
-
-	// This method ensures the device is in a proper state in order to update
-	// the profile.
-	err_code = user_profile_store(&m_user_profile);
-	APP_ERROR_CHECK(err_code);
-
-	LOG("[MAIN]:profile_update {weight: %.2f, wheel: %i}\r\n",
-			m_user_profile.total_weight_kg,
-			m_user_profile.wheel_size_mm);
-}
-
-static void resistance_adjust(irt_power_meas_t* p_power_meas_first, irt_power_meas_t* p_power_meas_current)
-{
-	float speed_avg;
-
-	// If we have a range of events between first and current, we're able to do a moving average of speed.
-	if (p_power_meas_first != NULL)
-	{
-		// Average the speed.
-		speed_avg = (p_power_meas_current->instant_speed_mps +
-				p_power_meas_current->instant_speed_mps) / 2.0f;
-	}
-	else
-	{
-		speed_avg = p_power_meas_current->instant_speed_mps;
-	}
-
-	// Don't attempt to adjust if stopped.
-	if (speed_avg == 0.0f)
-		return;
-
-	// If in erg or sim mode, adjust resistance accordingly.
-	switch (m_resistance_mode)
-	{
-		case RESISTANCE_SET_ERG:
-			resistance_erg_set(
-					speed_avg,
-					m_user_profile.total_weight_kg,
-					&m_sim_forces);
-			break;
-
-		case RESISTANCE_SET_SIM:
-			resistance_sim_set(
-					speed_avg,
-					m_user_profile.total_weight_kg,
-					&m_sim_forces);
-
-			/*LOG("[MAIN]:resistance_adjust SIM: %i\r\n", m_sim_forces.erg_watts);
-			LOG("[MAIN]:resistance_adjust SIM: %i-g, %i-mps, %i-c, %i-crr, %i-slope, %i-wind = %i-watts \r\n",
-					(uint16_t)(m_user_profile.total_weight_kg * 100),
-					(uint16_t)(power_meas.instant_speed_mps * 100),
-					(uint16_t)(m_sim_forces.c * 1000),
-					(uint16_t)(m_sim_forces.crr * 10000),
-					(uint16_t)(m_sim_forces.grade * 1000),
-					(uint16_t)(m_sim_forces.wind_speed_mps * 1000),
-					power_meas.instant_power);*/
-			break;
-
-		default:
-			break;
-	}
+				m_user_profile.wheel_size_mm,
+				m_user_profile.settings,
+				m_user_profile.ca_slope,
+				m_user_profile.ca_intercept);
 }
 
 /**@brief Function for handling profile update.
@@ -322,7 +299,28 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
 {
 	UNUSED_PARAMETER(p_event_data);
 	UNUSED_PARAMETER(event_size);
-	profile_update();
+
+	uint32_t err_code;
+
+	// This method ensures the device is in a proper state in order to update
+	// the profile.
+	err_code = user_profile_store(&m_user_profile);
+	APP_ERROR_CHECK(err_code);
+
+	LOG("[MAIN]:profile_update:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t slope: %i \r\n\t intercept: %i \r\n",
+			m_user_profile.total_weight_kg,
+			m_user_profile.wheel_size_mm,
+			m_user_profile.settings,
+			m_user_profile.ca_slope,
+			m_user_profile.ca_intercept);
+}
+
+/**@brief Schedules an update to the profile.  See notes above in handler.
+ *
+ */
+static void profile_update_sched(void)
+{
+	app_sched_event_put(NULL, 0, profile_update_sched_handler);
 }
 
 /*----------------------------------------------------------------------------
@@ -338,15 +336,19 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
  */
 static void ant_4hz_timeout_handler(void * p_context)
 {
+	static uint8_t event_count;
 	UNUSED_PARAMETER(p_context);
 	uint32_t err_code;
+	float rr_force;	// Calculated rolling resistance force.
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 	irt_power_meas_t* p_power_meas_last 		= NULL;
-		
+
+	// Maintain a static event count, we don't do everything each time.
+	event_count++;
+
 	// Get pointers to the event structures.
 	p_power_meas_current = irt_power_meas_fifo_next();
-	p_power_meas_first = irt_power_meas_fifo_first();
 	p_power_meas_last = irt_power_meas_fifo_last();
 
 	// Set current resistance state.
@@ -357,7 +359,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 		case RESISTANCE_SET_STANDARD:
 			p_power_meas_current->resistance_level = m_resistance_level;
 			break;
-		case RESISTANCE_SET_ERG:
+		case RESISTANCE_SET_ERG: // TOOD: not sure why we're falling through here with SIM?
 		case RESISTANCE_SET_SIM:
 			p_power_meas_current->resistance_level = (uint16_t)(m_sim_forces.erg_watts);
 			break;
@@ -367,8 +369,16 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	p_power_meas_current->servo_position = resistance_position_get();
 
-	// Get current temperature.
-	p_power_meas_current->temp = temperature_read();
+	// Every 32 seconds.
+	if (event_count % 128 == 0)
+	{
+		// Get current temperature.
+		p_power_meas_current->temp = temperature_read();
+	}
+	else
+	{
+		p_power_meas_current->temp = p_power_meas_last->temp;
+	}
 
 	// Report on accelerometer data.
 	if (m_accelerometer_data.source & ACCELEROMETER_SRC_FF_MT)
@@ -386,19 +396,27 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Calculate speed.
 	err_code = speed_calc(p_power_meas_current, p_power_meas_last);
+	APP_ERROR_CHECK(err_code);
 
-	// Calculate power.
-	err_code = power_calc(p_power_meas_current, p_power_meas_last);
+	// Calculate power and get back the rolling resistance force for use in adjusting resistance.
+	err_code = power_calc(p_power_meas_current, p_power_meas_last, &rr_force);
+	APP_ERROR_CHECK(err_code);
 
 	// TODO: this should return an err_code.
 	// Transmit the power message.
 	cycling_power_send(p_power_meas_current);
 
 	// If in erg or sim mode, adjusts the resistance.
-	if (m_resistance_mode == RESISTANCE_SET_ERG ||
-			m_resistance_mode == RESISTANCE_SET_SIM)
+	if (m_resistance_mode == RESISTANCE_SET_ERG || m_resistance_mode == RESISTANCE_SET_SIM)
 	{
-		resistance_adjust(p_power_meas_first, p_power_meas_current);
+		// Twice per second adjust resistance.
+		if (event_count % 2 == 0)
+		{
+			// Use the oldest record we have to average with.
+			p_power_meas_first = irt_power_meas_fifo_first();
+			resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces,
+					m_resistance_mode, rr_force);
+		}
 	}
 
 	// Send remote control availability.  Notification flag is 1 if a serial number
@@ -454,6 +472,47 @@ static void scheduler_init(void)
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 }
 
+
+/**@brief	Sends data page 2 response.
+ */
+static void send_data_page2(uint8_t subpage)
+{
+	uint8_t response[6];
+
+	memset(&response, 0, sizeof(response));
+
+	switch (subpage)
+	{
+		case IRT_MSG_SUBPAGE_SETTINGS:
+			memcpy(&response, &m_user_profile.settings, sizeof(uint32_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_CRR:
+			memcpy(&response, &m_user_profile.ca_slope, sizeof(uint16_t));
+			memcpy(&response[2], &m_user_profile.ca_intercept, sizeof(uint16_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_WEIGHT:
+			memcpy(&response, &m_user_profile.total_weight_kg, sizeof(uint16_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_WHEEL_SIZE:
+			memcpy(&response, &m_user_profile.wheel_size_mm, sizeof(uint16_t));
+			break;
+
+		default:
+			LOG("[MAIN] Unrecognized page request. \r\n");
+			return;
+	}
+
+	// # of times to send message - byte 5, bits 0:6 - just hard coding for now.
+	// Number of times to send.
+	for (uint8_t i = 0; i < REQUEST_RETRY; i++)
+	{
+		ant_bp_page2_tx_send(subpage, response, 0);
+	}
+}
+
 /*----------------------------------------------------------------------------
  * Event handlers
  * ----------------------------------------------------------------------------*/
@@ -478,7 +537,7 @@ static void on_power_down(bool accelerometer_wake_disable)
 	sd_power_system_off();
 }
 
-static void on_button_i(void)
+static void on_resistance_off(void)
 {
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = 0;
@@ -486,7 +545,7 @@ static void on_button_i(void)
 	ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
 }
 
-static void on_button_ii(void)
+static void on_resistance_dec(void)
 {
 	// decrement
 	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
@@ -504,7 +563,7 @@ static void on_button_ii(void)
 	}
 }
 
-static void on_button_iii(void)
+static void on_resistance_inc(void)
 {
 	// increment
 	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
@@ -521,7 +580,7 @@ static void on_button_iii(void)
 	}
 }
 
-static void on_button_iv(void)
+static void on_resistance_max(void)
 {
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
@@ -544,16 +603,17 @@ static void on_button_menu(void)
 	else
 	{
 		m_resistance_mode = RESISTANCE_SET_STANDARD;
-		on_button_i();
+		on_resistance_off();
 	}
 }
 
 // This is the button on the board.
 static void on_button_pbsw(void)
 {
+	// TODO: this button needs to be debounced and a LONG press should power down.
 	LOG("[MAIN] Push button switch pressed.\r\n");
-	// TODO: Temporarily calling battery from here.
-	battery_read_start();
+	// Shutting device down.
+	on_power_down(true);
 }
 
 // This event is triggered when there is data to be read from accelerometer.
@@ -573,18 +633,21 @@ static void on_accelerometer(void)
 			m_accelerometer_data.out_y_lsb |=
 					m_accelerometer_data.out_y_msb << 8);
 
-	// TODO: Use a constant here, but this is called when the device stops moving for a while.
-	if (m_accelerometer_data.source == 128)
+	// Received a sleep interrupt from the accelerometer meaning no motion for a while.
+	if (m_accelerometer_data.source == ACCELEROMETER_SRC_WAKE_SLEEP)
 	{
-
-		LOG("[MAIN]:about to power down, PIN_SHAKE is:%i, config is:%i\r\n",
-				nrf_gpio_pin_read(PIN_SHAKE),
-				NRF_GPIO->PIN_CNF[PIN_SHAKE]);
-
+		LOG("[MAIN]:about to power down from accelerometer sleep.\r\n");;
+		//
+		// This is a workaround to deal with GPIOTE toggling the SENSE bits which forces
+		// the device to wake up immediately after going to sleep without this.
+		//
         NRF_GPIO->PIN_CNF[PIN_SHAKE] &= ~GPIO_PIN_CNF_SENSE_Msk;
         NRF_GPIO->PIN_CNF[PIN_SHAKE] |= GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos;
 
-		on_power_down(false);
+        if (!(FEATURE_IS_SET(m_user_profile.settings, FEATURE_ACCEL_SLEEP_OFF)))
+        {
+        	on_power_down(false);
+        }
 	}
 }
 
@@ -628,11 +691,6 @@ static void on_ble_uart(uint8_t * data, uint16_t length)
 {
 	LOG("[MAIN]:on_ble_uart data: %*.*s\r\n", length, length, data);
 }
-
-// TODO: implement this behavior, reopen the channel, etc...?
-static void on_ant_channel_closed(void) {}
-// TODO: This is to handle when we pair to a power meter.
-static void on_ant_power_data(void) {}
 
 /*@brief	Event handler that the cycling power service calls when a set resistance
  *				command is received.
@@ -752,32 +810,74 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 	switch (evt.command)
 	{
 		case ANT_CTRL_BUTTON_UP:
-			// Increment resistance.
-			on_button_iii(); 
+			if (m_crr_adjust_mode)
+			{
+				m_user_profile.ca_slope += 50;
+				power_init(&m_user_profile);
+				send_data_page2(IRT_MSG_SUBPAGE_CRR);
+			}
+			else
+			{
+				// Increment resistance.
+				on_resistance_inc();
+			}
 			break;
 
 		case ANT_CTRL_BUTTON_DOWN:
-			// Decrement resistance.
-			on_button_ii();
+			if (m_crr_adjust_mode)
+			{
+				if (m_user_profile.ca_slope > 50)
+				{
+					m_user_profile.ca_slope -= 50;
+					power_init(&m_user_profile);
+					send_data_page2(IRT_MSG_SUBPAGE_CRR);
+				}
+			}
+			else
+			{
+				// Decrement resistance.
+				on_resistance_dec();
+			}
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_UP:
 			// Set full resistance
-			on_button_iv();
+			on_resistance_max();
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_DOWN:
 			// Turn off resistance
-			on_button_i();
+			on_resistance_off();
 			break;
 
 		case ANT_CTRL_BUTTON_MIDDLE:
-			on_button_menu();
+			if (m_crr_adjust_mode)
+			{
+				// Exit crr mode.
+				m_crr_adjust_mode = false;
+				clear_led(2);
+			}
+			else
+			{
+				on_button_menu();
+			}
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_MIDDLE:
-			// Force a hard power down, accelerometer will not wake.
-			on_power_down(true);
+			// Requires double long push of middle to shut down.
+			if (m_crr_adjust_mode)
+			{
+				// Force a hard power down, accelerometer will not wake.
+				on_power_down(true);
+			}
+			else
+			{
+				// Change into crr mode.
+				// Set the state, start blinking the LED RED
+				m_crr_adjust_mode = true;
+				set_led_red(2);
+			}
+
 			break;
 
 		default:
@@ -800,6 +900,109 @@ static void on_enable_dfu_mode(void)
 
 	// Resets the CPU to start in DFU mode.
 	NVIC_SystemReset();
+}
+
+/**@brief	Device receives page (0x46) requesting data page.
+ */
+static void on_request_data(uint8_t* buffer)
+{
+	uint8_t subpage;
+	subpage = (uint8_t)buffer[3];
+	LOG("[MAIN] Request to get data page (subpage): %#x\r\n", subpage);
+	LOG("[MAIN]:request data message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+			buffer[0],
+			buffer[1],
+			buffer[2],
+			buffer[3],
+			buffer[4],
+			buffer[5],
+			buffer[6],
+			buffer[7]);
+
+	// TODO: just a quick hack for right now for getting battery info.
+	if (subpage == ANT_PAGE_BATTERY_STATUS)
+	{
+		LOG("[MAIN] Requested battery status. \r\n");
+		battery_read_start();
+		return;
+	}
+
+	// Process and send response.
+	send_data_page2(subpage);
+}
+
+/**@brief	Device receives page (0x02) with values to set.
+ */
+static void on_set_parameter(uint8_t* buffer)
+{
+	LOG("[MAIN]:set param message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+			buffer[0],
+			buffer[1],
+			buffer[2],
+			buffer[3],
+			buffer[4],
+			buffer[5],
+			buffer[6],
+			buffer[7]);
+
+	// SubPage index
+	switch (buffer[IRT_MSG_PAGE2_SUBPAGE_INDEX])
+	{
+		case IRT_MSG_SUBPAGE_SETTINGS:
+			// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
+			// Need to use memcpy, Cortex-M proc doesn't support unaligned casting of 32bit int.
+			memcpy(&m_user_profile.settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
+					sizeof(uint32_t));
+
+			LOG("[MAIN] Request to update settings to: ACCEL:%i, BIG_MAG:%i, EXTRA_INFO:%i, TEST:%i \r\n",
+						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ACCEL_SLEEP_OFF),
+						FEATURE_IS_SET(m_user_profile.settings, FEATURE_BIG_MAG),
+						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ANT_EXTRA_INFO),
+						FEATURE_IS_SET(m_user_profile.settings, FEATURE_TEST));
+			// Schedule update to the profile.
+			profile_update_sched();
+			break;
+
+		case IRT_MSG_SUBPAGE_CRR:
+			// Update CRR, note this doesn't update the profile in flash.
+			memcpy(&m_user_profile.ca_slope, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
+					sizeof(uint16_t));
+			memcpy(&m_user_profile.ca_intercept, &buffer[IRT_MSG_PAGE2_DATA_INDEX+2],
+					sizeof(uint16_t));
+			LOG("[MAIN] Updated slope:%i intercept:%i \r\n",
+					m_user_profile.ca_slope, m_user_profile.ca_intercept);
+			// Reinitialize power.
+			power_init(&m_user_profile);
+			break;
+
+#ifdef USE_BATTERY
+		case IRT_MSG_SUBPAGE_SET_CHARGER:
+			// TODO: This shouldn't be sent this way it should really be sent using
+			// Common Data Page 72: Command Burst
+			battery_charge_set( (BATTERY_CHARGE_OFF) );
+			LOG("[MAIN] Toggling battery charger on/off. \r\n");
+
+			break;
+#endif
+		default:
+			LOG("[MAIN] on_set_parameter: Invalid setting, skipping. \r\n");
+			return;
+	}
+}
+
+/**@brief	Called when the result of the battery is determined.
+ *
+ */
+static void on_battery_result(uint16_t battery_level)
+{
+	LOG("[MAIN] on_battery_result %i \r\n", battery_level);
+
+	// TODO: temporarily sending page 2, need to send page 0x52.
+	// Number of times to send.
+	for (uint8_t i = 0; i < REQUEST_RETRY; i++)
+	{
+		ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, 0);
+	}
 }
 
 /**@brief	Configures power supervisor to warn and reset if power drops too low.
@@ -874,13 +1077,10 @@ int main(void)
 
 	// Peripheral interrupt event handlers.
 	static peripheral_evt_t on_peripheral_handlers = {
-		on_button_i,
-		on_button_ii,
-		on_button_iii,
-		on_button_iv,
 		on_button_pbsw,
 		on_accelerometer,
-		on_power_plug
+		on_power_plug,
+		on_battery_result
 	};
 
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).
@@ -893,11 +1093,11 @@ int main(void)
 		on_ble_timeout,
 		on_ble_advertising,
 		on_ble_uart,
-		on_ant_channel_closed,
-		on_ant_power_data,
 		on_set_resistance,
 		on_ant_ctrl_command,
-		on_enable_dfu_mode
+		on_enable_dfu_mode,
+		on_request_data,
+		on_set_parameter
 	};
 
 	// TODO: Question should we have a separate method to initialize soft device?
@@ -919,13 +1119,13 @@ int main(void)
 	ble_ant_start();
 
 	// Initialize resistance module and initial values.
-	resistance_init(PIN_SERVO_SIGNAL);
+	resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
 	// TODO: This state should be moved to resistance module.
 	m_resistance_level = 0;
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 
 	// Initialize module to read speed from flywheel.
-	speed_init(PIN_FLYWHEEL, DEFAULT_WHEEL_SIZE_MM);
+	speed_init(PIN_FLYWHEEL, m_user_profile.wheel_size_mm);
 
 	// Initialize power module with user profile.
 	power_init(&m_user_profile);
@@ -937,6 +1137,13 @@ int main(void)
 	application_timers_start();
 
 	LOG("[MAIN]:Initialization done.\r\n");
+
+#ifdef USE_BATTERY
+	// TODO: This is just temporary, this will move to a regular event.
+	// Can't be done as part of peripheral_init because soft device isn't enabled yet.
+	// Get an initial read from the battery.
+	battery_read_start();
+#endif
 
     // Enter main loop
     for (;;)

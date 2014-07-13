@@ -41,18 +41,13 @@
 #define ACCUMMULATED_TORQUE_LSB_INDEX	6u
 #define ACCUMMULATED_TORQUE_MSB_INDEX	7u
 
-#define BP_PAGE_1               	 0x01u   /**< Calibration message main data page. */
-#define BP_PAGE_STANDARD_POWER_ONLY  0x10u   /**< Standard Power only main data page. */
-#define BP_PAGE_TORQUE_AT_WHEEL		 0x11u   /**< Power reported as torque at wheel data page, which includes speed. */
-#define BP_PAGE_EXTRA_INFO			 0x24u   // TODO: My custom page.  Look for better page no for this.
-
 #define ANT_BP_CHANNEL_TYPE          0x10                                         /**< Channel Type TX. */
 #define ANT_BP_DEVICE_TYPE           0x0B                                         /**< Channel ID device type. */
-#define ANT_BP_TRANS_TYPE            0xA5 // is how we indicate WAHOO KICKR, normal is: 0x5                                         /**< Transmission Type. */
+#define ANT_BP_TRANS_TYPE            0xA5 	// is how we indicate WAHOO KICKR, normal is: 0x5                                         /**< Transmission Type. */
 #define ANT_BP_MSG_PERIOD            0x1FF6                                     	 /**< Message Periods, decimal 8182 (~4.00Hz) data is transmitted every 8182/32768 seconds. */
 #define ANT_BP_EXT_ASSIGN            0	                                          /**< ANT Ext Assign. */
 
-#define ANT_BURST_MSG_ID_SET_RESISTANCE		0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
+#define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
 
 /**@brief Debug logging for module.
  *
@@ -70,6 +65,7 @@
  ******************************************************************************/
 // Manufacturer-Specific pages (0xF0 - 0xFF).
 #define WF_ANT_RESPONSE_PAGE_ID              0xF0
+
 //
 #define WF_ANT_RESPONSE_FLAG                 0x80
 
@@ -90,8 +86,7 @@ typedef struct
 
 static uint8_t m_power_tx_buffer[TX_BUFFER_SIZE];
 static uint8_t m_torque_tx_buffer[TX_BUFFER_SIZE];
-static rc_evt_handler_t m_on_set_resistance;
-static ant_bp_evt_dfu_enable m_on_enable_dfu_mode;
+static ant_ble_evt_handlers_t* mp_evt_handlers;
 
 // Shared event counter for all ANT BP messages.
 static uint8_t m_event_count;
@@ -194,7 +189,7 @@ static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 {
 	uint8_t buffer[TX_BUFFER_SIZE];
 
-	buffer[PAGE_NUMBER_INDEX]			= BP_PAGE_EXTRA_INFO;
+	buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_EXTRA_INFO;
 	buffer[EXTRA_INFO_SERVO_POS_LSB]	= LOW_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_SERVO_POS_MSB]	= HIGH_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
@@ -212,17 +207,18 @@ static void handle_move_servo(ant_evt_t * p_ant_evt)
 
 	evt.operation = RESISTANCE_SET_SERVO_POS;
 	evt.pBuffer = &(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
-	m_on_set_resistance(evt);
+	mp_evt_handlers->on_set_resistance(evt);
 }
 
 static void handle_set_weight(ant_evt_t * p_ant_evt)
 {
 	// TODO: currently this is in the resistance command.
+	// TODO: Change this to  use data page 2 get/set params.
 	rc_evt_t evt;
 
 	evt.operation = RESISTANCE_SET_WEIGHT;
 	evt.pBuffer = &(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
-	m_on_set_resistance(evt);
+	mp_evt_handlers->on_set_resistance(evt);
 }
 
 // Right now all this method does is handle resistance control messages.
@@ -270,7 +266,32 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 				p_ant_evt->evt_buffer[7],
 				p_ant_evt->evt_buffer[8]);
 
-		m_on_set_resistance(evt);
+		mp_evt_handlers->on_set_resistance(evt);
+	}
+}
+
+/**@brief	Handles WAHOO API specific commands.
+ * 			Note: A couple of custom hack commands are here too.
+ */
+static void handle_wahoo_page(ant_evt_t * p_ant_evt)
+{
+	// Determine the "command".
+	switch (p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET])
+	{
+		case ANT_BP_SET_WEIGHT_COMMAND:	// Set Weight
+			handle_set_weight(p_ant_evt);
+			break;
+
+		case ANT_BP_ENABLE_DFU_COMMAND:	// Invoke device firmware update mode.
+			mp_evt_handlers->on_enable_dfu_mode();
+			break;
+
+		case ANT_BP_MOVE_SERVO_COMMAND: // Move the servo to a specific position.
+			handle_move_servo(p_ant_evt);
+			break;
+
+		default:
+			break;
 	}
 }
 
@@ -283,37 +304,46 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 		handle_burst(p_ant_evt);
 	}
 	// TODO: remove these hard coded array position values and create defines.
-	else if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] == MESG_ACKNOWLEDGED_DATA_ID &&
-		p_ant_evt->evt_buffer[3] == WF_ANT_RESPONSE_PAGE_ID)
+	else if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] == MESG_ACKNOWLEDGED_DATA_ID)
 	{
-		// Determine the "command". 
-		switch (p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET])
+		switch (p_ant_evt->evt_buffer[3])  // Switch on the page number.
 		{
-			case ANT_BP_SET_WEIGHT_COMMAND:	// Set Weight
-				handle_set_weight(p_ant_evt);
-				break;
-			
-			case ANT_BP_ENABLE_DFU_COMMAND:	// Invoke device firmware update mode.
-				m_on_enable_dfu_mode();
+			case WF_ANT_RESPONSE_PAGE_ID:
+				handle_wahoo_page(p_ant_evt);
 				break;
 
-			case ANT_BP_MOVE_SERVO_COMMAND: // Move the servo to a specific position.
-				handle_move_servo(p_ant_evt);
+			case ANT_PAGE_GETSET_PARAMETERS:
+				BP_LOG("[BP]:ANT GET/SET Page Sent.\r\n");
+				mp_evt_handlers->on_set_parameter(&(p_ant_evt->evt_buffer[3]));
+				break;
+
+			case ANT_PAGE_REQUEST_DATA:
+				BP_LOG("[BP]:ANT Data Request Page.\r\n");
+				mp_evt_handlers->on_request_data(&(p_ant_evt->evt_buffer[3]));
 				break;
 
 			default:
+				BP_LOG("[BP]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+						p_ant_evt->evt_buffer[0],
+						p_ant_evt->evt_buffer[1],
+						p_ant_evt->evt_buffer[2],
+						p_ant_evt->evt_buffer[3],
+						p_ant_evt->evt_buffer[4],
+						p_ant_evt->evt_buffer[5],
+						p_ant_evt->evt_buffer[6],
+						p_ant_evt->evt_buffer[7],
+						p_ant_evt->evt_buffer[8]);
 				break;
 		}
 	}
 }
 
-void ant_bp_tx_init(rc_evt_handler_t on_set_resistance, ant_bp_evt_dfu_enable on_enable_dfu_mode)
+void ant_bp_tx_init(ant_ble_evt_handlers_t * evt_handlers)
 {
     uint32_t err_code;
     
 	// Assign callback for when resistance message is processed.	
-	m_on_set_resistance = on_set_resistance;
-	m_on_enable_dfu_mode = on_enable_dfu_mode;
+    mp_evt_handlers = evt_handlers;
 		
     err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, (uint8_t *)m_ant_network_key);
     APP_ERROR_CHECK(err_code);
@@ -337,7 +367,7 @@ void ant_bp_tx_init(rc_evt_handler_t on_set_resistance, ant_bp_evt_dfu_enable on
     APP_ERROR_CHECK(err_code);
 		
 	// Initialize power transmit buffer.
-	m_power_tx_buffer[PAGE_NUMBER_INDEX]              = BP_PAGE_STANDARD_POWER_ONLY;
+	m_power_tx_buffer[PAGE_NUMBER_INDEX]              = ANT_BP_PAGE_STANDARD_POWER_ONLY;
 	m_power_tx_buffer[EVENT_COUNT_INDEX]              = 0;
 	m_power_tx_buffer[PEDAL_POWER_INDEX]              = BP_PAGE_RESERVE_BYTE;
 	m_power_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;
@@ -347,7 +377,7 @@ void ant_bp_tx_init(rc_evt_handler_t on_set_resistance, ant_bp_evt_dfu_enable on
 	m_power_tx_buffer[INSTANT_POWER_MSB_INDEX]        = 0;
 
 	// Initialize torque transmit buffer.
-	m_torque_tx_buffer[PAGE_NUMBER_INDEX]              = BP_PAGE_TORQUE_AT_WHEEL;
+	m_torque_tx_buffer[PAGE_NUMBER_INDEX]              = ANT_BP_PAGE_TORQUE_AT_WHEEL;
 	m_torque_tx_buffer[EVENT_COUNT_INDEX]              = 0;
 	m_torque_tx_buffer[WHEEL_TICKS_INDEX]              = 0;
 	m_torque_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;
@@ -434,4 +464,41 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 	err_code = acknolwedge_message_transmit(tx_buffer);
 
 	return err_code;
+}
+
+/**@brief	Sends get/set parameters page.  This is sent in response to a
+ * 			Page 0x46 (Request Data Page) message.  Returns a broadcast message.
+ *
+ *@note		Transmission type: (from 16.2.1.2 in the spec) - not fully implemented here.
+ * 			The power meter shall be able to support all requested transmission response types; however, the ANT+ bicycle power device profile further stipulates that the display shall only request broadcast messages from a power meter sensor.
+ *
+ */
+void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
+{
+	uint32_t err_code;
+
+	uint8_t tx_buffer[TX_BUFFER_SIZE] =
+	{
+		ANT_PAGE_GETSET_PARAMETERS,
+		subpage,
+		buffer[0],
+		buffer[1],
+		buffer[2],
+		buffer[3],
+		buffer[4],
+		buffer[5]
+	};
+
+	BP_LOG("[BP]:Sending page 2 response [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+			tx_buffer[0],
+			tx_buffer[1],
+			tx_buffer[2],
+			tx_buffer[3],
+			tx_buffer[4],
+			tx_buffer[5],
+			tx_buffer[6],
+			tx_buffer[7]);
+
+	err_code = broadcast_message_transmit(tx_buffer);
+	APP_ERROR_CHECK(err_code);
 }

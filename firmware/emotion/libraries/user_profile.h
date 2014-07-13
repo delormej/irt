@@ -1,8 +1,8 @@
 /*
 *******************************************************************************
 *
-* By Jason De Lorme <jjdelorme@yahoo.com>
-* http://www.roadacious.com
+* By Jason De Lorme <jason@insideride.com>
+* http://www.insideride.com
 *
 * This module is responsible for calculating power based on rider profile 
 * e.g. weight, current speed and resistance.
@@ -14,12 +14,41 @@
 
 #include <stdint.h>
 
-typedef struct user_profile_s {
-	float		total_weight_kg;
-	uint16_t	wheel_size_mm;
-	uint8_t		reserved[8]; // for block storage alignment.
-} user_profile_t;
+#define PROFILE_VERSION					2u	// Current version of the profile.
 
+//
+// Available device features. Default setting should result in 0.
+//
+#define FEATURE_DEFAULT					0xFFFFFFFF
+#define FEATURE_RESERVED				1UL
+#define FEATURE_ACCEL_SLEEP_OFF			2UL
+#define FEATURE_BIG_MAG					4UL
+#define FEATURE_SMALL_MAG				8UL
+#define FEATURE_OTHER_MAG				16UL
+// FUTURE features:
+// BTLE_OFF
+// ANT_CTRL_OFF
+// ANT_BP_OFF
+// ANT_FEC_OFF
+#define FEATURE_ANT_EXTRA_INFO			65536UL			// Set a mid bit
+#define FEATURE_TEST					0x80000000		// Set the highest bit
+// Number of wheel revs to flywheel?
+
+#define FEATURE_IS_SET(SETTINGS, FEATURE) \
+	((SETTINGS & FEATURE) == FEATURE)
+
+/**@brief	Structure used to for storing/reading user profile.
+ * 			NOTE: This must be divisable by 4 (sizeof(uin32_t).
+ */
+typedef struct user_profile_s {
+	uint8_t		version;					// Version of the profile for future compatibility purposes.
+	uint16_t	total_weight_kg;			// Stored in int format 1/100, e.g. 8181 = 81.81kg
+	uint16_t	wheel_size_mm;
+	uint32_t	settings;					// Bitmask of feature/settings to turn on/off.
+	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/10,000 e.g. 3870 = 0.3870
+	uint16_t	ca_intercept;				// Calibration intercept.  Stored in 1/1,000 e.g. 15897 = 15.879
+	uint8_t		reserved[3];				// Padding for word alignment.
+} user_profile_t;
 
 /**@brief Initializes access to storage. */
 uint32_t user_profile_init(void);

@@ -9,6 +9,18 @@
 #define ANT_BP_MOVE_SERVO_COMMAND		0x61
 #define ANT_BP_ENABLE_DFU_COMMAND		0x64
 
+// ANT Bike Power specific pages.
+#define ANT_BP_PAGE_1               	0x01   /**< Calibration message main data page. */
+#define ANT_BP_PAGE_STANDARD_POWER_ONLY 0x10   /**< Standard Power only main data page. */
+#define ANT_BP_PAGE_TORQUE_AT_WHEEL		0x11   /**< Power reported as torque at wheel data page, which includes speed. */
+#define ANT_BP_PAGE_EXTRA_INFO			0x24   // TODO: My custom page.  Look for better page no for this.
+
+// Generic ANT pages.
+#define ANT_PAGE_GETSET_PARAMETERS		0x02
+#define ANT_PAGE_REQUEST_DATA			0x46
+#define ANT_PAGE_BATTERY_STATUS			0x52
+
+
 #include "ble_ant.h"
 #include "ant_stack_handler_types.h"
 
@@ -17,10 +29,11 @@ typedef struct ant_speed_sensor_s {
 	
 } ant_speed_sensor_t;
 
-void ant_bp_tx_init(rc_evt_handler_t on_set_resistance, ant_bp_evt_dfu_enable on_enable_dfu_mode);
+void ant_bp_tx_init(ant_ble_evt_handlers_t * evt_handlers);
 void ant_bp_tx_start(void);
 void ant_bp_tx_send(irt_power_meas_t * p_power_meas);
 uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value);
+void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type);	// Sends data page 2.
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt);
 
 #endif	// ANT_BIKE_POWER_H__

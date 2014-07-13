@@ -9,7 +9,9 @@ namespace ANT_Console.Services
     // service context.
     //
     class AntBikePower : AntService
-    {  
+    {
+        const uint ACK_TIMEOUT = 5000;
+
         // Commands
         enum Command : byte
         {
@@ -35,6 +37,7 @@ namespace ANT_Console.Services
         public event MessageHandler<TorqueMessage> TorqueEvent;
         public event MessageHandler<ResistanceMessage> ResistanceEvent;
         public event MessageHandler<ExtraInfoMessage> ExtraInfoEvent;
+        public event MessageHandler<GetSetMessage> GetSetParameterEvent;
 
         public AntBikePower(int channelId, ushort deviceId = 0, byte transmissionType = 0)
         {
@@ -86,6 +89,7 @@ namespace ANT_Console.Services
             return SendCommand(Command.SetWeight, data);
         }
 
+        // This uses the WAHOO method with a burst message.
         public void SetWheelSize(int wheelSizeMM)
         {
             byte[] data = { 
@@ -124,6 +128,17 @@ namespace ANT_Console.Services
             m_wheelSizeMM = (short)wheelSizeMM;
         }
 
+        public void SetParameter(SubPages subpage, UInt32 value)
+        {
+            GetSetMessage message = new GetSetMessage(subpage);
+            message.SetPayLoad(value);
+            var result = m_channel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
+            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            {
+                throw new ApplicationException(string.Format("Unable to send set parameter, return result: {0}.", result));
+            }
+        }
+
         public void SetFirmwareUpdateMode()
         {
             SendCommand(Command.SetDFUMode);
@@ -136,6 +151,16 @@ namespace ANT_Console.Services
                 (byte)(position >> 8), // Position MSB
             };
             SendCommand(Command.MoveServo, data);
+        }
+
+        public void RequestDeviceParameter(SubPages subPage)
+        {
+            RequestDataMessage message = new RequestDataMessage(subPage);
+            var result = m_channel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
+            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            {
+                throw new ApplicationException(string.Format("Unable to request parameter, return result: {0}.", result));
+            }
         }
 
         public void SetButtonStops(ushort[] positionStops, ushort[] wattStops)
@@ -229,6 +254,11 @@ namespace ANT_Console.Services
                     break;
                 case ProductPage.Page:
                     ProcessMessage(new ProductPage(response));
+                    break;
+                case GetSetMessage.Page:
+                    
+                    if (GetSetParameterEvent != null)
+                        GetSetParameterEvent(new GetSetMessage(response));
                     break;
                 default:
                     break;

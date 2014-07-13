@@ -1,8 +1,8 @@
 /*
 *******************************************************************************
 *
-* By Jason De Lorme <jjdelorme@yahoo.com>
-* http://www.roadacious.com
+* By Jason De Lorme <jason@insideride.com>
+* Inside Ride Technologies, LLC
 *
 * This module is responsible for calculating power based on rider profile 
 * e.g. weight, current speed and resistance.
@@ -16,36 +16,22 @@
 #include "irt_common.h"
 #include "user_profile.h"
 
-#define IRT_ERROR_INVALID_RESISTANCE_LEVEL					IRT_ERROR_RC_BASE_NUM + 0x01
-
-/**@brief	Calculates an estimated power in watts based on current speed, rider
- *			profile including total weight (bike+gear+rider) in kg and the
- *			current magnet servo position.
- */
-uint16_t power_watts_calc(float speed_mps, float weight_kg, uint16_t servo_pos);
-
-uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048);
-
-/**@brief	Determines speed and calculates an estimated power in watts based on
- * 			current speed, rider profile including total weight (bike+gear+rider)
- * 			in kg and the current magnet servo position.
- *
- * @return	0 if successful, otherwise and error code.
- */
-int32_t power_measure(float total_weight_kg, irt_power_meas_t* p_power_meas);
-
-
-/**@brief	Initializes power module with a profile pointer that contains things like
- * 			the total rider weight, calibration details, etc...
- *
- */
-void power_init(user_profile_t* p_profile);
+#define DEFAULT_CRR						0.03f										// Default value of rolling resistance if not overridden with slope/intercept.
 
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *
  */
-uint32_t power_calc(irt_power_meas_t * current, irt_power_meas_t * last);
+uint32_t power_calc(irt_power_meas_t* current, irt_power_meas_t* last, float* p_rr_force);
 
-uint16_t power_servo_pos_calc(float weight_kg, float speed_mps, float force_needed);
+
+/**@brief	Calculates the required servo position given force needed.
+ *
+ */
+uint16_t power_servo_pos_calc(float force_needed);
+
+/**@brief	Initializes power module with the total rider weight & calibrated rolling resistance.
+ *
+ */
+void power_init(user_profile_t* p_profile);
 
 #endif // __POWER_H__

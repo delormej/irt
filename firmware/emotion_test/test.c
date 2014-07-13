@@ -61,24 +61,65 @@ void check(uint32_t err)
 	}
 }
 
+
+
+uint16_t slope_calc(float y, float slope, float intercept)
+{
+	float x;
+	x = y * slope + intercept;
+
+	return (uint16_t) x;
+}
+
+//
+// Calculates the desired servo position given speed in mps, weight in kg
+// and additional needed force in newton meters.
+//
+uint16_t power_servo_pos_calc(float force_needed)
+{
+	int16_t servo_pos;
+
+	//
+	// Manual multiple linear regression hack.
+	//
+	if (force_needed < 0.832566f)
+	{
+		servo_pos = 1500;
+	}
+	else if (force_needed < 5.028207f)
+	{
+		// 1,500 - 1,300
+		servo_pos = slope_calc(force_needed, -44.8841f, 1517.988f);
+	}
+	else if (force_needed < 40.51667f)
+	{
+		// 1,300 - 900
+		servo_pos = slope_calc(force_needed, -10.9038f, 1345.708f);
+	}
+	else if (force_needed < 44.9931f)
+	{
+		// 900 - 700
+		servo_pos = slope_calc(force_needed, -39.4606f, 2505.677f);
+	}
+	else
+	{
+		// Max
+		servo_pos = 700;
+	}
+
+	// Protect min/max.
+	if (servo_pos < 700)
+		servo_pos = 700;
+	else if (servo_pos > 1500)
+		servo_pos = 1500;
+
+	return servo_pos;
+}
+
 int main(int argc, char *argv [])
 {
-	int16_t watts;
-	uint8_t i;
-	
-	i = 60 % 6;
+	//				  [       uint32_t     ], [       uint32_t     ]
+	uint8_t arr[] = { 0x00, 0x00, 0x03, 0x00, 0x00, 0x05, 0x00, 0x00 };
 
-	printf("i = %i\r\n", i);
-
-
-	//watts = calc_watts(0.019f, 5.811f, 81.81f, 0.6f, 0.0033f);
-	watts = calc_watts(0.064f, 5.811f, 1.1176f, 81.36, 0.6f, 0.0033f);
-	printf("[LOG] Watts == %i\r\n", watts);
-	/*
-	check(IRT_ERROR_RC_BASE_NUM);	// 1000 0000 0001 0000 0000
-	check(12213);					//		  10 1111 1011 0101
-
-	DM_LOG("[LOG] Testing\r\n");
-	printf("Test DONE\r\n");
-	*/
+	printf("result = %i\r\n", *(uint32_t*)&arr[4]);
 }

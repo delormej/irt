@@ -8,38 +8,8 @@
 
 #include "power.h"
 #include "app_error.h"
-#include "speed.h"
 #include "resistance.h"
 #include "debug.h"
-
-#define	MATH_PI			3.14159265358979f
-
-// Speed to Weight model.
-#define SPEED_FORCE_A_SLOPE 		0.194426f
-#define SPEED_FORCE_A_INTERCEPT 	23.45062f
-#define SPEED_FORCE_A_WEIGHT		94.34714f
-#define SPEED_FORCE_B_SLOPE 		-0.03644f
-#define SPEED_FORCE_B_INTERCEPT 	22.31482f
-#define SPEED_FORCE_B_WEIGHT		79.83219f
-
-// Force to Servo Position model.
-#define FORCE_SERVO_A_SLOPE 		-0.06927f
-#define FORCE_SERVO_A_INTERCEPT 	100.4231f
-#define FORCE_SERVO_A_SPEED			8.9408f
-#define FORCE_SERVO_B_SLOPE 		-0.05872f
-#define FORCE_SERVO_B_INTERCEPT 	83.70909f
-#define FORCE_SERVO_B_SPEED			4.4704f
-
-// Servo Position to Force model (reverse calc of above).
-#define SERVO_FORCE_A_SLOPE 		-13.514f
-#define SERVO_FORCE_A_INTERCEPT 	1420.642f
-#define SERVO_FORCE_A_SPEED			8.9408f
-#define SERVO_FORCE_B_SLOPE 		-16.1195f
-#define SERVO_FORCE_B_INTERCEPT 	1402.58f
-#define SERVO_FORCE_B_SPEED			4.4704f
-
-// Assuming no additional force exists beyond this servo position (mag off).
-#define MIN_SERVO_FORCE_POS				1489
 
 /**@brief Debug logging for module.
  *
@@ -50,37 +20,12 @@
 #define PW_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-//static const float slope[10] = { 0, 2.6, 3.8, 5.0, 6.1, 7.1, 8.2, 9.2, 10.1, 11.0 };
-//static const float intercept [10] = { 0, -9.60, -18.75, -25.00, -28.94, -29.99, -29.23, -26.87, -20.90, -13.34 };
-
-user_profile_t* mp_user_profile;
-
-static float calc_mag0_force(float weight_kg, float speed_mps)
-{
-	float force = (speed_mps*SPEED_FORCE_A_SLOPE + SPEED_FORCE_A_INTERCEPT) -
-		(((speed_mps*SPEED_FORCE_A_SLOPE + SPEED_FORCE_A_INTERCEPT) -
-		(speed_mps*SPEED_FORCE_B_SLOPE + SPEED_FORCE_B_INTERCEPT)) / (SPEED_FORCE_A_WEIGHT - SPEED_FORCE_B_WEIGHT))*
-		(SPEED_FORCE_A_WEIGHT - weight_kg);
-
-	return force;
-}
-
-static float calc_servo_force(float speed_mps, uint16_t servo_pos)
-{
-
-	if (servo_pos > MIN_SERVO_FORCE_POS)
-		return 0;
-
-	float force = (servo_pos*FORCE_SERVO_A_SLOPE + FORCE_SERVO_A_INTERCEPT) -
-		(((servo_pos*FORCE_SERVO_A_SLOPE + FORCE_SERVO_A_INTERCEPT) -
-		(servo_pos*FORCE_SERVO_B_SLOPE + FORCE_SERVO_B_INTERCEPT)) / (FORCE_SERVO_A_SPEED - FORCE_SERVO_B_SPEED))*
-		(FORCE_SERVO_A_SPEED - speed_mps);
-
-	return force;
-}
+static float m_rr_force;
+static float m_ca_slope;			// calibration parameters
+static float m_ca_intercept;
 
 /* Calculates angular velocity based on wheel ticks and time.
-static float calc_angular_vel(uint8_t wheel_ticks, uint16_t period_2048)
+static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
 {
 	float value;
 
@@ -89,100 +34,10 @@ static float calc_angular_vel(uint8_t wheel_ticks, uint16_t period_2048)
 	return value;
 }*/
 
-//
-// Calculates the desired servo position given speed in mps, weight in kg
-// and additional needed force in newton meters.
-//
-uint16_t power_servo_pos_calc(float weight_kg, float speed_mps, float force_needed)
-{
-	int16_t servo_pos;
-	float calculated;
 
-	// Use the model to calculate servo position.
-	calculated = (force_needed * SERVO_FORCE_A_SLOPE + SERVO_FORCE_A_INTERCEPT) -
-		(((force_needed * SERVO_FORCE_A_SLOPE + SERVO_FORCE_A_INTERCEPT) -
-		(force_needed * SERVO_FORCE_B_SLOPE + SERVO_FORCE_B_INTERCEPT)) /
-		SERVO_FORCE_A_SPEED - SERVO_FORCE_B_SPEED)*(SERVO_FORCE_A_SPEED - speed_mps);
-
-	//PW_LOG("[PW]:power_servo_pos_calc pos=%f\r\n", value);
-
-	// Round the position.
-	servo_pos = (int16_t)calculated;
-
-	// Enforce min/max position.
-	if (servo_pos > RESISTANCE_LEVEL[0])
-	{
-		servo_pos = RESISTANCE_LEVEL[0];
-	}
-	else if (servo_pos < RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS - 1])
-	{
-		servo_pos = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS - 1];
-	}
-
-	return servo_pos;
-}
-
-uint16_t power_watts_calc(float speed_mps, float weight_kg,	uint16_t servo_pos)
-{
-	int16_t watts;
-	
-	if (speed_mps == 0)
-	{
-		watts = 0;
-	}
-	else
-	{
-		float mag0_force = calc_mag0_force(weight_kg, speed_mps);
-		float servo_force = calc_servo_force(speed_mps, servo_pos);
-		watts = (uint16_t) ((mag0_force + servo_force) * speed_mps);
-	}
-
-	return watts;
-}
-
-// TODO: This only works if you have a predefined LEVEL 0-9.  I need to make it 
-// more dynamic given any position the servo might have from min->max.
-// We should also be able to calc power far more acurately based on flywheel revs
-// instead of speed.
-/*
-uint8_t old_power_calc_watts(float speed_mph, float total_weight_lb,
-	uint8_t resistance_level, int16_t* p_watts)
-{
-	int16_t power = 0;
-	
-	if (resistance_level > 9)
-	{
-		return IRT_ERROR_INVALID_RESISTANCE_LEVEL;
-	}	
-
-	if (speed_mph == 0)
-	{
-		power = 0;
-	}
-	else
-	{
-		// All calculations start with what level 0 (no resistance) would be.
-		float level0 = (speed_mph*14.04 - 33.6) - (((speed_mph*14.04 - 33.06) -
-			(speed_mph*8.75 - 16.21)) / 90)*(220 - total_weight_lb);
-
-		if (resistance_level == 0)
-		{
-			power = (int16_t)level0;
-		}
-		else 
-		{
-			// TODO: Verify truncation vs. rounding that may occur here? Watts needs to
-			// be returned as a signed 16 bit integer.
-			power = (int16_t)(level0 + speed_mph *
-				slope[resistance_level] + intercept[resistance_level]);
-		}
-	}
-	*p_watts = power;
-
-	return IRT_SUCCESS;
-}*/
-
-uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
+/**@brief	Calculates estimated torque given watts and time.
+ */
+static uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
 {
 	uint16_t torque;
 
@@ -194,10 +49,111 @@ uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
 	{
 		torque = (watts * period_seconds_2048) / (128 * MATH_PI);
 	}
-	
+
 	//PW_LOG("[PW] torque: %i\r\n", torque);
 
 	return torque;
+}
+
+/**@brief	Helper function to calculate x = y * slope + intercept.
+ */
+static float inline slope_calc(float y, float slope, float intercept)
+{
+	float x;
+	 x = y * slope + intercept;
+
+	return x;
+}
+
+/**@brief 	Returns the force of rolling resistance using profile crr and weight.
+ * @returns Force in Newtons typical range 13.0 : 30.0
+ */
+static float power_rr_force(float speed_mps)
+{
+	if (m_ca_slope != 0xFFFF)
+	{
+		// return a calibrated value.
+		return (speed_mps * m_ca_slope + m_ca_intercept);
+	}
+	else
+	{
+		return m_rr_force;
+	}
+}
+
+/**@brief	Calculates the force applied by the servo at a given position.
+ */
+static float servo_force(uint16_t servo_pos)
+{
+	float force;
+
+	//
+	// Manual multiple linear regression hack.
+	//
+	if (servo_pos > 1500)
+	{
+		force = 0.0f;
+	}
+	else if (servo_pos > 1300)
+	{
+		// 1,500 - 1,300
+		force = slope_calc(servo_pos, -0.02098f, 31.9982f);
+	}
+	else if (servo_pos > 900)
+	{
+		// 1,300 - 900
+		force = slope_calc(servo_pos, -0.09138f, 123.0521f);
+	}
+	else if (servo_pos >= 699)
+	{
+		// 900 - 700
+		force = slope_calc(servo_pos, -0.02238f, 61.1305f);
+	}
+
+	return force;
+}
+
+/**@brief	Calculates the required servo position given force needed.
+ */
+uint16_t power_servo_pos_calc(float force_needed)
+{
+	int16_t servo_pos;
+
+	//
+	// Manual multiple linear regression hack.
+	//
+	if (force_needed < 0.832566f)
+	{
+		servo_pos = 1500;
+	}
+	else if (force_needed < 5.028207f)
+	{
+		// 1,500 - 1,300
+		servo_pos = (uint16_t)slope_calc(force_needed, -44.8841f, 1517.988f);
+	}
+	else if (force_needed < 40.51667f)
+	{
+		// 1,300 - 900
+		servo_pos = (uint16_t)slope_calc(force_needed, -10.9038f, 1345.708f);
+	}
+	else if (force_needed < 44.9931f)
+	{
+		// 900 - 700
+		servo_pos = (uint16_t)slope_calc(force_needed, -39.4606f, 2505.677f);
+	}
+	else
+	{
+		// Max
+		servo_pos = 700;
+	}
+
+	// Protect min/max.
+	if (servo_pos < 700)
+		servo_pos = 700;
+	else if (servo_pos > 1500)
+		servo_pos = 1500;
+
+	return servo_pos;
 }
 
 /**@brief	Initializes power module with a profile pointer that contains things like
@@ -206,23 +162,39 @@ uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
  */
 void power_init(user_profile_t* p_profile)
 {
-	mp_user_profile = p_profile;
+	if (p_profile->ca_slope != 0xFFFF)
+	{
+		m_ca_slope = (p_profile->ca_slope / 10000.0f);
+		m_ca_intercept = (p_profile->ca_intercept / 1000.0f);
+		m_rr_force = 0;
+
+		PW_LOG("[PW] Initializing power with slope: %.4f intercept %.3f \r\n",
+				m_ca_slope, m_ca_intercept);
+	}
+	else
+	{
+		m_rr_force = (GRAVITY * (p_profile->total_weight_kg / 100.0f) * (DEFAULT_CRR));
+		m_ca_slope = 0xFFFF;
+		m_ca_intercept = 0xFFFF;
+	}
 }
 
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *
  */
-uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
+uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last, float* p_rr_force)
 {
-	uint32_t err_code;
 	uint16_t torque;
 	uint16_t period_diff;
+	float servo;
+
+	servo = servo_force(p_current->servo_position);
+	*p_rr_force =  power_rr_force(p_current->instant_speed_mps);
 
 	// Calculate power.
-	p_current->instant_power = power_watts_calc(
-			p_current->instant_speed_mps,
-			mp_user_profile->total_weight_kg,
-			p_current->servo_position);
+	p_current->instant_power = ( *p_rr_force + servo ) * p_current->instant_speed_mps;
+
+	//PW_LOG("[PW] rr: %.2f, servo: %.2f, watts: %i\r\n", *p_rr_force, servo, p_current->instant_power);
 
 	// Handle time rollover.
 	// Accum wheel period is a calculated period representing the average time it takes

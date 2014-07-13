@@ -374,4 +374,118 @@ namespace ANT_Console.Messages
             get { return m_payload[EXTRA_INFO_TEMP]; }
         }
     }
+
+    public enum SubPages
+    {
+        CrankParameters = 0x01,
+        // Custom defined parameters - starting at 16u
+        Crr = 16,
+        Settings = 17,
+        TotalWeight = 18,
+        WheelSize = 19, // I'm sure this is defined in a standard message somewhere.
+        ButtonStops = 20, // Ability to configure custom button stops on the servo.
+        Battery = 0x52
+        
+        // Should we send commands this way, i.e.:
+        // Move servo
+        // Enable Device Firmware Update Mode 
+        // Shutdown, etc...
+    }
+
+    // This is mostly used to Set values on the device.
+    public class GetSetMessage : Message
+    {
+        public const byte Page = 0x02;
+
+        private byte m_subpage;
+
+        public GetSetMessage(SubPages subPage) 
+        {
+            m_payload = new byte[6];
+            SubPage = (byte)subPage;
+        }
+
+        internal GetSetMessage(ANT_Response response) : base(response) 
+        {  }
+
+        public byte SubPage
+        {
+            private set { m_subpage = value; }
+            get { return m_payload[1]; }
+        }
+
+        public void SetPayLoad(UInt32 payload)
+        {
+            // Adjust for endianness of the ARM Cortex M0 device.
+            m_payload[3] = (byte)((payload & 0xFF000000) >> 24);
+            m_payload[2] = (byte)((payload & 0x00FF0000) >> 16);
+            m_payload[1] = (byte)((payload & 0x0000FF00) >> 8);
+            m_payload[0] = (byte)payload;
+        }
+
+        public byte[] AsBytes()
+        {
+            byte[] data = new byte[] {
+                Page,
+                m_subpage,
+                m_payload[0],
+                m_payload[1],
+                m_payload[2],
+                m_payload[3],
+                m_payload[4],
+                m_payload[5]
+            };
+
+            return data;
+        }
+    }
+
+    // Any time you want to Get a parameter from the device, you issue a Request Data page.
+    // This should be sent as an acknowledged message to the device.
+    public class RequestDataMessage : Message
+    {
+        public const byte Page = 0x46;
+        
+        public RequestDataMessage(SubPages subPage)
+        {
+            CommandType = 0x01;
+            RequestedPage = GetSetMessage.Page; // Always use the get/set parameter page.
+            SubPage = subPage;
+            RequestTransmissionResponse = 0;
+        }
+
+        // Use this value to requesting a specific subpage.  First byte should be the value, last byte might be 0xFF?
+        public SubPages SubPage;
+
+        // Type of response the device should send back.
+        /*
+         * Bit 0-6: Number of times to transmit the page.
+         * Bit 7:   Reply using acknowledged message, HOWEVER - ANT BP says these should always respond as broadcast.
+         * 0x80:    Transmit until a succesful acknowledgement.
+         * 0x00:    Invalid value.
+         */
+        public byte RequestTransmissionResponse;
+
+        // The page requested.
+        public byte RequestedPage;
+
+        // The type of command, i.e. 0x01 for Requesting a Data Page, 0x02 for Setting parameters.
+        public byte CommandType; 
+
+        public byte[] AsBytes()
+        {
+            byte[] data = {
+                              Page,
+                              0xFF,
+                              0xFF,
+                              (byte)SubPage,
+                              0xFF,
+                              RequestTransmissionResponse,
+                              RequestedPage,
+                              CommandType
+                          };
+
+            return data;
+        }
+    }
 }

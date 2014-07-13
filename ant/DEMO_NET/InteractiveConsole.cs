@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ANT_Console.Services;
 using ANT_Console.Messages;
 using IntervalParser;
+using System.Runtime.InteropServices;
 
 namespace ANT_Console
 {
@@ -10,11 +11,13 @@ namespace ANT_Console
     {
         bool m_scriptInfinite = false;
         bool m_inCommand = false;
+        SubPages m_lastSubPage;                     // Stores last subpage requested - used for setting parameters.
         ScriptHandler m_script;
         DateTime m_lastReport = DateTime.Now;
         AntBikePower m_eMotion;
         AntBikeSpeed m_refSpeed;
         AntControl m_control;
+        
 
         public InteractiveConsole(AntBikePower eMotion, AntControl control, AntBikeSpeed refSpeed)
         {
@@ -25,6 +28,8 @@ namespace ANT_Console
 
         public void Run()
         {
+            PreventShutdown();
+
             const string header = "Time         |  mph  | Watts | Watts2| Servo  | Target | Flywheel";
             ConsoleKeyInfo cki;
 
@@ -94,6 +99,14 @@ namespace ANT_Console
 
                     case ConsoleKey.Z:
                         SetWheelSizeCommand();
+                        break;
+
+                    case ConsoleKey.G:
+                        SetParameterCommand();
+                        break;
+
+                    case ConsoleKey.R:
+                        GetParameterCommand();
                         break;
 
                     default:
@@ -179,6 +192,8 @@ namespace ANT_Console
                 "V [Display Firmware Version]\n" +
                 "P [Parse Interval file in format {mins},{watts},{text}]\n" +
                 "T [Execute script file in format {seconds},{servo_position}]\n" +
+                "G [Set Parameter]\n" +
+                "R [Request Parameter]\n" +
                 "X [Exit]");
 
             Console.ForegroundColor = color;
@@ -299,6 +314,69 @@ namespace ANT_Console
             }
         }
 
+        void SetParameterCommand()
+        {
+            string prompt = "<enter parameter value to set {0}>";
+            uint value = 0;
+            bool success = InteractiveCommand(string.Format(prompt, m_lastSubPage), () =>
+            {
+                //float weight = float.NaN;
+
+                if (uint.TryParse(Console.ReadLine(), out value))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            });
+
+            if (success)
+            {
+                try
+                {
+                    m_eMotion.SetParameter(m_lastSubPage, value);
+                    WriteCommand("Set parameter.");
+                }
+                catch (Exception e)
+                {
+                    WriteCommand(e.Message);
+                }
+            }
+        }
+
+        void GetParameterCommand()
+        {
+            string prompt = "<enter subpage (parameter) number>";
+            bool success = InteractiveCommand(prompt, () =>
+            {
+                try
+                {
+                    m_lastSubPage = (SubPages)Enum.Parse(typeof(SubPages), Console.ReadLine(), true);
+                    return true;
+                }
+                catch 
+                {
+                    WriteCommand("Unrecognized setting.");
+                    return false;
+                }
+            });
+
+            if (success)
+            {
+                try
+                {
+                    m_eMotion.RequestDeviceParameter(m_lastSubPage);
+                    WriteCommand("Requested " + m_lastSubPage.ToString());
+                }
+                catch (Exception e)
+                {
+                    WriteCommand(e.Message);
+                }
+            }
+        }
+
         void ParseIntervalFileCommand()
         {
             string prompt = "<enter interval source filename {defaults to Source.txt}>";
@@ -396,6 +474,27 @@ namespace ANT_Console
                 Console.WriteLine(data);
                 m_lastReport = data.Timestamp;
             }
+        }
+
+        private void PreventShutdown()
+        {
+            Utility.SetThreadExecutionState(
+                Utility.ThreadExecutionState.CONTINUOUS | 
+                Utility.ThreadExecutionState.DISPLAY_REQUIRED |
+                Utility.ThreadExecutionState.SYSTEM_REQUIRED);
+        }
+    }
+
+    public static class Utility
+    {
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern ThreadExecutionState SetThreadExecutionState(ThreadExecutionState esFlags);
+        [FlagsAttribute]
+        public enum ThreadExecutionState : uint
+        {
+            CONTINUOUS = 0x80000000,
+            DISPLAY_REQUIRED = 0x00000002,
+            SYSTEM_REQUIRED = 0x00000001
         }
     }
 }

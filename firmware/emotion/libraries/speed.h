@@ -25,8 +25,8 @@
 #ifndef __REVOLUTIONS_H__
 #define __REVOLUTIONS_H__
 
-#define REVS_TIMER 				NRF_TIMER1
-#define REVS_IRQHandler		TIMER1_IRQHandler
+#define REVS_TIMER 					NRF_TIMER1
+#define REVS_IRQHandler				TIMER1_IRQHandler
 #define REVS_IRQn					TIMER1_IRQn
 
 #define REVS_CHANNEL_TASK_TOGGLE	2
@@ -38,7 +38,6 @@
 #include "nrf_gpiote.h"
 #include "nrf_gpio.h"
 #include "irt_common.h"
-
 
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.
 *

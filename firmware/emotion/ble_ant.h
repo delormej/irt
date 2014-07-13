@@ -87,16 +87,16 @@ typedef void(*ant_bp_evt_dfu_enable)(void);
 // Event callbacks needed for program flow and control.
 //
 typedef struct ant_ble_evt_handlers_s {
-	void (*on_ble_connected)(void);
-	void (*on_ble_disconnected)(void);
-	void (*on_ble_timeout)(void);
-	void (*on_ble_advertising)(void);
-	void (*on_ble_uart)(uint8_t * data, uint16_t length); 
-	void (*on_ant_channel_closed)(void);
-	void (*on_ant_power_data)(void); // This will have a parameter.
-	rc_evt_handler_t on_set_resistance;
-	ctrl_evt_handler_t on_ant_ctrl_command;
-	ant_bp_evt_dfu_enable on_enable_dfu_mode;
+	void (*on_ble_connected)(void);					// BLE connection is established.
+	void (*on_ble_disconnected)(void);				// BLE connection is dropped.
+	void (*on_ble_timeout)(void);					// BLE advertising times out.
+	void (*on_ble_advertising)(void);				// BLE starts advertising.
+	void (*on_ble_uart)(uint8_t * data, uint16_t length);	// When UART over BLE is enabled and data is received.
+	rc_evt_handler_t on_set_resistance;				// Device receives a command to set resistance.
+	ctrl_evt_handler_t on_ant_ctrl_command;			// ANT control command is received from the remote control.
+	ant_bp_evt_dfu_enable on_enable_dfu_mode;		// Device receives a request to enter device firmware update mode.
+	void (*on_request_data)(uint8_t* buffer);		// Device receives page (0x46) requesting data page.
+	void (*on_set_parameter)(uint8_t* buffer);		// Device receives page (0x02) with values to set.
 } ant_ble_evt_handlers_t;
 
 // Public methods.

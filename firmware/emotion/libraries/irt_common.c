@@ -48,7 +48,7 @@ void irt_power_meas_fifo_free()
  */
 irt_power_meas_t* irt_power_meas_fifo_next()
 {
-	int8_t idx_write;
+	uint8_t idx_write;
 
 	// Determine index to write.
 	idx_write = m_fifo_index % m_buf_size;
@@ -59,34 +59,25 @@ irt_power_meas_t* irt_power_meas_fifo_next()
 	// Increment the index.
 	m_fifo_index++;
 
-	CN_LOG("[CN] _next %i, %l\r\n", idx_write, &mp_buf_power_meas[idx_write]);
+	CN_LOG("[CN] _next %i \r\n", idx_write);
 
 	// Set pointer of the current event to write.
 	return &mp_buf_power_meas[idx_write];
 }
 
 /*
- * Returns a pointer to first event put in the queue.
+ * Returns a pointer to oldest event in the queue.
  */
 irt_power_meas_t* irt_power_meas_fifo_first()
 {
 	// Determine index to read.
-	if (m_fifo_index >= m_buf_size)
-	{
-		int8_t idx_read = ((m_fifo_index - m_buf_size+1) % m_buf_size);
+	uint8_t idx_read;
 
-		CN_LOG("[CN] _first %i, %l\r\n", idx_read, &mp_buf_power_meas[idx_read]);
+	idx_read = (m_fifo_index+1) % m_buf_size;
+	CN_LOG("[CN] _first %i \r\n", idx_read);
 
-		// Return the pointer to the oldest event in the stack.
-		return &mp_buf_power_meas[idx_read];
-	}
-	else
-	{
-		CN_LOG("[CN] _first %i, %l\r\n", 0, &mp_buf_power_meas[0]);
-
-		// We haven't fully populated the queue yet, so the first is the first.
-		return &mp_buf_power_meas[0];
-	}
+	// Return the pointer to the oldest event in the stack.
+	return &mp_buf_power_meas[idx_read];
 }
 
 /*
@@ -94,18 +85,10 @@ irt_power_meas_t* irt_power_meas_fifo_first()
  */
 irt_power_meas_t* irt_power_meas_fifo_last()
 {
-	uint8_t index;
+	uint8_t idx_read;
 
-	if (m_fifo_index <= 2)
-	{
-		index = 0;
-	}
-	else
-	{
-		// subtract 2 because we always advance for the next.
-		index = (m_fifo_index-2) % m_buf_size;
-	}
+	idx_read = (m_fifo_index + m_buf_size - 2) % m_buf_size;
+	CN_LOG("[CN] _last %i \r\n", idx_read);
 
-	CN_LOG("[CN] _last %i, %l\r\n", index, &mp_buf_power_meas[index]);
-	return &mp_buf_power_meas[index];
+	return &mp_buf_power_meas[idx_read];
 }

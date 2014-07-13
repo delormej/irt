@@ -544,10 +544,8 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 	advertising_init();
 	conn_params_init();
 
-	// Initialize ANT channels
-	ant_bp_tx_init(
-			mp_ant_ble_evt_handlers->on_set_resistance,
-			mp_ant_ble_evt_handlers->on_enable_dfu_mode);
+	// Initialize ANT bike power channel.
+	ant_bp_tx_init(ant_ble_evt_handlers);
 }
 
 /**@brief Start advertising.

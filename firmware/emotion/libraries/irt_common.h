@@ -11,6 +11,12 @@ All rights reserved.
 #include <stdint.h>
 #include "nrf_error.h"
 
+//
+// Global defines.
+//
+#define	GRAVITY						9.8f		// Co-efficent of gravity for Earth.  Change for other planets.
+#define	MATH_PI						3.14159f
+
 /*****************************************************************************
 * Inside Ride Defines
 *****************************************************************************/
@@ -18,6 +24,18 @@ All rights reserved.
 #define IRT_ERROR_BASE_NUM      (0x80000)       				///< Error base, hopefully well away from anything else.
 #define IRT_ERROR_RC_BASE_NUM   IRT_ERROR_BASE_NUM + (0x100)   	///< Error base for Resistance Control
 #define IRT_ERROR_AC_BASE_NUM   IRT_ERROR_BASE_NUM + (0x200)   	///< Error base for Accelerometer
+
+//
+// Parameter identifiers for ANT get/set parameters.
+//
+#define IRT_MSG_PAGE2_SUBPAGE_INDEX			1u					// Index of the subpage in the message buffer.
+#define IRT_MSG_PAGE2_DATA_INDEX			2u					// Index of the data in the message buffer.
+#define IRT_MSG_SUBPAGE_CRR					16u
+#define IRT_MSG_SUBPAGE_SETTINGS			17u
+#define IRT_MSG_SUBPAGE_WEIGHT				18u
+#define IRT_MSG_SUBPAGE_WHEEL_SIZE			19u
+#define IRT_MSG_SUBPAGE_BUTTON_STOPS		20u
+#define IRT_MSG_SUBPAGE_SET_CHARGER			21u					// Setting to toggle the charger.
 
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 
@@ -32,7 +50,7 @@ typedef struct irt_power_meas_s
 	uint16_t	accum_wheel_period;											// Increments of 1/2048s rolls over at 32 seconds.
 	uint32_t	accum_flywheel_ticks;										// Currently 2 ticks per flywheel rev.
 	// TODO: ble cps spec uses accum_energy but we haven't implmented it yet.
-	uint16_t	accum_energy;												// Unit is in kilojoules with a resolution of 1 (used by ble cps).
+	// uint16_t	accum_energy;												// Unit is in kilojoules with a resolution of 1 (used by ble cps).
 	uint16_t	last_wheel_event_2048;										// Last time the virtual wheel completed a rotation, basd on wheel size.
 
 	// Resistance state.  TODO: Should this be refactored somewhere else? A pointer would save 8 bytes per entry.
