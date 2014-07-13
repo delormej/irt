@@ -53,7 +53,7 @@
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define BLE_ADV_BLINK_RATE_MS			500u
-#define SCHED_QUEUE_SIZE                64                                          /**< Maximum number of events in the scheduler queue. */
+#define SCHED_QUEUE_SIZE                16                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
 //
@@ -129,7 +129,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     //                any communication.
     //                Use with care.
 #if defined(ENABLE_DEBUG_ASSERT)
-	set_led_red(0);
+	set_led_red(3);
 
 	// Note this function does not return - it will hang waiting for a debugger to attach.
 	ble_debug_assert_handler(error_code, line_num, p_file_name);
