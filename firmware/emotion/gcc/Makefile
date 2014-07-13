@@ -45,14 +45,20 @@ USE_SOFTDEVICE = s310
 SDK_PATH = ../../nrf51_sdk/
 TEMPLATE_PATH = ../../gcc/
 
+CFLAGS += -D$(BOARD)							# Define board version being used.
+
 ############################################
 # Compiler optimizations.
 ############################################
 # Enable optimizing for file size.
-CFLAGS = -Os
-LDFLAGS += --specs=nano.specs
-
-CFLAGS += -D$(BOARD)					# Define board version being used.
+#CFLAGS = -Os
+#LDFLAGS += --specs=nano.specs
+#
+# Recommended compiler optimizations with newlib-nano (https://plus.google.com/+AndreyYurovsky/posts/XUr9VBPFDn7)
+#
+CFLAGS = -Os -flto -ffunction-sections -fdata-sections -fno-builtin
+LDFLAGS += --specs=nano.specs -lc -lnosys
+LDFLAGS += -Wl,--gc-sections
 
 ############################################
 # For debugging purposes
@@ -72,7 +78,7 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 45
+SW_REVISION_BLD := 47
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -85,8 +91,8 @@ CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_B
 ############################################
 CFLAGS += -DUSE_BATTERY							# If this device is built to support battery or not.
 CFLAGS += -DUSE_BATTERY_CHARGER					# If this device is enabled to control battery charger.
-CFLAGS += -DANT_DEVICE_NUMBER=0x03
-CFLAGS += -DSERIAL_NUMBER=0x0000000b
+CFLAGS += -DANT_DEVICE_NUMBER=0x05
+CFLAGS += -DSERIAL_NUMBER=0x0000000d
 
 include $(TEMPLATE_PATH)Makefile
 
