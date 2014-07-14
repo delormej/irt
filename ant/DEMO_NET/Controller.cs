@@ -238,6 +238,11 @@ namespace ANT_Console
                         Message.BigEndian(buffer[2], buffer[3]));
                     break;
 
+                case SubPages.TotalWeight:
+                    int grams = Message.BigEndian(buffer[2], buffer[3]);
+                    Console.WriteLine("Total Weight: {0:N2} kg", grams / 100.0);
+                    break;
+
                 default:
                     break;
             }
