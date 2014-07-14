@@ -45,7 +45,7 @@ APPLICATION_SRCS += ble_srv_common.c
 PROJECT_NAME := $(shell basename "$(realpath ../)")
 
 DEVICE = NRF51
-BOARD = BOARD_IRT_REV_A
+BOARD = BOARD_IRT_V2_REV_A
 #SEGGER_SERIAL = 
 TARGET_DEVICE = nRF51422_xxAA
 
@@ -59,19 +59,23 @@ LINKER_SCRIPT := $(TEMPLATE_PATH)gcc_nrf51_s310_bootloader.ld
 LIBRARY_PATHS += ../include
 LIBRARY_PATHS += ../include/ble_transport
 LIBRARY_PATHS += ../include/hci_transport
-#SOURCE_PATHS += ...
+LIBRARY_PATHS +=  ../../emotion
+LIBRARY_PATHS +=  ../../emotion/libraries
+#SOURCE_PATHS += 
 
-CFLAGS := -Os
-# Dead Code Elemination - but if there was no dead code, it blows up the codesize a little
-#CFLAGS += -ffunction-sections -fdata-sections
-#LDFLAGS += -Wl,--gc-sections
-
-# Include debug symbols
-CFLAGS = -g
+CFLAGS = -Os -flto -ffunction-sections -fdata-sections -fno-builtin
+LDFLAGS += --specs=nano.specs -lc -lnosys
+LDFLAGS += -Wl,--gc-sections
 
 # Define the S310 stack requirement as this is used as a directive in the dfu_types.
 CFLAGS += -DS310_STACK  
 
-GDB_PORT_NUMBER := 2331
+############################################
+# For debug builds
+############################################
+debug: CFLAGS = -g
+debug: GDB_PORT_NUMBER := 2331
 
 include $(TEMPLATE_PATH)Makefile
+
+.PHONY: debug 

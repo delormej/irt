@@ -45,11 +45,14 @@
 #include "app_timer.h"
 #include "app_gpiote.h"
 #include "nrf_error.h"
-//#include "boards.h"
+#include "boards.h"
 #include "ble_debug_assert_handler.h"
 #include "softdevice_handler.h"
 #include "pstorage_platform.h"
-#include "main.h"
+#include "irt_emotion.h"
+
+#define LED_ERR							ASSERT_LED_PIN_NO
+#define LED_STATUS						ADVERTISING_LED_PIN_NO
 
 #define APP_GPIOTE_MAX_USERS            1                                                       /**< Number of GPIOTE users in total. Used by button module and dfu_transport_serial module (flow control). */
 
@@ -117,7 +120,7 @@ static void leds_init(void)
 {
     nrf_gpio_cfg_output(LED_STATUS);
     nrf_gpio_cfg_output(LED_ERR);
-    nrf_gpio_cfg_output(BOOTLOADER_BUTTON_PIN);
+    //nrf_gpio_cfg_output(BOOTLOADER_BUTTON_PIN);
 }
 
 

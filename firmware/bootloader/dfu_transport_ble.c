@@ -25,7 +25,7 @@
 #include "ble_gap.h"
 #include "ble_gatt.h"
 #include "ble_hci.h"
-//#include "boards.h"
+#include "boards.h"
 #include "ble_dfu.h"
 #include "nordic_common.h"
 #include "app_timer.h"
@@ -34,7 +34,7 @@
 #include "hci_mem_pool.h"
 #include <stddef.h>
 #include <string.h>
-#include "main.h"
+#include "irt_emotion.h"
 
 #define MIN_CONN_INTERVAL                    (uint16_t)(MSEC_TO_UNITS(11.25, UNIT_1_25_MS))          /**< Minimum acceptable connection interval (11.25 milliseconds). */
 #define MAX_CONN_INTERVAL                    (uint16_t)(MSEC_TO_UNITS(15, UNIT_1_25_MS))             /**< Maximum acceptable connection interval (15 milliseconds). */
@@ -631,18 +631,6 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     on_ble_evt(p_ble_evt);
 }
 
-
-/**@brief       Function for the LEDs initialization.
- *
- * @details     Initializes all LEDs used by this application.
- */
-static void leds_init(void)
-{
-    nrf_gpio_cfg_output(LED_A);
-    nrf_gpio_cfg_output(LED_B);
-}
-
-
 /**@brief   Function for the GAP initialization.
  *
  * @details This function will setup all the necessary GAP (Generic Access Profile)
@@ -763,8 +751,6 @@ uint32_t dfu_transport_update_start()
     uint32_t err_code;
     
     m_pkt_type = PKT_TYPE_INVALID;
-
-    leds_init();
 
     err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
     if (err_code != NRF_SUCCESS)
