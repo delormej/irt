@@ -30,11 +30,6 @@ LIBRARY_PATHS += ../libraries/
 LIBRARY_PATHS += ../services/
 DEPLOY_PATH = '../../../../../SkyDrive/InsideRide/'
 
-############################################
-# Required for pure gcc from Nordic.
-############################################
-PROJECT_NAME = $(shell basename "$(realpath ../)")
-
 DEVICE = NRF51
 BOARD = BOARD_IRT_V2_REV_A
 #BOARD = BOARD_IRT_REV_A
@@ -84,6 +79,12 @@ CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
 CFLAGS += -DSW_REVISION_BLD=$(SW_REVISION_BLD)
 CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_BLD)\""
+
+############################################
+# Required for pure gcc from Nordic.
+############################################
+PROJECT_NAME = $(shell basename "$(realpath ../)")_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)
+debug:	PROJECT_NAME = $(shell basename "$(realpath ../)")_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)dbg
 
 ############################################
 # DEVICE specific data.  
