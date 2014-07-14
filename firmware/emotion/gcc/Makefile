@@ -78,7 +78,7 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 47
+SW_REVISION_BLD := 48
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -89,8 +89,8 @@ CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_B
 # DEVICE specific data.  
 # TODO: this should be done another way.
 ############################################
-CFLAGS += -DUSE_BATTERY							# If this device is built to support battery or not.
-CFLAGS += -DUSE_BATTERY_CHARGER					# If this device is enabled to control battery charger.
+#CFLAGS += -DUSE_BATTERY							# If this device is built to support battery or not.
+#CFLAGS += -DUSE_BATTERY_CHARGER					# If this device is enabled to control battery charger.
 CFLAGS += -DANT_DEVICE_NUMBER=0x05
 CFLAGS += -DSERIAL_NUMBER=0x0000000d
 

@@ -470,12 +470,20 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
  * 			Page 0x46 (Request Data Page) message.  Returns a broadcast message.
  *
  *@note		Transmission type: (from 16.2.1.2 in the spec) - not fully implemented here.
- * 			The power meter shall be able to support all requested transmission response types; however, the ANT+ bicycle power device profile further stipulates that the display shall only request broadcast messages from a power meter sensor.
+ * 			The power meter shall be able to support all requested transmission response types;
+ * 			however, the ANT+ bicycle power device profile further stipulates that the display
+ * 			shall only request broadcast messages from a power meter sensor.
+ *
+ *			tx_type Describes transmission characteristics of the data requested.
+ *			Bit 0-6: Number of times to transmit requested page.
+ *			Bit 7: Setting the MSB means the device replies using acknowledged messages if possible.
+ *			Special Values: 0x80 - Transmit until a successful acknowledge is received. 0x00 – Invalid
  *
  */
 void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 {
 	uint32_t err_code;
+	uint8_t times;
 
 	uint8_t tx_buffer[TX_BUFFER_SIZE] =
 	{
@@ -489,7 +497,7 @@ void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 		buffer[5]
 	};
 
-	BP_LOG("[BP]:Sending page 2 response [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+	/*BP_LOG("[BP]:Sending page 2 response [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 			tx_buffer[0],
 			tx_buffer[1],
 			tx_buffer[2],
@@ -497,8 +505,21 @@ void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 			tx_buffer[4],
 			tx_buffer[5],
 			tx_buffer[6],
-			tx_buffer[7]);
+			tx_buffer[7]);*/
 
-	err_code = broadcast_message_transmit(tx_buffer);
+	if (tx_type == 0x80)
+	{
+		// Send Acknowledged.
+		err_code = acknolwedge_message_transmit(tx_buffer);
+	}
+	else
+	{
+		// Get rid of MSB and take the other bits for # of times to send.
+		for (times = (tx_type & 0x7F); times > 0; times--)
+		{
+			err_code = broadcast_message_transmit(tx_buffer);
+		}
+	}
+
 	APP_ERROR_CHECK(err_code);
 }

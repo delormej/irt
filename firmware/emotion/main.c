@@ -66,7 +66,7 @@
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 
-#define REQUEST_RETRY					12ul										// Number of times to retry sending broadcast data requests.
+#define DATA_PAGE_RESPONSE_TYPE			0x80F										// 0X80f For acknowledged response or number of times to send broadcast data requests.
 
 static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
@@ -475,7 +475,7 @@ static void scheduler_init(void)
 
 /**@brief	Sends data page 2 response.
  */
-static void send_data_page2(uint8_t subpage)
+static void send_data_page2(uint8_t subpage, uint8_t response_type)
 {
 	uint8_t response[6];
 
@@ -505,12 +505,7 @@ static void send_data_page2(uint8_t subpage)
 			return;
 	}
 
-	// # of times to send message - byte 5, bits 0:6 - just hard coding for now.
-	// Number of times to send.
-	for (uint8_t i = 0; i < REQUEST_RETRY; i++)
-	{
-		ant_bp_page2_tx_send(subpage, response, 0);
-	}
+	ant_bp_page2_tx_send(subpage, response, response_type);
 }
 
 /*----------------------------------------------------------------------------
@@ -814,7 +809,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			{
 				m_user_profile.ca_slope += 50;
 				power_init(&m_user_profile);
-				send_data_page2(IRT_MSG_SUBPAGE_CRR);
+				send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
 			}
 			else
 			{
@@ -830,7 +825,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 				{
 					m_user_profile.ca_slope -= 50;
 					power_init(&m_user_profile);
-					send_data_page2(IRT_MSG_SUBPAGE_CRR);
+					send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
 				}
 			}
 			else
@@ -906,10 +901,12 @@ static void on_enable_dfu_mode(void)
  */
 static void on_request_data(uint8_t* buffer)
 {
-	uint8_t subpage;
-	subpage = (uint8_t)buffer[3];
+	uint8_t subpage, response_type;
+	subpage = buffer[3];
+	response_type = buffer[5];
+
 	LOG("[MAIN] Request to get data page (subpage): %#x\r\n", subpage);
-	LOG("[MAIN]:request data message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+	/*LOG("[MAIN]:request data message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 			buffer[0],
 			buffer[1],
 			buffer[2],
@@ -917,7 +914,7 @@ static void on_request_data(uint8_t* buffer)
 			buffer[4],
 			buffer[5],
 			buffer[6],
-			buffer[7]);
+			buffer[7]);*/
 
 	// TODO: just a quick hack for right now for getting battery info.
 	if (subpage == ANT_PAGE_BATTERY_STATUS)
@@ -928,7 +925,7 @@ static void on_request_data(uint8_t* buffer)
 	}
 
 	// Process and send response.
-	send_data_page2(subpage);
+	send_data_page2(subpage, response_type);
 }
 
 /**@brief	Device receives page (0x02) with values to set.
@@ -999,9 +996,9 @@ static void on_battery_result(uint16_t battery_level)
 
 	// TODO: temporarily sending page 2, need to send page 0x52.
 	// Number of times to send.
-	for (uint8_t i = 0; i < REQUEST_RETRY; i++)
+	for (uint8_t i = 0; i < DATA_PAGE_RESPONSE_TYPE; i++)
 	{
-		ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, 0);
+		ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
 	}
 }
 
