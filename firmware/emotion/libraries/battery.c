@@ -144,7 +144,7 @@ uint8_t battery_charge_status()
  */
 void battery_charge_set(bool turn_on)
 {
-#ifdef USE_BATTERY
+#ifdef USE_BATTERY_CHARGER
 	if (turn_on)
 	{
 		nrf_gpio_pin_clear(m_pin_charge_stop);
