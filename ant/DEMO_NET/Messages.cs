@@ -61,12 +61,12 @@ namespace ANT_Console.Messages
         }
 
         // Helper method to convert two bytes to ushort.
-        protected ushort BigEndian(byte lsb, byte msb)
+        public static ushort BigEndian(byte lsb, byte msb)
         {
             return (ushort)(lsb | msb << 8);
         }
 
-        protected short BigEndianSigned(byte lsb, byte msb)
+        public static short BigEndianSigned(byte lsb, byte msb)
         {
             return (short)(lsb | msb << 8);
         }
@@ -428,12 +428,12 @@ namespace ANT_Console.Messages
             byte[] data = new byte[] {
                 Page,
                 m_subpage,
-                m_payload[0],
-                m_payload[1],
                 m_payload[2],
                 m_payload[3],
                 m_payload[4],
-                m_payload[5]
+                m_payload[5],
+                m_payload[6],
+                m_payload[7]
             };
 
             return data;

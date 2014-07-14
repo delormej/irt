@@ -223,6 +223,19 @@ namespace ANT_Console
                 buffer[5],
                 buffer[6],
                 buffer[7]);
+
+            // Sub page
+            switch((SubPages)m.SubPage)
+            {
+                case SubPages.Crr:
+                    Console.WriteLine("CRR Response: Slope: {0}, Intercept: {1}",
+                        Message.BigEndian(buffer[2], buffer[3]),
+                        Message.BigEndian(buffer[4], buffer[5]));
+                    break;
+
+                default:
+                    break;
+            }
         }
     }
 }
