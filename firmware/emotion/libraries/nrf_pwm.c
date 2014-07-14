@@ -18,7 +18,7 @@
 #include "app_timer.h"
 #include "debug.h"
 
-#define PULSE_TRAIN_DURATION	APP_TIMER_TICKS(1500, 0)		// In reality it should only take 500ms, but we're giving it 1500ms to be safe.
+#define PULSE_TRAIN_DURATION	APP_TIMER_TICKS(1000, 0)		// In reality it should only take 500ms, but we're giving it 1000ms to be safe.
 
 /**@brief Debug logging for module.
  *
