@@ -66,7 +66,7 @@
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 
-#define DATA_PAGE_RESPONSE_TYPE			0x80F										// 0X80f For acknowledged response or number of times to send broadcast data requests.
+#define DATA_PAGE_RESPONSE_TYPE			0x80										// 0X80 For acknowledged response or number of times to send broadcast data requests.
 
 static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
@@ -905,7 +905,7 @@ static void on_request_data(uint8_t* buffer)
 	subpage = buffer[3];
 	response_type = buffer[5];
 
-	LOG("[MAIN] Request to get data page (subpage): %#x\r\n", subpage);
+	LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n", subpage, response_type);
 	/*LOG("[MAIN]:request data message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 			buffer[0],
 			buffer[1],
@@ -972,7 +972,7 @@ static void on_set_parameter(uint8_t* buffer)
 			power_init(&m_user_profile);
 			break;
 
-#ifdef USE_BATTERY
+#ifdef USE_BATTERY_CHARGER
 		case IRT_MSG_SUBPAGE_SET_CHARGER:
 			// TODO: This shouldn't be sent this way it should really be sent using
 			// Common Data Page 72: Command Burst
@@ -992,14 +992,9 @@ static void on_set_parameter(uint8_t* buffer)
  */
 static void on_battery_result(uint16_t battery_level)
 {
+	// TODO: Hard coded for the moment, we will send battery page.
 	LOG("[MAIN] on_battery_result %i \r\n", battery_level);
-
-	// TODO: temporarily sending page 2, need to send page 0x52.
-	// Number of times to send.
-	for (uint8_t i = 0; i < DATA_PAGE_RESPONSE_TYPE; i++)
-	{
-		ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
-	}
+	ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
 }
 
 /**@brief	Configures power supervisor to warn and reset if power drops too low.
@@ -1134,13 +1129,6 @@ int main(void)
 	application_timers_start();
 
 	LOG("[MAIN]:Initialization done.\r\n");
-
-#ifdef USE_BATTERY
-	// TODO: This is just temporary, this will move to a regular event.
-	// Can't be done as part of peripheral_init because soft device isn't enabled yet.
-	// Get an initial read from the battery.
-	battery_read_start();
-#endif
 
     // Enter main loop
     for (;;)
