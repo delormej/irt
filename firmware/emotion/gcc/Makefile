@@ -65,6 +65,7 @@ debug : CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wa
 debug : CFLAGS += -DSIM_SPEED					# Simulate speed.
 debug : CFLAGS += -g							# Enable debug symbols.
 debug : LDFLAGS += -u _printf_float				# Required to printf a float.
+#debug : CFLAGS += -DSETTINGS=2					# Sets the device so the accelerometer doesn't turn off
 
 GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 
@@ -73,7 +74,7 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 48
+SW_REVISION_BLD := 50
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -84,7 +85,6 @@ CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_B
 # Required for pure gcc from Nordic.
 ############################################
 PROJECT_NAME = $(shell basename "$(realpath ../)")_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)
-debug:	PROJECT_NAME = $(shell basename "$(realpath ../)")_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)dbg
 
 ############################################
 # DEVICE specific data.  
