@@ -233,6 +233,11 @@ namespace ANT_Console
                         Message.BigEndian(buffer[4], buffer[5]));
                     break;
 
+                case SubPages.Battery:
+                    Console.WriteLine("Battery voltage: {0} mA", 
+                        Message.BigEndian(buffer[2], buffer[3]));
+                    break;
+
                 default:
                     break;
             }
