@@ -29,9 +29,12 @@ uint32_t power_calc(irt_power_meas_t* current, irt_power_meas_t* last, float* p_
  */
 uint16_t power_servo_pos_calc(float force_needed);
 
-/**@brief	Initializes power module with the total rider weight & calibrated rolling resistance.
+/**@brief	Initializes power module with a profile pointer that contains things like
+ * 			the total rider weight, calibration details, etc...
+ * 			Takes a default co-efficient for rolling resistance (i.e. 0.03).
+ * 			This is only used if profile doesn't contain a slope/intercept override.
  *
  */
-void power_init(user_profile_t* p_profile);
+void power_init(user_profile_t* p_profile, uint16_t default_crr);
 
 #endif // __POWER_H__

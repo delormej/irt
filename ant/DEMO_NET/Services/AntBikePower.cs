@@ -11,6 +11,7 @@ namespace ANT_Console.Services
     class AntBikePower : AntService
     {
         const uint ACK_TIMEOUT = 5000;
+        const uint REQUEST_RETRY = 5;
 
         // Commands
         enum Command : byte
@@ -155,12 +156,19 @@ namespace ANT_Console.Services
 
         public void RequestDeviceParameter(SubPages subPage)
         {
+            int retries = 0;
+
             RequestDataMessage message = new RequestDataMessage(subPage);
-            var result = m_channel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
-            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            ANT_ReferenceLibrary.MessagingReturnCode result = 0;
+
+            while (retries < REQUEST_RETRY)
             {
-                throw new ApplicationException(string.Format("Unable to request parameter, return result: {0}.", result));
+                result = m_channel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
+                if (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+                    return;
             }
+
+            throw new ApplicationException(string.Format("Unable to request parameter, return result: {0}.", result));
         }
 
         public void SetButtonStops(ushort[] positionStops, ushort[] wattStops)

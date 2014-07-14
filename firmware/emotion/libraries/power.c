@@ -186,9 +186,11 @@ uint16_t power_servo_pos_calc(float force)
 
 /**@brief	Initializes power module with a profile pointer that contains things like
  * 			the total rider weight, calibration details, etc...
+ * 			Takes a default co-efficient for rolling resistance (i.e. 0.03).
+ * 			This is only used if profile doesn't contain a slope/intercept override.
  *
  */
-void power_init(user_profile_t* p_profile)
+void power_init(user_profile_t* p_profile, uint16_t default_crr)
 {
 	if (p_profile->ca_slope != 0xFFFF)
 	{
@@ -201,7 +203,8 @@ void power_init(user_profile_t* p_profile)
 	}
 	else
 	{
-		m_rr_force = (GRAVITY * (p_profile->total_weight_kg / 100.0f) * (DEFAULT_CRR));
+		m_rr_force = (GRAVITY * (p_profile->total_weight_kg / 100.0f) *
+				(default_crr / 1000.0f));
 		m_ca_slope = 0xFFFF;
 		m_ca_intercept = 0xFFFF;
 	}

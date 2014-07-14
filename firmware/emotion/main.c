@@ -63,6 +63,7 @@
 #define DEFAULT_TOTAL_WEIGHT_KG			8180ul 										// Default weight (convert 180.0lbs to KG).
 #define DEFAULT_ERG_WATTS				175u										// Default erg target_watts when not otherwise set.
 #define DEFAULT_SETTINGS				0ul											// Default 32bit field of settings.
+#define DEFAULT_CRR						30ul										// Default Co-efficient for rolling resistance used when no slope/intercept defined.  Divide by 1000 to get 0.03f.
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 
@@ -192,7 +193,7 @@ static void set_sim_params(uint8_t *pBuffer)
 		profile_update_sched();
 
 		// Re-initialize the power module with updated weight.
-		power_init(&m_user_profile);
+		power_init(&m_user_profile, DEFAULT_CRR);
 	}
 
 	// Co-efficient for rolling resistance.
@@ -264,11 +265,6 @@ static void profile_init(void)
 
 				// Total weight of rider + bike + shoes, clothing, etc...
 				m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
-			}
-
-			if (m_user_profile.ca_slope == 0xFFFF)
-			{
-				m_user_profile.ca_slope = DEFAULT_CRR;
 			}
 		}
 
@@ -808,7 +804,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			if (m_crr_adjust_mode)
 			{
 				m_user_profile.ca_slope += 50;
-				power_init(&m_user_profile);
+				power_init(&m_user_profile, DEFAULT_CRR);
 				send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
 			}
 			else
@@ -824,7 +820,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 				if (m_user_profile.ca_slope > 50)
 				{
 					m_user_profile.ca_slope -= 50;
-					power_init(&m_user_profile);
+					power_init(&m_user_profile, DEFAULT_CRR);
 					send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
 				}
 			}
@@ -969,7 +965,7 @@ static void on_set_parameter(uint8_t* buffer)
 			LOG("[MAIN] Updated slope:%i intercept:%i \r\n",
 					m_user_profile.ca_slope, m_user_profile.ca_intercept);
 			// Reinitialize power.
-			power_init(&m_user_profile);
+			power_init(&m_user_profile, DEFAULT_CRR);
 			break;
 
 #ifdef USE_BATTERY_CHARGER
@@ -1120,7 +1116,7 @@ int main(void)
 	speed_init(PIN_FLYWHEEL, m_user_profile.wheel_size_mm);
 
 	// Initialize power module with user profile.
-	power_init(&m_user_profile);
+	power_init(&m_user_profile, DEFAULT_CRR);
 
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);
