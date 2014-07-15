@@ -239,7 +239,7 @@ static void profile_init(void)
 		//
 		if (m_user_profile.version != PROFILE_VERSION)
 		{
-			LOG("[MAIN]: Older profile version %i. Loading defaults and upgrading\r\n.",
+			LOG("[MAIN]: Older profile version %i. Loading defaults and upgrading. \r\n",
 					m_user_profile.version);
 			m_user_profile.version			= PROFILE_VERSION;
 			m_user_profile.wheel_size_mm 	= DEFAULT_WHEEL_SIZE_MM;
@@ -480,7 +480,7 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 	switch (subpage)
 	{
 		case IRT_MSG_SUBPAGE_SETTINGS:
-			memcpy(&response, &m_user_profile.settings, sizeof(uint32_t));
+			memcpy(&response, &m_user_profile.settings, sizeof(uint16_t));
 			break;
 
 		case IRT_MSG_SUBPAGE_CRR:
@@ -945,13 +945,12 @@ static void on_set_parameter(uint8_t* buffer)
 			// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
 			// Need to use memcpy, Cortex-M proc doesn't support unaligned casting of 32bit int.
 			memcpy(&m_user_profile.settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
-					sizeof(uint32_t));
+					sizeof(uint16_t));
 
-			LOG("[MAIN] Request to update settings to: ACCEL:%i, BIG_MAG:%i, EXTRA_INFO:%i, TEST:%i \r\n",
+			LOG("[MAIN] Request to update settings to: ACCEL:%i, BIG_MAG:%i, EXTRA_INFO:%i \r\n",
 						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ACCEL_SLEEP_OFF),
 						FEATURE_IS_SET(m_user_profile.settings, FEATURE_BIG_MAG),
-						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ANT_EXTRA_INFO),
-						FEATURE_IS_SET(m_user_profile.settings, FEATURE_TEST));
+						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ANT_EXTRA_INFO));
 			// Schedule update to the profile.
 			profile_update_sched();
 			break;
