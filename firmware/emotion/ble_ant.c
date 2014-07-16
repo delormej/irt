@@ -13,7 +13,6 @@
 #include "nrf.h"
 #include "nrf_soc.h"
 #include "nrf51_bitfields.h"
-#include "softdevice_handler.h"
 #include "ant_stack_handler_types.h"
 #include "app_error.h"
 #include "app_timer.h"
@@ -445,13 +444,10 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 
 /**@brief BLE + ANT stack initialization.
  *
- * @details Initializes the SoftDevice and the stack event interrupt.
+ * @details Initializes the SoftDevice callbacks for BLE and ANT messages..
  */
 static void ble_ant_stack_init(void)
 {
-	// Initialize SoftDevice
-	SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, true);
-
 	// Subscribe for BLE events.
 	uint32_t err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
 	APP_ERROR_CHECK(err_code);
@@ -459,12 +455,6 @@ static void ble_ant_stack_init(void)
 	// Subscribe for ANT events.
 	err_code = softdevice_ant_evt_handler_set(on_ant_evt);
 	APP_ERROR_CHECK(err_code);
-
-	// TODO: implement system event handler callback
-	/*
-	 // Subscribe for system events.
-	 err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
-	 APP_ERROR_CHECK(err_code);*/
 }
 
 /**@brief	Sends acknolwedgement of resistance control to BLE and ANT recipients.

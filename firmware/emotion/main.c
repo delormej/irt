@@ -524,6 +524,11 @@ static void on_power_down(bool accelerometer_wake_disable)
 
 	// TODO: should we be gracefully closing ANT and BLE channels here?
 
+	// Enabling low power as indicated by PAN 11 "HFCLK: Base current with HFCLK
+    // running is too high" found at Product Anomaly document found at
+    // https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF51822/#Downloads
+	NRF_POWER->TASKS_LOWPWR = 1;
+
 	// Shut the system down.
 	sd_power_system_off();
 }
@@ -993,12 +998,12 @@ static void on_battery_result(uint16_t battery_level)
 }
 
 /**@brief	Configures power supervisor to warn and reset if power drops too low.
- */
+ *
 static void config_power_supervisor()
 {
 	// Forces a reset if power drops below 2.7v.
 	NRF_POWER->POFCON = POWER_POFCON_POF_Enabled | POWER_POFCON_THRESHOLD_V27;
-}
+}*/
 
 /**@brief	Check if there is a reset reason and log if enabled.
  */
@@ -1020,6 +1025,25 @@ static uint32_t check_reset_reason()
 	}
 
 	return reason;
+}
+
+/**@brief	Initializes the Nordic Softdevice.  This must be done before
+ * 			initializing ANT/BLE or calling any softdevice functions.
+ */
+static void s310_init()
+{
+	uint32_t err_code;
+
+	// Initialize SoftDevice
+	SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, true);
+
+    // Subscribe for system events.
+    err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
+    APP_ERROR_CHECK(err_code);
+
+    // Configure the DCDC converter to save battery.
+    err_code = sd_power_mode_set(NRF_POWER_DCDC_MODE_AUTOMATIC);
+    APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Power manager.
@@ -1056,9 +1080,6 @@ int main(void)
 	// Determine what the reason for startup is and log appropriately.
 	check_reset_reason();
 
-	// Configure brown out support.
-	config_power_supervisor();
-
 	// Initialize timers.
 	timers_init();
 
@@ -1087,23 +1108,17 @@ int main(void)
 		on_set_parameter
 	};
 
-	// TODO: Question should we have a separate method to initialize soft device?
+	// Initialize the softdevice.
+	s310_init();
 
-	// Initializes the soft device, Bluetooth and ANT stacks.
+	// Initializes the Bluetooth and ANT stacks.
 	ble_ant_init(&ant_ble_handlers);
-
-    // Subscribe for system events.
-    err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
-    APP_ERROR_CHECK(err_code);
 
     // Initialize the scheduler.
 	scheduler_init();
 
 	// initialize the user profile.
 	profile_init();
-
-	// Begin advertising and receiving ANT messages.
-	ble_ant_start();
 
 	// Initialize resistance module and initial values.
 	resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
@@ -1119,6 +1134,9 @@ int main(void)
 
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);
+
+	// Begin advertising and receiving ANT messages.
+	ble_ant_start();
 
 	// Start the main loop for reporting ble services.
 	application_timers_start();
