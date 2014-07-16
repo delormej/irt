@@ -524,11 +524,6 @@ static void on_power_down(bool accelerometer_wake_disable)
 
 	// TODO: should we be gracefully closing ANT and BLE channels here?
 
-	// Enabling low power as indicated by PAN 11 "HFCLK: Base current with HFCLK
-    // running is too high" found at Product Anomaly document found at
-    // https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF51822/#Downloads
-	NRF_POWER->TASKS_LOWPWR = 1;
-
 	// Shut the system down.
 	sd_power_system_off();
 }
@@ -997,13 +992,30 @@ static void on_battery_result(uint16_t battery_level)
 	ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
 }
 
-/**@brief	Configures power supervisor to warn and reset if power drops too low.
+/**@brief	Configures chip power options.
  *
-static void config_power_supervisor()
+ * @note	Note this must happen after softdevice is enabled.
+ */
+static void config_dcpower()
 {
+	uint32_t err_code;
+
+    // Enabling constant latency as indicated by PAN 11 "HFCLK: Base current with HFCLK
+    // running is too high" found at Product Anomaly document found at
+    // https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF51822/#Downloads
+    //
+    // @note This setting will ensure correct behavior when routing TIMER events through
+    //       PPI and low power mode simultaneously.
+    NRF_POWER->TASKS_CONSTLAT = 1;
+
 	// Forces a reset if power drops below 2.7v.
 	NRF_POWER->POFCON = POWER_POFCON_POF_Enabled | POWER_POFCON_THRESHOLD_V27;
-}*/
+
+    // Configure the DCDC converter to save battery.
+    err_code = sd_power_mode_set(NRF_POWER_DCDC_MODE_AUTOMATIC);
+    APP_ERROR_CHECK(err_code);
+}
+
 
 /**@brief	Check if there is a reset reason and log if enabled.
  */
@@ -1039,10 +1051,6 @@ static void s310_init()
 
     // Subscribe for system events.
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
-    APP_ERROR_CHECK(err_code);
-
-    // Configure the DCDC converter to save battery.
-    err_code = sd_power_mode_set(NRF_POWER_DCDC_MODE_AUTOMATIC);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -1108,8 +1116,11 @@ int main(void)
 		on_set_parameter
 	};
 
-	// Initialize the softdevice.
+	// Initialize and enable the softdevice.
 	s310_init();
+
+	// Configure the chip's power options (after sd enabled).
+	config_dcpower();
 
 	// Initializes the Bluetooth and ANT stacks.
 	ble_ant_init(&ant_ble_handlers);
