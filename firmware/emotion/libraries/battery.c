@@ -64,10 +64,9 @@ void ADC_IRQHandler(void)
 {
     if (NRF_ADC->EVENTS_END != 0)
     {
-        uint32_t     adc_result;
+        uint32_t	adc_result;
         uint16_t    batt_lvl_in_milli_volts;
-        uint8_t     percentage_batt_lvl;
-        uint32_t    err_code;
+        //uint8_t     percentage_batt_lvl;
 
         NRF_ADC->EVENTS_END     = 0;
         adc_result              = NRF_ADC->RESULT;
@@ -81,10 +80,9 @@ void ADC_IRQHandler(void)
 #endif // USE_BATTERY_READ_PIN
 
         batt_lvl_in_milli_volts = ADC_RESULT_IN_MILLI_VOLTS(adc_result);
-        percentage_batt_lvl     = battery_level_in_percent(batt_lvl_in_milli_volts);
+        //percentage_batt_lvl     = battery_level_in_percent(batt_lvl_in_milli_volts);
 
-        BY_LOG("[BY] Battery result on pin %i is: %i, millivolts: %i, percent: %i\r\n",
-        		m_pin_battery_read, adc_result, batt_lvl_in_milli_volts, percentage_batt_lvl);
+        BY_LOG("[BY] Battery result: ADC %i, %imV \r\n", adc_result, batt_lvl_in_milli_volts);
 
 		if (m_on_battery_result != NULL)
 		{
