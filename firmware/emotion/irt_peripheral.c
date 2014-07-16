@@ -12,9 +12,7 @@
 #include "temperature.h"
 #include "boards.h"
 #include "debug.h"
-#ifdef USE_BATTERY
 #include "battery.h"
-#endif
 
 /**@brief Debug logging for main module.
  *
@@ -90,6 +88,7 @@ static void irt_gpio_init()
 	// Initialize the LED pins.
 	nrf_gpio_cfg_output(PIN_LED_A);		// Green
 	nrf_gpio_cfg_output(PIN_LED_B);		// Red
+
 #ifdef IRT_REV_2A_H
 	nrf_gpio_cfg_output(PIN_LED_C);		// Red #2
 	nrf_gpio_cfg_output(PIN_LED_D);		// Green #2
@@ -102,35 +101,37 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
 	nrf_gpio_pin_set(PIN_EN_SERVO_PWR);
 
-	#ifdef USE_BATTERY
-	// Enable the power regulator if the board is configured for.
-	nrf_gpio_cfg_output(PIN_SLEEP_N);
-	nrf_gpio_pin_set(PIN_SLEEP_N);
-
-	// Configure pin to read if there is a power adapter.
-	nrf_gpio_cfg_input(PIN_PG_N, NRF_GPIO_PIN_NOPULL);
-
-	// Enable battery pin.
-	// When set enables the device to read battery voltage.
-	nrf_gpio_cfg_output(PIN_ENBATT);
-
-	// Configure pins for battery charger status.
-	nrf_gpio_cfg_input(PIN_STAT1, NRF_GPIO_PIN_NOPULL);
-	nrf_gpio_cfg_input(PIN_STAT2, NRF_GPIO_PIN_NOPULL);
-	#endif
-
 	#ifdef USE_BATTERY_CHARGER
-	// Configure pin for enabling or disabling battery charger. 0=on, 1=off
-	nrf_gpio_cfg_output(PIN_CHG_EN_N);
+		// Configure pin for enabling or disabling battery charger. 0=on, 1=off
+		nrf_gpio_cfg_output(PIN_CHG_EN_N);
+
+		// Enable the power regulator if the board is built with power regulator.
+		nrf_gpio_cfg_output(PIN_SLEEP_N);
+		nrf_gpio_pin_set(PIN_SLEEP_N);
+
+		// Configure pin to read if there is a power adapter.
+		nrf_gpio_cfg_input(PIN_PG_N, NRF_GPIO_PIN_NOPULL);
+
+		// Configure pins for battery charger status.
+		nrf_gpio_cfg_input(PIN_STAT1, NRF_GPIO_PIN_NOPULL);
+		nrf_gpio_cfg_input(PIN_STAT2, NRF_GPIO_PIN_NOPULL);
 	#endif
 
-#endif
+	#ifdef USE_BATTERY_READ_PIN
+		// When set enables the device to read battery voltage (on specific board builds - not all).
+		nrf_gpio_cfg_output(PIN_ENBATT);
+	#endif // USE_BATTERY_READ_PIN
+
+	// Configure input for the battery AIN.
+	// This is available whether or not the board is built with battery charge support.
+	NRF_GPIO->PIN_CNF[PIN_BATT_VOLT] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
+#endif //IRT_REV_2A_H
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
 
 	pins_low_to_high_mask =
-#ifdef USE_BATTERY
+#ifdef USE_BATTERY_CHARGER
 		1 << PIN_STAT1;				// On battery charger status changing.
 #else
 		0;
@@ -277,20 +278,17 @@ void peripheral_powerdown(bool accelerometer_off)
 	// Disable servo / LED.
 	nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
 
-	#ifdef USE_BATTERY
+	#ifdef USE_BATTERY_CHARGER
 	// Disable the power regulator if the board is configured for.
 	nrf_gpio_pin_clear(PIN_SLEEP_N);
-	#endif
 
-	#ifdef USE_BATTERY_CHARGER
 	// Check if AC power is plugged in.  If not, cut power to charger.
 	if (ac_adapter_off())
 	{
 		battery_charge_set(false);
 	}
-	#endif
-
-#endif
+	#endif // USE_BATTERY_CHARGER
+#endif // IRT_REV_2A_H
 
 	// Shut down the leds.
 	clear_led(3);
@@ -323,7 +321,7 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 		blink_timeout_handler);
 	APP_ERROR_CHECK(err_code); */
 
-#if USE_BATTERY
+#if USE_BATTERY_CHARGER
 	battery_init(PIN_ENBATT, PIN_CHG_EN_N, p_on_peripheral_evt->on_battery_result);
 	PH_LOG("[PH] Initialized battery.\r\n");
 #endif
