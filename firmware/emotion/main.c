@@ -1006,13 +1006,16 @@ static void config_dcpower()
     //
     // @note This setting will ensure correct behavior when routing TIMER events through
     //       PPI and low power mode simultaneously.
-    NRF_POWER->TASKS_CONSTLAT = 1;
+    // NRF_POWER->TASKS_CONSTLAT = 1; // Use sd call as the sd is enabled.
+    sd_power_mode_set(NRF_POWER_MODE_CONSTLAT);
 
 	// Forces a reset if power drops below 2.7v.
-	NRF_POWER->POFCON = POWER_POFCON_POF_Enabled | POWER_POFCON_THRESHOLD_V27;
+	//NRF_POWER->POFCON = POWER_POFCON_POF_Enabled | POWER_POFCON_THRESHOLD_V27;
+	sd_power_pof_enable(SD_POWER_POF_ENABLE);
+	sd_power_pof_threshold_set(NRF_POWER_THRESHOLD_V27);
 
     // Configure the DCDC converter to save battery.
-    err_code = sd_power_mode_set(NRF_POWER_DCDC_MODE_AUTOMATIC);
+    err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_MODE_AUTOMATIC);
     APP_ERROR_CHECK(err_code);
 }
 
