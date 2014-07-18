@@ -33,10 +33,10 @@
 #define LED_3					19
 
 #define PIN_FLYWHEEL 										0		// This is the output of the optical sensor.
-#define PIN_UART_RTS			23
-#define PIN_UART_CTS			25
-#define PIN_UART_TXD			21
-#define PIN_UART_RXD			24
+#define PIN_UART_RTS			2	// dyna board 10
+#define PIN_UART_CTS			11  // dyna board 12
+#define PIN_UART_TXD			12	// dyna board 3 or 11
+#define PIN_UART_RXD			5   // dyna board pin 5 as well
 #define UART_HWFC				false
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
