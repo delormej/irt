@@ -270,6 +270,7 @@ void peripheral_powerdown(bool accelerometer_off)
 
 	// Disconnect all input buffers to save power on shutdown.
     NRF_GPIO->PIN_CNF[PIN_FLYWHEEL] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
+
 #ifdef SIMPLE_UART
     // Disable UART and disconnect input buffers to save power.
     NRF_UART0->ENABLE = 0;
