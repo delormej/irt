@@ -518,7 +518,7 @@ static void on_power_down(bool accelerometer_wake_disable)
 	irt_power_meas_fifo_free();
 
 	// Blink red a couple of times to say good-night.
-	clear_led(0);
+	clear_led(3);
 
 	peripheral_powerdown(accelerometer_wake_disable);
 
@@ -1019,7 +1019,9 @@ static void config_dcpower()
     APP_ERROR_CHECK(err_code);
 
     // Configure the DCDC converter to save battery.
-    err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_MODE_AUTOMATIC);
+    // This shows now appreciable difference, see https://devzone.nordicsemi.com/question/5980/dcdc-and-softdevice/
+    //err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_MODE_AUTOMATIC);
+	//err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_MODE_OFF);
     APP_ERROR_CHECK(err_code);
 }
 
