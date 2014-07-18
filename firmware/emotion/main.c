@@ -518,7 +518,7 @@ static void on_power_down(bool accelerometer_wake_disable)
 	irt_power_meas_fifo_free();
 
 	// Blink red a couple of times to say good-night.
-	clear_led(3);
+	clear_led(0);
 
 	peripheral_powerdown(accelerometer_wake_disable);
 
@@ -1088,7 +1088,7 @@ int main(void)
 	debug_init();
 
 	LOG("**********************************************************************\r\n");
-	LOG("[MAIN]:Starting ANT+ id: %i, firmware: %s, serial: %#.8x\r\n",
+	LOG("[MAIN]:Starting ANT+ id: %i, firmware: %s, serial: %#.8x \r\n",
 			ANT_DEVICE_NUMBER, SW_REVISION, SERIAL_NUMBER);
 	LOG("**********************************************************************\r\n");
 
