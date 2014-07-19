@@ -14,9 +14,9 @@
 #define SW_REVISION                   	"0.0.0"		// major.minor.build
 */
 
-/* DEVICE specific info currently defined in make file.
-#define SERIAL_NUMBER                   0xAA55AA55
-#define ANT_DEVICE_NUMBER         		0x01
-*/
+/* DEVICE specific info */
+#define ANT_DEVICE_NUMBER			(uint16_t)NRF_FICR->DEVICEID[1]
+#define SERIAL_NUMBER				NRF_FICR->DEVICEID[1]
+
 
 #endif	// IRT_EMOTION_H__

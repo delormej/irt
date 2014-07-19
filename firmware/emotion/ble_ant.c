@@ -522,6 +522,23 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas)
 
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 {
+	// Initialize the product page.
+	ant_product_page[0] = ANT_COMMON_PAGE_81;
+	ant_product_page[1] = BP_PAGE_RESERVE_BYTE;
+	ant_product_page[2] = SW_REVISION_BLD;
+	ant_product_page[3] = SW_REVISION_MAJ | SW_REVISION_MIN;
+	memcpy((uint8_t*)&(ant_product_page[4]), (uint32_t*)&(SERIAL_NUMBER), sizeof(uint32_t));
+
+	// Initialize the manufacturer's page.
+	ant_manufacturer_page[0] = ANT_COMMON_PAGE_80;
+	ant_manufacturer_page[1] = BP_PAGE_RESERVE_BYTE;
+	ant_manufacturer_page[2] = BP_PAGE_RESERVE_BYTE;
+	ant_manufacturer_page[3] = HW_REVISION;
+	ant_manufacturer_page[4] = LOW_BYTE(MANUFACTURER_ID);
+	ant_manufacturer_page[5] = HIGH_BYTE(MANUFACTURER_ID);
+	ant_manufacturer_page[6] = LOW_BYTE(MODEL_NUMBER);
+	ant_manufacturer_page[7] = HIGH_BYTE(MODEL_NUMBER);
+
 	// Event pointers.
 	mp_ant_ble_evt_handlers = ant_ble_evt_handlers;
 
