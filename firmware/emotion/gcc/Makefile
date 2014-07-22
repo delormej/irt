@@ -61,7 +61,7 @@ LDFLAGS += -Wl,--gc-sections
 debug : CFLAGS += -DENABLE_DEBUG_LOG			# Enable debug logging.
 CFLAGS += -DSIMPLE_UART							# Use the Simple_UART module for logging.
 #debug : CFLAGS += -DBLE_NUS_ENABLED			# Use Nordic BLE UART for logging.
-debug : CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wait for debugger to attach.
+#debug : CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wait for debugger to attach.
 debug : CFLAGS += -DSIM_SPEED					# Simulate speed.
 debug : CFLAGS += -g							# Enable debug symbols.
 debug : LDFLAGS += -u _printf_float				# Required to printf a float.
@@ -74,7 +74,7 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 55
+SW_REVISION_BLD := 56
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)

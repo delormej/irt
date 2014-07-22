@@ -105,6 +105,11 @@ SECTIONS
 
 	} > RAM
 
+	.noinit (NOLOAD) :
+    {
+        *(.noinit*)
+    } > RAM
+    
 	.bss :
 	{
 		__bss_start__ = .;

@@ -46,10 +46,10 @@
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 #include "app_timer.h"
-#include "ble_debug_assert_handler.h"
 #include "debug.h"
 #include "boards.h"
 #include "battery.h"
+#include "irt_error_log.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define BLE_ADV_BLINK_RATE_MS			500u
@@ -67,6 +67,12 @@
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 
+//
+// General purpose retention register states used.
+//
+#define IRT_GPREG_DFU	 				0x1
+#define IRT_GPREG_ERROR 				0x2
+
 #define DATA_PAGE_RESPONSE_TYPE			0x80										// 0X80 For acknowledged response or number of times to send broadcast data requests.
 
 static uint8_t 							m_resistance_level;
@@ -74,7 +80,7 @@ static resistance_mode_t				m_resistance_mode;
 
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 
-static user_profile_t 					m_user_profile;
+static user_profile_t  					m_user_profile  __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
 static rc_sim_forces_t					m_sim_forces;
 static accelerometer_data_t 			m_accelerometer_data;
 
@@ -110,34 +116,36 @@ static void profile_update_sched(void);
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
-	if (error_code == NRF_ERROR_NO_MEM)
-	{
-		LOG("[MAIN]:app_error_handler CRITICAL: NRF_ERROR_NO_MEM in %s:{%lu}. \r\n",
-				p_file_name,
-				line_num);
-	}
-	else
-	{
-		LOG("[MAIN]:app_error_handler {HALTED ON ERRROR: %#.8x}: %s:%lu\r\n",
-				error_code, p_file_name, line_num);
-	}
-
-    // This call can be used for debug purposes during development of an application.
-    // @note CAUTION: Activating this code will write the stack to flash on an error.
-    //                This function should NOT be used in a final product.
-    //                It is intended STRICTLY for development/debugging purposes.
-    //                The flash write will happen EVEN if the radio is active, thus interrupting
-    //                any communication.
-    //                Use with care.
-#if defined(ENABLE_DEBUG_ASSERT)
+	// Set LED indicator.
 	set_led_red(3);
 
+	// Fetch the stack and save the error.
+	irt_error_save(error_code, line_num, p_file_name);
+
+    // Indicate error state in General Purpose Register.
+	sd_power_gpregret_set(IRT_GPREG_ERROR);
+
+#if defined(ENABLE_DEBUG_ASSERT)
+	// Kill the softdevice and any pending interrupt requests, log the error and wait.
+	sd_softdevice_disable();
+	__disable_irq();
+
+	irt_error_log_data_t* p_error = irt_error_last();
+
+	LOG("[MAIN]:app_error_handler {HALTED ON ERROR: %#.8x}: %s:%lu\r\nCOUNT = %i\r\n",
+			error_code, p_file_name, line_num, p_error->failure);
+
+	// TODO: figure out how to display the stack (p_error->stack_info).
+
 	// Note this function does not return - it will hang waiting for a debugger to attach.
-	ble_debug_assert_handler(error_code, line_num, p_file_name);
+	for (;;)
+	{
+		// Do nothing, attach debugger.
+	}
 #else
-    // On assert, the system can only recover with a reset.
-	LOG("[MAIN]:app_error_handler performing SystemReset()");
-    NVIC_SystemReset();
+	// Wait 1 second, to give user a chance to see LED indicators and then reset the system.
+	nrf_delay_ms(1000);
+	NVIC_SystemReset();
 #endif // ENABLE_DEBUG_ASSERT
 }
 
@@ -651,7 +659,7 @@ static void on_power_plug(void)
 static void on_ble_connected(void) 
 {
 	blink_led_green_stop(0);
-	set_led_green(0);
+	set_led_green(3);
 
 	LOG("[MAIN]:on_ble_connected\r\n");
 }
@@ -886,7 +894,7 @@ static void on_enable_dfu_mode(void)
 	// TODO: share the mask here in a common include file with bootloader.
 	// bootloader needs to share PWM, device name / manuf, etc... so we need
 	// to refactor anyways.
-	err_code = sd_power_gpregret_set(0x1);
+	err_code = sd_power_gpregret_set(IRT_GPREG_DFU);
 	APP_ERROR_CHECK(err_code);
 
 	// Resets the CPU to start in DFU mode.
@@ -1043,6 +1051,25 @@ static uint32_t check_reset_reason()
 	else
 	{
 		LOG("[MAIN]:Normal power on.\r\n");
+	}
+
+	// Check and see if the device last reset due to error.
+	if (NRF_POWER->GPREGRET == IRT_GPREG_ERROR)
+	{
+		// Log the occurrence.
+		irt_error_log_data_t* p_error = irt_error_last();
+
+		LOG("[MAIN]:check_reset_reason Resetting from previous error.");
+		LOG("\t{COUNT: %i, ERROR: %#.8x}: %s:%lu\r\n",
+				p_error->failure,
+				p_error->err_code,
+				p_error->message,
+				p_error->line_number);
+	}
+	else
+	{
+		// Initialize the error structure.
+		irt_error_init();
 	}
 
 	return reason;
