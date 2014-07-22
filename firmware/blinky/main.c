@@ -26,18 +26,25 @@
 #include "app_gpiote.h"
 #include "simple_uart.h"
 
-#define LED_0					12
-#define LED_1					13
+#define LED_0					18
+#define LED_1					19
 
-#define LED_2					18
-#define LED_3					19
-
+/*
 #define PIN_FLYWHEEL 										0		// This is the output of the optical sensor.
 #define PIN_UART_RTS			2	// dyna board 10
 #define PIN_UART_CTS			11  // dyna board 12
 #define PIN_UART_TXD			12	// dyna board 3 or 11
 #define PIN_UART_RXD			5   // dyna board pin 5 as well
 #define UART_HWFC				false
+*/
+
+#define PIN_UART_RTS			8	// 
+#define PIN_UART_CTS			10   // 
+#define PIN_UART_TXD			9	// 
+#define PIN_UART_RXD			11   // 
+#define UART_HWFC				true
+
+#define PIN_VIN					1
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
@@ -77,9 +84,10 @@ int main(void)
   // Configure LED-pins as outputs.
   nrf_gpio_cfg_output(LED_0);
   nrf_gpio_cfg_output(LED_1);
-  nrf_gpio_cfg_input(PIN_FLYWHEEL, NRF_GPIO_PIN_NOPULL);
+  //nrf_gpio_cfg_input(PIN_FLYWHEEL, NRF_GPIO_PIN_NOPULL);
  
   simple_uart_config(PIN_UART_RTS, PIN_UART_TXD, PIN_UART_CTS, PIN_UART_RXD, UART_HWFC);
+
   simple_uart_putstring((const uint8_t *)" \n\rBlinky Starting\n\r: ");
 
   gpio_init();
