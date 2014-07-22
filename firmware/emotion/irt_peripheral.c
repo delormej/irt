@@ -163,17 +163,11 @@ void set_led_red(uint8_t led_mask)
 	// 1 led 1 only
 	// 2 led 2 only
 	// 3 both
-	if (led_mask <= 1)
-	{
-		nrf_gpio_pin_clear(PIN_LED_A);
-		nrf_gpio_pin_set(PIN_LED_B);
-	}
+	nrf_gpio_pin_clear(PIN_LED_A);
+	nrf_gpio_pin_set(PIN_LED_B);
 #ifdef IRT_REV_2A_H
-	if ((led_mask | 2) == led_mask)
-	{
-		nrf_gpio_pin_clear(PIN_LED_C);
-		nrf_gpio_pin_set(PIN_LED_D);
-	}
+	nrf_gpio_pin_clear(PIN_LED_C);
+	nrf_gpio_pin_set(PIN_LED_D);
 #endif
 }
 
@@ -183,8 +177,8 @@ void set_led_green(uint8_t led_mask)
 	nrf_gpio_pin_set(PIN_LED_A);
 
 #ifdef IRT_REV_2A_H
-	nrf_gpio_pin_clear(PIN_LED_C);
-	nrf_gpio_pin_set(PIN_LED_D);
+	nrf_gpio_pin_clear(PIN_LED_D);
+	nrf_gpio_pin_set(PIN_LED_C);
 #endif
 }
 
