@@ -476,6 +476,17 @@ static void scheduler_init(void)
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 }
 
+/**@brief	Copies the last error to a response structure.
+ */
+static void error_to_response(uint8_t* p_response)
+{
+	irt_error_log_data_t* p_err;
+
+	p_err = irt_error_last();
+	memcpy(p_response, &(p_err->failure), sizeof(uint16_t));
+	memcpy(&(p_response[2]), &(p_err->line_number), sizeof(uint16_t));
+	memcpy(&(p_response[4]), &(p_err->err_code), sizeof(uint8_t));
+}
 
 /**@brief	Sends data page 2 response.
  */
@@ -502,6 +513,10 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 
 		case IRT_MSG_SUBPAGE_WHEEL_SIZE:
 			memcpy(&response, &m_user_profile.wheel_size_mm, sizeof(uint16_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_GET_ERROR:
+			error_to_response(response);
 			break;
 
 		default:

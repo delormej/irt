@@ -36,6 +36,7 @@ All rights reserved.
 #define IRT_MSG_SUBPAGE_WHEEL_SIZE			19u
 #define IRT_MSG_SUBPAGE_BUTTON_STOPS		20u
 #define IRT_MSG_SUBPAGE_SET_CHARGER			21u					// Setting to toggle the charger.
+#define IRT_MSG_SUBPAGE_GET_ERROR			22u					// Gets the last error code.
 
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 
