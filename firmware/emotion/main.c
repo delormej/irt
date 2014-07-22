@@ -125,11 +125,11 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     // Indicate error state in General Purpose Register.
 	sd_power_gpregret_set(IRT_GPREG_ERROR);
 
-#if defined(ENABLE_DEBUG_ASSERT)
-	// Kill the softdevice and any pending interrupt requests, log the error and wait.
+	// Kill the softdevice and any pending interrupt requests.
 	sd_softdevice_disable();
 	__disable_irq();
 
+#if defined(ENABLE_DEBUG_ASSERT)
 	irt_error_log_data_t* p_error = irt_error_last();
 
 	LOG("[MAIN]:app_error_handler {HALTED ON ERROR: %#.8x}: %s:%lu\r\nCOUNT = %i\r\n",
@@ -1038,7 +1038,7 @@ static void config_dcpower()
  */
 static uint32_t check_reset_reason()
 {
-	uint32_t reason;
+	uint32_t reason, gpreg;
 
 	// Read the reset reason
 	reason = NRF_POWER->RESETREAS;
@@ -1053,18 +1053,22 @@ static uint32_t check_reset_reason()
 		LOG("[MAIN]:Normal power on.\r\n");
 	}
 
+	gpreg = NRF_POWER->GPREGRET;
 	// Check and see if the device last reset due to error.
-	if (NRF_POWER->GPREGRET == IRT_GPREG_ERROR)
+	if (gpreg == IRT_GPREG_ERROR)
 	{
 		// Log the occurrence.
 		irt_error_log_data_t* p_error = irt_error_last();
 
-		LOG("[MAIN]:check_reset_reason Resetting from previous error.");
+		LOG("[MAIN]:check_reset_reason Resetting from previous error.\r\n");
 		LOG("\t{COUNT: %i, ERROR: %#.8x}: %s:%lu\r\n",
 				p_error->failure,
 				p_error->err_code,
 				p_error->message,
 				p_error->line_number);
+
+		// Now clear the register.
+		NRF_POWER->GPREGRET = 0;
 	}
 	else
 	{
