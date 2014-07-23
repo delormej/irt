@@ -74,7 +74,7 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 57
+SW_REVISION_BLD := 58
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -82,23 +82,39 @@ CFLAGS += -DSW_REVISION_BLD=$(SW_REVISION_BLD)
 CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_BLD)\""
 
 ############################################
-# Required for pure gcc from Nordic.
+# DEVICE specific data.  
 ############################################
-PROJECT_NAME = $(shell basename "$(realpath ../)")_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)
+CFLAGS += -DUSE_BATTERY_READ_PIN				# If this device is built to require enabling batt voltage read by charging a capacitor.  You can still read voltage on boards without this. 
+CFLAGS += -DUSE_BATTERY_CHARGER					# If this device is enabled to control battery charger.
+												# USE_BATTERY_CHARGER also dictates if there is control of the
+												# power regulator, since only battery charge enabled boards have 
+												# the power regulator.   
 
 ############################################
-# DEVICE specific data.  
-# TODO: this should be done another way.
+# Concat name used for project and binary 
+# based on build variants.
 ############################################
-#CFLAGS += -DUSE_BATTERY_READ_PIN					# If this device is built to require enabling batt voltage read.
-#CFLAGS += -DUSE_BATTERY_CHARGER					# If this device is enabled to control battery charger.
+PROJECT_NAME = $(subst BOARD_,,$(BOARD))_
+
+ifeq (USE_BATTERY_READ_PIN, $(findstring USE_BATTERY_READ_PIN,$(CFLAGS)))
+	PROJECT_NAME := $(PROJECT_NAME)P
+endif
+
+ifeq (USE_BATTERY_CHARGER, $(findstring USE_BATTERY_CHARGER,$(CFLAGS)))
+	PROJECT_NAME := $(PROJECT_NAME)C
+endif
+
+PROJECT_NAME := $(PROJECT_NAME)_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)
 
 include $(TEMPLATE_PATH)Makefile
 
-debug: all
-
+debug: all 
+	
 deploy:
 	cp $(BIN) $(DEPLOY_PATH)$(OUTPUT_NAME).bin
 	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
 
-.PHONY: debug deploy
+name:
+	@echo $(PROJECT_NAME)
+
+.PHONY: debug deploy name
