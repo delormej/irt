@@ -17,6 +17,43 @@ All rights reserved.
 #define	GRAVITY						9.8f		// Co-efficent of gravity for Earth.  Change for other planets.
 #define	MATH_PI						3.14159f
 
+#define DEVICE_NAME                 "E-Motion"                          /**< Name of device. Will be included in the advertising data. */
+#define MANUFACTURER_NAME           "Inside Ride"            			/**< Manufacturer. Will be passed to Device Information Service. */
+#define HW_REVISION                 0x01               					/**< Hardware revision for manufacturer's identification common page. */
+#define MANUFACTURER_ID             0xAAAA             				  	/**< Manufacturer ID for manufacturer's identification common page. */
+#define MODEL_NUMBER                0x5248								// Model 'HR' in ASCII /**< Model number for manufacturer's identification common page. */
+
+/* VERSION is currently defined in make file.
+#define SW_REVISION_MAJ				0			// Limited to 4 bits
+#define SW_REVISION_MIN				0			// Limited to 4 bits
+#define SW_REVISION_BLD				0			// Full byte
+#define SW_REVISION                 "0.0.0"		// major.minor.build
+*/
+
+/* DEVICE specific info */
+#define ANT_DEVICE_NUMBER			(uint16_t)NRF_FICR->DEVICEID[1]
+#define SERIAL_NUMBER				NRF_FICR->DEVICEID[1]
+
+//
+// Available device features.
+//
+#define FEATURE_DEFAULT					0xFFFFFFFF
+#define FEATURE_RESERVED				1UL
+#define FEATURE_ACCEL_SLEEP_OFF			2UL
+#define FEATURE_BIG_MAG					4UL
+#define FEATURE_SMALL_MAG				8UL
+#define FEATURE_OTHER_MAG				16UL
+// FUTURE features:
+// BTLE_OFF
+// ANT_CTRL_OFF
+// ANT_BP_OFF
+// ANT_FEC_OFF
+#define FEATURE_ANT_EXTRA_INFO			32768UL			// Set max bit.
+
+#define FEATURE_IS_SET(SETTINGS, FEATURE) \
+	((SETTINGS & FEATURE) == FEATURE)
+
+
 /*****************************************************************************
 * Inside Ride Defines
 *****************************************************************************/

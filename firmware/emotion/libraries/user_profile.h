@@ -16,27 +16,6 @@
 
 #define PROFILE_VERSION					3u	// Current version of the profile.
 
-//
-// Available device features. Default setting should result in 0.
-//
-#define FEATURE_DEFAULT					0xFFFFFFFF
-#define FEATURE_RESERVED				1UL
-#define FEATURE_ACCEL_SLEEP_OFF			2UL
-#define FEATURE_BIG_MAG					4UL
-#define FEATURE_SMALL_MAG				8UL
-#define FEATURE_OTHER_MAG				16UL
-// FUTURE features:
-// BTLE_OFF
-// ANT_CTRL_OFF
-// ANT_BP_OFF
-// ANT_FEC_OFF
-#define FEATURE_ANT_EXTRA_INFO			32768UL			// Set max bit.
-
-// Number of wheel revs to flywheel?
-
-#define FEATURE_IS_SET(SETTINGS, FEATURE) \
-	((SETTINGS & FEATURE) == FEATURE)
-
 /**@brief	Structure used to for storing/reading user profile.
  * 			Must be at least PSTORAGE_MIN_BLOCK_SIZE (i.e. 16 bytes) in size and should be word aligned (16 bits).
  */
