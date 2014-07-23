@@ -2,7 +2,7 @@
 #define BLE_ANT_H__
 
 #include <stdint.h>
-#include "irt_emotion.h"
+#include "irt_common.h"
 #include "ble_cps.h"
 #include "ble_gatt.h"
 #include "ant_ctrl.h"
