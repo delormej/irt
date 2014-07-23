@@ -12,6 +12,8 @@
   #include "boards/board_irt_v2a.h"
 #elif defined(BOARD_DYN_BAT_N548)
   #include "boards/dyn_bat_N548.h"
+#elif defined(BOARD_PCA10001)
+  #include "boards/pca10001.h"
 #else
 #error "Board is not defined"
 #endif

@@ -23,26 +23,9 @@
 #include <stdint.h>
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
-#include "app_gpiote.h"
+//#include "app_gpiote.h"
+#include "boards.h"
 #include "simple_uart.h"
-
-#define LED_0					18
-#define LED_1					19
-
-/*
-#define PIN_FLYWHEEL 										0		// This is the output of the optical sensor.
-#define PIN_UART_RTS			2	// dyna board 10
-#define PIN_UART_CTS			11  // dyna board 12
-#define PIN_UART_TXD			12	// dyna board 3 or 11
-#define PIN_UART_RXD			5   // dyna board pin 5 as well
-#define UART_HWFC				false
-*/
-
-#define PIN_UART_RTS			8	// 
-#define PIN_UART_CTS			10   // 
-#define PIN_UART_TXD			9	// 
-#define PIN_UART_RXD			11   // 
-#define UART_HWFC				true
 
 #define PIN_VIN					1
 
@@ -54,7 +37,7 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 {
 	simple_uart_put('|');
 }
-
+/*
 static void gpio_init()
 {
 	uint32_t err_code;
@@ -74,7 +57,7 @@ static void gpio_init()
 
 	err_code = app_gpiote_user_enable(p_user_id);
 	//APP_ERROR_CHECK(err_code);
-}
+}*/
 
 /**
  * @brief Function for application main entry.
@@ -90,7 +73,7 @@ int main(void)
 
   simple_uart_putstring((const uint8_t *)" \n\rBlinky Starting\n\r: ");
 
-  gpio_init();
+  //gpio_init();
 
   // LED 0 and LED 1 blink alternately.
   while(true)
