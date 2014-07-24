@@ -24,9 +24,19 @@
 #include "crc16.h"
 #include "pstorage.h"
 #include "app_scheduler.h"
+#include "debug.h"
 
 #define IRQ_ENABLED             0x01                    /**< Field identifying if an interrupt is enabled. */
 #define MAX_NUMBER_INTERRUPTS   32                      /**< Maximum number of interrupts available. */
+
+/**@brief Debug logging for main module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define BL_LOG debug_log
+#else
+#define BL_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 typedef enum
 {
@@ -90,6 +100,7 @@ bool bootloader_app_is_valid(uint32_t app_addr)
     // There exists an application in CODE region 1.
     if (DFU_BANK_0_REGION_START == EMPTY_FLASH_MASK)
     {
+    	BL_LOG("[BL] bootloader_app_is_valid EMPTY_FLASH_MASK\r\n");
         return false;
     }
     
@@ -105,12 +116,15 @@ bool bootloader_app_is_valid(uint32_t app_addr)
             {
                 uint16_t image_crc = 0;
 
+                BL_LOG("[BL] bootloader_app_is_valid BANK_VALID_APP.\r\n");
+
                 // A stored crc value of 0 indicates that CRC checking is not used.
                 if (p_bootloader_settings->bank_0_crc != 0)
                 {
                     image_crc = crc16_compute((uint8_t*)DFU_BANK_0_REGION_START,
                                               p_bootloader_settings->bank_0_size,
                                               NULL);
+                    BL_LOG("[BL] bootloader_app_is_valid image_crc %i.\r\n", image_crc);
                 }
 
                 success = (image_crc == p_bootloader_settings->bank_0_crc);

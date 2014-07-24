@@ -50,6 +50,8 @@
 #include "softdevice_handler.h"
 #include "pstorage_platform.h"
 #include "irt_common.h"
+#include "simple_uart.h"
+#include "debug.h"
 
 #define LED_ERR							ASSERT_LED_PIN_NO
 #define LED_STATUS						ADVERTISING_LED_PIN_NO
@@ -67,6 +69,16 @@
 #define SCHED_QUEUE_SIZE                20                                                      /**< Maximum number of events in the scheduler queue. */
 
 #define GPREG_DFU_UPDATE_MASK			0x1														// DFU UPDATE mode flagged.
+
+/**@brief Debug logging for main module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define BL_LOG debug_log
+#else
+#define BL_LOG(...)
+#endif // ENABLE_DEBUG_LOG
+
 
 /**@brief Function for error handling, which is called when an error has occurred. 
  *
@@ -209,6 +221,9 @@ int main(void)
 
 	bool     bootloader_is_pushed = false;
     
+	BL_LOG("[BL] Starting bootloader.\r\n");
+
+	debug_init();
     leds_init();
 
     // This check ensures that the defined fields in the bootloader corresponds with actual
@@ -237,6 +252,8 @@ int main(void)
 
     if (bootloader_is_pushed || (!bootloader_app_is_valid(DFU_BANK_0_REGION_START)))
     {
+    	BL_LOG("[BL] bootloader set OR app is not valid.\r\n");
+
 		nrf_gpio_pin_clear(LED_ERR);
 		nrf_gpio_pin_set(LED_STATUS);
 
@@ -254,6 +271,8 @@ int main(void)
 
     if (bootloader_app_is_valid(DFU_BANK_0_REGION_START))
     {
+    	BL_LOG("[BL] app_is_valid BANK_0, starting app.\r\n");
+
         leds_off();
         
         // Select a bank region to use as application region.
@@ -265,5 +284,7 @@ int main(void)
     nrf_gpio_pin_clear(LED_STATUS);
     nrf_gpio_pin_clear(LED_ERR);
     
+    BL_LOG("[BL] Restarting bootloader.\r\n");
+
     NVIC_SystemReset();
 }

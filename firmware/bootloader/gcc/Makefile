@@ -28,6 +28,8 @@ APPLICATION_SRCS += app_gpiote.c
 APPLICATION_SRCS += crc16.c
 APPLICATION_SRCS += softdevice_handler.c
 APPLICATION_SRCS += pstorage.c
+APPLICATION_SRCS += simple_uart.c
+APPLICATION_SRCS += debug.c
 
 # HCI Transport
 #APPLICATION_SRCS += hci_transport.c
@@ -61,7 +63,7 @@ LIBRARY_PATHS += ../include/ble_transport
 LIBRARY_PATHS += ../include/hci_transport
 LIBRARY_PATHS +=  ../../emotion
 LIBRARY_PATHS +=  ../../emotion/libraries
-#SOURCE_PATHS += 
+SOURCE_PATHS += ../../emotion/libraries
 
 CFLAGS = -Os -flto -ffunction-sections -fdata-sections -fno-builtin
 LDFLAGS += --specs=nano.specs -lc -lnosys
@@ -69,13 +71,17 @@ LDFLAGS += -Wl,--gc-sections
 
 # Define the S310 stack requirement as this is used as a directive in the dfu_types.
 CFLAGS += -DS310_STACK  
+CFLAGS += -DENABLE_DEBUG_LOG
 
 ############################################
 # For debug builds
 ############################################
-debug: CFLAGS = -g
+debug: CFLAGS += -g
+#debug: CFLAGS += -DENABLE_DEBUG_LOG
 debug: GDB_PORT_NUMBER := 2331
 
 include $(TEMPLATE_PATH)Makefile
+
+debug: all
 
 .PHONY: debug 
