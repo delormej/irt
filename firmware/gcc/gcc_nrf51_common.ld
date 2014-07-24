@@ -31,6 +31,16 @@ ENTRY(Reset_Handler)
 
 SECTIONS
 {
+    .bootloader_settings_block 0x0003FC00 :
+    {
+        KEEP(*(.bootloader_settings_sect))
+    } > bootloader_settings
+  
+    .NRF_UICR_BOOT_START_BLOCK 0x10001014 :
+    {
+        KEEP(*(.NRF_UICR_BOOT_START_SECT))
+    } > NRF_UICR_BOOT_START
+
 	.text :
 	{
 		KEEP(*(.isr_vector))
@@ -69,19 +79,9 @@ SECTIONS
 		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
 	} > FLASH
 	__exidx_end = .;
-    /*
-    .bootloader_settings 0x0003FC00 :
-    {
-        KEEP(*(.bootloader_settings))
-    } > FLASH
-	*/
+    
 	__etext = .;
-	
-	.NRF_UICR_BOOT_START_BLOCK 0x10001014 :
-    {
-        KEEP(*(.NRF_UICR_BOOT_START_SECT))
-    } > NRF_UICR_BOOT_START
-	
+		
 	.data : AT (__etext)
 	{
 		__data_start__ = .;
