@@ -76,12 +76,12 @@ SECTIONS
     } > FLASH
 	*/
 	__etext = .;
-	/*
+	
 	.NRF_UICR_BOOT_START_BLOCK 0x10001014 :
     {
         KEEP(*(.NRF_UICR_BOOT_START_SECT))
     } > NRF_UICR_BOOT_START
-	*/
+	
 	.data : AT (__etext)
 	{
 		__data_start__ = .;

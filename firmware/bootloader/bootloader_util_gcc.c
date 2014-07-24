@@ -13,7 +13,7 @@
 
 //uint8_t  m_boot_settings[CODE_PAGE_SIZE] __attribute__((section(".bootloader_settings"))) __attribute__((used)) = {BANK_VALID_APP};
 
-//uint32_t m_uicr_bootloader_start_address __attribute__((section(".bootloader_addr"))) __attribute__((used)) = BOOTLOADER_REGION_START;
+uint32_t m_uicr_bootloader_start_address __attribute__((section(".NRF_UICR_BOOT_START_SECT"))) __attribute__((used)) = BOOTLOADER_REGION_START;
 
 void bootloader_util_app_start(uint32_t start_addr)
 {
