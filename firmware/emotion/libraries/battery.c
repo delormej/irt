@@ -123,7 +123,9 @@ void battery_read_start()
     NRF_ADC->ENABLE     = ADC_ENABLE_ENABLE_Enabled;
     NRF_ADC->TASKS_START = 1;
 
+#ifdef USE_BATTERY_CHARGER
     BY_LOG("[BY] Battery Charger status: %i \r\n", battery_charge_status());
+#endif
 }
 
 /**@brief	Reads the current battery charge status.

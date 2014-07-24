@@ -74,7 +74,7 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 58
+SW_REVISION_BLD := 59
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -84,8 +84,8 @@ CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_B
 ############################################
 # DEVICE specific data.  
 ############################################
-#CFLAGS += -DUSE_BATTERY_READ_PIN				# If this device is built to require enabling batt voltage read by charging a capacitor.  You can still read voltage on boards without this. 
-#CFLAGS += -DUSE_BATTERY_CHARGER					# If this device is enabled to control battery charger.
+CFLAGS += -DUSE_BATTERY_READ_PIN				# If this device is built to require enabling batt voltage read by charging a capacitor.  You can still read voltage on boards without this. 
+CFLAGS += -DUSE_BATTERY_CHARGER					# If this device is enabled to control battery charger.
 												# USE_BATTERY_CHARGER also dictates if there is control of the
 												# power regulator, since only battery charge enabled boards have 
 												# the power regulator.   

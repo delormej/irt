@@ -267,16 +267,6 @@ void peripheral_powerdown(bool accelerometer_off)
 {
 	PH_LOG("[PH] Powering down peripherals.\r\n");
 
-	// Disconnect all input buffers to save power on shutdown.
-    NRF_GPIO->PIN_CNF[PIN_FLYWHEEL] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
-
-#ifdef SIMPLE_UART
-    // Disable UART and disconnect input buffers to save power.
-    NRF_UART0->ENABLE = 0;
-	NRF_GPIO->PIN_CNF[PIN_UART_RXD] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
-	NRF_GPIO->PIN_CNF[PIN_UART_CTS] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
-#endif // SIMPLE_UART
-
 	if (accelerometer_off)
 	{
 		// Put accelerometer to sleep so we don't get awaken by it's AUTO-SLEEP/AUTO-WAKE interrupts.
