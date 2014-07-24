@@ -10,6 +10,16 @@
 #include "nordic_common.h"
 #include "bootloader_types.h"
 #include "dfu_types.h"
+#include "debug.h"
+
+/**@brief Debug logging for main module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define BL_LOG debug_log
+#else
+#define BL_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 uint8_t  m_boot_settings[CODE_PAGE_SIZE] __attribute__((section(".bootloader_settings_sect"))) __attribute__((used)) = {BANK_VALID_APP};
 
@@ -19,12 +29,14 @@ void bootloader_util_app_start(uint32_t start_addr)
 {
 #if 0
     { /* First approach to start the application */
+    	BL_LOG("[BL] First approach to load.\r\n");
         typedef void (*application_main_t)();
         application_main_t application_main = *(application_main_t*)(start_addr+4);
         application_main();
     }
 #else
     { /* Second approach to start the application */
+    	BL_LOG("[BL] Second approach to load.\r\n");
         asm volatile(" LDR   R0, =0x20000          \n\t" // Assign app code address
                      " LDR   R2, [R0]              \n\t" // Get App MSP
                      " MSR   MSP, R2               \n\t" // Set the main stack pointer to the applications MSP

@@ -283,7 +283,7 @@ void bootloader_app_start(uint32_t app_addr)
     err_code = sd_softdevice_forward_to_application();
     APP_ERROR_CHECK(err_code);
 
-    BL_LOG("[BL] Starting the app at: %i.\r\n", CODE_REGION_1_START);
+    BL_LOG("[BL] Starting the app at: %#.8x.\r\n", CODE_REGION_1_START);
 
     bootloader_util_app_start(CODE_REGION_1_START);
 }
