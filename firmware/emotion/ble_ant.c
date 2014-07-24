@@ -34,7 +34,7 @@
 #include "debug.h"
 
 #define APP_ADV_INTERVAL                40                                           /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      180                                          /**< The advertising timeout in units of seconds. */
+#define APP_ADV_TIMEOUT_IN_SECONDS      180                                          // BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED /**< The advertising timeout in units of seconds. */
 
 #define SECOND_1_25_MS_UNITS            800                                          /**< Definition of 1 second, when 1 unit is 1.25 ms. */
 #define SECOND_10_MS_UNITS              100                                          /**< Definition of 1 second, when 1 unit is 10 ms. */
@@ -568,7 +568,7 @@ void ble_advertising_start(void) {
 	adv_params.p_peer_addr = NULL;					// Undirected advertisement
 	adv_params.fp = BLE_GAP_ADV_FP_ANY;
 	adv_params.interval = APP_ADV_INTERVAL;
-	adv_params.timeout = BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED; // APP_ADV_TIMEOUT_IN_SECONDS;
+	adv_params.timeout = APP_ADV_TIMEOUT_IN_SECONDS;
 
 	err_code = sd_ble_gap_adv_start(&adv_params);
 	APP_ERROR_CHECK(err_code);

@@ -66,8 +66,7 @@ static void blink_timeout_handler(void * p_context)
 {
 	UNUSED_PARAMETER(p_context);
 
-	// Toggle the green LED on/off.
-//	nrf_gpio_pin_toggle(PIN_LED_A);
+	// Toggle the green LED_1 on/off.
 	nrf_gpio_pin_toggle(PIN_LED_B);
 }
 
@@ -158,39 +157,45 @@ static void irt_gpio_init()
 
 void set_led_red(uint8_t led_mask)
 {
-	// led_mask =
-	// 0 led 1 only (backwards compat)
-	// 1 led 1 only
-	// 2 led 2 only
-	// 3 both
-	nrf_gpio_pin_clear(PIN_LED_A);
-	nrf_gpio_pin_set(PIN_LED_B);
+	if ((led_mask & LED_1) == LED_1)
+	{
+		nrf_gpio_pin_clear(PIN_LED_A);
+		nrf_gpio_pin_set(PIN_LED_B);
+	}
 #ifdef IRT_REV_2A_H
-	nrf_gpio_pin_clear(PIN_LED_C);
-	nrf_gpio_pin_set(PIN_LED_D);
+	if ((led_mask & LED_2) == LED_2)
+	{
+		nrf_gpio_pin_clear(PIN_LED_C);
+		nrf_gpio_pin_set(PIN_LED_D);
+	}
 #endif
 }
 
 void set_led_green(uint8_t led_mask)
 {
-	nrf_gpio_pin_clear(PIN_LED_B);
-	nrf_gpio_pin_set(PIN_LED_A);
-
+	if ((led_mask & LED_1) == LED_1)
+	{
+		nrf_gpio_pin_clear(PIN_LED_B);
+		nrf_gpio_pin_set(PIN_LED_A);
+	}
 #ifdef IRT_REV_2A_H
-	nrf_gpio_pin_clear(PIN_LED_D);
-	nrf_gpio_pin_set(PIN_LED_C);
+	if ((led_mask & LED_2) == LED_2)
+	{
+		nrf_gpio_pin_clear(PIN_LED_D);
+		nrf_gpio_pin_set(PIN_LED_C);
+	}
 #endif
 }
 
 void clear_led(uint8_t led_mask)
 {
-	if (led_mask <= 1)
+	if ((led_mask & LED_1) == LED_1)
 	{
 		nrf_gpio_pin_set(PIN_LED_A);
 		nrf_gpio_pin_set(PIN_LED_B);
 	}
 #ifdef IRT_REV_2A_H
-	if ((led_mask | 2) == led_mask)
+	if ((led_mask & LED_2) == LED_2)
 	{
 		nrf_gpio_pin_set(PIN_LED_C);
 		nrf_gpio_pin_set(PIN_LED_D);
@@ -207,7 +212,7 @@ void blink_led_green_start(uint8_t led_mask, uint16_t interval_ms)
 	interval_ticks = APP_TIMER_TICKS(interval_ms, APP_TIMER_PRESCALER);
 
 	// Stop any current LED flash.
-	clear_led(0);
+	//clear_led(led_mask);
 
 	// Start the timer.
 	err_code = app_timer_start(m_led1_blink_timer_id, interval_ticks, NULL);
@@ -221,7 +226,7 @@ void blink_led_green_stop(uint8_t led_mask)
 	err_code = app_timer_stop(m_led1_blink_timer_id);
 	APP_ERROR_CHECK(err_code);
 
-	clear_led(0);
+	clear_led(led_mask);
 }
 
 /*
@@ -295,7 +300,7 @@ void peripheral_powerdown(bool accelerometer_off)
 #endif // IRT_REV_2A_H
 
 	// Shut down the leds.
-	clear_led(3);
+	clear_led(LED_BOTH);
 }
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
@@ -308,13 +313,14 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	temperature_init();
 
 	// Blink both LEDS
-	set_led_green(3);
+	set_led_red(LED_BOTH);
 	nrf_delay_ms(10);
-	clear_led(3);
+	clear_led(LED_1);
+	set_led_green(LED_2);
 
 	// Create the timer for blinking led #1.
 	err_code = app_timer_create(&m_led1_blink_timer_id,
-		APP_TIMER_MODE_REPEATED,
+		APP_TIMER_MODE_REPEATED, // APP_TIMER_MODE_SINGLE_SHOT
 		blink_timeout_handler);
 	APP_ERROR_CHECK(err_code);
 

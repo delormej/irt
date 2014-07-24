@@ -117,7 +117,7 @@ static void profile_update_sched(void);
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
 	// Set LED indicator.
-	set_led_red(3);
+	set_led_red(LED_BOTH);
 
 	// Fetch the stack and save the error.
 	irt_error_save(error_code, line_num, p_file_name);
@@ -540,9 +540,6 @@ static void on_power_down(bool accelerometer_wake_disable)
 	// Free heap allocation.
 	irt_power_meas_fifo_free();
 
-	// Blink red a couple of times to say good-night.
-	clear_led(0);
-
 	peripheral_powerdown(accelerometer_wake_disable);
 
 	// TODO: should we be gracefully closing ANT and BLE channels here?
@@ -673,8 +670,8 @@ static void on_power_plug(void)
 
 static void on_ble_connected(void) 
 {
-	blink_led_green_stop(0);
-	set_led_green(3);
+	blink_led_green_stop(LED_1);
+	set_led_green(LED_1);
 
 	LOG("[MAIN]:on_ble_connected\r\n");
 }
@@ -682,7 +679,7 @@ static void on_ble_connected(void)
 static void on_ble_disconnected(void) 
 {
 	// Clear connection LED.
-	clear_led(0);
+	clear_led(LED_1);
 	
 	LOG("[MAIN]:on_ble_disconnected\r\n");
 
@@ -692,13 +689,13 @@ static void on_ble_disconnected(void)
 
 static void on_ble_timeout(void) 
 {
-	blink_led_green_stop(0);
+	blink_led_green_stop(LED_1);
 	LOG("[MAIN]:on_ble_timeout\r\n");
 }
 
 static void on_ble_advertising(void)
 {
-	blink_led_green_start(0, BLE_ADV_BLINK_RATE_MS);
+	blink_led_green_start(LED_1, BLE_ADV_BLINK_RATE_MS);
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
@@ -869,7 +866,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			{
 				// Exit crr mode.
 				m_crr_adjust_mode = false;
-				clear_led(2);
+				clear_led(LED_1);
 			}
 			else
 			{
@@ -889,7 +886,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 				// Change into crr mode.
 				// Set the state, start blinking the LED RED
 				m_crr_adjust_mode = true;
-				set_led_red(2);
+				set_led_red(LED_1);
 			}
 
 			break;
