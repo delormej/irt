@@ -11,6 +11,10 @@
 #include "bootloader_types.h"
 #include "dfu_types.h"
 
+uint8_t  m_boot_settings[CODE_PAGE_SIZE] __attribute__((section(".bootloader_settings"))) __attribute__((used)) = {BANK_VALID_APP};
+
+uint32_t m_uicr_bootloader_start_address __attribute__((section(".bootloader_addr"))) __attribute__((used)) = BOOTLOADER_REGION_START;
+
 void bootloader_util_app_start(uint32_t start_addr)
 {
 #if 0
@@ -34,5 +38,6 @@ void bootloader_util_app_start(uint32_t start_addr)
 void bootloader_util_settings_get(const bootloader_settings_t** pp_bootloader_settings)
 {
     // Read only pointer to bootloader settings in flash.
-    *pp_bootloader_settings = (bootloader_settings_t*)BOOTLOADER_SETTINGS_ADDRESS;
+    //*pp_bootloader_settings = (bootloader_settings_t*)BOOTLOADER_SETTINGS_ADDRESS;
+	*pp_bootloader_settings = (bootloader_settings_t*)m_uicr_bootloader_start_address;
 }
