@@ -221,9 +221,9 @@ int main(void)
 
 	bool     bootloader_is_pushed = false;
     
+	debug_init();
 	BL_LOG("[BL] Starting bootloader.\r\n");
 
-	debug_init();
     leds_init();
 
     // This check ensures that the defined fields in the bootloader corresponds with actual

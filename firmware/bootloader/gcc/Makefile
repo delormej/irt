@@ -71,14 +71,14 @@ LDFLAGS += -Wl,--gc-sections
 
 # Define the S310 stack requirement as this is used as a directive in the dfu_types.
 CFLAGS += -DS310_STACK  
-CFLAGS += -DENABLE_DEBUG_LOG
 
 ############################################
 # For debug builds
 ############################################
+debug: CFLAGS += -DSIMPLE_UART
 debug: CFLAGS += -g
-#debug: CFLAGS += -DENABLE_DEBUG_LOG
-debug: GDB_PORT_NUMBER := 2331
+debug: CFLAGS += -DENABLE_DEBUG_LOG
+GDB_PORT_NUMBER := 2331
 
 include $(TEMPLATE_PATH)Makefile
 

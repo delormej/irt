@@ -69,19 +69,19 @@ SECTIONS
 		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
 	} > FLASH
 	__exidx_end = .;
-    
+    /*
     .bootloader_settings 0x0003FC00 :
     {
         KEEP(*(.bootloader_settings))
     } > FLASH
-	
+	*/
 	__etext = .;
-	
-    .bootloader_addr 0x10001014 : 
+	/*
+	.NRF_UICR_BOOT_START_BLOCK 0x10001014 :
     {
-        KEEP(*(.bootloader_addr))
-    } > UICR	
-		
+        KEEP(*(.NRF_UICR_BOOT_START_SECT))
+    } > NRF_UICR_BOOT_START
+	*/
 	.data : AT (__etext)
 	{
 		__data_start__ = .;
