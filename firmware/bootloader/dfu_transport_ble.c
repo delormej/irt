@@ -34,7 +34,7 @@
 #include "hci_mem_pool.h"
 #include <stddef.h>
 #include <string.h>
-#include "irt_emotion.h"
+#include "irt_common.h"
 
 #define MIN_CONN_INTERVAL                    (uint16_t)(MSEC_TO_UNITS(11.25, UNIT_1_25_MS))          /**< Minimum acceptable connection interval (11.25 milliseconds). */
 #define MAX_CONN_INTERVAL                    (uint16_t)(MSEC_TO_UNITS(15, UNIT_1_25_MS))             /**< Maximum acceptable connection interval (15 milliseconds). */

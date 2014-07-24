@@ -49,7 +49,7 @@
 #include "ble_debug_assert_handler.h"
 #include "softdevice_handler.h"
 #include "pstorage_platform.h"
-#include "irt_emotion.h"
+#include "irt_common.h"
 
 #define LED_ERR							ASSERT_LED_PIN_NO
 #define LED_STATUS						ADVERTISING_LED_PIN_NO
