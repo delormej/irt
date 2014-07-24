@@ -38,6 +38,6 @@ void bootloader_util_app_start(uint32_t start_addr)
 void bootloader_util_settings_get(const bootloader_settings_t** pp_bootloader_settings)
 {
     // Read only pointer to bootloader settings in flash.
-    *pp_bootloader_settings = (bootloader_settings_t*)BOOTLOADER_SETTINGS_ADDRESS;
-	//*pp_bootloader_settings = (bootloader_settings_t*)m_boot_settings;
+    //*pp_bootloader_settings = (bootloader_settings_t*)BOOTLOADER_SETTINGS_ADDRESS;
+	*pp_bootloader_settings = (bootloader_settings_t*)m_boot_settings;
 }
