@@ -55,7 +55,7 @@ else
 endif
 
 LINKER_SCRIPT ?= gcc_nrf51_$(USE_SOFTDEVICE)_xxaa.ld
-OUTPUT_NAME ?= $(addsuffix _$(USE_SOFTDEVICE), $(PROJECT_NAME))
+OUTPUT_NAME = $(PROJECT_NAME)
 
 ifdef USE_EXT_SENSORS
 LIBRARY_PATHS += $(SDK_INCLUDE_PATH)ext_sensors/

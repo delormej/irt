@@ -13,7 +13,6 @@
 #include "nrf.h"
 #include "nrf_soc.h"
 #include "nrf51_bitfields.h"
-#include "softdevice_handler.h"
 #include "ant_stack_handler_types.h"
 #include "app_error.h"
 #include "app_timer.h"
@@ -35,7 +34,7 @@
 #include "debug.h"
 
 #define APP_ADV_INTERVAL                40                                           /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      180                                          /**< The advertising timeout in units of seconds. */
+#define APP_ADV_TIMEOUT_IN_SECONDS      180                                          // BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED /**< The advertising timeout in units of seconds. */
 
 #define SECOND_1_25_MS_UNITS            800                                          /**< Definition of 1 second, when 1 unit is 1.25 ms. */
 #define SECOND_10_MS_UNITS              100                                          /**< Definition of 1 second, when 1 unit is 10 ms. */
@@ -445,13 +444,10 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 
 /**@brief BLE + ANT stack initialization.
  *
- * @details Initializes the SoftDevice and the stack event interrupt.
+ * @details Initializes the SoftDevice callbacks for BLE and ANT messages..
  */
 static void ble_ant_stack_init(void)
 {
-	// Initialize SoftDevice
-	SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, true);
-
 	// Subscribe for BLE events.
 	uint32_t err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
 	APP_ERROR_CHECK(err_code);
@@ -459,12 +455,6 @@ static void ble_ant_stack_init(void)
 	// Subscribe for ANT events.
 	err_code = softdevice_ant_evt_handler_set(on_ant_evt);
 	APP_ERROR_CHECK(err_code);
-
-	// TODO: implement system event handler callback
-	/*
-	 // Subscribe for system events.
-	 err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
-	 APP_ERROR_CHECK(err_code);*/
 }
 
 /**@brief	Sends acknolwedgement of resistance control to BLE and ANT recipients.
@@ -532,6 +522,23 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas)
 
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 {
+	// Initialize the product page.
+	ant_product_page[0] = ANT_COMMON_PAGE_81;
+	ant_product_page[1] = BP_PAGE_RESERVE_BYTE;
+	ant_product_page[2] = SW_REVISION_BLD;
+	ant_product_page[3] = SW_REVISION_MAJ | SW_REVISION_MIN;
+	memcpy((uint8_t*)&(ant_product_page[4]), (uint32_t*)&(SERIAL_NUMBER), sizeof(uint32_t));
+
+	// Initialize the manufacturer's page.
+	ant_manufacturer_page[0] = ANT_COMMON_PAGE_80;
+	ant_manufacturer_page[1] = BP_PAGE_RESERVE_BYTE;
+	ant_manufacturer_page[2] = BP_PAGE_RESERVE_BYTE;
+	ant_manufacturer_page[3] = HW_REVISION;
+	ant_manufacturer_page[4] = LOW_BYTE(MANUFACTURER_ID);
+	ant_manufacturer_page[5] = HIGH_BYTE(MANUFACTURER_ID);
+	ant_manufacturer_page[6] = LOW_BYTE(MODEL_NUMBER);
+	ant_manufacturer_page[7] = HIGH_BYTE(MODEL_NUMBER);
+
 	// Event pointers.
 	mp_ant_ble_evt_handlers = ant_ble_evt_handlers;
 
@@ -561,7 +568,7 @@ void ble_advertising_start(void) {
 	adv_params.p_peer_addr = NULL;					// Undirected advertisement
 	adv_params.fp = BLE_GAP_ADV_FP_ANY;
 	adv_params.interval = APP_ADV_INTERVAL;
-	adv_params.timeout = BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED; // APP_ADV_TIMEOUT_IN_SECONDS;
+	adv_params.timeout = APP_ADV_TIMEOUT_IN_SECONDS;
 
 	err_code = sd_ble_gap_adv_start(&adv_params);
 	APP_ERROR_CHECK(err_code);

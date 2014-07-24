@@ -57,11 +57,10 @@ static void revs_init_ppi()
 	err_code = sd_ppi_channel_assign(3, 
 			&NRF_GPIOTE->EVENTS_IN[REVS_CHANNEL_TASK_TOGGLE],
 			&REVS_TIMER->TASKS_COUNT);
-	
-	if (err_code == NRF_ERROR_SOC_PPI_INVALID_CHANNEL)
-		APP_ERROR_HANDLER(NRF_ERROR_SOC_PPI_INVALID_CHANNEL);
+	APP_ERROR_CHECK(err_code);
 
-	sd_ppi_channel_enable_set(PPI_CHEN_CH3_Enabled << PPI_CHEN_CH3_Pos);
+	err_code = sd_ppi_channel_enable_set(PPI_CHEN_CH3_Enabled << PPI_CHEN_CH3_Pos);
+	APP_ERROR_CHECK(err_code);
 }
 
 /**@brief 	Function called when a specified number of flywheel revolutions occur.
@@ -82,7 +81,7 @@ static void REVS_IRQHandler()
  */
 static void revs_init_timer()
 {
-	REVS_TIMER->MODE		=	TIMER_MODE_MODE_Counter;
+	REVS_TIMER->MODE		= TIMER_MODE_MODE_Counter;
 	REVS_TIMER->BITMODE   	= TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
 	REVS_TIMER->TASKS_CLEAR = 1;
 	
@@ -163,10 +162,10 @@ void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 	revs_init_ppi();
 	revs_init_timer();
 	
+	// TODO: I think we can remove this? Not required by PPI, but used by GPIOTE??
 	// Enable interrupt handler which will internally map to REVS_IRQHandler.
 	NVIC_EnableIRQ(REVS_IRQn);
-	//__enable_irq();	// <-- TODO: not sure what this call does, leaving it commented.
-	
+
 	// Start the counter.
 	REVS_TIMER->TASKS_START = 1;
 }

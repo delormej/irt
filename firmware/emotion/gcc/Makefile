@@ -59,10 +59,10 @@ LDFLAGS += -Wl,--gc-sections
 # For debugging purposes
 ############################################
 debug : CFLAGS += -DENABLE_DEBUG_LOG			# Enable debug logging.
-CFLAGS += -DSIMPLE_UART							# Use the Simple_UART module for logging.
+debug : CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
 #debug : CFLAGS += -DBLE_NUS_ENABLED			# Use Nordic BLE UART for logging.
 debug : CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wait for debugger to attach.
-debug : CFLAGS += -DSIM_SPEED					# Simulate speed.
+#debug : CFLAGS += -DSIM_SPEED					# Simulate speed.
 debug : CFLAGS += -g							# Enable debug symbols.
 debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 #debug : CFLAGS += -DSETTINGS=2					# Sets the device so the accelerometer doesn't turn off
@@ -74,7 +74,7 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 51
+SW_REVISION_BLD := 59
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -82,25 +82,45 @@ CFLAGS += -DSW_REVISION_BLD=$(SW_REVISION_BLD)
 CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_BLD)\""
 
 ############################################
-# Required for pure gcc from Nordic.
+# DEVICE specific data.  
 ############################################
-PROJECT_NAME = $(shell basename "$(realpath ../)")_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)
+CFLAGS += -DUSE_BATTERY_READ_PIN				# If this device is built to require enabling batt voltage read by charging a capacitor.  You can still read voltage on boards without this. 
+CFLAGS += -DUSE_BATTERY_CHARGER					# If this device is enabled to control battery charger.
+												# USE_BATTERY_CHARGER also dictates if there is control of the
+												# power regulator, since only battery charge enabled boards have 
+												# the power regulator.   
 
 ############################################
-# DEVICE specific data.  
-# TODO: this should be done another way.
+# Concat name used for project and binary 
+# based on build variants.
 ############################################
-CFLAGS += -DUSE_BATTERY							# If this device is built to support battery or not.
-#CFLAGS += -DUSE_BATTERY_CHARGER					# If this device is enabled to control battery charger.
-CFLAGS += -DANT_DEVICE_NUMBER=0x03
-CFLAGS += -DSERIAL_NUMBER=0x0000000b
+PROJECT_NAME = $(subst BOARD_,,$(BOARD))_
+
+ifeq (USE_BATTERY_READ_PIN, $(findstring USE_BATTERY_READ_PIN,$(CFLAGS)))
+	PROJECT_NAME := $(PROJECT_NAME)P
+endif
+
+ifeq (USE_BATTERY_CHARGER, $(findstring USE_BATTERY_CHARGER,$(CFLAGS)))
+	PROJECT_NAME := $(PROJECT_NAME)C
+endif
+
+PROJECT_NAME := $(PROJECT_NAME)_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)
 
 include $(TEMPLATE_PATH)Makefile
 
-debug: all
+debug: all 
 
 deploy:
 	cp $(BIN) $(DEPLOY_PATH)$(OUTPUT_NAME).bin
 	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
 
-.PHONY: debug deploy
+############################################
+# Flashes both the bootloader & app.
+############################################
+flash-all: 
+	$(NRFJPROG) --program $(HEX) ../../bootloader/gcc/_build/bootloader.hex --verify --reset
+
+name:
+	@echo $(PROJECT_NAME)
+
+.PHONY: debug deploy name

@@ -384,6 +384,8 @@ namespace ANT_Console.Messages
         TotalWeight = 18,
         WheelSize = 19, // I'm sure this is defined in a standard message somewhere.
         ButtonStops = 20, // Ability to configure custom button stops on the servo.
+        SetCharger = 21,
+        GetLastError = 22,
         Battery = 0x52
         
         // Should we send commands this way, i.e.:
@@ -401,7 +403,7 @@ namespace ANT_Console.Messages
 
         public GetSetMessage(SubPages subPage) 
         {
-            m_payload = new byte[6];
+            m_payload = new byte[8];
             SubPage = (byte)subPage;
         }
 
@@ -417,10 +419,10 @@ namespace ANT_Console.Messages
         public void SetPayLoad(UInt32 payload)
         {
             // Adjust for endianness of the ARM Cortex M0 device.
-            m_payload[3] = (byte)((payload & 0xFF000000) >> 24);
-            m_payload[2] = (byte)((payload & 0x00FF0000) >> 16);
-            m_payload[1] = (byte)((payload & 0x0000FF00) >> 8);
-            m_payload[0] = (byte)payload;
+            m_payload[5] = (byte)((payload & 0xFF000000) >> 24);
+            m_payload[4] = (byte)((payload & 0x00FF0000) >> 16);
+            m_payload[3] = (byte)((payload & 0x0000FF00) >> 8);
+            m_payload[2] = (byte)payload;
         }
 
         public byte[] AsBytes()

@@ -17,6 +17,7 @@ All rights reserved.
 			1		0				Charge-in-progress
 			1		1				Fault = No battery, charger off, overvoltage, timer fault, suspended
  */
+#define BATTERY_CHARGE_NONE			0u	// If no battery charger is present.
 #define BATTERY_CHARGE_COMPLETE		1u
 #define BATTERY_CHARGING			2u
 #define BATTERY_CHARGE_FAULT		3u	//

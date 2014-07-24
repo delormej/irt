@@ -9,6 +9,10 @@
 #define APP_TIMER_OP_QUEUE_SIZE     4   /**< Size of timer operation queues. */
 #define APP_GPIOTE_MAX_USERS        1	/**< Maximum number of users of the GPIOTE handler. */
 
+#define LED_1						1
+#define LED_2						2
+#define LED_BOTH					LED_1 | LED_2
+
 typedef struct peripheral_evt_s
 {
 	void (*on_button_pbsw)(void);

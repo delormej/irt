@@ -48,8 +48,11 @@
 // Callback to invoke after reading voltage.
 static on_battery_result_t m_on_battery_result;
 
+#ifdef USE_BATTERY_READ_PIN
 // Separate pin used for enabling voltage read on Analog Input 2.
 static uint8_t m_pin_battery_read;
+#endif
+
 // Pin used to tell the charger to stop.
 static uint8_t m_pin_charge_stop;
 
@@ -61,10 +64,9 @@ void ADC_IRQHandler(void)
 {
     if (NRF_ADC->EVENTS_END != 0)
     {
-        uint32_t     adc_result;
+        uint32_t	adc_result;
         uint16_t    batt_lvl_in_milli_volts;
-        uint8_t     percentage_batt_lvl;
-        uint32_t    err_code;
+        //uint8_t     percentage_batt_lvl;
 
         NRF_ADC->EVENTS_END     = 0;
         adc_result              = NRF_ADC->RESULT;
@@ -72,14 +74,15 @@ void ADC_IRQHandler(void)
 
         NRF_ADC->ENABLE     	= ADC_ENABLE_ENABLE_Disabled;
 
+#ifdef USE_BATTERY_READ_PIN
         // Stop reading voltage.
         nrf_gpio_pin_clear(m_pin_battery_read);
+#endif // USE_BATTERY_READ_PIN
 
         batt_lvl_in_milli_volts = ADC_RESULT_IN_MILLI_VOLTS(adc_result);
-        percentage_batt_lvl     = battery_level_in_percent(batt_lvl_in_milli_volts);
+        //percentage_batt_lvl     = battery_level_in_percent(batt_lvl_in_milli_volts);
 
-        BY_LOG("[BY] Battery result on pin %i is: %i, millivolts: %i, percent: %i\r\n",
-        		m_pin_battery_read, adc_result, batt_lvl_in_milli_volts, percentage_batt_lvl);
+        BY_LOG("[BY] Battery result: ADC %i, %imV \r\n", adc_result, batt_lvl_in_milli_volts);
 
 		if (m_on_battery_result != NULL)
 		{
@@ -93,17 +96,18 @@ void ADC_IRQHandler(void)
  */
 void battery_read_start()
 {
-#ifdef USE_BATTERY
     uint32_t err_code;
 
     // Stop any running conversions.
     NRF_ADC->EVENTS_END  = 0;
 
+#ifdef USE_BATTERY_READ_PIN
     // Enable reading voltage.
 	nrf_gpio_pin_set(m_pin_battery_read);
 
 	// Wait ~3-10ms after setting the pin to allow the capacitor to charge.
 	nrf_delay_ms(CAPACITOR_CHARGE_TIME);
+#endif // USE_BATTERY_READ_PIN
 
     // Enable ADC interrupt
     err_code = sd_nvic_ClearPendingIRQ(ADC_IRQn);
@@ -119,9 +123,8 @@ void battery_read_start()
     NRF_ADC->ENABLE     = ADC_ENABLE_ENABLE_Enabled;
     NRF_ADC->TASKS_START = 1;
 
+#ifdef USE_BATTERY_CHARGER
     BY_LOG("[BY] Battery Charger status: %i \r\n", battery_charge_status());
-#else
-    BY_LOG("[BY] WARN:Attempt to read battery on non-battery device.\r\n");
 #endif
 }
 
@@ -132,12 +135,16 @@ void battery_read_start()
  */
 uint8_t battery_charge_status()
 {
+#ifdef USE_BATTERY_CHARGER
 	uint8_t status;
 
 	status = nrf_gpio_pin_read(PIN_STAT1);
 	status |= (nrf_gpio_pin_read(PIN_STAT2) << 1);
 
 	return status;
+#else
+	return BATTERY_CHARGE_NONE;
+#endif
 }
 
 /**@brief	Starts or stops the battery charge process.
@@ -163,9 +170,11 @@ void battery_charge_set(bool turn_on)
  */
 void battery_init(uint8_t pin_battery_enable, uint8_t pin_charge_stop, on_battery_result_t on_battery_result)
 {
-#ifdef USE_BATTERY
 	m_on_battery_result = on_battery_result;
+#ifdef USE_BATTERY_READ_PIN
+	// TODO: This pin goes away, except for 1 test board.  We can remove in future build or ifdef.
 	m_pin_battery_read = pin_battery_enable;
+#endif
 	m_pin_charge_stop = pin_charge_stop;
 
     // Configure ADC
@@ -175,7 +184,6 @@ void battery_init(uint8_t pin_battery_enable, uint8_t pin_charge_stop, on_batter
                           (ADC_CONFIG_REFSEL_VBG							<< ADC_CONFIG_REFSEL_Pos)  |
 						  (AIN_BATT_VOLT							  		<< ADC_CONFIG_PSEL_Pos) |
                           (ADC_CONFIG_EXTREFSEL_None                  		<< ADC_CONFIG_EXTREFSEL_Pos);
-#endif
 }
 
 /**

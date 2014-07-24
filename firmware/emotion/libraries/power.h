@@ -16,8 +16,6 @@
 #include "irt_common.h"
 #include "user_profile.h"
 
-#define DEFAULT_CRR						0.03f										// Default value of rolling resistance if not overridden with slope/intercept.
-
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *
  */

@@ -5,7 +5,7 @@
 #include "ant_ctrl.h"
 #include "ble_ant.h"
 #include "app_error.h"
-#include "irt_emotion.h"
+#include "irt_common.h"
 #include "ant_interface.h"
 #include "ant_parameters.h"
 

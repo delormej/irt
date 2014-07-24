@@ -46,10 +46,10 @@
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 #include "app_timer.h"
-#include "ble_debug_assert_handler.h"
 #include "debug.h"
 #include "boards.h"
 #include "battery.h"
+#include "irt_error_log.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define BLE_ADV_BLINK_RATE_MS			500u
@@ -67,6 +67,12 @@
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 
+//
+// General purpose retention register states used.
+//
+#define IRT_GPREG_DFU	 				0x1
+#define IRT_GPREG_ERROR 				0x2
+
 #define DATA_PAGE_RESPONSE_TYPE			0x80										// 0X80 For acknowledged response or number of times to send broadcast data requests.
 
 static uint8_t 							m_resistance_level;
@@ -74,7 +80,7 @@ static resistance_mode_t				m_resistance_mode;
 
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 
-static user_profile_t 					m_user_profile;
+static user_profile_t  					m_user_profile  __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
 static rc_sim_forces_t					m_sim_forces;
 static accelerometer_data_t 			m_accelerometer_data;
 
@@ -110,34 +116,36 @@ static void profile_update_sched(void);
  */
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
-	if (error_code == NRF_ERROR_NO_MEM)
-	{
-		LOG("[MAIN]:app_error_handler CRITICAL: NRF_ERROR_NO_MEM in %s:{%lu}. \r\n",
-				p_file_name,
-				line_num);
-	}
-	else
-	{
-		LOG("[MAIN]:app_error_handler {HALTED ON ERRROR: %#.8x}: %s:%lu\r\n",
-				error_code, p_file_name, line_num);
-	}
+	// Set LED indicator.
+	set_led_red(LED_BOTH);
 
-    // This call can be used for debug purposes during development of an application.
-    // @note CAUTION: Activating this code will write the stack to flash on an error.
-    //                This function should NOT be used in a final product.
-    //                It is intended STRICTLY for development/debugging purposes.
-    //                The flash write will happen EVEN if the radio is active, thus interrupting
-    //                any communication.
-    //                Use with care.
+	// Fetch the stack and save the error.
+	irt_error_save(error_code, line_num, p_file_name);
+
+    // Indicate error state in General Purpose Register.
+	sd_power_gpregret_set(IRT_GPREG_ERROR);
+
+	// Kill the softdevice and any pending interrupt requests.
+	sd_softdevice_disable();
+	__disable_irq();
+
 #if defined(ENABLE_DEBUG_ASSERT)
-	set_led_red(3);
+	irt_error_log_data_t* p_error = irt_error_last();
+
+	LOG("[MAIN]:app_error_handler {HALTED ON ERROR: %#.8x}: %s:%lu\r\nCOUNT = %i\r\n",
+			error_code, p_file_name, line_num, p_error->failure);
+
+	// TODO: figure out how to display the stack (p_error->stack_info).
 
 	// Note this function does not return - it will hang waiting for a debugger to attach.
-	ble_debug_assert_handler(error_code, line_num, p_file_name);
+	for (;;)
+	{
+		// Do nothing, attach debugger.
+	}
 #else
-    // On assert, the system can only recover with a reset.
-	LOG("[MAIN]:app_error_handler performing SystemReset()");
-    NVIC_SystemReset();
+	// Wait 1 second, to give user a chance to see LED indicators and then reset the system.
+	nrf_delay_ms(1000);
+	NVIC_SystemReset();
 #endif // ENABLE_DEBUG_ASSERT
 }
 
@@ -239,7 +247,7 @@ static void profile_init(void)
 		//
 		if (m_user_profile.version != PROFILE_VERSION)
 		{
-			LOG("[MAIN]: Older profile version %i. Loading defaults and upgrading\r\n.",
+			LOG("[MAIN]: Older profile version %i. Loading defaults and upgrading. \r\n",
 					m_user_profile.version);
 			m_user_profile.version			= PROFILE_VERSION;
 			m_user_profile.wheel_size_mm 	= DEFAULT_WHEEL_SIZE_MM;
@@ -468,6 +476,17 @@ static void scheduler_init(void)
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 }
 
+/**@brief	Copies the last error to a response structure.
+ */
+static void error_to_response(uint8_t* p_response)
+{
+	irt_error_log_data_t* p_err;
+
+	p_err = irt_error_last();
+	memcpy(p_response, &(p_err->failure), sizeof(uint16_t));
+	memcpy(&(p_response[2]), &(p_err->line_number), sizeof(uint16_t));
+	memcpy(&(p_response[4]), &(p_err->err_code), sizeof(uint8_t));
+}
 
 /**@brief	Sends data page 2 response.
  */
@@ -480,7 +499,7 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 	switch (subpage)
 	{
 		case IRT_MSG_SUBPAGE_SETTINGS:
-			memcpy(&response, &m_user_profile.settings, sizeof(uint32_t));
+			memcpy(&response, &m_user_profile.settings, sizeof(uint16_t));
 			break;
 
 		case IRT_MSG_SUBPAGE_CRR:
@@ -494,6 +513,10 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 
 		case IRT_MSG_SUBPAGE_WHEEL_SIZE:
 			memcpy(&response, &m_user_profile.wheel_size_mm, sizeof(uint16_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_GET_ERROR:
+			error_to_response(response);
 			break;
 
 		default:
@@ -516,9 +539,6 @@ static void on_power_down(bool accelerometer_wake_disable)
 
 	// Free heap allocation.
 	irt_power_meas_fifo_free();
-
-	// Blink red a couple of times to say good-night.
-	clear_led(0);
 
 	peripheral_powerdown(accelerometer_wake_disable);
 
@@ -650,8 +670,8 @@ static void on_power_plug(void)
 
 static void on_ble_connected(void) 
 {
-	blink_led_green_stop(0);
-	set_led_green(0);
+	blink_led_green_stop(LED_1);
+	set_led_green(LED_1);
 
 	LOG("[MAIN]:on_ble_connected\r\n");
 }
@@ -659,7 +679,7 @@ static void on_ble_connected(void)
 static void on_ble_disconnected(void) 
 {
 	// Clear connection LED.
-	clear_led(0);
+	clear_led(LED_1);
 	
 	LOG("[MAIN]:on_ble_disconnected\r\n");
 
@@ -669,13 +689,13 @@ static void on_ble_disconnected(void)
 
 static void on_ble_timeout(void) 
 {
-	blink_led_green_stop(0);
+	blink_led_green_stop(LED_1);
 	LOG("[MAIN]:on_ble_timeout\r\n");
 }
 
 static void on_ble_advertising(void)
 {
-	blink_led_green_start(0, BLE_ADV_BLINK_RATE_MS);
+	blink_led_green_start(LED_1, BLE_ADV_BLINK_RATE_MS);
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
@@ -846,7 +866,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			{
 				// Exit crr mode.
 				m_crr_adjust_mode = false;
-				clear_led(2);
+				clear_led(LED_1);
 			}
 			else
 			{
@@ -866,7 +886,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 				// Change into crr mode.
 				// Set the state, start blinking the LED RED
 				m_crr_adjust_mode = true;
-				set_led_red(2);
+				set_led_red(LED_1);
 			}
 
 			break;
@@ -886,7 +906,7 @@ static void on_enable_dfu_mode(void)
 	// TODO: share the mask here in a common include file with bootloader.
 	// bootloader needs to share PWM, device name / manuf, etc... so we need
 	// to refactor anyways.
-	err_code = sd_power_gpregret_set(0x1);
+	err_code = sd_power_gpregret_set(IRT_GPREG_DFU);
 	APP_ERROR_CHECK(err_code);
 
 	// Resets the CPU to start in DFU mode.
@@ -945,13 +965,12 @@ static void on_set_parameter(uint8_t* buffer)
 			// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
 			// Need to use memcpy, Cortex-M proc doesn't support unaligned casting of 32bit int.
 			memcpy(&m_user_profile.settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
-					sizeof(uint32_t));
+					sizeof(uint16_t));
 
-			LOG("[MAIN] Request to update settings to: ACCEL:%i, BIG_MAG:%i, EXTRA_INFO:%i, TEST:%i \r\n",
+			LOG("[MAIN] Request to update settings to: ACCEL:%i, BIG_MAG:%i, EXTRA_INFO:%i \r\n",
 						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ACCEL_SLEEP_OFF),
 						FEATURE_IS_SET(m_user_profile.settings, FEATURE_BIG_MAG),
-						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ANT_EXTRA_INFO),
-						FEATURE_IS_SET(m_user_profile.settings, FEATURE_TEST));
+						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ANT_EXTRA_INFO));
 			// Schedule update to the profile.
 			profile_update_sched();
 			break;
@@ -993,19 +1012,45 @@ static void on_battery_result(uint16_t battery_level)
 	ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
 }
 
-/**@brief	Configures power supervisor to warn and reset if power drops too low.
+/**@brief	Configures chip power options.
+ *
+ * @note	Note this must happen after softdevice is enabled.
  */
-static void config_power_supervisor()
+static void config_dcpower()
 {
+	uint32_t err_code;
+
+    // Enabling constant latency as indicated by PAN 11 "HFCLK: Base current with HFCLK
+    // running is too high" found at Product Anomaly document found at
+    // https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF51822/#Downloads
+    //
+    // @note This setting will ensure correct behavior when routing TIMER events through
+    //       PPI and low power mode simultaneously.
+    // NRF_POWER->TASKS_CONSTLAT = 1; // Use sd call as the sd is enabled.
+    err_code = sd_power_mode_set(NRF_POWER_MODE_CONSTLAT);
+    APP_ERROR_CHECK(err_code);
+
 	// Forces a reset if power drops below 2.7v.
-	NRF_POWER->POFCON = POWER_POFCON_POF_Enabled | POWER_POFCON_THRESHOLD_V27;
+	//NRF_POWER->POFCON = POWER_POFCON_POF_Enabled | POWER_POFCON_THRESHOLD_V27;
+    err_code = sd_power_pof_threshold_set(NRF_POWER_THRESHOLD_V27);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = sd_power_pof_enable(SD_POWER_POF_ENABLE);
+    APP_ERROR_CHECK(err_code);
+
+    // Configure the DCDC converter to save battery.
+    // This shows now appreciable difference, see https://devzone.nordicsemi.com/question/5980/dcdc-and-softdevice/
+    //err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_MODE_AUTOMATIC);
+	//err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_MODE_OFF);
+    APP_ERROR_CHECK(err_code);
 }
+
 
 /**@brief	Check if there is a reset reason and log if enabled.
  */
 static uint32_t check_reset_reason()
 {
-	uint32_t reason;
+	uint32_t reason, gpreg;
 
 	// Read the reset reason
 	reason = NRF_POWER->RESETREAS;
@@ -1020,7 +1065,45 @@ static uint32_t check_reset_reason()
 		LOG("[MAIN]:Normal power on.\r\n");
 	}
 
+	gpreg = NRF_POWER->GPREGRET;
+	// Check and see if the device last reset due to error.
+	if (gpreg == IRT_GPREG_ERROR)
+	{
+		// Log the occurrence.
+		irt_error_log_data_t* p_error = irt_error_last();
+
+		LOG("[MAIN]:check_reset_reason Resetting from previous error.\r\n");
+		LOG("\t{COUNT: %i, ERROR: %#.8x}: %s:%lu\r\n",
+				p_error->failure,
+				p_error->err_code,
+				p_error->message,
+				p_error->line_number);
+
+		// Now clear the register.
+		NRF_POWER->GPREGRET = 0;
+	}
+	else
+	{
+		// Initialize the error structure.
+		irt_error_init();
+	}
+
 	return reason;
+}
+
+/**@brief	Initializes the Nordic Softdevice.  This must be done before
+ * 			initializing ANT/BLE or calling any softdevice functions.
+ */
+static void s310_init()
+{
+	uint32_t err_code;
+
+	// Initialize SoftDevice
+	SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, true);
+
+    // Subscribe for system events.
+    err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
+    APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Power manager.
@@ -1041,8 +1124,6 @@ void power_manage(void)
  */
 int main(void)
 {
-	uint32_t err_code;
-
 	// Initialize default remote serial number.
 	m_ant_ctrl_remote_ser_no = 0;
 
@@ -1050,15 +1131,12 @@ int main(void)
 	debug_init();
 
 	LOG("**********************************************************************\r\n");
-	LOG("[MAIN]:Starting ANT+ id: %i, firmware: %s, serial: %#.8x\r\n",
+	LOG("[MAIN]:Starting ANT+ id: %i, firmware: %s, serial: %#.8x \r\n",
 			ANT_DEVICE_NUMBER, SW_REVISION, SERIAL_NUMBER);
 	LOG("**********************************************************************\r\n");
 
 	// Determine what the reason for startup is and log appropriately.
 	check_reset_reason();
-
-	// Configure brown out support.
-	config_power_supervisor();
 
 	// Initialize timers.
 	timers_init();
@@ -1088,23 +1166,20 @@ int main(void)
 		on_set_parameter
 	};
 
-	// TODO: Question should we have a separate method to initialize soft device?
+	// Initialize and enable the softdevice.
+	s310_init();
 
-	// Initializes the soft device, Bluetooth and ANT stacks.
+	// Configure the chip's power options (after sd enabled).
+	config_dcpower();
+
+	// Initializes the Bluetooth and ANT stacks.
 	ble_ant_init(&ant_ble_handlers);
-
-    // Subscribe for system events.
-    err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
-    APP_ERROR_CHECK(err_code);
 
     // Initialize the scheduler.
 	scheduler_init();
 
 	// initialize the user profile.
 	profile_init();
-
-	// Begin advertising and receiving ANT messages.
-	ble_ant_start();
 
 	// Initialize resistance module and initial values.
 	resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
@@ -1120,6 +1195,9 @@ int main(void)
 
 	// Initialize the FIFO queue for holding events.
 	irt_power_meas_fifo_init(IRT_FIFO_SIZE);
+
+	// Begin advertising and receiving ANT messages.
+	ble_ant_start();
 
 	// Start the main loop for reporting ble services.
 	application_timers_start();

@@ -109,6 +109,10 @@ namespace ANT_Console
                         GetParameterCommand();
                         break;
 
+                    case ConsoleKey.D1:
+                        SpeedSimulator.Simulate(1.0f);
+                        break;
+
                     default:
                         WriteCommand("Unrecognized command.");
                         ShowHelp();

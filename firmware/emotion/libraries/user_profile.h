@@ -14,40 +14,20 @@
 
 #include <stdint.h>
 
-#define PROFILE_VERSION					2u	// Current version of the profile.
-
-//
-// Available device features. Default setting should result in 0.
-//
-#define FEATURE_DEFAULT					0xFFFFFFFF
-#define FEATURE_RESERVED				1UL
-#define FEATURE_ACCEL_SLEEP_OFF			2UL
-#define FEATURE_BIG_MAG					4UL
-#define FEATURE_SMALL_MAG				8UL
-#define FEATURE_OTHER_MAG				16UL
-// FUTURE features:
-// BTLE_OFF
-// ANT_CTRL_OFF
-// ANT_BP_OFF
-// ANT_FEC_OFF
-#define FEATURE_ANT_EXTRA_INFO			65536UL			// Set a mid bit
-#define FEATURE_TEST					0x80000000		// Set the highest bit
-// Number of wheel revs to flywheel?
-
-#define FEATURE_IS_SET(SETTINGS, FEATURE) \
-	((SETTINGS & FEATURE) == FEATURE)
+#define PROFILE_VERSION					3u	// Current version of the profile.
 
 /**@brief	Structure used to for storing/reading user profile.
- * 			NOTE: This must be divisable by 4 (sizeof(uin32_t).
+ * 			Must be at least PSTORAGE_MIN_BLOCK_SIZE (i.e. 16 bytes) in size and should be word aligned (16 bits).
  */
 typedef struct user_profile_s {
 	uint8_t		version;					// Version of the profile for future compatibility purposes.
+	uint8_t		reserved;					// Padding (word alignment size is 16 bits).
+	uint16_t	settings;					// Bitmask of feature/settings to turn on/off.
 	uint16_t	total_weight_kg;			// Stored in int format 1/100, e.g. 8181 = 81.81kg
 	uint16_t	wheel_size_mm;
-	uint32_t	settings;					// Bitmask of feature/settings to turn on/off.
 	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/10,000 e.g. 3870 = 0.3870
 	uint16_t	ca_intercept;				// Calibration intercept.  Stored in 1/1,000 e.g. 15897 = 15.879
-	uint8_t		reserved[3];				// Padding for word alignment.
+	uint16_t	future[2];					// For block size alignment -- 16 bytes
 } user_profile_t;
 
 /**@brief Initializes access to storage. */

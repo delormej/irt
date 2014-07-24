@@ -2,7 +2,7 @@
 #define BLE_ANT_H__
 
 #include <stdint.h>
-#include "irt_emotion.h"
+#include "irt_common.h"
 #include "ble_cps.h"
 #include "ble_gatt.h"
 #include "ant_ctrl.h"
@@ -32,29 +32,8 @@
 
 static const uint8_t m_ant_network_key[] = ANT_NETWORK_KEY;
 
-static const uint8_t ant_product_page[TX_BUFFER_SIZE] =
-{
-	ANT_COMMON_PAGE_81,
-	BP_PAGE_RESERVE_BYTE,
-	SW_REVISION_BLD,					// Minor is actually the build
-	SW_REVISION_MAJ | SW_REVISION_MIN,	// Major is comprised of 4 bits major and 4 bits minor
-	(uint8_t)(SERIAL_NUMBER),
-	(uint8_t)(SERIAL_NUMBER >> 8u),
-	(uint8_t)(SERIAL_NUMBER >> 16u),
-	(uint8_t)(SERIAL_NUMBER >> 24u)
-};
-
-static const uint8_t ant_manufacturer_page[TX_BUFFER_SIZE] =
-{
-	ANT_COMMON_PAGE_80,
-	BP_PAGE_RESERVE_BYTE,
-	BP_PAGE_RESERVE_BYTE,
-	HW_REVISION,
-	LOW_BYTE(MANUFACTURER_ID),
-	HIGH_BYTE(MANUFACTURER_ID),
-	LOW_BYTE(MODEL_NUMBER),
-	HIGH_BYTE(MODEL_NUMBER)
-};
+uint8_t ant_product_page[TX_BUFFER_SIZE];
+uint8_t ant_manufacturer_page[TX_BUFFER_SIZE];
 
 /**@brief	Checks to see if this ANT error could be treated as a warning.
  */
