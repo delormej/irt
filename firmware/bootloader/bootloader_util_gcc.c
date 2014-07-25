@@ -29,14 +29,12 @@ void bootloader_util_app_start(uint32_t start_addr)
 {
 #if 0
     { /* First approach to start the application */
-    	BL_LOG("[BL] First approach to load.\r\n");
         typedef void (*application_main_t)();
         application_main_t application_main = *(application_main_t*)(start_addr+4);
         application_main();
     }
 #else
     { /* Second approach to start the application */
-    	BL_LOG("[BL] Second approach to load.\r\n");
         asm volatile(" LDR   R0, =0x20000          \n\t" // Assign app code address
                      " LDR   R2, [R0]              \n\t" // Get App MSP
                      " MSR   MSP, R2               \n\t" // Set the main stack pointer to the applications MSP
