@@ -60,11 +60,12 @@ TEMPLATE_PATH = ../../gcc/
 LINKER_SCRIPT := $(TEMPLATE_PATH)gcc_nrf51_s310_bootloader.ld
 
 LIBRARY_PATHS += ../include
+# See this for why ble and not hci: <https://devzone.nordicsemi.com/blogs/12/nrf51-sdk-v600-bug-report-and-temporary-workaround/
 LIBRARY_PATHS += ../include/ble_transport
-LIBRARY_PATHS += ../include/hci_transport
+#LIBRARY_PATHS += ../include/hci_transport
 LIBRARY_PATHS +=  ../../emotion
 LIBRARY_PATHS +=  ../../emotion/libraries
-SOURCE_PATHS += ../../emotion/libraries
+SOURCE_PATHS  += ../../emotion/libraries
 
 CFLAGS = -Os -flto -ffunction-sections -fdata-sections -fno-builtin
 LDFLAGS += --specs=nano.specs -lc -lnosys

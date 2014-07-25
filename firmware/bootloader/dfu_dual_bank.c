@@ -30,6 +30,16 @@
 #include "crc16.h"
 #include "pstorage.h"
 #include "nrf_gpio.h"
+#include "debug.h"
+
+/**@brief Debug logging for main module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define BL_LOG debug_log
+#else
+#define BL_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 /**@brief States of the DFU state machine. */
 typedef enum
@@ -146,6 +156,7 @@ uint32_t dfu_init(void)
     bootloader_settings_get(&bootloader_settings);
     if ((bootloader_settings.bank_1 != BANK_ERASED) || (*p_bank_start_address != EMPTY_FLASH_MASK))
     {
+    	// THIS IS THE LINE I COMMENT TO MAKE IT WORK:
         err_code = pstorage_raw_clear(&m_storage_handle_swap, DFU_IMAGE_MAX_SIZE_BANKED);
         if (err_code != NRF_SUCCESS)
         {

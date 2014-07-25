@@ -35,6 +35,16 @@
 #include <stddef.h>
 #include <string.h>
 #include "irt_common.h"
+#include "debug.h"
+
+/**@brief Debug logging for main module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define BL_LOG debug_log
+#else
+#define BL_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 #define MIN_CONN_INTERVAL                    (uint16_t)(MSEC_TO_UNITS(11.25, UNIT_1_25_MS))          /**< Minimum acceptable connection interval (11.25 milliseconds). */
 #define MAX_CONN_INTERVAL                    (uint16_t)(MSEC_TO_UNITS(15, UNIT_1_25_MS))             /**< Maximum acceptable connection interval (15 milliseconds). */
@@ -200,6 +210,8 @@ static void start_data_process(ble_dfu_t * p_dfu, ble_dfu_evt_t * p_evt)
     {
         // Extract the size of from the DFU Packet Characteristic.
         uint32_t image_size = uint32_decode(p_evt->evt.ble_dfu_pkt_write.p_data);
+
+        BL_LOG("[BL] start_data_process image_size: %i \r\n", image_size);
 
         err_code = dfu_image_size_set(image_size);
 
