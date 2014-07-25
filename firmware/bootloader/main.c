@@ -242,7 +242,7 @@ int main(void)
     uint32_t err_code;
 	uint32_t gp_power_reg;
 
-	bool     bootloader_is_pushed = false;
+	bool     start_bootloader = false;
     
 	debug_init();
 	BL_LOG("[BL] Starting bootloader.\r\n");
@@ -262,19 +262,39 @@ int main(void)
     ble_stack_init();
     scheduler_init();
 	
-    //bootloader_is_pushed = false; // ((nrf_gpio_pin_read(BOOTLOADER_BUTTON_PIN) == 0)? true: false);
-    //bootloader_is_pushed = !bootloader_app_is_valid(DFU_BANK_0_REGION_START);
-	
-	// Read the general purpose power register for a flag.
-	err_code = sd_power_gpregret_get(&gp_power_reg);
-	APP_ERROR_CHECK(err_code);
-
-	//  (NRF_POWER->GPREGRET == 0x1);
-	bootloader_is_pushed = (gp_power_reg & GPREG_DFU_UPDATE_MASK); 
-
-    if (bootloader_is_pushed || (!bootloader_app_is_valid(DFU_BANK_0_REGION_START)))
+    //
+    // 3 conditions for which we'll start the bootloader.
+    //
+    // 1. User push button is pressed during boot to force bootloader starting.
+    // Check if user push button switch is held down.
+    // NOTE: Only available on IRT_REV_2A or higher.
+#ifdef PIN_PBSW
+    nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
+    start_bootloader = ((nrf_gpio_pin_read(PIN_PBSW) == 0)? true: false);
+#endif
+    //
+    // 2. the GP reg was set to 0x1 - as indicated by the app to start DFU mode
+    //
+    if (!start_bootloader)
     {
-    	BL_LOG("[BL] bootloader set OR app is not valid.\r\n");
+		// Read the general purpose power register for a flag.
+		err_code = sd_power_gpregret_get(&gp_power_reg);
+		APP_ERROR_CHECK(err_code);
+	
+		start_bootloader = (gp_power_reg & GPREG_DFU_UPDATE_MASK);
+    }
+
+    //
+    // 3. App in BANK_0 is not valid.
+    //
+    if (!start_bootloader)
+    {
+    	start_bootloader = (!bootloader_app_is_valid(DFU_BANK_0_REGION_START));
+    }
+
+    if (start_bootloader)
+    {
+    	BL_LOG("[BL] Starting bootloader.\r\n");
 
 		nrf_gpio_pin_clear(LED_ERR);
 		nrf_gpio_pin_set(LED_STATUS);
@@ -285,10 +305,12 @@ int main(void)
 
         nrf_gpio_pin_clear(LED_STATUS);
 
-		// Assuming we made it this far, the firmware update took so clear the flag.
-		//NRF_POWER->GPREGRET = 0x0;
-		err_code = sd_power_gpregret_clr(GPREG_DFU_UPDATE_MASK);
-		APP_ERROR_CHECK(err_code);
+		// If we were indicated by the app clear the flag now that the app is loaded.
+		if (gp_power_reg & GPREG_DFU_UPDATE_MASK)
+		{
+			err_code = sd_power_gpregret_clr(GPREG_DFU_UPDATE_MASK);
+			APP_ERROR_CHECK(err_code);
+		}
     }
 
     if (bootloader_app_is_valid(DFU_BANK_0_REGION_START))
