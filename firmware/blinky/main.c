@@ -139,8 +139,13 @@ int main(void)
 	  }
   } */
 
+#ifdef PIN_PBSW
+  nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
+  while( (nrf_gpio_pin_read(PIN_PBSW) == 0) )
+#else
   // LED 0 and LED 1 blink alternately.
   while(true)
+#endif
   {
     nrf_gpio_pin_clear(LED_0);
     nrf_gpio_pin_set(LED_1);
@@ -154,5 +159,8 @@ int main(void)
     
     nrf_delay_ms(500);
   }
+
+  // Reset the system.
+  NVIC_SystemReset();
 }
 
