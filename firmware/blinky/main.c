@@ -32,7 +32,8 @@
 
 #define PIN_VIN					1
 #define PIN_POT_PWR				3
-
+#define LED_0					PIN_LED_A
+#define LED_1					PIN_LED_B
 
 int _write(int fd, char * str, int len)
 {
@@ -114,12 +115,12 @@ int main(void)
   simple_uart_config(PIN_UART_RTS, PIN_UART_TXD, PIN_UART_CTS, PIN_UART_RXD, UART_HWFC);
 
   simple_uart_putstring((const uint8_t *)" \n\rBlinky Starting\n\r: ");
-
+  /*
   config_adc();
   start_adc();
 
   uint32_t result, last_result;
-
+  
   while (true)
   {
 	  if (!NRF_ADC->BUSY)
@@ -136,7 +137,7 @@ int main(void)
 		  start_adc();
 		  nrf_delay_ms(100);
 	  }
-  }
+  } */
 
   // LED 0 and LED 1 blink alternately.
   while(true)

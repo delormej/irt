@@ -23,18 +23,18 @@ LIBRARY_PATHS += ../../emotion
 PROJECT_NAME := $(shell basename "$(realpath ../)")
 
 DEVICE = NRF51
-#BOARD = BOARD_IRT_REV_A
-BOARD = BOARD_PCA10001
+BOARD = BOARD_IRT_REV_A
+#BOARD = BOARD_PCA10001
 #SEGGER_SERIAL = 
 #TARGET_DEVICE = nRF51422_xxAA
 
-#USE_SOFTDEVICE = s310
+USE_SOFTDEVICE = s310
 
 SDK_PATH = ../../nrf51_sdk/
 TEMPLATE_PATH = ../../gcc/
 
-#LINKER_SCRIPT := $(TEMPLATE_PATH)gcc_nrf51_s310_xxaa.ld
-LINKER_SCRIPT := $(TEMPLATE_PATH)gcc_nrf51_blank_xxaa.ld
+LINKER_SCRIPT := $(TEMPLATE_PATH)gcc_nrf51_s310_xxaa.ld
+#LINKER_SCRIPT := $(TEMPLATE_PATH)gcc_nrf51_blank_xxaa.ld
 
 CFLAGS := -Os
 
@@ -42,7 +42,7 @@ CFLAGS := -Os
 CFLAGS += -g
 
 # Define the S310 stack requirement as this is used as a directive in the dfu_types.
-#CFLAGS += -DS310_STACK  
+CFLAGS += -DS310_STACK  
 
 GDB_PORT_NUMBER := 2331
 
