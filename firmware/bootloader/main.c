@@ -35,6 +35,9 @@
 #include <stddef.h>
 #include "nordic_common.h"
 #include "nrf.h"
+#ifndef S310_STACK
+#include "nrf_mbr.h"
+#endif // S310_STACK
 #include "app_error.h"
 #include "nrf_gpio.h"
 #include "nrf51_bitfields.h"
@@ -69,6 +72,7 @@
 #define SCHED_QUEUE_SIZE                20                                                      /**< Maximum number of events in the scheduler queue. */
 
 #define GPREG_DFU_UPDATE_MASK			0x1														// DFU UPDATE mode flagged.
+#define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                                       /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
 /**@brief Debug logging for main module.
  *
@@ -103,7 +107,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
     // ble_debug_assert_handler(error_code, line_num, p_file_name);
 
     // On assert, the system can only recover on reset.
-    // NVIC_SystemReset();
+    NVIC_SystemReset();
 }
 
 
@@ -196,8 +200,27 @@ static void sys_evt_dispatch(uint32_t event)
 static void ble_stack_init(void)
 {
     uint32_t err_code;
-    
+
+#ifndef S310_STACK
+    sd_mbr_command_t com = {SD_MBR_COMMAND_INIT_SD, };
+
+    err_code = sd_mbr_command(&com);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = sd_softdevice_vector_table_base_set(BOOTLOADER_REGION_START);
+    APP_ERROR_CHECK(err_code);
+#endif // S310_STACK
+
     SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, true);
+
+#ifndef S310_STACK
+    // Enable BLE stack 
+    ble_enable_params_t ble_enable_params;
+    memset(&ble_enable_params, 0, sizeof(ble_enable_params));
+    ble_enable_params.gatts_enable_params.service_changed = IS_SRVC_CHANGED_CHARACT_PRESENT;
+    err_code = sd_ble_enable(&ble_enable_params);
+    APP_ERROR_CHECK(err_code);
+#endif // S310_STACK
 
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
     APP_ERROR_CHECK(err_code);

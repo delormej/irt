@@ -785,12 +785,7 @@ uint32_t dfu_transport_close()
     {
         // Disconnect from peer.
         err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-		
-		// TODO: Ignore invalid state for now.
-		if (!err_code == NRF_ERROR_INVALID_STATE)
-		{
-			APP_ERROR_CHECK(err_code);
-		}
+        APP_ERROR_CHECK(err_code);
     }
     else
     {

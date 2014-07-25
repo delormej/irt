@@ -45,17 +45,6 @@
  */
 #define PSTORAGE_RAW_MODE_ENABLE
 
-#ifdef PSTORAGE_RAW_ACCESS
-#ifdef S310_STACK
-    #define PSTORAGE_RAW_START_ADDR   0x00020000                                                /**< Start address for Raw access mode, configurable based on use case. */
-#else
-    #define PSTORAGE_RAW_START_ADDR   0x00014000                                                /**< Start address for Raw access mode, configurable based on use case. */
-#endif
-
-#define PSTORAGE_RAW_END_ADDR       0x0003C800                                                  /**< End address for Raw access mode, configurable based on use case. */
-#endif // PSTORAGE_RAW_MODE_ENABLE
-
-
 /** Abstracts persistently memory block identifier. */
 typedef uint32_t pstorage_block_t;
 

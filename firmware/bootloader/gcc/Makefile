@@ -52,6 +52,7 @@ BOARD = BOARD_IRT_V2_REV_A
 TARGET_DEVICE = nRF51422_xxAA
 
 USE_SOFTDEVICE = s310
+SOFTDEVICE = ../../s310_nrf51422_1.0.0_softdevice.hex
 
 SDK_PATH = ../../nrf51_sdk/
 TEMPLATE_PATH = ../../gcc/

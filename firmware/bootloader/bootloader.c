@@ -111,12 +111,14 @@ bool bootloader_app_is_valid(uint32_t app_addr)
         case DFU_BANK_0_REGION_START:
             bootloader_util_settings_get(&p_bootloader_settings);
 
+            BL_LOG("[BL] bootloader_app_is_valid? %i, bank_0_crc:%i \r\n",
+            		p_bootloader_settings->bank_0,
+            		p_bootloader_settings->bank_0_crc);
+
             // The application in CODE region 1 is flagged as valid during update.
             if (p_bootloader_settings->bank_0 == BANK_VALID_APP)
             {
                 uint16_t image_crc = 0;
-
-                BL_LOG("[BL] bootloader_app_is_valid BANK_VALID_APP.\r\n");
 
                 // A stored crc value of 0 indicates that CRC checking is not used.
                 if (p_bootloader_settings->bank_0_crc != 0)
@@ -280,7 +282,12 @@ void bootloader_app_start(uint32_t app_addr)
 
     interrupts_disable();
 
+#ifdef S310_STACK
     err_code = sd_softdevice_forward_to_application();
+#else
+    err_code = sd_softdevice_vector_table_base_set(CODE_REGION_1_START);
+#endif 
+
     APP_ERROR_CHECK(err_code);
 
     BL_LOG("[BL] Starting the app at: %#.8x.\r\n", CODE_REGION_1_START);
