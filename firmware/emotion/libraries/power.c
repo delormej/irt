@@ -88,45 +88,34 @@ static float power_rr_force(float speed_mps)
 static float servo_force(uint16_t servo_pos)
 {
 	float force;
-	/*
-	//
-	// Manual multiple linear regression hack.
-	//
-	if (servo_pos > 1500)
-	{
-		force = 0.0f;
-	}
-	else if (servo_pos > 1300)
-	{
-		// 1,500 - 1,300
-		force = slope_calc(servo_pos, -0.02098f, 31.9982f);
-	}
-	else if (servo_pos > 900)
-	{
-		// 1,300 - 900
-		force = slope_calc(servo_pos, -0.09138f, 123.0521f);
-	}
-	else if (servo_pos >= 699)
-	{
-		// 900 - 700
-		force = slope_calc(servo_pos, -0.02238f, 61.1305f);
-	}
-	*/
 
 	if (servo_pos > MIN_RESISTANCE_LEVEL)
 	{
-		// Mag OFF
+		// Magnet OFF
 		force = 0.0f;
 	}
 	else
 	{
-		force = (
-				-0.0000000000012401 * pow(servo_pos,5)
-				+0.0000000067486647 * pow(servo_pos,4)
-				-0.0000141629606351 * pow(servo_pos,3)
-				+0.0142639827784839 * pow(servo_pos,2)
-				-6.92836459712442 * servo_pos
-				+1351.463567618);
+		if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
+		{
+			force = (
+					-0.00000000000033469583 * pow(servo_pos,5)
+					+0.00000000202071048200 * pow(servo_pos,4)
+					-0.00000466916875500000 * pow(servo_pos,3)
+					+0.00513145135800000000 * pow(servo_pos,2)
+					-2.691480529 * servo_pos
+					+562.4577135);
+		}
+		else // BIG_MAG
+		{
+			force = (
+					-0.0000000000012401 * pow(servo_pos,5)
+					+0.0000000067486647 * pow(servo_pos,4)
+					-0.0000141629606351 * pow(servo_pos,3)
+					+0.0142639827784839 * pow(servo_pos,2)
+					-6.92836459712442 * servo_pos
+					+1351.463567618);
+		}
 	}
 
 	return force;
