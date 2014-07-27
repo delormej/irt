@@ -7,7 +7,7 @@
 #include "debug.h"
 
 #define USER_PROFILE_BLOCK_ID		0u
-#define USER_PROFILE_OFFSET			0u
+#define USER_PROFILE_OFFSET			1u	// User Profile is 1 block higher.  0 block is programmed with readonly factory default settings.
 
 /**@brief Debug logging for main module.
  *
@@ -18,7 +18,7 @@
 #define UP_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-static pstorage_handle_t m_user_profile_storage;  // Internal pointer to persistent storage.
+static pstorage_handle_t m_user_profile_storage;  	// Internal pointer to persistent storage.
 
 static void up_pstorage_cb_handler(pstorage_handle_t * handle,
                                    uint8_t             op_code,

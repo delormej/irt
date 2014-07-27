@@ -647,7 +647,6 @@ static void on_accelerometer(void)
 	// Received a sleep interrupt from the accelerometer meaning no motion for a while.
 	if (m_accelerometer_data.source == ACCELEROMETER_SRC_WAKE_SLEEP)
 	{
-		LOG("[MAIN]:about to power down from accelerometer sleep.\r\n");;
 		//
 		// This is a workaround to deal with GPIOTE toggling the SENSE bits which forces
 		// the device to wake up immediately after going to sleep without this.
@@ -655,9 +654,14 @@ static void on_accelerometer(void)
         NRF_GPIO->PIN_CNF[PIN_SHAKE] &= ~GPIO_PIN_CNF_SENSE_Msk;
         NRF_GPIO->PIN_CNF[PIN_SHAKE] |= GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos;
 
-        if (!(FEATURE_IS_SET(m_user_profile.settings, FEATURE_ACCEL_SLEEP_OFF)))
+        if ((SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON)))
         {
+    		LOG("[MAIN]:about to power down from accelerometer sleep.\r\n");;
         	on_power_down(false);
+        }
+        else
+        {
+    		LOG("[MAIN]:skipping sleep signal from accelerometer.\r\n");;
         }
 	}
 }
@@ -967,10 +971,8 @@ static void on_set_parameter(uint8_t* buffer)
 			memcpy(&m_user_profile.settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
 					sizeof(uint16_t));
 
-			LOG("[MAIN] Request to update settings to: ACCEL:%i, BIG_MAG:%i, EXTRA_INFO:%i \r\n",
-						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ACCEL_SLEEP_OFF),
-						FEATURE_IS_SET(m_user_profile.settings, FEATURE_BIG_MAG),
-						FEATURE_IS_SET(m_user_profile.settings, FEATURE_ANT_EXTRA_INFO));
+			LOG("[MAIN] Request to update settings to: ACCEL:%i \r\n",
+						SETTING_IS_SET(SETTING_ACL_SLEEP_ON) );
 			// Schedule update to the profile.
 			profile_update_sched();
 			break;

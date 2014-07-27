@@ -10,6 +10,7 @@ All rights reserved.
 
 #include <stdint.h>
 #include "nrf_error.h"
+#include "pstorage_platform.h"
 
 //
 // Global defines.
@@ -37,22 +38,21 @@ All rights reserved.
 //
 // Available device features.
 //
-#define FEATURE_DEFAULT					0xFFFFFFFF
+// Address in flash memory where features are stored on flash.
+#define FEATURE_FLASH_ADDRESS			(PSTORAGE_DATA_START_ADDR + 16)
+
 #define FEATURE_RESERVED				1UL
-#define FEATURE_ACCEL_SLEEP_OFF			2UL
+//#define FEATURE_TBD						2UL				// To be defined.
 #define FEATURE_BIG_MAG					4UL
 #define FEATURE_SMALL_MAG				8UL
 #define FEATURE_OTHER_MAG				16UL
-// FUTURE features:
-// BTLE_OFF
-// ANT_CTRL_OFF
-// ANT_BP_OFF
-// ANT_FEC_OFF
-#define FEATURE_ANT_EXTRA_INFO			32768UL			// Set max bit.
+#define FEATURE_74_SERVO				32UL
+#define FEATURE_60_SERVO				64UL
+#define FEATURE_INVALID					65535UL			// Max feature setting of 16 bit.
 
-#define FEATURE_IS_SET(SETTINGS, FEATURE) \
-	((SETTINGS & FEATURE) == FEATURE)
-
+#define FEATURE_IS_SET(FEATURE) \
+	(*(FEATURE_FLASH_ADDRESS) != FEATURE_INVALID) && \
+	(( *(FEATURE_FLASH_ADDRESS) & FEATURE) == FEATURE)
 
 /*****************************************************************************
 * Inside Ride Defines
