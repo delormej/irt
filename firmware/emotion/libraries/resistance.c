@@ -77,9 +77,9 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 	// Ensure we don't move the servo beyond it's min and max.
 	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107
 	//
-	if (servo_pos < RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1])
+	if (servo_pos < RESISTANCE_LEVEL[RESISTANCE_LEVELS-1])
 	{
-		servo_pos = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
+		servo_pos = RESISTANCE_LEVEL[RESISTANCE_LEVELS-1];
 	}
 	else if (servo_pos > RESISTANCE_LEVEL[0])
 	{
@@ -99,9 +99,9 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 uint16_t resistance_level_set(uint8_t level)
 {
 	// Sets the resistance to a standard 0-9 level.
-	if (level >= MAX_RESISTANCE_LEVELS)
+	if (level >= RESISTANCE_LEVELS)
 	{
-		level = MAX_RESISTANCE_LEVELS - 1;
+		level = RESISTANCE_LEVELS - 1;
 	}
 
 	return resistance_position_set(RESISTANCE_LEVEL[level]);
@@ -127,13 +127,13 @@ uint16_t resistance_pct_set(float percent)
 	}
 	else if (percent > 99.9f)
 	{
-		position = RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1];
+		position = RESISTANCE_LEVEL[RESISTANCE_LEVELS-1];
 	}
 	else
 	{
 		// Calculate the difference between easiest and hardest positions.
 		position = (uint16_t) (MIN_RESISTANCE_LEVEL -(
-							(MIN_RESISTANCE_LEVEL-RESISTANCE_LEVEL[MAX_RESISTANCE_LEVELS-1]) *
+							(MIN_RESISTANCE_LEVEL-RESISTANCE_LEVEL[RESISTANCE_LEVELS-1]) *
 							percent));
 	}
 

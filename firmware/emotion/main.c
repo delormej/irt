@@ -578,7 +578,7 @@ static void on_resistance_inc(void)
 {
 	// increment
 	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
-			m_resistance_level < (MAX_RESISTANCE_LEVELS-1))
+			m_resistance_level < (RESISTANCE_LEVELS-1))
 	{
 		resistance_level_set(++m_resistance_level);
 		ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
@@ -594,7 +594,7 @@ static void on_resistance_inc(void)
 static void on_resistance_max(void)
 {
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
-	m_resistance_level = MAX_RESISTANCE_LEVELS-1;
+	m_resistance_level = RESISTANCE_LEVELS-1;
 	resistance_level_set(m_resistance_level);
 	ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
 }
@@ -972,7 +972,7 @@ static void on_set_parameter(uint8_t* buffer)
 					sizeof(uint16_t));
 
 			LOG("[MAIN] Request to update settings to: ACCEL:%i \r\n",
-						SETTING_IS_SET(SETTING_ACL_SLEEP_ON) );
+						SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON) );
 			// Schedule update to the profile.
 			profile_update_sched();
 			break;
