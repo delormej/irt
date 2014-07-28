@@ -43,11 +43,9 @@ APPLICATION_SRCS += ble_conn_params.c
 APPLICATION_SRCS += ble_advdata.c
 APPLICATION_SRCS += ble_srv_common.c
 
-# Use shell to find name of root folder. Possible but horrible to do in make.
-PROJECT_NAME := $(shell basename "$(realpath ../)")
-
 DEVICE = NRF51
 BOARD = BOARD_IRT_V2_REV_A
+#BOARD = BOARD_IRT_REV_A
 #SEGGER_SERIAL = 
 TARGET_DEVICE = nRF51422_xxAA
 
@@ -81,6 +79,10 @@ debug: CFLAGS += -DSIMPLE_UART
 debug: CFLAGS += -g
 debug: CFLAGS += -DENABLE_DEBUG_LOG
 GDB_PORT_NUMBER := 2331
+
+# Use shell to find name of root folder. Possible but horrible to do in make.
+PROJECT_NAME = $(subst BOARD_,,$(BOARD))_
+PROJECT_NAME :=  $(PROJECT_NAME)_$(shell basename "$(realpath ../)")
 
 include $(TEMPLATE_PATH)Makefile
 
