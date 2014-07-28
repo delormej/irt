@@ -3,6 +3,7 @@
 //
 
 #include "irt_peripheral.h"
+#include "nrf_delay.h"
 #include "nordic_common.h"
 #include "app_util.h"
 #include "app_gpiote.h"
@@ -74,7 +75,11 @@ static void blink_timeout_handler(void * p_context)
  */
 static __INLINE uint32_t ac_adapter_off(void)
 {
+#ifdef BOARD_IRT_V2_REV_A
 	return nrf_gpio_pin_read(PIN_PG_N);
+#else
+	return 1;
+#endif
 }
 
 /**@brief Initialize all peripherial pins.
@@ -321,6 +326,10 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 		blink_timeout_handler);
 	APP_ERROR_CHECK(err_code); */
 
+#ifdef USE_BATTERY_CHARGER
 	battery_init(PIN_ENBATT, PIN_CHG_EN_N, p_on_peripheral_evt->on_battery_result);
+#else
+	battery_init(PIN_ENBATT, -1, p_on_peripheral_evt->on_battery_result);
+#endif
 	PH_LOG("[PH] Initialized battery.\r\n");
 }

@@ -175,7 +175,9 @@ void battery_init(uint8_t pin_battery_enable, uint8_t pin_charge_stop, on_batter
 	// TODO: This pin goes away, except for 1 test board.  We can remove in future build or ifdef.
 	m_pin_battery_read = pin_battery_enable;
 #endif
+#ifdef USE_BATTERY_CHARGER
 	m_pin_charge_stop = pin_charge_stop;
+#endif
 
     // Configure ADC
     NRF_ADC->INTENSET   = ADC_INTENSET_END_Msk;
