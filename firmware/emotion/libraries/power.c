@@ -190,16 +190,6 @@ uint16_t power_servo_pos_calc(float force)
 #endif
 	}
 
-	// Protect min/max.
-	if (servo_pos < MIN_RESISTANCE_LEVEL)
-	{
-		servo_pos = MIN_RESISTANCE_LEVEL;
-	}
-	else if (servo_pos > MAX_RESISTANCE_LEVEL)
-	{
-		servo_pos = MAX_RESISTANCE_LEVEL;
-	}
-
 	return servo_pos;
 }
 
