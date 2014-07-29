@@ -27,6 +27,34 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #define IRT_ERROR_BASE_NUM      (0x80000)       				///< Error base, hopefully well away from anything else.
 #define IRT_ERROR_RC_BASE_NUM   IRT_ERROR_BASE_NUM + (0x100)   	///< Error base for Resistance Control
 
+#define RESISTANCE_LEVELS 	7 	// Number of resistance levels available.
+
+/**@brief		Array representing the servo position in micrseconds (us) by
+*					resistance level 0-9.
+*
+*/
+static const uint16_t RESISTANCE_LEVEL[RESISTANCE_LEVELS] = {
+	2000, // 0 - no resistance
+	/*	1300,
+	1225,
+	1150,
+	1075,
+	1000,
+	925,
+	850,
+	775,
+	700}; // Max resistance
+	*/ // TESTING 7 positions.
+	1300,
+	1200,
+	1100,
+	1000,
+	900,
+	800 };
+
+#define MIN_RESISTANCE_LEVEL	1700					// Minimum by which there is no longer resistance.
+#define MAX_RESISTANCE_LEVEL	RESISTANCE_LEVEL[RESISTANCE_LEVELS-1]
+
 
 int16_t calc_watts(float grade, float speed_mps, float wind_mps, float weight_kg, float _c, float _crr)
 {
@@ -75,43 +103,17 @@ uint16_t slope_calc(float y, float slope, float intercept)
 // Calculates the desired servo position given speed in mps, weight in kg
 // and additional needed force in newton meters.
 //
-uint16_t power_servo_pos_calc(float force_needed)
+uint16_t power_servo_pos_calc(float force)
 {
 	int16_t servo_pos;
 
-	//
-	// Manual multiple linear regression hack.
-	//
-	if (force_needed < 0.832566f)
-	{
-		servo_pos = 1500;
-	}
-	else if (force_needed < 5.028207f)
-	{
-		// 1,500 - 1,300
-		servo_pos = slope_calc(force_needed, -44.8841f, 1517.988f);
-	}
-	else if (force_needed < 40.51667f)
-	{
-		// 1,300 - 900
-		servo_pos = slope_calc(force_needed, -10.9038f, 1345.708f);
-	}
-	else if (force_needed < 44.9931f)
-	{
-		// 900 - 700
-		servo_pos = slope_calc(force_needed, -39.4606f, 2505.677f);
-	}
-	else
-	{
-		// Max
-		servo_pos = 700;
-	}
-
-	// Protect min/max.
-	if (servo_pos < 700)
-		servo_pos = 700;
-	else if (servo_pos > 1500)
-		servo_pos = 1500;
+	servo_pos = (
+		0.001461686  * pow(force, 5)
+		- 0.076119976 * pow(force, 4)
+		+ 1.210189005 * pow(force, 3)
+		- 5.221468861 * pow(force, 2)
+		- 37.59134617 * force
+		+ 1526.614724);
 
 	return servo_pos;
 }
@@ -119,7 +121,11 @@ uint16_t power_servo_pos_calc(float force_needed)
 int main(int argc, char *argv [])
 {
 	//				  [       uint32_t     ], [       uint32_t     ]
-	uint8_t arr[] = { 0x00, 0x00, 0x03, 0x00, 0x00, 0x05, 0x00, 0x00 };
+	//uint8_t arr[] = { 0x00, 0x00, 0x03, 0x00, 0x00, 0x05, 0x00, 0x00 };
 
-	printf("result = %i\r\n", *(uint32_t*)&arr[4]);
+	int16_t servo_pos;
+
+	servo_pos = power_servo_pos_calc(0.8f);
+
+	printf("result = %i, %i\r\n", servo_pos, power_servo_pos_calc(3.6f));
 }
