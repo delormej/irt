@@ -99,6 +99,21 @@ uint16_t slope_calc(float y, float slope, float intercept)
 	return (uint16_t) x;
 }
 
+float servo_pos_force_calc(uint16_t servo_pos)
+{
+	float force;
+
+	force = (
+		-0.0000000000012401 * pow(servo_pos, 5)
+		+ 0.0000000067486647 * pow(servo_pos, 4)
+		- 0.0000141629606351 * pow(servo_pos, 3)
+		+ 0.0142639827784839 * pow(servo_pos, 2)
+		- 6.92836459712442 * servo_pos
+		+ 1351.463567618);
+
+	return force;
+}
+
 //
 // Calculates the desired servo position given speed in mps, weight in kg
 // and additional needed force in newton meters.
@@ -124,8 +139,10 @@ int main(int argc, char *argv [])
 	//uint8_t arr[] = { 0x00, 0x00, 0x03, 0x00, 0x00, 0x05, 0x00, 0x00 };
 
 	int16_t servo_pos;
+	float force;
 
-	servo_pos = power_servo_pos_calc(0.8f);
+	servo_pos = power_servo_pos_calc(0.001f);
+	force = servo_pos_force_calc(1500);
 
-	printf("result = %i, %i\r\n", servo_pos, power_servo_pos_calc(3.6f));
+	printf("result = %f, %i\r\n", force, servo_pos);
 }
