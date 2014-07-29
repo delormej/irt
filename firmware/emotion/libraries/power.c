@@ -96,8 +96,9 @@ static float servo_force(uint16_t servo_pos)
 	}
 	else
 	{
-		if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
-		{
+#ifdef SMALL_MAG
+		//if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
+		//{
 			force = (
 					-0.00000000000033469583 * pow(servo_pos,5)
 					+0.00000000202071048200 * pow(servo_pos,4)
@@ -105,9 +106,10 @@ static float servo_force(uint16_t servo_pos)
 					+0.00513145135800000000 * pow(servo_pos,2)
 					-2.691480529 * servo_pos
 					+562.4577135);
-		}
-		else // BIG_MAG
-		{
+		//}
+		//else // BIG_MAG
+		//{
+#else
 			force = (
 					-0.0000000000012401 * pow(servo_pos,5)
 					+0.0000000067486647 * pow(servo_pos,4)
@@ -115,7 +117,8 @@ static float servo_force(uint16_t servo_pos)
 					+0.0142639827784839 * pow(servo_pos,2)
 					-6.92836459712442 * servo_pos
 					+1351.463567618);
-		}
+		//}
+#endif
 	}
 
 	if (force < 0.0f)
@@ -162,8 +165,9 @@ uint16_t power_servo_pos_calc(float force)
 	}*/
 	else
 	{
-		if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
-		{
+#ifdef SMALL_MAG
+		//if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
+		//{
 			servo_pos = (
 					0.001461686  * pow(force,5)
 					-0.076119976 * pow(force,4)
@@ -171,9 +175,10 @@ uint16_t power_servo_pos_calc(float force)
 					-5.221468861 * pow(force,2)
 					-37.59134617 * force
 					+1526.614724);
-		}
-		else // BIG_MAG
-		{
+		//}
+		//else // BIG_MAG
+		//{
+#else
 			servo_pos = (
 					-0.0000940913669469  * pow(force,5)
 					+ 0.0108240213514885 * pow(force,4)
@@ -181,7 +186,8 @@ uint16_t power_servo_pos_calc(float force)
 					+8.9640144624266 	 * pow(force,2)
 					-87.5217493343533 	 * force
 					+1558.47782198543);
-		}
+		//}
+#endif
 	}
 
 	// Protect min/max.
