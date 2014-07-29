@@ -91,7 +91,7 @@ static float servo_force(uint16_t servo_pos)
 
 	if (servo_pos >= MIN_RESISTANCE_LEVEL)
 	{
-		// Magnet OFF
+		// Magnet OFF no force being applied.
 		force = 0.0f;
 	}
 	else
@@ -121,6 +121,7 @@ static float servo_force(uint16_t servo_pos)
 #endif
 	}
 
+	// Force unsigned float - 0.0 is minimum.
 	if (force < 0.0f)
 	{
 		force = 0.0f;
@@ -137,12 +138,11 @@ uint16_t power_servo_pos_calc(float force)
 
 	//
 	// Manual multiple linear regression hack.
-	//
+	/*
 	if (force < 0.8f)
 	{
 		servo_pos = MIN_RESISTANCE_LEVEL;
 	}
-	/*
 	else if (force_needed < 5.028207f)
 	{
 		// 1,500 - 1,300
@@ -162,9 +162,9 @@ uint16_t power_servo_pos_calc(float force)
 	{
 		// Max
 		servo_pos = 700;
-	}*/
+	}
 	else
-	{
+	{*/
 #ifdef SMALL_MAG
 		//if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
 		//{
@@ -188,7 +188,7 @@ uint16_t power_servo_pos_calc(float force)
 					+1558.47782198543);
 		//}
 #endif
-	}
+	//}
 
 	return servo_pos;
 }
