@@ -39,7 +39,7 @@ All rights reserved.
 // Available device features.
 //
 // Address in flash memory where features are stored on flash.
-#define FEATURE_FLASH_ADDRESS			(uint16_t*)(PSTORAGE_DATA_START_ADDR + 16)
+#define FEATURE_FLASH_ADDRESS			(PSTORAGE_DATA_START_ADDR + 16)
 
 #define FEATURE_RESERVED				1UL
 #define FEATURE_SMALL_MAG				2UL				// Small magnet is installed vs. Big magnet
@@ -47,8 +47,8 @@ All rights reserved.
 #define FEATURE_INVALID					65535UL			// Max feature setting of 16 bit.
 
 #define FEATURE_IS_SET(FEATURE) \
-	(*FEATURE_FLASH_ADDRESS != FEATURE_INVALID) && \
-	((*FEATURE_FLASH_ADDRESS & FEATURE) == FEATURE)
+	( *((uint16_t*)FEATURE_FLASH_ADDRESS) != FEATURE_INVALID ) && \
+	(  ( *((uint16_t*)FEATURE_FLASH_ADDRESS) & FEATURE ) == FEATURE  )
 
 /*****************************************************************************
 * Inside Ride Defines

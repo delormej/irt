@@ -7,7 +7,7 @@
 #include "debug.h"
 
 #define USER_PROFILE_BLOCK_ID		0u
-#define USER_PROFILE_OFFSET			0u	// User Profile is 1 block higher.  0 block is programmed with readonly factory default settings.
+#define USER_PROFILE_OFFSET			1u	// User Profile is 1 block higher.  0 block is programmed with readonly factory default settings.
 
 /**@brief Debug logging for main module.
  *
@@ -48,7 +48,7 @@ uint32_t user_profile_init(void)
 
 	// We're smaller than the min block size, so use that.
 	param.block_size  = sizeof (user_profile_t);
-    param.block_count = 1u;
+    param.block_count = 2u;
     param.cb          = up_pstorage_cb_handler;
 
     err_code = pstorage_register(&param, &m_user_profile_storage);
