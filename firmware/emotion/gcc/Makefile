@@ -28,7 +28,7 @@ SOURCE_PATHS +=  ../libraries/
 SOURCE_PATHS +=  ../services/
 LIBRARY_PATHS += ../libraries/
 LIBRARY_PATHS += ../services/
-DEPLOY_PATH = '../../../../../SkyDrive/InsideRide/Web/Support/Firmware'
+DEPLOY_PATH = '../../../../../SkyDrive/InsideRide'
 
 DEVICE = NRF51
 #BOARD = BOARD_IRT_V2_REV_A
@@ -89,7 +89,7 @@ CFLAGS += -DSW_REVISION="\"$(SW_REVISION_MAJ).$(SW_REVISION_MIN).$(SW_REVISION_B
 												# USE_BATTERY_CHARGER also dictates if there is control of the
 												# power regulator, since only battery charge enabled boards have 
 												# the power regulator.   
-CFLAGS += -DSMALL_MAG				# Small magnet
+CFLAGS += -DSMALL_MAG							# Small magnet
 
 ############################################
 # Concat name used for project and binary 
