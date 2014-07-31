@@ -50,7 +50,8 @@ All rights reserved.
 // IRT Factory configured features. These individual defines are made at build time for the bootloader
 // and read in irt_common.c::irt_feature_is_available() from flash for app operation.
 //
-#define IRT_FEATURES 				0UL
+#define IRT_FEATURES 				0UL				// TODO: Need to write a macro to be able to parse these somehow from build flags
+													// OR I should be generating one of multiple HEX files into the bootloader at firmware load time.
 
 #define FEATURE_IS_SET(FEATURE) 	irt_feature_is_available(FEATURE)
 
