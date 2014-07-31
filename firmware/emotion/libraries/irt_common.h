@@ -21,7 +21,7 @@ All rights reserved.
 
 #define DEVICE_NAME                 "E-Motion"                          /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME           "Inside Ride"            			/**< Manufacturer. Will be passed to Device Information Service. */
-#define HW_REVISION                 0x01               					/**< Hardware revision for manufacturer's identification common page. */
+//#define HW_REVISION                 0x01  							// This is now defined in boards.h	/**< Hardware revision for manufacturer's identification common page. */
 #define MANUFACTURER_ID             0xAAAA             				  	/**< Manufacturer ID for manufacturer's identification common page. */
 #define MODEL_NUMBER                0x5248								// Model 'HR' in ASCII /**< Model number for manufacturer's identification common page. */
 
@@ -45,6 +45,12 @@ All rights reserved.
 #define FEATURE_BATTERY_CHARGER		64UL			// Device has a battery charger IC installed.
 #define FEATURE_BATTERY_READ_PIN	128UL			// Device requires the use of enabling flow to a capacitor before reading battery voltage.
 #define FEATURE_INVALID				65535UL			// Max feature setting of 16 bit.
+
+//
+// IRT Factory configured features. These individual defines are made at build time for the bootloader
+// and read in irt_common.c::irt_feature_is_available() from flash for app operation.
+//
+#define IRT_FEATURES 				0UL
 
 #define FEATURE_IS_SET(FEATURE) 	irt_feature_is_available(FEATURE)
 

@@ -10,6 +10,7 @@
 #include "nordic_common.h"
 #include "bootloader_types.h"
 #include "dfu_types.h"
+#include "irt_common.h"
 #include "debug.h"
 
 /**@brief Debug logging for main module.
@@ -21,7 +22,8 @@
 #define BL_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-uint8_t  m_boot_settings[CODE_PAGE_SIZE] __attribute__((section(".bootloader_settings_sect"))) __attribute__((used)) = {BANK_VALID_APP};
+bootloader_settings_t  m_boot_settings __attribute__((section(".bootloader_settings_sect"))) __attribute__((used)) = {BANK_VALID_APP};
+uint16_t  m_irt_features __attribute__((section(".bootloader_settings_sect"))) __attribute__((used)) = IRT_FEATURES;
 
 uint32_t m_uicr_bootloader_start_address __attribute__((section(".NRF_UICR_BOOT_START_SECT"))) __attribute__((used)) = BOOTLOADER_REGION_START;
 
@@ -49,5 +51,5 @@ void bootloader_util_settings_get(const bootloader_settings_t** pp_bootloader_se
 {
     // Read only pointer to bootloader settings in flash.
     //*pp_bootloader_settings = (bootloader_settings_t*)BOOTLOADER_SETTINGS_ADDRESS;
-	*pp_bootloader_settings = (bootloader_settings_t*)m_boot_settings;
+	*pp_bootloader_settings = &m_boot_settings;
 }
