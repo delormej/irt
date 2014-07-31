@@ -9,6 +9,7 @@ All rights reserved.
 #define IRT_COMMON_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "nrf_error.h"
 #include "pstorage_platform.h"
 
@@ -38,17 +39,14 @@ All rights reserved.
 //
 // Available device features.
 //
-// Address in flash memory where features are stored on flash.
-#define FEATURE_FLASH_ADDRESS			(PSTORAGE_DATA_START_ADDR + 16)
+#define FEATURE_RESERVED			1UL
+#define FEATURE_SMALL_MAG			2UL				// Small magnet is installed vs. Big magnet
+#define FEATURE_74_SERVO			32UL			// 7.4 Volt Servo feature.
+#define FEATURE_BATTERY_CHARGER		64UL			// Device has a battery charger IC installed.
+#define FEATURE_BATTERY_READ_PIN	128UL			// Device requires the use of enabling flow to a capacitor before reading battery voltage.
+#define FEATURE_INVALID				65535UL			// Max feature setting of 16 bit.
 
-#define FEATURE_RESERVED				1UL
-#define FEATURE_SMALL_MAG				2UL				// Small magnet is installed vs. Big magnet
-#define FEATURE_74_SERVO				32UL			// 7.4 Volt Servo feature.
-#define FEATURE_INVALID					65535UL			// Max feature setting of 16 bit.
-
-#define FEATURE_IS_SET(FEATURE) \
-	( *((uint16_t*)FEATURE_FLASH_ADDRESS) != FEATURE_INVALID ) && \
-	(  ( *((uint16_t*)FEATURE_FLASH_ADDRESS) & FEATURE ) == FEATURE  )
+#define FEATURE_IS_SET(FEATURE) 	irt_feature_is_available(FEATURE)
 
 /*****************************************************************************
 * Inside Ride Defines
@@ -155,5 +153,6 @@ void 	 			irt_power_meas_fifo_free();
 irt_power_meas_t* 	irt_power_meas_fifo_next();
 irt_power_meas_t* 	irt_power_meas_fifo_first();
 irt_power_meas_t* 	irt_power_meas_fifo_last();
+__inline__ bool		irt_feature_is_available(uint16_t feature_mask);
 
 #endif // IRT_COMMON_H

@@ -11,6 +11,7 @@
 #include "resistance.h"
 #include "debug.h"
 #include "math.h"
+#include "irt_common.h"
 #include "nrf_delay.h"
 
 /**@brief Debug logging for module.
@@ -96,9 +97,8 @@ static float servo_force(uint16_t servo_pos)
 	}
 	else
 	{
-#ifdef SMALL_MAG
-		//if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
-		//{
+		if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
+		{
 			force = (
 					-0.00000000000033469583 * pow(servo_pos,5)
 					+0.00000000202071048200 * pow(servo_pos,4)
@@ -106,10 +106,9 @@ static float servo_force(uint16_t servo_pos)
 					+0.00513145135800000000 * pow(servo_pos,2)
 					-2.691480529 * servo_pos
 					+562.4577135);
-		//}
-		//else // BIG_MAG
-		//{
-#else
+		}
+		else // BIG_MAG
+		{
 			force = (
 					-0.0000000000012401 * pow(servo_pos,5)
 					+0.0000000067486647 * pow(servo_pos,4)
@@ -117,8 +116,7 @@ static float servo_force(uint16_t servo_pos)
 					+0.0142639827784839 * pow(servo_pos,2)
 					-6.92836459712442 * servo_pos
 					+1351.463567618);
-		//}
-#endif
+		}
 	}
 
 	// Force unsigned float - 0.0 is minimum.
@@ -136,59 +134,26 @@ uint16_t power_servo_pos_calc(float force)
 {
 	int16_t servo_pos;
 
-	//
-	// Manual multiple linear regression hack.
-	/*
-	if (force < 0.8f)
+	if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
 	{
-		servo_pos = MIN_RESISTANCE_LEVEL;
+		servo_pos = (
+				0.001461686  * pow(force,5)
+				-0.076119976 * pow(force,4)
+				+1.210189005 * pow(force,3)
+				-5.221468861 * pow(force,2)
+				-37.59134617 * force
+				+1526.614724);
 	}
-	else if (force_needed < 5.028207f)
+	else // BIG_MAG
 	{
-		// 1,500 - 1,300
-		servo_pos = (uint16_t)slope_calc(force_needed, -44.8841f, 1517.988f);
+		servo_pos = (
+				-0.0000940913669469  * pow(force,5)
+				+ 0.0108240213514885 * pow(force,4)
+				-0.46173964201648 	 * pow(force,3)
+				+8.9640144624266 	 * pow(force,2)
+				-87.5217493343533 	 * force
+				+1558.47782198543);
 	}
-	else if (force_needed < 40.51667f)
-	{
-		// 1,300 - 900
-		servo_pos = (uint16_t)slope_calc(force_needed, -10.9038f, 1345.708f);
-	}
-	else if (force_needed < 44.9931f)
-	{
-		// 900 - 700
-		servo_pos = (uint16_t)slope_calc(force_needed, -39.4606f, 2505.677f);
-	}
-	else
-	{
-		// Max
-		servo_pos = 700;
-	}
-	else
-	{*/
-#ifdef SMALL_MAG
-		//if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
-		//{
-			servo_pos = (
-					0.001461686  * pow(force,5)
-					-0.076119976 * pow(force,4)
-					+1.210189005 * pow(force,3)
-					-5.221468861 * pow(force,2)
-					-37.59134617 * force
-					+1526.614724);
-		//}
-		//else // BIG_MAG
-		//{
-#else
-			servo_pos = (
-					-0.0000940913669469  * pow(force,5)
-					+ 0.0108240213514885 * pow(force,4)
-					-0.46173964201648 	 * pow(force,3)
-					+8.9640144624266 	 * pow(force,2)
-					-87.5217493343533 	 * force
-					+1558.47782198543);
-		//}
-#endif
-	//}
 
 	return servo_pos;
 }
