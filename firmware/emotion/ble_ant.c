@@ -14,6 +14,7 @@
 #include "nrf_soc.h"
 #include "nrf51_bitfields.h"
 #include "ant_stack_handler_types.h"
+#include "ble_stack_handler_types.h"
 #include "app_error.h"
 #include "app_timer.h"
 #include "ant_parameters.h"
