@@ -107,6 +107,7 @@
     <Compile Include="Services\BleUart.cs" />
     <Compile Include="Services\ScriptHandler.cs" />
     <Compile Include="Services\SpeedSimulator.cs" />
+    <Compile Include="UnmanagedIRSerialPort.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
