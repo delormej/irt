@@ -10,6 +10,7 @@ All rights reserved.
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "boards.h"
 #include "nrf_error.h"
 #include "pstorage_platform.h"
 
