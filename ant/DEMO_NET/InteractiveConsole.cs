@@ -17,7 +17,7 @@ namespace ANT_Console
         AntBikePower m_eMotion;
         AntBikeSpeed m_refSpeed;
         AntControl m_control;
-        
+        SpeedSimulator m_speedSim;
 
         public InteractiveConsole(AntBikePower eMotion, AntControl control, AntBikeSpeed refSpeed)
         {
@@ -110,7 +110,7 @@ namespace ANT_Console
                         break;
 
                     case ConsoleKey.D1:
-                        SpeedSimulator.Simulate(1.0f);
+                        SimulateSpeedCommand();
                         break;
 
                     default:
@@ -378,6 +378,58 @@ namespace ANT_Console
                 {
                     WriteCommand(e.Message);
                 }
+            }
+        }
+
+        void SimulateSpeedCommand()
+        {
+            string prompt = "<enter speed in miles per hour:>";
+            float speed_mph = 0.0f;
+            bool success = InteractiveCommand(prompt, () =>
+            {
+                try
+                {
+                    if (float.TryParse(Console.ReadLine(), out speed_mph))
+                    {
+                        if (speed_mph < 5.0f || speed_mph > 40.0f)
+                        {
+                            WriteCommand("Speed must be between 5.0 and 40.0 mph");
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+                catch 
+                {
+                    WriteCommand("Unrecognized setting.");
+                    return false;
+                }
+            });
+
+            if (success)
+            {
+                try
+                {
+                    if (m_speedSim == null)
+                    {
+                        m_speedSim = new SpeedSimulator();
+                    }
+
+                    float speed_mps = speed_mph * 0.44704f; 
+
+                    m_speedSim.Simulate(speed_mps);
+                    /*WriteCommand(string.Format("Simulating {0:d} mps / {1:d} mph",
+                        speed_mps, speed_mph));*/
+                }
+                catch (Exception e)
+                {
+                    WriteCommand(e.Message);
+                }
+            }
+            else
+            {
+                WriteCommand("Invalid speed.");
             }
         }
 

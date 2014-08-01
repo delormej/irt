@@ -7,37 +7,61 @@ using System.Threading;
 
 namespace ANT_Console.Services
 {
-    public class SpeedSimulator
+    public class SpeedSimulator : IDisposable
     {
-        public static void Simulate(float speed_mps)
-        {
-            // (a) Ratio of Flywheel to Wheel (2.07m) Revolutions = (18.52 * 2)
-            // (b) Speed in Mph converted to MPS
-            // (c) MPS / 2.07 = # of wheel rotations per second
-            // (d) Multiply wheel rotations per second times Ratio (a)
-            // (e) Start a timer and every 1/16th second, send rotations / 16
+        Timer m_timer;
+        SerialPort m_port;
 
-            SerialPort port = new SerialPort("COM3");
-            try
+        public SpeedSimulator() 
+        {
+            m_port = new SerialPort("COM3", 38400);
+            m_port.Open();
+            
+            m_timer = new Timer(Simulate_Callback);
+        }
+
+        public SpeedSimulator(SerialPort port)
+        {
+            m_port = port;
+            m_timer = new Timer(Simulate_Callback);
+        }
+
+        private void Simulate_Callback(object state)
+        {
+            // Flip the bit.
+            m_port.RtsEnable = !m_port.RtsEnable;
+        }
+
+        public void Simulate(float speed_mps)
+        {
+            TimeSpan interval = GetInterval(speed_mps);
+            m_timer.Change(interval, interval);
+        }
+
+        private TimeSpan GetInterval(float speed_mps)
+        {
+            float wheelsPerSec = speed_mps / 2.07f; // static wheel size in meters.
+            float flyWheelPerSec = wheelsPerSec * 18.5218f;
+
+            // 2 events per flywheel
+            long ticks = (long)(((1 / (flyWheelPerSec)) * TimeSpan.TicksPerSecond) / 2);
+
+            //TimeSpan interval = new TimeSpan(ticks);
+            TimeSpan interval = new TimeSpan(0, 0, 0, 0, 8);
+
+            return interval;
+        }
+
+        public void Dispose()
+        {
+            if (m_timer != null)
             {
-                Console.WriteLine("Started: {0:ss-FFFFF}", System.DateTime.Now);
-                int i = 0;
-                port.Open();
-                while (i++ < 100)
-                {
-                    port.RtsEnable = true;
-                    Thread.Sleep(1);
-                    port.RtsEnable = false;
-                }
-                Console.WriteLine("Ended: {0:ss-FFFFF}", System.DateTime.Now);
+                m_timer.Dispose();
             }
-            catch(Exception e)
+
+            if (m_port != null)
             {
-                Console.WriteLine(e.Message);
-            }
-            finally
-            {
-                port.Close();
+                m_port.Close();
             }
         }
     }
