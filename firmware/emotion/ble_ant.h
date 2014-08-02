@@ -60,6 +60,15 @@ uint8_t ant_manufacturer_page[TX_BUFFER_SIZE];
         	APP_ERROR_CHECK(ERR_CODE);										\
     } while (0)																\
 
+
+/**@brief Macros for identifying ANT Burst Sequence.
+ */
+#define BURST_LAST_PACKET						0x04
+#define BURST_SEQ_NUM(CHANNEL_BYTE) 			(CHANNEL_BYTE >> 5)
+#define BURST_SEQ_FIRST_PACKET(CHANNEL_BYTE) 	(BURST_SEQ_NUM(CHANNEL_BYTE) == 0x0)
+#define BURST_SEQ_LAST_PACKET(CHANNEL_BYTE) \
+	(BURST_SEQ_NUM(CHANNEL_BYTE) & BURST_LAST_PACKET) == BURST_LAST_PACKET
+
 typedef void(*ant_bp_evt_dfu_enable)(void);
 
 //

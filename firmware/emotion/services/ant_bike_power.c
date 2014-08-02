@@ -224,27 +224,29 @@ static void handle_set_weight(ant_evt_t * p_ant_evt)
 // Right now all this method does is handle resistance control messages.
 static void handle_burst(ant_evt_t * p_ant_evt)
 {
-	static bool 							receiving_burst_resistance = false;
+	static bool 				receiving_burst_resistance = false;
 	static resistance_mode_t	resistance_mode = RESISTANCE_SET_STANDARD;
 
 	// TODO: there is probably a more defined way to deal with burst data, but this
 	// should work for now.  i.e. use  some derivation of sd_ant_burst_handler_request
 	// Although that method looks as though it's for sending bursts, not receiving.
-	uint8_t message_sequence_id = p_ant_evt->evt_buffer[2];			// third byte.
 	uint8_t message_id = p_ant_evt->evt_buffer[3];			// forth byte.
 
-	if (message_sequence_id == 0x01 && message_id == ANT_BURST_MSG_ID_SET_RESISTANCE)
+	//
+	// All WAHOO messages seem to have 3 messages per BURST, first, middle, last.
+	// Middle message does not seem to contain anything relevant.
+	//
+
+	if (BURST_SEQ_FIRST_PACKET(p_ant_evt->evt_buffer[2])
+			&& message_id == ANT_BURST_MSG_ID_SET_RESISTANCE)
 	{
 		// Burst has begun, fifth byte has the mode, need to wait for subsequent messages
 		// to parse the level.
 		receiving_burst_resistance = true;
 		resistance_mode = (resistance_mode_t) p_ant_evt->evt_buffer[4];
 	}
-	else if (message_sequence_id == 0x21)
-	{
-		// do nothing, not sure what this message is used for.
-	}
-	else if (message_sequence_id == 0xC1 && receiving_burst_resistance)
+	else if (BURST_SEQ_LAST_PACKET(p_ant_evt->evt_buffer[2])
+			&& receiving_burst_resistance)
 	{
 		// Value for the operation exists in this message sequence.  
 
