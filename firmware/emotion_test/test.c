@@ -141,8 +141,9 @@ int main(int argc, char *argv [])
 	int16_t servo_pos;
 	float force;
 
-	servo_pos = power_servo_pos_calc(0.001f);
-	force = servo_pos_force_calc(1500);
+	uint8_t sequence;
+	sequence = 0x21;
 
-	printf("result = %f, %i\r\n", force, servo_pos);
+	printf("Sequence is: %i\r\n", (sequence >> 5));;
+	printf("Last byte: %i\r\n", ((sequence >> 5) & 0x04) == 0x04);
 }
