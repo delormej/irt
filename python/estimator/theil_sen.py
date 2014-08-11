@@ -62,7 +62,7 @@ def slope( x_1, x_2, y_1, y_2):
     
 if __name__=="__main__":
     from numpy import genfromtxt
-    my_data = genfromtxt('/users/jasondel/dev/InsideRide/python/estimator/data.csv', delimiter=',', names=True, usecols = (3,5) )
+    my_data = genfromtxt('/users/jasondel/dev/InsideRide/python/estimator/data.csv', delimiter=',', names=True, usecols = (3,5,7) )
 
     #ix = my_data['emotion_speed_mph'] >= 13.0 
     #print (ix)
@@ -70,6 +70,10 @@ if __name__=="__main__":
 
     # This filters out the first 5 minutes:
     my_data = my_data[300:]
+
+    # Filter anything except servo position 2,000 or greater (magnet off).
+    z1 = my_data['servo_pos']
+    my_data = my_data[z1>=2000]
 
     x1 = my_data['emotion_speed_mph'] 
     #y1 = my_data['quarq_power']
