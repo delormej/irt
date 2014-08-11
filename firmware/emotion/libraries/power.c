@@ -36,7 +36,6 @@ static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
 	return value;
 }*/
 
-
 /**@brief	Calculates estimated torque given watts and time.
  */
 static uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
@@ -187,7 +186,7 @@ void power_init(user_profile_t* p_profile, uint16_t default_crr)
 {
 	if (p_profile->ca_slope != 0xFFFF)
 	{
-		m_ca_slope = (p_profile->ca_slope / 10000.0f);
+		m_ca_slope = (p_profile->ca_slope / 1000.0f);
 		m_ca_intercept = (p_profile->ca_intercept / 1000.0f);
 		m_rr_force = 0;
 
@@ -222,7 +221,7 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last, flo
 		// First calculate power in watts, then back out to force.
 		// Calculated by taking slope of change in watts (y) for each 1 mps (x) in speed.
 		magoff_watts =
-				(p_current->instant_speed_mps * m_ca_slope + m_ca_intercept);
+				(p_current->instant_speed_mps * m_ca_slope - m_ca_intercept);
 
 		// Calculate force of rolling resistance alone.
 		*p_rr_force = (magoff_watts / p_current->instant_speed_mps);

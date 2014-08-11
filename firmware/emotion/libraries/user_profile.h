@@ -39,8 +39,8 @@ typedef struct user_profile_s {
 	uint16_t	settings;					// Bitmask of feature/settings to turn on/off.
 	uint16_t	total_weight_kg;			// Stored in int format 1/100, e.g. 8181 = 81.81kg
 	uint16_t	wheel_size_mm;
-	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/10,000 e.g. 3870 = 0.3870
-	uint16_t	ca_intercept;				// Calibration intercept.  Stored in 1/1,000 e.g. 15897 = 15.879
+	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/1,000 e.g. 20741 = 20.741
+	uint16_t	ca_intercept;				// Calibration intercept. This value is inverted on the wire -1/1,000 e.g. 40144 = -40.144
 	uint16_t	future[2];					// For block size alignment -- 16 bytes
 } user_profile_t;
 
