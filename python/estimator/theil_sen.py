@@ -10,6 +10,7 @@ Very robust to outliers.
 C:\\Python34>python.exe c:\\users\\jasondel\\dev\\insideride\\python\\estimator\\theil_sen.py
 
 """
+import sys
 import numpy as np
 import bottleneck #very fast searching and sorting written in Cython.
 import itertools
@@ -61,10 +62,9 @@ def slope( x_1, x_2, y_1, y_2):
     
     
     
-    
-if __name__=="__main__":
+def main(file):
     from numpy import genfromtxt
-    my_data = genfromtxt('/users/jasondel/dev/InsideRide/python/estimator/data.csv', delimiter=',', names=True, usecols = (3,5,7) )
+    my_data = genfromtxt(file, delimiter=',', names=True, usecols = (3,5,7) )
 
     #ix = my_data['emotion_speed_mph'] >= 13.0 
     #print (ix)
@@ -105,3 +105,8 @@ if __name__=="__main__":
 
 #index = numpy.asarray([row['category_code'] in ('A', 'B', 'C') for row in data])
 #filtered_data = data[index]
+
+if __name__ == "__main__":
+   #file = '/users/jasondel/dev/InsideRide/python/estimator/data.csv'
+   file = sys.argv[1]
+   main(file)
