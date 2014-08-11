@@ -7,6 +7,8 @@ where slope = (y_i - y_j)/(x_i - x_j)
 
 Very robust to outliers.
 
+C:\\Python34>python.exe c:\\users\\jasondel\\dev\\insideride\\python\\estimator\\theil_sen.py
+
 """
 import numpy as np
 import bottleneck #very fast searching and sorting written in Cython.
