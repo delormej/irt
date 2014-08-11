@@ -64,7 +64,9 @@ def slope( x_1, x_2, y_1, y_2):
     
 def main(file):
     from numpy import genfromtxt
-    my_data = genfromtxt(file, delimiter=',', names=True, usecols = (3,5,7) )
+    my_data = genfromtxt(file, delimiter=',', names=True, usecols = (2,3,5,7) )
+    my_data['emotion_speed_mps'] = my_data['emotion_speed_mph'] * 0.44704
+    #print(my_data)
 
     #ix = my_data['emotion_speed_mph'] >= 13.0 
     #print (ix)
@@ -83,15 +85,20 @@ def main(file):
     y1 = filtered_data['quarq_power']
     filtered_data = filtered_data[y1>0]
 
+    #print (filtered_data)
     #filtered_data = filtered_data[:,range(300, 900)]
     #idx=(my_data[:,0]>10.0) & (my_data[:,1]>0) #errors in too many indices
 
     #list = np.array( filter(lambda x: x['emotion_speed_mph'] >= 13.0 and x['quarq_power'] > 0, my_data) ) 
     #cond = np.logical_and(my_data[:, 0] >= 10.0, my_data[:, 1] > 0)
+    
+    #my_func = lambda x: x['emotion_speed_mph'] * 0.44704
+    #filtered_data = np.hstack((filtered_data, my_func)).T
 
     #print (filtered_data[idx].shape)
     #filtered_data = my_data[cond, :]
-    x = filtered_data['emotion_speed_mph'] 
+    x = filtered_data['emotion_speed_mps'] 
+    #x = filtered_data[3:] 
     y = filtered_data['quarq_power']
     
     #x = my_data['emotion_speed_mph'] 
@@ -107,6 +114,6 @@ def main(file):
 #filtered_data = data[index]
 
 if __name__ == "__main__":
-   #file = '/users/jasondel/dev/InsideRide/python/estimator/data.csv'
+   file = '/users/jasondel/dev/InsideRide/python/estimator/data.csv'
    file = sys.argv[1]
    main(file)
