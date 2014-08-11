@@ -11,6 +11,7 @@ namespace ANT_Console.Messages
         public DateTime Timestamp;
         public float SpeedReference;
         public float SpeedEMotion;
+        public float SpeedMPSEMotion;
         public short PowerReference;
         public short PowerEMotion;
         public ushort ServoPosition;
@@ -27,7 +28,7 @@ namespace ANT_Console.Messages
             return string.Format(FORMAT,
                 Timestamp,
                 SpeedReference,
-                SpeedEMotion,
+                SpeedMPSEMotion,
                 PowerReference,
                 PowerEMotion,
                 ServoPosition,

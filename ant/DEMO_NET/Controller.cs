@@ -159,6 +159,7 @@ namespace ANT_Console
                     m_data.Timestamp = m.Source.timeReceived;
                     m_data.PowerEMotion = m.CalculatedPower;
                     m_data.SpeedEMotion = m.SpeedMph;
+                    m_data.SpeedMPSEMotion = m.SpeedMps;
                     break;
                 case AntChannel.RefPower:
                     m_data.Timestamp = m.Source.timeReceived;
