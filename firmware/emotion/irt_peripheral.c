@@ -278,6 +278,9 @@ void peripheral_powerdown(bool accelerometer_off)
 		accelerometer_standby();
 	}
 
+    // Shutdown temperature sensor.
+	temperature_shutdown();
+
 #ifdef IRT_REV_2A_H
 	// Disable servo / LED.
 	nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);

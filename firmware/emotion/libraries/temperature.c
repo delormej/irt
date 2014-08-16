@@ -15,7 +15,8 @@
 #define NCT75_READ				(NCT75_WRITE | 0x1)			// 0x3B
 
 /* Bit fields */
-#define NCT75_ONE_SHOT_CONFIG	_BIT(5)		// One shot bit for
+#define NCT75_ONE_SHOT_CONFIG	_BIT(5)		// Configuration Register bit for One shot
+#define NCT75_SHUTDOWN			_BIT(0)		// Configuration Register bit for Shutdown
 
 /* Register Map for the NCT75. */
 enum {
@@ -43,6 +44,18 @@ void temperature_init()
 
 	// Test it out:
 	//float temp  = temperature_read();
+}
+
+void temperature_shutdown()
+{
+	uint8_t buffer[2];
+	buffer[0] = REGNCT75_CONFIG;
+	buffer[1] = NCT75_SHUTDOWN;
+
+	twi_master_transfer(NCT75_WRITE,
+						buffer,
+						sizeof(buffer),
+						true);
 }
 
 // Reads the current temperature 12 bit value as a one-shot operation.
