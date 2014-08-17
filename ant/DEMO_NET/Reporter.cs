@@ -17,7 +17,7 @@ namespace ANT_Console
 
         public LogReporter()
         {
-            string filename = string.Format("irt_{0}}_{1:yyyyMMdd-HHmmss-F}.csv",
+            string filename = string.Format("irt_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
                 typeof(LogReporter).Assembly.GetName().Version.ToString(3),
                 DateTime.Now);
 
