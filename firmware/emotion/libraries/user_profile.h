@@ -21,13 +21,12 @@
 #define SETTING_ANT_CTRL_ENABLED		4UL				// ANT+ Remote Control enabled.
 #define SETTING_ANT_BP_ENABLED			8UL				// ANT+ Bike Power profile enabled.
 #define SETTING_ANT_FEC_ENABLED			16UL			// ANT+ Fitness Equipment Control profile enabled.
-#define SETTING_ANT_EXTRA_INFO_SEND		32UL			// Send custom IRT EXTRA_INFO message (mostly for debugging).
+#define SETTING_ANT_EXTRA_INFO_ENABLED	32UL			// Send custom IRT EXTRA_INFO message (mostly for debugging).
 #define SETTING_INVALID					65535UL			// Max for 16 bit settings.
 
 /**@brief	Helper macro for determining if a setting is flagged.
  */
 #define SETTING_IS_SET(SETTINGS, SETTING) \
-	(SETTINGS != SETTING_INVALID) && \
 	((SETTINGS & SETTING) == SETTING)
 
 /**@brief	Structure used to for storing/reading user profile.

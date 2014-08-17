@@ -62,7 +62,7 @@
 #define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
 #define DEFAULT_TOTAL_WEIGHT_KG			8180ul 										// Default weight (convert 180.0lbs to KG).
 #define DEFAULT_ERG_WATTS				175u										// Default erg target_watts when not otherwise set.
-#define DEFAULT_SETTINGS				0ul											// Default 32bit field of settings.
+#define DEFAULT_SETTINGS				SETTING_INVALID								// Default 32bit field of settings.
 #define DEFAULT_CRR						30ul										// Default Co-efficient for rolling resistance used when no slope/intercept defined.  Divide by 1000 to get 0.03f.
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
@@ -252,7 +252,7 @@ static void profile_init(void)
 			m_user_profile.version			= PROFILE_VERSION;
 			m_user_profile.wheel_size_mm 	= DEFAULT_WHEEL_SIZE_MM;
 			m_user_profile.total_weight_kg 	= DEFAULT_TOTAL_WEIGHT_KG;
-			m_user_profile.settings 		= DEFAULT_SETTINGS;
+			//m_user_profile.settings 		= DEFAULT_SETTINGS;
 
 			// Schedule an update.
 			profile_update_sched();
