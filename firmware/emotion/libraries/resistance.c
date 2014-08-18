@@ -73,6 +73,8 @@ uint16_t resistance_position_get()
  */
 uint16_t resistance_position_set(uint16_t servo_pos)
 {
+	// Actual servo position after calibration.
+	uint16_t offset_servo_pos;
 	//
 	// Ensure we don't move the servo beyond it's min and max.
 	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107
@@ -88,8 +90,12 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 
 	if ( (m_servo_pos != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
 	{
-		RC_LOG("[RC]:SET_SERVO %i\r\n", servo_pos);
-		pwm_set_servo(servo_pos);
+		// Only record offset position internally, don't expose beyond the module
+		// as certain servo positions have bearing on position.
+		offset_servo_pos = servo_pos + mp_user_profile->servo_offset;
+
+		RC_LOG("[RC]:SET_SERVO %i\r\n", offset_servo_pos);
+		pwm_set_servo(offset_servo_pos);
 		m_servo_pos = servo_pos;
 	}
 

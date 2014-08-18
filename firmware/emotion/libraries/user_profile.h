@@ -14,7 +14,7 @@
 
 #include <stdint.h>
 
-#define PROFILE_VERSION					4u	// Current version of the profile.
+#define PROFILE_VERSION					5u	// Current version of the profile.
 
 #define SETTING_ACL_SLEEP_ON			1UL				// Put device to sleep when accelerometer signals no motion.
 #define SETTING_BTLE_ENABLED			2UL				// BTLE Enabled
@@ -40,7 +40,8 @@ typedef struct user_profile_s {
 	uint16_t	wheel_size_mm;
 	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/1,000 e.g. 20741 = 20.741
 	uint16_t	ca_intercept;				// Calibration intercept. This value is inverted on the wire -1/1,000 e.g. 40144 = -40.144
-	uint16_t	future[2];					// For block size alignment -- 16 bytes
+	int8_t		servo_offset;				// Calibration offset for servo position.
+	uint8_t		future[3];					// For block size alignment -- 16 bytes
 } user_profile_t;
 
 /**@brief Initializes access to storage. */

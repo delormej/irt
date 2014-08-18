@@ -252,7 +252,8 @@ static void profile_init(void)
 			m_user_profile.version			= PROFILE_VERSION;
 			m_user_profile.wheel_size_mm 	= DEFAULT_WHEEL_SIZE_MM;
 			m_user_profile.total_weight_kg 	= DEFAULT_TOTAL_WEIGHT_KG;
-			//m_user_profile.settings 		= DEFAULT_SETTINGS;
+			m_user_profile.settings 		= DEFAULT_SETTINGS;
+			m_user_profile.servo_offset		= 0;
 
 			// Schedule an update.
 			profile_update_sched();
