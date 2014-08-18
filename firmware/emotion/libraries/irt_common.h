@@ -63,6 +63,7 @@ All rights reserved.
 //
 #define IRT_MSG_PAGE2_SUBPAGE_INDEX			1u					// Index of the subpage in the message buffer.
 #define IRT_MSG_PAGE2_DATA_INDEX			2u					// Index of the data in the message buffer.
+
 #define IRT_MSG_SUBPAGE_CRR					16u
 #define IRT_MSG_SUBPAGE_SETTINGS			17u
 #define IRT_MSG_SUBPAGE_WEIGHT				18u
@@ -70,6 +71,8 @@ All rights reserved.
 #define IRT_MSG_SUBPAGE_BUTTON_STOPS		20u
 #define IRT_MSG_SUBPAGE_SET_CHARGER			21u					// Setting to toggle the charger.
 #define IRT_MSG_SUBPAGE_GET_ERROR			22u					// Gets the last error code.
+#define IRT_MSG_SUBPAGE_SERVO_OFFSET		23u					// Get/set servo offset.
+
 
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 

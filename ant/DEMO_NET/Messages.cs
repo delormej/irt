@@ -387,6 +387,7 @@ namespace ANT_Console.Messages
         ButtonStops = 20, // Ability to configure custom button stops on the servo.
         SetCharger = 21,
         GetLastError = 22,
+        ServoOffset = 23,
         Battery = 0x52
         
         // Should we send commands this way, i.e.:

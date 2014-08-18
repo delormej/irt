@@ -244,6 +244,10 @@ namespace ANT_Console
                     Console.WriteLine("Total Weight: {0:N2} kg", grams / 100.0);
                     break;
 
+                case SubPages.ServoOffset:
+                    Console.WriteLine("Servo Offset: {0}", buffer[2]);
+                    break;
+
                 default:
                     break;
             }

@@ -520,6 +520,10 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 			error_to_response(response);
 			break;
 
+		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
+			response[0] = m_user_profile.servo_offset;
+			break;
+
 		default:
 			LOG("[MAIN] Unrecognized page request. \r\n");
 			return;
@@ -988,6 +992,12 @@ static void on_set_parameter(uint8_t* buffer)
 					m_user_profile.ca_slope, m_user_profile.ca_intercept);
 			// Reinitialize power.
 			power_init(&m_user_profile, DEFAULT_CRR);
+			break;
+
+		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
+			m_user_profile.servo_offset = buffer[IRT_MSG_PAGE2_DATA_INDEX];
+			// Schedule update to the user profile.
+			profile_update_sched();
 			break;
 
 #ifdef USE_BATTERY_CHARGER
