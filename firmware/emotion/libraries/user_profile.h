@@ -40,6 +40,7 @@ typedef struct user_profile_s {
 	uint16_t	wheel_size_mm;
 	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/1,000 e.g. 20741 = 20.741
 	uint16_t	ca_intercept;				// Calibration intercept. This value is inverted on the wire -1/1,000 e.g. 40144 = -40.144
+	float		ca_temp;					// Temperature recorded when calibration was set.  See: Bicycling Science (1% drop in Crr proportional to 1 degree change in temp).
 	int8_t		servo_offset;				// Calibration offset for servo position.
 	uint8_t		future[3];					// For block size alignment -- 16 bytes
 } user_profile_t;
