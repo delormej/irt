@@ -15,7 +15,7 @@ import numpy as np
 import bottleneck #very fast searching and sorting written in Cython.
 import itertools
 
-def theil_sen(x,y, sample= "auto", n_samples = 1e7):
+def theil_sen(x,y, sample= False, n_samples = 1e7):
     """
     Computes the Theil-Sen estimator for 2d data.
     parameters:
@@ -33,7 +33,7 @@ def theil_sen(x,y, sample= "auto", n_samples = 1e7):
     """
     assert x.shape[0] == y.shape[0], "x and y must be the same shape."
     n = x.shape[0]
-    
+
     if n < 100 or not sample:
         ix = np.argsort( x )
         slopes = np.empty( n*(n-1)*0.5 )
