@@ -29,7 +29,7 @@ namespace ANT_Console
         public void Report(DataPoint data)
         {
             string message = String.Format(report_format,
-                DateTime.Now,
+                data.Timestamp,
                 data.SpeedReference,
                 data.SpeedMPSEMotion,
                 data.SpeedEMotion,

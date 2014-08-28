@@ -3,22 +3,36 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Facet.Combinatorics;
 
 namespace ANT_Console.Services
 {
     public static class TheilSen
     {
-        static ArrayList Calc(List<double> x, List<double> y)
+        public struct SpeedPower
         {
+            double Speed;
+            double Power;
+        }
+
+        static ArrayList Calc(IList<SpeedPower> list)
+        {
+            /*
+            List<SpeedPower> l;
+            
 
             int n = x.Count; 
+            //Tuple<double, double> t; // .NET 4.5 specific
+            Combinations<double> comb = new Combinations<double>(x, 2);
+            
             //if n < 100 or not sample:
 
             //        ix = np.argsort( x )
             
 
             //slopes = np.empty( n*(n-1)*0.5 )
-            
+            List<double> slopes = new List<double>((int)(n * (n - 1) * 0.5));
+            */
 
             return null;
         }

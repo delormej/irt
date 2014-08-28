@@ -55,7 +55,9 @@ namespace ANT_Console.Services
                 throw new Exception("Error configuring Channel Period");
 
             if (m_channel.openChannel(500))
+            {
                 Console.WriteLine("Channel opened");
+            }
             else
                 throw new Exception("Error opening channel");
         }
@@ -82,6 +84,20 @@ namespace ANT_Console.Services
                 default:
                     // Nothing to process.
                     break;
+            }
+        }
+
+        public UInt16 GetDeviceNumber()
+        {
+            try
+            {
+                ANT_ChannelID channelId = m_channel.requestID(3000);
+                return channelId.deviceNumber;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("WARN: Timeout trying to get channel id.");
+                return 0;
             }
         }
 

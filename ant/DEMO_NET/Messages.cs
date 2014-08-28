@@ -19,7 +19,7 @@ namespace ANT_Console.Messages
         public byte Temperature;
         public byte ResistanceMode;
         public ushort TargetLevel;
-        public ushort FlywheelRevs;
+        public uint FlywheelRevs;
         public ushort RefSpeedWheelRevs;
         public ushort RefPowerAccumTorque;
 
@@ -34,6 +34,32 @@ namespace ANT_Console.Messages
                 ServoPosition,
                 Accelerometer_y,
                 Temperature);
+        }
+    }
+
+    public class CalibrationSpeed
+    {
+        byte[] m_buffer;
+
+        public CalibrationSpeed(byte[] buffer)
+        {
+            m_buffer = buffer;
+        }
+
+        public UInt16 Seconds { get { return Message.BigEndian(m_buffer[2], m_buffer[3]); } }
+        public UInt32 FlywheelRotations { 
+            get 
+            { 
+                return 
+                    (UInt32)(Message.BigEndian(m_buffer[6], m_buffer[7]) << 16) |
+                    Message.BigEndian(m_buffer[4], m_buffer[5]);
+            }
+        }
+
+        public override string ToString()
+        {
+            return String.Format("Calibration Time:{0}, Rotations:{1}",
+                Seconds, FlywheelRotations);
         }
     }
 
@@ -388,6 +414,7 @@ namespace ANT_Console.Messages
         SetCharger = 21,
         GetLastError = 22,
         ServoOffset = 23,
+        CalibrationSpeed = 24,
         Battery = 0x52
         
         // Should we send commands this way, i.e.:

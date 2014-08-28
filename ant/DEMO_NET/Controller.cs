@@ -9,11 +9,15 @@ namespace ANT_Console
 {
     class Controller
     {
+        ushort m_eMotionDeviceId = 0;
         DataPoint m_data;
         AntBikePower m_eMotionPower;
         AntControl m_control;
         AntBikeSpeed m_refSpeed;
+        AntBikePower m_refPower;
         InteractiveConsole m_console;
+        IList<IReporter> m_reporters;
+        CalibrationSpeed m_last_calibration;
 
         enum AntChannel : byte // limited to 8 channels per device.
         {
@@ -46,12 +50,24 @@ namespace ANT_Console
         public void Run()
         {
             // Check to see if we should connect to a specific E-Motion Device.
-            ushort deviceId = 0;
             Console.Write("E-Motion Rollers Device ID or <ENTER>:");
-            ushort.TryParse(Console.ReadLine(), out deviceId);
-            ConfigureServices(deviceId);
+            ushort.TryParse(Console.ReadLine(), out m_eMotionDeviceId);
+            ConfigureServices(m_eMotionDeviceId);
 
             m_console = new InteractiveConsole(m_eMotionPower, m_control, m_refSpeed);
+
+            // Try until we can connect to E-Motion Rollers.
+            while (m_eMotionDeviceId == 0)
+            {
+                Console.WriteLine("Searching for E-Motion rollers...");
+                System.Threading.Thread.Sleep(1000);
+                m_eMotionDeviceId = m_eMotionPower.GetDeviceNumber();
+            }
+
+            Console.WriteLine("E-Motion Device: {0}", m_eMotionPower.GetDeviceNumber());
+            Console.WriteLine("Reference Power: {0}", m_refPower.GetDeviceNumber());
+            Console.WriteLine("Reference Speed: {0}", m_refSpeed.GetDeviceNumber());
+            
             ConfigureReporters();
             m_console.Run();
         }
@@ -62,12 +78,12 @@ namespace ANT_Console
             const byte quarq_transmission_type = 0x5;
 
             // Configure reference power.
-            AntBikePower refPower = new AntBikePower(
+            m_refPower = new AntBikePower(
                 (int)AntChannel.RefPower, 0, quarq_transmission_type);
-            refPower.StandardPowerEvent += ProcessMessage;
-            refPower.TorqueEvent += ProcessMessage;
-            refPower.Connected += refPower_Connected;
-            refPower.Closing += refPower_Closing;
+            m_refPower.StandardPowerEvent += ProcessMessage;
+            m_refPower.TorqueEvent += ProcessMessage;
+            m_refPower.Connected += refPower_Connected;
+            m_refPower.Closing += refPower_Closing;
 
             m_refSpeed = new AntBikeSpeed(
                 (int)AntChannel.RefSpeed, 0);
@@ -117,18 +133,54 @@ namespace ANT_Console
         private void ConfigureReporters()
         {
             // Temporary reporter.
-            IList<IReporter> reporters = new List<IReporter>(2);
-            reporters.Add(new LogReporter());
-            reporters.Add(m_console);
+            m_reporters = new List<IReporter>(2);
+            m_reporters.Add(new LogReporter());
+            m_reporters.Add(m_console);
 
             Timer timer = new Timer(1000);
             timer.Elapsed += (o, e) =>
             {
-                foreach (var r in reporters)
-                    r.Report(m_data);
+                Report();
             };
 
             timer.Start();
+        }
+
+        private void Report()
+        {
+            foreach (var r in m_reporters)
+                r.Report(m_data);
+        }
+
+        private void Report(CalibrationSpeed calibration)
+        {
+            DataPoint data = new DataPoint();
+            data.Timestamp = DateTime.Now;
+            data.FlywheelRevs = calibration.FlywheelRotations;
+            
+            if (m_last_calibration != null)
+            {
+                if (calibration.Seconds < m_last_calibration.Seconds)
+                {
+                    // Rollover.
+                    data.RefPowerAccumTorque = (ushort)((m_last_calibration.Seconds ^ 0xFFFF) +
+                            calibration.Seconds);
+                }
+                else 
+                {
+                    // Just using the torque field randomly for a place right now.
+                    data.RefPowerAccumTorque = (ushort)(calibration.Seconds - m_last_calibration.Seconds);
+                }
+            }
+            else
+            {
+                data.RefPowerAccumTorque = 0;
+            }
+
+            foreach (var r in m_reporters)
+                r.Report(data);
+
+            m_last_calibration = calibration;
         }
 
         private void ProcessMessage(StandardPowerMessage m)
@@ -181,9 +233,10 @@ namespace ANT_Console
         /// <param name="m"></param>
         private void ProcessMessage(ExtraInfoMessage m)
         {
-            System.Diagnostics.Debug.Write(
+            /*System.Diagnostics.Debug.Write(
                 string.Format("Received Extra_info: {0:HH:mm:ss.fff}, Flywheel: {1}\n", 
-                System.DateTime.Now, m.FlyweelRevs));
+                System.DateTime.Now, m.FlyweelRevs));*/
+            m_data.Timestamp = System.DateTime.Now;
             m_data.ServoPosition = m.ServoPosition;
             m_data.Temperature = m.Temperature;
             m_data.FlywheelRevs = m.FlyweelRevs;
@@ -217,14 +270,6 @@ namespace ANT_Console
         {
             byte[] buffer = m.AsBytes();
 
-            Console.WriteLine("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
-                buffer[2],
-                buffer[3],
-                buffer[4],
-                buffer[5],
-                buffer[6],
-                buffer[7]);
-
             // Sub page
             switch((SubPages)m.SubPage)
             {
@@ -248,7 +293,20 @@ namespace ANT_Console
                     Console.WriteLine("Servo Offset: {0}", buffer[2]);
                     break;
 
+                case SubPages.CalibrationSpeed:
+                    var calibration = new CalibrationSpeed(buffer);
+                    Console.WriteLine(calibration);
+                    Report(calibration);
+                    break;
+
                 default:
+                    Console.WriteLine("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
+                        buffer[2],
+                        buffer[3],
+                        buffer[4],
+                        buffer[5],
+                        buffer[6],
+                        buffer[7]);
                     break;
             }
         }
