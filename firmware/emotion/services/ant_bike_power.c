@@ -188,14 +188,16 @@ static uint8_t encode_resistance_level(irt_power_meas_t * p_power_meas)
 static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 {
 	uint8_t buffer[TX_BUFFER_SIZE];
+	uint16_t flywheel;
 
 	buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_EXTRA_INFO;
 	buffer[EXTRA_INFO_SERVO_POS_LSB]	= LOW_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_SERVO_POS_MSB]	= HIGH_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
 	buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
-	buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]= LOW_BYTE((uint16_t)(p_power_meas->accum_flywheel_ticks));
-	buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]= HIGH_BYTE((uint16_t)(p_power_meas->accum_flywheel_ticks));
+	flywheel 							= (uint16_t)p_power_meas->accum_flywheel_ticks;
+	buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]= LOW_BYTE(flywheel);
+	buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]= HIGH_BYTE(flywheel);
 	buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
 
 	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);

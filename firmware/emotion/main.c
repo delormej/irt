@@ -52,6 +52,7 @@
 #include "irt_error_log.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
+#define CALIBRATION_INTERVAL			APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Calibration message interval.
 #define BLE_ADV_BLINK_RATE_MS			500u
 #define SCHED_QUEUE_SIZE                16                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
@@ -79,6 +80,7 @@ static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
 
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
+static app_timer_id_t					m_ca_timer_id;								// Timer used during calibration.
 
 static user_profile_t  					m_user_profile  __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
 static rc_sim_forces_t					m_sim_forces;
@@ -328,9 +330,45 @@ static void profile_update_sched(void)
 	app_sched_event_put(NULL, 0, profile_update_sched_handler);
 }
 
+/**@brief	Sends a heart beat message for the ANT+ remote control.
+  */
+static void ant_ctrl_available(void)
+{
+	// Send remote control availability to keep it alive during calibration.
+	ant_ctrl_device_avail_tx((uint8_t) (m_ant_ctrl_remote_ser_no != 0));
+}
+
 /*----------------------------------------------------------------------------
  * Timer functions
  * ----------------------------------------------------------------------------*/
+
+/**@brief Called during calibration to send frequent calibration messages.
+ *
+ */
+static void calibration_timeout_handler(void * p_context)
+{
+	static uint8_t count;
+	uint8_t response[6];
+	uint32_t flywheel;
+	uint16_t seconds2048;
+
+	seconds2048 = seconds_2048_get();
+	flywheel = flywheel_ticks_get();
+
+	LOG("[MAIN]flywheel: %u\r\n", flywheel);
+
+	// 6 data bytes available.
+	memcpy(&response, &seconds2048, sizeof(uint16_t));
+	memcpy(&response[2], &flywheel, sizeof(uint32_t));
+
+	ant_bp_page2_tx_send(IRT_MSG_SUBPAGE_CA_SPEED, response, DATA_PAGE_RESPONSE_TYPE);
+
+	/* Send remote control heart beat less frequently.
+	if (count++ % 8 == 0)
+	{
+		ant_ctrl_available();
+	}*/
+}
 
 /**@brief Function for handling the ANT 4hz measurement timer timeout.
  *
@@ -379,6 +417,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 	{
 		// Get current temperature.
 		p_power_meas_current->temp = temperature_read();
+		LOG("[MAIN] Temperature read: %2.1f. \r\n", p_power_meas_current->temp);
 	}
 	else
 	{
@@ -424,9 +463,8 @@ static void ant_4hz_timeout_handler(void * p_context)
 		}
 	}
 
-	// Send remote control availability.  Notification flag is 1 if a serial number
-	// is connected, 0 if none are connected.
-	ant_ctrl_device_avail_tx((uint8_t) (m_ant_ctrl_remote_ser_no != 0));
+	// Send remote control a heartbeat.
+	ant_ctrl_available();
 }
 
 /**@brief Function for starting the application timers.
@@ -440,14 +478,13 @@ static void application_timers_start(void)
     APP_ERROR_CHECK(err_code);
 }
 
-/*//TODO: Currently not used, should it be used on sleep?
 static void application_timers_stop(void)
 {
 	uint32_t err_code;
 		
 	err_code = app_timer_stop(m_ant_4hz_timer_id);
     APP_ERROR_CHECK(err_code);
-} */
+}
 
 /**@brief Timer initialization.
  *
@@ -530,6 +567,47 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 	}
 
 	ant_bp_page2_tx_send(subpage, response, response_type);
+}
+
+/**@brief 	Suspends normal messages and starts sending calibration messages.
+ */
+static void calibration_start(void)
+{
+	uint32_t err_code;
+
+	// Stop existing ANT timer, start the new one.
+	application_timers_stop();
+
+    if (m_ca_timer_id == NULL)
+    {
+		err_code = app_timer_create(&m_ca_timer_id,
+									APP_TIMER_MODE_REPEATED,
+									calibration_timeout_handler);
+		APP_ERROR_CHECK(err_code);
+    }
+
+    err_code = app_timer_start(m_ca_timer_id, CALIBRATION_INTERVAL, NULL);
+    APP_ERROR_CHECK(err_code);
+
+    set_led_red(LED_1);
+    m_crr_adjust_mode = true;
+}
+
+/**@brief 	Stops calibration and resumes normal activity.
+ */
+static void calibration_stop(void)
+{
+	uint32_t err_code;
+
+	// Stop the calibration timer.
+	err_code = app_timer_stop(m_ca_timer_id);
+    APP_ERROR_CHECK(err_code);
+
+	clear_led(LED_1);
+	m_crr_adjust_mode = false;
+
+	// Restart the normal timer.
+	application_timers_start();
 }
 
 /*----------------------------------------------------------------------------
@@ -831,10 +909,10 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 	{
 		case ANT_CTRL_BUTTON_UP:
 			if (m_crr_adjust_mode)
-			{
+			{/*
 				m_user_profile.ca_slope += 50;
 				power_init(&m_user_profile, DEFAULT_CRR);
-				send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
+				send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);*/
 			}
 			else
 			{
@@ -845,13 +923,13 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 
 		case ANT_CTRL_BUTTON_DOWN:
 			if (m_crr_adjust_mode)
-			{
+			{/*
 				if (m_user_profile.ca_slope > 50)
 				{
 					m_user_profile.ca_slope -= 50;
 					power_init(&m_user_profile, DEFAULT_CRR);
 					send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
-				}
+				}*/
 			}
 			else
 			{
@@ -874,8 +952,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			if (m_crr_adjust_mode)
 			{
 				// Exit crr mode.
-				m_crr_adjust_mode = false;
-				clear_led(LED_1);
+				calibration_stop();
 			}
 			else
 			{
@@ -893,9 +970,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			else
 			{
 				// Change into crr mode.
-				// Set the state, start blinking the LED RED
-				m_crr_adjust_mode = true;
-				set_led_red(LED_1);
+				calibration_start();
 			}
 
 			break;
@@ -1064,6 +1139,7 @@ static void config_dcpower()
 static uint32_t check_reset_reason()
 {
 	uint32_t reason, gpreg;
+	irt_error_log_data_t* p_error;
 
 	// Read the reset reason
 	reason = NRF_POWER->RESETREAS;
@@ -1083,7 +1159,7 @@ static uint32_t check_reset_reason()
 	if (gpreg == IRT_GPREG_ERROR)
 	{
 		// Log the occurrence.
-		irt_error_log_data_t* p_error = irt_error_last();
+		p_error = irt_error_last();
 
 		LOG("[MAIN]:check_reset_reason Resetting from previous error.\r\n");
 		LOG("\t{COUNT: %i, ERROR: %#.8x}: %s:%lu\r\n",
