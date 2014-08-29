@@ -7,6 +7,7 @@ namespace ANT_Console
     public interface IReporter
     {
         void Report(DataPoint data);
+        void Report(string message);
     }
 
     public class LogReporter : IReporter, IDisposable
@@ -46,6 +47,11 @@ namespace ANT_Console
                 );
 
             m_logFileWriter.WriteLine(message);
+        }
+
+        public void Report(string message)
+        {
+            m_logFileWriter.Write(message);
         }
 
         public void Dispose()

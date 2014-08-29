@@ -115,6 +115,7 @@
     <Compile Include="Services\SpeedSimulator.cs" />
     <Compile Include="Services\Statistics.cs" />
     <Compile Include="Services\TheilSen.cs" />
+    <Compile Include="SummaryInfo.cs" />
     <Compile Include="UnmanagedIRSerialPort.cs" />
   </ItemGroup>
   <ItemGroup>

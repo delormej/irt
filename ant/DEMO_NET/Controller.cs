@@ -11,13 +11,15 @@ namespace ANT_Console
     {
         ushort m_eMotionDeviceId = 0;
         DataPoint m_data;
-        AntBikePower m_eMotionPower;
+        SummaryInfo m_summary;
         AntControl m_control;
+        AntBikePower m_eMotionPower;
         AntBikeSpeed m_refSpeed;
         AntBikePower m_refPower;
         InteractiveConsole m_console;
         IList<IReporter> m_reporters;
         CalibrationSpeed m_last_calibration;
+        Timer m_ReportingTimer;
 
         enum AntChannel : byte // limited to 8 channels per device.
         {
@@ -45,6 +47,7 @@ namespace ANT_Console
         public Controller()
         {
             m_data = new DataPoint();
+            m_summary = new SummaryInfo();
         }
 
         public void Run()
@@ -56,6 +59,20 @@ namespace ANT_Console
 
             m_console = new InteractiveConsole(m_eMotionPower, m_control, m_refSpeed);
 
+            GetSummaryInfo();
+
+            ConfigureReporters();
+            
+            // Kick off the console and block here until done.
+            m_console.Run();
+
+            m_ReportingTimer.Stop();
+            // Report out summary.
+            Report(m_summary);
+        }
+
+        private void GetSummaryInfo()
+        {
             // Try until we can connect to E-Motion Rollers.
             while (m_eMotionDeviceId == 0)
             {
@@ -64,13 +81,53 @@ namespace ANT_Console
                 m_eMotionDeviceId = m_eMotionPower.GetDeviceNumber();
             }
 
-            Console.WriteLine("E-Motion Device: {0}", m_eMotionPower.GetDeviceNumber());
+            Console.WriteLine("E-Motion Device: {0}", m_eMotionDeviceId);
             Console.WriteLine("Reference Power: {0}", m_refPower.GetDeviceNumber());
             Console.WriteLine("Reference Speed: {0}", m_refSpeed.GetDeviceNumber());
-            
-            ConfigureReporters();
-            m_console.Run();
+
+            m_summary.EmotionDeviceId = m_eMotionDeviceId;
+
+            // Set a timer for 5 minutes from now to collect product and manufacturer data which should have
+            // Arrived.
+            Timer t = new Timer(5 * 60 * 1000);
+            t.AutoReset = true;
+            t.Elapsed += (o, e) => 
+            {
+                if (m_summary.Crr != 0 && m_summary.Settings != 0 && m_summary.TotalWeight != 0)
+                {
+                    // Disable if we already have all the info.
+                    t.Enabled = false;
+                    return;
+                }
+
+                m_summary.EmotionFirmwareVersion = m_eMotionPower.FirmwareVersion;
+
+                if (m_eMotionPower.Product != null)
+                {
+                    m_summary.EmotionSerialNo = m_eMotionPower.Product.SerialNumber;
+                }
+
+                if (m_eMotionPower.Manufacturer != null)
+                {
+                    m_summary.EmotionModel = m_eMotionPower.Manufacturer.Model;
+                }
+
+                if (m_refPower.Manufacturer != null)
+                {
+                    m_summary.RefPowerManfId = m_refPower.Manufacturer.Manufacturer;
+                    m_summary.RefPowerModel = m_refPower.Manufacturer.Model;
+                }
+
+                // Request these settings.
+                m_refPower.RequestDeviceParameter(SubPages.Crr);
+                m_refPower.RequestDeviceParameter(SubPages.TotalWeight);
+                m_refPower.RequestDeviceParameter(SubPages.Settings);
+
+            };
+            t.Start();
+
         }
+
 
         private void ConfigureServices(ushort deviceId = 0)
         {
@@ -137,19 +194,27 @@ namespace ANT_Console
             m_reporters.Add(new LogReporter());
             m_reporters.Add(m_console);
 
-            Timer timer = new Timer(1000);
-            timer.Elapsed += (o, e) =>
+            m_ReportingTimer = new Timer(1000);
+            m_ReportingTimer.Elapsed += (o, e) =>
             {
                 Report();
             };
 
-            timer.Start();
+            m_ReportingTimer.Start();
         }
 
         private void Report()
         {
             foreach (var r in m_reporters)
                 r.Report(m_data);
+        }
+
+        private void Report(SummaryInfo data)
+        {
+            string message = data.ToString();
+
+            foreach (var r in m_reporters)
+                r.Report(message);
         }
 
         private void Report(CalibrationSpeed calibration)
@@ -277,6 +342,8 @@ namespace ANT_Console
                     Console.WriteLine("CRR Response: Slope: {0}, Intercept: {1}",
                         Message.BigEndian(buffer[2], buffer[3]),
                         Message.BigEndian(buffer[4], buffer[5]));
+                    m_summary.Crr = (UInt32)(Message.BigEndian(buffer[6], buffer[7]) << 16) |
+                        Message.BigEndian(buffer[4], buffer[5]);
                     break;
 
                 case SubPages.Battery:
@@ -286,6 +353,7 @@ namespace ANT_Console
 
                 case SubPages.TotalWeight:
                     int grams = Message.BigEndian(buffer[2], buffer[3]);
+                    m_summary.TotalWeight = grams;
                     Console.WriteLine("Total Weight: {0:N2} kg", grams / 100.0);
                     break;
 

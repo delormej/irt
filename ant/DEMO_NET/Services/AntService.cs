@@ -25,10 +25,25 @@ namespace ANT_Console.Services
         static ANT_Device m_device;
         protected ANT_Channel m_channel;
 
+        protected ProductPage m_productPage;
+        protected ManufacturerPage m_manufPage;
+
         public event EventHandler<EventArgs> Connected;
         public event EventHandler<EventArgs> Closing;
 
+        public ProductPage Product { get { return m_productPage; } }
+        public ManufacturerPage Manufacturer { get { return m_manufPage;  } }
+
         protected abstract void ProcessResponse(ANT_Response response);
+
+        protected void ProcessMessage(ProductPage page)
+        {
+            this.m_productPage = page;
+        }
+        protected void ProcessMessage(ManufacturerPage page)
+        {
+            this.m_manufPage = page;
+        }
 
         // Generic function to get moved out of here and work for any ANT channel.
         protected virtual void Configure(AntConfig config)

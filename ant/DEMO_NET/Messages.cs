@@ -93,10 +93,18 @@ namespace ANT_Console.Messages
             return (ushort)(lsb | msb << 8);
         }
 
+        // Returns last 4 bytes of an 8 byte buffer as UInt32.
+        public static UInt32 BigEndian(byte[] buffer)
+        {
+            return (UInt32)(Message.BigEndian(buffer[6], buffer[7]) << 16) |
+                                Message.BigEndian(buffer[4], buffer[5]);
+        }
+
         public static short BigEndianSigned(byte lsb, byte msb)
         {
             return (short)(lsb | msb << 8);
         }
+
     }
 
     public abstract class UpdateEventMessage : Message
@@ -318,6 +326,8 @@ namespace ANT_Console.Messages
         } // 4 least sig bits
 
         public byte SoftwareRevBuild { get { return m_payload[SW_REV_SUP_INDEX]; } }
+
+        public UInt32 SerialNumber { get { return Message.BigEndian(m_payload); } }
     }
 
     public class BatteryStatus : Message

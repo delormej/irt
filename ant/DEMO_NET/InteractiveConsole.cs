@@ -121,6 +121,11 @@ namespace ANT_Console
             } while (cki.Key != ConsoleKey.X);
         }
 
+        public void Report(string message)
+        {
+            Console.WriteLine(message);
+        }
+
         public void Report(DataPoint data)
         {
             if (m_inCommand)
