@@ -428,7 +428,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 		p_power_meas_current->temp = p_power_meas_last->temp;
 	}
 
-	if (event_count % 512)
+	if (event_count % 512 == 0)
 	{
 		// Every 2 minutes initiate battery read.
 		battery_read_start();
@@ -1301,6 +1301,9 @@ int main(void)
 
 	// Start the main loop for reporting ble services.
 	application_timers_start();
+
+	// Initiate first battery read.
+	battery_read_start();
 
 	LOG("[MAIN]:Initialization done.\r\n");
 

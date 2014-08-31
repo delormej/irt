@@ -335,6 +335,4 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	battery_init(PIN_ENBATT, -1, p_on_peripheral_evt->on_battery_result);
 #endif
 	PH_LOG("[PH] Initialized battery.\r\n");
-	// Initiate first read.
-	battery_read_start();
 }
