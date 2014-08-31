@@ -88,6 +88,8 @@ static accelerometer_data_t 			m_accelerometer_data;
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
+static irt_battery_status_t				m_battery_status;
+
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
 // Type declarations for profile updating.
@@ -372,7 +374,8 @@ static void calibration_timeout_handler(void * p_context)
 
 /**@brief Function for handling the ANT 4hz measurement timer timeout.
  *
- * @details This function will be called each timer expiration.
+ * @details This function will be called each timer expiration.  The default period
+ * 			for the ANT Bike Power service is 4hz.
  *
  * @param[in]   p_context   Pointer used for passing some arbitrary information (context) from the
  *                          app_start_timer() call to the timeout handler.
@@ -411,6 +414,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 	}
 
 	p_power_meas_current->servo_position = resistance_position_get();
+	p_power_meas_current->battery_status = m_battery_status;
 
 	// Every 32 seconds.
 	if (event_count % 128 == 0)
@@ -422,6 +426,12 @@ static void ant_4hz_timeout_handler(void * p_context)
 	else
 	{
 		p_power_meas_current->temp = p_power_meas_last->temp;
+	}
+
+	if (event_count % 512)
+	{
+		// Every 2 minutes initiate battery read.
+		battery_read_start();
 	}
 
 	// Report on accelerometer data.
@@ -876,7 +886,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	}
 
 	// Send acknowledgment.
-	ble_ant_resistance_ack(m_resistance_mode, (int16_t)*rc_evt.pBuffer);
+	ble_ant_resistance_ack(rc_evt.operation, (int16_t)*rc_evt.pBuffer);
 }
 
 // Invoked when a button is pushed on the remote control.
@@ -1097,7 +1107,8 @@ static void on_battery_result(uint16_t battery_level)
 {
 	// TODO: Hard coded for the moment, we will send battery page.
 	LOG("[MAIN] on_battery_result %i \r\n", battery_level);
-	ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
+	//ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
+	m_battery_status = battery_status(battery_level);
 }
 
 /**@brief	Configures chip power options.

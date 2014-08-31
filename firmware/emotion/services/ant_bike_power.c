@@ -47,6 +47,15 @@
 #define ANT_BP_MSG_PERIOD            0x1FF6                                     	 /**< Message Periods, decimal 8182 (~4.00Hz) data is transmitted every 8182/32768 seconds. */
 #define ANT_BP_EXT_ASSIGN            0	                                          /**< ANT Ext Assign. */
 
+// Battery Status page.
+#define ANT_BAT_ID_INDEX		 	 2
+#define ANT_BAT_TIME_LSB_INDEX	 	 3
+#define ANT_BAT_TIME_INDEX	 	 	 4
+#define ANT_BAT_TIME_MSB_INDEX	 	 5
+#define ANT_BAT_FRAC_VOLT_INDEX	 	 6
+#define ANT_BAT_DESC_INDEX	 	 	 7
+
+
 #define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
 
 /**@brief Debug logging for module.
@@ -181,6 +190,24 @@ static uint8_t encode_resistance_level(irt_power_meas_t * p_power_meas)
 	target_msb |= mode << 6;
 
 	return target_msb;
+}
+
+static uint32_t battery_status_transmit(irt_battery_status_t status)
+{
+	uint8_t buffer[TX_BUFFER_SIZE];
+
+	buffer[PAGE_NUMBER_INDEX]			= ANT_PAGE_BATTERY_STATUS;
+	buffer[1]							= 0xFF;
+	buffer[ANT_BAT_ID_INDEX]			= 0b00010001;	// bits 0:3 = Number of batteries, 4:7 = Identifier.
+	buffer[ANT_BAT_TIME_LSB_INDEX]	 	= 0;
+	buffer[ANT_BAT_TIME_INDEX]	 		= 0;
+	buffer[ANT_BAT_TIME_MSB_INDEX]		= 0;
+	buffer[ANT_BAT_FRAC_VOLT_INDEX]		= status.fractional_volt;
+	buffer[ANT_BAT_DESC_INDEX]			= status.status |
+											status.fractional_volt << 4 |
+											status.resolution << 7;
+
+	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
 }
 
 // Transmits extra info embedded in the power measurement.
@@ -403,6 +430,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	const uint8_t product_page_interleave 		= PRODUCT_PAGE_INTERLEAVE_COUNT;
 	const uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
 	const uint8_t extra_info_page_interleave 	= EXTRA_INFO_PAGE_INTERLEAVE_COUNT;
+	const uint8_t battery_page_interleave 		= BATTERY_PAGE_INTERLEAVE_COUNT;
 
 	uint32_t err_code = 0;		
 
@@ -423,6 +451,10 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	else if (m_event_count % manufacturer_page_interleave == 0)
 	{
 		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
+	}
+	else if (m_event_count % battery_page_interleave == 0)
+	{
+		battery_status_transmit(p_power_meas->battery_status);
 	}
 	else if (m_event_count % extra_info_page_interleave == 0)
 	{

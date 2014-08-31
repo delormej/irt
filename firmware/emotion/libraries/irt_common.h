@@ -77,6 +77,16 @@ All rights reserved.
 
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 
+/**@brief	Battery status structure.
+ */
+typedef struct irt_battery_status_s
+{
+	uint8_t	  	fractional_volt;
+	uint8_t		coarse_volt : 3;
+	uint8_t		status : 3;
+	uint8_t		resolution : 2;
+} irt_battery_status_t;
+
 /**@brief Cycling Power Service measurement type. */
 typedef struct irt_power_meas_s
 {
@@ -100,6 +110,8 @@ typedef struct irt_power_meas_s
 	float		temp;														// Measured temperature in c.
 	uint8_t		accel_y_lsb;												// Accelerometer reading. TODO: determine if we're going to use.
 	uint8_t		accel_y_msb;
+
+	irt_battery_status_t battery_status;
 } irt_power_meas_t;
 
 //
