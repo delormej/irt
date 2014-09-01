@@ -137,7 +137,7 @@ irt_battery_status_t battery_status(uint16_t millivolts)
 	float volts = millivolts / 1000.0f;
 
 	status.coarse_volt = (uint8_t)volts;
-	status.fractional_volt = (uint8_t)((millivolts - status.coarse_volt) * 255);
+	status.fractional_volt = (uint8_t)((volts - status.coarse_volt) * 255);
 
 	// TODO: implement actual rating of battery level more scientifically for
 	// lithium ion battery.
