@@ -57,6 +57,10 @@
 
 
 #define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
+/** Message ID used when setting resistance via an ANT BURST. */
+
+static const uint8_t 				ACK_MESSAGE_RETRIES = 4;
+static const uint8_t 				ACK_MESSAGE_RETRY_DELAY = 5; // milliseconds
 
 /**@brief Debug logging for module.
  *
@@ -131,8 +135,25 @@ static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 {
 	uint32_t err_code;
+	uint8_t retries = 0;
 
-	err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+	while (retries++ < ACK_MESSAGE_RETRIES)
+	{
+		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+		if (ANT_ERROR_AS_WARN(err_code))
+		{
+			BP_LOG("[BP]:acknolwedge_message_transmit retry: %i, %#.8x\r\n", retries, err_code);
+
+			// Sleep and try again.
+			nrf_delay_ms(ACK_MESSAGE_RETRY_DELAY);
+			continue;
+		}
+		else
+		{
+			// No need to retry, either success or hard fail.
+			break;
+		}
+	}
 
 	if (ANT_ERROR_AS_WARN(err_code))
 	{
@@ -497,7 +518,8 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 		0x00
 	};
 
-	err_code = acknolwedge_message_transmit(tx_buffer);
+	err_code = broadcast_message_transmit(tx_buffer);
+	BP_LOG("[BP]:acknowledged mode [%.2x]\r\n", mode);
 
 	return err_code;
 }
