@@ -171,7 +171,7 @@ static void set_wheel_params(uint8_t *pBuffer)
 	// Comes as 20700 for example, we'll round to nearest mm.
 	wheel_size = uint16_decode(pBuffer) / 10;
 
-	if (m_user_profile.wheel_size_mm != wheel_size)
+	if (m_user_profile.wheel_size_mm != wheel_size && wheel_size > 1800)
 	{
 		LOG("[MAIN]:set_wheel_params {wheel:%lu}\r\n", wheel_size);
 
