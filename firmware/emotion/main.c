@@ -195,15 +195,18 @@ static void set_sim_params(uint8_t *pBuffer)
 
 	weight = uint16_decode(pBuffer);
 
-	if (m_user_profile.total_weight_kg != weight)
+	if (weight > 30.0f) // minimum weight.
 	{
-		m_user_profile.total_weight_kg = weight;
+		if (m_user_profile.total_weight_kg != weight)
+		{
+			m_user_profile.total_weight_kg = weight;
 
-		// Schedule an update to persist the profile to flash.
-		profile_update_sched();
+			// Schedule an update to persist the profile to flash.
+			profile_update_sched();
 
-		// Re-initialize the power module with updated weight.
-		power_init(&m_user_profile, DEFAULT_CRR);
+			// Re-initialize the power module with updated weight.
+			power_init(&m_user_profile, DEFAULT_CRR);
+		}
 	}
 
 	// Co-efficient for rolling resistance.
@@ -217,10 +220,11 @@ static void set_sim_params(uint8_t *pBuffer)
 	if (c > 0.0f)
 		m_sim_forces.c = c;
 
+	/*
 	LOG("[MAIN]:set_sim_params {weight:%.2f, crr:%i, c:%i}\r\n",
 		(m_user_profile.total_weight_kg / 100.0f),
 		(uint16_t)(m_sim_forces.crr * 10000),
-		(uint16_t)(m_sim_forces.c * 1000) );
+		(uint16_t)(m_sim_forces.c * 1000) ); */
 }
 
 /**@brief	Initializes user profile and loads from flash.  Sets defaults for
@@ -876,7 +880,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	}
 
 	// Send acknowledgment.
-	ble_ant_resistance_ack(m_resistance_mode, (int16_t)*rc_evt.pBuffer);
+	ble_ant_resistance_ack(rc_evt.operation, (int16_t)*rc_evt.pBuffer);
 }
 
 // Invoked when a button is pushed on the remote control.
