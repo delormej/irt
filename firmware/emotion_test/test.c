@@ -29,6 +29,15 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 
 #define RESISTANCE_LEVELS 	7 	// Number of resistance levels available.
 
+typedef struct irt_battery_status_s
+{
+	uint8_t	  	fractional_volt;
+	uint8_t		coarse_volt : 3;
+	uint8_t		status : 3;
+	uint8_t		resolution : 2;
+} irt_battery_status_t;
+
+
 /**@brief		Array representing the servo position in micrseconds (us) by
 *					resistance level 0-9.
 *
@@ -138,8 +147,20 @@ int main(int argc, char *argv [])
 	//				  [       uint32_t     ], [       uint32_t     ]
 	//uint8_t arr[] = { 0x00, 0x00, 0x03, 0x00, 0x00, 0x05, 0x00, 0x00 };
 
-	int16_t servo_pos;
+	int16_t servo_pos, millivolts;
 	float force;
+	float volts;
+	irt_battery_status_t status;
+	
+	millivolts = 1935;
+	volts = millivolts / 1000.0f;
+
+	status.coarse_volt = (uint8_t) volts;
+	status.fractional_volt = (uint8_t) ((volts - status.coarse_volt) * 255);
+
+	printf("Size: %i, (volt)%i, (mV)%i, Volt: %1.3f\r\n", sizeof(irt_battery_status_t),
+		status.coarse_volt, status.fractional_volt,
+		status.coarse_volt + (status.fractional_volt/255.0f));
 
 	uint8_t sequence;
 	sequence = 0x21;

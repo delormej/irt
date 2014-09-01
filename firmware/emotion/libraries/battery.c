@@ -128,6 +128,33 @@ void battery_read_start()
 #endif
 }
 
+/**@brief	Converts millivolt reading into status structure.
+ */
+irt_battery_status_t battery_status(uint16_t millivolts)
+{
+	irt_battery_status_t status;
+
+	float volts = millivolts / 1000.0f;
+
+	status.coarse_volt = (uint8_t)volts;
+	status.fractional_volt = (uint8_t)((volts - status.coarse_volt) * 255);
+
+	// TODO: implement actual rating of battery level more scientifically for
+	// lithium ion battery.
+	// TODO: also implement operating time of battery.
+
+	if (status.coarse_volt > 6)
+	{
+		status.status = Good;
+	}
+	else
+	{
+		status.status = Low;
+	}
+
+	return status;
+}
+
 /**@brief	Reads the current battery charge status.
  * @returns	BATTERY_CHARGE_COMPLETE
  * 			BATTERY_CHARGING
