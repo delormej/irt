@@ -31,14 +31,14 @@ typedef void (*on_battery_result_t)(uint16_t battery_level);
 
 /**@brief	Battery statuses defined in ANT spec for common page 0x82.
  */
-enum irt_battery_status
+enum IRT_BATTERY_STATUS
 {
-	New = 0x01,
-	Good,
-	Ok,
-	Low,
-	Critical,
-	Invalid
+	BAT_NEW = 0x01,
+	BAT_GOOD,
+	BAT_OK,
+	BAT_LOW,
+	BAT_CRITICAL,
+	BAT_INVALID = 0x07
 };
 
 // Begins a read of the battery voltage.

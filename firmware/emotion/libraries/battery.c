@@ -145,11 +145,11 @@ irt_battery_status_t battery_status(uint16_t millivolts)
 
 	if (status.coarse_volt > 6)
 	{
-		status.status = Good;
+		status.status = BAT_GOOD;
 	}
 	else
 	{
-		status.status = Low;
+		status.status = BAT_LOW;
 	}
 
 	return status;
