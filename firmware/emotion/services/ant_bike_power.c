@@ -59,8 +59,10 @@
 #define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
 /** Message ID used when setting resistance via an ANT BURST. */
 
-static const uint8_t 				ACK_MESSAGE_RETRIES = 4;
-static const uint8_t 				ACK_MESSAGE_RETRY_DELAY = 5; // milliseconds
+#define ANT_ACKNOWLEDGED_RESPONSE 		0x80
+
+static const uint8_t 				ANT_MESSAGE_RETRIES = 3;
+static const uint8_t 				ANT_MESSAGE_RETRY_DELAY = 10; // milliseconds
 
 /**@brief Debug logging for module.
  *
@@ -97,6 +99,12 @@ typedef struct
 } ANTMsgWahoo240_t;
 /*****************************************************************************/
 
+enum ANT_MESSAGE_TYPE
+{
+	BROADCAST,
+	ACKNOWLEDGED
+};
+
 static uint8_t m_power_tx_buffer[TX_BUFFER_SIZE];
 static uint8_t m_torque_tx_buffer[TX_BUFFER_SIZE];
 static ant_ble_evt_handlers_t* mp_evt_handlers;
@@ -104,48 +112,34 @@ static ant_ble_evt_handlers_t* mp_evt_handlers;
 // Shared event counter for all ANT BP messages.
 static uint8_t m_event_count;
 
-// TODO: Implement required calibration page.
-
-static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
-{
-	uint32_t err_code;
-
-	err_code = sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
-
-	if (ANT_ERROR_AS_WARN(err_code))
-	{
-		//BP_LOG("[BP]:broadcast_message_transmit WARN:%#.8x\r\n", err_code);
-		BP_LOG("[BP]:broadcast_message_transmit WARN:%#.8x\r\n\t[%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-				err_code,
-				p_buffer[0],
-				p_buffer[1],
-				p_buffer[2],
-				p_buffer[3],
-				p_buffer[4],
-				p_buffer[5],
-				p_buffer[6],
-				p_buffer[7],
-				p_buffer[8]);
-		err_code = NRF_SUCCESS;
-	}
-	
-	return err_code;
-}
-
-static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
+/**@brief	Sends an ANT broadcast or acknowledged message.
+ */
+static __INLINE uint32_t message_transmit(enum ANT_MESSAGE_TYPE type, const uint8_t * p_buffer)
 {
 	uint32_t err_code;
 	uint8_t retries = 0;
 
-	while (retries++ < ACK_MESSAGE_RETRIES)
+	while (retries++ < ANT_MESSAGE_RETRIES)
 	{
-		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+		switch (type)
+		{
+			case BROADCAST:
+				err_code = sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+				break;
+			case ACKNOWLEDGED:
+				err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+				break;
+			default:
+				// should never get here.
+				return IRT_ERROR_BASE_NUM;
+		}
+
 		if (ANT_ERROR_AS_WARN(err_code))
 		{
-			BP_LOG("[BP]:acknolwedge_message_transmit retry: %i, %#.8x\r\n", retries, err_code);
+			BP_LOG("[BP]:message_transmit retry: %i, %#.8x\r\n", retries, err_code);
 
 			// Sleep and try again.
-			nrf_delay_ms(ACK_MESSAGE_RETRY_DELAY);
+			nrf_delay_ms(ANT_MESSAGE_RETRY_DELAY);
 			continue;
 		}
 		else
@@ -157,7 +151,17 @@ static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 
 	if (ANT_ERROR_AS_WARN(err_code))
 	{
-		BP_LOG("[BP]:acknolwedge_message_transmit WARN: %#.8x\r\n", err_code);
+		BP_LOG("[BP]:message_transmit WARN:%#.8x\r\n\t[%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+				err_code,
+				p_buffer[0],
+				p_buffer[1],
+				p_buffer[2],
+				p_buffer[3],
+				p_buffer[4],
+				p_buffer[5],
+				p_buffer[6],
+				p_buffer[7],
+				p_buffer[8]);
 		err_code = NRF_SUCCESS;
 	}
 	
@@ -176,7 +180,7 @@ static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_peri
 	m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(accum_torque);
 	m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(accum_torque);
 
-	return broadcast_message_transmit(m_torque_tx_buffer);
+	return message_transmit(BROADCAST, m_torque_tx_buffer);
 }
 
 static uint32_t power_transmit(uint16_t watts)
@@ -190,7 +194,7 @@ static uint32_t power_transmit(uint16_t watts)
 	m_power_tx_buffer[INSTANT_POWER_LSB_INDEX]        = LOW_BYTE(watts);            
 	m_power_tx_buffer[INSTANT_POWER_MSB_INDEX]        = HIGH_BYTE(watts);                
 			
-	return broadcast_message_transmit(m_power_tx_buffer);
+	return message_transmit(BROADCAST, m_power_tx_buffer);
 }
 
 // Encodes the resistance mode into the 2 most significant bits.
@@ -224,8 +228,8 @@ static uint32_t battery_status_transmit(irt_battery_status_t status)
 	buffer[ANT_BAT_TIME_INDEX]	 		= 0;
 	buffer[ANT_BAT_TIME_MSB_INDEX]		= 0;
 	buffer[ANT_BAT_FRAC_VOLT_INDEX]		= status.fractional_volt;
-	buffer[ANT_BAT_DESC_INDEX]			= status.status |
-											status.fractional_volt << 4 |
+	buffer[ANT_BAT_DESC_INDEX]			= status.coarse_volt |
+											status.status << 4 |
 											status.resolution << 7;
 
 	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
@@ -518,7 +522,7 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 		0x00
 	};
 
-	err_code = broadcast_message_transmit(tx_buffer);
+	err_code = message_transmit(ACKNOWLEDGED, tx_buffer);
 	BP_LOG("[BP]:acknowledged mode [%.2x]\r\n", mode);
 
 	return err_code;
@@ -565,17 +569,17 @@ void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 			tx_buffer[6],
 			tx_buffer[7]);*/
 
-	if (tx_type == 0x80)
+	if (tx_type == ANT_ACKNOWLEDGED_RESPONSE)
 	{
 		// Send Acknowledged.
-		err_code = acknolwedge_message_transmit(tx_buffer);
+		err_code = message_transmit(ACKNOWLEDGED, tx_buffer);
 	}
 	else
 	{
 		// Get rid of MSB and take the other bits for # of times to send.
 		for (times = (tx_type & 0x7F); times > 0; times--)
 		{
-			err_code = broadcast_message_transmit(tx_buffer);
+			err_code = message_transmit(BROADCAST, tx_buffer);
 		}
 	}
 
