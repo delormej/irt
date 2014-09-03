@@ -59,7 +59,7 @@
 #define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
 /** Message ID used when setting resistance via an ANT BURST. */
 
-static const uint8_t 				ACK_MESSAGE_RETRIES = 4;
+static const uint8_t 				ACK_MESSAGE_RETRIES = 3;
 static const uint8_t 				ACK_MESSAGE_RETRY_DELAY = 5; // milliseconds
 
 /**@brief Debug logging for module.
