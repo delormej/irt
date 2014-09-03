@@ -529,4 +529,31 @@ namespace ANT_Console.Messages
             return data;
         }
     }
+
+    public class BatteryStatusMessage : Message
+    {
+        public const byte Page = 0x52;
+
+        internal BatteryStatusMessage(ANT_Response response) : base(response) { }
+        
+        const byte ANT_BAT_ID_INDEX	= 2;
+        const byte ANT_BAT_TIME_LSB_INDEX	= 3;
+        const byte ANT_BAT_TIME_INDEX = 4;
+        const byte ANT_BAT_TIME_MSB_INDEX = 5;
+        const byte ANT_BAT_FRAC_VOLT_INDEX = 6;
+        const byte ANT_BAT_DESC_INDEX = 7;
+
+        public float Voltage { 
+            get 
+            {
+                int volts;
+                float mV;
+                
+                // Get the coarse voltage.
+                //volts = this.m_payload[ANT_BAT_DESC_INDEX] & 0xF;
+                return 0.0f;
+            } 
+        }
+    }
+
 }

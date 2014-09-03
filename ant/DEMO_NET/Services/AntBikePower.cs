@@ -36,6 +36,7 @@ namespace ANT_Console.Services
         public event MessageHandler<ResistanceMessage> ResistanceEvent;
         public event MessageHandler<ExtraInfoMessage> ExtraInfoEvent;
         public event MessageHandler<GetSetMessage> GetSetParameterEvent;
+        public event MessageHandler<BatteryStatusMessage> BatteryStatusEvent;
 
         public AntBikePower(int channelId, ushort deviceId = 0, byte transmissionType = 0)
         {
@@ -65,10 +66,17 @@ namespace ANT_Console.Services
         {
             get
             {
-                return string.Format("{0}.{1}.{2}",
-                    this.m_productPage.SoftwareRevMajor,
-                    this.m_productPage.SoftwareRevMinor,
-                    this.m_productPage.SoftwareRevBuild);
+                if (m_productPage != null)
+                {
+                    return string.Format("{0}.{1}.{2}",
+                        this.m_productPage.SoftwareRevMajor,
+                        this.m_productPage.SoftwareRevMinor,
+                        this.m_productPage.SoftwareRevBuild);
+                }
+                else
+                {
+                    return "unavailable";
+                }
             }
         }
 
