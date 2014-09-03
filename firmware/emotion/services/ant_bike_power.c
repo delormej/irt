@@ -224,8 +224,8 @@ static uint32_t battery_status_transmit(irt_battery_status_t status)
 	buffer[ANT_BAT_TIME_INDEX]	 		= 0;
 	buffer[ANT_BAT_TIME_MSB_INDEX]		= 0;
 	buffer[ANT_BAT_FRAC_VOLT_INDEX]		= status.fractional_volt;
-	buffer[ANT_BAT_DESC_INDEX]			= status.status |
-											status.fractional_volt << 4 |
+	buffer[ANT_BAT_DESC_INDEX]			= status.coarse_volt |
+											status.status << 4 |
 											status.resolution << 7;
 
 	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
