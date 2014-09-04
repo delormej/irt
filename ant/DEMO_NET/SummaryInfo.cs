@@ -23,6 +23,8 @@ namespace ANT_Console
         public uint Crr { get; set; }
         public int Settings { get; set; }
 
+        public float BatteryTime { get; set; }
+
         public SummaryInfo()
         { }
 

@@ -378,6 +378,9 @@ namespace ANT_Console
 
         private void ProcessMessage(BatteryStatusMessage m)
         {
+            if (m_summary != null)
+                m_summary.BatteryTime = m.OperatingTime;
+
             Console.WriteLine("Battery: {0:0.####} volts, Operating Time: {1} seconds.", 
                 m.Voltage, m.OperatingTime);
         }
