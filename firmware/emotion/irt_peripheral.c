@@ -329,6 +329,10 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 		blink_timeout_handler);
 	APP_ERROR_CHECK(err_code); */
 
+#ifndef PIN_ENBATT
+#define PIN_ENBATT -1
+#endif
+
 #ifdef USE_BATTERY_CHARGER
 	battery_init(PIN_ENBATT, PIN_CHG_EN_N, p_on_peripheral_evt->on_battery_result);
 #else
