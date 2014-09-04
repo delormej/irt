@@ -358,10 +358,26 @@ namespace ANT_Console.Messages
             }
         }
 
-        // Returns operating time in seconds.  Comes accross the wire in ticks.
+        // Returns operating time in hours.  Comes accross the wire in ticks.
         public float OperatingTime
         {
-            get { return 0.0f;  }
+            get 
+            {
+                int ticks;
+                bool resolution2sec;
+                float hours;
+
+                resolution2sec = (this.m_payload[ANT_BAT_DESC_INDEX] & 0x80) == 1; // 7th bit.
+
+                ticks = this.m_payload[ANT_BAT_TIME_LSB_INDEX] |
+                    this.m_payload[ANT_BAT_TIME_INDEX] << 8 |
+                    this.m_payload[ANT_BAT_TIME_MSB_INDEX] << 16;
+
+                hours = ticks * (resolution2sec ? 2 : 16) / 3600;
+                
+                return hours; 
+            
+            }
         }
     }
 
