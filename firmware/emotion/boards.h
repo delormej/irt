@@ -6,8 +6,8 @@
 #ifndef BOARDS_H
 #define BOARDS_H
 
-#if defined(BOARD_IRT_V2_REV_B)
-  #include "boards/board_irt_v2b.h"
+#if defined(BOARD_IRT_V2_REV_A1)
+  #include "boards/board_irt_v2a1.h"
 
 #elif defined(BOARD_IRT_V2_REV_A)
   #include "boards/board_irt_v2a.h"
