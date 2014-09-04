@@ -116,6 +116,7 @@ namespace ANT_Console
                 {
                     m_summary.RefPowerManfId = m_refPower.Manufacturer.Manufacturer;
                     m_summary.RefPowerModel = m_refPower.Manufacturer.Model;
+                    m_summary.EmotionHWRev = m_refPower.Manufacturer.HardwareRevision;
                 }
 
                 // Request these settings.
@@ -154,6 +155,7 @@ namespace ANT_Console
             m_eMotionPower.ExtraInfoEvent += ProcessMessage;
             m_eMotionPower.ResistanceEvent += ProcessMessage;
             m_eMotionPower.GetSetParameterEvent += ProcessMessage;
+            m_eMotionPower.BatteryStatusEvent += ProcessMessage;
             m_eMotionPower.Connected += m_eMotionPower_Connected;
             m_eMotionPower.Closing += m_eMotionPower_Closing;
 
@@ -346,11 +348,6 @@ namespace ANT_Console
                         Message.BigEndian(buffer[4], buffer[5]);
                     break;
 
-                case SubPages.Battery:
-                    Console.WriteLine("Battery voltage: {0} mA", 
-                        Message.BigEndian(buffer[2], buffer[3]));
-                    break;
-
                 case SubPages.TotalWeight:
                     int grams = Message.BigEndian(buffer[2], buffer[3]);
                     m_summary.TotalWeight = grams;
@@ -377,6 +374,12 @@ namespace ANT_Console
                         buffer[7]);
                     break;
             }
+        }
+
+        private void ProcessMessage(BatteryStatusMessage m)
+        {
+            Console.WriteLine("Battery: {0:0.####} volts, Operating Time: {1} seconds.", 
+                m.Voltage, m.OperatingTime);
         }
     }
 }

@@ -16,6 +16,7 @@ namespace ANT_Console
         public uint EmotionSerialNo { get; set; }
         public string EmotionFirmwareVersion { get; set; }
         public int EmotionModel { get; set; }
+        public int EmotionHWRev { get; set; }
         public int RefPowerModel {get; set; } 
         public int RefPowerManfId {get; set; }
         public int TotalWeight { get; set; }

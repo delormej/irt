@@ -276,6 +276,9 @@ namespace ANT_Console.Services
                     if (GetSetParameterEvent != null)
                         GetSetParameterEvent(new GetSetMessage(response));
                     break;
+                case BatteryStatusMessage.Page:
+                    ProcessMessage(new BatteryStatusMessage(response));
+                    break;
                 default:
                     break;
             }
@@ -365,6 +368,14 @@ namespace ANT_Console.Services
             else
             {
                 return false;
+            }
+        }
+
+        protected void ProcessMessage(BatteryStatusMessage message)
+        {
+            if (BatteryStatusEvent != null)
+            {
+                BatteryStatusEvent(message);
             }
         }
     }
