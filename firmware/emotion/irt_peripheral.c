@@ -131,6 +131,12 @@ static void irt_gpio_init()
 	NRF_GPIO->PIN_CNF[PIN_BATT_VOLT] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
 #endif //IRT_REV_2A_H
 
+#ifdef BOARD_IRT_V2_REV_A1
+	nrf_gpio_cfg_output(PIN_3VPWR_DIS);
+	nrf_gpio_cfg_input(PIN_AC_PWR, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_input(PIN_ANALOG_READ, NRF_GPIO_PIN_NOPULL);
+#endif
+
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
 
@@ -263,6 +269,23 @@ uint16_t seconds_2048_get()
 	return seconds_2048;
 }
 
+#ifdef BOARD_IRT_V2_REV_A1
+/**@brief	Turn J7-6 power off/on.
+ */
+void peripheral_aux_pwr_set(bool disable)
+{
+	if (disable)
+	{
+		nrf_gpio_pin_set(PIN_3VPWR_DIS);
+	}
+	else
+	{
+		nrf_gpio_pin_clear(PIN_3VPWR_DIS);
+	}
+}
+#endif
+
+
 //
 // Cuts power to servo and optical sensor and other peripherals.
 // Optionally will put the accelerometer in standby and it will
@@ -297,6 +320,10 @@ void peripheral_powerdown(bool accelerometer_off)
 	#endif // USE_BATTERY_CHARGER
 #endif // IRT_REV_2A_H
 
+#ifdef BOARD_IRT_V2_REV_A1
+	peripheral_aux_pwr_set(true);
+#endif
+
 	// Shut down the leds.
 	clear_led(LED_BOTH);
 }
@@ -315,6 +342,11 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	nrf_delay_ms(10);
 	clear_led(LED_1);
 	set_led_green(LED_2);
+
+#ifdef BOARD_IRT_V2_REV_A1
+	// Turn aux power on.
+	peripheral_aux_pwr_set(false);
+#endif
 
 	// Create the timer for blinking led #1.
 	err_code = app_timer_create(&m_led1_blink_timer_id,

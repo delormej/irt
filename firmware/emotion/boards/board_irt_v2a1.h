@@ -16,7 +16,7 @@
 
 #define PIN_ANALOG_READ				1	// J7-4 which connects to pin 1, used for reading analog voltage.
 
-#define	PIN_3VPWR_EN				6	// Enables 3.3v power to pin J7-6.
+#define	PIN_3VPWR_DIS				6	// Disables 3v power to pin J7-6.
 
 #define	PIN_AC_PWR					PIN_TP19 // monitors the status of the AC Power. P0.20 monitors a similar signal from a different source with the inverse logic sense.
 

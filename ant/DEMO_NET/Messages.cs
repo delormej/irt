@@ -462,6 +462,9 @@ namespace ANT_Console.Messages
         GetLastError = 22,
         ServoOffset = 23,
         CalibrationSpeed = 24,
+        AuxPwr = 25,                 // Get/Set auxilury 3V power on J7-6.
+        
+        // Outlier, this isn't actually a subpage, it's an actual page - need to fix this.
         Battery = 0x52
         
         // Should we send commands this way, i.e.:

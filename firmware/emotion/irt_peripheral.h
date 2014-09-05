@@ -24,6 +24,12 @@ typedef struct peripheral_evt_s
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);
 void peripheral_powerdown(bool accelerometer_off);
 
+#ifdef BOARD_IRT_V2_REV_A1
+/**@brief	Turn J7-6 power on/off.
+ */
+void peripheral_aux_pwr_set(bool turn_on);
+#endif
+
 // LED functions.
 void set_led_red(uint8_t led_mask);
 void set_led_green(uint8_t led_mask);
