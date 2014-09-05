@@ -541,7 +541,6 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 {
 	uint32_t err_code;
-	uint8_t times;
 
 	uint8_t tx_buffer[TX_BUFFER_SIZE] =
 	{
@@ -572,11 +571,8 @@ void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 	}
 	else
 	{
-		// Get rid of MSB and take the other bits for # of times to send.
-		for (times = (tx_type & 0x7F); times > 0; times--)
-		{
-			err_code = broadcast_message_transmit(tx_buffer);
-		}
+		// Send Broadcast.
+		err_code = broadcast_message_transmit(tx_buffer);
 	}
 
 	APP_ERROR_CHECK(err_code);

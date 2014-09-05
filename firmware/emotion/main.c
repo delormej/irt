@@ -218,16 +218,25 @@ static bool dequeue_ant_response(void)
 		//subpage = buffer[3];
 		//response_type = buffer[5];
 		send_data_page2(m_request_data_pending[0], m_request_data_pending[1]);
-		// Clear the buffer.
-		m_request_data_pending[0] = 0;
-		m_request_data_pending[1] = 0;
+
+		// byte 1 of the buffer contains the flag for either acknowledged (0x80) or a value
+		// indicating how many times to send the message.
+		if (m_request_data_pending[1] == 0x80 || (m_request_data_pending[1] & 0x7F) <= 1)
+		{
+			// Clear the buffer.
+			m_request_data_pending[0] = 0;
+			m_request_data_pending[1] = 0;
+		}
+		else
+		{
+			// Decrement the count, we'll need to send again.
+			m_request_data_pending[1]--;
+		}
 	}
 	else if (m_resistance_ack_pending[0] != 0)
 	{
 		uint16_t* value;
 		value = (uint16_t*)&m_resistance_ack_pending[1];
-
-		LOG("[MAIN] dequeued resistance val: %i\r\n", value);
 
 		ble_ant_resistance_ack(m_resistance_ack_pending[0], *value);
 		// Clear the buffer.
