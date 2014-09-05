@@ -1199,11 +1199,10 @@ static void on_set_parameter(uint8_t* buffer)
 
 #ifdef USE_BATTERY_CHARGER
 		case IRT_MSG_SUBPAGE_CHARGER:
-			// TODO: This shouldn't be sent this way it should really be sent using
-			// Common Data Page 72: Command Burst
+			// Turns charger on if currently off, else turns off.
 			battery_charge_set( (BATTERY_CHARGE_OFF) );
-			LOG("[MAIN] Toggling battery charger on/off. \r\n");
 
+			LOG("[MAIN] Toggled battery charger. \r\n");
 			break;
 #endif
 		default:
