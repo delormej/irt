@@ -134,7 +134,7 @@ static void irt_gpio_init()
 #ifdef BOARD_IRT_V2_REV_A1
 	nrf_gpio_cfg_output(PIN_3VPWR_DIS);
 	nrf_gpio_cfg_input(PIN_AC_PWR, NRF_GPIO_PIN_NOPULL);
-	nrf_gpio_cfg_input(PIN_ANALOG_READ, NRF_GPIO_PIN_NOPULL);
+	//nrf_gpio_cfg_input(PIN_ANALOG_READ, NRF_GPIO_PIN_NOPULL);
 #endif
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
