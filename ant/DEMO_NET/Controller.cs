@@ -121,8 +121,11 @@ namespace ANT_Console
 
                 // Request these settings.
                 m_refPower.RequestDeviceParameter(SubPages.Crr);
+                System.Threading.Thread.Sleep(500);
                 m_refPower.RequestDeviceParameter(SubPages.TotalWeight);
+                System.Threading.Thread.Sleep(500);
                 m_refPower.RequestDeviceParameter(SubPages.Settings);
+                System.Threading.Thread.Sleep(500);
 
             };
             t.Start();

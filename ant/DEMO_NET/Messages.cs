@@ -524,13 +524,20 @@ namespace ANT_Console.Messages
     {
         public const byte Page = 0x46;
         
-        public RequestDataMessage(SubPages subPage)
+        public RequestDataMessage()
         {
+            // Defaults.
             CommandType = 0x01;
+            RequestTransmissionResponse = 2;
+        }
+
+        public RequestDataMessage(SubPages subPage) : this()
+        {
+            //CommandType = 0x01;
             RequestedPage = GetSetMessage.Page; // Always use the get/set parameter page.
             SubPage = subPage;
             //RequestTransmissionResponse = 0x80;
-            RequestTransmissionResponse = 2;    // Default to trying 2 times to send.
+            //RequestTransmissionResponse = 2;    // Default to trying 2 times to send.
         }
 
         // Use this value to requesting a specific subpage.  First byte should be the value, last byte might be 0xFF?

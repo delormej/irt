@@ -10,8 +10,8 @@ namespace ANT_Console.Services
     //
     class AntBikePower : AntService
     {
-        const uint ACK_TIMEOUT = 5000;
-        const uint REQUEST_RETRY = 5;
+        const uint ACK_TIMEOUT = 1000;
+        const uint REQUEST_RETRY = 3;
 
         // Commands
         enum Command : byte
@@ -163,8 +163,18 @@ namespace ANT_Console.Services
         {
             int retries = 0;
 
-            RequestDataMessage message = new RequestDataMessage(subPage);
             ANT_ReferenceLibrary.MessagingReturnCode result = 0;
+            RequestDataMessage message;
+            
+            if (subPage == SubPages.Battery)
+            {
+                message = new RequestDataMessage();
+                message.RequestedPage = (byte)SubPages.Battery;
+            }
+            else
+            {
+                message = new RequestDataMessage(subPage);
+            }
 
             while (retries < REQUEST_RETRY)
             {

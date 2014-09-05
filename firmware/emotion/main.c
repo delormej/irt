@@ -107,7 +107,7 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type);
  *		 	message.
  */
 static uint8_t							m_resistance_ack_pending[3] = {0};		// byte 0: operation, byte 1:2: value
-static uint8_t							m_request_data_pending[2]	= {0};		// byte 0: subpage, byte 1: tx_type
+static ant_request_data_page_t			m_request_data_pending;
 #define ANT_RESPONSE_LIMIT				3										// Only send max 3 sequential response messages before interleaving real power message.
 
 /**@brief Debug logging for main module.
@@ -184,10 +184,9 @@ static void queue_resistance_ack(uint8_t op_code, uint16_t value)
 	m_resistance_ack_pending[2] = MSB(value);
 }
 
-static void queue_data_response(uint8_t subpage, uint8_t response_type)
+static void queue_data_response(ant_request_data_page_t request)
 {
-	m_request_data_pending[0] = subpage;
-	m_request_data_pending[1] = response_type;
+	m_request_data_pending = request;
 }
 
 /**@brief	Dispatches ANT messages in response to requests such as Request Data Page and
@@ -210,27 +209,26 @@ static bool dequeue_ant_response(void)
 	}
 
 	// Prioritize data response messages first.
-	if (m_request_data_pending[0] != 0)
+	if (m_request_data_pending.data_page == ANT_PAGE_REQUEST_DATA)
 	{
 		// Deal with the # of times that it has to be sent.
 		// for (times = (tx_type & 0x7F); times > 0; times--)
 		//m_request_data_pending[5]
 		//subpage = buffer[3];
 		//response_type = buffer[5];
-		send_data_page2(m_request_data_pending[0], m_request_data_pending[1]);
+		send_data_page2(m_request_data_pending.descriptor[0], m_request_data_pending.tx_response);
 
 		// byte 1 of the buffer contains the flag for either acknowledged (0x80) or a value
 		// indicating how many times to send the message.
-		if (m_request_data_pending[1] == 0x80 || (m_request_data_pending[1] & 0x7F) <= 1)
+		if (m_request_data_pending.tx_response == 0x80 || (m_request_data_pending.tx_response & 0x7F) <= 1)
 		{
 			// Clear the buffer.
-			m_request_data_pending[0] = 0;
-			m_request_data_pending[1] = 0;
+			memset(&m_request_data_pending, 0, sizeof(ant_request_data_page_t));
 		}
 		else
 		{
 			// Decrement the count, we'll need to send again.
-			m_request_data_pending[1]--;
+			m_request_data_pending.tx_response--;
 		}
 	}
 	else if (m_resistance_ack_pending[0] != 0)
@@ -1119,33 +1117,29 @@ static void on_enable_dfu_mode(void)
  */
 static void on_request_data(uint8_t* buffer)
 {
-	uint8_t subpage, response_type;
-	subpage = buffer[3];
-	response_type = buffer[5];
-
-	LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n", subpage, response_type);
-	/*LOG("[MAIN]:request data message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-			buffer[0],
-			buffer[1],
-			buffer[2],
-			buffer[3],
-			buffer[4],
-			buffer[5],
-			buffer[6],
-			buffer[7]);*/
+	ant_request_data_page_t request;
+	memcpy(&request, buffer, sizeof(ant_request_data_page_t));
 
 	// TODO: just a quick hack for right now for getting battery info.
-	if (subpage == ANT_PAGE_BATTERY_STATUS)
+	if (request.tx_page == ANT_PAGE_BATTERY_STATUS)
 	{
 		LOG("[MAIN] Requested battery status. \r\n");
 		battery_read_start();
 		return;
 	}
+
+	// Request is for get/set parameters.
+	if (request.tx_page == ANT_PAGE_GETSET_PARAMETERS)
+	{
+		queue_data_response(request);
+		LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
+				request.descriptor[0],
+				request.tx_response);
+	}
 	else
 	{
-		// Process and send response.
-		//send_data_page2(subpage, response_type);
-		queue_data_response(subpage, response_type);
+		LOG("[MAIN] Unrecognized request page:%i, descriptor:%i. \r\n",
+				request.data_page, request.descriptor[0]);
 	}
 }
 
