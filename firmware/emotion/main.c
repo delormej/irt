@@ -96,6 +96,20 @@ static bool								m_crr_adjust_mode;							// Indicator that we're in manual ca
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 static void profile_update_sched(void);
 
+static void send_data_page2(uint8_t subpage, uint8_t response_type);
+
+/* TODO:	Total hack for request data page & resistance control ack, we will fix.
+ *		 	Simple logic right now.  If there is a pending request data page, send
+ *		 	up to 2 of these messages as priority (based on requested tx count).
+ *		 	If there is a pending resistance acknowledgment, send that as second
+ *		 	priority.  Otherwise, resume normal power message.
+ *		 	Ensure that at least once per second we are sending an actual power
+ *		 	message.
+ */
+static uint8_t							m_resistance_ack_pending[3] = {0};		// byte 0: operation, byte 1:2: value
+static uint8_t							m_request_data_pending[2]	= {0};		// byte 0: subpage, byte 1: tx_type
+#define ANT_RESPONSE_LIMIT				3										// Only send max 3 sequential response messages before interleaving real power message.
+
 /**@brief Debug logging for main module.
  *
  */
@@ -158,6 +172,74 @@ static void sys_evt_dispatch(uint32_t sys_evt)
 {
 	// Process storage events.
 	pstorage_sys_event_handler(sys_evt);
+}
+
+/**@brief	Queues up the last resistance control acknowledgment.
+ *
+ */
+static void queue_resistance_ack(uint8_t op_code, uint16_t value)
+{
+	m_resistance_ack_pending[0] = op_code;
+	m_resistance_ack_pending[1] = LSB(value);
+	m_resistance_ack_pending[2] = MSB(value);
+}
+
+static void queue_data_response(uint8_t subpage, uint8_t response_type)
+{
+	m_request_data_pending[0] = subpage;
+	m_request_data_pending[1] = response_type;
+}
+
+/**@brief	Dispatches ANT messages in response to requests such as Request Data Page and
+ * 			resistance control acknowledgments.
+ *
+ *@return	Returns true if it had messages to dequeue and sent, false if there were none.
+ *@note		Will send no more than ANT_RESPONSE_LIMIT in sequential calls.
+ */
+static bool dequeue_ant_response(void)
+{
+	// Static response count so that no more than ANT_RESPONSE_LIMIT are sent sequentially
+	// as not to starve the normal power messages.
+	static uint8_t response_count = 0;
+
+	if (response_count >= ANT_RESPONSE_LIMIT)
+	{
+		// Reset sequential response count and return.
+		response_count = 0;
+		return false;
+	}
+
+	// Prioritize data response messages first.
+	if (m_request_data_pending[0] != 0)
+	{
+		// Deal with the # of times that it has to be sent.
+		// for (times = (tx_type & 0x7F); times > 0; times--)
+		//m_request_data_pending[5]
+		//subpage = buffer[3];
+		//response_type = buffer[5];
+		send_data_page2(m_request_data_pending[0], m_request_data_pending[1]);
+		// Clear the buffer.
+		m_request_data_pending[0] = 0;
+		m_request_data_pending[1] = 0;
+	}
+	else if (m_resistance_ack_pending[0] != 0)
+	{
+		uint16_t* value;
+		value = (uint16_t*)&m_resistance_ack_pending[1];
+
+		LOG("[MAIN] dequeued resistance val: %i\r\n", value);
+
+		ble_ant_resistance_ack(m_resistance_ack_pending[0], *value);
+		// Clear the buffer.
+		memset(&m_resistance_ack_pending, 0, sizeof(m_resistance_ack_pending));
+	}
+	else
+	{
+		return false;
+	}
+
+	response_count++;
+	return true;
 }
 
 /*----------------------------------------------------------------------------
@@ -393,6 +475,19 @@ static void ant_4hz_timeout_handler(void * p_context)
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 	irt_power_meas_t* p_power_meas_last 		= NULL;
+
+	// All ANT messages on the Bike Power channel are sent in this function:
+
+	// Standard ANT+ Device broadcast (cycle of 5 messages)
+	// Request Data Page responses
+	// Extra Info debug messages (to be removed before production and replaced with request data page)
+	// Acknowledgments to resistance control
+
+	// If there was another ANT+ message dequeued, move on.
+	if (dequeue_ant_response())
+	{
+		return;
+	}
 
 	// Maintain a static event count, we don't do everything each time.
 	event_count++;
@@ -650,7 +745,7 @@ static void on_resistance_off(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = 0;
 	resistance_level_set(m_resistance_level);
-	ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
+	queue_resistance_ack(m_resistance_mode, m_resistance_level);
 }
 
 static void on_resistance_dec(void)
@@ -660,14 +755,14 @@ static void on_resistance_dec(void)
 			m_resistance_level > 0)
 	{
 		resistance_level_set(--m_resistance_level);
-		ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
+		queue_resistance_ack(m_resistance_mode, m_resistance_level);
 	}
 	else if (m_resistance_mode == RESISTANCE_SET_ERG &&
 			m_sim_forces.erg_watts > 50u)
 	{
 		// Decrement by 15 watts;
 		m_sim_forces.erg_watts -= 15u;
-		ble_ant_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 }
 
@@ -678,13 +773,13 @@ static void on_resistance_inc(void)
 			m_resistance_level < (RESISTANCE_LEVELS-1))
 	{
 		resistance_level_set(++m_resistance_level);
-		ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
+		queue_resistance_ack(m_resistance_mode, m_resistance_level);
 	}
 	else if (m_resistance_mode == RESISTANCE_SET_ERG)
 	{
 		// Increment by 15 watts;
 		m_sim_forces.erg_watts += 15u;
-		ble_ant_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 }
 
@@ -693,7 +788,7 @@ static void on_resistance_max(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = RESISTANCE_LEVELS-1;
 	resistance_level_set(m_resistance_level);
-	ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
+	queue_resistance_ack(m_resistance_mode, m_resistance_level);
 }
 
 static void on_button_menu(void)
@@ -706,7 +801,7 @@ static void on_button_menu(void)
 		{
 			m_sim_forces.erg_watts = DEFAULT_ERG_WATTS;
 		}
-		ble_ant_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 	else
 	{
@@ -890,7 +985,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	}
 
 	// Send acknowledgment.
-	ble_ant_resistance_ack(rc_evt.operation, (int16_t)*rc_evt.pBuffer);
+	queue_resistance_ack(rc_evt.operation, (int16_t)*rc_evt.pBuffer);
 }
 
 // Invoked when a button is pushed on the remote control.
@@ -1040,7 +1135,8 @@ static void on_request_data(uint8_t* buffer)
 	else
 	{
 		// Process and send response.
-		send_data_page2(subpage, response_type);
+		//send_data_page2(subpage, response_type);
+		queue_data_response(subpage, response_type);
 	}
 }
 
