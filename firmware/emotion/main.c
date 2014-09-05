@@ -677,6 +677,10 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 			memcpy(&response, &m_user_profile.servo_offset, sizeof(int16_t));
 			break;
 
+		case IRT_MSG_SUBPAGE_CHARGER:
+			response[0] = battery_charge_status();
+			break;
+
 		default:
 			LOG("[MAIN] Unrecognized page request. \r\n");
 			return;
@@ -1194,7 +1198,7 @@ static void on_set_parameter(uint8_t* buffer)
 			break;
 
 #ifdef USE_BATTERY_CHARGER
-		case IRT_MSG_SUBPAGE_SET_CHARGER:
+		case IRT_MSG_SUBPAGE_CHARGER:
 			// TODO: This shouldn't be sent this way it should really be sent using
 			// Common Data Page 72: Command Burst
 			battery_charge_set( (BATTERY_CHARGE_OFF) );

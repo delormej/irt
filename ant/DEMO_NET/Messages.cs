@@ -458,7 +458,7 @@ namespace ANT_Console.Messages
         TotalWeight = 18,
         WheelSize = 19, // I'm sure this is defined in a standard message somewhere.
         ButtonStops = 20, // Ability to configure custom button stops on the servo.
-        SetCharger = 21,
+        Charger = 21,       // Get/set charger status.
         GetLastError = 22,
         ServoOffset = 23,
         CalibrationSpeed = 24,
