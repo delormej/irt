@@ -355,7 +355,8 @@ namespace ANT_Console
                     break;
 
                 case SubPages.ServoOffset:
-                    Console.WriteLine("Servo Offset: {0}", buffer[2]);
+                    Console.WriteLine("Servo Offset: {0}",
+                        Message.BigEndian(buffer[2], buffer[3]));
                     break;
 
                 case SubPages.CalibrationSpeed:

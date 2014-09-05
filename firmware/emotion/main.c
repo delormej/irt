@@ -572,7 +572,7 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 			break;
 
 		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
-			response[0] = m_user_profile.servo_offset;
+			memcpy(&response, &m_user_profile.servo_offset, sizeof(int16_t));
 			break;
 
 		default:
