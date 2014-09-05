@@ -87,6 +87,20 @@ typedef struct ant_ble_evt_handlers_s {
 	void (*on_set_parameter)(uint8_t* buffer);		// Device receives page (0x02) with values to set.
 } ant_ble_evt_handlers_t;
 
+/* This doesn't really help since you would need to manually copy each value from the buffer
+ * since you can't just cast an 8 byte buffer to a struct due to compiler alignment unless
+ * __attribute__((packed)) was used.
+typedef struct ant_request_data_page_s
+{
+	uint8_t data_page;								// = 0x46 Common Data Page 70: Request Data Page
+	uint8_t reserved[2];							// Unused
+	uint8_t descriptor[2];							// Allows data specification.
+	uint8_t tx_response;							// Bit 0-6: Number of times to transmit page., bit 7: If set, send ack message (0x80)
+	uint8_t tx_page;								// Page to transmit
+	uint8_t command_type;							// 0x01 Request Data Page, 0x02 request ANT-FS Session
+} ant_request_data_page_t;
+*/
+
 // Public methods.
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers);
 void ble_ant_start(void);
