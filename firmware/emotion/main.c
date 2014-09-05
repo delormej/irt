@@ -1037,9 +1037,11 @@ static void on_request_data(uint8_t* buffer)
 		battery_read_start();
 		return;
 	}
-
-	// Process and send response.
-	send_data_page2(subpage, response_type);
+	else
+	{
+		// Process and send response.
+		send_data_page2(subpage, response_type);
+	}
 }
 
 /**@brief	Device receives page (0x02) with values to set.
@@ -1084,7 +1086,10 @@ static void on_set_parameter(uint8_t* buffer)
 			break;
 
 		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
-			m_user_profile.servo_offset = buffer[IRT_MSG_PAGE2_DATA_INDEX];
+			m_user_profile.servo_offset = (int16_t)(buffer[IRT_MSG_PAGE2_DATA_INDEX] |
+				buffer[IRT_MSG_PAGE2_DATA_INDEX+1] << 8);
+			LOG("[MAIN] Updated servo_offset:%i \r\n", m_user_profile.servo_offset);
+
 			// Schedule update to the user profile.
 			profile_update_sched();
 			break;

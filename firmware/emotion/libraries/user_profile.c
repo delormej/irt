@@ -69,13 +69,14 @@ uint32_t user_profile_load(user_profile_t *p_user_profile)
     						sizeof (user_profile_t),
     						USER_PROFILE_OFFSET);
 
-    UP_LOG("[UP]:user_profile_load {version: %i, weight:%i, wheel:%i, settings:%i, slope:%i, intercept:%i}\r\n",
+    UP_LOG("[UP]:user_profile_load {version: %i, weight:%i, wheel:%i, settings:%i, slope:%i, intercept:%i, servo_offset:%i}\r\n",
     		p_user_profile->version,
     		p_user_profile->total_weight_kg,
     		p_user_profile->wheel_size_mm,
     		p_user_profile->settings,
     		p_user_profile->ca_slope,
-    		p_user_profile->ca_intercept);
+    		p_user_profile->ca_intercept,
+    		p_user_profile->servo_offset);
 
     return err_code;
 }
@@ -96,13 +97,14 @@ uint32_t user_profile_store(user_profile_t *p_user_profile)
                                sizeof (user_profile_t),
                                USER_PROFILE_OFFSET);
 
-    UP_LOG("[UP]:user_profile_store {version: %i, weight:%i, wheel:%i, settings:%i, slope:%i, intercept:%i}\r\n",
+    UP_LOG("[UP]:user_profile_store {version: %i, weight:%i, wheel:%i, settings:%i, slope:%i, intercept:%i, servo_offset:%i}\r\n",
     		p_user_profile->version,
     		p_user_profile->total_weight_kg,
     		p_user_profile->wheel_size_mm,
     		p_user_profile->settings,
     		p_user_profile->ca_slope,
-    		p_user_profile->ca_intercept);
+    		p_user_profile->ca_intercept,
+    		p_user_profile->servo_offset);
 
 	return err_code;
 }

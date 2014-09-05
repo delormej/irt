@@ -16,7 +16,7 @@
 #include "math.h"
 #include "debug.h"
 
-#define MIN_THRESHOLD_MOVE	3		// Minimum threshold for a servo move.
+#define MIN_THRESHOLD_MOVE	2		// Minimum threshold for a servo move.
 
 /**@brief Debug logging for resistance control module.
  */

@@ -330,8 +330,24 @@ namespace ANT_Console
             bool success = InteractiveCommand(string.Format(prompt, m_lastSubPage), () =>
             {
                 //float weight = float.NaN;
+                string input = Console.ReadLine();
 
-                if (uint.TryParse(Console.ReadLine(), out value))
+                if (input.StartsWith("-"))
+                {
+                    // Special handling for signed int16 values.
+                    short val = 0;
+                    
+                    if (short.TryParse(input, out val))
+                    {
+                        value = (uint)val;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (uint.TryParse(input, out value))
                 {
                     return true;
                 }
