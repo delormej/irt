@@ -37,6 +37,7 @@ namespace ANT_Console.Services
         public event MessageHandler<ExtraInfoMessage> ExtraInfoEvent;
         public event MessageHandler<GetSetMessage> GetSetParameterEvent;
         public event MessageHandler<BatteryStatusMessage> BatteryStatusEvent;
+        public event MessageHandler<MeasureOutputMessage> MeasureOutputEvent;
 
         public AntBikePower(int channelId, ushort deviceId = 0, byte transmissionType = 0)
         {
@@ -171,6 +172,11 @@ namespace ANT_Console.Services
                 message = new RequestDataMessage();
                 message.RequestedPage = (byte)SubPages.Battery;
             }
+            else if (subPage == SubPages.Temp)
+            {
+                message = new RequestDataMessage();
+                message.RequestedPage = 0x03;
+            }
             else
             {
                 message = new RequestDataMessage(subPage);
@@ -287,8 +293,15 @@ namespace ANT_Console.Services
                         GetSetParameterEvent(new GetSetMessage(response));
                     break;
                 case BatteryStatusMessage.Page:
-                    ProcessMessage(new BatteryStatusMessage(response));
+                    if (BatteryStatusEvent != null)
+                        BatteryStatusEvent(new BatteryStatusMessage(response));
+                        break;
+
+                case MeasureOutputMessage.Page:
+                    if (MeasureOutputEvent != null)
+                        MeasureOutputEvent(new MeasureOutputMessage(response));
                     break;
+
                 default:
                     break;
             }
@@ -378,14 +391,6 @@ namespace ANT_Console.Services
             else
             {
                 return false;
-            }
-        }
-
-        protected void ProcessMessage(BatteryStatusMessage message)
-        {
-            if (BatteryStatusEvent != null)
-            {
-                BatteryStatusEvent(message);
             }
         }
     }

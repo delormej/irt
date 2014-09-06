@@ -73,8 +73,8 @@ All rights reserved.
 #define IRT_MSG_SUBPAGE_GET_ERROR			22u					// Gets the last error code.
 #define IRT_MSG_SUBPAGE_SERVO_OFFSET		23u					// Get/set servo offset.
 #define IRT_MSG_SUBPAGE_CA_SPEED			24u					// Gets instant speed + time for calibration.
-#define IRT_MSG_SUBPAGE_TEMP				25u					// Gets current temperature. TODO: this should be in Measurement output page 0x03.
-
+#define IRT_MSG_SUBPAGE_AUXPWR				25u					// Gets/set whether power goes to J7-4.
+#define IRT_MSG_SUBPAGE_TEMP				26u					// Gets current temperature.
 
 
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
