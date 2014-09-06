@@ -80,7 +80,8 @@ All rights reserved.
 #define IRT_MSG_SUBPAGE_SERVO_OFFSET		23u					// Get/set servo offset.
 #define IRT_MSG_SUBPAGE_CA_SPEED			24u					// Gets instant speed + time for calibration.
 #define IRT_MSG_SUBPAGE_AUXPWR				25u					// Gets/set whether power goes to J7-4.
-#define IRT_MSG_SUBPAGE_TEMP				26u					// Gets current temperature.
+#define IRT_MSG_SUBPAGE_TEMP				26u					// TODO: this is not really a get/set, move this. Gets current temperature.
+#define IRT_MSG_SUBPAGE_SLEEP				27u					// When set puts the device in lower power mode.
 
 
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
