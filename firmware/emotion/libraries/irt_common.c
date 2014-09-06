@@ -11,7 +11,6 @@
 #include "irt_common.h"
 #include "nrf_error.h"
 #include "debug.h"
-#include "../bootloader/include/bootloader_types.h"	// Include bootloader sister project for bootloader_settings_t
 
 /**@brief Debug logging for resistance control module.
  */
@@ -24,13 +23,6 @@
 static irt_power_meas_t* 	mp_buf_power_meas;
 static uint8_t				m_buf_size;
 static uint8_t				m_fifo_index;
-
-//
-// Address in flash memory where features are stored on flash.
-// Features are stored just above the bootloader settings (~128 bytes of 1,024 bytes reserved for the settings).
-//
-static const uint8_t*  gp_bootsettings __attribute__((section(".bootloader_settings_sect"))) __attribute__((used));
-#define FEATURE_FLASH_ADDRESS			(uint16_t*)(gp_bootsettings + sizeof(bootloader_settings_t))			// 128 == sizeof(bootloader_settings_t) as defined in ../../bootloader/bootloader_types.h
 
 uint32_t irt_power_meas_fifo_init(uint8_t size)
 {
@@ -99,13 +91,4 @@ irt_power_meas_t* irt_power_meas_fifo_last()
 	CN_LOG("[CN] _last %i \r\n", idx_read);
 
 	return &mp_buf_power_meas[idx_read];
-}
-
-/*
- * Returns whether a specific feature is available on this board as configured at manufacturing time by IRT.
- */
-bool irt_feature_is_available(uint16_t feature_mask)
-{
-	return ( *(FEATURE_FLASH_ADDRESS) != FEATURE_INVALID ) &&
-			(  ( *((uint16_t*)FEATURE_FLASH_ADDRESS) & feature_mask ) == feature_mask  );
 }

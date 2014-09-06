@@ -26,6 +26,7 @@
 static float m_rr_force;
 static float m_ca_slope;			// calibration parameters
 static float m_ca_intercept;
+static bool  m_use_small_mag;
 
 /* Calculates angular velocity based on wheel ticks and time.
 static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
@@ -80,7 +81,7 @@ static float servo_force(uint16_t servo_pos)
 	}
 	else
 	{
-		if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
+		if (m_use_small_mag)
 		{
 			force = (
 					-0.00000000000033469583 * pow(servo_pos,5)
@@ -117,7 +118,7 @@ uint16_t power_servo_pos_calc(float force)
 {
 	int16_t servo_pos;
 
-	if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
+	if (m_use_small_mag)
 	{
 		servo_pos = (
 				0.001461686  * pow(force,5)
@@ -149,6 +150,9 @@ uint16_t power_servo_pos_calc(float force)
  */
 void power_init(user_profile_t* p_profile, uint16_t default_crr)
 {
+	m_use_small_mag = FEATURE_AVAILABLE(FEATURE_SMALL_MAG);
+	PW_LOG("[PW] Use small mag?: %i\r\n", m_use_small_mag);
+
 	if (p_profile->ca_slope != 0xFFFF)
 	{
 		m_ca_slope = (p_profile->ca_slope / 1000.0f);

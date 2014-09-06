@@ -44,6 +44,7 @@ typedef struct
     uint16_t               reserved;     /**< Padding word */
     bootloader_bank_code_t bank_1;       /**< Variable to store if bank 1 has been erased/prepared for new image. Bank 1 is only used in Banked Update scenario. */
     uint32_t               bank_0_size;  /**< Size of bank0. */
+    uint32_t			   factory_features;	// Bit array of features enabled at the factory based on board / config.
 } bootloader_settings_t;
 
 #endif // BOOTLOADER_TYPES_H__

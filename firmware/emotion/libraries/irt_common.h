@@ -13,11 +13,12 @@ All rights reserved.
 #include "boards.h"
 #include "nrf_error.h"
 #include "pstorage_platform.h"
+#include "../bootloader/include/bootloader_types.h"	// Include bootloader sister project for bootloader_settings_t
 
 //
 // Global defines.
 //
-#define	GRAVITY						9.8f		// Co-efficent of gravity for Earth.  Change for other planets.
+#define	GRAVITY						9.81f		// Co-efficent of gravity for Earth.
 #define	MATH_PI						3.14159f
 
 #define DEVICE_NAME                 "E-Motion"                          /**< Name of device. Will be included in the advertising data. */
@@ -35,7 +36,7 @@ All rights reserved.
 
 /* DEVICE specific info */
 #define ANT_DEVICE_NUMBER			(uint16_t)NRF_FICR->DEVICEID[1]
-#define SERIAL_NUMBER				NRF_FICR->DEVICEID[1]
+#define SERIAL_NUMBER				NRF_FICR->DEVICEID[1]				// TODO: We should have something unique here.
 
 //
 // Available device features.
@@ -48,13 +49,30 @@ All rights reserved.
 #define FEATURE_INVALID				65535UL			// Max feature setting of 16 bit.
 
 //
-// IRT Factory configured features. These individual defines are made at build time for the bootloader
-// and read in irt_common.c::irt_feature_is_available() from flash for app operation.
+// Address in flash memory where features are stored on flash.
+// Features are stored just above the bootloader settings (~128 bytes of 1,024 bytes reserved for the settings).
+// We're using the bootloader section and extending the data type for factory features.
 //
-#define IRT_FEATURES 				0UL				// TODO: Need to write a macro to be able to parse these somehow from build flags
-													// OR I should be generating one of multiple HEX files into the bootloader at firmware load time.
+static const bootloader_settings_t  m_boot_settings __attribute__((section(".bootloader_settings_sect"))) __attribute__((used));
 
-#define FEATURE_IS_SET(FEATURE) 	irt_feature_is_available(FEATURE)
+/*
+ * Returns whether a specific feature is available on this board as configured at manufacturing time by IRT.
+ */
+static bool __inline__ irt_feature_is_available(uint16_t feature_mask)
+{
+	uint32_t features;
+	bool available;
+
+	// Defined as a 32bit int, but we're ony using 16bits, upper 16bits are reserved for future use.
+	features = (uint16_t)m_boot_settings.factory_features;
+
+	available = ( features != FEATURE_INVALID ) &&
+			(  ( features & feature_mask ) == feature_mask  );
+
+	return available;
+}
+
+#define FEATURE_AVAILABLE(FEATURE) 	irt_feature_is_available(FEATURE)
 
 /*****************************************************************************
 * Inside Ride Defines
@@ -180,6 +198,5 @@ void 	 			irt_power_meas_fifo_free();
 irt_power_meas_t* 	irt_power_meas_fifo_next();
 irt_power_meas_t* 	irt_power_meas_fifo_first();
 irt_power_meas_t* 	irt_power_meas_fifo_last();
-__inline__ bool		irt_feature_is_available(uint16_t feature_mask);
 
 #endif // IRT_COMMON_H

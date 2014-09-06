@@ -23,7 +23,6 @@
 #endif // ENABLE_DEBUG_LOG
 
 bootloader_settings_t  m_boot_settings __attribute__((section(".bootloader_settings_sect"))) __attribute__((used)) = {BANK_VALID_APP};
-uint16_t  m_irt_features __attribute__((section(".bootloader_settings_sect"))) __attribute__((used)) = IRT_FEATURES;
 
 uint32_t m_uicr_bootloader_start_address __attribute__((section(".NRF_UICR_BOOT_START_SECT"))) __attribute__((used)) = BOOTLOADER_REGION_START;
 
