@@ -463,8 +463,9 @@ namespace ANT_Console.Messages
         ServoOffset = 23,
         CalibrationSpeed = 24,
         AuxPwr = 25,                 // Get/Set auxilury 3V power on J7-6.
-        
-        // Outlier, this isn't actually a subpage, it's an actual page - need to fix this.
+
+        // Outliers, these are not actually a subpages, it's an actual page - need to fix this.
+        Temp = 26,           // Get the temperature from the device.  This isn't a
         Battery = 0x52
         
         // Should we send commands this way, i.e.:
@@ -577,4 +578,21 @@ namespace ANT_Console.Messages
             return data;
         }
     }
+
+    public class MeasureOutputMessage : Message
+    {
+        public const byte Page = 0x03;
+
+        internal MeasureOutputMessage(ANT_Response response) : base(response) { }
+
+        public short Value
+        {
+            get
+            {
+                return BigEndianSigned(m_payload[6],
+                        m_payload[7]);
+            }
+        }
+    }
+
 }

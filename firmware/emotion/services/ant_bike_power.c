@@ -8,6 +8,7 @@
 #include "ant_interface.h"
 #include "ant_error.h"
 #include "app_error.h"
+#include "nordic_common.h"
 #include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
@@ -455,12 +456,6 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 
 	uint32_t err_code = 0;		
 
-	// NOTE:
-	// Using an EVENT-synchronous update methodology.  The last wheel time is
-	// adjusted to when the last wheel rotation occurred based on current speed.
-	// See section 8 of ANT+ Bicycle Power Device Profile.
-	//
-
 	// Increment event counter.
 	m_event_count++;
 
@@ -577,3 +572,44 @@ void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 
 	APP_ERROR_CHECK(err_code);
 }
+
+/**@brief	Sends Measurement Output Data Page (0x03).  Normally sent only during calibration.
+ *@note		The measurement output data page shall only be sent as a broadcast message from the
+ *@note		sensor to the display.
+ */
+void ant_bp_page3_tx_send(
+		uint8_t meas_count,						// Number of data types currently being rotated through.
+		ant_output_meas_data_type data_type,
+		int8_t scale_factor,
+		uint16_t timestamp,
+		int16_t value)
+{
+	uint32_t err_code;
+
+	if (meas_count > 15)	// Only 3 bits are used, upper 4 bits are reserved for future.
+	{
+		// Throw an error -- for now log
+		BP_LOG("[BP] Attempt to send more than 15 measurement data types, truncating.\r\n");
+		meas_count = 15;
+	}
+
+	uint8_t tx_buffer[TX_BUFFER_SIZE] =
+	{
+		ANT_PAGE_MEASURE_OUTPUT,
+		meas_count,
+		(uint8_t)data_type,
+		scale_factor,
+		LSB(timestamp),
+		MSB(timestamp),
+		LSB(value),
+		MSB(value)
+	};
+
+	// Send Broadcast.
+	err_code = broadcast_message_transmit(tx_buffer);
+
+	BP_LOG("[BP] Sent temperature.\r\n");
+
+	APP_ERROR_CHECK(err_code);
+}
+

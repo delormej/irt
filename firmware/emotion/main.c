@@ -97,6 +97,7 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
 static void profile_update_sched(void);
 
 static void send_data_page2(uint8_t subpage, uint8_t response_type);
+static void send_temperature();
 
 /* TODO:	Total hack for request data page & resistance control ack, we will fix.
  *		 	Simple logic right now.  If there is a pending request data page, send
@@ -189,6 +190,11 @@ static void queue_data_response(ant_request_data_page_t request)
 	m_request_data_pending = request;
 }
 
+static void queue_data_response_clear()
+{
+	memset(&m_request_data_pending, 0, sizeof(ant_request_data_page_t));
+}
+
 /**@brief	Dispatches ANT messages in response to requests such as Request Data Page and
  * 			resistance control acknowledgments.
  *
@@ -211,25 +217,36 @@ static bool dequeue_ant_response(void)
 	// Prioritize data response messages first.
 	if (m_request_data_pending.data_page == ANT_PAGE_REQUEST_DATA)
 	{
-		// Deal with the # of times that it has to be sent.
-		// for (times = (tx_type & 0x7F); times > 0; times--)
-		//m_request_data_pending[5]
-		//subpage = buffer[3];
-		//response_type = buffer[5];
-		send_data_page2(m_request_data_pending.descriptor[0], m_request_data_pending.tx_response);
+
+		if (m_request_data_pending.tx_page == ANT_PAGE_MEASURE_OUTPUT)
+		{
+			// TODO: This is the only measurement being sent right now, but we'll have more
+			// to cycle through here.
+			send_temperature();
+		}
+		else
+		{
+			// Deal with the # of times that it has to be sent.
+			// for (times = (tx_type & 0x7F); times > 0; times--)
+			//m_request_data_pending[5]
+			//subpage = buffer[3];
+			//response_type = buffer[5];
+			send_data_page2(m_request_data_pending.descriptor[0], m_request_data_pending.tx_response);
+		}
 
 		// byte 1 of the buffer contains the flag for either acknowledged (0x80) or a value
 		// indicating how many times to send the message.
 		if (m_request_data_pending.tx_response == 0x80 || (m_request_data_pending.tx_response & 0x7F) <= 1)
 		{
 			// Clear the buffer.
-			memset(&m_request_data_pending, 0, sizeof(ant_request_data_page_t));
+			queue_data_response_clear();
 		}
 		else
 		{
 			// Decrement the count, we'll need to send again.
 			m_request_data_pending.tx_response--;
 		}
+
 	}
 	else if (m_resistance_ack_pending[0] != 0)
 	{
@@ -689,6 +706,22 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 	ant_bp_page2_tx_send(subpage, response, response_type);
 }
 
+/**@brief	Sends temperature value as measurement output page (0x03)
+ *
+ */
+static void send_temperature()
+{
+	float temp;
+	int16_t value;
+
+	temp = temperature_read();
+	value = (int16_t)(1024.0 * temp);  // TODO: look closer at how the scale factor works. (2^10)
+
+	LOG("[MAIN] Sending temperature as: %i \r\n", value);
+
+	ant_bp_page3_tx_send(1, TEMPERATURE, 10, 0, value);
+}
+
 /**@brief 	Suspends normal messages and starts sending calibration messages.
  */
 static void calibration_start(void)
@@ -1124,26 +1157,26 @@ static void on_request_data(uint8_t* buffer)
 	ant_request_data_page_t request;
 	memcpy(&request, buffer, sizeof(ant_request_data_page_t));
 
-	// TODO: just a quick hack for right now for getting battery info.
-	if (request.tx_page == ANT_PAGE_BATTERY_STATUS)
+	switch (request.tx_page)
 	{
-		LOG("[MAIN] Requested battery status. \r\n");
-		battery_read_start();
-		return;
-	}
+		// Kick off battery read.
+		case ANT_PAGE_BATTERY_STATUS:
+			LOG("[MAIN] Requested battery status. \r\n");
+			battery_read_start();
+			return;
 
-	// Request is for get/set parameters.
-	if (request.tx_page == ANT_PAGE_GETSET_PARAMETERS)
-	{
-		queue_data_response(request);
-		LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
-				request.descriptor[0],
-				request.tx_response);
-	}
-	else
-	{
-		LOG("[MAIN] Unrecognized request page:%i, descriptor:%i. \r\n",
-				request.data_page, request.descriptor[0]);
+		// Request is for get/set parameters or measurement output.
+		case ANT_PAGE_GETSET_PARAMETERS:
+		case ANT_PAGE_MEASURE_OUTPUT:
+			queue_data_response(request);
+			LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
+					request.descriptor[0],
+					request.tx_response);
+			break;
+
+		default:
+			LOG("[MAIN] Unrecognized request page:%i, descriptor:%i. \r\n",
+					request.data_page, request.descriptor[0]);
 	}
 }
 

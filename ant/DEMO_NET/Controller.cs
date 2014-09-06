@@ -160,7 +160,9 @@ namespace ANT_Console
             m_eMotionPower.GetSetParameterEvent += ProcessMessage;
             m_eMotionPower.BatteryStatusEvent += ProcessMessage;
             m_eMotionPower.Connected += m_eMotionPower_Connected;
+            m_eMotionPower.MeasureOutputEvent += ProcessMessage;
             m_eMotionPower.Closing += m_eMotionPower_Closing;
+            
 
             // Configure the remote control service.
             m_control = new AntControl((int)AntChannel.AntControl);
@@ -387,6 +389,11 @@ namespace ANT_Console
 
             Console.WriteLine("Battery: {0:0.####} volts, Operating Time: {1} seconds.", 
                 m.Voltage, m.OperatingTime);
+        }
+
+        private void ProcessMessage(MeasureOutputMessage m)
+        {
+            Console.WriteLine("Temperature returned: {0}.", (m.Value / 1024.0));
         }
     }
 }
