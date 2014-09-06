@@ -681,6 +681,11 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 			response[0] = battery_charge_status();
 			break;
 
+		case IRT_MSG_SUBPAGE_TEMP:
+			// TODO: fully implement this.
+			temperature_read();
+			break;
+
 		default:
 			LOG("[MAIN] Unrecognized page request. \r\n");
 			return;
@@ -1124,26 +1129,30 @@ static void on_request_data(uint8_t* buffer)
 	ant_request_data_page_t request;
 	memcpy(&request, buffer, sizeof(ant_request_data_page_t));
 
-	// TODO: just a quick hack for right now for getting battery info.
-	if (request.tx_page == ANT_PAGE_BATTERY_STATUS)
+	switch (request.tx_page)
 	{
-		LOG("[MAIN] Requested battery status. \r\n");
-		battery_read_start();
-		return;
-	}
+		// Kick off battery read.
+		case ANT_PAGE_BATTERY_STATUS:
+			LOG("[MAIN] Requested battery status. \r\n");
+			battery_read_start();
+			return;
 
-	// Request is for get/set parameters.
-	if (request.tx_page == ANT_PAGE_GETSET_PARAMETERS)
-	{
-		queue_data_response(request);
-		LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
-				request.descriptor[0],
-				request.tx_response);
-	}
-	else
-	{
-		LOG("[MAIN] Unrecognized request page:%i, descriptor:%i. \r\n",
-				request.data_page, request.descriptor[0]);
+		// Request is for get/set parameters.
+		case ANT_PAGE_GETSET_PARAMETERS:
+			queue_data_response(request);
+			LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
+					request.descriptor[0],
+					request.tx_response);
+			break;
+
+		// Send data page 0x03
+		case ANT_PAGE_MEASURE_OUTPUT:
+			LOG("[MAIN] Requested Measurement Output page which isn't supported yet.");
+			break;
+
+		default:
+			LOG("[MAIN] Unrecognized request page:%i, descriptor:%i. \r\n",
+					request.data_page, request.descriptor[0]);
 	}
 }
 

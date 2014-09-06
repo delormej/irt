@@ -17,6 +17,7 @@
 
 // Generic ANT pages.
 #define ANT_PAGE_GETSET_PARAMETERS		0x02
+#define ANT_PAGE_MEASURE_OUTPUT			0x03	// Measurement Output Data Page (0x03)
 #define ANT_PAGE_REQUEST_DATA			0x46
 #define ANT_PAGE_BATTERY_STATUS			0x52
 

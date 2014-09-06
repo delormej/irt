@@ -73,7 +73,7 @@ All rights reserved.
 #define IRT_MSG_SUBPAGE_GET_ERROR			22u					// Gets the last error code.
 #define IRT_MSG_SUBPAGE_SERVO_OFFSET		23u					// Get/set servo offset.
 #define IRT_MSG_SUBPAGE_CA_SPEED			24u					// Gets instant speed + time for calibration.
-
+#define IRT_MSG_SUBPAGE_TEMP				25u					// Gets current temperature. TODO: this should be in Measurement output page 0x03.
 
 
 
