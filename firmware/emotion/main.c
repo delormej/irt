@@ -763,6 +763,35 @@ static void calibration_stop(void)
 	application_timers_start();
 }
 
+/**@brief	Updates settings either temporarily or with persistence.
+ * @warn	NOTE that if any other profile persistence occurs during the session
+ * 			these settings will be updated to flash.
+ * 			TODO: fix this as it is a bug -- use a settings dirty flag for instance.
+ */
+static void settings_update(uint8_t* buffer)
+{
+	uint16_t settings;
+
+	// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
+	// Need to use memcpy, Cortex-M proc doesn't support unaligned casting of 32bit int.
+	// MSB is flagged to indicate if we should persist or if this is just temporary.
+	memcpy(&settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
+			sizeof(uint16_t));
+
+	m_user_profile.settings = SETTING_VALUE(settings);
+
+	LOG("[MAIN] Request to update settings to: ACCEL:%i \r\n",
+				SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON) );
+
+	if (SETTING_PERSIST(settings))
+	{
+		LOG("[MAIN] Scheduled persistence of updated settings: %i\r\n",
+				m_user_profile.settings);
+		// Schedule update to the profile.
+		profile_update_sched();
+	}
+}
+
 /*----------------------------------------------------------------------------
  * Event handlers
  * ----------------------------------------------------------------------------*/
@@ -1198,15 +1227,7 @@ static void on_set_parameter(uint8_t* buffer)
 	switch (buffer[IRT_MSG_PAGE2_SUBPAGE_INDEX])
 	{
 		case IRT_MSG_SUBPAGE_SETTINGS:
-			// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
-			// Need to use memcpy, Cortex-M proc doesn't support unaligned casting of 32bit int.
-			memcpy(&m_user_profile.settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
-					sizeof(uint16_t));
-
-			LOG("[MAIN] Request to update settings to: ACCEL:%i \r\n",
-						SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON) );
-			// Schedule update to the profile.
-			profile_update_sched();
+			settings_update(buffer);
 			break;
 
 		case IRT_MSG_SUBPAGE_CRR:
@@ -1228,6 +1249,11 @@ static void on_set_parameter(uint8_t* buffer)
 
 			// Schedule update to the user profile.
 			profile_update_sched();
+			break;
+
+		case IRT_MSG_SUBPAGE_SLEEP:
+			LOG("[MAIN] Received message to put device to sleep.\r\n");
+			on_power_down(true);
 			break;
 
 #ifdef USE_BATTERY_CHARGER

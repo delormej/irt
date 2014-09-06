@@ -466,6 +466,7 @@ namespace ANT_Console.Messages
 
         // Outliers, these are not actually a subpages, it's an actual page - need to fix this.
         Temp = 26,           // Get the temperature from the device.  This isn't a
+        Sleep = 27,          // Sets the device to go to sleep.
         Battery = 0x52
         
         // Should we send commands this way, i.e.:
