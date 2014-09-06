@@ -1230,6 +1230,11 @@ static void on_set_parameter(uint8_t* buffer)
 			profile_update_sched();
 			break;
 
+		case IRT_MSG_SUBPAGE_SLEEP:
+			LOG("[MAIN] Received message to put device to sleep.\r\n");
+			on_power_down(true);
+			break;
+
 #ifdef USE_BATTERY_CHARGER
 		case IRT_MSG_SUBPAGE_CHARGER:
 			// Turns charger on if currently off, else turns off.
