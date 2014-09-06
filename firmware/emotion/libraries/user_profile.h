@@ -27,7 +27,17 @@
 /**@brief	Helper macro for determining if a setting is flagged.
  */
 #define SETTING_IS_SET(SETTINGS, SETTING) \
-	((SETTINGS & SETTING) == SETTING)
+	((SETTINGS & SETTING) == SETTING_VALUE(SETTING))
+
+/**@brief	Determine if the setting should be persisted.
+ */
+#define SETTING_PERSIST(SETTING) \
+	(SETTING & 0x8000)					// Most significant bit indicates if we should persist to flash or not.
+
+/**@brief	Helper to get the value independent of whether we persist.
+ */
+#define SETTING_VALUE(SETTING) \
+	(SETTING & 0x7FFFF)
 
 /**@brief	Structure used to for storing/reading user profile.
  * 			Must be at least PSTORAGE_MIN_BLOCK_SIZE (i.e. 16 bytes) in size and should be word aligned (16 bits).
