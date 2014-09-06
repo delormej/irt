@@ -25,10 +25,25 @@ namespace ANT_Console.Services
         static ANT_Device m_device;
         protected ANT_Channel m_channel;
 
+        protected ProductPage m_productPage;
+        protected ManufacturerPage m_manufPage;
+
         public event EventHandler<EventArgs> Connected;
         public event EventHandler<EventArgs> Closing;
 
+        public ProductPage Product { get { return m_productPage; } }
+        public ManufacturerPage Manufacturer { get { return m_manufPage;  } }
+
         protected abstract void ProcessResponse(ANT_Response response);
+
+        protected void ProcessMessage(ProductPage page)
+        {
+            this.m_productPage = page;
+        }
+        protected void ProcessMessage(ManufacturerPage page)
+        {
+            this.m_manufPage = page;
+        }
 
         // Generic function to get moved out of here and work for any ANT channel.
         protected virtual void Configure(AntConfig config)
@@ -55,7 +70,9 @@ namespace ANT_Console.Services
                 throw new Exception("Error configuring Channel Period");
 
             if (m_channel.openChannel(500))
+            {
                 Console.WriteLine("Channel opened");
+            }
             else
                 throw new Exception("Error opening channel");
         }
@@ -82,6 +99,20 @@ namespace ANT_Console.Services
                 default:
                     // Nothing to process.
                     break;
+            }
+        }
+
+        public UInt16 GetDeviceNumber()
+        {
+            try
+            {
+                ANT_ChannelID channelId = m_channel.requestID(3000);
+                return channelId.deviceNumber;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("WARN: Timeout trying to get channel id.");
+                return 0;
             }
         }
 

@@ -9,6 +9,7 @@ All rights reserved.
 #define BATTERY_H
 
 #include "boards.h"	// Included for status pins.
+#include "irt_common.h"
 
 /* Battery status indicators, uses 2 GPIO pins combined to get status.
  * 	2 bits (MSB)	(LSB)
@@ -28,8 +29,24 @@ All rights reserved.
 
 typedef void (*on_battery_result_t)(uint16_t battery_level);
 
+/**@brief	Battery statuses defined in ANT spec for common page 0x82.
+ */
+enum IRT_BATTERY_STATUS
+{
+	BAT_NEW = 0x01,
+	BAT_GOOD,
+	BAT_OK,
+	BAT_LOW,
+	BAT_CRITICAL,
+	BAT_INVALID = 0x07
+};
+
 // Begins a read of the battery voltage.
 void battery_read_start(void);
+
+/**@brief	Converts millivolt reading into status structure.
+ */
+irt_battery_status_t battery_status(uint16_t millivolts);
 
 // Reads the charger status.
 // TODO: Connect this with PPI to one of the LEDs.

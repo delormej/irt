@@ -10,8 +10,8 @@ namespace ANT_Console.Services
     //
     class AntBikePower : AntService
     {
-        const uint ACK_TIMEOUT = 5000;
-        const uint REQUEST_RETRY = 5;
+        const uint ACK_TIMEOUT = 1000;
+        const uint REQUEST_RETRY = 3;
 
         // Commands
         enum Command : byte
@@ -26,9 +26,6 @@ namespace ANT_Console.Services
         byte m_sequence;
         short m_wheelSizeMM = 2096;
         TorqueMessage m_lastTorqueMessage;
-        byte m_hw_major;
-        byte m_hw_minor;
-        byte m_hw_build;
 
         /*
          * Events
@@ -39,6 +36,8 @@ namespace ANT_Console.Services
         public event MessageHandler<ResistanceMessage> ResistanceEvent;
         public event MessageHandler<ExtraInfoMessage> ExtraInfoEvent;
         public event MessageHandler<GetSetMessage> GetSetParameterEvent;
+        public event MessageHandler<BatteryStatusMessage> BatteryStatusEvent;
+        public event MessageHandler<MeasureOutputMessage> MeasureOutputEvent;
 
         public AntBikePower(int channelId, ushort deviceId = 0, byte transmissionType = 0)
         {
@@ -68,10 +67,17 @@ namespace ANT_Console.Services
         {
             get
             {
-                return string.Format("{0}.{1}.{2}",
-                    m_hw_major,
-                    m_hw_minor,
-                    m_hw_build);
+                if (m_productPage != null)
+                {
+                    return string.Format("{0}.{1}.{2}",
+                        this.m_productPage.SoftwareRevMajor,
+                        this.m_productPage.SoftwareRevMinor,
+                        this.m_productPage.SoftwareRevBuild);
+                }
+                else
+                {
+                    return "unavailable";
+                }
             }
         }
 
@@ -158,8 +164,23 @@ namespace ANT_Console.Services
         {
             int retries = 0;
 
-            RequestDataMessage message = new RequestDataMessage(subPage);
             ANT_ReferenceLibrary.MessagingReturnCode result = 0;
+            RequestDataMessage message;
+            
+            if (subPage == SubPages.Battery)
+            {
+                message = new RequestDataMessage();
+                message.RequestedPage = (byte)SubPages.Battery;
+            }
+            else if (subPage == SubPages.Temp)
+            {
+                message = new RequestDataMessage();
+                message.RequestedPage = 0x03;
+            }
+            else
+            {
+                message = new RequestDataMessage(subPage);
+            }
 
             while (retries < REQUEST_RETRY)
             {
@@ -263,11 +284,24 @@ namespace ANT_Console.Services
                 case ProductPage.Page:
                     ProcessMessage(new ProductPage(response));
                     break;
+                case ManufacturerPage.Page:
+                    ProcessMessage(new ManufacturerPage(response));
+                    break;
                 case GetSetMessage.Page:
                     
                     if (GetSetParameterEvent != null)
                         GetSetParameterEvent(new GetSetMessage(response));
                     break;
+                case BatteryStatusMessage.Page:
+                    if (BatteryStatusEvent != null)
+                        BatteryStatusEvent(new BatteryStatusMessage(response));
+                        break;
+
+                case MeasureOutputMessage.Page:
+                    if (MeasureOutputEvent != null)
+                        MeasureOutputEvent(new MeasureOutputMessage(response));
+                    break;
+
                 default:
                     break;
             }
@@ -284,13 +318,6 @@ namespace ANT_Console.Services
             }
             // Save state for next round.
             m_lastTorqueMessage = message;
-        }
-
-        protected virtual void ProcessMessage(ProductPage message)
-        {
-            m_hw_major = message.SoftwareRevMajor;
-            m_hw_minor = message.SoftwareRevMinor;
-            m_hw_build = message.SoftwareRevBuild;
         }
 
         // Calculate speed & power.

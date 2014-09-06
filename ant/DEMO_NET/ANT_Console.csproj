@@ -95,6 +95,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Combinatorics\Combinations.cs" />
+    <Compile Include="Combinatorics\GenerateOption.cs" />
+    <Compile Include="Combinatorics\IMetaCollection.cs" />
+    <Compile Include="Combinatorics\Permutations.cs" />
+    <Compile Include="Combinatorics\SmallPrimeUtility.cs" />
+    <Compile Include="Combinatorics\Variations.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="InteractiveConsole.cs" />
     <Compile Include="Messages.cs" />
@@ -107,6 +113,9 @@
     <Compile Include="Services\BleUart.cs" />
     <Compile Include="Services\ScriptHandler.cs" />
     <Compile Include="Services\SpeedSimulator.cs" />
+    <Compile Include="Services\Statistics.cs" />
+    <Compile Include="Services\TheilSen.cs" />
+    <Compile Include="SummaryInfo.cs" />
     <Compile Include="UnmanagedIRSerialPort.cs" />
   </ItemGroup>
   <ItemGroup>

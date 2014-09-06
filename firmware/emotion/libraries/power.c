@@ -37,7 +37,6 @@ static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
 	return value;
 }*/
 
-
 /**@brief	Calculates estimated torque given watts and time.
  */
 static uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
@@ -67,22 +66,6 @@ static float inline slope_calc(float y, float slope, float intercept)
 
 	return x;
 }*/
-
-/**@brief 	Returns the force of rolling resistance using profile crr and weight.
- * @returns Force in Newtons typical range 13.0 : 30.0
- */
-static float power_rr_force(float speed_mps)
-{
-	if (m_ca_slope != 0xFFFF)
-	{
-		// return a calibrated value.
-		return (speed_mps * m_ca_slope + m_ca_intercept);
-	}
-	else
-	{
-		return m_rr_force;
-	}
-}
 
 /**@brief	Calculates the force applied by the servo at a given position.
  */
@@ -168,7 +151,7 @@ void power_init(user_profile_t* p_profile, uint16_t default_crr)
 {
 	if (p_profile->ca_slope != 0xFFFF)
 	{
-		m_ca_slope = (p_profile->ca_slope / 10000.0f);
+		m_ca_slope = (p_profile->ca_slope / 1000.0f);
 		m_ca_intercept = (p_profile->ca_intercept / 1000.0f);
 		m_rr_force = 0;
 
@@ -192,9 +175,32 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last, flo
 	uint16_t torque;
 	uint16_t period_diff;
 	float servo;
+	float magoff_watts;
 
 	servo = servo_force(p_current->servo_position);
-	*p_rr_force = power_rr_force(p_current->instant_speed_mps);
+
+	if (m_ca_slope != 0xFFFF)
+	{
+		// return a calibrated value.
+
+		// First calculate power in watts, then back out to force.
+		// Calculated by taking slope of change in watts (y) for each 1 mps (x) in speed.
+		magoff_watts =
+				(p_current->instant_speed_mps * m_ca_slope - m_ca_intercept);
+
+		// Calculate force of rolling resistance alone.
+		*p_rr_force = (magoff_watts / p_current->instant_speed_mps);
+	}
+	else
+	{
+		// DEFAULT behavior is to return a statically calculated value regardless
+		// of speed.  This is returned if user did not override with a calibration
+		// value.
+		// This seems like overhead now, but in the future we shouldn't use a static
+		// RR value anyways - we'll come up with a default calibration value based on
+		// weight.
+		*p_rr_force = m_rr_force;
+	}
 
 	// Calculate power.
 	p_current->instant_power = ( *p_rr_force + servo ) * p_current->instant_speed_mps;

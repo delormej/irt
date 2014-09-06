@@ -14,20 +14,19 @@
 
 #include <stdint.h>
 
-#define PROFILE_VERSION					4u	// Current version of the profile.
+#define PROFILE_VERSION					5u	// Current version of the profile.
 
 #define SETTING_ACL_SLEEP_ON			1UL				// Put device to sleep when accelerometer signals no motion.
 #define SETTING_BTLE_ENABLED			2UL				// BTLE Enabled
 #define SETTING_ANT_CTRL_ENABLED		4UL				// ANT+ Remote Control enabled.
 #define SETTING_ANT_BP_ENABLED			8UL				// ANT+ Bike Power profile enabled.
 #define SETTING_ANT_FEC_ENABLED			16UL			// ANT+ Fitness Equipment Control profile enabled.
-#define SETTING_ANT_EXTRA_INFO_SEND		32UL			// Send custom IRT EXTRA_INFO message (mostly for debugging).
+#define SETTING_ANT_EXTRA_INFO_ENABLED	32UL			// Send custom IRT EXTRA_INFO message (mostly for debugging).
 #define SETTING_INVALID					65535UL			// Max for 16 bit settings.
 
 /**@brief	Helper macro for determining if a setting is flagged.
  */
 #define SETTING_IS_SET(SETTINGS, SETTING) \
-	(SETTINGS != SETTING_INVALID) && \
 	((SETTINGS & SETTING) == SETTING)
 
 /**@brief	Structure used to for storing/reading user profile.
@@ -39,9 +38,11 @@ typedef struct user_profile_s {
 	uint16_t	settings;					// Bitmask of feature/settings to turn on/off.
 	uint16_t	total_weight_kg;			// Stored in int format 1/100, e.g. 8181 = 81.81kg
 	uint16_t	wheel_size_mm;
-	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/10,000 e.g. 3870 = 0.3870
-	uint16_t	ca_intercept;				// Calibration intercept.  Stored in 1/1,000 e.g. 15897 = 15.879
-	uint16_t	future[2];					// For block size alignment -- 16 bytes
+	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/1,000 e.g. 20741 = 20.741
+	uint16_t	ca_intercept;				// Calibration intercept. This value is inverted on the wire -1/1,000 e.g. 40144 = -40.144
+	float		ca_temp;					// Temperature recorded when calibration was set.  See: Bicycling Science (1% drop in Crr proportional to 1 degree change in temp).
+	int16_t		servo_offset;				// Calibration offset for servo position.
+	uint8_t		future[2];					// For block size alignment -- 16 bytes
 } user_profile_t;
 
 /**@brief Initializes access to storage. */

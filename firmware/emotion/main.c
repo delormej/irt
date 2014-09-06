@@ -52,6 +52,7 @@
 #include "irt_error_log.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
+#define CALIBRATION_INTERVAL			APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Calibration message interval.
 #define BLE_ADV_BLINK_RATE_MS			500u
 #define SCHED_QUEUE_SIZE                16                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
@@ -62,7 +63,7 @@
 #define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
 #define DEFAULT_TOTAL_WEIGHT_KG			8180ul 										// Default weight (convert 180.0lbs to KG).
 #define DEFAULT_ERG_WATTS				175u										// Default erg target_watts when not otherwise set.
-#define DEFAULT_SETTINGS				0ul											// Default 32bit field of settings.
+#define DEFAULT_SETTINGS				SETTING_INVALID								// Default 32bit field of settings.
 #define DEFAULT_CRR						30ul										// Default Co-efficient for rolling resistance used when no slope/intercept defined.  Divide by 1000 to get 0.03f.
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
@@ -79,6 +80,7 @@ static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
 
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
+static app_timer_id_t					m_ca_timer_id;								// Timer used during calibration.
 
 static user_profile_t  					m_user_profile  __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
 static rc_sim_forces_t					m_sim_forces;
@@ -86,11 +88,28 @@ static accelerometer_data_t 			m_accelerometer_data;
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
+static irt_battery_status_t				m_battery_status;
+
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
 // Type declarations for profile updating.
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 static void profile_update_sched(void);
+
+static void send_data_page2(uint8_t subpage, uint8_t response_type);
+static void send_temperature();
+
+/* TODO:	Total hack for request data page & resistance control ack, we will fix.
+ *		 	Simple logic right now.  If there is a pending request data page, send
+ *		 	up to 2 of these messages as priority (based on requested tx count).
+ *		 	If there is a pending resistance acknowledgment, send that as second
+ *		 	priority.  Otherwise, resume normal power message.
+ *		 	Ensure that at least once per second we are sending an actual power
+ *		 	message.
+ */
+static uint8_t							m_resistance_ack_pending[3] = {0};		// byte 0: operation, byte 1:2: value
+static ant_request_data_page_t			m_request_data_pending;
+#define ANT_RESPONSE_LIMIT				3										// Only send max 3 sequential response messages before interleaving real power message.
 
 /**@brief Debug logging for main module.
  *
@@ -156,6 +175,97 @@ static void sys_evt_dispatch(uint32_t sys_evt)
 	pstorage_sys_event_handler(sys_evt);
 }
 
+/**@brief	Queues up the last resistance control acknowledgment.
+ *
+ */
+static void queue_resistance_ack(uint8_t op_code, uint16_t value)
+{
+	m_resistance_ack_pending[0] = op_code;
+	m_resistance_ack_pending[1] = LSB(value);
+	m_resistance_ack_pending[2] = MSB(value);
+}
+
+static void queue_data_response(ant_request_data_page_t request)
+{
+	m_request_data_pending = request;
+}
+
+static void queue_data_response_clear()
+{
+	memset(&m_request_data_pending, 0, sizeof(ant_request_data_page_t));
+}
+
+/**@brief	Dispatches ANT messages in response to requests such as Request Data Page and
+ * 			resistance control acknowledgments.
+ *
+ *@return	Returns true if it had messages to dequeue and sent, false if there were none.
+ *@note		Will send no more than ANT_RESPONSE_LIMIT in sequential calls.
+ */
+static bool dequeue_ant_response(void)
+{
+	// Static response count so that no more than ANT_RESPONSE_LIMIT are sent sequentially
+	// as not to starve the normal power messages.
+	static uint8_t response_count = 0;
+
+	if (response_count >= ANT_RESPONSE_LIMIT)
+	{
+		// Reset sequential response count and return.
+		response_count = 0;
+		return false;
+	}
+
+	// Prioritize data response messages first.
+	if (m_request_data_pending.data_page == ANT_PAGE_REQUEST_DATA)
+	{
+
+		if (m_request_data_pending.tx_page == ANT_PAGE_MEASURE_OUTPUT)
+		{
+			// TODO: This is the only measurement being sent right now, but we'll have more
+			// to cycle through here.
+			send_temperature();
+		}
+		else
+		{
+			// Deal with the # of times that it has to be sent.
+			// for (times = (tx_type & 0x7F); times > 0; times--)
+			//m_request_data_pending[5]
+			//subpage = buffer[3];
+			//response_type = buffer[5];
+			send_data_page2(m_request_data_pending.descriptor[0], m_request_data_pending.tx_response);
+		}
+
+		// byte 1 of the buffer contains the flag for either acknowledged (0x80) or a value
+		// indicating how many times to send the message.
+		if (m_request_data_pending.tx_response == 0x80 || (m_request_data_pending.tx_response & 0x7F) <= 1)
+		{
+			// Clear the buffer.
+			queue_data_response_clear();
+		}
+		else
+		{
+			// Decrement the count, we'll need to send again.
+			m_request_data_pending.tx_response--;
+		}
+
+	}
+	else if (m_resistance_ack_pending[0] != 0)
+	{
+		uint16_t* value;
+		value = (uint16_t*)&m_resistance_ack_pending[1];
+
+		ble_ant_resistance_ack(m_resistance_ack_pending[0], *value);
+		// Clear the buffer.
+		memset(&m_resistance_ack_pending, 0, sizeof(m_resistance_ack_pending));
+	}
+	else
+	{
+		return false;
+	}
+
+	response_count++;
+	return true;
+}
+
 /*----------------------------------------------------------------------------
  * KICKR resistance commands.
  * ----------------------------------------------------------------------------*/
@@ -169,7 +279,7 @@ static void set_wheel_params(uint8_t *pBuffer)
 	// Comes as 20700 for example, we'll round to nearest mm.
 	wheel_size = uint16_decode(pBuffer) / 10;
 
-	if (m_user_profile.wheel_size_mm != wheel_size)
+	if (m_user_profile.wheel_size_mm != wheel_size && wheel_size > 1800)
 	{
 		LOG("[MAIN]:set_wheel_params {wheel:%lu}\r\n", wheel_size);
 
@@ -193,15 +303,18 @@ static void set_sim_params(uint8_t *pBuffer)
 
 	weight = uint16_decode(pBuffer);
 
-	if (m_user_profile.total_weight_kg != weight)
+	if (weight > 30.0f) // minimum weight.
 	{
-		m_user_profile.total_weight_kg = weight;
+		if (m_user_profile.total_weight_kg != weight)
+		{
+			m_user_profile.total_weight_kg = weight;
 
-		// Schedule an update to persist the profile to flash.
-		profile_update_sched();
+			// Schedule an update to persist the profile to flash.
+			profile_update_sched();
 
-		// Re-initialize the power module with updated weight.
-		power_init(&m_user_profile, DEFAULT_CRR);
+			// Re-initialize the power module with updated weight.
+			power_init(&m_user_profile, DEFAULT_CRR);
+		}
 	}
 
 	// Co-efficient for rolling resistance.
@@ -215,10 +328,11 @@ static void set_sim_params(uint8_t *pBuffer)
 	if (c > 0.0f)
 		m_sim_forces.c = c;
 
+	/*
 	LOG("[MAIN]:set_sim_params {weight:%.2f, crr:%i, c:%i}\r\n",
 		(m_user_profile.total_weight_kg / 100.0f),
 		(uint16_t)(m_sim_forces.crr * 10000),
-		(uint16_t)(m_sim_forces.c * 1000) );
+		(uint16_t)(m_sim_forces.c * 1000) ); */
 }
 
 /**@brief	Initializes user profile and loads from flash.  Sets defaults for
@@ -253,6 +367,7 @@ static void profile_init(void)
 			m_user_profile.wheel_size_mm 	= DEFAULT_WHEEL_SIZE_MM;
 			m_user_profile.total_weight_kg 	= DEFAULT_TOTAL_WEIGHT_KG;
 			m_user_profile.settings 		= DEFAULT_SETTINGS;
+			m_user_profile.servo_offset		= 0;
 
 			// Schedule an update.
 			profile_update_sched();
@@ -327,13 +442,50 @@ static void profile_update_sched(void)
 	app_sched_event_put(NULL, 0, profile_update_sched_handler);
 }
 
+/**@brief	Sends a heart beat message for the ANT+ remote control.
+  */
+static void ant_ctrl_available(void)
+{
+	// Send remote control availability to keep it alive during calibration.
+	ant_ctrl_device_avail_tx((uint8_t) (m_ant_ctrl_remote_ser_no != 0));
+}
+
 /*----------------------------------------------------------------------------
  * Timer functions
  * ----------------------------------------------------------------------------*/
 
+/**@brief Called during calibration to send frequent calibration messages.
+ *
+ */
+static void calibration_timeout_handler(void * p_context)
+{
+	static uint8_t count;
+	uint8_t response[6];
+	uint32_t flywheel;
+	uint16_t seconds2048;
+
+	seconds2048 = seconds_2048_get();
+	flywheel = flywheel_ticks_get();
+
+	LOG("[MAIN]flywheel: %u\r\n", flywheel);
+
+	// 6 data bytes available.
+	memcpy(&response, &seconds2048, sizeof(uint16_t));
+	memcpy(&response[2], &flywheel, sizeof(uint32_t));
+
+	ant_bp_page2_tx_send(IRT_MSG_SUBPAGE_CA_SPEED, response, DATA_PAGE_RESPONSE_TYPE);
+
+	/* Send remote control heart beat less frequently.
+	if (count++ % 8 == 0)
+	{
+		ant_ctrl_available();
+	}*/
+}
+
 /**@brief Function for handling the ANT 4hz measurement timer timeout.
  *
- * @details This function will be called each timer expiration.
+ * @details This function will be called each timer expiration.  The default period
+ * 			for the ANT Bike Power service is 4hz.
  *
  * @param[in]   p_context   Pointer used for passing some arbitrary information (context) from the
  *                          app_start_timer() call to the timeout handler.
@@ -347,6 +499,19 @@ static void ant_4hz_timeout_handler(void * p_context)
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 	irt_power_meas_t* p_power_meas_last 		= NULL;
+
+	// All ANT messages on the Bike Power channel are sent in this function:
+
+	// Standard ANT+ Device broadcast (cycle of 5 messages)
+	// Request Data Page responses
+	// Extra Info debug messages (to be removed before production and replaced with request data page)
+	// Acknowledgments to resistance control
+
+	// If there was another ANT+ message dequeued, move on.
+	if (dequeue_ant_response())
+	{
+		return;
+	}
 
 	// Maintain a static event count, we don't do everything each time.
 	event_count++;
@@ -372,16 +537,24 @@ static void ant_4hz_timeout_handler(void * p_context)
 	}
 
 	p_power_meas_current->servo_position = resistance_position_get();
+	p_power_meas_current->battery_status = m_battery_status;
 
 	// Every 32 seconds.
 	if (event_count % 128 == 0)
 	{
 		// Get current temperature.
 		p_power_meas_current->temp = temperature_read();
+		LOG("[MAIN] Temperature read: %2.1f. \r\n", p_power_meas_current->temp);
 	}
 	else
 	{
 		p_power_meas_current->temp = p_power_meas_last->temp;
+	}
+
+	if (event_count % 512 == 0)
+	{
+		// Every 2 minutes initiate battery read.
+		battery_read_start();
 	}
 
 	// Report on accelerometer data.
@@ -423,9 +596,8 @@ static void ant_4hz_timeout_handler(void * p_context)
 		}
 	}
 
-	// Send remote control availability.  Notification flag is 1 if a serial number
-	// is connected, 0 if none are connected.
-	ant_ctrl_device_avail_tx((uint8_t) (m_ant_ctrl_remote_ser_no != 0));
+	// Send remote control a heartbeat.
+	ant_ctrl_available();
 }
 
 /**@brief Function for starting the application timers.
@@ -439,14 +611,13 @@ static void application_timers_start(void)
     APP_ERROR_CHECK(err_code);
 }
 
-/*//TODO: Currently not used, should it be used on sleep?
 static void application_timers_stop(void)
 {
 	uint32_t err_code;
 		
 	err_code = app_timer_stop(m_ant_4hz_timer_id);
     APP_ERROR_CHECK(err_code);
-} */
+}
 
 /**@brief Timer initialization.
  *
@@ -519,12 +690,77 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 			error_to_response(response);
 			break;
 
+		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
+			memcpy(&response, &m_user_profile.servo_offset, sizeof(int16_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_CHARGER:
+			response[0] = battery_charge_status();
+			break;
+
 		default:
 			LOG("[MAIN] Unrecognized page request. \r\n");
 			return;
 	}
 
 	ant_bp_page2_tx_send(subpage, response, response_type);
+}
+
+/**@brief	Sends temperature value as measurement output page (0x03)
+ *
+ */
+static void send_temperature()
+{
+	float temp;
+	int16_t value;
+
+	temp = temperature_read();
+	value = (int16_t)(1024.0 * temp);  // TODO: look closer at how the scale factor works. (2^10)
+
+	LOG("[MAIN] Sending temperature as: %i \r\n", value);
+
+	ant_bp_page3_tx_send(1, TEMPERATURE, 10, 0, value);
+}
+
+/**@brief 	Suspends normal messages and starts sending calibration messages.
+ */
+static void calibration_start(void)
+{
+	uint32_t err_code;
+
+	// Stop existing ANT timer, start the new one.
+	application_timers_stop();
+
+    if (m_ca_timer_id == NULL)
+    {
+		err_code = app_timer_create(&m_ca_timer_id,
+									APP_TIMER_MODE_REPEATED,
+									calibration_timeout_handler);
+		APP_ERROR_CHECK(err_code);
+    }
+
+    err_code = app_timer_start(m_ca_timer_id, CALIBRATION_INTERVAL, NULL);
+    APP_ERROR_CHECK(err_code);
+
+    set_led_red(LED_1);
+    m_crr_adjust_mode = true;
+}
+
+/**@brief 	Stops calibration and resumes normal activity.
+ */
+static void calibration_stop(void)
+{
+	uint32_t err_code;
+
+	// Stop the calibration timer.
+	err_code = app_timer_stop(m_ca_timer_id);
+    APP_ERROR_CHECK(err_code);
+
+	clear_led(LED_1);
+	m_crr_adjust_mode = false;
+
+	// Restart the normal timer.
+	application_timers_start();
 }
 
 /*----------------------------------------------------------------------------
@@ -553,7 +789,7 @@ static void on_resistance_off(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = 0;
 	resistance_level_set(m_resistance_level);
-	ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
+	queue_resistance_ack(m_resistance_mode, m_resistance_level);
 }
 
 static void on_resistance_dec(void)
@@ -563,14 +799,14 @@ static void on_resistance_dec(void)
 			m_resistance_level > 0)
 	{
 		resistance_level_set(--m_resistance_level);
-		ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
+		queue_resistance_ack(m_resistance_mode, m_resistance_level);
 	}
 	else if (m_resistance_mode == RESISTANCE_SET_ERG &&
 			m_sim_forces.erg_watts > 50u)
 	{
 		// Decrement by 15 watts;
 		m_sim_forces.erg_watts -= 15u;
-		ble_ant_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 }
 
@@ -581,13 +817,13 @@ static void on_resistance_inc(void)
 			m_resistance_level < (RESISTANCE_LEVELS-1))
 	{
 		resistance_level_set(++m_resistance_level);
-		ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
+		queue_resistance_ack(m_resistance_mode, m_resistance_level);
 	}
 	else if (m_resistance_mode == RESISTANCE_SET_ERG)
 	{
 		// Increment by 15 watts;
 		m_sim_forces.erg_watts += 15u;
-		ble_ant_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 }
 
@@ -596,7 +832,7 @@ static void on_resistance_max(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = RESISTANCE_LEVELS-1;
 	resistance_level_set(m_resistance_level);
-	ble_ant_resistance_ack(m_resistance_mode, m_resistance_level);
+	queue_resistance_ack(m_resistance_mode, m_resistance_level);
 }
 
 static void on_button_menu(void)
@@ -609,7 +845,7 @@ static void on_button_menu(void)
 		{
 			m_sim_forces.erg_watts = DEFAULT_ERG_WATTS;
 		}
-		ble_ant_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 	else
 	{
@@ -793,7 +1029,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	}
 
 	// Send acknowledgment.
-	ble_ant_resistance_ack(m_resistance_mode, (int16_t)*rc_evt.pBuffer);
+	queue_resistance_ack(rc_evt.operation, (int16_t)*rc_evt.pBuffer);
 }
 
 // Invoked when a button is pushed on the remote control.
@@ -826,10 +1062,10 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 	{
 		case ANT_CTRL_BUTTON_UP:
 			if (m_crr_adjust_mode)
-			{
+			{/*
 				m_user_profile.ca_slope += 50;
 				power_init(&m_user_profile, DEFAULT_CRR);
-				send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
+				send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);*/
 			}
 			else
 			{
@@ -840,13 +1076,13 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 
 		case ANT_CTRL_BUTTON_DOWN:
 			if (m_crr_adjust_mode)
-			{
+			{/*
 				if (m_user_profile.ca_slope > 50)
 				{
 					m_user_profile.ca_slope -= 50;
 					power_init(&m_user_profile, DEFAULT_CRR);
 					send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
-				}
+				}*/
 			}
 			else
 			{
@@ -869,8 +1105,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			if (m_crr_adjust_mode)
 			{
 				// Exit crr mode.
-				m_crr_adjust_mode = false;
-				clear_led(LED_1);
+				calibration_stop();
 			}
 			else
 			{
@@ -888,9 +1123,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			else
 			{
 				// Change into crr mode.
-				// Set the state, start blinking the LED RED
-				m_crr_adjust_mode = true;
-				set_led_red(LED_1);
+				calibration_start();
 			}
 
 			break;
@@ -921,31 +1154,30 @@ static void on_enable_dfu_mode(void)
  */
 static void on_request_data(uint8_t* buffer)
 {
-	uint8_t subpage, response_type;
-	subpage = buffer[3];
-	response_type = buffer[5];
+	ant_request_data_page_t request;
+	memcpy(&request, buffer, sizeof(ant_request_data_page_t));
 
-	LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n", subpage, response_type);
-	/*LOG("[MAIN]:request data message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-			buffer[0],
-			buffer[1],
-			buffer[2],
-			buffer[3],
-			buffer[4],
-			buffer[5],
-			buffer[6],
-			buffer[7]);*/
-
-	// TODO: just a quick hack for right now for getting battery info.
-	if (subpage == ANT_PAGE_BATTERY_STATUS)
+	switch (request.tx_page)
 	{
-		LOG("[MAIN] Requested battery status. \r\n");
-		battery_read_start();
-		return;
-	}
+		// Kick off battery read.
+		case ANT_PAGE_BATTERY_STATUS:
+			LOG("[MAIN] Requested battery status. \r\n");
+			battery_read_start();
+			return;
 
-	// Process and send response.
-	send_data_page2(subpage, response_type);
+		// Request is for get/set parameters or measurement output.
+		case ANT_PAGE_GETSET_PARAMETERS:
+		case ANT_PAGE_MEASURE_OUTPUT:
+			queue_data_response(request);
+			LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
+					request.descriptor[0],
+					request.tx_response);
+			break;
+
+		default:
+			LOG("[MAIN] Unrecognized request page:%i, descriptor:%i. \r\n",
+					request.data_page, request.descriptor[0]);
+	}
 }
 
 /**@brief	Device receives page (0x02) with values to set.
@@ -989,13 +1221,21 @@ static void on_set_parameter(uint8_t* buffer)
 			power_init(&m_user_profile, DEFAULT_CRR);
 			break;
 
-#ifdef USE_BATTERY_CHARGER
-		case IRT_MSG_SUBPAGE_SET_CHARGER:
-			// TODO: This shouldn't be sent this way it should really be sent using
-			// Common Data Page 72: Command Burst
-			battery_charge_set( (BATTERY_CHARGE_OFF) );
-			LOG("[MAIN] Toggling battery charger on/off. \r\n");
+		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
+			m_user_profile.servo_offset = (int16_t)(buffer[IRT_MSG_PAGE2_DATA_INDEX] |
+				buffer[IRT_MSG_PAGE2_DATA_INDEX+1] << 8);
+			LOG("[MAIN] Updated servo_offset:%i \r\n", m_user_profile.servo_offset);
 
+			// Schedule update to the user profile.
+			profile_update_sched();
+			break;
+
+#ifdef USE_BATTERY_CHARGER
+		case IRT_MSG_SUBPAGE_CHARGER:
+			// Turns charger on if currently off, else turns off.
+			battery_charge_set( (BATTERY_CHARGE_OFF) );
+
+			LOG("[MAIN] Toggled battery charger. \r\n");
 			break;
 #endif
 		default:
@@ -1011,7 +1251,8 @@ static void on_battery_result(uint16_t battery_level)
 {
 	// TODO: Hard coded for the moment, we will send battery page.
 	LOG("[MAIN] on_battery_result %i \r\n", battery_level);
-	ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
+	//ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
+	m_battery_status = battery_status(battery_level);
 }
 
 /**@brief	Configures chip power options.
@@ -1053,6 +1294,7 @@ static void config_dcpower()
 static uint32_t check_reset_reason()
 {
 	uint32_t reason, gpreg;
+	irt_error_log_data_t* p_error;
 
 	// Read the reset reason
 	reason = NRF_POWER->RESETREAS;
@@ -1072,7 +1314,7 @@ static uint32_t check_reset_reason()
 	if (gpreg == IRT_GPREG_ERROR)
 	{
 		// Log the occurrence.
-		irt_error_log_data_t* p_error = irt_error_last();
+		p_error = irt_error_last();
 
 		LOG("[MAIN]:check_reset_reason Resetting from previous error.\r\n");
 		LOG("\t{COUNT: %i, ERROR: %#.8x}: %s:%lu\r\n",
@@ -1203,6 +1445,9 @@ int main(void)
 
 	// Start the main loop for reporting ble services.
 	application_timers_start();
+
+	// Initiate first battery read.
+	battery_read_start();
 
 	LOG("[MAIN]:Initialization done.\r\n");
 

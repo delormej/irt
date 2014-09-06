@@ -81,6 +81,7 @@ float wahoo_sim_wind_decode(uint8_t *p_buffer)
 float wahoo_sim_grade_decode(uint8_t *p_buffer)
 {
 	int16_t value;
+	float grade;
 
 	// Note this is a signed int, change the endianness.
 	value = uint16_decode(p_buffer);
@@ -88,8 +89,9 @@ float wahoo_sim_grade_decode(uint8_t *p_buffer)
 	// For some reason the value seems to come across the wire backwards?
 	// FLIP the sign bit (negative == positive, and vice versa).
 	value ^= 1 << 15u;
+	grade = value / 32768.0f;
 
-	WH_LOG("[WH]:wahoo_sim_grade_decode = %i / 32786\r\n", value);
+	WH_LOG("[WH]:wahoo_sim_grade_decode %i = %.4f \r\n", value, grade);
 
-	return value / 32768.0f;
+	return grade;
 }
