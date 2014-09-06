@@ -775,8 +775,7 @@ static void settings_update(uint8_t* buffer)
 	// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
 	// Need to use memcpy, Cortex-M proc doesn't support unaligned casting of 32bit int.
 	// MSB is flagged to indicate if we should persist or if this is just temporary.
-	memcpy(&settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
-			sizeof(uint16_t));
+	memcpy(&settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint16_t));
 
 	m_user_profile.settings = SETTING_VALUE(settings);
 
