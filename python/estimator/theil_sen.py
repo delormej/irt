@@ -7,23 +7,15 @@ where slope = (y_i - y_j)/(x_i - x_j)
 
 Very robust to outliers.
 
-<<<<<<< HEAD
-"""
-=======
 C:\\Python34>python.exe c:\\users\\jasondel\\dev\\insideride\\python\\estimator\\theil_sen.py
 
 """
 import sys
->>>>>>> master
 import numpy as np
 import bottleneck #very fast searching and sorting written in Cython.
 import itertools
 
-<<<<<<< HEAD
-def theil_sen(x,y, sample= "auto", n_samples = 1e7):
-=======
 def theil_sen(x,y, sample= False, n_samples = 1e7):
->>>>>>> master
     """
     Computes the Theil-Sen estimator for 2d data.
     parameters:
@@ -41,11 +33,7 @@ def theil_sen(x,y, sample= False, n_samples = 1e7):
     """
     assert x.shape[0] == y.shape[0], "x and y must be the same shape."
     n = x.shape[0]
-<<<<<<< HEAD
-    
-=======
 
->>>>>>> master
     if n < 100 or not sample:
         ix = np.argsort( x )
         slopes = np.empty( n*(n-1)*0.5 )
@@ -74,18 +62,11 @@ def slope( x_1, x_2, y_1, y_2):
     
     
     
-<<<<<<< HEAD
-    
-if __name__=="__main__":
-    from numpy import genfromtxt
-    my_data = genfromtxt('/users/jasondel/dev/InsideRide/python/estimator/data.csv', delimiter=',', names=True, usecols = (3,5) )
-=======
 def main(file):
     from numpy import genfromtxt
     my_data = genfromtxt(file, delimiter=',', names=True, usecols = (2,3,5,7) )
     my_data['emotion_speed_mps'] = my_data['emotion_speed_mph'] * 0.44704
     #print(my_data)
->>>>>>> master
 
     #ix = my_data['emotion_speed_mph'] >= 13.0 
     #print (ix)
@@ -94,34 +75,22 @@ def main(file):
     # This filters out the first 5 minutes:
     my_data = my_data[300:]
 
-<<<<<<< HEAD
-=======
     # Filter anything except servo position 2,000 or greater (magnet off).
     z1 = my_data['servo_pos']
     my_data = my_data[z1>=2000]
 
->>>>>>> master
     x1 = my_data['emotion_speed_mph'] 
     #y1 = my_data['quarq_power']
     filtered_data = my_data[x1>10.0]
     y1 = filtered_data['quarq_power']
     filtered_data = filtered_data[y1>0]
 
-<<<<<<< HEAD
-=======
     #print (filtered_data)
->>>>>>> master
     #filtered_data = filtered_data[:,range(300, 900)]
     #idx=(my_data[:,0]>10.0) & (my_data[:,1]>0) #errors in too many indices
 
     #list = np.array( filter(lambda x: x['emotion_speed_mph'] >= 13.0 and x['quarq_power'] > 0, my_data) ) 
     #cond = np.logical_and(my_data[:, 0] >= 10.0, my_data[:, 1] > 0)
-<<<<<<< HEAD
-
-    #print (filtered_data[idx].shape)
-    #filtered_data = my_data[cond, :]
-    x = filtered_data['emotion_speed_mph'] 
-=======
     
     #my_func = lambda x: x['emotion_speed_mph'] * 0.44704
     #filtered_data = np.hstack((filtered_data, my_func)).T
@@ -130,7 +99,6 @@ def main(file):
     #filtered_data = my_data[cond, :]
     x = filtered_data['emotion_speed_mps'] 
     #x = filtered_data[3:] 
->>>>>>> master
     y = filtered_data['quarq_power']
     
     #x = my_data['emotion_speed_mph'] 
@@ -144,11 +112,8 @@ def main(file):
 
 #index = numpy.asarray([row['category_code'] in ('A', 'B', 'C') for row in data])
 #filtered_data = data[index]
-<<<<<<< HEAD
-=======
 
 if __name__ == "__main__":
    file = '/users/jasondel/dev/InsideRide/python/estimator/data.csv'
    file = sys.argv[1]
    main(file)
->>>>>>> master
