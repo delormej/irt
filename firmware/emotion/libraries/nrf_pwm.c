@@ -183,6 +183,7 @@ void pwm_stop_servo(void)
 
 	//
 	// TODO: can't we just force the pin low here?
+	// If we interrupt while it's not 0, we'll corrupt the pulse train.
 	//
 	// Make sure that the pin is not high before sending another pulse train.
 	while ((NRF_GPIO->IN & (1 << m_pwm_pin_output)) != 0)
@@ -193,4 +194,10 @@ void pwm_stop_servo(void)
 	}
 	NRF_TIMER2->TASKS_STOP = 1;
 	NRF_TIMER2->TASKS_CLEAR = 1;
+
+	/*
+	if (tries > 100)
+	{
+		PWM_LOG("[PWM]:pwm_stop_servo retries: %i\r\n", tries);
+	}*/
 }

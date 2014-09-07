@@ -74,7 +74,7 @@ uint16_t resistance_position_get()
 uint16_t resistance_position_set(uint16_t servo_pos)
 {
 	// Actual servo position after calibration.
-	uint16_t offset_servo_pos;
+	uint16_t actual_servo_pos;
 	//
 	// Ensure we don't move the servo beyond it's min and max.
 	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107
@@ -106,11 +106,21 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 		 * Adjusted offset for the 2,000 - 1,000 range is -301, but since testing was done at -50,
 		 * the new baseline offset is 351 for a servo that is factory calibrated to 1,451.
 		*/
-		offset_servo_pos = servo_pos + mp_user_profile->servo_offset;
+		actual_servo_pos = servo_pos + mp_user_profile->servo_offset;
 
-		RC_LOG("[RC]:SET_SERVO %i\r\n", offset_servo_pos);
-		pwm_set_servo(offset_servo_pos);
+		// Using offset, guard to acceptable range of 2000-1000
+		if (actual_servo_pos > 2000)
+		{
+			actual_servo_pos = 2000;
+		}
+		else if (actual_servo_pos < 1000)
+		{
+			actual_servo_pos = 1000;
+		}
+
+		pwm_set_servo(actual_servo_pos);
 		m_servo_pos = servo_pos;
+		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
 	}
 
 	return m_servo_pos;
