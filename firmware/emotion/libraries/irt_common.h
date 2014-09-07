@@ -13,12 +13,14 @@ All rights reserved.
 #include "boards.h"
 #include "nrf_error.h"
 #include "pstorage_platform.h"
-#include "../bootloader/include/bootloader_types.h"	// Include bootloader sister project for bootloader_settings_t
 
 //
 // Global defines.
 //
-#define	GRAVITY						9.81f		// Co-efficent of gravity for Earth.
+#define FACTORY_SETTINGS_BASE		0x3FC88								// Address in flash in the uppermost page just after bootloader_settings_t
+#define FEATURES ((volatile uint16_t *) FACTORY_SETTINGS_BASE) 			/* 16 bit array of features */
+
+#define	GRAVITY						9.81f								// Coefficent of gravity.
 #define	MATH_PI						3.14159f
 
 #define DEVICE_NAME                 "E-Motion"                          /**< Name of device. Will be included in the advertising data. */
@@ -48,13 +50,6 @@ All rights reserved.
 #define FEATURE_BATTERY_READ_PIN	128UL			// Device requires the use of enabling flow to a capacitor before reading battery voltage.
 #define FEATURE_INVALID				65535UL			// Max feature setting of 16 bit.
 
-//
-// Address in flash memory where features are stored on flash.
-// Features are stored just above the bootloader settings (~128 bytes of 1,024 bytes reserved for the settings).
-// We're using the bootloader section and extending the data type for factory features.
-//
-static const bootloader_settings_t  m_boot_settings __attribute__((section(".bootloader_settings_sect"))) __attribute__((used));
-
 /*
  * Returns whether a specific feature is available on this board as configured at manufacturing time by IRT.
  */
@@ -63,8 +58,7 @@ static bool __inline__ irt_feature_is_available(uint16_t feature_mask)
 	uint32_t features;
 	bool available;
 
-	// Defined as a 32bit int, but we're ony using 16bits, upper 16bits are reserved for future use.
-	features = (uint16_t)m_boot_settings.factory_features;
+	features = *FEATURES;
 
 	available = ( features != FEATURE_INVALID ) &&
 			(  ( features & feature_mask ) == feature_mask  );

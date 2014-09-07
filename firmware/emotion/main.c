@@ -1402,6 +1402,7 @@ int main(void)
 	LOG("**********************************************************************\r\n");
 	LOG("[MAIN]:Starting ANT+ id: %i, firmware: %s, serial: %#.8x \r\n",
 			ANT_DEVICE_NUMBER, SW_REVISION, SERIAL_NUMBER);
+	LOG("[MAIN]:Features: %i\r\n", *FEATURES);
 	LOG("**********************************************************************\r\n");
 
 	// Determine what the reason for startup is and log appropriately.
