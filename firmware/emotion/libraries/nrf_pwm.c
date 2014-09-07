@@ -170,15 +170,22 @@ void pwm_set_servo(uint32_t pulse_width_us)
 	NRF_TIMER2->CC[1] = pulse_width_us*2;
 	NRF_TIMER2->CC[2] = PWM_PERIOD_WIDTH_US - (pulse_width_us*2);
 
+	// Flag that the servo is running.
+	m_is_running = true;
+
 	// Start the timers.
 	NRF_TIMER2->TASKS_START = 1;
 	app_timer_start(m_stop_pulse_train_timer, PULSE_TRAIN_DURATION, NULL);
-
-	m_is_running = true;
 }
 
 void pwm_stop_servo(void)
 {
+	NRF_TIMER2->TASKS_STOP = 1;
+	NRF_TIMER2->TASKS_CLEAR = 1;
+
+	nrf_gpio_pin_clear(m_pwm_pin_output);
+
+	/*
 	uint32_t tries = 0, max_tries = 5000;
 
 	//
@@ -191,6 +198,5 @@ void pwm_stop_servo(void)
 		if (++tries > max_tries)
 			break;
 	}
-	NRF_TIMER2->TASKS_STOP = 1;
-	NRF_TIMER2->TASKS_CLEAR = 1;
+	*/
 }
