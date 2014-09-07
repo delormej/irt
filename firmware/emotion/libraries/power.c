@@ -26,6 +26,7 @@
 static float m_rr_force;
 static float m_ca_slope;			// calibration parameters
 static float m_ca_intercept;
+static bool  m_use_small_mag;
 
 /* Calculates angular velocity based on wheel ticks and time.
 static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
@@ -36,7 +37,6 @@ static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
 
 	return value;
 }*/
-
 
 /**@brief	Calculates estimated torque given watts and time.
  */
@@ -68,22 +68,6 @@ static float inline slope_calc(float y, float slope, float intercept)
 	return x;
 }*/
 
-/**@brief 	Returns the force of rolling resistance using profile crr and weight.
- * @returns Force in Newtons typical range 13.0 : 30.0
- */
-static float power_rr_force(float speed_mps)
-{
-	if (m_ca_slope != 0xFFFF)
-	{
-		// return a calibrated value.
-		return (speed_mps * m_ca_slope + m_ca_intercept);
-	}
-	else
-	{
-		return m_rr_force;
-	}
-}
-
 /**@brief	Calculates the force applied by the servo at a given position.
  */
 static float servo_force(uint16_t servo_pos)
@@ -97,7 +81,7 @@ static float servo_force(uint16_t servo_pos)
 	}
 	else
 	{
-		if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
+		if (m_use_small_mag)
 		{
 			force = (
 					-0.00000000000033469583 * pow(servo_pos,5)
@@ -134,7 +118,7 @@ uint16_t power_servo_pos_calc(float force)
 {
 	int16_t servo_pos;
 
-	if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
+	if (m_use_small_mag)
 	{
 		servo_pos = (
 				0.001461686  * pow(force,5)
@@ -166,9 +150,12 @@ uint16_t power_servo_pos_calc(float force)
  */
 void power_init(user_profile_t* p_profile, uint16_t default_crr)
 {
+	m_use_small_mag = FEATURE_AVAILABLE(FEATURE_SMALL_MAG);
+	PW_LOG("[PW] Use small mag?: %i\r\n", m_use_small_mag);
+
 	if (p_profile->ca_slope != 0xFFFF)
 	{
-		m_ca_slope = (p_profile->ca_slope / 10000.0f);
+		m_ca_slope = (p_profile->ca_slope / 1000.0f);
 		m_ca_intercept = (p_profile->ca_intercept / 1000.0f);
 		m_rr_force = 0;
 
@@ -192,9 +179,32 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last, flo
 	uint16_t torque;
 	uint16_t period_diff;
 	float servo;
+	float magoff_watts;
 
 	servo = servo_force(p_current->servo_position);
-	*p_rr_force = power_rr_force(p_current->instant_speed_mps);
+
+	if (m_ca_slope != 0xFFFF)
+	{
+		// return a calibrated value.
+
+		// First calculate power in watts, then back out to force.
+		// Calculated by taking slope of change in watts (y) for each 1 mps (x) in speed.
+		magoff_watts =
+				(p_current->instant_speed_mps * m_ca_slope - m_ca_intercept);
+
+		// Calculate force of rolling resistance alone.
+		*p_rr_force = (magoff_watts / p_current->instant_speed_mps);
+	}
+	else
+	{
+		// DEFAULT behavior is to return a statically calculated value regardless
+		// of speed.  This is returned if user did not override with a calibration
+		// value.
+		// This seems like overhead now, but in the future we shouldn't use a static
+		// RR value anyways - we'll come up with a default calibration value based on
+		// weight.
+		*p_rr_force = m_rr_force;
+	}
 
 	// Calculate power.
 	p_current->instant_power = ( *p_rr_force + servo ) * p_current->instant_speed_mps;

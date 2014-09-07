@@ -11,6 +11,7 @@ namespace ANT_Console.Messages
         public DateTime Timestamp;
         public float SpeedReference;
         public float SpeedEMotion;
+        public float SpeedMPSEMotion;
         public short PowerReference;
         public short PowerEMotion;
         public ushort ServoPosition;
@@ -18,7 +19,7 @@ namespace ANT_Console.Messages
         public byte Temperature;
         public byte ResistanceMode;
         public ushort TargetLevel;
-        public ushort FlywheelRevs;
+        public uint FlywheelRevs;
         public ushort RefSpeedWheelRevs;
         public ushort RefPowerAccumTorque;
 
@@ -27,12 +28,38 @@ namespace ANT_Console.Messages
             return string.Format(FORMAT,
                 Timestamp,
                 SpeedReference,
-                SpeedEMotion,
+                SpeedMPSEMotion,
                 PowerReference,
                 PowerEMotion,
                 ServoPosition,
                 Accelerometer_y,
                 Temperature);
+        }
+    }
+
+    public class CalibrationSpeed
+    {
+        byte[] m_buffer;
+
+        public CalibrationSpeed(byte[] buffer)
+        {
+            m_buffer = buffer;
+        }
+
+        public UInt16 Seconds { get { return Message.BigEndian(m_buffer[2], m_buffer[3]); } }
+        public UInt32 FlywheelRotations { 
+            get 
+            { 
+                return 
+                    (UInt32)(Message.BigEndian(m_buffer[6], m_buffer[7]) << 16) |
+                    Message.BigEndian(m_buffer[4], m_buffer[5]);
+            }
+        }
+
+        public override string ToString()
+        {
+            return String.Format("Calibration Time:{0}, Rotations:{1}",
+                Seconds, FlywheelRotations);
         }
     }
 
@@ -66,10 +93,18 @@ namespace ANT_Console.Messages
             return (ushort)(lsb | msb << 8);
         }
 
+        // Returns last 4 bytes of an 8 byte buffer as UInt32.
+        public static UInt32 BigEndian(byte[] buffer)
+        {
+            return (UInt32)(Message.BigEndian(buffer[6], buffer[7]) << 16) |
+                                Message.BigEndian(buffer[4], buffer[5]);
+        }
+
         public static short BigEndianSigned(byte lsb, byte msb)
         {
             return (short)(lsb | msb << 8);
         }
+
     }
 
     public abstract class UpdateEventMessage : Message
@@ -291,20 +326,59 @@ namespace ANT_Console.Messages
         } // 4 least sig bits
 
         public byte SoftwareRevBuild { get { return m_payload[SW_REV_SUP_INDEX]; } }
-    }
 
-    public class BatteryStatus : Message
+        public UInt32 SerialNumber { get { return Message.BigEndian(m_payload); } }
+    }
+    
+    public class BatteryStatusMessage : Message
     {
         public const byte Page = 0x52;
 
-        const byte BATT_ID_INDEX = 2;
-        const byte OP_TIME1_INDEX = 3;
-        const byte OP_TIME2_INDEX = 4;
-        const byte OP_TIME3_INDEX = 5;
-        const byte BATT_VOLT_INDEX = 6;
-        const byte DESC_BIT_INDEX = 7;
+        internal BatteryStatusMessage(ANT_Response response) : base(response) { }
 
-        internal BatteryStatus(ANT_Response response) : base(response) { }
+        const byte ANT_BAT_ID_INDEX = 2;
+        const byte ANT_BAT_TIME_LSB_INDEX = 3;
+        const byte ANT_BAT_TIME_INDEX = 4;
+        const byte ANT_BAT_TIME_MSB_INDEX = 5;
+        const byte ANT_BAT_FRAC_VOLT_INDEX = 6;
+        const byte ANT_BAT_DESC_INDEX = 7;
+
+        public float Voltage
+        {
+            get
+            {
+                int volts;
+                float fracVolts;
+
+                // Get the coarse voltage.
+                volts = this.m_payload[ANT_BAT_DESC_INDEX] & 0xF;
+                fracVolts = this.m_payload[ANT_BAT_FRAC_VOLT_INDEX] / 256.0f;
+                
+                return volts + fracVolts;
+            }
+        }
+
+        // Returns operating time in hours.  Comes accross the wire in ticks.
+        public float OperatingTime
+        {
+            get 
+            {
+                int ticks;
+                bool resolution2sec;
+                float hours;
+
+                resolution2sec = (this.m_payload[ANT_BAT_DESC_INDEX] & 0x80) == 1; // 7th bit.
+
+                ticks = this.m_payload[ANT_BAT_TIME_LSB_INDEX] |
+                    this.m_payload[ANT_BAT_TIME_INDEX] << 8 |
+                    this.m_payload[ANT_BAT_TIME_MSB_INDEX] << 16;
+
+                hours = ticks * (resolution2sec ? 2 : 16) / 3600;
+                
+                return hours; 
+            
+            }
+        }
     }
 
     public class ExtraInfoMessage : Message
@@ -384,8 +458,15 @@ namespace ANT_Console.Messages
         TotalWeight = 18,
         WheelSize = 19, // I'm sure this is defined in a standard message somewhere.
         ButtonStops = 20, // Ability to configure custom button stops on the servo.
-        SetCharger = 21,
+        Charger = 21,       // Get/set charger status.
         GetLastError = 22,
+        ServoOffset = 23,
+        CalibrationSpeed = 24,
+        AuxPwr = 25,                 // Get/Set auxilury 3V power on J7-6.
+
+        // Outliers, these are not actually a subpages, it's an actual page - need to fix this.
+        Temp = 26,           // Get the temperature from the device.  This isn't a
+        Sleep = 27,          // Sets the device to go to sleep.
         Battery = 0x52
         
         // Should we send commands this way, i.e.:
@@ -448,12 +529,20 @@ namespace ANT_Console.Messages
     {
         public const byte Page = 0x46;
         
-        public RequestDataMessage(SubPages subPage)
+        public RequestDataMessage()
         {
+            // Defaults.
             CommandType = 0x01;
+            RequestTransmissionResponse = 2;
+        }
+
+        public RequestDataMessage(SubPages subPage) : this()
+        {
+            //CommandType = 0x01;
             RequestedPage = GetSetMessage.Page; // Always use the get/set parameter page.
             SubPage = subPage;
-            RequestTransmissionResponse = 0x80;
+            //RequestTransmissionResponse = 0x80;
+            //RequestTransmissionResponse = 2;    // Default to trying 2 times to send.
         }
 
         // Use this value to requesting a specific subpage.  First byte should be the value, last byte might be 0xFF?
@@ -490,4 +579,21 @@ namespace ANT_Console.Messages
             return data;
         }
     }
+
+    public class MeasureOutputMessage : Message
+    {
+        public const byte Page = 0x03;
+
+        internal MeasureOutputMessage(ANT_Response response) : base(response) { }
+
+        public short Value
+        {
+            get
+            {
+                return BigEndianSigned(m_payload[6],
+                        m_payload[7]);
+            }
+        }
+    }
+
 }

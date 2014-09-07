@@ -100,20 +100,6 @@ static void revs_init_timer()
 	*/
 }
 
-/**@brief 	Returns the accumulated count of flywheel revolutions since the
- *					counter started.
- *					
- */
-static uint32_t flywheel_ticks_get()
-{
-	uint32_t revs;
-
-	REVS_TIMER->TASKS_CAPTURE[0] = 1;
-	revs = REVS_TIMER->CC[0]; 
-
-	return revs;
-}
-
 /**@brief		Calculates how long it would have taken since the last complete 
  *					wheel revolution given current speed (in meters per second).  
  *					Returns a value in 1/2048's of a second.
@@ -139,6 +125,20 @@ static uint16_t last_wheel_time_calc(float wheel_revs, float avg_wheel_period, u
 * Public functions, see function descriptions in header.
 *
 *****************************************************************************/
+
+/**@brief 	Returns the accumulated count of flywheel revolutions since the
+ *					counter started.
+ *
+ */
+uint32_t flywheel_ticks_get()
+{
+	uint32_t revs;
+
+	REVS_TIMER->TASKS_CAPTURE[0] = 1;
+	revs = REVS_TIMER->CC[0];
+
+	return revs;
+}
 
 void speed_wheel_size_set(uint16_t wheel_size_mm)
 {

@@ -7,6 +7,7 @@ namespace ANT_Console
     public interface IReporter
     {
         void Report(DataPoint data);
+        void Report(string message);
     }
 
     public class LogReporter : IReporter, IDisposable
@@ -17,8 +18,9 @@ namespace ANT_Console
 
         public LogReporter()
         {
-            string filename = string.Format("log-{0:yyyyMMdd-HHmmss-F}.csv",
-                    DateTime.Now);
+            string filename = string.Format("irt_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
+                typeof(LogReporter).Assembly.GetName().Version.ToString(3),
+                DateTime.Now);
 
             m_logFileWriter = new StreamWriter(filename);
             m_logFileWriter.AutoFlush = true;
@@ -28,13 +30,13 @@ namespace ANT_Console
         public void Report(DataPoint data)
         {
             string message = String.Format(report_format,
-                DateTime.Now,
+                data.Timestamp,
                 data.SpeedReference,
-                0 /* mps */,
+                data.SpeedMPSEMotion,
                 data.SpeedEMotion,
                 data.PowerEMotion,
                 data.PowerReference,
-                0 /* calc */,
+                data.PowerEMotion,
                 data.ServoPosition,
                 data.FlywheelRevs,
                 data.Temperature,
@@ -45,6 +47,11 @@ namespace ANT_Console
                 );
 
             m_logFileWriter.WriteLine(message);
+        }
+
+        public void Report(string message)
+        {
+            m_logFileWriter.Write(message);
         }
 
         public void Dispose()

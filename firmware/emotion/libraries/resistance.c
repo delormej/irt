@@ -16,7 +16,7 @@
 #include "math.h"
 #include "debug.h"
 
-#define MIN_THRESHOLD_MOVE	3		// Minimum threshold for a servo move.
+#define MIN_THRESHOLD_MOVE	2		// Minimum threshold for a servo move.
 
 /**@brief Debug logging for resistance control module.
  */
@@ -73,6 +73,8 @@ uint16_t resistance_position_get()
  */
 uint16_t resistance_position_set(uint16_t servo_pos)
 {
+	// Actual servo position after calibration.
+	uint16_t offset_servo_pos;
 	//
 	// Ensure we don't move the servo beyond it's min and max.
 	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107
@@ -88,8 +90,26 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 
 	if ( (m_servo_pos != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
 	{
-		RC_LOG("[RC]:SET_SERVO %i\r\n", servo_pos);
-		pwm_set_servo(servo_pos);
+		/*
+		 * NOTE: SERVO OFFSET LOGIC
+		 *
+		 * Only record offset position internally, don't expose beyond the module
+		 * as certain servo positions have bearing on position.
+		 *
+		 * Goal is to use the range 2,000 - 1,000 as per servo specs.  Instead of
+		 * the original 2,107 - 699 range which our power curve testing was done against.
+		 *
+		 * Factory Baseline is where Jennifer's jig is set.  This used to be "position 2" or 1150.
+		 * Initial power curve testing was based on a servo that would consider position 2 as 1100
+		 * (had -50 offset).
+		 *
+		 * Adjusted offset for the 2,000 - 1,000 range is -301, but since testing was done at -50,
+		 * the new baseline offset is 351 for a servo that is factory calibrated to 1,451.
+		*/
+		offset_servo_pos = servo_pos + mp_user_profile->servo_offset;
+
+		RC_LOG("[RC]:SET_SERVO %i\r\n", offset_servo_pos);
+		pwm_set_servo(offset_servo_pos);
 		m_servo_pos = servo_pos;
 	}
 

@@ -8,6 +8,7 @@
 #include "ant_interface.h"
 #include "ant_error.h"
 #include "app_error.h"
+#include "nordic_common.h"
 #include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
@@ -47,7 +48,20 @@
 #define ANT_BP_MSG_PERIOD            0x1FF6                                     	 /**< Message Periods, decimal 8182 (~4.00Hz) data is transmitted every 8182/32768 seconds. */
 #define ANT_BP_EXT_ASSIGN            0	                                          /**< ANT Ext Assign. */
 
+// Battery Status page.
+#define ANT_BAT_ID_INDEX		 	 2
+#define ANT_BAT_TIME_LSB_INDEX	 	 3
+#define ANT_BAT_TIME_INDEX	 	 	 4
+#define ANT_BAT_TIME_MSB_INDEX	 	 5
+#define ANT_BAT_FRAC_VOLT_INDEX	 	 6
+#define ANT_BAT_DESC_INDEX	 	 	 7
+
+
 #define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
+/** Message ID used when setting resistance via an ANT BURST. */
+
+static const uint8_t 				ACK_MESSAGE_RETRIES = 3;
+static const uint8_t 				ACK_MESSAGE_RETRY_DELAY = 5; // milliseconds
 
 /**@brief Debug logging for module.
  *
@@ -122,8 +136,25 @@ static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
 static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 {
 	uint32_t err_code;
+	uint8_t retries = 0;
 
-	err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+	while (retries++ < ACK_MESSAGE_RETRIES)
+	{
+		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+		if (ANT_ERROR_AS_WARN(err_code))
+		{
+			BP_LOG("[BP]:acknolwedge_message_transmit retry: %i, %#.8x\r\n", retries, err_code);
+
+			// Sleep and try again.
+			nrf_delay_ms(ACK_MESSAGE_RETRY_DELAY);
+			continue;
+		}
+		else
+		{
+			// No need to retry, either success or hard fail.
+			break;
+		}
+	}
 
 	if (ANT_ERROR_AS_WARN(err_code))
 	{
@@ -183,19 +214,39 @@ static uint8_t encode_resistance_level(irt_power_meas_t * p_power_meas)
 	return target_msb;
 }
 
+static uint32_t battery_status_transmit(irt_battery_status_t status)
+{
+	uint8_t buffer[TX_BUFFER_SIZE];
+
+	buffer[PAGE_NUMBER_INDEX]			= ANT_PAGE_BATTERY_STATUS;
+	buffer[1]							= 0xFF;
+	buffer[ANT_BAT_ID_INDEX]			= 0b00010001;	// bits 0:3 = Number of batteries, 4:7 = Identifier.
+	buffer[ANT_BAT_TIME_LSB_INDEX]	 	= 0;
+	buffer[ANT_BAT_TIME_INDEX]	 		= 0;
+	buffer[ANT_BAT_TIME_MSB_INDEX]		= 0;
+	buffer[ANT_BAT_FRAC_VOLT_INDEX]		= status.fractional_volt;
+	buffer[ANT_BAT_DESC_INDEX]			= status.coarse_volt |
+											status.status << 4 |
+											status.resolution << 7;
+
+	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
+}
+
 // Transmits extra info embedded in the power measurement.
 // TODO: Need a formal message/methodology for this.
 static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 {
 	uint8_t buffer[TX_BUFFER_SIZE];
+	uint16_t flywheel;
 
 	buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_EXTRA_INFO;
 	buffer[EXTRA_INFO_SERVO_POS_LSB]	= LOW_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_SERVO_POS_MSB]	= HIGH_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
 	buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
-	buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]= LOW_BYTE((uint16_t)(p_power_meas->accum_flywheel_ticks));
-	buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]= HIGH_BYTE((uint16_t)(p_power_meas->accum_flywheel_ticks));
+	flywheel 							= (uint16_t)p_power_meas->accum_flywheel_ticks;
+	buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]= LOW_BYTE(flywheel);
+	buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]= HIGH_BYTE(flywheel);
 	buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
 
 	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
@@ -401,14 +452,9 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	const uint8_t product_page_interleave 		= PRODUCT_PAGE_INTERLEAVE_COUNT;
 	const uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
 	const uint8_t extra_info_page_interleave 	= EXTRA_INFO_PAGE_INTERLEAVE_COUNT;
+	const uint8_t battery_page_interleave 		= BATTERY_PAGE_INTERLEAVE_COUNT;
 
 	uint32_t err_code = 0;		
-
-	// NOTE:
-	// Using an EVENT-synchronous update methodology.  The last wheel time is
-	// adjusted to when the last wheel rotation occurred based on current speed.
-	// See section 8 of ANT+ Bicycle Power Device Profile.
-	//
 
 	// Increment event counter.
 	m_event_count++;
@@ -421,6 +467,10 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	else if (m_event_count % manufacturer_page_interleave == 0)
 	{
 		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
+	}
+	else if (m_event_count % battery_page_interleave == 0)
+	{
+		battery_status_transmit(p_power_meas->battery_status);
 	}
 	else if (m_event_count % extra_info_page_interleave == 0)
 	{
@@ -463,7 +513,8 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 		0x00
 	};
 
-	err_code = acknolwedge_message_transmit(tx_buffer);
+	err_code = broadcast_message_transmit(tx_buffer);
+	BP_LOG("[BP]:acknowledged mode [%.2x]\r\n", mode);
 
 	return err_code;
 }
@@ -485,7 +536,6 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 {
 	uint32_t err_code;
-	uint8_t times;
 
 	uint8_t tx_buffer[TX_BUFFER_SIZE] =
 	{
@@ -516,12 +566,50 @@ void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 	}
 	else
 	{
-		// Get rid of MSB and take the other bits for # of times to send.
-		for (times = (tx_type & 0x7F); times > 0; times--)
-		{
-			err_code = broadcast_message_transmit(tx_buffer);
-		}
+		// Send Broadcast.
+		err_code = broadcast_message_transmit(tx_buffer);
 	}
 
 	APP_ERROR_CHECK(err_code);
 }
+
+/**@brief	Sends Measurement Output Data Page (0x03).  Normally sent only during calibration.
+ *@note		The measurement output data page shall only be sent as a broadcast message from the
+ *@note		sensor to the display.
+ */
+void ant_bp_page3_tx_send(
+		uint8_t meas_count,						// Number of data types currently being rotated through.
+		ant_output_meas_data_type data_type,
+		int8_t scale_factor,
+		uint16_t timestamp,
+		int16_t value)
+{
+	uint32_t err_code;
+
+	if (meas_count > 15)	// Only 3 bits are used, upper 4 bits are reserved for future.
+	{
+		// Throw an error -- for now log
+		BP_LOG("[BP] Attempt to send more than 15 measurement data types, truncating.\r\n");
+		meas_count = 15;
+	}
+
+	uint8_t tx_buffer[TX_BUFFER_SIZE] =
+	{
+		ANT_PAGE_MEASURE_OUTPUT,
+		meas_count,
+		(uint8_t)data_type,
+		scale_factor,
+		LSB(timestamp),
+		MSB(timestamp),
+		LSB(value),
+		MSB(value)
+	};
+
+	// Send Broadcast.
+	err_code = broadcast_message_transmit(tx_buffer);
+
+	BP_LOG("[BP] Sent temperature.\r\n");
+
+	APP_ERROR_CHECK(err_code);
+}
+
