@@ -125,4 +125,12 @@ flash-all:
 name:
 	@echo $(PROJECT_NAME)
 
-.PHONY: debug deploy name
+# Set to 'Valid App'
+# Set 0 for CRC value
+# Set factory features to use charger
+prep:
+	$(NRFJPROG) --memwr 0x3fc00 --val 1		
+	$(NRFJPROG) --memwr 0x3fc04 --val 0		
+	$(NRFJPROG) --memwr 0x3fc90 --val 64	
+
+.PHONY: debug deploy name prep

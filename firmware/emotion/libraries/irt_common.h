@@ -17,7 +17,7 @@ All rights reserved.
 //
 // Global defines.
 //
-#define FACTORY_SETTINGS_BASE		0x3FC88								// Address in flash in the uppermost page just after bootloader_settings_t
+#define FACTORY_SETTINGS_BASE		0x3FC90								// Address in flash in the uppermost page just after bootloader_settings_t
 #define FEATURES ((volatile uint16_t *) FACTORY_SETTINGS_BASE) 			/* 16 bit array of features */
 
 #define	GRAVITY						9.81f								// Coefficent of gravity.
