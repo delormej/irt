@@ -24,13 +24,6 @@
 #define PH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-// RTC1 is based on a 32.768khz crystal, or in other words it oscillates
-// 32768 times per second.  The PRESCALER determins how often a tick gets
-// counted.  With a prescaler of 0, there are 32,768 ticks in 1 second
-// 1/2048th of a second would be 16 ticks (32768/2048)
-// # of 2048th's would then be ticks / 16.
-#define	TICK_FREQUENCY	(32768 / (NRF_RTC1->PRESCALER + 1))
-
 static peripheral_evt_t *mp_on_peripheral_evt;
 static app_timer_id_t m_led1_blink_timer_id;
 //static app_timer_id_t m_led2_blink_timer_id;
@@ -50,15 +43,20 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 		mp_on_peripheral_evt->on_accelerometer_evt();
 	}
 #ifdef IRT_REV_2A_H
-	// TODO: This button should be debounced.
-	else if (event_pins_high_to_low & (1 << PIN_PBSW))
+	else if (event_pins_low_to_high & (1 << PIN_PG_N))
 	{
-		mp_on_peripheral_evt->on_button_pbsw();
+		// Detects when the power adapter is unplugged.
+		mp_on_peripheral_evt->on_power_plug(false);
 	}
 	else if (event_pins_high_to_low & (1 << PIN_PG_N))
 	{
 		// Detects when the power adapter is plugged in.
-		mp_on_peripheral_evt->on_power_plug();
+		mp_on_peripheral_evt->on_power_plug(true);
+	}
+	// TODO: This button should be debounced.
+	else if (event_pins_high_to_low & (1 << PIN_PBSW))
+	{
+		mp_on_peripheral_evt->on_button_pbsw();
 	}
 #endif
 }
@@ -141,10 +139,11 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
 
 	pins_low_to_high_mask =
+			1 << PIN_PG_N			// On power adapter unplugged.
 #ifdef USE_BATTERY_CHARGER
-		1 << PIN_STAT1;				// On battery charger status changing.
+		| 1 << PIN_STAT1;				// On battery charger status changing.
 #else
-		0;
+		;
 #endif
 
 	pins_high_to_low_mask = ( 1 << PIN_SHAKE
