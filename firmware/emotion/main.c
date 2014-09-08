@@ -89,6 +89,7 @@ static accelerometer_data_t 			m_accelerometer_data;
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
 static irt_battery_status_t				m_battery_status;
+static uint32_t 						m_battery_start_ticks __attribute__ ((section(".noinit")));			// Time (in ticks) when we started running on battery.
 
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
@@ -931,9 +932,17 @@ static void on_accelerometer(void)
 }
 
 // Called when the power adapter is plugged in.
-static void on_power_plug(void)
+static void on_power_plug(bool plugged_in)
 {
-	LOG("[MAIN] Power plugged in.\r\n");
+	if (plugged_in)
+	{
+		LOG("[MAIN] Power plugged in.\r\n");
+	}
+	else
+	{
+		LOG("[MAIN] Power unplugged.\r\n");
+		m_battery_start_ticks = NRF_RTC1->COUNTER;
+	}
 }
 
 static void on_ble_connected(void) 
@@ -1274,10 +1283,29 @@ static void on_set_parameter(uint8_t* buffer)
  */
 static void on_battery_result(uint16_t battery_level)
 {
+	// Get current tick count.
+	uint32_t ticks_since_charge;
+	uint32_t current_ticks;
+
+	current_ticks = NRF_RTC1->COUNTER;
+
+	if (current_ticks > m_battery_start_ticks)
+	{
+		ticks_since_charge = current_ticks - m_battery_start_ticks;
+	}
+	else
+	{
+		// TODO: this shouldn't happen, but we need to test and this is a
+		// safety guard.
+		m_battery_start_ticks = current_ticks;
+		ticks_since_charge = 0;
+	}
+
 	// TODO: Hard coded for the moment, we will send battery page.
 	LOG("[MAIN] on_battery_result %i \r\n", battery_level);
 	//ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
-	m_battery_status = battery_status(battery_level);
+
+	m_battery_status = battery_status(battery_level, ticks_since_charge);
 }
 
 /**@brief	Configures chip power options.

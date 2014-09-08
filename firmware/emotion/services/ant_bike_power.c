@@ -221,9 +221,9 @@ static uint32_t battery_status_transmit(irt_battery_status_t status)
 	buffer[PAGE_NUMBER_INDEX]			= ANT_PAGE_BATTERY_STATUS;
 	buffer[1]							= 0xFF;
 	buffer[ANT_BAT_ID_INDEX]			= 0b00010001;	// bits 0:3 = Number of batteries, 4:7 = Identifier.
-	buffer[ANT_BAT_TIME_LSB_INDEX]	 	= 0;
-	buffer[ANT_BAT_TIME_INDEX]	 		= 0;
-	buffer[ANT_BAT_TIME_MSB_INDEX]		= 0;
+	buffer[ANT_BAT_TIME_LSB_INDEX]	 	= (uint8_t)status.operating_time;
+	buffer[ANT_BAT_TIME_INDEX]	 		= (status.operating_time & 0x0000FF00) >> 8;
+	buffer[ANT_BAT_TIME_MSB_INDEX]		= (status.operating_time & 0x00FF0000) >> 16;
 	buffer[ANT_BAT_FRAC_VOLT_INDEX]		= status.fractional_volt;
 	buffer[ANT_BAT_DESC_INDEX]			= status.coarse_volt |
 											status.status << 4 |

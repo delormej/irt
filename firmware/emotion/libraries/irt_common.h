@@ -106,6 +106,7 @@ typedef struct irt_battery_status_s
 	uint8_t		coarse_volt : 3;
 	uint8_t		status : 3;
 	uint8_t		resolution : 2;
+	uint32_t	operating_time;
 } irt_battery_status_t;
 
 /**@brief Cycling Power Service measurement type. */

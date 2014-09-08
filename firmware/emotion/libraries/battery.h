@@ -46,7 +46,7 @@ void battery_read_start(void);
 
 /**@brief	Converts millivolt reading into status structure.
  */
-irt_battery_status_t battery_status(uint16_t millivolts);
+irt_battery_status_t battery_status(uint16_t millivolts, uint32_t operating_time);
 
 // Reads the charger status.
 // TODO: Connect this with PPI to one of the LEDs.

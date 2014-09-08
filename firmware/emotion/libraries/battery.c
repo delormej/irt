@@ -130,7 +130,7 @@ void battery_read_start()
 
 /**@brief	Converts millivolt reading into status structure.
  */
-irt_battery_status_t battery_status(uint16_t millivolts)
+irt_battery_status_t battery_status(uint16_t millivolts, uint32_t operating_time)
 {
 	irt_battery_status_t status;
 
@@ -138,6 +138,7 @@ irt_battery_status_t battery_status(uint16_t millivolts)
 
 	status.coarse_volt = (uint8_t)volts;
 	status.fractional_volt = (uint8_t)((volts - status.coarse_volt) * 255);
+	status.operating_time = operating_time;
 
 	// TODO: implement actual rating of battery level more scientifically for
 	// lithium ion battery.
