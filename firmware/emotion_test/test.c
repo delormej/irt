@@ -146,6 +146,8 @@ int main(int argc, char *argv [])
 {
 	//				  [       uint32_t     ], [       uint32_t     ]
 	//uint8_t arr[] = { 0x00, 0x00, 0x03, 0x00, 0x00, 0x05, 0x00, 0x00 };
+	uint32_t value_24;
+	uint32_t value;
 
 	int16_t servo_pos, millivolts;
 	float force;
@@ -167,4 +169,15 @@ int main(int argc, char *argv [])
 
 	printf("Sequence is: %i\r\n", (sequence >> 5));;
 	printf("Last byte: %i\r\n", ((sequence >> 5) & 0x04) == 0x04);
+
+	value = 0xAABBCCDD;
+	value_24 = value & 0x00FFFFFF;
+
+	printf("Result MSB: %i\r\n", (value_24 & 0x00FF0000) >> 16);
+	printf("Result 1: %i\r\n", (value_24 & 0x0000FF00) >> 8);
+	printf("Result 2: %i\r\n", (uint8_t)value_24);
+	
+	
+
+
 }
