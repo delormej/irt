@@ -18,7 +18,7 @@
 #define PWM_CHANNEL_TASK_TOGGLE	3
 
 void pwm_init(uint32_t pwm_pin_output_number);
-void pwm_set_servo(uint32_t pulse_width_us);
-void pwm_stop_servo(void);
+uint32_t pwm_set_servo(uint32_t pulse_width_us);
+uint32_t pwm_stop_servo(void);
 
 #endif
