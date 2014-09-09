@@ -1,24 +1,38 @@
 /* Copyright (c) 2014 Inside Ride Technologies, LLC. All Rights Reserved.
  *
- * Uses 3 compare registers: 	[0] Pulse Width in us (position of servo in microseconds)
- *														[1] Period Width of 20ms
- *														[2] Duration of 500ms (longest it would take to move 180 degrees)
+ * PWM module for controlling servo.  Servo operates by sending the desired position as a HIGH pulse to a pin
+ * timed in microseconds as part of a 20ms cycle.  Each 20ms, the period the pin is high is the target position
+ * of the servo.
  *
- *      |<--- Period Width (20ms) ------>|
+ * Uses 3 compare registers: 	[0] Pulse Width in us (position of servo in microseconds) on time expiration toggles
+ * 									the pin HIGH
+ *								[1] Pulse Width * 2, on edge toggles pin LOW
+ *								[2] Delta period width of 20ms - (pulse*2), on this expiration clears the timer and
+ *									executes code to check if it should continue another cycle.
  *
- *      +--------+                       +--------+
- *      |        |                       |        |
- * -----+        +-----------------------+        +------
+ *         |<---   Period Width (20ms)  --->|
  *
- *   -->|        |<-- Pulse Width 
+ *         +--------+                       +--------+
+ *         |        |                       |        |
+ * --------+        +-----------------------+        +------
+ *
+ *      -->|        |<-- Pulse Width
 */
 #include "nrf_pwm.h"
 #include "nrf_sdm.h"
+#include "nrf_delay.h"
 #include "app_error.h"
-#include "app_timer.h"
 #include "debug.h"
 
-#define PULSE_TRAIN_DURATION	APP_TIMER_TICKS(1000, 0)		// In reality it should only take 500ms, but we're giving it 1000ms to be safe.
+#define PULSE_TRAIN_MAX_COUNT	50		// In reality it should only take 500ms, but we're giving it 1000ms to be safe, which is 20ms * count of 50
+#define RETRY_STOP_MAX			20		// # of times we should try to stop before just HARD stopping the timer.
+#define RETRY_STOP_DELAY		1000	// Time in microseconds to delay in between retries.
+
+#define IRT_PPI_CH_4			4
+#define IRT_PPI_CH_5			5
+
+#define IRT_PPI_CH_SERVO_1		IRT_PPI_CH_4
+#define IRT_PPI_CH_SERVO_2		IRT_PPI_CH_5
 
 /**@brief Debug logging for module.
  *
@@ -29,21 +43,35 @@
 #define PWM_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-uint32_t m_pwm_pin_output = 0;
-app_timer_id_t m_stop_pulse_train_timer;
-bool m_is_running = false;
+static uint32_t m_pwm_pin_output = 0;
+static uint8_t m_period_count = 0;
+static bool m_is_running = false;
+static bool m_stop_requested = false;
 
-/** @brief 	Called when the timer expires indicating it's time to stop the 
- *					pulse train going to the servo.
+
+/** @brief Function for handling timer 2 peripheral interrupts.
  */
-static void pulse_train_timeout_handler(void * p_context)
+void TIMER2_IRQHandler(void)
 {
-	pwm_stop_servo();
+	if (m_stop_requested || m_period_count > PULSE_TRAIN_MAX_COUNT-1)
+	{
+		NRF_TIMER2->TASKS_STOP = 1;
+		NRF_TIMER2->TASKS_CLEAR = 1;
+
+		// Clear flags and reset counter.
+		m_is_running = false;
+		m_stop_requested = false;
+		m_period_count = 0;
+	}
+	else
+	{
+		m_period_count++;
+	}
 }
 
 /** @brief Function for initializing the Timer 2 peripheral.
  */
-static void pwm_timers_init(void)
+static void pwm_timer_init(void)
 {
 	//
 	// Initialize timer2.
@@ -55,20 +83,16 @@ static void pwm_timers_init(void)
 	// Clears the timer, sets it to 0.
 	NRF_TIMER2->TASKS_CLEAR = 1;
 
-	// On compare 2 event, clear the counter and restart.
+	/* Configure COMPARE[2] behaviors: */
+
+	// On COMPARE[2] event, clear the counter and restart.
 	NRF_TIMER2->SHORTS = TIMER_SHORTS_COMPARE2_CLEAR_Msk;
 
-	//
-	// Create a single shot app timer to be used to stop sending signals to the servo
-	// after a preset amount of time (i.e. 2 seconds).
-	//
-	uint32_t err_code = app_timer_create(&m_stop_pulse_train_timer,
-			APP_TIMER_MODE_SINGLE_SHOT,
-			pulse_train_timeout_handler);
+	// Enable interrupt handler.
+    NVIC_EnableIRQ(TIMER2_IRQn);
 
-	// We assume that APP_TIMER_INIT has been previously called, if not
-	// this will throw NRF_ERROR_INVALID_STATE.
-	APP_ERROR_CHECK(err_code);
+    // Assign the interrupt to fire on COMPARE[2].
+    NRF_TIMER2->INTENSET = (TIMER_INTENSET_COMPARE2_Enabled << TIMER_INTENSET_COMPARE2_Pos);
 }
 
 
@@ -95,26 +119,24 @@ static void pwm_ppi_init(void)
 {
 	uint32_t err_code; 
 	
-	// TODO: remove hardcode channel nos and define them globally (irt_common).
-	// Using hardcoded channels that are available, 4 & 5.
-	err_code = sd_ppi_channel_assign(4,
+	// Assign PPI channels.
+	err_code = sd_ppi_channel_assign(IRT_PPI_CH_SERVO_1,
 			&NRF_TIMER2->EVENTS_COMPARE[0],
 			&NRF_GPIOTE->TASKS_OUT[PWM_CHANNEL_TASK_TOGGLE]);
+
+	APP_ERROR_CHECK(err_code);
 	
-	if (err_code == NRF_ERROR_SOC_PPI_INVALID_CHANNEL)
-		APP_ERROR_HANDLER(NRF_ERROR_SOC_PPI_INVALID_CHANNEL);
-	
-	err_code = sd_ppi_channel_assign(5, 
+	err_code = sd_ppi_channel_assign(IRT_PPI_CH_SERVO_2,
 			&NRF_TIMER2->EVENTS_COMPARE[1],
 			&NRF_GPIOTE->TASKS_OUT[PWM_CHANNEL_TASK_TOGGLE]);
-	
-	if (err_code == NRF_ERROR_SOC_PPI_INVALID_CHANNEL)
-	{
-		APP_ERROR_HANDLER(NRF_ERROR_SOC_PPI_INVALID_CHANNEL);
-	}
 
-	sd_ppi_channel_enable_set((PPI_CHEN_CH4_Enabled << PPI_CHEN_CH4_Pos)
+	APP_ERROR_CHECK(err_code);
+	
+	// Enable PPI channels.
+	err_code = sd_ppi_channel_enable_set((PPI_CHEN_CH4_Enabled << PPI_CHEN_CH4_Pos)
 			| (PPI_CHEN_CH5_Enabled << PPI_CHEN_CH5_Pos));
+
+	APP_ERROR_CHECK(err_code);
 }
 
 /**
@@ -132,7 +154,7 @@ void pwm_init(uint32_t pwm_pin_output_number)
 	
     pwm_gpiote_init();
     pwm_ppi_init();
-    pwm_timers_init();
+    pwm_timer_init();
 
     // Enabling constant latency as indicated by PAN 11 "HFCLK: Base current with HFCLK 
     // running is too high" found at Product Anomaly document found at
@@ -144,53 +166,82 @@ void pwm_init(uint32_t pwm_pin_output_number)
     //NRF_POWER->TASKS_CONSTLAT = 1;
 }
 
-void pwm_set_servo(uint32_t pulse_width_us)
+/**@brief	Starts the process of moving the servo to valid range (1,000 - 2,000) as
+ * 			defined in microseconds.
+ *			This call returns immediately and doesn't wait for the move to complete.
+ *			Error returned if servo target is out of range.
+ */
+uint32_t pwm_set_servo(uint32_t pulse_width_us)
 {
+	uint32_t err_code;
+
 	if (pulse_width_us < PWM_PULSE_MIN ||
 				pulse_width_us > PWM_PULSE_MAX)
 	{
-		PWM_LOG("[PWM]:pwm_set_servo WARN: Attempt to set servo out of range: %lu\r\n.",
+		PWM_LOG("[PWM]:pwm_set_servo ERROR: Attempt to set servo out of range: %lu\r\n.",
 				pulse_width_us);
-		// TODO: should return an error here.
-		return;
+		// TODO: assign an actual error number here.
+		return -1;
 	}
 
-	// Stop timer and clear any existing counts if already running.
+	// Ensure servo is not currently running.
 	if (m_is_running)
-		pwm_stop_servo();
+	{
+		err_code = pwm_stop_servo();
+
+		if (err_code != NRF_SUCCESS)
+		{
+			return err_code;
+		}
+	}
 
 	//
-	// Configuring capture compares for the timer.
-	//
-	// First timer capture is just a time buffer for the 1st call, it can be any
-	// value greater than a few hundred 'us'.  The 2nd is the actual pulse width
-	// in microseconds (us).  The 3rd is the remainder of the 20ms total period.
+	// Configuring capture compares for the timer. See file header for description.
+	// In theory, we could set the initial pin value to HIGH and get away with 1 less
+	// capture and hence free up a PPI channel if needed.
 	//
 	NRF_TIMER2->CC[0] = pulse_width_us;
 	NRF_TIMER2->CC[1] = pulse_width_us*2;
 	NRF_TIMER2->CC[2] = PWM_PERIOD_WIDTH_US - (pulse_width_us*2);
 
-	// Start the timers.
+	// Reset the counter.
+	m_period_count = 0;
+
+	// Start the timer to begin moving the servo.
 	NRF_TIMER2->TASKS_START = 1;
-	app_timer_start(m_stop_pulse_train_timer, PULSE_TRAIN_DURATION, NULL);
 
 	m_is_running = true;
+
+	return NRF_SUCCESS;
 }
 
-void pwm_stop_servo(void)
+/**@brief	Attempts to stop current servo movement if running.  This call blocks until the
+ * 			servo stops or a timeout occurs and an error is returned.
+ *
+ */
+uint32_t pwm_stop_servo(void)
 {
-	uint32_t tries = 0, max_tries = 5000;
+	uint8_t retries = 0;
 
-	//
-	// TODO: can't we just force the pin low here?
-	//
-	// Make sure that the pin is not high before sending another pulse train.
-	while ((NRF_GPIO->IN & (1 << m_pwm_pin_output)) != 0)
+	// Flag a stop.
+	m_stop_requested = true;
+
+	// Wait until stop is executed or we timeout.
+	while (m_is_running && ++retries < RETRY_STOP_MAX)
 	{
-		// Keep trying for a while and if no success - just stop the timer.
-		if (++tries > max_tries)
-			break;
+		nrf_delay_us(RETRY_STOP_DELAY);
 	}
-	NRF_TIMER2->TASKS_STOP = 1;
-	NRF_TIMER2->TASKS_CLEAR = 1;
+
+	// If we reach here and still running, there's a problem.
+	if (m_is_running)
+	{
+		PWM_LOG("[PWM] ERROR: Unable to stop servo.\r\n");
+		// we failed, TODO: assign an actual error number here.
+		return -1;
+	}
+	else
+	{
+		// Success in stopping the servo.
+		return NRF_SUCCESS;
+	}
 }

@@ -1231,7 +1231,7 @@ static void on_set_parameter(uint8_t* buffer)
 			break;
 
 		case IRT_MSG_SUBPAGE_CRR:
-			// Update CRR, note this doesn't update the profile in flash.
+			// Update CRR.
 			memcpy(&m_user_profile.ca_slope, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
 					sizeof(uint16_t));
 			memcpy(&m_user_profile.ca_intercept, &buffer[IRT_MSG_PAGE2_DATA_INDEX+2],
@@ -1240,6 +1240,9 @@ static void on_set_parameter(uint8_t* buffer)
 					m_user_profile.ca_slope, m_user_profile.ca_intercept);
 			// Reinitialize power.
 			power_init(&m_user_profile, DEFAULT_CRR);
+
+			// Schedule update to the user profile.
+			profile_update_sched();
 			break;
 
 		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
