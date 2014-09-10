@@ -82,30 +82,6 @@ static __INLINE uint32_t ac_adapter_off(void)
 #endif
 }
 
-/* Functions related to the ADC.*/
-static void adc_config()
-{
-	// Configure ADC
-	NRF_ADC->INTENSET = ADC_INTENSET_END_Msk;
-	NRF_ADC->CONFIG = (ADC_CONFIG_RES_10bit << ADC_CONFIG_RES_Pos) |
-		(ADC_CONFIG_INPSEL_AnalogInputOneThirdPrescaling << ADC_CONFIG_INPSEL_Pos) |
-		(ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos) |
-		(ADC_CONFIG_PSEL_AnalogInput2 << ADC_CONFIG_PSEL_Pos) |
-		(ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);
-}
-
-static void adc_start()
-{
-	uint32_t err_code;
-
-	// Stop any running conversions.
-	NRF_ADC->EVENTS_END = 0;
-
-	// Enable the ADC and start it.
-	NRF_ADC->ENABLE = ADC_ENABLE_ENABLE_Enabled;
-	NRF_ADC->TASKS_START = 1;
-}
-
 /**@brief Initialize all peripherial pins.
  */
 static void irt_gpio_init()
