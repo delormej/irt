@@ -37,7 +37,7 @@
 /**@brief	Helper to get the value independent of whether we persist.
  */
 #define SETTING_VALUE(SETTING) \
-	(SETTING & 0x7FFFF)
+	(SETTING & 0x7FFF)
 
 /**@brief	Structure used to for storing/reading user profile.
  * 			Must be at least PSTORAGE_MIN_BLOCK_SIZE (i.e. 16 bytes) in size and should be word aligned (16 bits).
