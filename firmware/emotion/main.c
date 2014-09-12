@@ -784,8 +784,11 @@ static void settings_update(uint8_t* buffer)
 
 	m_user_profile.settings = SETTING_VALUE(settings);
 
-	LOG("[MAIN] Request to update settings to: ACCEL:%i \r\n",
-				SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON) );
+	/*LOG("[MAIN] Request to update settings to: ACCEL:%i \r\n",
+				SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON) );*/
+
+	LOG("[MAIN]:settings_update raw: %i, translated: %i\r\n",
+			settings, m_user_profile.settings);
 
 	if (SETTING_PERSIST(settings))
 	{
