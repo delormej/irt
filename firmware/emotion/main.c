@@ -500,6 +500,8 @@ static void ant_4hz_timeout_handler(void * p_context)
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 	irt_power_meas_t* p_power_meas_last 		= NULL;
 
+	LOG("[MAIN] Enter 4hz: %.2f \r\n", SECONDS_CURRENT);
+
 	// All ANT messages on the Bike Power channel are sent in this function:
 
 	// Standard ANT+ Device broadcast (cycle of 5 messages)
@@ -598,6 +600,8 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Send remote control a heartbeat.
 	ant_ctrl_available();
+
+	LOG("[MAIN] Exit 4hz: %.2f \r\n", SECONDS_CURRENT);
 }
 
 /**@brief Function for starting the application timers.
@@ -628,7 +632,7 @@ static void timers_init(void)
     uint32_t err_code;
 
 	// Initialize timer module
-    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, true);
 
     err_code = app_timer_create(&m_ant_4hz_timer_id,
                                 APP_TIMER_MODE_REPEATED,
