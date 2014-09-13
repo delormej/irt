@@ -183,6 +183,10 @@ static void queue_resistance_ack(uint8_t op_code, uint16_t value)
 	m_resistance_ack_pending[0] = op_code;
 	m_resistance_ack_pending[1] = LSB(value);
 	m_resistance_ack_pending[2] = MSB(value);
+
+	LOG("[MAIN] Queued resistance ack for [%.2x][%.2x]:\r\n",
+			m_resistance_ack_pending[1],
+			m_resistance_ack_pending[2]);
 }
 
 static void queue_data_response(ant_request_data_page_t request)
@@ -500,7 +504,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 	irt_power_meas_t* p_power_meas_last 		= NULL;
 
-	LOG("[MAIN] Enter 4hz: %.2f \r\n", SECONDS_CURRENT);
+	//LOG("[MAIN] Enter 4hz: %.2f \r\n", SECONDS_CURRENT);
 
 	// All ANT messages on the Bike Power channel are sent in this function:
 
@@ -601,7 +605,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 	// Send remote control a heartbeat.
 	ant_ctrl_available();
 
-	LOG("[MAIN] Exit 4hz: %.2f \r\n", SECONDS_CURRENT);
+	//LOG("[MAIN] Exit 4hz: %.2f \r\n", SECONDS_CURRENT);
 }
 
 /**@brief Function for starting the application timers.
