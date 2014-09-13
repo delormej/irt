@@ -21,11 +21,12 @@
 #include "nrf_pwm.h"
 #include "nrf_sdm.h"
 #include "nrf_delay.h"
+#include "app_util.h"
 #include "app_error.h"
 #include "debug.h"
 
 #define PULSE_TRAIN_MAX_COUNT	50		// In reality it should only take 500ms, but we're giving it 1000ms to be safe, which is 20ms * count of 50
-#define RETRY_STOP_MAX			20		// # of times we should try to stop before just HARD stopping the timer.
+#define RETRY_STOP_MAX			25		// # of times we should try to stop before just HARD stopping the timer.
 #define RETRY_STOP_DELAY		1000	// Time in microseconds to delay in between retries.
 
 #define IRT_PPI_CH_4			4
@@ -49,24 +50,54 @@ static bool m_is_running = false;
 static bool m_stop_requested = false;
 
 
+static void timer_stop()
+{
+	sd_nvic_DisableIRQ(TIMER2_IRQn);
+
+	NRF_TIMER2->TASKS_STOP = 1;
+	NRF_TIMER2->TASKS_CLEAR = 1;
+
+	// Clear flags and reset counter.
+	m_is_running = false;
+	m_stop_requested = false;
+
+	//PWM_LOG("[PWM] Stopping at count: %i.\r\n", m_period_count);
+	m_period_count = 0;
+}
+
 /** @brief Function for handling timer 2 peripheral interrupts.
  */
 void TIMER2_IRQHandler(void)
 {
-	if (m_stop_requested || m_period_count > PULSE_TRAIN_MAX_COUNT-1)
-	{
-		NRF_TIMER2->TASKS_STOP = 1;
-		NRF_TIMER2->TASKS_CLEAR = 1;
+	// Clear the interrupt otherwise it will just keep calling this.
+	//NRF_TIMER2->INTENCLR = 1;
+	//NRF_TIMER2->INTENCLR = TIMER_INTENCLR_COMPARE2_Msk;
 
-		// Clear flags and reset counter.
-		m_is_running = false;
-		m_stop_requested = false;
-		m_period_count = 0;
-	}
-	else
+	// Clear the event?
+    if ((NRF_TIMER2->EVENTS_COMPARE[2] != 0) &&
+       ((NRF_TIMER2->INTENSET & TIMER_INTENSET_COMPARE2_Msk) != 0))
 	{
-		m_period_count++;
+		NRF_TIMER2->EVENTS_COMPARE[2] = 0;
 	}
+
+	// Clear the timer and restart.
+	NRF_TIMER2->TASKS_CLEAR = 1;
+
+
+	// This interrupt handler should get called every 20ms - not more frequently.
+	//PWM_LOG("[PWM] IRQ: %i @ %.2f.\r\n", NRF_TIMER2->CC[2], SECONDS_CURRENT);
+
+	if (m_stop_requested || m_period_count++ >= PULSE_TRAIN_MAX_COUNT)
+	{
+		timer_stop();
+	}
+	/*else
+	{
+		if (m_period_count % 10 == 0)
+		{
+			PWM_LOG("[PWM] Moving...%i\r\n", m_period_count);
+		}
+	}*/
 }
 
 /** @brief Function for initializing the Timer 2 peripheral.
@@ -85,14 +116,10 @@ static void pwm_timer_init(void)
 
 	/* Configure COMPARE[2] behaviors: */
 
-	// On COMPARE[2] event, clear the counter and restart.
-	NRF_TIMER2->SHORTS = TIMER_SHORTS_COMPARE2_CLEAR_Msk;
+	// On COMPARE[2] event, clear the counter to restart.
+	//NRF_TIMER2->SHORTS = (TIMER_SHORTS_COMPARE2_CLEAR_Enabled << TIMER_SHORTS_COMPARE2_CLEAR_Pos);
 
-	// Enable interrupt handler.
-    NVIC_EnableIRQ(TIMER2_IRQn);
-
-    // Assign the interrupt to fire on COMPARE[2].
-    NRF_TIMER2->INTENSET = (TIMER_INTENSET_COMPARE2_Enabled << TIMER_INTENSET_COMPARE2_Pos);
+    sd_nvic_SetPriority(TIMER2_IRQn, APP_IRQ_PRIORITY_LOW);
 }
 
 
@@ -207,10 +234,19 @@ uint32_t pwm_set_servo(uint32_t pulse_width_us)
 	// Reset the counter.
 	m_period_count = 0;
 
-	// Start the timer to begin moving the servo.
-	NRF_TIMER2->TASKS_START = 1;
-
 	m_is_running = true;
+
+    // Assign the interrupt to fire on COMPARE[2].
+    NRF_TIMER2->INTENSET = (TIMER_INTENSET_COMPARE2_Enabled << TIMER_INTENSET_COMPARE2_Pos);
+
+	// Enable interrupt handler.
+	sd_nvic_EnableIRQ(TIMER2_IRQn);
+
+	//PWM_LOG("[PWM] Set Servo started: %.2f.\r\n", SECONDS_CURRENT);
+
+	// Start the timer to begin moving the servo.
+	NRF_TIMER2->TASKS_CLEAR = 1;
+	NRF_TIMER2->TASKS_START = 1;
 
 	return NRF_SUCCESS;
 }
@@ -235,7 +271,10 @@ uint32_t pwm_stop_servo(void)
 	// If we reach here and still running, there's a problem.
 	if (m_is_running)
 	{
-		PWM_LOG("[PWM] ERROR: Unable to stop servo.\r\n");
+		timer_stop();
+
+		PWM_LOG("[PWM] ERROR: Unable to properly stop servo.\r\n");
+
 		// we failed, TODO: assign an actual error number here.
 		return -1;
 	}
