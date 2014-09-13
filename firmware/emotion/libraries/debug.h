@@ -2,8 +2,12 @@
 #define __DEBUG_H_
 
 #include <stdio.h>
+#include "irt_peripheral.h"
 
 #ifdef ENABLE_DEBUG_LOG
+
+#define SECONDS_CURRENT \
+	(NRF_RTC1->COUNTER / (float)TICK_FREQUENCY)
 
 /**
  * @brief Debug module initialization.

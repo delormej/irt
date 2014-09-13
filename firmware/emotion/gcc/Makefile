@@ -74,8 +74,8 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 # Define the Software Revision.
 ############################################
 SW_REVISION_MAJ := 0
-SW_REVISION_MIN := 8
-SW_REVISION_BLD := 84
+SW_REVISION_MIN := 10
+SW_REVISION_BLD := 1
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)

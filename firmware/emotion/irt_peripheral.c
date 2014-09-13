@@ -24,13 +24,6 @@
 #define PH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-// RTC1 is based on a 32.768khz crystal, or in other words it oscillates
-// 32768 times per second.  The PRESCALER determins how often a tick gets
-// counted.  With a prescaler of 0, there are 32,768 ticks in 1 second
-// 1/2048th of a second would be 16 ticks (32768/2048)
-// # of 2048th's would then be ticks / 16.
-#define	TICK_FREQUENCY	(32768 / (NRF_RTC1->PRESCALER + 1))
-
 static peripheral_evt_t *mp_on_peripheral_evt;
 static app_timer_id_t m_led1_blink_timer_id;
 //static app_timer_id_t m_led2_blink_timer_id;
