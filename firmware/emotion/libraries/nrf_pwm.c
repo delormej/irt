@@ -25,15 +25,23 @@
 #include "app_error.h"
 #include "debug.h"
 
-#define PULSE_TRAIN_MAX_COUNT	50		// In reality it should only take 500ms, but we're giving it 1000ms to be safe, which is 20ms * count of 50
-#define RETRY_STOP_MAX			5		// # of times we should try to stop before just HARD stopping the timer.
-#define RETRY_STOP_DELAY		20000	// Time in microseconds to delay in between retries.
+#define PULSE_TRAIN_MAX_COUNT		50		// In reality it should only take 500ms, but we're giving it 1000ms to be safe, which is 20ms * count of 50
+#define RETRY_STOP_MAX				5		// # of times we should try to stop before just HARD stopping the timer.
+#define RETRY_STOP_DELAY			20000	// Time in microseconds to delay in between retries.
 
-#define IRT_PPI_CH_4			4
-#define IRT_PPI_CH_5			5
+#define PWM_PERIOD_WIDTH_US			20*1000		// 20ms
+#define PWM_DURATION_US				500*1000	// 500ms is how long we should pulse for.
+#define PWM_TIMER_PRESCALER 		4U 				// Prescaler 4 results in 1 tick == 1 microsecond (μs)
+#define PWM_PULSE_MIN				699
+#define PWM_PULSE_MAX				2107
 
-#define IRT_PPI_CH_SERVO_1		IRT_PPI_CH_4
-#define IRT_PPI_CH_SERVO_2		IRT_PPI_CH_5
+// TODO: move generic define of channels to irt_peripheral and then assignment to specific funciton here.
+#define IRT_GPIOTE_CH_TASK_TOGGLE	3
+#define IRT_PPI_CH_4				4
+#define IRT_PPI_CH_5				5
+
+#define IRT_PPI_CH_SERVO_1			IRT_PPI_CH_4
+#define IRT_PPI_CH_SERVO_2			IRT_PPI_CH_5
 
 /**@brief Debug logging for module.
  *
@@ -49,8 +57,9 @@ static uint8_t m_period_count = 0;
 static bool m_is_running = false;
 static bool m_stop_requested = false;
 
-
-static void timer_stop()
+/**@brief	Forces the timer to stop.
+ */
+static void pwm_timer_stop()
 {
 	// Disable interrupt.
 	sd_nvic_DisableIRQ(TIMER2_IRQn);
@@ -67,58 +76,16 @@ static void timer_stop()
 	m_period_count = 0;
 }
 
-/** @brief Function for handling timer 2 peripheral interrupts.
- */
-void TIMER2_IRQHandler(void)
-{
-    if ((NRF_TIMER2->EVENTS_COMPARE[2] != 0) &&
-       ((NRF_TIMER2->INTENSET & TIMER_INTENSET_COMPARE2_Msk) != 0))
-	{
-    	// Clear the event compare interrupt, otherwise interrupt handler will get
-    	// called continuously.
-		NRF_TIMER2->EVENTS_COMPARE[2] = 0;
-	}
-
-	// This interrupt handler should get called every 20ms - not more frequently.
-	//PWM_LOG("[PWM] IRQ: %i @ %.2f Stop? %i.\r\n", NRF_TIMER2->CC[2], SECONDS_CURRENT, m_stop_requested);
-
-	if (m_stop_requested || m_period_count++ >= PULSE_TRAIN_MAX_COUNT)
-	{
-		timer_stop();
-	}
-	else
-	{
-		// Clear the timer and restart.
-		NRF_TIMER2->TASKS_CLEAR = 1;
-	}
-
-	/*else
-	{
-		if (m_period_count % 10 == 0)
-		{
-			PWM_LOG("[PWM] Moving...%i\r\n", m_period_count);
-		}
-	}*/
-}
-
-/** @brief Function for initializing the Timer 2 peripheral.
+/**@brief Function for initializing the Timer 2 peripheral.
  */
 static void pwm_timer_init(void)
 {
-	//
-	// Initialize timer2.
-	//
 	NRF_TIMER2->MODE        = TIMER_MODE_MODE_Timer;
 	NRF_TIMER2->BITMODE     = TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
-	NRF_TIMER2->PRESCALER   = PWM_TIMER_PRESCALER;
+	NRF_TIMER2->PRESCALER   = PWM_TIMER_PRESCALER;		// Such that each count is 1us.
 
 	// Clears the timer, sets it to 0.
 	NRF_TIMER2->TASKS_CLEAR = 1;
-
-	/* Configure COMPARE[2] behaviors: */
-
-	// On COMPARE[2] event, clear the counter to restart.
-	//NRF_TIMER2->SHORTS = (TIMER_SHORTS_COMPARE2_CLEAR_Enabled << TIMER_SHORTS_COMPARE2_CLEAR_Pos);
 
     sd_nvic_SetPriority(TIMER2_IRQn, APP_IRQ_PRIORITY_LOW);
 }
@@ -132,16 +99,18 @@ static void pwm_gpiote_init(void)
 
     // Configure GPIOTE channel 0 to toggle the PWM pin state
 	// @note Only one GPIOTE task can be connected to an output pin.
-    nrf_gpiote_task_config(PWM_CHANNEL_TASK_TOGGLE, 
+    nrf_gpiote_task_config(IRT_GPIOTE_CH_TASK_TOGGLE,
     		m_pwm_pin_output,
     		NRF_GPIOTE_POLARITY_TOGGLE,
     		NRF_GPIOTE_INITIAL_VALUE_LOW);
 }
 
-/** @brief Function for initializing the Programmable Peripheral Interconnect peripheral.
+/**@brief Function for initializing the Programmable Peripheral Interconnect peripheral.
  *
- * 	@note	The PPI allows an event on one peripheral to automatically execute a task on 
- *				another peripheral without using the CPU.  In this case we are 
+ * @note	The PPI allows an event on one peripheral to automatically execute a task on
+ *			another peripheral without using the CPU.  Events are tied to the capture compare
+ *			of the timer, when a time is hit, toggles the output pin forming the pulse width
+ *			required to move the servo.  One channel per event/task pair.
  */
 static void pwm_ppi_init(void)
 {
@@ -150,13 +119,13 @@ static void pwm_ppi_init(void)
 	// Assign PPI channels.
 	err_code = sd_ppi_channel_assign(IRT_PPI_CH_SERVO_1,
 			&NRF_TIMER2->EVENTS_COMPARE[0],
-			&NRF_GPIOTE->TASKS_OUT[PWM_CHANNEL_TASK_TOGGLE]);
+			&NRF_GPIOTE->TASKS_OUT[IRT_GPIOTE_CH_TASK_TOGGLE]);
 
 	APP_ERROR_CHECK(err_code);
 	
 	err_code = sd_ppi_channel_assign(IRT_PPI_CH_SERVO_2,
 			&NRF_TIMER2->EVENTS_COMPARE[1],
-			&NRF_GPIOTE->TASKS_OUT[PWM_CHANNEL_TASK_TOGGLE]);
+			&NRF_GPIOTE->TASKS_OUT[IRT_GPIOTE_CH_TASK_TOGGLE]);
 
 	APP_ERROR_CHECK(err_code);
 	
@@ -167,37 +136,11 @@ static void pwm_ppi_init(void)
 	APP_ERROR_CHECK(err_code);
 }
 
-/**
- * @brief Initializes PWM.
- *
- * @note	APP_TIMER_INIT must be previously called, if not NRF_ERROR_INVALID_STATE 
- *				will get thrown as an exception.
- *
- *				TODO: we could use NRF_TIMER1 or we could remove PPI dependency and do it
- *				in CPU code and not use so many HW resources.  This should be considered.
- */
-void pwm_init(uint32_t pwm_pin_output_number)
-{
-    m_pwm_pin_output = pwm_pin_output_number;
-	
-    pwm_gpiote_init();
-    pwm_ppi_init();
-    pwm_timer_init();
-
-    // Enabling constant latency as indicated by PAN 11 "HFCLK: Base current with HFCLK 
-    // running is too high" found at Product Anomaly document found at
-    // https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF51822/#Downloads
-    //
-    // @note This example does not go to low power mode therefore constant latency is not needed.
-    //       However this setting will ensure correct behaviour when routing TIMER events through 
-    //       PPI (shown in this example) and low power mode simultaneously.
-    //NRF_POWER->TASKS_CONSTLAT = 1;
-}
-
 /**@brief	Starts the process of moving the servo to valid range (1,000 - 2,000) as
  * 			defined in microseconds.
  *			This call returns immediately and doesn't wait for the move to complete.
- *			Error returned if servo target is out of range.
+ *
+ *			NRF_ERROR_INVALID_PARAM returned if servo target is out of range.
  */
 uint32_t pwm_set_servo(uint32_t pulse_width_us)
 {
@@ -208,8 +151,8 @@ uint32_t pwm_set_servo(uint32_t pulse_width_us)
 	{
 		PWM_LOG("[PWM]:pwm_set_servo ERROR: Attempt to set servo out of range: %lu\r\n.",
 				pulse_width_us);
-		// TODO: assign an actual error number here.
-		return -1;
+
+		return NRF_ERROR_INVALID_PARAM;
 	}
 
 	// Ensure servo is not currently running.
@@ -232,9 +175,8 @@ uint32_t pwm_set_servo(uint32_t pulse_width_us)
 	NRF_TIMER2->CC[1] = pulse_width_us*2;
 	NRF_TIMER2->CC[2] = PWM_PERIOD_WIDTH_US - (pulse_width_us*2);
 
-	// Reset the counter.
+	// Reset the counter & flag.
 	m_period_count = 0;
-
 	m_is_running = true;
 
     // Assign the interrupt to fire on COMPARE[2].
@@ -275,16 +217,52 @@ uint32_t pwm_stop_servo(void)
 	// If we reach here and still running, there's a problem.
 	if (m_is_running)
 	{
-		timer_stop();
-
 		PWM_LOG("[PWM] ERROR: Unable to properly stop servo.\r\n");
 
 		// we failed, TODO: assign an actual error number here.
-		return -1;
+		return NRF_ERROR_INVALID_STATE;
 	}
 	else
 	{
 		// Success in stopping the servo.
 		return NRF_SUCCESS;
+	}
+}
+
+/**@brief 	Initializes PWM.
+ *
+ */
+void pwm_init(uint32_t pwm_pin_output_number)
+{
+    m_pwm_pin_output = pwm_pin_output_number;
+
+    pwm_gpiote_init();
+    pwm_ppi_init();
+    pwm_timer_init();
+}
+
+/**@brief Function for handling timer 2 peripheral interrupts.
+ */
+void TIMER2_IRQHandler(void)
+{
+    if ((NRF_TIMER2->EVENTS_COMPARE[2] != 0) &&
+       ((NRF_TIMER2->INTENSET & TIMER_INTENSET_COMPARE2_Msk) != 0))
+	{
+    	// Clear the event compare interrupt, otherwise interrupt handler will get
+    	// called continuously.
+		NRF_TIMER2->EVENTS_COMPARE[2] = 0;
+	}
+
+	// This interrupt handler should get called every 20ms - not more frequently.
+	//PWM_LOG("[PWM] IRQ: %i @ %.2f Stop? %i.\r\n", NRF_TIMER2->CC[2], SECONDS_CURRENT, m_stop_requested);
+
+	if (m_stop_requested || m_period_count++ >= PULSE_TRAIN_MAX_COUNT)
+	{
+		pwm_timer_stop();
+	}
+	else
+	{
+		// Clear the timer and restart.
+		NRF_TIMER2->TASKS_CLEAR = 1;
 	}
 }

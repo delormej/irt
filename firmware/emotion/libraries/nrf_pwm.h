@@ -9,14 +9,6 @@
 #include "nrf_gpio.h"
 #include "nrf_pwm.h"
 
-#define PWM_PERIOD_WIDTH_US			20*1000		// 20ms
-#define PWM_DURATION_US					500*1000	// 500ms is how long we should pulse for.
-#define PWM_TIMER_PRESCALER 		4U 				// Prescaler 4 results in 1 tick == 1 microsecond 
-#define PWM_PULSE_MIN						699
-#define PWM_PULSE_MAX						2107
-
-#define PWM_CHANNEL_TASK_TOGGLE	3
-
 void pwm_init(uint32_t pwm_pin_output_number);
 uint32_t pwm_set_servo(uint32_t pulse_width_us);
 uint32_t pwm_stop_servo(void);
