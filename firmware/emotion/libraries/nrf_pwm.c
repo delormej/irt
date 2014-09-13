@@ -20,6 +20,7 @@
 */
 #include "nrf_pwm.h"
 #include "nrf_sdm.h"
+#include "nrf51.h"
 #include "nrf_delay.h"
 #include "app_util.h"
 #include "app_error.h"
