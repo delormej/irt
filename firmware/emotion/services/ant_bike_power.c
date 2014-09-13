@@ -514,7 +514,8 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 	};
 
 	err_code = broadcast_message_transmit(tx_buffer);
-	BP_LOG("[BP]:acknowledged mode [%.2x]\r\n", mode);
+	BP_LOG("[BP]:acknowledged OP:[%.2x] VAL:[%.2x][%.2x]\r\n",
+			mode, LOW_BYTE(value), HIGH_BYTE(value));
 
 	return err_code;
 }
