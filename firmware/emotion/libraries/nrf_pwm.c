@@ -20,14 +20,14 @@
 */
 #include "nrf_pwm.h"
 #include "nrf_sdm.h"
+#include "nrf51.h"
 #include "nrf_delay.h"
 #include "app_util.h"
 #include "app_error.h"
 #include "debug.h"
 
 #define PULSE_TRAIN_MAX_COUNT		50		// In reality it should only take 500ms, but we're giving it 1000ms to be safe, which is 20ms * count of 50
-#define RETRY_STOP_MAX				5		// # of times we should try to stop before just HARD stopping the timer.
-#define RETRY_STOP_DELAY			20000	// Time in microseconds to delay in between retries.
+#define RETRY_STOP_MAX				20		// # of times we should try to stop before just HARD stopping the timer.
 
 #define PWM_PERIOD_WIDTH_US			20*1000		// 20ms
 #define PWM_DURATION_US				500*1000	// 500ms is how long we should pulse for.
@@ -57,16 +57,16 @@ static uint8_t m_period_count = 0;
 static bool m_is_running = false;
 static bool m_stop_requested = false;
 
-/**@brief	Forces the timer to stop.
+/**@brief	Forces hard timer stop.
  */
-static void pwm_timer_stop()
+static void __INLINE pwm_timer_stop()
 {
-	// Disable interrupt.
-	sd_nvic_DisableIRQ(TIMER2_IRQn);
-
 	// Stop & reset timer
 	NRF_TIMER2->TASKS_STOP = 1;
 	NRF_TIMER2->TASKS_CLEAR = 1;
+
+	// Disable interrupt.
+	sd_nvic_DisableIRQ(TIMER2_IRQn);
 
 	// Clear state flags.
 	m_is_running = false;
@@ -206,25 +206,26 @@ uint32_t pwm_stop_servo(void)
 	m_stop_requested = true;
 	retries = 0;
 
-	// Wait until stop request is fulfilled or we timeout.
-	while (m_is_running && (retries < RETRY_STOP_MAX))
+	while(nrf_gpio_pin_read(m_pwm_pin_output) == 1 && (retries++ < RETRY_STOP_MAX))
 	{
-		retries++;
-		nrf_delay_us(RETRY_STOP_DELAY);
-		PWM_LOG("[PWM] pwm_stop_servo retry %i @ %.2f \r\n", retries, SECONDS_CURRENT);
+		// This should never spin more than 2ms.
+		nrf_delay_us(100);	// nominal delay
 	}
 
-	// If we reach here and still running, there's a problem.
-	if (m_is_running)
-	{
-		PWM_LOG("[PWM] ERROR: Unable to properly stop servo.\r\n");
+	pwm_timer_stop();
 
-		// we failed, TODO: assign an actual error number here.
+	if (retries > RETRY_STOP_MAX)
+	{
+		// Force off.
+		nrf_gpio_pin_write(m_pwm_pin_output, 0);
+
+		PWM_LOG("[PWM] pwm_stop_servo ERROR: Unable to properly stop servo.\r\n");
+
+		// Return error.
 		return NRF_ERROR_INVALID_STATE;
 	}
 	else
 	{
-		// Success in stopping the servo.
 		return NRF_SUCCESS;
 	}
 }

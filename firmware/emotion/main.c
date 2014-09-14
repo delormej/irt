@@ -28,6 +28,7 @@
 #include <math.h>
 #include "float.h"
 #include "nordic_common.h"
+#include "nrf51.h"
 #include "softdevice_handler.h"
 #include "nrf_error.h"
 #include "app_scheduler.h"
@@ -54,7 +55,7 @@
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define CALIBRATION_INTERVAL			APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Calibration message interval.
 #define BLE_ADV_BLINK_RATE_MS			500u
-#define SCHED_QUEUE_SIZE                16                                          /**< Maximum number of events in the scheduler queue. */
+#define SCHED_QUEUE_SIZE                4                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
 //
@@ -157,16 +158,18 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 	// TODO: figure out how to display the stack (p_error->stack_info).
 
+#if defined(IRT_REV_2A_H)
 	// Note this function does not return - it will hang waiting for a debugger to attach.
-	for (;;)
-	{
-		// Do nothing, attach debugger.
-	}
-#else
+	LOG("[MAIN]:app_error_handler -- PRESS BUTTON TO RESET\r\n.");
+	while (nrf_gpio_pin_read(PIN_PBSW) == 1) {}			// Do nothing, attach debugger until the button is pressed.
+#else // IRT_REV_2A_H
+	for (;;) {}
+#endif // IRT_REV_2A_H
+
+#endif // ENABLE_DEBUG_ASSERT
 	// Wait 1 second, to give user a chance to see LED indicators and then reset the system.
 	nrf_delay_ms(1000);
 	NVIC_SystemReset();
-#endif // ENABLE_DEBUG_ASSERT
 }
 
 /**@brief	Handle Soft Device system events. */
