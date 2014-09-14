@@ -10,6 +10,7 @@
 ********************************************************************************/
 
 #include "irt_peripheral.h"
+#include "app_error.h"
 #include "power.h"
 #include "resistance.h"
 #include "nrf_pwm.h"
@@ -73,6 +74,7 @@ uint16_t resistance_position_get()
  */
 uint16_t resistance_position_set(uint16_t servo_pos)
 {
+	uint32_t err_code;
 	// Actual servo position after calibration.
 	uint16_t actual_servo_pos;
 	//
@@ -118,7 +120,9 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 			actual_servo_pos = 1000;
 		}
 
-		pwm_set_servo(actual_servo_pos);
+		err_code = pwm_set_servo(actual_servo_pos);
+		APP_ERROR_CHECK(err_code);
+
 		m_servo_pos = servo_pos;
 		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
 	}
