@@ -25,24 +25,21 @@ uint8_t  m_boot_settings[CODE_PAGE_SIZE] __attribute__((section(".bootloader_set
 
 uint32_t m_uicr_bootloader_start_address __attribute__((section(".NRF_UICR_BOOT_START_SECT"))) __attribute__((used)) = BOOTLOADER_REGION_START;
 
-void bootloader_util_app_start(uint32_t start_addr)
-{
-#if 0
-    { /* First approach to start the application */
-        typedef void (*application_main_t)();
-        application_main_t application_main = *(application_main_t*)(start_addr+4);
-        application_main();
-    }
-#else
-    { /* Second approach to start the application */
-        asm volatile(" LDR   R0, =0x20000          \n\t" // Assign app code address
-                     " LDR   R2, [R0]              \n\t" // Get App MSP
-                     " MSR   MSP, R2               \n\t" // Set the main stack pointer to the applications MSP
-                     " LDR   R3, [R0, #0x00000004] \n\t" // Get application reset vector address
-                     " BX    R3                    \n\t" // No return - stack code is now activated only through SVC and plain interrupts
-                     " .ALIGN                      ");
-    }
-#endif
+// Bootloader settings.
+uint8_t __attribute__((section(".bootloader_settings_sect"))) m_bootloader_settings[CODE_PAGE_SIZE] __attribute__((used));
+
+// This variable isn't used, but forces the bootloader start address to be written to the hex file.
+uint32_t __attribute__((section(".NRF_UICR_BOOT_START_SECT"))) m_uicr_bootloader_start_address = BOOTLOADER_REGION_START;
+
+// Start the application
+inline void bootloader_util_app_start(uint32_t start_addr)
+{ 
+    asm volatile(" LDR   R0, =0x20000          \n\t" // Assign app code address
+                    " LDR   R2, [R0]              \n\t" // Get App MSP
+                    " MSR   MSP, R2               \n\t" // Set the main stack pointer to the applications MSP
+                    " LDR   R3, [R0, #0x00000004] \n\t" // Get application reset vector address
+                    " BX    R3                    \n\t" // No return - stack code is now activated only through SVC and plain interrupts
+                    " .ALIGN                      ");
 }
 
 void bootloader_util_settings_get(const bootloader_settings_t** pp_bootloader_settings)
