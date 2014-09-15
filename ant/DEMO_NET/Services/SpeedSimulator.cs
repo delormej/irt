@@ -27,7 +27,7 @@ namespace ANT_Console.Services
             m_port.Open();
             */
 
-            m_port = new UnmanagedIRSerialPort("COM3", 115200); // 38400);
+            m_port = new UnmanagedIRSerialPort("COM5", 115200); // 38400);
             m_port.Open();
 
             m_timer = new Timer(Simulate_Callback);

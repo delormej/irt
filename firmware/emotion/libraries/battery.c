@@ -130,6 +130,7 @@ irt_battery_status_t battery_status(uint16_t millivolts, uint32_t operating_time
 	status.coarse_volt = (uint8_t)volts;
 	status.fractional_volt = (uint8_t)((volts - status.coarse_volt) * 255);
 	status.operating_time = operating_time;
+	status.resolution = 0; // 0 = 16 second resolution.  1 = 2 second resolution.
 
 	// TODO: implement actual rating of battery level more scientifically for
 	// lithium ion battery.

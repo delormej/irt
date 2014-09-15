@@ -58,6 +58,8 @@
 #define SCHED_QUEUE_SIZE                8                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
+#define BATTERY_4HZ_INTERVAL			512											// Every 2 minutes read the battery voltage (512 * 4hz) read the battery.
+
 //
 // Default profile and simulation values.
 //
@@ -561,7 +563,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 		p_power_meas_current->temp = p_power_meas_last->temp;
 	}
 
-	if (event_count % 512 == 0)
+	if (event_count % BATTERY_4HZ_INTERVAL == 0)
 	{
 		// Every 2 minutes initiate battery read.
 		battery_read_start();
@@ -953,8 +955,10 @@ static void on_power_plug(bool plugged_in)
 	else
 	{
 		LOG("[MAIN] Power unplugged.\r\n");
-		m_battery_start_ticks = NRF_RTC1->COUNTER;
 	}
+
+	// Either way, reset the battery ticks.
+	m_battery_start_ticks = 0;
 }
 
 static void on_ble_connected(void) 
@@ -1304,29 +1308,17 @@ static void on_set_parameter(uint8_t* buffer)
  */
 static void on_battery_result(uint16_t battery_level)
 {
-	// Get current tick count.
-	uint32_t ticks_since_charge;
-	uint32_t current_ticks;
-
-	current_ticks = NRF_RTC1->COUNTER;
-
-	if (current_ticks > m_battery_start_ticks)
-	{
-		ticks_since_charge = current_ticks - m_battery_start_ticks;
-	}
-	else
-	{
-		// TODO: this shouldn't happen, but we need to test and this is a
-		// safety guard.
-		m_battery_start_ticks = current_ticks;
-		ticks_since_charge = 0;
-	}
+	// Increment battery ticks.  Each "tick" represents 16 seconds.
+	// BATTERY_4HZ_INTERVAL is the number of events in between reads, each event is @4hz.
+	// i.e. { 512 == ~2 mins (128 seconds) } / {16 second reporting * 4 per second}
+	//
+	m_battery_start_ticks += (BATTERY_4HZ_INTERVAL / (16*4));
 
 	// TODO: Hard coded for the moment, we will send battery page.
-	LOG("[MAIN] on_battery_result %i \r\n", battery_level);
+	LOG("[MAIN] on_battery_result %i, ticks: %i \r\n", battery_level, m_battery_start_ticks);
 	//ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
 
-	m_battery_status = battery_status(battery_level, ticks_since_charge);
+	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
 }
 
 /**@brief	Configures chip power options.
