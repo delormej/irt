@@ -92,7 +92,7 @@ static accelerometer_data_t 			m_accelerometer_data;
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
 static irt_battery_status_t				m_battery_status;
-static uint32_t 						m_battery_start_ticks __attribute__ ((section(".noinit")));			// Time (in ticks) when we started running on battery.
+static uint32_t 						m_battery_start_ticks __attribute__ ((section (".noinit")));			// Time (in ticks) when we started running on battery.
 
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
@@ -1209,6 +1209,12 @@ static void on_request_data(uint8_t* buffer)
 {
 	ant_request_data_page_t request;
 	memcpy(&request, buffer, sizeof(ant_request_data_page_t));
+
+	/* Hard-coded case for testing error handler.
+	if (request.descriptor[0] == 0xFF)
+	{
+		APP_ERROR_HANDLER(NRF_ERROR_INVALID_PARAM);
+	}*/
 
 	switch (request.tx_page)
 	{
