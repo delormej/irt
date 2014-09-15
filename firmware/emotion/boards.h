@@ -27,8 +27,9 @@
   #include "boards/pca10001.h"
 
 #else
+  #define HW_REVISION	-1
   #error "Board is not defined"
 
-#endif
+#endif // BOARD REVISION
 
-#endif
+#endif // BOARDS_H

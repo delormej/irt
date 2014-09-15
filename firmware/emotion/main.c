@@ -816,15 +816,13 @@ static void on_power_down(bool accelerometer_wake_disable)
 {
 	LOG("[MAIN]:on_power_down \r\n");
 
-	// Free heap allocation.
-	irt_power_meas_fifo_free();
-
-	peripheral_powerdown(accelerometer_wake_disable);
-
 	// TODO: should we be gracefully closing ANT and BLE channels here?
+	application_timers_stop();							// Stop running timers.
+	irt_power_meas_fifo_free();							// Free heap allocation.
 
-	// Shut the system down.
-	sd_power_system_off();
+	peripheral_powerdown(accelerometer_wake_disable);	// Shutdown peripherals.
+
+	sd_power_system_off();								// Enter lower power mode.
 }
 
 static void on_resistance_off(void)
