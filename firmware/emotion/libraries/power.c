@@ -7,6 +7,7 @@
 ********************************************************************************/
 
 #include "power.h"
+#include "nrf_error.h"
 #include "app_error.h"
 #include "resistance.h"
 #include "debug.h"
@@ -79,6 +80,10 @@ static float servo_force(uint16_t servo_pos)
 		// Magnet OFF no force being applied.
 		force = 0.0f;
 	}
+	else if (servo_pos < MAX_RESISTANCE_LEVEL)
+	{
+		APP_ERROR_HANDLER(NRF_ERROR_INVALID_PARAM);
+	}
 	else
 	{
 		if (m_use_small_mag)
@@ -116,11 +121,12 @@ static float servo_force(uint16_t servo_pos)
  */
 uint16_t power_servo_pos_calc(float force)
 {
-	int16_t servo_pos;
+	float value;
+	uint16_t servo_pos;
 
 	if (m_use_small_mag)
 	{
-		servo_pos = (
+		value = (
 				0.001461686  * pow(force,5)
 				-0.076119976 * pow(force,4)
 				+1.210189005 * pow(force,3)
@@ -130,7 +136,7 @@ uint16_t power_servo_pos_calc(float force)
 	}
 	else // BIG_MAG
 	{
-		servo_pos = (
+		value = (
 				-0.0000940913669469  * pow(force,5)
 				+ 0.0108240213514885 * pow(force,4)
 				-0.46173964201648 	 * pow(force,3)
@@ -138,6 +144,25 @@ uint16_t power_servo_pos_calc(float force)
 				-87.5217493343533 	 * force
 				+1558.47782198543);
 	}
+
+	if (value > MIN_RESISTANCE_LEVEL)
+	{
+		// Value is greater than the minimum resistance level, i.e. 2000.
+		servo_pos = MIN_RESISTANCE_LEVEL;
+	}
+	else if (value < MAX_RESISTANCE_LEVEL)
+	{
+		// Value is less than the minimum resistance level, i.e. 1000.
+		servo_pos = MAX_RESISTANCE_LEVEL;
+	}
+	else
+	{
+		// Resistance is in range, so cast float to integer.
+		servo_pos = (uint16_t)value;
+	}
+
+	PW_LOG("[PW] power_servo_pos_calc force:%.2f == servo_pos:%i\r\n",
+			force, servo_pos);
 
 	return servo_pos;
 }

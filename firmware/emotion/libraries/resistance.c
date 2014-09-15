@@ -229,17 +229,24 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
 
 	// Determine the additional force required from the magnet if necessary.
 	mag_force = ( (wind + rolling + gravitational) - rr_force );
-/*
+
+	RC_LOG("[RC]:resistance_sim_set: mag_force: %.2f\r\n", mag_force);
+	/*
+	RC_LOG("[RC]:rr_force: %.2f\r\n", rr_force);
 	RC_LOG("[RC]:grade: %.2f\r\n", p_sim_forces->grade);
-	RC_LOG("[RC]:speed: %.2f\r\n", speed_mps);
+	RC_LOG("[RC]:gravitational: %.2f\r\n", gravitational);
 	RC_LOG("[RC]:rolling: %.2f\r\n", rolling);
-	RC_LOG("[RC]:weight_kg: %.2f\r\n", weight_kg);
-	RC_LOG("[RC]:slope force: %.2f\r\n", gravitational);
 	RC_LOG("[RC]:wind_speed: %.2f\r\n", p_sim_forces->wind_speed_mps);
-	RC_LOG("[RC]:watts: %i\r\n", p_sim_forces->erg_watts);
-*/
+	 */
+
+	// No support for negative force.
+	if (mag_force < 0.0f)
+	{
+		mag_force = 0.0f;
+	}
+
 	// Move the servo to the required position.
-	return 	position_set_by_force(mag_force);
+	return position_set_by_force(mag_force);
 }
 
 /**@brief	Adjusts the magnetic resistance accordingly for erg & sim modes.

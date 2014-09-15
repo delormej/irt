@@ -55,7 +55,7 @@
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define CALIBRATION_INTERVAL			APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Calibration message interval.
 #define BLE_ADV_BLINK_RATE_MS			500u
-#define SCHED_QUEUE_SIZE                4                                          /**< Maximum number of events in the scheduler queue. */
+#define SCHED_QUEUE_SIZE                8                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
 //

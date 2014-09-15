@@ -129,8 +129,10 @@ float servo_pos_force_calc(uint16_t servo_pos)
 //
 uint16_t power_servo_pos_calc(float force)
 {
-	int16_t servo_pos;
+	//int16_t servo_pos;
+	float servo_pos;
 
+	/*
 	servo_pos = (
 		0.001461686  * pow(force, 5)
 		- 0.076119976 * pow(force, 4)
@@ -138,6 +140,16 @@ uint16_t power_servo_pos_calc(float force)
 		- 5.221468861 * pow(force, 2)
 		- 37.59134617 * force
 		+ 1526.614724);
+	*/
+	servo_pos =
+		-0.0000940913669469  * pow(force, 5)
+		+ 0.0108240213514885 * pow(force, 4)
+		- 0.46173964201648 	 * pow(force, 3)
+		+ 8.9640144624266 	 * pow(force, 2)
+		- 87.5217493343533 	 * force
+		+ 1558.47782198543;
+
+	if (servo_pos )
 
 	return servo_pos;
 }
@@ -176,8 +188,8 @@ int main(int argc, char *argv [])
 	printf("Result MSB: %i\r\n", (value_24 & 0x00FF0000) >> 16);
 	printf("Result 1: %i\r\n", (value_24 & 0x0000FF00) >> 8);
 	printf("Result 2: %i\r\n", (uint8_t)value_24);
-	
-	
 
-
+	printf("Servo Pos: %.4f\r\n.", power_servo_pos_calc(54.28f));
+	printf("Servo Pos: %i\r\n", (uint16_t)power_servo_pos_calc(54.28f));
+	printf("Servo Pos: %#32x\r\n", power_servo_pos_calc(54.28f));
 }
