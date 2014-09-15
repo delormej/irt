@@ -52,8 +52,7 @@ All rights reserved.
 
 /*
  * Returns whether a specific feature is available on this board as configured at manufacturing time by IRT.
- */
-static bool __inline__ irt_feature_is_available(uint16_t feature_mask)
+static bool __inline__ irt_feature_is_available(uint16_t feature)
 {
 	uint32_t features;
 	bool available;
@@ -61,12 +60,15 @@ static bool __inline__ irt_feature_is_available(uint16_t feature_mask)
 	features = *FEATURES;
 
 	available = ( features != FEATURE_INVALID ) &&
-			(  ( features & feature_mask ) == feature_mask  );
+			(  ( features & feature ) == feature  );
 
 	return available;
 }
 
-#define FEATURE_AVAILABLE(FEATURE) 	irt_feature_is_available(FEATURE)
+//#define FEATURE_AVAILABLE(FEATURE) 	irt_feature_is_available(FEATURE)
+ */
+#define FEATURE_AVAILABLE(FEATURE) \
+	((*FEATURES & FEATURE) == FEATURE)
 
 /*****************************************************************************
 * Inside Ride Defines

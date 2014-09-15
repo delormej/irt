@@ -1274,18 +1274,24 @@ static void on_set_parameter(uint8_t* buffer)
 			break;
 
 		case IRT_MSG_SUBPAGE_SLEEP:
-			LOG("[MAIN] Received message to put device to sleep.\r\n");
+			LOG("[MAIN] on_set_parameter: Request device sleep.\r\n");
 			on_power_down(true);
 			break;
 
-#ifdef USE_BATTERY_CHARGER
 		case IRT_MSG_SUBPAGE_CHARGER:
-			// Turns charger on if currently off, else turns off.
-			battery_charge_set( (BATTERY_CHARGE_OFF) );
+			if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+			{
+				// Turns charger on if currently off, else turns off.
+				battery_charge_set( (BATTERY_CHARGE_OFF) );
 
-			LOG("[MAIN] Toggled battery charger. \r\n");
+				LOG("[MAIN] on_set_parameter: Toggled battery charger.\r\n");
+			}
+			else
+			{
+				LOG("[MAIN] on_set_parameter: No battery charger present.\r\n");
+			}
 			break;
-#endif
+
 		default:
 			LOG("[MAIN] on_set_parameter: Invalid setting, skipping. \r\n");
 			return;

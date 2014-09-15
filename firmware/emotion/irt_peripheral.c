@@ -103,7 +103,8 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
 	nrf_gpio_pin_set(PIN_EN_SERVO_PWR);
 
-	#ifdef USE_BATTERY_CHARGER
+	if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+	{
 		// Configure pin for enabling or disabling battery charger. 0=on, 1=off
 		nrf_gpio_cfg_output(PIN_CHG_EN_N);
 
@@ -117,13 +118,15 @@ static void irt_gpio_init()
 		// Configure pins for battery charger status.
 		nrf_gpio_cfg_input(PIN_STAT1, NRF_GPIO_PIN_NOPULL);
 		nrf_gpio_cfg_input(PIN_STAT2, NRF_GPIO_PIN_NOPULL);
-	#endif
+	}
 
-	#ifdef USE_BATTERY_READ_PIN
+	#ifdef PIN_ENBATT
+	if (FEATURE_AVAILABLE(FEATURE_BATTERY_READ_PIN))
+	{
 		// When set enables the device to read battery voltage (on specific board builds - not all).
 		nrf_gpio_cfg_output(PIN_ENBATT);
-	#endif // USE_BATTERY_READ_PIN
-
+	}
+	#endif
 	// Configure input for the battery AIN.
 	// This is available whether or not the board is built with battery charge support.
 	NRF_GPIO->PIN_CNF[PIN_BATT_VOLT] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
@@ -138,13 +141,12 @@ static void irt_gpio_init()
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
 
-	pins_low_to_high_mask =
-			1 << PIN_PG_N			// On power adapter unplugged.
-#ifdef USE_BATTERY_CHARGER
-		| 1 << PIN_STAT1;				// On battery charger status changing.
-#else
-		;
-#endif
+	pins_low_to_high_mask = 1 << PIN_PG_N;			// On power adapter unplugged.
+
+	if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+	{
+		pins_low_to_high_mask |= 1 << PIN_STAT1;	// On battery charger status changing.
+	}
 
 	pins_high_to_low_mask = ( 1 << PIN_SHAKE
 #ifdef IRT_REV_2A_H
@@ -307,16 +309,17 @@ void peripheral_powerdown(bool accelerometer_off)
 	// Disable servo / LED.
 	nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
 
-	#ifdef USE_BATTERY_CHARGER
-	// Disable the power regulator if the board is configured for.
-	nrf_gpio_pin_clear(PIN_SLEEP_N);
-
-	// Check if AC power is plugged in.  If not, cut power to charger.
-	if (ac_adapter_off())
+	if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
 	{
-		battery_charge_set(false);
+		// Disable the power regulator if the board is configured for.
+		nrf_gpio_pin_clear(PIN_SLEEP_N);
+
+		// Check if AC power is plugged in.  If not, cut power to charger.
+		if (ac_adapter_off())
+		{
+			battery_charge_set(false);
+		}
 	}
-	#endif // USE_BATTERY_CHARGER
 #endif // IRT_REV_2A_H
 
 #ifdef BOARD_IRT_V2_REV_A1
@@ -364,10 +367,14 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 #define PIN_ENBATT -1
 #endif
 
-#ifdef USE_BATTERY_CHARGER
-	battery_init(PIN_ENBATT, PIN_CHG_EN_N, p_on_peripheral_evt->on_battery_result);
-#else
-	battery_init(PIN_ENBATT, -1, p_on_peripheral_evt->on_battery_result);
-#endif
+	if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+	{
+		battery_init(PIN_ENBATT, PIN_CHG_EN_N, p_on_peripheral_evt->on_battery_result);
+	}
+	else
+	{
+		battery_init(PIN_ENBATT, -1, p_on_peripheral_evt->on_battery_result);
+	}
+
 	PH_LOG("[PH] Initialized battery.\r\n");
 }
