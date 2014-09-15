@@ -158,13 +158,13 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 	// TODO: figure out how to display the stack (p_error->stack_info).
 
-#if defined(IRT_REV_2A_H)
+#if defined(PIN_PBSW)
 	// Note this function does not return - it will hang waiting for a debugger to attach.
 	LOG("[MAIN]:app_error_handler -- PRESS BUTTON TO RESET\r\n.");
 	while (nrf_gpio_pin_read(PIN_PBSW) == 1) {}			// Do nothing, attach debugger until the button is pressed.
-#else // IRT_REV_2A_H
+#else // PIN_PBSW
 	for (;;) {}
-#endif // IRT_REV_2A_H
+#endif // PIN_PBSW
 
 #endif // ENABLE_DEBUG_ASSERT
 	// Wait 1 second, to give user a chance to see LED indicators and then reset the system.

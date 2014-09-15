@@ -73,11 +73,11 @@ static void blink_timeout_handler(void * p_context)
  */
 static __INLINE uint32_t ac_adapter_off(void)
 {
-#ifdef BOARD_IRT_V2_REV_A
+#ifdef PIN_PG_N
 	return nrf_gpio_pin_read(PIN_PG_N);
-#else
+#else // PIN_PG_N
 	return 1;
-#endif
+#endif // PIN_PG_N
 }
 
 /**@brief Initialize all peripherial pins.
@@ -91,52 +91,54 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_output(PIN_LED_A);		// Green
 	nrf_gpio_cfg_output(PIN_LED_B);		// Red
 
-#ifdef IRT_REV_2A_H
-	nrf_gpio_cfg_output(PIN_LED_C);		// Red #2
-	nrf_gpio_cfg_output(PIN_LED_D);		// Green #2
-
-	// User push button on the board.
-	// TODO: this needs to be debounced.
-	nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
-
-	// Enable servo / LED.
-	nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
-	nrf_gpio_pin_set(PIN_EN_SERVO_PWR);
-
-	if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+	if (HW_REVISION >= 2)	// BOARD_IRT_V2_REV_A
 	{
-		// Configure pin for enabling or disabling battery charger. 0=on, 1=off
-		nrf_gpio_cfg_output(PIN_CHG_EN_N);
+		nrf_gpio_cfg_output(PIN_LED_C);		// Red #2
+		nrf_gpio_cfg_output(PIN_LED_D);		// Green #2
 
-		// Enable the power regulator if the board is built with power regulator.
-		nrf_gpio_cfg_output(PIN_SLEEP_N);
-		nrf_gpio_pin_set(PIN_SLEEP_N);
+		// User push button on the board.
+		// TODO: this needs to be debounced.
+		nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
 
-		// Configure pin to read if there is a power adapter.
-		nrf_gpio_cfg_input(PIN_PG_N, NRF_GPIO_PIN_NOPULL);
+		// Enable servo / LED.
+		nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
+		nrf_gpio_pin_set(PIN_EN_SERVO_PWR);
 
-		// Configure pins for battery charger status.
-		nrf_gpio_cfg_input(PIN_STAT1, NRF_GPIO_PIN_NOPULL);
-		nrf_gpio_cfg_input(PIN_STAT2, NRF_GPIO_PIN_NOPULL);
+		if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+		{
+			// Configure pin for enabling or disabling battery charger. 0=on, 1=off
+			nrf_gpio_cfg_output(PIN_CHG_EN_N);
+
+			// Enable the power regulator if the board is built with power regulator.
+			nrf_gpio_cfg_output(PIN_SLEEP_N);
+			nrf_gpio_pin_set(PIN_SLEEP_N);
+
+			// Configure pin to read if there is a power adapter.
+			nrf_gpio_cfg_input(PIN_PG_N, NRF_GPIO_PIN_NOPULL);
+
+			// Configure pins for battery charger status.
+			nrf_gpio_cfg_input(PIN_STAT1, NRF_GPIO_PIN_NOPULL);
+			nrf_gpio_cfg_input(PIN_STAT2, NRF_GPIO_PIN_NOPULL);
+		}
+
+		#ifdef PIN_ENBATT
+		if (FEATURE_AVAILABLE(FEATURE_BATTERY_READ_PIN))
+		{
+			// When set enables the device to read battery voltage (on specific board builds - not all).
+			nrf_gpio_cfg_output(PIN_ENBATT);
+		}
+		#endif
+		// Configure input for the battery AIN.
+		// This is available whether or not the board is built with battery charge support.
+		NRF_GPIO->PIN_CNF[PIN_BATT_VOLT] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
 	}
 
-	#ifdef PIN_ENBATT
-	if (FEATURE_AVAILABLE(FEATURE_BATTERY_READ_PIN))
+	if (HW_REVISION >= 3)	// BOARD_IRT_V2_REV_A1
 	{
-		// When set enables the device to read battery voltage (on specific board builds - not all).
-		nrf_gpio_cfg_output(PIN_ENBATT);
+		nrf_gpio_cfg_output(PIN_3VPWR_DIS);
+		nrf_gpio_cfg_input(PIN_AC_PWR, NRF_GPIO_PIN_NOPULL);
+		//nrf_gpio_cfg_input(PIN_ANALOG_READ, NRF_GPIO_PIN_NOPULL);
 	}
-	#endif
-	// Configure input for the battery AIN.
-	// This is available whether or not the board is built with battery charge support.
-	NRF_GPIO->PIN_CNF[PIN_BATT_VOLT] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
-#endif //IRT_REV_2A_H
-
-#ifdef BOARD_IRT_V2_REV_A1
-	nrf_gpio_cfg_output(PIN_3VPWR_DIS);
-	nrf_gpio_cfg_input(PIN_AC_PWR, NRF_GPIO_PIN_NOPULL);
-	//nrf_gpio_cfg_input(PIN_ANALOG_READ, NRF_GPIO_PIN_NOPULL);
-#endif
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
@@ -174,13 +176,12 @@ void set_led_red(uint8_t led_mask)
 		nrf_gpio_pin_clear(PIN_LED_A);
 		nrf_gpio_pin_set(PIN_LED_B);
 	}
-#ifdef IRT_REV_2A_H
-	if ((led_mask & LED_2) == LED_2)
+
+	if (HW_REVISION >= 2 && (led_mask & LED_2) == LED_2) // IRT_REV_2A_H and later
 	{
 		nrf_gpio_pin_clear(PIN_LED_C);
 		nrf_gpio_pin_set(PIN_LED_D);
 	}
-#endif
 }
 
 void set_led_green(uint8_t led_mask)
@@ -190,13 +191,12 @@ void set_led_green(uint8_t led_mask)
 		nrf_gpio_pin_clear(PIN_LED_B);
 		nrf_gpio_pin_set(PIN_LED_A);
 	}
-#ifdef IRT_REV_2A_H
-	if ((led_mask & LED_2) == LED_2)
+
+	if (HW_REVISION >= 2 && (led_mask & LED_2) == LED_2) // IRT_REV_2A_H and later
 	{
 		nrf_gpio_pin_clear(PIN_LED_D);
 		nrf_gpio_pin_set(PIN_LED_C);
 	}
-#endif
 }
 
 void clear_led(uint8_t led_mask)
@@ -206,13 +206,11 @@ void clear_led(uint8_t led_mask)
 		nrf_gpio_pin_set(PIN_LED_A);
 		nrf_gpio_pin_set(PIN_LED_B);
 	}
-#ifdef IRT_REV_2A_H
-	if ((led_mask & LED_2) == LED_2)
+	if (HW_REVISION >= 2 && (led_mask & LED_2) == LED_2) // IRT_REV_2A_H and later
 	{
 		nrf_gpio_pin_set(PIN_LED_C);
 		nrf_gpio_pin_set(PIN_LED_D);
 	}
-#endif
 }
 
 void blink_led_green_start(uint8_t led_mask, uint16_t interval_ms)
@@ -270,22 +268,22 @@ uint16_t seconds_2048_get()
 	return seconds_2048;
 }
 
-#ifdef BOARD_IRT_V2_REV_A1
 /**@brief	Turn J7-6 power off/on.
  */
 void peripheral_aux_pwr_set(bool disable)
 {
-	if (disable)
+	if (HW_REVISION >= 3) // IRT_V2_REV_A1
 	{
-		nrf_gpio_pin_set(PIN_3VPWR_DIS);
-	}
-	else
-	{
-		nrf_gpio_pin_clear(PIN_3VPWR_DIS);
+		if (disable)
+		{
+			nrf_gpio_pin_set(PIN_3VPWR_DIS);
+		}
+		else
+		{
+			nrf_gpio_pin_clear(PIN_3VPWR_DIS);
+		}
 	}
 }
-#endif
-
 
 //
 // Cuts power to servo and optical sensor and other peripherals.
@@ -305,26 +303,25 @@ void peripheral_powerdown(bool accelerometer_off)
     // Shutdown temperature sensor.
 	temperature_shutdown();
 
-#ifdef IRT_REV_2A_H
-	// Disable servo / LED.
-	nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
-
-	if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+	if (HW_REVISION >= 2) // IRT_REV_2A_H
 	{
-		// Disable the power regulator if the board is configured for.
-		nrf_gpio_pin_clear(PIN_SLEEP_N);
+			// Disable servo / LED.
+			nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
 
-		// Check if AC power is plugged in.  If not, cut power to charger.
-		if (ac_adapter_off())
-		{
-			battery_charge_set(false);
-		}
-	}
-#endif // IRT_REV_2A_H
+			if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+			{
+				// Disable the power regulator if the board is configured for.
+				nrf_gpio_pin_clear(PIN_SLEEP_N);
 
-#ifdef BOARD_IRT_V2_REV_A1
+				// Check if AC power is plugged in.  If not, cut power to charger.
+				if (ac_adapter_off())
+				{
+					battery_charge_set(false);
+				}
+			}
+	} // IRT_REV_2A_H
+
 	peripheral_aux_pwr_set(true);
-#endif
 
 	// Shut down the leds.
 	clear_led(LED_BOTH);
@@ -345,10 +342,8 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	clear_led(LED_1);
 	set_led_green(LED_2);
 
-#ifdef BOARD_IRT_V2_REV_A1
 	// Turn aux power on.
 	peripheral_aux_pwr_set(false);
-#endif
 
 	// Create the timer for blinking led #1.
 	err_code = app_timer_create(&m_led1_blink_timer_id,
