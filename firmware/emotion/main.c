@@ -228,22 +228,22 @@ static bool dequeue_ant_response(void)
 	if (m_request_data_pending.data_page == ANT_PAGE_REQUEST_DATA)
 	{
 
-		if (m_request_data_pending.tx_page == ANT_PAGE_MEASURE_OUTPUT)
+		switch (m_request_data_pending.tx_page)
 		{
-			// TODO: This is the only measurement being sent right now, but we'll have more
-			// to cycle through here.
-			send_temperature();
-		}
-		else
-		{
-			// Deal with the # of times that it has to be sent.
-			// for (times = (tx_type & 0x7F); times > 0; times--)
-			//m_request_data_pending[5]
-			//subpage = buffer[3];
-			//response_type = buffer[5];
-			send_data_page2(m_request_data_pending.descriptor[0], m_request_data_pending.tx_response);
-		}
+			case ANT_PAGE_MEASURE_OUTPUT:
+				// TODO: This is the only measurement being sent right now, but we'll have more
+				// to cycle through here.
+				send_temperature();
+				break;
 
+			case ANT_PAGE_BATTERY_STATUS:
+				ant_bp_battery_tx_send(m_battery_status);
+				break;
+
+			default:
+				send_data_page2(m_request_data_pending.descriptor[0], m_request_data_pending.tx_response);
+				break;
+		}
 		// byte 1 of the buffer contains the flag for either acknowledged (0x80) or a value
 		// indicating how many times to send the message.
 		if (m_request_data_pending.tx_response == 0x80 || (m_request_data_pending.tx_response & 0x7F) <= 1)
@@ -1212,15 +1212,10 @@ static void on_request_data(uint8_t* buffer)
 
 	switch (request.tx_page)
 	{
-		// Kick off battery read.
-		case ANT_PAGE_BATTERY_STATUS:
-			LOG("[MAIN] Requested battery status. \r\n");
-			battery_read_start();
-			return;
-
 		// Request is for get/set parameters or measurement output.
 		case ANT_PAGE_GETSET_PARAMETERS:
 		case ANT_PAGE_MEASURE_OUTPUT:
+		case ANT_PAGE_BATTERY_STATUS:
 			queue_data_response(request);
 			LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
 					request.descriptor[0],

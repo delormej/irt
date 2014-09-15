@@ -62,4 +62,6 @@ void ant_bp_page3_tx_send(uint8_t meas_count,
 
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt);
 
+uint32_t ant_bp_battery_tx_send(irt_battery_status_t status);
+
 #endif	// ANT_BIKE_POWER_H__

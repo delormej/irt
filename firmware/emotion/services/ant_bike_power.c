@@ -214,7 +214,7 @@ static uint8_t encode_resistance_level(irt_power_meas_t * p_power_meas)
 	return target_msb;
 }
 
-static uint32_t battery_status_transmit(irt_battery_status_t status)
+uint32_t ant_bp_battery_tx_send(irt_battery_status_t status)
 {
 	uint8_t buffer[TX_BUFFER_SIZE];
 
@@ -470,7 +470,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	}
 	else if (m_event_count % battery_page_interleave == 0)
 	{
-		battery_status_transmit(p_power_meas->battery_status);
+		ant_bp_battery_tx_send(p_power_meas->battery_status);
 	}
 	else if (m_event_count % extra_info_page_interleave == 0)
 	{
