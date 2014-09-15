@@ -91,7 +91,7 @@ static void irt_gpio_init()
 	nrf_gpio_cfg_output(PIN_LED_A);		// Green
 	nrf_gpio_cfg_output(PIN_LED_B);		// Red
 
-	if (HW_REVISION >= 2)	// BOARD_IRT_V2_REV_A
+	if (HW_REVISION >= 2)	// IRT_V2_REV_A
 	{
 		nrf_gpio_cfg_output(PIN_LED_C);		// Red #2
 		nrf_gpio_cfg_output(PIN_LED_D);		// Green #2
@@ -133,7 +133,7 @@ static void irt_gpio_init()
 		NRF_GPIO->PIN_CNF[PIN_BATT_VOLT] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
 	}
 
-	if (HW_REVISION >= 3)	// BOARD_IRT_V2_REV_A1
+	if (HW_REVISION >= 3)	// IRT_V2_REV_A1
 	{
 		nrf_gpio_cfg_output(PIN_3VPWR_DIS);
 		nrf_gpio_cfg_input(PIN_AC_PWR, NRF_GPIO_PIN_NOPULL);

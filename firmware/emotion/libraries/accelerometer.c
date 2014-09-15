@@ -26,11 +26,11 @@
 #define FF_MT_YEFE			_BIT(4)
 #define FF_MT_XEFE			_BIT(3)
 
-#ifdef BOARD_IRT_V2_REV_A1
+#ifdef IRT_REV_2A1_H
 #define ORIENTATION			FF_MT_XEFE	// "Portrait Down" orientation, is the way the REV-2A1 boards were built.
 #else
 #define ORIENTATION			FF_MT_YEFE	// "Landscape Left" orientation is the way REV-A boards were built.
-#endif
+#endif // IRT_REV_2A1_H
 
 /* CTRL_REG1 bits. */
 #define MMA8652FC_ACTIVE	_BIT(0)
