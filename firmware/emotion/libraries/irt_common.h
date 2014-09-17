@@ -9,18 +9,23 @@ All rights reserved.
 #define IRT_COMMON_H
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "boards.h"
 #include "nrf_error.h"
 #include "pstorage_platform.h"
 
 //
 // Global defines.
 //
-#define	GRAVITY						9.8f		// Co-efficent of gravity for Earth.  Change for other planets.
+#define FACTORY_SETTINGS_BASE		0x3FC90								// Address in flash in the uppermost page just after bootloader_settings_t
+#define FEATURES ((volatile uint16_t *) FACTORY_SETTINGS_BASE) 			/* 16 bit array of features */
+
+#define	GRAVITY						9.81f								// Coefficent of gravity.
 #define	MATH_PI						3.14159f
 
 #define DEVICE_NAME                 "E-Motion"                          /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME           "Inside Ride"            			/**< Manufacturer. Will be passed to Device Information Service. */
-#define HW_REVISION                 0x01               					/**< Hardware revision for manufacturer's identification common page. */
+//#define HW_REVISION                 0x01  							// This is now defined in boards.h	/**< Hardware revision for manufacturer's identification common page. */
 #define MANUFACTURER_ID             0xAAAA             				  	/**< Manufacturer ID for manufacturer's identification common page. */
 #define MODEL_NUMBER                0x5248								// Model 'HR' in ASCII /**< Model number for manufacturer's identification common page. */
 
@@ -33,22 +38,37 @@ All rights reserved.
 
 /* DEVICE specific info */
 #define ANT_DEVICE_NUMBER			(uint16_t)NRF_FICR->DEVICEID[1]
-#define SERIAL_NUMBER				NRF_FICR->DEVICEID[1]
+#define SERIAL_NUMBER				NRF_FICR->DEVICEID[1]				// TODO: We should have something unique here.
 
 //
 // Available device features.
 //
-// Address in flash memory where features are stored on flash.
-#define FEATURE_FLASH_ADDRESS			(uint16_t*)(PSTORAGE_DATA_START_ADDR + 16)
+#define FEATURE_RESERVED			1UL
+#define FEATURE_SMALL_MAG			2UL				// Small magnet is installed vs. Big magnet
+#define FEATURE_74_SERVO			32UL			// 7.4 Volt Servo feature.
+#define FEATURE_BATTERY_CHARGER		64UL			// Device has a battery charger IC installed.
+#define FEATURE_BATTERY_READ_PIN	128UL			// Device requires the use of enabling flow to a capacitor before reading battery voltage.
+#define FEATURE_INVALID				65535UL			// Max feature setting of 16 bit.
 
-#define FEATURE_RESERVED				1UL
-#define FEATURE_SMALL_MAG				2UL				// Small magnet is installed vs. Big magnet
-#define FEATURE_74_SERVO				32UL			// 7.4 Volt Servo feature.
-#define FEATURE_INVALID					65535UL			// Max feature setting of 16 bit.
+/*
+ * Returns whether a specific feature is available on this board as configured at manufacturing time by IRT.
+static bool __inline__ irt_feature_is_available(uint16_t feature)
+{
+	uint32_t features;
+	bool available;
 
-#define FEATURE_IS_SET(FEATURE) \
-	(*FEATURE_FLASH_ADDRESS != FEATURE_INVALID) && \
-	((*FEATURE_FLASH_ADDRESS & FEATURE) == FEATURE)
+	features = *FEATURES;
+
+	available = ( features != FEATURE_INVALID ) &&
+			(  ( features & feature ) == feature  );
+
+	return available;
+}
+
+//#define FEATURE_AVAILABLE(FEATURE) 	irt_feature_is_available(FEATURE)
+ */
+#define FEATURE_AVAILABLE(FEATURE) \
+	((*FEATURES & FEATURE) == FEATURE)
 
 /*****************************************************************************
 * Inside Ride Defines
@@ -88,6 +108,7 @@ typedef struct irt_battery_status_s
 	uint8_t		coarse_volt : 3;
 	uint8_t		status : 3;
 	uint8_t		resolution : 2;
+	uint32_t	operating_time;
 } irt_battery_status_t;
 
 /**@brief Cycling Power Service measurement type. */

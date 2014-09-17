@@ -387,7 +387,7 @@ namespace ANT_Console
             if (m_summary != null)
                 m_summary.BatteryTime = m.OperatingTime;
 
-            Console.WriteLine("Battery: {0:0.####} volts, Operating Time: {1} seconds.", 
+            Console.WriteLine("Battery: {0:0.####} volts, Operating Time: {1:0.00} hours.", 
                 m.Voltage, m.OperatingTime);
         }
 

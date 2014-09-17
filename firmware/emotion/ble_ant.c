@@ -481,6 +481,8 @@ void ble_ant_resistance_ack(uint8_t op_code, uint16_t value)
 	{
 		APP_ERROR_CHECK(err_code);
 	}
+
+	BA_LOG("[BA]:ble_ant_resistance_ack op:%i value:%i\r\n", op_code, value);
 }
 
 //

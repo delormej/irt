@@ -373,7 +373,8 @@ namespace ANT_Console.Messages
                     this.m_payload[ANT_BAT_TIME_INDEX] << 8 |
                     this.m_payload[ANT_BAT_TIME_MSB_INDEX] << 16;
 
-                hours = ticks * (resolution2sec ? 2 : 16) / 3600;
+                // If not 2 second resolution, then it's 16 second.
+                hours = ticks * (resolution2sec ? 2 : 16) / 3600.0f;
                 
                 return hours; 
             

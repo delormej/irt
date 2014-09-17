@@ -63,7 +63,7 @@ debug : CFLAGS += -DENABLE_DEBUG_LOG			# Enable debug logging.
 debug : CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
 #debug : CFLAGS += -DBLE_NUS_ENABLED			# Use Nordic BLE UART for logging.
 debug : CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wait for debugger to attach.
-#debug : CFLAGS += -DSIM_SPEED					# Simulate speed.
+debug : CFLAGS += -DSIM_SPEED					# Simulate speed.
 debug : CFLAGS += -g							# Enable debug symbols.
 debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 #debug : CFLAGS += -DSETTINGS=2					# Sets the device so the accelerometer doesn't turn off
@@ -74,8 +74,8 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 # Define the Software Revision.
 ############################################
 SW_REVISION_MAJ := 0
-SW_REVISION_MIN := 9
-SW_REVISION_BLD := 0
+SW_REVISION_MIN := 8
+SW_REVISION_BLD := 81
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -125,4 +125,12 @@ flash-all:
 name:
 	@echo $(PROJECT_NAME)
 
-.PHONY: debug deploy name
+# Set to 'Valid App'
+# Set 0 for CRC value
+# Set factory features to use charger
+prep:
+	$(NRFJPROG) --memwr 0x3fc00 --val 1		
+	$(NRFJPROG) --memwr 0x3fc04 --val 0		
+	$(NRFJPROG) --memwr 0x3fc90 --val 64	
+
+.PHONY: debug deploy name prep

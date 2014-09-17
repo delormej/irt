@@ -5,8 +5,8 @@
  */
 #include "board_irt_v2a.h"
 
-#ifndef BOARD_IRT_V2A1_H_
-#define BOARD_IRT_V2A1_H_
+#ifndef IRT_REV_2A1_H
+#define IRT_REV_2A1_H
 
 #undef	PIN_ENBATT					// no longer uses pin 6 for reading battery voltage.
 #undef	USE_BATTERY_READ_PIN
@@ -20,4 +20,4 @@
 
 #define	PIN_AC_PWR					PIN_TP19 // monitors the status of the AC Power. P0.20 monitors a similar signal from a different source with the inverse logic sense.
 
-#endif /* BOARD_IRT_V2A1_H_ */
+#endif /* IRT_REV_2A1_H */

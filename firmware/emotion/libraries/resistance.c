@@ -10,6 +10,7 @@
 ********************************************************************************/
 
 #include "irt_peripheral.h"
+#include "app_error.h"
 #include "power.h"
 #include "resistance.h"
 #include "nrf_pwm.h"
@@ -73,8 +74,9 @@ uint16_t resistance_position_get()
  */
 uint16_t resistance_position_set(uint16_t servo_pos)
 {
+	uint32_t err_code;
 	// Actual servo position after calibration.
-	uint16_t offset_servo_pos;
+	uint16_t actual_servo_pos;
 	//
 	// Ensure we don't move the servo beyond it's min and max.
 	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107
@@ -106,11 +108,23 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 		 * Adjusted offset for the 2,000 - 1,000 range is -301, but since testing was done at -50,
 		 * the new baseline offset is 351 for a servo that is factory calibrated to 1,451.
 		*/
-		offset_servo_pos = servo_pos + mp_user_profile->servo_offset;
+		actual_servo_pos = servo_pos + mp_user_profile->servo_offset;
 
-		RC_LOG("[RC]:SET_SERVO %i\r\n", offset_servo_pos);
-		pwm_set_servo(offset_servo_pos);
+		// Using offset, guard to acceptable range of 2000-1000
+		if (actual_servo_pos > 2000)
+		{
+			actual_servo_pos = 2000;
+		}
+		else if (actual_servo_pos < 1000)
+		{
+			actual_servo_pos = 1000;
+		}
+
+		err_code = pwm_set_servo(actual_servo_pos);
+		APP_ERROR_CHECK(err_code);
+
 		m_servo_pos = servo_pos;
+		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
 	}
 
 	return m_servo_pos;
@@ -215,17 +229,24 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
 
 	// Determine the additional force required from the magnet if necessary.
 	mag_force = ( (wind + rolling + gravitational) - rr_force );
-/*
+
+	RC_LOG("[RC]:resistance_sim_set: mag_force: %.2f\r\n", mag_force);
+	/*
+	RC_LOG("[RC]:rr_force: %.2f\r\n", rr_force);
 	RC_LOG("[RC]:grade: %.2f\r\n", p_sim_forces->grade);
-	RC_LOG("[RC]:speed: %.2f\r\n", speed_mps);
+	RC_LOG("[RC]:gravitational: %.2f\r\n", gravitational);
 	RC_LOG("[RC]:rolling: %.2f\r\n", rolling);
-	RC_LOG("[RC]:weight_kg: %.2f\r\n", weight_kg);
-	RC_LOG("[RC]:slope force: %.2f\r\n", gravitational);
 	RC_LOG("[RC]:wind_speed: %.2f\r\n", p_sim_forces->wind_speed_mps);
-	RC_LOG("[RC]:watts: %i\r\n", p_sim_forces->erg_watts);
-*/
+	 */
+
+	// No support for negative force.
+	if (mag_force < 0.0f)
+	{
+		mag_force = 0.0f;
+	}
+
 	// Move the servo to the required position.
-	return 	position_set_by_force(mag_force);
+	return position_set_by_force(mag_force);
 }
 
 /**@brief	Adjusts the magnetic resistance accordingly for erg & sim modes.

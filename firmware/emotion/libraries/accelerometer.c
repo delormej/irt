@@ -26,6 +26,12 @@
 #define FF_MT_YEFE			_BIT(4)
 #define FF_MT_XEFE			_BIT(3)
 
+#ifdef IRT_REV_2A1_H
+#define ORIENTATION			FF_MT_XEFE	// "Portrait Down" orientation, is the way the REV-2A1 boards were built.
+#else
+#define ORIENTATION			FF_MT_YEFE	// "Landscape Left" orientation is the way REV-A boards were built.
+#endif // IRT_REV_2A1_H
+
 /* CTRL_REG1 bits. */
 #define MMA8652FC_ACTIVE	_BIT(0)
 #define MMA8652FC_STANDBY	(0x00)
@@ -200,7 +206,7 @@ static void enable_interrupt(void)
 	// Configure motion detection on Y axis only.
 	// NOTE: When I tried setting additional axis, Y wasn't signaling.
 	//
-	ret = accelerometer_write(REG8652_FF_MT_CFG, (FF_MT_OAE | FF_MT_YEFE));
+	ret = accelerometer_write(REG8652_FF_MT_CFG, (FF_MT_OAE | ORIENTATION));
 	RET_CHECK(ret);
 
 	//

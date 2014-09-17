@@ -214,16 +214,16 @@ static uint8_t encode_resistance_level(irt_power_meas_t * p_power_meas)
 	return target_msb;
 }
 
-static uint32_t battery_status_transmit(irt_battery_status_t status)
+uint32_t ant_bp_battery_tx_send(irt_battery_status_t status)
 {
 	uint8_t buffer[TX_BUFFER_SIZE];
 
 	buffer[PAGE_NUMBER_INDEX]			= ANT_PAGE_BATTERY_STATUS;
 	buffer[1]							= 0xFF;
 	buffer[ANT_BAT_ID_INDEX]			= 0b00010001;	// bits 0:3 = Number of batteries, 4:7 = Identifier.
-	buffer[ANT_BAT_TIME_LSB_INDEX]	 	= 0;
-	buffer[ANT_BAT_TIME_INDEX]	 		= 0;
-	buffer[ANT_BAT_TIME_MSB_INDEX]		= 0;
+	buffer[ANT_BAT_TIME_LSB_INDEX]	 	= (uint8_t)status.operating_time;
+	buffer[ANT_BAT_TIME_INDEX]	 		= (status.operating_time & 0x0000FF00) >> 8;
+	buffer[ANT_BAT_TIME_MSB_INDEX]		= (status.operating_time & 0x00FF0000) >> 16;
 	buffer[ANT_BAT_FRAC_VOLT_INDEX]		= status.fractional_volt;
 	buffer[ANT_BAT_DESC_INDEX]			= status.coarse_volt |
 											status.status << 4 |
@@ -470,7 +470,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	}
 	else if (m_event_count % battery_page_interleave == 0)
 	{
-		battery_status_transmit(p_power_meas->battery_status);
+		ant_bp_battery_tx_send(p_power_meas->battery_status);
 	}
 	else if (m_event_count % extra_info_page_interleave == 0)
 	{
@@ -514,7 +514,8 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 	};
 
 	err_code = broadcast_message_transmit(tx_buffer);
-	BP_LOG("[BP]:acknowledged mode [%.2x]\r\n", mode);
+	BP_LOG("[BP]:acknowledged OP:[%.2x] VAL:[%.2x][%.2x]\r\n",
+			mode, LOW_BYTE(value), HIGH_BYTE(value));
 
 	return err_code;
 }

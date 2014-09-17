@@ -35,7 +35,7 @@ SECTIONS
     {
         KEEP(*(.bootloader_settings_sect))
     } > bootloader_settings
-  
+
     .NRF_UICR_BOOT_START_BLOCK 0x10001014 :
     {
         KEEP(*(.NRF_UICR_BOOT_START_SECT))

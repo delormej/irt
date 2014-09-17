@@ -45,16 +45,9 @@
         (((((ADC_VALUE) * ADC_REF_VOLTAGE_IN_MILLIVOLTS) / 255) * \
         		ADC_PRE_SCALING_COMPENSATION) / 0.4)
 
-// Callback to invoke after reading voltage.
-static on_battery_result_t m_on_battery_result;
-
-#ifdef USE_BATTERY_READ_PIN
-// Separate pin used for enabling voltage read on Analog Input 2.
-static uint8_t m_pin_battery_read;
-#endif
-
-// Pin used to tell the charger to stop.
-static uint8_t m_pin_charge_stop;
+static on_battery_result_t m_on_battery_result;		// Callback to invoke after reading voltage.
+static uint8_t m_pin_battery_read;					// Separate pin used for enabling voltage read on Analog Input 2.
+static uint8_t m_pin_charge_stop;					// Pin used to tell the charger to stop.
 
 /**@brief Function for handling the ADC interrupt.
  * @details  This function will fetch the conversion result from the ADC, convert the value into
@@ -123,14 +116,12 @@ void battery_read_start()
     NRF_ADC->ENABLE     = ADC_ENABLE_ENABLE_Enabled;
     NRF_ADC->TASKS_START = 1;
 
-#ifdef USE_BATTERY_CHARGER
     BY_LOG("[BY] Battery Charger status: %i \r\n", battery_charge_status());
-#endif
 }
 
 /**@brief	Converts millivolt reading into status structure.
  */
-irt_battery_status_t battery_status(uint16_t millivolts)
+irt_battery_status_t battery_status(uint16_t millivolts, uint32_t operating_time)
 {
 	irt_battery_status_t status;
 
@@ -138,6 +129,8 @@ irt_battery_status_t battery_status(uint16_t millivolts)
 
 	status.coarse_volt = (uint8_t)volts;
 	status.fractional_volt = (uint8_t)((volts - status.coarse_volt) * 255);
+	status.operating_time = operating_time;
+	status.resolution = 0; // 0 = 16 second resolution.  1 = 2 second resolution.
 
 	// TODO: implement actual rating of battery level more scientifically for
 	// lithium ion battery.
@@ -162,34 +155,40 @@ irt_battery_status_t battery_status(uint16_t millivolts)
  */
 uint8_t battery_charge_status()
 {
-#ifdef USE_BATTERY_CHARGER
 	uint8_t status;
 
-	status = nrf_gpio_pin_read(PIN_STAT1);
-	status |= (nrf_gpio_pin_read(PIN_STAT2) << 1);
+    if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+    {
+		status = nrf_gpio_pin_read(PIN_STAT1);
+		status |= (nrf_gpio_pin_read(PIN_STAT2) << 1);
+    }
+    else
+    {
+    	status = BATTERY_CHARGE_NONE;
+    }
 
-	return status;
-#else
-	return BATTERY_CHARGE_NONE;
-#endif
+    return status;
 }
 
 /**@brief	Starts or stops the battery charge process.
  */
-void battery_charge_set(bool turn_on)
+void battery_charge_set(bool enable)
 {
-#ifdef USE_BATTERY_CHARGER
-	if (turn_on)
-	{
-		nrf_gpio_pin_clear(m_pin_charge_stop);
-	}
-	else
-	{
-		nrf_gpio_pin_set(m_pin_charge_stop);
-	}
+    if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+    {
+		if (enable)
+		{
+			// Clear the pin to enable charger.
+			nrf_gpio_pin_clear(m_pin_charge_stop);
+		}
+		else
+		{
+			// Set the pin to stop charger.
+			nrf_gpio_pin_set(m_pin_charge_stop);
+		}
 
-	BY_LOG("[BY] Toggled charge, new status is: %i. \r\n", battery_charge_status());
-#endif
+		BY_LOG("[BY] Toggled charge, new status is: %i. \r\n", battery_charge_status());
+    }
 }
 
 /**@brief	Initializes the battery module with a callback when a read is complete and
@@ -198,13 +197,10 @@ void battery_charge_set(bool turn_on)
 void battery_init(uint8_t pin_battery_enable, uint8_t pin_charge_stop, on_battery_result_t on_battery_result)
 {
 	m_on_battery_result = on_battery_result;
-#ifdef USE_BATTERY_READ_PIN
 	// TODO: This pin goes away, except for 1 test board.  We can remove in future build or ifdef.
 	m_pin_battery_read = pin_battery_enable;
-#endif
-#ifdef USE_BATTERY_CHARGER
+
 	m_pin_charge_stop = pin_charge_stop;
-#endif
 
     // Configure ADC
     NRF_ADC->INTENSET   = ADC_INTENSET_END_Msk;
@@ -215,6 +211,3 @@ void battery_init(uint8_t pin_battery_enable, uint8_t pin_charge_stop, on_batter
                           (ADC_CONFIG_EXTREFSEL_None                  		<< ADC_CONFIG_EXTREFSEL_Pos);
 }
 
-/**
- * @}
- */

@@ -10,12 +10,11 @@ Very robust to outliers.
 C:\\Python34>python.exe c:\\users\\jasondel\\dev\\insideride\\python\\estimator\\theil_sen.py
 
 """
-import sys
 import numpy as np
 import bottleneck #very fast searching and sorting written in Cython.
 import itertools
 
-def theil_sen(x,y, sample= False, n_samples = 1e7):
+def theil_sen(x,y, sample= "auto", n_samples = 1e7):
     """
     Computes the Theil-Sen estimator for 2d data.
     parameters:
@@ -33,7 +32,7 @@ def theil_sen(x,y, sample= False, n_samples = 1e7):
     """
     assert x.shape[0] == y.shape[0], "x and y must be the same shape."
     n = x.shape[0]
-
+    
     if n < 100 or not sample:
         ix = np.argsort( x )
         slopes = np.empty( n*(n-1)*0.5 )
@@ -62,11 +61,10 @@ def slope( x_1, x_2, y_1, y_2):
     
     
     
-def main(file):
+    
+if __name__=="__main__":
     from numpy import genfromtxt
-    my_data = genfromtxt(file, delimiter=',', names=True, usecols = (2,3,5,7) )
-    my_data['emotion_speed_mps'] = my_data['emotion_speed_mph'] * 0.44704
-    #print(my_data)
+    my_data = genfromtxt('/users/jasondel/dev/InsideRide/python/estimator/data.csv', delimiter=',', names=True, usecols = (3,5,7) )
 
     #ix = my_data['emotion_speed_mph'] >= 13.0 
     #print (ix)
@@ -85,20 +83,15 @@ def main(file):
     y1 = filtered_data['quarq_power']
     filtered_data = filtered_data[y1>0]
 
-    #print (filtered_data)
     #filtered_data = filtered_data[:,range(300, 900)]
     #idx=(my_data[:,0]>10.0) & (my_data[:,1]>0) #errors in too many indices
 
     #list = np.array( filter(lambda x: x['emotion_speed_mph'] >= 13.0 and x['quarq_power'] > 0, my_data) ) 
     #cond = np.logical_and(my_data[:, 0] >= 10.0, my_data[:, 1] > 0)
-    
-    #my_func = lambda x: x['emotion_speed_mph'] * 0.44704
-    #filtered_data = np.hstack((filtered_data, my_func)).T
 
     #print (filtered_data[idx].shape)
     #filtered_data = my_data[cond, :]
-    x = filtered_data['emotion_speed_mps'] 
-    #x = filtered_data[3:] 
+    x = filtered_data['emotion_speed_mph'] 
     y = filtered_data['quarq_power']
     
     #x = my_data['emotion_speed_mph'] 
@@ -112,8 +105,3 @@ def main(file):
 
 #index = numpy.asarray([row['category_code'] in ('A', 'B', 'C') for row in data])
 #filtered_data = data[index]
-
-if __name__ == "__main__":
-   file = '/users/jasondel/dev/InsideRide/python/estimator/data.csv'
-   file = sys.argv[1]
-   main(file)

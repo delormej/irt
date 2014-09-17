@@ -28,6 +28,7 @@
 #include <math.h>
 #include "float.h"
 #include "nordic_common.h"
+#include "nrf51.h"
 #include "softdevice_handler.h"
 #include "nrf_error.h"
 #include "app_scheduler.h"
@@ -54,9 +55,11 @@
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define CALIBRATION_INTERVAL			APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Calibration message interval.
 #define BLE_ADV_BLINK_RATE_MS			500u
-#define SCHED_QUEUE_SIZE                16                                          /**< Maximum number of events in the scheduler queue. */
+#define SCHED_QUEUE_SIZE                8                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
+#define BATTERY_4HZ_INTERVAL			512											// Every 2 minutes read the battery voltage (512 * 4hz) read the battery.
+
 //
 // Default profile and simulation values.
 //
@@ -89,6 +92,7 @@ static accelerometer_data_t 			m_accelerometer_data;
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
 static irt_battery_status_t				m_battery_status;
+static uint32_t 						m_battery_start_ticks __attribute__ ((section (".noinit")));			// Time (in ticks) when we started running on battery.
 
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
@@ -156,16 +160,18 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 	// TODO: figure out how to display the stack (p_error->stack_info).
 
+#if defined(PIN_PBSW)
 	// Note this function does not return - it will hang waiting for a debugger to attach.
-	for (;;)
-	{
-		// Do nothing, attach debugger.
-	}
-#else
+	LOG("[MAIN]:app_error_handler -- PRESS BUTTON TO RESET\r\n.");
+	while (nrf_gpio_pin_read(PIN_PBSW) == 1) {}			// Do nothing, attach debugger until the button is pressed.
+#else // PIN_PBSW
+	for (;;) {}
+#endif // PIN_PBSW
+
+#endif // ENABLE_DEBUG_ASSERT
 	// Wait 1 second, to give user a chance to see LED indicators and then reset the system.
 	nrf_delay_ms(1000);
 	NVIC_SystemReset();
-#endif // ENABLE_DEBUG_ASSERT
 }
 
 /**@brief	Handle Soft Device system events. */
@@ -183,6 +189,10 @@ static void queue_resistance_ack(uint8_t op_code, uint16_t value)
 	m_resistance_ack_pending[0] = op_code;
 	m_resistance_ack_pending[1] = LSB(value);
 	m_resistance_ack_pending[2] = MSB(value);
+
+	LOG("[MAIN] Queued resistance ack for [%.2x][%.2x]:\r\n",
+			m_resistance_ack_pending[1],
+			m_resistance_ack_pending[2]);
 }
 
 static void queue_data_response(ant_request_data_page_t request)
@@ -218,22 +228,22 @@ static bool dequeue_ant_response(void)
 	if (m_request_data_pending.data_page == ANT_PAGE_REQUEST_DATA)
 	{
 
-		if (m_request_data_pending.tx_page == ANT_PAGE_MEASURE_OUTPUT)
+		switch (m_request_data_pending.tx_page)
 		{
-			// TODO: This is the only measurement being sent right now, but we'll have more
-			// to cycle through here.
-			send_temperature();
-		}
-		else
-		{
-			// Deal with the # of times that it has to be sent.
-			// for (times = (tx_type & 0x7F); times > 0; times--)
-			//m_request_data_pending[5]
-			//subpage = buffer[3];
-			//response_type = buffer[5];
-			send_data_page2(m_request_data_pending.descriptor[0], m_request_data_pending.tx_response);
-		}
+			case ANT_PAGE_MEASURE_OUTPUT:
+				// TODO: This is the only measurement being sent right now, but we'll have more
+				// to cycle through here.
+				send_temperature();
+				break;
 
+			case ANT_PAGE_BATTERY_STATUS:
+				ant_bp_battery_tx_send(m_battery_status);
+				break;
+
+			default:
+				send_data_page2(m_request_data_pending.descriptor[0], m_request_data_pending.tx_response);
+				break;
+		}
 		// byte 1 of the buffer contains the flag for either acknowledged (0x80) or a value
 		// indicating how many times to send the message.
 		if (m_request_data_pending.tx_response == 0x80 || (m_request_data_pending.tx_response & 0x7F) <= 1)
@@ -500,6 +510,8 @@ static void ant_4hz_timeout_handler(void * p_context)
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 	irt_power_meas_t* p_power_meas_last 		= NULL;
 
+	//LOG("[MAIN] Enter 4hz: %.2f \r\n", SECONDS_CURRENT);
+
 	// All ANT messages on the Bike Power channel are sent in this function:
 
 	// Standard ANT+ Device broadcast (cycle of 5 messages)
@@ -551,7 +563,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 		p_power_meas_current->temp = p_power_meas_last->temp;
 	}
 
-	if (event_count % 512 == 0)
+	if (event_count % BATTERY_4HZ_INTERVAL == 0)
 	{
 		// Every 2 minutes initiate battery read.
 		battery_read_start();
@@ -598,6 +610,8 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Send remote control a heartbeat.
 	ant_ctrl_available();
+
+	//LOG("[MAIN] Exit 4hz: %.2f \r\n", SECONDS_CURRENT);
 }
 
 /**@brief Function for starting the application timers.
@@ -628,7 +642,7 @@ static void timers_init(void)
     uint32_t err_code;
 
 	// Initialize timer module
-    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, true);
 
     err_code = app_timer_create(&m_ant_4hz_timer_id,
                                 APP_TIMER_MODE_REPEATED,
@@ -775,13 +789,15 @@ static void settings_update(uint8_t* buffer)
 	// The actual settings are a 32 bit int stored in bytes [2:5] IRT_MSG_PAGE2_DATA_INDEX
 	// Need to use memcpy, Cortex-M proc doesn't support unaligned casting of 32bit int.
 	// MSB is flagged to indicate if we should persist or if this is just temporary.
-	memcpy(&settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
-			sizeof(uint16_t));
+	memcpy(&settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint16_t));
 
 	m_user_profile.settings = SETTING_VALUE(settings);
 
-	LOG("[MAIN] Request to update settings to: ACCEL:%i \r\n",
-				SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON) );
+	/*LOG("[MAIN] Request to update settings to: ACCEL:%i \r\n",
+				SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON) );*/
+
+	LOG("[MAIN]:settings_update raw: %i, translated: %i\r\n",
+			settings, m_user_profile.settings);
 
 	if (SETTING_PERSIST(settings))
 	{
@@ -802,15 +818,13 @@ static void on_power_down(bool accelerometer_wake_disable)
 {
 	LOG("[MAIN]:on_power_down \r\n");
 
-	// Free heap allocation.
-	irt_power_meas_fifo_free();
-
-	peripheral_powerdown(accelerometer_wake_disable);
-
 	// TODO: should we be gracefully closing ANT and BLE channels here?
+	application_timers_stop();							// Stop running timers.
+	irt_power_meas_fifo_free();							// Free heap allocation.
 
-	// Shut the system down.
-	sd_power_system_off();
+	peripheral_powerdown(accelerometer_wake_disable);	// Shutdown peripherals.
+
+	sd_power_system_off();								// Enter lower power mode.
 }
 
 static void on_resistance_off(void)
@@ -932,9 +946,19 @@ static void on_accelerometer(void)
 }
 
 // Called when the power adapter is plugged in.
-static void on_power_plug(void)
+static void on_power_plug(bool plugged_in)
 {
-	LOG("[MAIN] Power plugged in.\r\n");
+	if (plugged_in)
+	{
+		LOG("[MAIN] Power plugged in.\r\n");
+	}
+	else
+	{
+		LOG("[MAIN] Power unplugged.\r\n");
+	}
+
+	// Either way, reset the battery ticks.
+	m_battery_start_ticks = 0;
 }
 
 static void on_ble_connected(void) 
@@ -1186,17 +1210,18 @@ static void on_request_data(uint8_t* buffer)
 	ant_request_data_page_t request;
 	memcpy(&request, buffer, sizeof(ant_request_data_page_t));
 
+	/* Hard-coded case for testing error handler.
+	if (request.descriptor[0] == 0xFF)
+	{
+		APP_ERROR_HANDLER(NRF_ERROR_INVALID_PARAM);
+	}*/
+
 	switch (request.tx_page)
 	{
-		// Kick off battery read.
-		case ANT_PAGE_BATTERY_STATUS:
-			LOG("[MAIN] Requested battery status. \r\n");
-			battery_read_start();
-			return;
-
 		// Request is for get/set parameters or measurement output.
 		case ANT_PAGE_GETSET_PARAMETERS:
 		case ANT_PAGE_MEASURE_OUTPUT:
+		case ANT_PAGE_BATTERY_STATUS:
 			queue_data_response(request);
 			LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
 					request.descriptor[0],
@@ -1231,7 +1256,7 @@ static void on_set_parameter(uint8_t* buffer)
 			break;
 
 		case IRT_MSG_SUBPAGE_CRR:
-			// Update CRR, note this doesn't update the profile in flash.
+			// Update CRR.
 			memcpy(&m_user_profile.ca_slope, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
 					sizeof(uint16_t));
 			memcpy(&m_user_profile.ca_intercept, &buffer[IRT_MSG_PAGE2_DATA_INDEX+2],
@@ -1240,6 +1265,9 @@ static void on_set_parameter(uint8_t* buffer)
 					m_user_profile.ca_slope, m_user_profile.ca_intercept);
 			// Reinitialize power.
 			power_init(&m_user_profile, DEFAULT_CRR);
+
+			// Schedule update to the user profile.
+			profile_update_sched();
 			break;
 
 		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
@@ -1252,18 +1280,24 @@ static void on_set_parameter(uint8_t* buffer)
 			break;
 
 		case IRT_MSG_SUBPAGE_SLEEP:
-			LOG("[MAIN] Received message to put device to sleep.\r\n");
+			LOG("[MAIN] on_set_parameter: Request device sleep.\r\n");
 			on_power_down(true);
 			break;
 
-#ifdef USE_BATTERY_CHARGER
 		case IRT_MSG_SUBPAGE_CHARGER:
-			// Turns charger on if currently off, else turns off.
-			battery_charge_set( (BATTERY_CHARGE_OFF) );
+			if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+			{
+				// Turns charger on if currently off, else turns off.
+				battery_charge_set( (BATTERY_CHARGE_OFF) );
 
-			LOG("[MAIN] Toggled battery charger. \r\n");
+				LOG("[MAIN] on_set_parameter: Toggled battery charger.\r\n");
+			}
+			else
+			{
+				LOG("[MAIN] on_set_parameter: No battery charger present.\r\n");
+			}
 			break;
-#endif
+
 		default:
 			LOG("[MAIN] on_set_parameter: Invalid setting, skipping. \r\n");
 			return;
@@ -1275,10 +1309,17 @@ static void on_set_parameter(uint8_t* buffer)
  */
 static void on_battery_result(uint16_t battery_level)
 {
+	// Increment battery ticks.  Each "tick" represents 16 seconds.
+	// BATTERY_4HZ_INTERVAL is the number of events in between reads, each event is @4hz.
+	// i.e. { 512 == ~2 mins (128 seconds) } / {16 second reporting * 4 per second}
+	//
+	m_battery_start_ticks += (BATTERY_4HZ_INTERVAL / (16*4));
+
 	// TODO: Hard coded for the moment, we will send battery page.
-	LOG("[MAIN] on_battery_result %i \r\n", battery_level);
+	LOG("[MAIN] on_battery_result %i, ticks: %i \r\n", battery_level, m_battery_start_ticks);
 	//ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
-	m_battery_status = battery_status(battery_level);
+
+	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
 }
 
 /**@brief	Configures chip power options.
@@ -1403,6 +1444,7 @@ int main(void)
 	LOG("**********************************************************************\r\n");
 	LOG("[MAIN]:Starting ANT+ id: %i, firmware: %s, serial: %#.8x \r\n",
 			ANT_DEVICE_NUMBER, SW_REVISION, SERIAL_NUMBER);
+	LOG("[MAIN]:Features: %i\r\n", *FEATURES);
 	LOG("**********************************************************************\r\n");
 
 	// Determine what the reason for startup is and log appropriately.

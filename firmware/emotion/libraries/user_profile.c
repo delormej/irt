@@ -7,7 +7,7 @@
 #include "debug.h"
 
 #define USER_PROFILE_BLOCK_ID		0u
-#define USER_PROFILE_OFFSET			0u	// User Profile is 1 block higher.  0 block is programmed with readonly factory default settings.
+#define USER_PROFILE_OFFSET			0u	
 
 /**@brief Debug logging for main module.
  *

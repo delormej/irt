@@ -7,10 +7,12 @@
 ********************************************************************************/
 
 #include "power.h"
+#include "nrf_error.h"
 #include "app_error.h"
 #include "resistance.h"
 #include "debug.h"
 #include "math.h"
+#include "irt_common.h"
 #include "nrf_delay.h"
 
 /**@brief Debug logging for module.
@@ -25,6 +27,7 @@
 static float m_rr_force;
 static float m_ca_slope;			// calibration parameters
 static float m_ca_intercept;
+static bool  m_use_small_mag;
 
 /* Calculates angular velocity based on wheel ticks and time.
 static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
@@ -77,11 +80,14 @@ static float servo_force(uint16_t servo_pos)
 		// Magnet OFF no force being applied.
 		force = 0.0f;
 	}
+	else if (servo_pos < MAX_RESISTANCE_LEVEL)
+	{
+		APP_ERROR_HANDLER(NRF_ERROR_INVALID_PARAM);
+	}
 	else
 	{
-#ifdef SMALL_MAG
-		//if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
-		//{
+		if (m_use_small_mag)
+		{
 			force = (
 					-0.00000000000033469583 * pow(servo_pos,5)
 					+0.00000000202071048200 * pow(servo_pos,4)
@@ -89,10 +95,9 @@ static float servo_force(uint16_t servo_pos)
 					+0.00513145135800000000 * pow(servo_pos,2)
 					-2.691480529 * servo_pos
 					+562.4577135);
-		//}
-		//else // BIG_MAG
-		//{
-#else
+		}
+		else // BIG_MAG
+		{
 			force = (
 					-0.0000000000012401 * pow(servo_pos,5)
 					+0.0000000067486647 * pow(servo_pos,4)
@@ -100,8 +105,7 @@ static float servo_force(uint16_t servo_pos)
 					+0.0142639827784839 * pow(servo_pos,2)
 					-6.92836459712442 * servo_pos
 					+1351.463567618);
-		//}
-#endif
+		}
 	}
 
 	// Force unsigned float - 0.0 is minimum.
@@ -117,61 +121,48 @@ static float servo_force(uint16_t servo_pos)
  */
 uint16_t power_servo_pos_calc(float force)
 {
-	int16_t servo_pos;
+	float value;
+	uint16_t servo_pos;
 
-	//
-	// Manual multiple linear regression hack.
-	/*
-	if (force < 0.8f)
+	if (m_use_small_mag)
 	{
+		value = (
+				0.001461686  * pow(force,5)
+				-0.076119976 * pow(force,4)
+				+1.210189005 * pow(force,3)
+				-5.221468861 * pow(force,2)
+				-37.59134617 * force
+				+1526.614724);
+	}
+	else // BIG_MAG
+	{
+		value = (
+				-0.0000940913669469  * pow(force,5)
+				+ 0.0108240213514885 * pow(force,4)
+				-0.46173964201648 	 * pow(force,3)
+				+8.9640144624266 	 * pow(force,2)
+				-87.5217493343533 	 * force
+				+1558.47782198543);
+	}
+
+	if (value > MIN_RESISTANCE_LEVEL)
+	{
+		// Value is greater than the minimum resistance level, i.e. 2000.
 		servo_pos = MIN_RESISTANCE_LEVEL;
 	}
-	else if (force_needed < 5.028207f)
+	else if (value < MAX_RESISTANCE_LEVEL)
 	{
-		// 1,500 - 1,300
-		servo_pos = (uint16_t)slope_calc(force_needed, -44.8841f, 1517.988f);
-	}
-	else if (force_needed < 40.51667f)
-	{
-		// 1,300 - 900
-		servo_pos = (uint16_t)slope_calc(force_needed, -10.9038f, 1345.708f);
-	}
-	else if (force_needed < 44.9931f)
-	{
-		// 900 - 700
-		servo_pos = (uint16_t)slope_calc(force_needed, -39.4606f, 2505.677f);
+		// Value is less than the minimum resistance level, i.e. 1000.
+		servo_pos = MAX_RESISTANCE_LEVEL;
 	}
 	else
 	{
-		// Max
-		servo_pos = 700;
+		// Resistance is in range, so cast float to integer.
+		servo_pos = (uint16_t)value;
 	}
-	else
-	{*/
-#ifdef SMALL_MAG
-		//if (FEATURE_IS_SET(FEATURE_SMALL_MAG))
-		//{
-			servo_pos = (
-					0.001461686  * pow(force,5)
-					-0.076119976 * pow(force,4)
-					+1.210189005 * pow(force,3)
-					-5.221468861 * pow(force,2)
-					-37.59134617 * force
-					+1526.614724);
-		//}
-		//else // BIG_MAG
-		//{
-#else
-			servo_pos = (
-					-0.0000940913669469  * pow(force,5)
-					+ 0.0108240213514885 * pow(force,4)
-					-0.46173964201648 	 * pow(force,3)
-					+8.9640144624266 	 * pow(force,2)
-					-87.5217493343533 	 * force
-					+1558.47782198543);
-		//}
-#endif
-	//}
+
+	PW_LOG("[PW] power_servo_pos_calc force:%.2f == servo_pos:%i\r\n",
+			force, servo_pos);
 
 	return servo_pos;
 }
@@ -184,6 +175,9 @@ uint16_t power_servo_pos_calc(float force)
  */
 void power_init(user_profile_t* p_profile, uint16_t default_crr)
 {
+	m_use_small_mag = FEATURE_AVAILABLE(FEATURE_SMALL_MAG);
+	PW_LOG("[PW] Use small mag?: %i\r\n", m_use_small_mag);
+
 	if (p_profile->ca_slope != 0xFFFF)
 	{
 		m_ca_slope = (p_profile->ca_slope / 1000.0f);

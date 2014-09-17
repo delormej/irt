@@ -16,7 +16,8 @@
 #define RESISTANCE_LEVELS 	7 	// Number of resistance levels available.
 
 /**@brief		Array representing the servo position in micrseconds (us) by 
- *					resistance level 0-9.
+ *				resistance level 0-9, with a larger number representing more
+ *				resistance applied.  0 is NO resistance.
  *
  */
 static const uint16_t RESISTANCE_LEVEL[RESISTANCE_LEVELS] = { 
@@ -38,8 +39,8 @@ static const uint16_t RESISTANCE_LEVEL[RESISTANCE_LEVELS] = {
 	900,
 	800 };
 
-#define MIN_RESISTANCE_LEVEL	1700					// Minimum by which there is no longer resistance.
-#define MAX_RESISTANCE_LEVEL	RESISTANCE_LEVEL[RESISTANCE_LEVELS-1]
+#define MIN_RESISTANCE_LEVEL	RESISTANCE_LEVEL[0]						// Minimum by which there is no longer resistance.
+#define MAX_RESISTANCE_LEVEL	RESISTANCE_LEVEL[RESISTANCE_LEVELS-1]	// Maximum resistance.
 
 /**@brief Bike types, used for predefined resistance coefficients. */
 typedef enum
