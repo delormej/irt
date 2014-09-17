@@ -82,6 +82,8 @@ static float servo_force(uint16_t servo_pos)
 	}
 	else if (servo_pos < MAX_RESISTANCE_LEVEL)
 	{
+		PW_LOG("[PW] servo_force ERROR servo_pos:%i -- bounds should be %i:%i\r\n", servo_pos,
+				MIN_RESISTANCE_LEVEL, MAX_RESISTANCE_LEVEL);
 		APP_ERROR_HANDLER(NRF_ERROR_INVALID_PARAM);
 	}
 	else

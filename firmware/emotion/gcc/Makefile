@@ -75,7 +75,7 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 8
-SW_REVISION_BLD := 81
+SW_REVISION_BLD := 100
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -127,7 +127,7 @@ name:
 
 # Set to 'Valid App'
 # Set 0 for CRC value
-# Set factory features to use charger
+# Set factory features to use charger (64)
 prep:
 	$(NRFJPROG) --memwr 0x3fc00 --val 1		
 	$(NRFJPROG) --memwr 0x3fc04 --val 0		

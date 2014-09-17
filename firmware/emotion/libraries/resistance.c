@@ -59,7 +59,10 @@ uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profi
 	pwm_init(servo_pin_number);
 
 	// Always start off with resistance at level 0.
-	return resistance_level_set(0);
+	//return resistance_level_set(0);
+	#pragma message "TODO: Hard coded to return 2,000 - fix this."
+	m_servo_pos = 2000;
+	return 2000;
 }
 
 /**@brief	Returns the last known position of the servo.
@@ -90,7 +93,7 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 		servo_pos = RESISTANCE_LEVEL[0];
 	}
 
-	if ( (m_servo_pos != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
+	if ( (m_servo_pos != servo_pos) )// && ABOVE_TRESHOLD(servo_pos) )
 	{
 		/*
 		 * NOTE: SERVO OFFSET LOGIC
