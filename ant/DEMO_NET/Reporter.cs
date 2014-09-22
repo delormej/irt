@@ -10,6 +10,33 @@ namespace ANT_Console
         void Report(string message);
     }
 
+    public abstract class BaseReporter : IReporter
+    {
+        DateTime m_lastReport = DateTime.Now;
+
+        public const string ReportHeader = "Time         |  mph  | Watts | Watts2| Servo  | Target | Flywheel";
+
+        protected string ReportFormat(DataPoint data)
+        {
+            const string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5,4}:{6} | {7}";
+            string value = string.Format(format,
+                data.Timestamp,
+                //data.SpeedReference,
+                data.SpeedEMotion,
+                data.PowerEMotion,
+                data.PowerReference,
+                data.ServoPosition,
+                data.ResistanceMode == 0x41 ? "S" : data.ResistanceMode == 0x42 ? "E" : "",
+                data.TargetLevel,
+                data.FlywheelRevs);
+
+            return value;
+        }
+
+        public abstract void Report(DataPoint data);
+        public abstract void Report(string message);
+    }
+
     public class LogReporter : IReporter, IDisposable
     {
         StreamWriter m_logFileWriter;

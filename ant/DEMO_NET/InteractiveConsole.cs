@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace ANT_Console
 {
-    class InteractiveConsole : IReporter
+    class InteractiveConsole : BaseReporter
     {
         bool m_scriptInfinite = false;
         bool m_inCommand = false;
@@ -55,12 +55,11 @@ namespace ANT_Console
 
             Utility.PreventShutdown();
 
-            const string header = "Time         |  mph  | Watts | Watts2| Servo  | Target | Flywheel";
             ConsoleKeyInfo cki;
 
             Console.CursorVisible = false;
             Console.WriteLine("Starting....");
-            Console.WriteLine(header);
+            Console.WriteLine(ReportHeader);
 
             do
             {
@@ -149,20 +148,18 @@ namespace ANT_Console
             controller.Shutdown();
         }
 
-        public void Report(string message)
+        public override void Report(string message)
         {
             Console.WriteLine(message);
         }
 
-        public void Report(DataPoint data)
+        public override void Report(DataPoint data)
         {
             if (m_inCommand)
                 return;
 
             if (data.Timestamp <= m_lastReport)
                 return;
-
-            const string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5,4}:{6} | {7}";
 
             // Leave 2 rows at the bottom for command.
             int lastLine = Console.CursorTop;
@@ -198,16 +195,7 @@ namespace ANT_Console
             Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
             Console.Write("<enter cmd>");
             Console.SetCursorPosition(Console.WindowLeft, lastLine);
-            Console.WriteLine(format,
-                data.Timestamp,
-                //data.SpeedReference,
-                data.SpeedEMotion,
-                data.PowerEMotion,
-                data.PowerReference,
-                data.ServoPosition,
-                data.ResistanceMode == 0x41 ? "S" : data.ResistanceMode == 0x42 ? "E" : "",
-                data.TargetLevel,
-                data.FlywheelRevs);
+            Console.WriteLine(ReportFormat(data));
         }
 
         void ShowHelp()
