@@ -68,7 +68,6 @@
             this.label19 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.btnCalibrationSet = new System.Windows.Forms.Button();
-            this.lblChargeStatus = new System.Windows.Forms.Label();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.cmbResistanceMode = new System.Windows.Forms.ComboBox();
             this.btnResistanceSet = new System.Windows.Forms.Button();
@@ -104,6 +103,8 @@
             this.txtServoOffset = new System.Windows.Forms.TextBox();
             this.btnServoOffset = new System.Windows.Forms.Button();
             this.lblResistanceStdLevel = new System.Windows.Forms.Label();
+            this.chkCharge = new System.Windows.Forms.CheckBox();
+            this.btnDfuEnable = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -126,12 +127,13 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btnDfuEnable);
+            this.groupBox1.Controls.Add(this.chkCharge);
             this.groupBox1.Controls.Add(this.btnServoOffset);
             this.groupBox1.Controls.Add(this.txtServoOffset);
             this.groupBox1.Controls.Add(this.lblServoOffset);
             this.groupBox1.Controls.Add(this.label28);
             this.groupBox1.Controls.Add(this.label18);
-            this.groupBox1.Controls.Add(this.lblChargeStatus);
             this.groupBox1.Controls.Add(this.label19);
             this.groupBox1.Controls.Add(this.lblEmrBattTime);
             this.groupBox1.Controls.Add(this.label10);
@@ -376,7 +378,7 @@
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(22, 22);
+            this.label12.Location = new System.Drawing.Point(9, 22);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(34, 13);
             this.label12.TabIndex = 14;
@@ -399,7 +401,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(22, 44);
+            this.label7.Location = new System.Drawing.Point(9, 45);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(35, 13);
             this.label7.TabIndex = 16;
@@ -508,16 +510,6 @@
             this.btnCalibrationSet.TabIndex = 17;
             this.btnCalibrationSet.Text = "Set";
             this.btnCalibrationSet.UseVisualStyleBackColor = true;
-            // 
-            // lblChargeStatus
-            // 
-            this.lblChargeStatus.AutoSize = true;
-            this.lblChargeStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblChargeStatus.Location = new System.Drawing.Point(145, 121);
-            this.lblChargeStatus.Name = "lblChargeStatus";
-            this.lblChargeStatus.Size = new System.Drawing.Size(19, 13);
-            this.lblChargeStatus.TabIndex = 14;
-            this.lblChargeStatus.Text = "...";
             // 
             // groupBox5
             // 
@@ -860,6 +852,27 @@
             this.lblResistanceStdLevel.Text = "0";
             this.lblResistanceStdLevel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // chkCharge
+            // 
+            this.chkCharge.AutoSize = true;
+            this.chkCharge.Enabled = false;
+            this.chkCharge.Location = new System.Drawing.Point(135, 121);
+            this.chkCharge.Name = "chkCharge";
+            this.chkCharge.Size = new System.Drawing.Size(68, 17);
+            this.chkCharge.TabIndex = 27;
+            this.chkCharge.Text = "Charging";
+            this.chkCharge.UseVisualStyleBackColor = true;
+            // 
+            // btnDfuEnable
+            // 
+            this.btnDfuEnable.Location = new System.Drawing.Point(154, 59);
+            this.btnDfuEnable.Name = "btnDfuEnable";
+            this.btnDfuEnable.Size = new System.Drawing.Size(47, 23);
+            this.btnDfuEnable.TabIndex = 28;
+            this.btnDfuEnable.Text = "DFU";
+            this.btnDfuEnable.UseVisualStyleBackColor = true;
+            this.btnDfuEnable.Visible = false;
+            // 
             // frmIrtGui
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -942,7 +955,6 @@
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Button btnCalibrationSet;
-        private System.Windows.Forms.Label lblChargeStatus;
         private System.Windows.Forms.GroupBox groupBox5;
         private System.Windows.Forms.Panel pnlResistanceStd;
         private System.Windows.Forms.Button btnResistanceSet;
@@ -978,6 +990,8 @@
         private System.Windows.Forms.Label label28;
         private System.Windows.Forms.Button btnServoOffset;
         private System.Windows.Forms.Label lblResistanceStdLevel;
+        private System.Windows.Forms.CheckBox chkCharge;
+        private System.Windows.Forms.Button btnDfuEnable;
     }
 }
 

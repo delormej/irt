@@ -4,7 +4,7 @@ using ANT_Console.Messages;
 
 namespace ANT_Console.Services
 {
-    class AntBikeSpeed : AntService
+    public class AntBikeSpeed : AntService
     {
         public event MessageHandler<SpeedMessage> SpeedEvent;
 

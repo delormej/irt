@@ -74,7 +74,7 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>ANT_Console.Controller</StartupObject>
+    <StartupObject>ANT_Console.InteractiveConsole</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>IR 1 red_alter4ICON.ico</ApplicationIcon>

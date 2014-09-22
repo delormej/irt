@@ -3,7 +3,7 @@ using ANT_Managed_Library;
 
 namespace ANT_Console.Services
 {
-    class AntControl : AntService
+    public class AntControl : AntService
     {
         byte m_ctrl_sequence;
         byte[] serial_no = { 0xFF, 0xFF }; // No serial number - so device doesn't bond.

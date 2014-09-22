@@ -19,15 +19,40 @@ namespace ANT_Console
         AntControl m_control;
         SpeedSimulator m_speedSim;
 
-        public InteractiveConsole(AntBikePower eMotion, AntControl control, AntBikeSpeed refSpeed)
+        public static void Main()
         {
-            m_eMotion = eMotion;
-            m_control = control;
-            m_refSpeed = refSpeed;
+            Console.Title = "IRT Debug Console";
+            InteractiveConsole console = new InteractiveConsole();
+            console.Run();
         }
 
         public void Run()
         {
+            Controller controller = null;
+
+            try
+            {
+                controller = new Controller();
+
+                // Check to see if we should connect to a specific E-Motion Device.
+                Console.Write("E-Motion Rollers Device ID or <ENTER>:");
+                
+                controller.ConfigureServices(ushort.Parse(Console.ReadLine()));
+
+                m_eMotion = controller.EMotionBikePower;
+                m_control = controller.AntRemoteControl;
+                m_refSpeed = controller.RefBikeSpeed;
+
+                // configure ourselves as a reporter and start.
+                controller.Reporters.Add(this);
+                controller.ConfigureReporters();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return;
+            }
+
             PreventShutdown();
 
             const string header = "Time         |  mph  | Watts | Watts2| Servo  | Target | Flywheel";
@@ -119,6 +144,9 @@ namespace ANT_Console
                         break;
                 }
             } while (cki.Key != ConsoleKey.X);
+
+            // Signal to wrap up and report out summary.
+            controller.Shutdown();
         }
 
         public void Report(string message)

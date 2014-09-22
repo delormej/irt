@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace ANT_Console
 {
-    class Controller
+    public class Controller
     {
         ushort m_eMotionDeviceId = 0;
         DataPoint m_data;
@@ -16,7 +16,6 @@ namespace ANT_Console
         AntBikePower m_eMotionPower;
         AntBikeSpeed m_refSpeed;
         AntBikePower m_refPower;
-        InteractiveConsole m_console;
         IList<IReporter> m_reporters;
         CalibrationSpeed m_last_calibration;
         Timer m_ReportingTimer;
@@ -29,46 +28,43 @@ namespace ANT_Console
             AntControl
         }
 
-        public static void Main()
-        {
-            Console.Title = "IRT Debug Console";
-
-            try
-            {
-                Controller controller = new Controller();
-                controller.Run();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
-
         public Controller()
         {
             m_data = new DataPoint();
             m_summary = new SummaryInfo();
+            m_reporters = new List<IReporter>();
         }
 
-        public void Run()
+        public void Shutdown()
         {
-            // Check to see if we should connect to a specific E-Motion Device.
-            Console.Write("E-Motion Rollers Device ID or <ENTER>:");
-            ushort.TryParse(Console.ReadLine(), out m_eMotionDeviceId);
-            ConfigureServices(m_eMotionDeviceId);
-
-            m_console = new InteractiveConsole(m_eMotionPower, m_control, m_refSpeed);
-
-            GetSummaryInfo();
-
-            ConfigureReporters();
-            
-            // Kick off the console and block here until done.
-            m_console.Run();
-
             m_ReportingTimer.Stop();
             // Report out summary.
             Report(m_summary);
+        }
+
+        public IList<IReporter> Reporters
+        {
+            get { return m_reporters;  }
+        }
+
+        public AntBikePower EMotionBikePower
+        {
+            get { return m_eMotionPower; }
+        }
+            
+        public AntControl AntRemoteControl
+        {
+            get { return m_control; }
+        }
+
+        public AntBikeSpeed RefBikeSpeed
+        {
+            get { return m_refSpeed; }
+        }
+
+        public AntBikePower RefBikePower
+        {
+            get { return RefBikePower;  }
         }
 
         private void GetSummaryInfo()
@@ -133,7 +129,7 @@ namespace ANT_Console
         }
 
 
-        private void ConfigureServices(ushort deviceId = 0)
+        public void ConfigureServices(ushort deviceId = 0)
         {
             const byte emotion_transmission_type = 0xA5;
             const byte quarq_transmission_type = 0x5;
@@ -194,12 +190,10 @@ namespace ANT_Console
         // End
         //
 
-        private void ConfigureReporters()
+        public void ConfigureReporters()
         {
             // Temporary reporter.
-            m_reporters = new List<IReporter>(2);
             m_reporters.Add(new LogReporter());
-            m_reporters.Add(m_console);
 
             m_ReportingTimer = new Timer(1000);
             m_ReportingTimer.Elapsed += (o, e) =>
