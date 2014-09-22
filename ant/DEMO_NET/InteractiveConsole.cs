@@ -53,7 +53,7 @@ namespace ANT_Console
                 return;
             }
 
-            PreventShutdown();
+            Utility.PreventShutdown();
 
             const string header = "Time         |  mph  | Watts | Watts2| Servo  | Target | Flywheel";
             ConsoleKeyInfo cki;
@@ -580,14 +580,6 @@ namespace ANT_Console
                 m_lastReport = data.Timestamp;
             }
         }
-
-        private void PreventShutdown()
-        {
-            Utility.SetThreadExecutionState(
-                Utility.ThreadExecutionState.CONTINUOUS | 
-                Utility.ThreadExecutionState.DISPLAY_REQUIRED |
-                Utility.ThreadExecutionState.SYSTEM_REQUIRED);
-        }
     }
 
     public static class Utility
@@ -600,6 +592,14 @@ namespace ANT_Console
             CONTINUOUS = 0x80000000,
             DISPLAY_REQUIRED = 0x00000002,
             SYSTEM_REQUIRED = 0x00000001
+        }
+
+        public static void PreventShutdown()
+        {
+            Utility.SetThreadExecutionState(
+                Utility.ThreadExecutionState.CONTINUOUS | 
+                Utility.ThreadExecutionState.DISPLAY_REQUIRED |
+                Utility.ThreadExecutionState.SYSTEM_REQUIRED);
         }
     }
 }
