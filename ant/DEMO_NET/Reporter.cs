@@ -10,15 +10,13 @@ namespace ANT_Console
         void Report(string message);
     }
 
-    public abstract class BaseReporter : IReporter
+    public class ReportHelper
     {
-        DateTime m_lastReport = DateTime.Now;
+        public static readonly string Header = "Time         |  mph  | Watts | Watts2| Servo  | Target | Flywheel\r\n";
 
-        public const string ReportHeader = "Time         |  mph  | Watts | Watts2| Servo  | Target | Flywheel";
-
-        protected string ReportFormat(DataPoint data)
+        public static string Format(DataPoint data)
         {
-            const string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5,4}:{6} | {7}";
+            const string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5,4}:{6} | {7}\r\n";
             string value = string.Format(format,
                 data.Timestamp,
                 //data.SpeedReference,
@@ -32,9 +30,6 @@ namespace ANT_Console
 
             return value;
         }
-
-        public abstract void Report(DataPoint data);
-        public abstract void Report(string message);
     }
 
     public class LogReporter : IReporter, IDisposable

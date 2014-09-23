@@ -31,80 +31,82 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmIrtGui));
             this.txtLog = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.txtEmrDeviceId = new System.Windows.Forms.TextBox();
-            this.lblEmrSerialNo = new System.Windows.Forms.Label();
-            this.lblEmrFirmwareRev = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
-            this.lblEmrHardwareRev = new System.Windows.Forms.Label();
+            this.btnDfuEnable = new System.Windows.Forms.Button();
+            this.chkCharge = new System.Windows.Forms.CheckBox();
+            this.btnServoOffset = new System.Windows.Forms.Button();
+            this.txtServoOffset = new System.Windows.Forms.TextBox();
+            this.lblServoOffset = new System.Windows.Forms.Label();
+            this.label28 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
+            this.lblEmrBattTime = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.lblEmrBattVolt = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.btnEmrSearch = new System.Windows.Forms.Button();
             this.lblEmrModel = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
+            this.lblEmrHardwareRev = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.lblEmrFirmwareRev = new System.Windows.Forms.Label();
+            this.lblEmrSerialNo = new System.Windows.Forms.Label();
+            this.txtEmrDeviceId = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.lblRefPwrManuf = new System.Windows.Forms.Label();
             this.txtRefPwrDeviceId = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label17 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.btnRefPwrSearch = new System.Windows.Forms.Button();
             this.lblRefPwrType = new System.Windows.Forms.Label();
             this.lblRefPwrModel = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
-            this.lblEmrBattVolt = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
-            this.lblEmrBattTime = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.txtSlope = new System.Windows.Forms.TextBox();
             this.txtOffset = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
-            this.btnRefPwrSearch = new System.Windows.Forms.Button();
-            this.btnEmrSearch = new System.Windows.Forms.Button();
-            this.label13 = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
-            this.label17 = new System.Windows.Forms.Label();
-            this.label18 = new System.Windows.Forms.Label();
-            this.label19 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.btnCalibrationSet = new System.Windows.Forms.Button();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.cmbResistanceMode = new System.Windows.Forms.ComboBox();
-            this.btnResistanceSet = new System.Windows.Forms.Button();
             this.pnlResistanceStd = new System.Windows.Forms.Panel();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.label22 = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
             this.pnlErg = new System.Windows.Forms.Panel();
+            this.lblResistanceStdLevel = new System.Windows.Forms.Label();
+            this.btnResistanceDec = new System.Windows.Forms.Button();
+            this.btnResistanceInc = new System.Windows.Forms.Button();
             this.txtResistanceErgWatts = new System.Windows.Forms.TextBox();
             this.label20 = new System.Windows.Forms.Label();
+            this.btnResistanceSet = new System.Windows.Forms.Button();
+            this.txtServoPos = new System.Windows.Forms.TextBox();
+            this.cmbResistanceMode = new System.Windows.Forms.ComboBox();
+            this.label22 = new System.Windows.Forms.Label();
             this.pnlResistanceSim = new System.Windows.Forms.Panel();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.label23 = new System.Windows.Forms.Label();
-            this.textBox3 = new System.Windows.Forms.TextBox();
-            this.label24 = new System.Windows.Forms.Label();
             this.textBox4 = new System.Windows.Forms.TextBox();
             this.label25 = new System.Windows.Forms.Label();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.label24 = new System.Windows.Forms.Label();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.label23 = new System.Windows.Forms.Label();
             this.label26 = new System.Windows.Forms.Label();
             this.txtTotalWeight = new System.Windows.Forms.TextBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.chkLstSettings = new System.Windows.Forms.CheckedListBox();
+            this.btnSettingsSet = new System.Windows.Forms.Button();
             this.label21 = new System.Windows.Forms.Label();
             this.txtWheelSizeMm = new System.Windows.Forms.TextBox();
-            this.btnSettingsSet = new System.Windows.Forms.Button();
-            this.chkLstSettings = new System.Windows.Forms.CheckedListBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.txtParamGet = new System.Windows.Forms.TextBox();
-            this.btnParamSet = new System.Windows.Forms.Button();
-            this.btnParamGet = new System.Windows.Forms.Button();
             this.txtParamSet = new System.Windows.Forms.TextBox();
-            this.lblServoOffset = new System.Windows.Forms.Label();
-            this.label28 = new System.Windows.Forms.Label();
-            this.txtServoOffset = new System.Windows.Forms.TextBox();
-            this.btnServoOffset = new System.Windows.Forms.Button();
-            this.lblResistanceStdLevel = new System.Windows.Forms.Label();
-            this.chkCharge = new System.Windows.Forms.CheckBox();
-            this.btnDfuEnable = new System.Windows.Forms.Button();
+            this.btnParamGet = new System.Windows.Forms.Button();
+            this.btnParamSet = new System.Windows.Forms.Button();
+            this.txtParamGet = new System.Windows.Forms.TextBox();
+            this.statusStrip = new System.Windows.Forms.StatusStrip();
+            this.chkSettingsPersist = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -122,7 +124,7 @@
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtLog.Size = new System.Drawing.Size(759, 215);
+            this.txtLog.Size = new System.Drawing.Size(759, 202);
             this.txtLog.TabIndex = 0;
             // 
             // groupBox1
@@ -159,76 +161,153 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "E-Motion Rollers";
             // 
-            // label1
+            // btnDfuEnable
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(7, 26);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(55, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Device ID";
+            this.btnDfuEnable.Location = new System.Drawing.Point(154, 59);
+            this.btnDfuEnable.Name = "btnDfuEnable";
+            this.btnDfuEnable.Size = new System.Drawing.Size(47, 23);
+            this.btnDfuEnable.TabIndex = 28;
+            this.btnDfuEnable.Text = "DFU";
+            this.btnDfuEnable.UseVisualStyleBackColor = true;
+            this.btnDfuEnable.Visible = false;
+            this.btnDfuEnable.Click += new System.EventHandler(this.btnDfuEnable_Click);
             // 
-            // label2
+            // chkCharge
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(7, 45);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(50, 13);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "Serial No";
+            this.chkCharge.AutoSize = true;
+            this.chkCharge.Enabled = false;
+            this.chkCharge.Location = new System.Drawing.Point(135, 121);
+            this.chkCharge.Name = "chkCharge";
+            this.chkCharge.Size = new System.Drawing.Size(68, 17);
+            this.chkCharge.TabIndex = 27;
+            this.chkCharge.Text = "Charging";
+            this.chkCharge.UseVisualStyleBackColor = true;
+            this.chkCharge.CheckedChanged += new System.EventHandler(this.chkCharge_CheckedChanged);
             // 
-            // label3
+            // btnServoOffset
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(7, 64);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(72, 13);
-            this.label3.TabIndex = 2;
-            this.label3.Text = "Firmware Rev";
+            this.btnServoOffset.Location = new System.Drawing.Point(154, 153);
+            this.btnServoOffset.Name = "btnServoOffset";
+            this.btnServoOffset.Size = new System.Drawing.Size(47, 23);
+            this.btnServoOffset.TabIndex = 26;
+            this.btnServoOffset.Text = "Set";
+            this.btnServoOffset.UseVisualStyleBackColor = true;
+            this.btnServoOffset.Visible = false;
+            this.btnServoOffset.Click += new System.EventHandler(this.btnServoOffset_Click);
             // 
-            // txtEmrDeviceId
+            // txtServoOffset
             // 
-            this.txtEmrDeviceId.Location = new System.Drawing.Point(111, 19);
-            this.txtEmrDeviceId.Name = "txtEmrDeviceId";
-            this.txtEmrDeviceId.Size = new System.Drawing.Size(77, 20);
-            this.txtEmrDeviceId.TabIndex = 3;
-            this.txtEmrDeviceId.Text = "0";
+            this.txtServoOffset.Location = new System.Drawing.Point(111, 155);
+            this.txtServoOffset.Name = "txtServoOffset";
+            this.txtServoOffset.Size = new System.Drawing.Size(37, 20);
+            this.txtServoOffset.TabIndex = 17;
+            this.txtServoOffset.Text = "0";
+            this.txtServoOffset.Visible = false;
             // 
-            // lblEmrSerialNo
+            // lblServoOffset
             // 
-            this.lblEmrSerialNo.AutoSize = true;
-            this.lblEmrSerialNo.Location = new System.Drawing.Point(108, 45);
-            this.lblEmrSerialNo.Name = "lblEmrSerialNo";
-            this.lblEmrSerialNo.Size = new System.Drawing.Size(16, 13);
-            this.lblEmrSerialNo.TabIndex = 4;
-            this.lblEmrSerialNo.Text = "...";
+            this.lblServoOffset.AutoSize = true;
+            this.lblServoOffset.Location = new System.Drawing.Point(108, 158);
+            this.lblServoOffset.Name = "lblServoOffset";
+            this.lblServoOffset.Size = new System.Drawing.Size(13, 13);
+            this.lblServoOffset.TabIndex = 16;
+            this.lblServoOffset.Text = "..";
             // 
-            // lblEmrFirmwareRev
+            // label28
             // 
-            this.lblEmrFirmwareRev.AutoSize = true;
-            this.lblEmrFirmwareRev.Location = new System.Drawing.Point(108, 64);
-            this.lblEmrFirmwareRev.Name = "lblEmrFirmwareRev";
-            this.lblEmrFirmwareRev.Size = new System.Drawing.Size(16, 13);
-            this.lblEmrFirmwareRev.TabIndex = 5;
-            this.lblEmrFirmwareRev.Text = "...";
+            this.label28.AutoSize = true;
+            this.label28.Location = new System.Drawing.Point(7, 156);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(66, 13);
+            this.label28.TabIndex = 15;
+            this.label28.Text = "Servo Offset";
             // 
-            // label6
+            // label18
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(7, 83);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(76, 13);
-            this.label6.TabIndex = 6;
-            this.label6.Text = "Hardware Rev";
+            this.label18.AutoSize = true;
+            this.label18.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label18.Location = new System.Drawing.Point(36, 282);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(34, 13);
+            this.label18.TabIndex = 13;
+            this.label18.Text = "MPH";
             // 
-            // lblEmrHardwareRev
+            // label19
             // 
-            this.lblEmrHardwareRev.AutoSize = true;
-            this.lblEmrHardwareRev.Location = new System.Drawing.Point(108, 83);
-            this.lblEmrHardwareRev.Name = "lblEmrHardwareRev";
-            this.lblEmrHardwareRev.Size = new System.Drawing.Size(16, 13);
-            this.lblEmrHardwareRev.TabIndex = 7;
-            this.lblEmrHardwareRev.Text = "...";
+            this.label19.AutoSize = true;
+            this.label19.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label19.Location = new System.Drawing.Point(29, 225);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(51, 55);
+            this.label19.TabIndex = 12;
+            this.label19.Text = "0";
+            this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblEmrBattTime
+            // 
+            this.lblEmrBattTime.AutoSize = true;
+            this.lblEmrBattTime.Location = new System.Drawing.Point(108, 139);
+            this.lblEmrBattTime.Name = "lblEmrBattTime";
+            this.lblEmrBattTime.Size = new System.Drawing.Size(13, 13);
+            this.lblEmrBattTime.TabIndex = 13;
+            this.lblEmrBattTime.Text = "..";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(7, 119);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(79, 13);
+            this.label10.TabIndex = 10;
+            this.label10.Text = "Battery Voltage";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(7, 137);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(79, 13);
+            this.label11.TabIndex = 12;
+            this.label11.Text = "Operating Time";
+            // 
+            // lblEmrBattVolt
+            // 
+            this.lblEmrBattVolt.AutoSize = true;
+            this.lblEmrBattVolt.Location = new System.Drawing.Point(108, 121);
+            this.lblEmrBattVolt.Name = "lblEmrBattVolt";
+            this.lblEmrBattVolt.Size = new System.Drawing.Size(13, 13);
+            this.lblEmrBattVolt.TabIndex = 11;
+            this.lblEmrBattVolt.Text = "..";
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label16.Location = new System.Drawing.Point(131, 282);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(40, 13);
+            this.label16.TabIndex = 11;
+            this.label16.Text = "Watts";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.Location = new System.Drawing.Point(124, 225);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(51, 55);
+            this.label13.TabIndex = 10;
+            this.label13.Text = "0";
+            this.label13.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // btnEmrSearch
+            // 
+            this.btnEmrSearch.Location = new System.Drawing.Point(60, 195);
+            this.btnEmrSearch.Name = "btnEmrSearch";
+            this.btnEmrSearch.Size = new System.Drawing.Size(75, 23);
+            this.btnEmrSearch.TabIndex = 9;
+            this.btnEmrSearch.Text = "Search";
+            this.btnEmrSearch.UseVisualStyleBackColor = true;
             // 
             // lblEmrModel
             // 
@@ -247,6 +326,77 @@
             this.label9.Size = new System.Drawing.Size(36, 13);
             this.label9.TabIndex = 8;
             this.label9.Text = "Model";
+            // 
+            // lblEmrHardwareRev
+            // 
+            this.lblEmrHardwareRev.AutoSize = true;
+            this.lblEmrHardwareRev.Location = new System.Drawing.Point(108, 83);
+            this.lblEmrHardwareRev.Name = "lblEmrHardwareRev";
+            this.lblEmrHardwareRev.Size = new System.Drawing.Size(16, 13);
+            this.lblEmrHardwareRev.TabIndex = 7;
+            this.lblEmrHardwareRev.Text = "...";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(7, 83);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(76, 13);
+            this.label6.TabIndex = 6;
+            this.label6.Text = "Hardware Rev";
+            // 
+            // lblEmrFirmwareRev
+            // 
+            this.lblEmrFirmwareRev.AutoSize = true;
+            this.lblEmrFirmwareRev.Location = new System.Drawing.Point(108, 64);
+            this.lblEmrFirmwareRev.Name = "lblEmrFirmwareRev";
+            this.lblEmrFirmwareRev.Size = new System.Drawing.Size(16, 13);
+            this.lblEmrFirmwareRev.TabIndex = 5;
+            this.lblEmrFirmwareRev.Text = "...";
+            // 
+            // lblEmrSerialNo
+            // 
+            this.lblEmrSerialNo.AutoSize = true;
+            this.lblEmrSerialNo.Location = new System.Drawing.Point(108, 45);
+            this.lblEmrSerialNo.Name = "lblEmrSerialNo";
+            this.lblEmrSerialNo.Size = new System.Drawing.Size(16, 13);
+            this.lblEmrSerialNo.TabIndex = 4;
+            this.lblEmrSerialNo.Text = "...";
+            // 
+            // txtEmrDeviceId
+            // 
+            this.txtEmrDeviceId.Location = new System.Drawing.Point(111, 19);
+            this.txtEmrDeviceId.Name = "txtEmrDeviceId";
+            this.txtEmrDeviceId.Size = new System.Drawing.Size(77, 20);
+            this.txtEmrDeviceId.TabIndex = 3;
+            this.txtEmrDeviceId.Text = "0";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(7, 64);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(72, 13);
+            this.label3.TabIndex = 2;
+            this.label3.Text = "Firmware Rev";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(7, 45);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(50, 13);
+            this.label2.TabIndex = 1;
+            this.label2.Text = "Serial No";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(7, 26);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(55, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Device ID";
             // 
             // label4
             // 
@@ -312,6 +462,36 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Power Meter";
             // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label17.Location = new System.Drawing.Point(76, 281);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(40, 13);
+            this.label17.TabIndex = 12;
+            this.label17.Text = "Watts";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label15.Location = new System.Drawing.Point(73, 224);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(51, 55);
+            this.label15.TabIndex = 11;
+            this.label15.Text = "0";
+            this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // btnRefPwrSearch
+            // 
+            this.btnRefPwrSearch.Location = new System.Drawing.Point(70, 195);
+            this.btnRefPwrSearch.Name = "btnRefPwrSearch";
+            this.btnRefPwrSearch.Size = new System.Drawing.Size(75, 23);
+            this.btnRefPwrSearch.TabIndex = 8;
+            this.btnRefPwrSearch.Text = "Search";
+            this.btnRefPwrSearch.UseVisualStyleBackColor = true;
+            // 
             // lblRefPwrType
             // 
             this.lblRefPwrType.AutoSize = true;
@@ -338,42 +518,6 @@
             this.label14.Size = new System.Drawing.Size(70, 13);
             this.label14.TabIndex = 1;
             this.label14.Text = "Manufacturer";
-            // 
-            // lblEmrBattVolt
-            // 
-            this.lblEmrBattVolt.AutoSize = true;
-            this.lblEmrBattVolt.Location = new System.Drawing.Point(108, 121);
-            this.lblEmrBattVolt.Name = "lblEmrBattVolt";
-            this.lblEmrBattVolt.Size = new System.Drawing.Size(13, 13);
-            this.lblEmrBattVolt.TabIndex = 11;
-            this.lblEmrBattVolt.Text = "..";
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(7, 119);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(79, 13);
-            this.label10.TabIndex = 10;
-            this.label10.Text = "Battery Voltage";
-            // 
-            // lblEmrBattTime
-            // 
-            this.lblEmrBattTime.AutoSize = true;
-            this.lblEmrBattTime.Location = new System.Drawing.Point(108, 139);
-            this.lblEmrBattTime.Name = "lblEmrBattTime";
-            this.lblEmrBattTime.Size = new System.Drawing.Size(13, 13);
-            this.lblEmrBattTime.TabIndex = 13;
-            this.lblEmrBattTime.Text = "..";
-            // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(7, 137);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(79, 13);
-            this.label11.TabIndex = 12;
-            this.label11.Text = "Operating Time";
             // 
             // label12
             // 
@@ -407,87 +551,6 @@
             this.label7.TabIndex = 16;
             this.label7.Text = "Offset";
             // 
-            // btnRefPwrSearch
-            // 
-            this.btnRefPwrSearch.Location = new System.Drawing.Point(70, 195);
-            this.btnRefPwrSearch.Name = "btnRefPwrSearch";
-            this.btnRefPwrSearch.Size = new System.Drawing.Size(75, 23);
-            this.btnRefPwrSearch.TabIndex = 8;
-            this.btnRefPwrSearch.Text = "Search";
-            this.btnRefPwrSearch.UseVisualStyleBackColor = true;
-            // 
-            // btnEmrSearch
-            // 
-            this.btnEmrSearch.Location = new System.Drawing.Point(60, 195);
-            this.btnEmrSearch.Name = "btnEmrSearch";
-            this.btnEmrSearch.Size = new System.Drawing.Size(75, 23);
-            this.btnEmrSearch.TabIndex = 9;
-            this.btnEmrSearch.Text = "Search";
-            this.btnEmrSearch.UseVisualStyleBackColor = true;
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(124, 225);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(51, 55);
-            this.label13.TabIndex = 10;
-            this.label13.Text = "0";
-            this.label13.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label15
-            // 
-            this.label15.AutoSize = true;
-            this.label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label15.Location = new System.Drawing.Point(73, 224);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(51, 55);
-            this.label15.TabIndex = 11;
-            this.label15.Text = "0";
-            this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label16.Location = new System.Drawing.Point(131, 282);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(40, 13);
-            this.label16.TabIndex = 11;
-            this.label16.Text = "Watts";
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label17.Location = new System.Drawing.Point(76, 281);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(40, 13);
-            this.label17.TabIndex = 12;
-            this.label17.Text = "Watts";
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label18.Location = new System.Drawing.Point(36, 282);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(34, 13);
-            this.label18.TabIndex = 13;
-            this.label18.Text = "MPH";
-            // 
-            // label19
-            // 
-            this.label19.AutoSize = true;
-            this.label19.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label19.Location = new System.Drawing.Point(29, 225);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(51, 55);
-            this.label19.TabIndex = 12;
-            this.label19.Text = "0";
-            this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // groupBox3
             // 
             this.groupBox3.Controls.Add(this.btnCalibrationSet);
@@ -510,12 +573,12 @@
             this.btnCalibrationSet.TabIndex = 17;
             this.btnCalibrationSet.Text = "Set";
             this.btnCalibrationSet.UseVisualStyleBackColor = true;
+            this.btnCalibrationSet.Click += new System.EventHandler(this.btnCalibrationSet_Click);
             // 
             // groupBox5
             // 
-            this.groupBox5.Controls.Add(this.pnlResistanceStd);
             this.groupBox5.Controls.Add(this.btnResistanceSet);
-            this.groupBox5.Controls.Add(this.textBox2);
+            this.groupBox5.Controls.Add(this.txtServoPos);
             this.groupBox5.Controls.Add(this.cmbResistanceMode);
             this.groupBox5.Controls.Add(this.label22);
             this.groupBox5.Controls.Add(this.pnlResistanceSim);
@@ -525,6 +588,92 @@
             this.groupBox5.TabIndex = 19;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Resistance";
+            // 
+            // pnlResistanceStd
+            // 
+            this.pnlResistanceStd.Controls.Add(this.lblResistanceStdLevel);
+            this.pnlResistanceStd.Controls.Add(this.btnResistanceDec);
+            this.pnlResistanceStd.Controls.Add(this.btnResistanceInc);
+            this.pnlResistanceStd.Location = new System.Drawing.Point(0, 0);
+            this.pnlResistanceStd.Name = "pnlResistanceStd";
+            this.pnlResistanceStd.Size = new System.Drawing.Size(164, 91);
+            this.pnlResistanceStd.TabIndex = 20;
+            // 
+            // pnlErg
+            // 
+            this.pnlErg.Controls.Add(this.pnlResistanceStd);
+            this.pnlErg.Controls.Add(this.txtResistanceErgWatts);
+            this.pnlErg.Controls.Add(this.label20);
+            this.pnlErg.Location = new System.Drawing.Point(0, 0);
+            this.pnlErg.Name = "pnlErg";
+            this.pnlErg.Size = new System.Drawing.Size(164, 91);
+            this.pnlErg.TabIndex = 21;
+            // 
+            // lblResistanceStdLevel
+            // 
+            this.lblResistanceStdLevel.AutoSize = true;
+            this.lblResistanceStdLevel.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblResistanceStdLevel.Location = new System.Drawing.Point(60, 16);
+            this.lblResistanceStdLevel.Name = "lblResistanceStdLevel";
+            this.lblResistanceStdLevel.Size = new System.Drawing.Size(51, 55);
+            this.lblResistanceStdLevel.TabIndex = 27;
+            this.lblResistanceStdLevel.Text = "0";
+            this.lblResistanceStdLevel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // btnResistanceDec
+            // 
+            this.btnResistanceDec.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnResistanceDec.Location = new System.Drawing.Point(133, 27);
+            this.btnResistanceDec.Name = "btnResistanceDec";
+            this.btnResistanceDec.Size = new System.Drawing.Size(23, 28);
+            this.btnResistanceDec.TabIndex = 1;
+            this.btnResistanceDec.Text = "&-";
+            this.btnResistanceDec.UseVisualStyleBackColor = true;
+            this.btnResistanceDec.Click += new System.EventHandler(this.btnResistanceDec_Click);
+            // 
+            // btnResistanceInc
+            // 
+            this.btnResistanceInc.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnResistanceInc.Location = new System.Drawing.Point(10, 27);
+            this.btnResistanceInc.Name = "btnResistanceInc";
+            this.btnResistanceInc.Size = new System.Drawing.Size(23, 28);
+            this.btnResistanceInc.TabIndex = 0;
+            this.btnResistanceInc.Text = "&+";
+            this.btnResistanceInc.UseVisualStyleBackColor = true;
+            this.btnResistanceInc.Click += new System.EventHandler(this.btnResistanceInc_Click);
+            // 
+            // txtResistanceErgWatts
+            // 
+            this.txtResistanceErgWatts.Location = new System.Drawing.Point(89, 35);
+            this.txtResistanceErgWatts.Name = "txtResistanceErgWatts";
+            this.txtResistanceErgWatts.Size = new System.Drawing.Size(63, 20);
+            this.txtResistanceErgWatts.TabIndex = 22;
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(6, 38);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(69, 13);
+            this.label20.TabIndex = 21;
+            this.label20.Text = "Target Watts";
+            // 
+            // btnResistanceSet
+            // 
+            this.btnResistanceSet.Location = new System.Drawing.Point(40, 78);
+            this.btnResistanceSet.Name = "btnResistanceSet";
+            this.btnResistanceSet.Size = new System.Drawing.Size(75, 23);
+            this.btnResistanceSet.TabIndex = 18;
+            this.btnResistanceSet.Text = "Set";
+            this.btnResistanceSet.UseVisualStyleBackColor = true;
+            this.btnResistanceSet.Click += new System.EventHandler(this.btnResistanceSet_Click);
+            // 
+            // txtServoPos
+            // 
+            this.txtServoPos.Location = new System.Drawing.Point(83, 48);
+            this.txtServoPos.Name = "txtServoPos";
+            this.txtServoPos.Size = new System.Drawing.Size(63, 20);
+            this.txtServoPos.TabIndex = 20;
             // 
             // cmbResistanceMode
             // 
@@ -538,31 +687,7 @@
             this.cmbResistanceMode.Name = "cmbResistanceMode";
             this.cmbResistanceMode.Size = new System.Drawing.Size(121, 21);
             this.cmbResistanceMode.TabIndex = 19;
-            this.cmbResistanceMode.Text = "Standard";
-            // 
-            // btnResistanceSet
-            // 
-            this.btnResistanceSet.Location = new System.Drawing.Point(40, 78);
-            this.btnResistanceSet.Name = "btnResistanceSet";
-            this.btnResistanceSet.Size = new System.Drawing.Size(75, 23);
-            this.btnResistanceSet.TabIndex = 18;
-            this.btnResistanceSet.Text = "Set";
-            this.btnResistanceSet.UseVisualStyleBackColor = true;
-            // 
-            // pnlResistanceStd
-            // 
-            this.pnlResistanceStd.Controls.Add(this.pnlErg);
-            this.pnlResistanceStd.Location = new System.Drawing.Point(156, 19);
-            this.pnlResistanceStd.Name = "pnlResistanceStd";
-            this.pnlResistanceStd.Size = new System.Drawing.Size(164, 91);
-            this.pnlResistanceStd.TabIndex = 20;
-            // 
-            // textBox2
-            // 
-            this.textBox2.Location = new System.Drawing.Point(83, 48);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(63, 20);
-            this.textBox2.TabIndex = 20;
+            this.cmbResistanceMode.SelectedIndexChanged += new System.EventHandler(this.cmbResistanceMode_SelectedIndexChanged);
             // 
             // label22
             // 
@@ -573,86 +698,35 @@
             this.label22.TabIndex = 19;
             this.label22.Text = "Position";
             // 
-            // button1
-            // 
-            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button1.Location = new System.Drawing.Point(28, 27);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(23, 28);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "&+";
-            this.button1.UseVisualStyleBackColor = true;
-            // 
-            // button2
-            // 
-            this.button2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button2.Location = new System.Drawing.Point(114, 27);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(23, 28);
-            this.button2.TabIndex = 1;
-            this.button2.Text = "&-";
-            this.button2.UseVisualStyleBackColor = true;
-            // 
-            // pnlErg
-            // 
-            this.pnlErg.Controls.Add(this.lblResistanceStdLevel);
-            this.pnlErg.Controls.Add(this.button2);
-            this.pnlErg.Controls.Add(this.button1);
-            this.pnlErg.Controls.Add(this.txtResistanceErgWatts);
-            this.pnlErg.Controls.Add(this.label20);
-            this.pnlErg.Location = new System.Drawing.Point(0, 1);
-            this.pnlErg.Name = "pnlErg";
-            this.pnlErg.Size = new System.Drawing.Size(164, 91);
-            this.pnlErg.TabIndex = 21;
-            this.pnlErg.Visible = false;
-            // 
-            // txtResistanceErgWatts
-            // 
-            this.txtResistanceErgWatts.Location = new System.Drawing.Point(89, 35);
-            this.txtResistanceErgWatts.Name = "txtResistanceErgWatts";
-            this.txtResistanceErgWatts.Size = new System.Drawing.Size(63, 20);
-            this.txtResistanceErgWatts.TabIndex = 22;
-            this.txtResistanceErgWatts.Visible = false;
-            // 
-            // label20
-            // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(6, 38);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(69, 13);
-            this.label20.TabIndex = 21;
-            this.label20.Text = "Target Watts";
-            // 
             // pnlResistanceSim
             // 
+            this.pnlResistanceSim.Controls.Add(this.pnlErg);
             this.pnlResistanceSim.Controls.Add(this.textBox4);
             this.pnlResistanceSim.Controls.Add(this.label25);
             this.pnlResistanceSim.Controls.Add(this.textBox3);
             this.pnlResistanceSim.Controls.Add(this.label24);
             this.pnlResistanceSim.Controls.Add(this.textBox1);
             this.pnlResistanceSim.Controls.Add(this.label23);
-            this.pnlResistanceSim.Location = new System.Drawing.Point(156, 20);
+            this.pnlResistanceSim.Location = new System.Drawing.Point(156, 19);
             this.pnlResistanceSim.Name = "pnlResistanceSim";
             this.pnlResistanceSim.Size = new System.Drawing.Size(164, 91);
             this.pnlResistanceSim.TabIndex = 23;
-            this.pnlResistanceSim.Visible = false;
             // 
-            // textBox1
+            // textBox4
             // 
-            this.textBox1.Location = new System.Drawing.Point(89, 9);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(63, 20);
-            this.textBox1.TabIndex = 22;
-            this.textBox1.Visible = false;
+            this.textBox4.Location = new System.Drawing.Point(89, 55);
+            this.textBox4.Name = "textBox4";
+            this.textBox4.Size = new System.Drawing.Size(63, 20);
+            this.textBox4.TabIndex = 26;
             // 
-            // label23
+            // label25
             // 
-            this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(6, 12);
-            this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(45, 13);
-            this.label23.TabIndex = 21;
-            this.label23.Text = "Slope %";
+            this.label25.AutoSize = true;
+            this.label25.Location = new System.Drawing.Point(6, 58);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(60, 13);
+            this.label25.TabIndex = 25;
+            this.label25.Text = "Wind (mps)";
             // 
             // textBox3
             // 
@@ -660,7 +734,6 @@
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(63, 20);
             this.textBox3.TabIndex = 24;
-            this.textBox3.Visible = false;
             // 
             // label24
             // 
@@ -671,22 +744,21 @@
             this.label24.TabIndex = 23;
             this.label24.Text = "Crr";
             // 
-            // textBox4
+            // textBox1
             // 
-            this.textBox4.Location = new System.Drawing.Point(89, 55);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(63, 20);
-            this.textBox4.TabIndex = 26;
-            this.textBox4.Visible = false;
+            this.textBox1.Location = new System.Drawing.Point(89, 9);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(63, 20);
+            this.textBox1.TabIndex = 22;
             // 
-            // label25
+            // label23
             // 
-            this.label25.AutoSize = true;
-            this.label25.Location = new System.Drawing.Point(6, 58);
-            this.label25.Name = "label25";
-            this.label25.Size = new System.Drawing.Size(60, 13);
-            this.label25.TabIndex = 25;
-            this.label25.Text = "Wind (mps)";
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(6, 12);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(45, 13);
+            this.label23.TabIndex = 21;
+            this.label23.Text = "Slope %";
             // 
             // label26
             // 
@@ -700,12 +772,14 @@
             // txtTotalWeight
             // 
             this.txtTotalWeight.Location = new System.Drawing.Point(84, 21);
+            this.txtTotalWeight.MaxLength = 6;
             this.txtTotalWeight.Name = "txtTotalWeight";
             this.txtTotalWeight.Size = new System.Drawing.Size(75, 20);
             this.txtTotalWeight.TabIndex = 18;
             // 
             // groupBox6
             // 
+            this.groupBox6.Controls.Add(this.chkSettingsPersist);
             this.groupBox6.Controls.Add(this.chkLstSettings);
             this.groupBox6.Controls.Add(this.btnSettingsSet);
             this.groupBox6.Controls.Add(this.label21);
@@ -714,10 +788,35 @@
             this.groupBox6.Controls.Add(this.txtTotalWeight);
             this.groupBox6.Location = new System.Drawing.Point(169, 12);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(164, 187);
+            this.groupBox6.Size = new System.Drawing.Size(171, 187);
             this.groupBox6.TabIndex = 19;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Profile";
+            // 
+            // chkLstSettings
+            // 
+            this.chkLstSettings.FormattingEnabled = true;
+            this.chkLstSettings.Items.AddRange(new object[] {
+            "Accelerometer Sleeps",
+            "Bluetooth Enabled",
+            "ANT+ Control",
+            "ANT+ Bike Power",
+            "ANT+ FE-C",
+            "ANT+ Extra Info"});
+            this.chkLstSettings.Location = new System.Drawing.Point(8, 73);
+            this.chkLstSettings.Name = "chkLstSettings";
+            this.chkLstSettings.Size = new System.Drawing.Size(150, 79);
+            this.chkLstSettings.TabIndex = 22;
+            // 
+            // btnSettingsSet
+            // 
+            this.btnSettingsSet.Location = new System.Drawing.Point(84, 158);
+            this.btnSettingsSet.Name = "btnSettingsSet";
+            this.btnSettingsSet.Size = new System.Drawing.Size(75, 23);
+            this.btnSettingsSet.TabIndex = 18;
+            this.btnSettingsSet.Text = "Set";
+            this.btnSettingsSet.UseVisualStyleBackColor = true;
+            this.btnSettingsSet.Click += new System.EventHandler(this.btnSettingsSet_Click);
             // 
             // label21
             // 
@@ -735,30 +834,6 @@
             this.txtWheelSizeMm.Size = new System.Drawing.Size(75, 20);
             this.txtWheelSizeMm.TabIndex = 20;
             // 
-            // btnSettingsSet
-            // 
-            this.btnSettingsSet.Location = new System.Drawing.Point(46, 158);
-            this.btnSettingsSet.Name = "btnSettingsSet";
-            this.btnSettingsSet.Size = new System.Drawing.Size(75, 23);
-            this.btnSettingsSet.TabIndex = 18;
-            this.btnSettingsSet.Text = "Set";
-            this.btnSettingsSet.UseVisualStyleBackColor = true;
-            // 
-            // chkLstSettings
-            // 
-            this.chkLstSettings.FormattingEnabled = true;
-            this.chkLstSettings.Items.AddRange(new object[] {
-            "Accelerometer Sleeps",
-            "Bluetooth Enabled",
-            "ANT+ Control",
-            "ANT+ Bike Power",
-            "ANT+ FE-C",
-            "ANT+ Extra Info"});
-            this.chkLstSettings.Location = new System.Drawing.Point(8, 73);
-            this.chkLstSettings.Name = "chkLstSettings";
-            this.chkLstSettings.Size = new System.Drawing.Size(150, 79);
-            this.chkLstSettings.TabIndex = 22;
-            // 
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.txtParamSet);
@@ -772,21 +847,12 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Get/Set Parameter";
             // 
-            // txtParamGet
+            // txtParamSet
             // 
-            this.txtParamGet.Location = new System.Drawing.Point(6, 19);
-            this.txtParamGet.Name = "txtParamGet";
-            this.txtParamGet.Size = new System.Drawing.Size(60, 20);
-            this.txtParamGet.TabIndex = 10;
-            // 
-            // btnParamSet
-            // 
-            this.btnParamSet.Location = new System.Drawing.Point(84, 45);
-            this.btnParamSet.Name = "btnParamSet";
-            this.btnParamSet.Size = new System.Drawing.Size(47, 23);
-            this.btnParamSet.TabIndex = 23;
-            this.btnParamSet.Text = "Set";
-            this.btnParamSet.UseVisualStyleBackColor = true;
+            this.txtParamSet.Location = new System.Drawing.Point(76, 19);
+            this.txtParamSet.Name = "txtParamSet";
+            this.txtParamSet.Size = new System.Drawing.Size(64, 20);
+            this.txtParamSet.TabIndex = 25;
             // 
             // btnParamGet
             // 
@@ -796,88 +862,52 @@
             this.btnParamGet.TabIndex = 24;
             this.btnParamGet.Text = "Get";
             this.btnParamGet.UseVisualStyleBackColor = true;
+            this.btnParamGet.Click += new System.EventHandler(this.btnParamGet_Click);
             // 
-            // txtParamSet
+            // btnParamSet
             // 
-            this.txtParamSet.Location = new System.Drawing.Point(76, 19);
-            this.txtParamSet.Name = "txtParamSet";
-            this.txtParamSet.Size = new System.Drawing.Size(64, 20);
-            this.txtParamSet.TabIndex = 25;
+            this.btnParamSet.Location = new System.Drawing.Point(84, 45);
+            this.btnParamSet.Name = "btnParamSet";
+            this.btnParamSet.Size = new System.Drawing.Size(47, 23);
+            this.btnParamSet.TabIndex = 23;
+            this.btnParamSet.Text = "Set";
+            this.btnParamSet.UseVisualStyleBackColor = true;
+            this.btnParamSet.Click += new System.EventHandler(this.btnParamSet_Click);
             // 
-            // lblServoOffset
+            // txtParamGet
             // 
-            this.lblServoOffset.AutoSize = true;
-            this.lblServoOffset.Location = new System.Drawing.Point(108, 158);
-            this.lblServoOffset.Name = "lblServoOffset";
-            this.lblServoOffset.Size = new System.Drawing.Size(13, 13);
-            this.lblServoOffset.TabIndex = 16;
-            this.lblServoOffset.Text = "..";
+            this.txtParamGet.Location = new System.Drawing.Point(6, 19);
+            this.txtParamGet.Name = "txtParamGet";
+            this.txtParamGet.Size = new System.Drawing.Size(60, 20);
+            this.txtParamGet.TabIndex = 10;
             // 
-            // label28
+            // statusStrip
             // 
-            this.label28.AutoSize = true;
-            this.label28.Location = new System.Drawing.Point(7, 156);
-            this.label28.Name = "label28";
-            this.label28.Size = new System.Drawing.Size(66, 13);
-            this.label28.TabIndex = 15;
-            this.label28.Text = "Servo Offset";
+            this.statusStrip.Location = new System.Drawing.Point(0, 539);
+            this.statusStrip.Name = "statusStrip";
+            this.statusStrip.Size = new System.Drawing.Size(784, 22);
+            this.statusStrip.TabIndex = 20;
+            this.statusStrip.Text = "Running";
             // 
-            // txtServoOffset
+            // chkSettingsPersist
             // 
-            this.txtServoOffset.Location = new System.Drawing.Point(111, 155);
-            this.txtServoOffset.Name = "txtServoOffset";
-            this.txtServoOffset.Size = new System.Drawing.Size(37, 20);
-            this.txtServoOffset.TabIndex = 17;
-            this.txtServoOffset.Text = "0";
-            this.txtServoOffset.Visible = false;
-            // 
-            // btnServoOffset
-            // 
-            this.btnServoOffset.Location = new System.Drawing.Point(154, 153);
-            this.btnServoOffset.Name = "btnServoOffset";
-            this.btnServoOffset.Size = new System.Drawing.Size(47, 23);
-            this.btnServoOffset.TabIndex = 26;
-            this.btnServoOffset.Text = "Set";
-            this.btnServoOffset.UseVisualStyleBackColor = true;
-            this.btnServoOffset.Visible = false;
-            // 
-            // lblResistanceStdLevel
-            // 
-            this.lblResistanceStdLevel.AutoSize = true;
-            this.lblResistanceStdLevel.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblResistanceStdLevel.Location = new System.Drawing.Point(57, 16);
-            this.lblResistanceStdLevel.Name = "lblResistanceStdLevel";
-            this.lblResistanceStdLevel.Size = new System.Drawing.Size(51, 55);
-            this.lblResistanceStdLevel.TabIndex = 27;
-            this.lblResistanceStdLevel.Text = "0";
-            this.lblResistanceStdLevel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // chkCharge
-            // 
-            this.chkCharge.AutoSize = true;
-            this.chkCharge.Enabled = false;
-            this.chkCharge.Location = new System.Drawing.Point(135, 121);
-            this.chkCharge.Name = "chkCharge";
-            this.chkCharge.Size = new System.Drawing.Size(68, 17);
-            this.chkCharge.TabIndex = 27;
-            this.chkCharge.Text = "Charging";
-            this.chkCharge.UseVisualStyleBackColor = true;
-            // 
-            // btnDfuEnable
-            // 
-            this.btnDfuEnable.Location = new System.Drawing.Point(154, 59);
-            this.btnDfuEnable.Name = "btnDfuEnable";
-            this.btnDfuEnable.Size = new System.Drawing.Size(47, 23);
-            this.btnDfuEnable.TabIndex = 28;
-            this.btnDfuEnable.Text = "DFU";
-            this.btnDfuEnable.UseVisualStyleBackColor = true;
-            this.btnDfuEnable.Visible = false;
+            this.chkSettingsPersist.AutoSize = true;
+            this.chkSettingsPersist.Checked = true;
+            this.chkSettingsPersist.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkSettingsPersist.Enabled = false;
+            this.chkSettingsPersist.Location = new System.Drawing.Point(10, 162);
+            this.chkSettingsPersist.Name = "chkSettingsPersist";
+            this.chkSettingsPersist.Size = new System.Drawing.Size(57, 17);
+            this.chkSettingsPersist.TabIndex = 29;
+            this.chkSettingsPersist.Text = "Persist";
+            this.chkSettingsPersist.UseVisualStyleBackColor = true;
             // 
             // frmIrtGui
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 561);
+            this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox6);
             this.Controls.Add(this.groupBox5);
@@ -901,6 +931,7 @@
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
             this.pnlResistanceStd.ResumeLayout(false);
+            this.pnlResistanceStd.PerformLayout();
             this.pnlErg.ResumeLayout(false);
             this.pnlErg.PerformLayout();
             this.pnlResistanceSim.ResumeLayout(false);
@@ -959,9 +990,9 @@
         private System.Windows.Forms.Panel pnlResistanceStd;
         private System.Windows.Forms.Button btnResistanceSet;
         private System.Windows.Forms.ComboBox cmbResistanceMode;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.Button btnResistanceDec;
+        private System.Windows.Forms.Button btnResistanceInc;
+        private System.Windows.Forms.TextBox txtServoPos;
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.Panel pnlErg;
         private System.Windows.Forms.TextBox txtResistanceErgWatts;
@@ -992,6 +1023,8 @@
         private System.Windows.Forms.Label lblResistanceStdLevel;
         private System.Windows.Forms.CheckBox chkCharge;
         private System.Windows.Forms.Button btnDfuEnable;
+        private System.Windows.Forms.StatusStrip statusStrip;
+        private System.Windows.Forms.CheckBox chkSettingsPersist;
     }
 }
 

@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace ANT_Console
 {
-    class InteractiveConsole : BaseReporter
+    class InteractiveConsole : IReporter
     {
         bool m_scriptInfinite = false;
         bool m_inCommand = false;
@@ -59,7 +59,7 @@ namespace ANT_Console
 
             Console.CursorVisible = false;
             Console.WriteLine("Starting....");
-            Console.WriteLine(ReportHeader);
+            Console.Write(ReportHelper.Header);
 
             do
             {
@@ -68,17 +68,17 @@ namespace ANT_Console
                 switch (cki.Key)
                 {
                     case ConsoleKey.U:
-                        m_control.RemoteControl(0x00);
+                        m_control.RemoteControl(ANT_Console.Services.AntControl.RemoteControlCommand.Up);
                         WriteCommand("Sent UP command.");
                         break;
 
                     case ConsoleKey.D:
-                        m_control.RemoteControl(0x01);
+                        m_control.RemoteControl(ANT_Console.Services.AntControl.RemoteControlCommand.Down);
                         WriteCommand("Sent DOWN command.");
                         break;
 
                     case ConsoleKey.S:
-                        m_control.RemoteControl(0x02);
+                        m_control.RemoteControl(ANT_Console.Services.AntControl.RemoteControlCommand.Select);
                         WriteCommand("Sent SELECT command.");
                         break;
 
@@ -148,12 +148,12 @@ namespace ANT_Console
             controller.Shutdown();
         }
 
-        public override void Report(string message)
+        public void Report(string message)
         {
             Console.WriteLine(message);
         }
 
-        public override void Report(DataPoint data)
+        public void Report(DataPoint data)
         {
             if (m_inCommand)
                 return;
@@ -195,7 +195,7 @@ namespace ANT_Console
             Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
             Console.Write("<enter cmd>");
             Console.SetCursorPosition(Console.WindowLeft, lastLine);
-            Console.WriteLine(ReportFormat(data));
+            Console.Write(ReportHelper.Format(data));
         }
 
         void ShowHelp()

@@ -134,6 +134,10 @@ namespace ANT_Console
             const byte emotion_transmission_type = 0xA5;
             const byte quarq_transmission_type = 0x5;
 
+            // Open a background scanning channel for devices (speed, power, etc...)
+
+            /*
+
             // Configure reference power.
             m_refPower = new AntBikePower(
                 (int)AntChannel.RefPower, 0, quarq_transmission_type);
@@ -145,6 +149,7 @@ namespace ANT_Console
             m_refSpeed = new AntBikeSpeed(
                 (int)AntChannel.RefSpeed, 0);
             m_refSpeed.SpeedEvent += ProcessMessage;
+            */
 
             // Configure E-Motion power reporting.
             m_eMotionPower = new AntBikePower(
@@ -158,10 +163,9 @@ namespace ANT_Console
             m_eMotionPower.Connected += m_eMotionPower_Connected;
             m_eMotionPower.MeasureOutputEvent += ProcessMessage;
             m_eMotionPower.Closing += m_eMotionPower_Closing;
-            
 
             // Configure the remote control service.
-            m_control = new AntControl((int)AntChannel.AntControl);
+            //m_control = new AntControl((int)AntChannel.AntControl);
         }
 
         //
