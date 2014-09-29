@@ -28,7 +28,8 @@ SOURCE_PATHS +=  ../libraries/
 SOURCE_PATHS +=  ../services/
 LIBRARY_PATHS += ../libraries/
 LIBRARY_PATHS += ../services/
-DEPLOY_PATH = '../../../../../SkyDrive/InsideRide/'
+#DEPLOY_PATH = '../../../../../SkyDrive/InsideRide/Builds/'
+DEPLOY_PATH = '../../../../../Google Drive/Firmware/'
 
 DEVICE = NRF51
 BOARD = BOARD_IRT_V2_REV_A1
@@ -113,7 +114,6 @@ include $(TEMPLATE_PATH)Makefile
 debug: all 
 
 deploy:
-	cp $(BIN) $(DEPLOY_PATH)$(OUTPUT_NAME).bin
 	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
 
 ############################################
