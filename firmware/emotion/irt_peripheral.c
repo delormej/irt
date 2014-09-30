@@ -342,8 +342,8 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	clear_led(LED_1);
 	set_led_green(LED_2);
 
-	// Turn aux power on.
-	peripheral_aux_pwr_set(false);
+	// Ensure aux power is off for right now, we're not using.
+	peripheral_aux_pwr_set(true);
 
 	// Create the timer for blinking led #1.
 	err_code = app_timer_create(&m_led1_blink_timer_id,
