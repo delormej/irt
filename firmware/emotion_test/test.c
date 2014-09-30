@@ -157,7 +157,7 @@ uint16_t power_servo_pos_calc(float force)
 int main(int argc, char *argv [])
 {
 	//				  [       uint32_t     ], [       uint32_t     ]
-	//uint8_t arr[] = { 0x00, 0x00, 0x03, 0x00, 0x00, 0x05, 0x00, 0x00 };
+	/*uint8_t arr[] = { 0x00, 0x00, 0x03, 0x00, 0x00, 0x05, 0x00, 0x00 };
 	uint32_t value_24;
 	uint32_t value;
 
@@ -192,4 +192,10 @@ int main(int argc, char *argv [])
 	printf("Servo Pos: %.4f\r\n.", power_servo_pos_calc(54.28f));
 	printf("Servo Pos: %i\r\n", (uint16_t)power_servo_pos_calc(54.28f));
 	printf("Servo Pos: %#32x\r\n", power_servo_pos_calc(54.28f));
+	*/
+
+	printf("Value %i\r\n",
+		((65535UL & 1UL) == (1UL & 0x7FFF))
+		);
+
 }
