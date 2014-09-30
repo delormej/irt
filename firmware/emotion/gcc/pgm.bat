@@ -1,3 +1,4 @@
+nrfjprog --eraseall
 cd ..\..\bootloader\gcc\
 make flash-softdevice flash
 cd ..\..\emotion\gcc
