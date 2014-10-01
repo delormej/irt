@@ -51,11 +51,9 @@
 #include "boards.h"
 #include "battery.h"
 #include "irt_error_log.h"
-#include "irt_button.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define CALIBRATION_INTERVAL			APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Calibration message interval.
-#define DEBOUNCE_INTERVAL				APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)   // Debounce interval 50ms.
 
 #define BLE_ADV_BLINK_RATE_MS			500u
 #define SCHED_QUEUE_SIZE                8                                          /**< Maximum number of events in the scheduler queue. */
@@ -87,7 +85,6 @@ static resistance_mode_t				m_resistance_mode;
 
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 static app_timer_id_t					m_ca_timer_id;								// Timer used during calibration.
-static app_timer_id_t					m_debounce_timer_id;						// Timer used for debouncing button input.
 
 static user_profile_t  					m_user_profile  __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
 static rc_sim_forces_t					m_sim_forces;
@@ -106,6 +103,7 @@ static void profile_update_sched(void);
 
 static void send_data_page2(uint8_t subpage, uint8_t response_type);
 static void send_temperature();
+static void on_enable_dfu_mode();
 
 /* TODO:	Total hack for request data page & resistance control ack, we will fix.
  *		 	Simple logic right now.  If there is a pending request data page, send
@@ -496,11 +494,6 @@ static void calibration_timeout_handler(void * p_context)
 	}*/
 }
 
-static void debounce_timeout_handler(void * p_context)
-{
-	button_debounce();
-}
-
 /**@brief Function for handling the ANT 4hz measurement timer timeout.
  *
  * @details This function will be called each timer expiration.  The default period
@@ -632,9 +625,6 @@ static void application_timers_start(void)
     // Start application timers
     err_code = app_timer_start(m_ant_4hz_timer_id, ANT_4HZ_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
-
-    err_code = app_timer_start(m_debounce_timer_id, DEBOUNCE_INTERVAL, NULL);
-    APP_ERROR_CHECK(err_code);
 }
 
 static void application_timers_stop(void)
@@ -659,11 +649,6 @@ static void timers_init(void)
     err_code = app_timer_create(&m_ant_4hz_timer_id,
                                 APP_TIMER_MODE_REPEATED,
                                 ant_4hz_timeout_handler);
-
-    // Create debounce timer.
-    err_code = app_timer_create(&m_debounce_timer_id,
-                                APP_TIMER_MODE_REPEATED,
-                                debounce_timeout_handler);
     
 	APP_ERROR_CHECK(err_code);
 }
@@ -915,12 +900,20 @@ static void on_button_menu(void)
 }
 
 // This is the button on the board.
-static void on_button_pbsw(void)
+static void on_button_pbsw(bool long_press)
 {
-	// TODO: this button needs to be debounced and a LONG press should power down.
-	LOG("[MAIN] Push button switch pressed.\r\n");
-	// Shutting device down.
-	on_power_down(true);
+	if (long_press)
+	{
+		// TODO: this button needs to be debounced and a LONG press should power down.
+		LOG("[MAIN] Push button switch pressed (long).\r\n");
+		on_enable_dfu_mode();
+	}
+	else
+	{
+		LOG("[MAIN] Push button switch pressed (short).\r\n");
+		// Shutting device down.
+		on_power_down(true);
+	}
 }
 
 // This event is triggered when there is data to be read from accelerometer.

@@ -23,7 +23,7 @@
 
 typedef struct peripheral_evt_s
 {
-	void (*on_button_pbsw)(void);
+	void (*on_button_pbsw)(bool long_press);
 	void (*on_accelerometer_evt)(void);
 	void (*on_power_plug)(bool plugged_in);
 	void (*on_battery_result)(uint16_t);

@@ -6,11 +6,14 @@
  *  Created on: Oct 1, 2014
  *      Author: Jason
  */
+#include <stdbool.h>
 #include "irt_button.h"
-#include "stdbool.h"
 #include "boards.h"
 #include "nrf_gpio.h"
 #include "debug.h"
+
+#define LONG_BUTTON_COUNT		40U
+#define SHORT_BUTTON_COUNT		1U
 
 /**@brief Debug logging for main module.
  *
@@ -21,89 +24,44 @@
 #define BTN_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define CHECK_MSEC 5 // Read hardware every 5 msec
-#define PRESS_MSEC 10 // Stable time before registering pressed
-#define RELEASE_MSEC 100 // Stable time before registering released
+static uint32_t m_button_pin;
 
-// This function reads the key state from the hardware.
-extern bool RawKeyPressed();
-
-// This holds the debounced state of the key.
-bool DebouncedKeyPress = false;
-
-// Service routine called every CHECK_MSEC to
-// debounce both edges
-void DebounceButton(bool *Key_changed, bool *Key_pressed)
+void irt_button_init(uint32_t button_pin)
 {
-	static uint8_t Count = RELEASE_MSEC / CHECK_MSEC;
-	bool RawState;
-
-	*Key_changed = false;
-	*Key_pressed = DebouncedKeyPress;
-
-	RawState = RawKeyPressed();
-
-	if (RawState == DebouncedKeyPress)
-	{
-		// Set the timer which allows a change from current state.
-		if (DebouncedKeyPress)
-			Count = RELEASE_MSEC / CHECK_MSEC;
-		else
-			Count = PRESS_MSEC / CHECK_MSEC;
-	}
-	else
-	{
-		// Key has changed - wait for new state to become stable.
-		if (--Count == 0)
-		{
-			// Timer expired - accept the change.
-			DebouncedKeyPress = RawState;
-			*Key_changed=true;
-			*Key_pressed=DebouncedKeyPress;
-
-			// And reset the timer.
-			if (DebouncedKeyPress) Count = RELEASE_MSEC / CHECK_MSEC;
-			else Count = PRESS_MSEC / CHECK_MSEC;
-		}
-	}
-}
-
-static uint8_t button_pin = PIN_PBSW;
-
-static bool key_down()
-{
-	// Button reads 0 when pushed down.
-	return !nrf_gpio_pin_read(button_pin);
+	m_button_pin = button_pin;
 }
 
 // called from a timer every 50ms.
-void button_debounce()
+irt_button_state_t irt_button_debounce()
 {
 	static uint8_t down_counter = 0;
-	static bool long_down = false;
+	bool button_down = false;
+	irt_button_state_t state = NoPress;
 
-	if (key_down())
+	// Read the button; 0 for depressed, 1 for not pressed.
+	button_down = !nrf_gpio_pin_read(m_button_pin);
+
+	if (button_down)
 	{
 		down_counter++;
-		if (down_counter == 20)
+		if (down_counter == LONG_BUTTON_COUNT)
 		{
 			// long detected.
-			long_down = true;
+			state = LongPress;
 		}
 	}
+	// When the button is released.
 	else
 	{
-		if (down_counter > 1 && down_counter < 20)
+		if (down_counter > SHORT_BUTTON_COUNT && down_counter < LONG_BUTTON_COUNT)
 		{
-			// Short press
-			BTN_LOG("SHORT press detected.\r\n");
+			state = ShortPress;
 		}
-		else if (long_down)
-		{
-			long_down = false;
-			BTN_LOG("LONG detected.\r\n");
-		}
+
 		// Reset counter
 		down_counter = 0;
 	}
+
+	return state;
 }
+
