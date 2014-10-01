@@ -28,8 +28,8 @@ SOURCE_PATHS +=  ../libraries/
 SOURCE_PATHS +=  ../services/
 LIBRARY_PATHS += ../libraries/
 LIBRARY_PATHS += ../services/
-#DEPLOY_PATH = '../../../../../SkyDrive/InsideRide/Builds/'
 DEPLOY_PATH = '../../../../../Google Drive/Firmware/'
+DEPLOY_PATH2 = '../../../../../SkyDrive/InsideRide/Builds/'
 
 DEVICE = NRF51
 BOARD = BOARD_IRT_V2_REV_A1
@@ -115,6 +115,7 @@ debug: all
 
 deploy:
 	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
+	cp $(HEX) $(DEPLOY_PATH2)$(OUTPUT_NAME).hex
 
 ############################################
 # Flashes both the bootloader & app.
