@@ -1,4 +1,4 @@
-﻿namespace ANT_IRT_GUI
+﻿namespace IRT_GUI
 {
     partial class frmIrtGui
     {
@@ -75,18 +75,18 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.btnCalibrationSet = new System.Windows.Forms.Button();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.pnlResistanceStd = new System.Windows.Forms.Panel();
-            this.pnlErg = new System.Windows.Forms.Panel();
-            this.lblResistanceStdLevel = new System.Windows.Forms.Label();
-            this.btnResistanceDec = new System.Windows.Forms.Button();
-            this.btnResistanceInc = new System.Windows.Forms.Button();
-            this.txtResistanceErgWatts = new System.Windows.Forms.TextBox();
-            this.label20 = new System.Windows.Forms.Label();
             this.btnResistanceSet = new System.Windows.Forms.Button();
             this.txtServoPos = new System.Windows.Forms.TextBox();
             this.cmbResistanceMode = new System.Windows.Forms.ComboBox();
             this.label22 = new System.Windows.Forms.Label();
             this.pnlResistanceSim = new System.Windows.Forms.Panel();
+            this.pnlErg = new System.Windows.Forms.Panel();
+            this.pnlResistanceStd = new System.Windows.Forms.Panel();
+            this.lblResistanceStdLevel = new System.Windows.Forms.Label();
+            this.btnResistanceDec = new System.Windows.Forms.Button();
+            this.btnResistanceInc = new System.Windows.Forms.Button();
+            this.txtResistanceErgWatts = new System.Windows.Forms.TextBox();
+            this.label20 = new System.Windows.Forms.Label();
             this.textBox4 = new System.Windows.Forms.TextBox();
             this.label25 = new System.Windows.Forms.Label();
             this.textBox3 = new System.Windows.Forms.TextBox();
@@ -96,6 +96,7 @@
             this.label26 = new System.Windows.Forms.Label();
             this.txtTotalWeight = new System.Windows.Forms.TextBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.chkSettingsPersist = new System.Windows.Forms.CheckBox();
             this.chkLstSettings = new System.Windows.Forms.CheckedListBox();
             this.btnSettingsSet = new System.Windows.Forms.Button();
             this.label21 = new System.Windows.Forms.Label();
@@ -106,14 +107,13 @@
             this.btnParamSet = new System.Windows.Forms.Button();
             this.txtParamGet = new System.Windows.Forms.TextBox();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
-            this.chkSettingsPersist = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox5.SuspendLayout();
-            this.pnlResistanceStd.SuspendLayout();
-            this.pnlErg.SuspendLayout();
             this.pnlResistanceSim.SuspendLayout();
+            this.pnlErg.SuspendLayout();
+            this.pnlResistanceStd.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.SuspendLayout();
@@ -308,6 +308,7 @@
             this.btnEmrSearch.TabIndex = 9;
             this.btnEmrSearch.Text = "Search";
             this.btnEmrSearch.UseVisualStyleBackColor = true;
+            this.btnEmrSearch.Click += new System.EventHandler(this.btnEmrSearch_Click);
             // 
             // lblEmrModel
             // 
@@ -589,75 +590,6 @@
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Resistance";
             // 
-            // pnlResistanceStd
-            // 
-            this.pnlResistanceStd.Controls.Add(this.lblResistanceStdLevel);
-            this.pnlResistanceStd.Controls.Add(this.btnResistanceDec);
-            this.pnlResistanceStd.Controls.Add(this.btnResistanceInc);
-            this.pnlResistanceStd.Location = new System.Drawing.Point(0, 0);
-            this.pnlResistanceStd.Name = "pnlResistanceStd";
-            this.pnlResistanceStd.Size = new System.Drawing.Size(164, 91);
-            this.pnlResistanceStd.TabIndex = 20;
-            // 
-            // pnlErg
-            // 
-            this.pnlErg.Controls.Add(this.pnlResistanceStd);
-            this.pnlErg.Controls.Add(this.txtResistanceErgWatts);
-            this.pnlErg.Controls.Add(this.label20);
-            this.pnlErg.Location = new System.Drawing.Point(0, 0);
-            this.pnlErg.Name = "pnlErg";
-            this.pnlErg.Size = new System.Drawing.Size(164, 91);
-            this.pnlErg.TabIndex = 21;
-            // 
-            // lblResistanceStdLevel
-            // 
-            this.lblResistanceStdLevel.AutoSize = true;
-            this.lblResistanceStdLevel.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblResistanceStdLevel.Location = new System.Drawing.Point(60, 16);
-            this.lblResistanceStdLevel.Name = "lblResistanceStdLevel";
-            this.lblResistanceStdLevel.Size = new System.Drawing.Size(51, 55);
-            this.lblResistanceStdLevel.TabIndex = 27;
-            this.lblResistanceStdLevel.Text = "0";
-            this.lblResistanceStdLevel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // btnResistanceDec
-            // 
-            this.btnResistanceDec.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnResistanceDec.Location = new System.Drawing.Point(133, 27);
-            this.btnResistanceDec.Name = "btnResistanceDec";
-            this.btnResistanceDec.Size = new System.Drawing.Size(23, 28);
-            this.btnResistanceDec.TabIndex = 1;
-            this.btnResistanceDec.Text = "&-";
-            this.btnResistanceDec.UseVisualStyleBackColor = true;
-            this.btnResistanceDec.Click += new System.EventHandler(this.btnResistanceDec_Click);
-            // 
-            // btnResistanceInc
-            // 
-            this.btnResistanceInc.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnResistanceInc.Location = new System.Drawing.Point(10, 27);
-            this.btnResistanceInc.Name = "btnResistanceInc";
-            this.btnResistanceInc.Size = new System.Drawing.Size(23, 28);
-            this.btnResistanceInc.TabIndex = 0;
-            this.btnResistanceInc.Text = "&+";
-            this.btnResistanceInc.UseVisualStyleBackColor = true;
-            this.btnResistanceInc.Click += new System.EventHandler(this.btnResistanceInc_Click);
-            // 
-            // txtResistanceErgWatts
-            // 
-            this.txtResistanceErgWatts.Location = new System.Drawing.Point(89, 35);
-            this.txtResistanceErgWatts.Name = "txtResistanceErgWatts";
-            this.txtResistanceErgWatts.Size = new System.Drawing.Size(63, 20);
-            this.txtResistanceErgWatts.TabIndex = 22;
-            // 
-            // label20
-            // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(6, 38);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(69, 13);
-            this.label20.TabIndex = 21;
-            this.label20.Text = "Target Watts";
-            // 
             // btnResistanceSet
             // 
             this.btnResistanceSet.Location = new System.Drawing.Point(40, 78);
@@ -711,6 +643,75 @@
             this.pnlResistanceSim.Name = "pnlResistanceSim";
             this.pnlResistanceSim.Size = new System.Drawing.Size(164, 91);
             this.pnlResistanceSim.TabIndex = 23;
+            // 
+            // pnlErg
+            // 
+            this.pnlErg.Controls.Add(this.pnlResistanceStd);
+            this.pnlErg.Controls.Add(this.txtResistanceErgWatts);
+            this.pnlErg.Controls.Add(this.label20);
+            this.pnlErg.Location = new System.Drawing.Point(0, 0);
+            this.pnlErg.Name = "pnlErg";
+            this.pnlErg.Size = new System.Drawing.Size(164, 91);
+            this.pnlErg.TabIndex = 21;
+            // 
+            // pnlResistanceStd
+            // 
+            this.pnlResistanceStd.Controls.Add(this.lblResistanceStdLevel);
+            this.pnlResistanceStd.Controls.Add(this.btnResistanceDec);
+            this.pnlResistanceStd.Controls.Add(this.btnResistanceInc);
+            this.pnlResistanceStd.Location = new System.Drawing.Point(0, 0);
+            this.pnlResistanceStd.Name = "pnlResistanceStd";
+            this.pnlResistanceStd.Size = new System.Drawing.Size(164, 91);
+            this.pnlResistanceStd.TabIndex = 20;
+            // 
+            // lblResistanceStdLevel
+            // 
+            this.lblResistanceStdLevel.AutoSize = true;
+            this.lblResistanceStdLevel.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblResistanceStdLevel.Location = new System.Drawing.Point(60, 16);
+            this.lblResistanceStdLevel.Name = "lblResistanceStdLevel";
+            this.lblResistanceStdLevel.Size = new System.Drawing.Size(51, 55);
+            this.lblResistanceStdLevel.TabIndex = 27;
+            this.lblResistanceStdLevel.Text = "0";
+            this.lblResistanceStdLevel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // btnResistanceDec
+            // 
+            this.btnResistanceDec.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnResistanceDec.Location = new System.Drawing.Point(133, 27);
+            this.btnResistanceDec.Name = "btnResistanceDec";
+            this.btnResistanceDec.Size = new System.Drawing.Size(23, 28);
+            this.btnResistanceDec.TabIndex = 1;
+            this.btnResistanceDec.Text = "&-";
+            this.btnResistanceDec.UseVisualStyleBackColor = true;
+            this.btnResistanceDec.Click += new System.EventHandler(this.btnResistanceDec_Click);
+            // 
+            // btnResistanceInc
+            // 
+            this.btnResistanceInc.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnResistanceInc.Location = new System.Drawing.Point(10, 27);
+            this.btnResistanceInc.Name = "btnResistanceInc";
+            this.btnResistanceInc.Size = new System.Drawing.Size(23, 28);
+            this.btnResistanceInc.TabIndex = 0;
+            this.btnResistanceInc.Text = "&+";
+            this.btnResistanceInc.UseVisualStyleBackColor = true;
+            this.btnResistanceInc.Click += new System.EventHandler(this.btnResistanceInc_Click);
+            // 
+            // txtResistanceErgWatts
+            // 
+            this.txtResistanceErgWatts.Location = new System.Drawing.Point(89, 35);
+            this.txtResistanceErgWatts.Name = "txtResistanceErgWatts";
+            this.txtResistanceErgWatts.Size = new System.Drawing.Size(63, 20);
+            this.txtResistanceErgWatts.TabIndex = 22;
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(6, 38);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(69, 13);
+            this.label20.TabIndex = 21;
+            this.label20.Text = "Target Watts";
             // 
             // textBox4
             // 
@@ -792,6 +793,19 @@
             this.groupBox6.TabIndex = 19;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Profile";
+            // 
+            // chkSettingsPersist
+            // 
+            this.chkSettingsPersist.AutoSize = true;
+            this.chkSettingsPersist.Checked = true;
+            this.chkSettingsPersist.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkSettingsPersist.Enabled = false;
+            this.chkSettingsPersist.Location = new System.Drawing.Point(10, 162);
+            this.chkSettingsPersist.Name = "chkSettingsPersist";
+            this.chkSettingsPersist.Size = new System.Drawing.Size(57, 17);
+            this.chkSettingsPersist.TabIndex = 29;
+            this.chkSettingsPersist.Text = "Persist";
+            this.chkSettingsPersist.UseVisualStyleBackColor = true;
             // 
             // chkLstSettings
             // 
@@ -889,19 +903,6 @@
             this.statusStrip.TabIndex = 20;
             this.statusStrip.Text = "Running";
             // 
-            // chkSettingsPersist
-            // 
-            this.chkSettingsPersist.AutoSize = true;
-            this.chkSettingsPersist.Checked = true;
-            this.chkSettingsPersist.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkSettingsPersist.Enabled = false;
-            this.chkSettingsPersist.Location = new System.Drawing.Point(10, 162);
-            this.chkSettingsPersist.Name = "chkSettingsPersist";
-            this.chkSettingsPersist.Size = new System.Drawing.Size(57, 17);
-            this.chkSettingsPersist.TabIndex = 29;
-            this.chkSettingsPersist.Text = "Persist";
-            this.chkSettingsPersist.UseVisualStyleBackColor = true;
-            // 
             // frmIrtGui
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -930,12 +931,12 @@
             this.groupBox3.PerformLayout();
             this.groupBox5.ResumeLayout(false);
             this.groupBox5.PerformLayout();
-            this.pnlResistanceStd.ResumeLayout(false);
-            this.pnlResistanceStd.PerformLayout();
-            this.pnlErg.ResumeLayout(false);
-            this.pnlErg.PerformLayout();
             this.pnlResistanceSim.ResumeLayout(false);
             this.pnlResistanceSim.PerformLayout();
+            this.pnlErg.ResumeLayout(false);
+            this.pnlErg.PerformLayout();
+            this.pnlResistanceStd.ResumeLayout(false);
+            this.pnlResistanceStd.PerformLayout();
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
             this.groupBox4.ResumeLayout(false);

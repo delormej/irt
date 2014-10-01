@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ANT_IRT_GUI
+namespace IRT_GUI
 {
     static class Program
     {
