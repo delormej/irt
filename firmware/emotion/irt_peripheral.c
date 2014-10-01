@@ -56,7 +56,7 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 	// TODO: This button should be debounced.
 	else if (event_pins_high_to_low & (1 << PIN_PBSW))
 	{
-		mp_on_peripheral_evt->on_button_pbsw();
+		//mp_on_peripheral_evt->on_button_pbsw();
 	}
 #endif
 }
@@ -152,7 +152,7 @@ static void irt_gpio_init()
 
 	pins_high_to_low_mask = ( 1 << PIN_SHAKE
 #ifdef IRT_REV_2A_H
-			| 1 << PIN_PBSW			// On user push button switch
+			//| 1 << PIN_PBSW			// On user push button switch
 			| 1 << PIN_PG_N			// On power adapter plugged in
 #endif
 			);
