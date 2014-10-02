@@ -1298,7 +1298,7 @@ static void on_set_parameter(uint8_t* buffer)
 			if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
 			{
 				// Turns charger on if currently off, else turns off.
-				battery_charge_set( (BATTERY_CHARGE_OFF) );
+				battery_charge_set( (BATTERY_CHARGER_IS_OFF) );
 
 				LOG("[MAIN] on_set_parameter: Toggled battery charger.\r\n");
 			}
