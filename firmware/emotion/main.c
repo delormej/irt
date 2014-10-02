@@ -714,6 +714,10 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 			response[0] = battery_charge_status();
 			break;
 
+		case IRT_MSG_SUBPAGE_FEATURES:
+			response[0] = *FEATURES;
+			break;
+
 		default:
 			LOG("[MAIN] Unrecognized page request. \r\n");
 			return;
@@ -1307,6 +1311,15 @@ static void on_set_parameter(uint8_t* buffer)
 				LOG("[MAIN] on_set_parameter: No battery charger present.\r\n");
 			}
 			break;
+
+#ifdef SIM_SPEED
+		case IRT_MSG_SUBPAGE_DEBUG_SPEED:
+			// # of ticks to simulate in debug mode.
+			LOG("[MAIN] setting debug speed ticks to: %i\r\n",
+					buffer[IRT_MSG_PAGE2_DATA_INDEX]);
+			speed_debug_ticks = buffer[IRT_MSG_PAGE2_DATA_INDEX];
+			break;
+#endif
 
 		default:
 			LOG("[MAIN] on_set_parameter: Invalid setting, skipping. \r\n");

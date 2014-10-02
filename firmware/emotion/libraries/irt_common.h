@@ -96,7 +96,8 @@ static bool __inline__ irt_feature_is_available(uint16_t feature)
 #define IRT_MSG_SUBPAGE_AUXPWR				25u					// Gets/set whether power goes to J7-4.
 #define IRT_MSG_SUBPAGE_TEMP				26u					// TODO: this is not really a get/set, move this. Gets current temperature.
 #define IRT_MSG_SUBPAGE_SLEEP				27u					// When set puts the device in lower power mode.
-
+#define IRT_MSG_SUBPAGE_DEBUG_SPEED			28u					// # of ticks to emulate at 4hz for debugging simulated speed.
+#define IRT_MSG_SUBPAGE_FEATURES			29u					// Configured features.
 
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 
