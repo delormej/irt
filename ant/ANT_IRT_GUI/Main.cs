@@ -1,4 +1,6 @@
-﻿using ANT_Managed_Library;
+﻿using ANT_Console;
+using ANT_Console.Services;
+using ANT_Managed_Library;
 using AntPlus.Profiles.BikePower;
 using AntPlus.Profiles.Components;
 using AntPlus.Types;
@@ -17,22 +19,29 @@ using System.Windows.Forms;
 
 namespace IRT_GUI
 {
-    public partial class frmIrtGui : Form
+    public partial class frmIrtGui : Form, IReporter
     {
         const int EMR_CHANNEL_ID = 0;
         const int REF_PWR_CHANNEL_ID = 1;
         const byte ANT_FREQUENCY = 0x39;     // 2457 Mhz
         readonly byte[] USER_NETWORK_KEY = { 0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45 };
 
+        
         private BikePowerDisplay m_eMotion;
         private ANT_Device m_ANT_Device;
         private Network m_ANT_Network;
 
+        /* 
+        AntBikePower m_eMotion;
+        AntBikeSpeed m_refSpeed;
+        AntControl m_control;
+        SpeedSimulator m_speedSim;
+        */
         public object Simulator
         {
             set
             {
-                this.m_eMotion = (BikePowerDisplay)value;  // throw type mismatch if not correct.
+                //this.m_eMotion = (BikePowerDisplay)value;  // throw type mismatch if not correct.
             }
         }
 
@@ -48,6 +57,15 @@ namespace IRT_GUI
         {
             try
             {
+                Controller controller = null;
+                controller.ConfigureServices(0);
+
+                //m_eMotion = controller.EMotionBikePower;
+                //m_control = controller.AntRemoteControl;
+                //m_refSpeed = controller.RefBikeSpeed;
+
+
+
                 //m_ANT_Network = new Network(0, USER_NETWORK_KEY, ANT_FREQUENCY);
                 //m_ANT_Device = new ANT_Device();
                 //m_ANT_Device.ResetSystem();     // Soft reset
@@ -224,6 +242,16 @@ namespace IRT_GUI
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {
             System.Diagnostics.Debug.WriteLine("Page!");
+        }
+
+        public void Report(ANT_Console.Messages.DataPoint data)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public void Report(string message)
+        {
+            //throw new NotImplementedException();
         }
     }
 }

@@ -37,7 +37,10 @@ namespace ANT_Console
                 // Check to see if we should connect to a specific E-Motion Device.
                 Console.Write("E-Motion Rollers Device ID or <ENTER>:");
                 
-                controller.ConfigureServices(ushort.Parse(Console.ReadLine()));
+                ushort deviceId = 0;
+                ushort.TryParse(Console.ReadLine(), out deviceId);
+
+                controller.ConfigureServices(deviceId);
 
                 m_eMotion = controller.EMotionBikePower;
                 m_control = controller.AntRemoteControl;

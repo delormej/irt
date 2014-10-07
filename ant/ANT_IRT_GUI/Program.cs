@@ -16,7 +16,8 @@ namespace IRT_GUI
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmIrtGui());
+            frmIrtGui form = new frmIrtGui();
+            Application.Run(form);
         }
     }
 }

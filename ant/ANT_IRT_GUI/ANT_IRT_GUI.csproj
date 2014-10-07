@@ -95,6 +95,12 @@
   <ItemGroup>
     <Content Include="IR 1 red_alter4ICON.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DEMO_NET\ANT_Console.csproj">
+      <Project>{73a108d9-6e34-4446-a5f4-45365c4390f8}</Project>
+      <Name>ANT_Console</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
