@@ -38,13 +38,13 @@
             this.lblServoOffset = new System.Windows.Forms.Label();
             this.label28 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
-            this.label19 = new System.Windows.Forms.Label();
+            this.lblEmrMph = new System.Windows.Forms.Label();
             this.lblEmrBattTime = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.lblEmrBattVolt = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
-            this.label13 = new System.Windows.Forms.Label();
+            this.lblEmrWatts = new System.Windows.Forms.Label();
             this.btnEmrSearch = new System.Windows.Forms.Button();
             this.lblEmrModel = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
@@ -63,7 +63,7 @@
             this.label8 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label17 = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
+            this.lblRefPwrWatts = new System.Windows.Forms.Label();
             this.btnRefPwrSearch = new System.Windows.Forms.Button();
             this.lblRefPwrType = new System.Windows.Forms.Label();
             this.lblRefPwrModel = new System.Windows.Forms.Label();
@@ -136,13 +136,13 @@
             this.groupBox1.Controls.Add(this.lblServoOffset);
             this.groupBox1.Controls.Add(this.label28);
             this.groupBox1.Controls.Add(this.label18);
-            this.groupBox1.Controls.Add(this.label19);
+            this.groupBox1.Controls.Add(this.lblEmrMph);
             this.groupBox1.Controls.Add(this.lblEmrBattTime);
             this.groupBox1.Controls.Add(this.label10);
             this.groupBox1.Controls.Add(this.label11);
             this.groupBox1.Controls.Add(this.lblEmrBattVolt);
             this.groupBox1.Controls.Add(this.label16);
-            this.groupBox1.Controls.Add(this.label13);
+            this.groupBox1.Controls.Add(this.lblEmrWatts);
             this.groupBox1.Controls.Add(this.btnEmrSearch);
             this.groupBox1.Controls.Add(this.lblEmrModel);
             this.groupBox1.Controls.Add(this.label9);
@@ -232,16 +232,16 @@
             this.label18.TabIndex = 13;
             this.label18.Text = "MPH";
             // 
-            // label19
+            // lblEmrMph
             // 
-            this.label19.AutoSize = true;
-            this.label19.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label19.Location = new System.Drawing.Point(29, 225);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(51, 55);
-            this.label19.TabIndex = 12;
-            this.label19.Text = "0";
-            this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblEmrMph.AutoSize = true;
+            this.lblEmrMph.Font = new System.Drawing.Font("Microsoft Sans Serif", 32F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblEmrMph.Location = new System.Drawing.Point(1, 225);
+            this.lblEmrMph.Name = "lblEmrMph";
+            this.lblEmrMph.Size = new System.Drawing.Size(106, 51);
+            this.lblEmrMph.TabIndex = 12;
+            this.lblEmrMph.Text = "00.0";
+            this.lblEmrMph.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lblEmrBattTime
             // 
@@ -289,16 +289,16 @@
             this.label16.TabIndex = 11;
             this.label16.Text = "Watts";
             // 
-            // label13
+            // lblEmrWatts
             // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(124, 225);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(51, 55);
-            this.label13.TabIndex = 10;
-            this.label13.Text = "0";
-            this.label13.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblEmrWatts.AutoSize = true;
+            this.lblEmrWatts.Font = new System.Drawing.Font("Microsoft Sans Serif", 32F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblEmrWatts.Location = new System.Drawing.Point(106, 225);
+            this.lblEmrWatts.Name = "lblEmrWatts";
+            this.lblEmrWatts.Size = new System.Drawing.Size(94, 51);
+            this.lblEmrWatts.TabIndex = 10;
+            this.lblEmrWatts.Text = "000";
+            this.lblEmrWatts.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // btnEmrSearch
             // 
@@ -446,7 +446,7 @@
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.label17);
-            this.groupBox2.Controls.Add(this.label15);
+            this.groupBox2.Controls.Add(this.lblRefPwrWatts);
             this.groupBox2.Controls.Add(this.btnRefPwrSearch);
             this.groupBox2.Controls.Add(this.lblRefPwrType);
             this.groupBox2.Controls.Add(this.label4);
@@ -467,22 +467,22 @@
             // 
             this.label17.AutoSize = true;
             this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label17.Location = new System.Drawing.Point(76, 281);
+            this.label17.Location = new System.Drawing.Point(87, 281);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(40, 13);
             this.label17.TabIndex = 12;
             this.label17.Text = "Watts";
             // 
-            // label15
+            // lblRefPwrWatts
             // 
-            this.label15.AutoSize = true;
-            this.label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label15.Location = new System.Drawing.Point(73, 224);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(51, 55);
-            this.label15.TabIndex = 11;
-            this.label15.Text = "0";
-            this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblRefPwrWatts.AutoSize = true;
+            this.lblRefPwrWatts.Font = new System.Drawing.Font("Microsoft Sans Serif", 32F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblRefPwrWatts.Location = new System.Drawing.Point(60, 225);
+            this.lblRefPwrWatts.Name = "lblRefPwrWatts";
+            this.lblRefPwrWatts.Size = new System.Drawing.Size(94, 51);
+            this.lblRefPwrWatts.TabIndex = 11;
+            this.lblRefPwrWatts.Text = "000";
+            this.lblRefPwrWatts.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // btnRefPwrSearch
             // 
@@ -667,10 +667,10 @@
             // lblResistanceStdLevel
             // 
             this.lblResistanceStdLevel.AutoSize = true;
-            this.lblResistanceStdLevel.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblResistanceStdLevel.Font = new System.Drawing.Font("Microsoft Sans Serif", 32F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblResistanceStdLevel.Location = new System.Drawing.Point(60, 16);
             this.lblResistanceStdLevel.Name = "lblResistanceStdLevel";
-            this.lblResistanceStdLevel.Size = new System.Drawing.Size(51, 55);
+            this.lblResistanceStdLevel.Size = new System.Drawing.Size(46, 51);
             this.lblResistanceStdLevel.TabIndex = 27;
             this.lblResistanceStdLevel.Text = "0";
             this.lblResistanceStdLevel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -969,9 +969,9 @@
         private System.Windows.Forms.Label lblRefPwrType;
         private System.Windows.Forms.Label lblRefPwrModel;
         private System.Windows.Forms.Label label14;
-        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label lblEmrWatts;
         private System.Windows.Forms.Button btnEmrSearch;
-        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label lblRefPwrWatts;
         private System.Windows.Forms.Button btnRefPwrSearch;
         private System.Windows.Forms.Label lblEmrBattVolt;
         private System.Windows.Forms.Label label10;
@@ -982,7 +982,7 @@
         private System.Windows.Forms.TextBox txtOffset;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Label lblEmrMph;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.GroupBox groupBox3;

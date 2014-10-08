@@ -9,11 +9,12 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>IRT_GUI</RootNamespace>
     <AssemblyName>IRT_GUI</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -94,12 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="IR 1 red_alter4ICON.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DEMO_NET\ANT_Console.csproj">
-      <Project>{73a108d9-6e34-4446-a5f4-45365c4390f8}</Project>
-      <Name>ANT_Console</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
