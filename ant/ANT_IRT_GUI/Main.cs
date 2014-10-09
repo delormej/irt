@@ -1,7 +1,9 @@
 ﻿using ANT_Managed_Library;
 using AntPlus.Profiles.BikePower;
+using AntPlus.Profiles.Common;
 using AntPlus.Profiles.Components;
 using AntPlus.Types;
+using IRT_GUI.IrtMessages;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -74,8 +76,6 @@ namespace IRT_GUI
             if (simulator != null && (simulator is BikePowerDisplay))
             {
                 m_eMotion = (BikePowerDisplay)simulator;
-
-                //BindText(txtLog, m_eMotion, "StandardWheelTorque.AccumulatedTorque");
             }
         }
 
@@ -98,6 +98,11 @@ namespace IRT_GUI
 
         void channel_rawChannelResponse(ANT_Device.ANTMessage message, ushort messageSize)
         {
+            if (message.ucharBuf[1] == 0x24)
+            {
+                // it's our custom message, including servo position.
+            }
+
             //throw new NotImplementedException();
         }
 
@@ -108,10 +113,44 @@ namespace IRT_GUI
 
         void channel_channelResponse(ANT_Response response)
         {
+            if (response.messageContents[1] == 0x24)
+            {
+                HandleExtraInfo(response);
+            }
+
             //throw new NotImplementedException();
         }
 
-        static int counter = 0;
+        void HandleExtraInfo(ANT_Response response)
+        {
+            ExtraInfoMessage message = new ExtraInfoMessage(response);
+            UpdateText(txtServoPos, message.ServoPosition);
+
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke((Action)delegate()
+                {
+                    switch ((ResistanceMode)message.Mode)
+                    {
+                        case ResistanceMode.Standard:
+                            cmbResistanceMode.SelectedIndex = 0;
+                            UpdateText(lblResistanceStdLevel, message.Level);
+                            break;
+                        case ResistanceMode.Percent:
+                            cmbResistanceMode.SelectedIndex = 1;
+                            break;
+                        case ResistanceMode.Erg:
+                            cmbResistanceMode.SelectedIndex = 2;
+                            break;
+                        case ResistanceMode.Sim:
+                            cmbResistanceMode.SelectedIndex = 3;
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            }
+        }
 
         void BindSimulator()
         {
@@ -128,29 +167,19 @@ namespace IRT_GUI
 
             m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
             m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
-
         }
 
-        void BindText(Control control, object obj, string property)
+        void UpdateText(Control control, object obj)
         {
-            Binding b = control.DataBindings.Add("Text", obj, property, false, 
-                DataSourceUpdateMode.OnPropertyChanged, 
-                string.Empty);
-            b.Parse += (s, e) =>
-                {
-
-
-                };
-            /*b.Format += (s, e) =>
+            if (this.InvokeRequired)
             {
-                e.Value;
-                e.
-                
-            };*/
+                this.BeginInvoke((Action)delegate()
+                {
+                    control.Text = obj.ToString();
+                });
+            }
         }
-
-
-
+        
         void m_eMotion_ManufacturerSpecificPageReceived(ManufacturerSpecificPage arg1, uint arg2)
         {
             
@@ -158,7 +187,7 @@ namespace IRT_GUI
 
         void m_eMotion_SensorFound(ushort arg1, byte arg2)
         {
-            //throw new NotImplementedException();
+            UpdateText(txtEmrDeviceId, arg1);
         }
 
         void m_eMotion_TemperatureSubPageReceived(AntPlus.Profiles.Common.TemperatureSubPage arg1, uint arg2)
@@ -180,35 +209,55 @@ namespace IRT_GUI
 
         void m_eMotion_BatteryStatusPageReceived(AntPlus.Profiles.Common.BatteryStatusPage arg1, uint arg2)
         {
-            //float volts = (float)arg1.CoarseBatteryVoltage + (float)arg1.FractionalBatteryVoltage / 10;
-            //lblEmrBattVolt.Text = volts.ToString();
+            float volts = (float)arg1.CoarseBatteryVoltage + 
+                ((float)arg1.FractionalBatteryVoltage / 255);
+
+            UpdateText(lblEmrBattVolt, volts.ToString("0.00"));
+            // Update the color of the battery status, Red, Green, Yellow.
+
+            double time = arg1.CumulativeOperatingTime;
+
+            if (arg1.CumulativeOperatingTimeResolution == Common.Resolution.TwoSeconds)
+            {
+                time = time * 2;
+
+            }
+            else
+            {
+                time = time * 16;
+            }
+
+            UpdateText(lblEmrBattTime, time);
+
+            
+
         }
 
         void m_eMotion_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
-            if (this.InvokeRequired)
-            {
-                this.BeginInvoke((Action)delegate()
-                {
-                    this.lblEmrWatts.Text = arg1.InstantaneousPower.ToString();
-                });
-            }
+            UpdateText(lblEmrWatts, arg1.InstantaneousPower);
         }
 
 
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {
-            
+            // Convert to mph from km/h.
+            double mph = m_eMotion.AverageSpeedWheelTorque * 0.621371;
+            UpdateText(lblEmrMph, mph.ToString("00.0"));
         }
 
         void m_eMotion_ProductInformationPageReceived(AntPlus.Profiles.Common.ProductInformationPage arg1, uint arg2)
         {
+            UpdateText(lblEmrSerialNo, arg1.SerialNumber.ToString("X"));
             
+            string firmwareRev = string.Format("{0}.{1}.{2}", 0, arg1.SoftwareRevision, arg1.SupplementalSoftwareRevision);
+            UpdateText(lblEmrFirmwareRev, firmwareRev);
         }
 
         void m_eMotion_ManufacturerIdentificationPageReceived(AntPlus.Profiles.Common.ManufacturerIdentificationPage arg1, uint arg2)
         {
-            
+            UpdateText(lblEmrHardwareRev, arg1.HardwareRevision);
+            UpdateText(lblEmrModel, arg1.ModelNumber);
         }
         
         void frmIrtGui_Load(object sender, EventArgs e)
@@ -319,14 +368,6 @@ namespace IRT_GUI
             //m_eMotion.SetParameter(SubPages.ServoOffset, uint.Parse(txtServoOffset.Text));
         }
 
-        public enum ResistanceMode
-        {
-            Standard = 0,
-            Percentage,
-            Erg,
-            Simluation
-        }
-
         private void cmbResistanceMode_SelectedIndexChanged(object sender, EventArgs e)
         {
             switch ((ResistanceMode)cmbResistanceMode.SelectedIndex)
@@ -339,7 +380,7 @@ namespace IRT_GUI
                     System.Diagnostics.Debug.WriteLine("Standard selected.");
                     break;
 
-                case ResistanceMode.Percentage:
+                case ResistanceMode.Percent:
                     pnlResistanceSim.Hide();
                     pnlErg.Hide();
                     pnlResistanceStd.BringToFront();
@@ -355,7 +396,7 @@ namespace IRT_GUI
                     System.Diagnostics.Debug.WriteLine("Erg selected.");
                     break;
 
-                case ResistanceMode.Simluation:
+                case ResistanceMode.Sim:
                     /*pnlErg.Hide();
                     pnlResistanceStd.Hide();
                     pnlResistanceSim.BringToFront();*/
