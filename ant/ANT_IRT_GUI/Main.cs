@@ -215,22 +215,23 @@ namespace IRT_GUI
             UpdateText(lblEmrBattVolt, volts.ToString("0.00"));
             // Update the color of the battery status, Red, Green, Yellow.
 
-            double time = arg1.CumulativeOperatingTime;
+            double hours = 0.0; 
+            int minutes = 0;
 
             if (arg1.CumulativeOperatingTimeResolution == Common.Resolution.TwoSeconds)
             {
-                time = time * 2;
-
+                // CumulativeOperatingTime represents a tick every 2 seconds.
+                hours = arg1.CumulativeOperatingTime / (3600 / 2);
             }
             else
             {
-                time = time * 16;
+                // CumulativeOperatingTime represents a tick every 16 seconds.
+                hours = arg1.CumulativeOperatingTime / (3600 / 16);
             }
 
-            UpdateText(lblEmrBattTime, time);
+            minutes = (int)Math.Round((hours - Math.Floor(hours)) / 60, 0);
 
-            
-
+            UpdateText(lblEmrBattTime, string.Format("{0}:{1:D2}", hours, minutes));
         }
 
         void m_eMotion_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
