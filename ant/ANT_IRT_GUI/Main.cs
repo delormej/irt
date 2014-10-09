@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Message = IRT_GUI.IrtMessages.Message;
 
 namespace IRT_GUI
 {
@@ -22,11 +23,24 @@ namespace IRT_GUI
         const int REF_PWR_CHANNEL_ID = 1;
         const byte ANT_FREQUENCY = 0x39;     // 2457 Mhz
         readonly byte[] USER_NETWORK_KEY = { 0xb9, 0xa5, 0x21, 0xfb, 0xbd, 0x72, 0xc3, 0x45 };
-        
+
+        const uint ACK_TIMEOUT = 1000;
+        const uint REQUEST_RETRY = 3;
+
+        // Commands
+        enum Command : byte
+        {
+            SetWeight = 0x60,
+            MoveServo = 0x61,
+            SetButtonStops = 0x62,
+            SetDFUMode = 0x64
+        };
+
         private BikePowerDisplay m_eMotion;
         private BikePowerDisplay m_refPower;
         private ANT_Device m_ANT_Device;
         private Network m_ANT_Network;
+        private ANT_Channel m_channel; 
 
         public frmIrtGui()
         {
@@ -36,7 +50,19 @@ namespace IRT_GUI
             this.Load += (o, e) =>
             {
                 BindSimulator();
+                if (AdminEnabled)
+                {
+                    txtServoOffset.Enabled = true;
+                    btnServoOffset.Visible = true;
+                    btnServoOffset.Enabled = true;
+                }
             };
+        }
+
+        public bool AdminEnabled
+        {
+            get;
+            set;
         }
 
         public frmIrtGui(object simulator)
@@ -52,7 +78,7 @@ namespace IRT_GUI
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine(response.getMessageID());
+                //System.Diagnostics.Debug.WriteLine(response.getMessageID());
             }
             catch 
             {
@@ -82,17 +108,44 @@ namespace IRT_GUI
 
         void channel_channelResponse(ANT_Response response)
         {
-            if (response.messageContents[1] == 0x24)
+            try
             {
-                HandleExtraInfo(response);
-            }
+                // Handle E-Motion raw channel responses.
+                if (response.antChannel == EMR_CHANNEL_ID)
+                {
+                    switch (response.messageContents[1])    // Page Number
+                    {
+                        case GetSetMessage.Page:
+                            ProcessMessage(new GetSetMessage(response));
+                            break;
 
-            //throw new NotImplementedException();
+                        case ExtraInfoMessage.Page:
+                            ProcessMessage(new ExtraInfoMessage(response));
+                            break;
+
+                        default:
+                            break;
+
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                // log
+            }
         }
 
-        void HandleExtraInfo(ANT_Response response)
+        private void ProcessMessage(ExtraInfoMessage message)
         {
-            ExtraInfoMessage message = new ExtraInfoMessage(response);
+            /*
+            m_data.Timestamp = System.DateTime.Now;
+            m_data.ServoPosition = m.ServoPosition;
+            m_data.Temperature = m.Temperature;
+            m_data.FlywheelRevs = m.FlyweelRevs;
+            m_data.TargetLevel = m.Level;
+            m_data.ResistanceMode = m.Mode;
+             */
+
             UpdateText(txtServoPos, message.ServoPosition);
             UpdateText(lblFlywheel, message.FlyweelRevs);
 
@@ -122,6 +175,65 @@ namespace IRT_GUI
             }
         }
 
+        /// <summary>
+        /// Happens when the get/set parameters is sent from the device.
+        /// </summary>
+        /// <param name="m"></param>
+        private void ProcessMessage(GetSetMessage m)
+        {
+            byte[] buffer = m.AsBytes();
+
+            // Sub page
+            switch ((SubPages)m.SubPage)
+            {
+                case SubPages.Crr:
+                    ushort slope = Message.BigEndian(buffer[2], buffer[3]);
+                    ushort intercept = Message.BigEndian(buffer[4], buffer[5]);
+
+                    UpdateText(txtSlope, slope);
+                    UpdateText(txtOffset, intercept);
+
+                    //m_summary.Crr = (UInt32)(Message.BigEndian(buffer[6], buffer[7]) << 16) |
+                    //    Message.BigEndian(buffer[4], buffer[5]);
+                    break;
+
+                case SubPages.TotalWeight:
+                    int grams = Message.BigEndian(buffer[2], buffer[3]);
+                    double kg = grams / 100.0;
+                    UpdateText(txtTotalWeight, kg.ToString("N2"));
+
+                    break;
+
+                case SubPages.ServoOffset:
+                    ushort servoOffset = Message.BigEndian(buffer[2], buffer[3]);
+                    UpdateText(txtServoOffset, servoOffset);
+                    break;
+
+                case SubPages.CalibrationSpeed:
+                    //var calibration = new CalibrationSpeed(buffer);
+                    //Console.WriteLine(calibration);
+                    //Report(calibration);
+                    break;
+
+                case SubPages.WheelSize:
+                    //m_eMotion.WheelCircumference
+                    ushort wheelSize = Message.BigEndian(buffer[2], buffer[3]);
+                    UpdateText(txtWheelSizeMm, wheelSize);
+                    break;
+
+                default:
+                    Console.WriteLine("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
+                        buffer[2],
+                        buffer[3],
+                        buffer[4],
+                        buffer[5],
+                        buffer[6],
+                        buffer[7]);
+                    break;
+            }
+        }
+
+
         void BindSimulator()
         {
             if (m_eMotion == null)
@@ -130,18 +242,18 @@ namespace IRT_GUI
                 m_ANT_Device.setNetworkKey(0x00, USER_NETWORK_KEY);
 
                 m_ANT_Network = new Network(0x00, USER_NETWORK_KEY, ANT_FREQUENCY);
-                ANT_Channel channel = m_ANT_Device.getChannel(EMR_CHANNEL_ID);
+                m_channel = m_ANT_Device.getChannel(EMR_CHANNEL_ID);
                 
 
                 // Temporary - not sure how much of this I need.
-                channel.channelResponse += channel_channelResponse;
-                channel.DeviceNotification += channel_DeviceNotification;
-                channel.rawChannelResponse += channel_rawChannelResponse;
+                m_channel.channelResponse += channel_channelResponse;
+                m_channel.DeviceNotification += channel_DeviceNotification;
+                m_channel.rawChannelResponse += channel_rawChannelResponse;
 
                 m_ANT_Device.serialError += m_ANT_Device_serialError;
                 m_ANT_Device.deviceResponse += m_ANT_Device_deviceResponse;
 
-                m_eMotion = new BikePowerDisplay(channel, m_ANT_Network);
+                m_eMotion = new BikePowerDisplay(m_channel, m_ANT_Network);
                 m_eMotion.ChannelParameters.TransmissionType = 0xA5;
 
                 m_refPower = new BikePowerDisplay(m_ANT_Device.getChannel(REF_PWR_CHANNEL_ID), m_ANT_Network);
@@ -201,7 +313,7 @@ namespace IRT_GUI
         
         void m_eMotion_ManufacturerSpecificPageReceived(ManufacturerSpecificPage arg1, uint arg2)
         {
-            
+            // wahoo resistance ack pages come through here.
         }
 
         void m_eMotion_SensorFound(ushort arg1, byte arg2)
@@ -217,8 +329,7 @@ namespace IRT_GUI
 
         void m_eMotion_GetSetParametersPageReceived(GetSetParametersPage arg1, uint arg2)
         {
-            // Don't think we use this on the display side today.
-            //throw new NotImplementedException();
+            // This isn't going to work because GetSetParametersPage doesn't contain the value.
         }
 
         void m_eMotion_DataPageReceived(DataPage arg1, uint arg2)
@@ -428,6 +539,25 @@ namespace IRT_GUI
             //lblRefPwrWatts
 
         }
+
+        private void btnSettingsGet_Click(object sender, EventArgs e)
+        {
+            List<SubPages> parameters = new List<SubPages>();
+            parameters.Add(SubPages.TotalWeight);
+            parameters.Add(SubPages.WheelSize);
+            parameters.Add(SubPages.Settings);
+            parameters.Add(SubPages.ServoOffset);
+
+            new System.Threading.Thread(() =>
+            {
+                foreach(var p in parameters)
+                {
+                    RequestDeviceParameter(p);
+                    System.Threading.Thread.Sleep(500);
+                }
+
+            }).Start();
+        }
         
         /*private bool TextBoxRangeCheck<T>(TextBox txt, string name, int min, int max, out T value) where T : IComparable<T>
         {
@@ -435,6 +565,50 @@ namespace IRT_GUI
            //TextBoxRangeCheck 
             //return false;
         }*/
+
+        public void RequestDeviceParameter(SubPages subPage)
+        {
+            int retries = 0;
+
+            ANT_ReferenceLibrary.MessagingReturnCode result = 0;
+            RequestDataMessage message;
+
+            if (subPage == SubPages.Battery)
+            {
+                message = new RequestDataMessage();
+                message.RequestedPage = (byte)SubPages.Battery;
+                //request.RequestedPageNumber = (byte)SubPages.Battery;
+            }
+            else if (subPage == SubPages.Temp)
+            {
+                message = new RequestDataMessage();
+                message.RequestedPage = 0x03;
+                //request.RequestedPageNumber = (byte)SubPages.Temp;
+            }
+            else
+            {
+                RequestDataPage request = new RequestDataPage();
+                request.DescriptorByte1 = (byte)subPage;
+                request.RequestedPageNumber = (byte)GetSetMessage.Page;
+
+                m_eMotion.SendDataPageRequest(request);
+                return;
+
+                //message = new RequestDataMessage(subPage);
+            }
+
+            
+            
+            while (retries < REQUEST_RETRY)
+            {
+                result = m_channel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
+                if (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+                    return;
+            }
+
+            throw new ApplicationException(string.Format("Unable to request parameter, return result: {0}.", result));
+             
+        }
 
     }
 }

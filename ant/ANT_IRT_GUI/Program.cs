@@ -30,6 +30,14 @@ namespace IRT_GUI
             {
                 form = new frmIrtGui();
             }
+
+            string[] args = Environment.GetCommandLineArgs();
+            if (args.Length > 1 && args[1] == "-a")
+            {
+                // Enable admin mode.
+                form.AdminEnabled = true;
+            }
+
             Application.Run(form);
         }
 

@@ -35,7 +35,6 @@
             this.chkCharge = new System.Windows.Forms.CheckBox();
             this.btnServoOffset = new System.Windows.Forms.Button();
             this.txtServoOffset = new System.Windows.Forms.TextBox();
-            this.lblServoOffset = new System.Windows.Forms.Label();
             this.label28 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.lblEmrMph = new System.Windows.Forms.Label();
@@ -143,7 +142,6 @@
             this.groupBox1.Controls.Add(this.chkCharge);
             this.groupBox1.Controls.Add(this.btnServoOffset);
             this.groupBox1.Controls.Add(this.txtServoOffset);
-            this.groupBox1.Controls.Add(this.lblServoOffset);
             this.groupBox1.Controls.Add(this.label28);
             this.groupBox1.Controls.Add(this.label18);
             this.groupBox1.Controls.Add(this.lblEmrMph);
@@ -207,21 +205,12 @@
             // 
             // txtServoOffset
             // 
+            this.txtServoOffset.Enabled = false;
             this.txtServoOffset.Location = new System.Drawing.Point(111, 155);
             this.txtServoOffset.Name = "txtServoOffset";
             this.txtServoOffset.Size = new System.Drawing.Size(37, 20);
             this.txtServoOffset.TabIndex = 17;
             this.txtServoOffset.Text = "0";
-            this.txtServoOffset.Visible = false;
-            // 
-            // lblServoOffset
-            // 
-            this.lblServoOffset.AutoSize = true;
-            this.lblServoOffset.Location = new System.Drawing.Point(108, 158);
-            this.lblServoOffset.Name = "lblServoOffset";
-            this.lblServoOffset.Size = new System.Drawing.Size(13, 13);
-            this.lblServoOffset.TabIndex = 16;
-            this.lblServoOffset.Text = "..";
             // 
             // label28
             // 
@@ -774,9 +763,9 @@
             this.label26.AutoSize = true;
             this.label26.Location = new System.Drawing.Point(6, 24);
             this.label26.Name = "label26";
-            this.label26.Size = new System.Drawing.Size(63, 13);
+            this.label26.Size = new System.Drawing.Size(62, 13);
             this.label26.TabIndex = 19;
-            this.label26.Text = "Weight (lbs)";
+            this.label26.Text = "Weight (kg)";
             // 
             // txtTotalWeight
             // 
@@ -810,7 +799,7 @@
             this.chkSettingsPersist.Checked = true;
             this.chkSettingsPersist.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkSettingsPersist.Enabled = false;
-            this.chkSettingsPersist.Location = new System.Drawing.Point(9, 170);
+            this.chkSettingsPersist.Location = new System.Drawing.Point(98, 173);
             this.chkSettingsPersist.Name = "chkSettingsPersist";
             this.chkSettingsPersist.Size = new System.Drawing.Size(57, 17);
             this.chkSettingsPersist.TabIndex = 29;
@@ -934,6 +923,7 @@
             this.btnSettingsGet.TabIndex = 27;
             this.btnSettingsGet.Text = "Get";
             this.btnSettingsGet.UseVisualStyleBackColor = true;
+            this.btnSettingsGet.Click += new System.EventHandler(this.btnSettingsGet_Click);
             // 
             // btnSettingsSet
             // 
@@ -1118,7 +1108,6 @@
         private System.Windows.Forms.Button btnParamSet;
         private System.Windows.Forms.TextBox txtParamGet;
         private System.Windows.Forms.TextBox txtServoOffset;
-        private System.Windows.Forms.Label lblServoOffset;
         private System.Windows.Forms.Label label28;
         private System.Windows.Forms.Button btnServoOffset;
         private System.Windows.Forms.Label lblResistanceStdLevel;

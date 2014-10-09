@@ -6,6 +6,71 @@ using System.Text;
 
 namespace IRT_GUI.IrtMessages
 {
+    public class ResistanceMessage : Message
+    {
+        public const byte Page = 0xF0;
+
+        const byte MODE_INDEX = 1;
+        const byte SEQUENCE_INDEX = 3;
+        const byte LEVEL_LSB = 4;
+        const byte LEVEL_MSB = 5;
+
+        public static byte[] GetCommand(byte command, byte sequence, byte[] value)
+        {
+            byte[] data = {
+                Page, 
+                command,
+                0x00, // TBD
+                value[0],
+                value[1],
+                sequence, // increment sequence
+                0x00, // TBD
+                0x00  // TBD
+            };
+
+            return data;
+        }
+
+        internal ResistanceMessage(ANT_Response response) : base(response) { }
+
+        public byte Mode { get { return m_payload[MODE_INDEX]; } }
+
+        public byte Sequence { get { return m_payload[SEQUENCE_INDEX]; } }
+
+        public ushort Level
+        {
+            get
+            {
+                return BigEndian(m_payload[LEVEL_LSB], m_payload[LEVEL_MSB]);
+            }
+        }
+    }
+
+    public class ManufacturerPage : Message
+    {
+        public const byte Page = 0x50;
+
+        const byte HW_REV_INDEX = 3;
+        const byte MANUFACTUR_LSB_INDEX = 4;
+        const byte MANUFACTUR_MSB_INDEX = 5;
+        const byte MODEL_LSB_INDEX = 6;
+        const byte MODEL_MSB_INDEX = 7;
+
+        internal ManufacturerPage(ANT_Response response) : base(response) { }
+
+        public byte HardwareRevision { get { return m_payload[HW_REV_INDEX]; } }
+
+        public ushort Manufacturer
+        {
+            get
+            {
+                return BigEndian(m_payload[MANUFACTUR_LSB_INDEX], m_payload[MANUFACTUR_MSB_INDEX]);
+            }
+        }
+
+        public ushort Model { get { return BigEndian(m_payload[MODEL_LSB_INDEX], m_payload[MODEL_MSB_INDEX]); } }
+    }
+
     public class ExtraInfoMessage : Message
     {
         public const byte Page = 0x24;
@@ -160,4 +225,112 @@ namespace IRT_GUI.IrtMessages
         Erg = 0x42,
         Sim = 0x43             
     }
+
+    // Any time you want to Get a parameter from the device, you issue a Request Data page.
+    // This should be sent as an acknowledged message to the device.
+    public class RequestDataMessage : Message
+    {
+        public const byte Page = 0x46;
+
+        public RequestDataMessage()
+        {
+            // Defaults.
+            CommandType = 0x01;
+            RequestTransmissionResponse = 2;
+        }
+
+        public RequestDataMessage(SubPages subPage)
+            : this()
+        {
+            //CommandType = 0x01;
+            RequestedPage = GetSetMessage.Page; // Always use the get/set parameter page.
+            SubPage = subPage;
+            //RequestTransmissionResponse = 0x80;
+            //RequestTransmissionResponse = 2;    // Default to trying 2 times to send.
+        }
+
+        // Use this value to requesting a specific subpage.  First byte should be the value, last byte might be 0xFF?
+        public SubPages SubPage;
+
+        // Type of response the device should send back.
+        /*
+         * Bit 0-6: Number of times to transmit the page.
+         * Bit 7:   Reply using acknowledged message, HOWEVER - ANT BP says these should always respond as broadcast.
+         * 0x80:    Transmit until a succesful acknowledgement.
+         * 0x00:    Invalid value.
+         */
+        public byte RequestTransmissionResponse;
+
+        // The page requested.
+        public byte RequestedPage;
+
+        // The type of command, i.e. 0x01 for Requesting a Data Page, 0x02 for Setting parameters.
+        public byte CommandType;
+
+        public byte[] AsBytes()
+        {
+            byte[] data = {
+                              Page,
+                              0xFF,
+                              0xFF,
+                              (byte)SubPage,
+                              0xFF,
+                              RequestTransmissionResponse,
+                              RequestedPage,
+                              CommandType
+                          };
+
+            return data;
+        }
+    }
+
+    // This is mostly used to Set values on the device.
+    public class GetSetMessage : Message
+    {
+        public const byte Page = 0x02;
+
+        private byte m_subpage;
+
+        public GetSetMessage(SubPages subPage)
+        {
+            m_payload = new byte[8];
+            SubPage = (byte)subPage;
+        }
+
+        internal GetSetMessage(ANT_Response response)
+            : base(response)
+        { }
+
+        public byte SubPage
+        {
+            private set { m_subpage = value; }
+            get { return m_payload[1]; }
+        }
+
+        public void SetPayLoad(UInt32 payload)
+        {
+            // Adjust for endianness of the ARM Cortex M0 device.
+            m_payload[5] = (byte)((payload & 0xFF000000) >> 24);
+            m_payload[4] = (byte)((payload & 0x00FF0000) >> 16);
+            m_payload[3] = (byte)((payload & 0x0000FF00) >> 8);
+            m_payload[2] = (byte)payload;
+        }
+
+        public byte[] AsBytes()
+        {
+            byte[] data = new byte[] {
+                Page,
+                m_subpage,
+                m_payload[2],
+                m_payload[3],
+                m_payload[4],
+                m_payload[5],
+                m_payload[6],
+                m_payload[7]
+            };
+
+            return data;
+        }
+    }
+
 }
