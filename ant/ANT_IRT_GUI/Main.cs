@@ -22,18 +22,11 @@ namespace IRT_GUI
         const int REF_PWR_CHANNEL_ID = 1;
         const byte ANT_FREQUENCY = 0x39;     // 2457 Mhz
         readonly byte[] USER_NETWORK_KEY = { 0xb9, 0xa5, 0x21, 0xfb, 0xbd, 0x72, 0xc3, 0x45 };
-
         
         private BikePowerDisplay m_eMotion;
+        private BikePowerDisplay m_refPower;
         private ANT_Device m_ANT_Device;
         private Network m_ANT_Network;
-
-        /* 
-        AntBikePower m_eMotion;
-        AntBikeSpeed m_refSpeed;
-        AntControl m_control;
-        SpeedSimulator m_speedSim;
-        */
 
         public frmIrtGui()
         {
@@ -42,30 +35,6 @@ namespace IRT_GUI
             this.Load += frmIrtGui_Load;
             this.Load += (o, e) =>
             {
-                if (m_eMotion == null)
-                {
-                    m_ANT_Device = new ANT_Device();
-                    m_ANT_Device.setNetworkKey(0x00, USER_NETWORK_KEY);
-
-                    var r = m_ANT_Device.requestMessageAndResponse(ANT_ReferenceLibrary.RequestMessageID.VERSION_0x3E, 300);
-                    System.Diagnostics.Debug.WriteLine(new ASCIIEncoding().GetString(r.messageContents, 0, r.messageContents.Length - 1));
-
-                    m_ANT_Network = new Network(0x00, USER_NETWORK_KEY, ANT_FREQUENCY);
-                    ANT_Channel channel = m_ANT_Device.getChannel(0);
-
-
-
-                    channel.channelResponse += channel_channelResponse;
-                    channel.DeviceNotification += channel_DeviceNotification;
-                    channel.rawChannelResponse += channel_rawChannelResponse;
-
-                    m_ANT_Device.serialError += m_ANT_Device_serialError;
-                    m_ANT_Device.deviceResponse += m_ANT_Device_deviceResponse;
-
-                    m_eMotion = new BikePowerDisplay(channel, m_ANT_Network);
-                }
-                
-                m_eMotion.TurnOn();
                 BindSimulator();
             };
         }
@@ -154,6 +123,32 @@ namespace IRT_GUI
 
         void BindSimulator()
         {
+            if (m_eMotion == null)
+            {
+                m_ANT_Device = new ANT_Device();
+                m_ANT_Device.setNetworkKey(0x00, USER_NETWORK_KEY);
+
+                m_ANT_Network = new Network(0x00, USER_NETWORK_KEY, ANT_FREQUENCY);
+                ANT_Channel channel = m_ANT_Device.getChannel(EMR_CHANNEL_ID);
+                
+
+                // Temporary - not sure how much of this I need.
+                channel.channelResponse += channel_channelResponse;
+                channel.DeviceNotification += channel_DeviceNotification;
+                channel.rawChannelResponse += channel_rawChannelResponse;
+
+                m_ANT_Device.serialError += m_ANT_Device_serialError;
+                m_ANT_Device.deviceResponse += m_ANT_Device_deviceResponse;
+
+                m_eMotion = new BikePowerDisplay(channel, m_ANT_Network);
+                m_eMotion.ChannelParameters.TransmissionType = 0xA5;
+
+                m_refPower = new BikePowerDisplay(m_ANT_Device.getChannel(REF_PWR_CHANNEL_ID), m_ANT_Network);
+                m_refPower.ChannelParameters.TransmissionType = 0x5;
+            }
+
+            m_eMotion.TurnOn();
+
             m_eMotion.SensorFound += m_eMotion_SensorFound;
 
             m_eMotion.ManufacturerIdentificationPageReceived += m_eMotion_ManufacturerIdentificationPageReceived;
@@ -167,6 +162,29 @@ namespace IRT_GUI
 
             m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
             m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
+
+
+            m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
+            m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
+            m_refPower.SensorFound += m_refPower_SensorFound;
+            
+            m_refPower.TurnOn();
+        }
+
+        void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
+        {
+            UpdateText(lblRefPwrWatts, arg1.InstantaneousPower);
+        }
+
+        void m_refPower_SensorFound(ushort arg1, byte arg2)
+        {
+            UpdateText(txtRefPwrDeviceId, arg1);
+        }
+
+        void m_refPower_ManufacturerIdentificationPageReceived(ManufacturerIdentificationPage arg1, uint arg2)
+        {
+            UpdateText(lblRefPwrModel, arg1.ModelNumber);
+            UpdateText(lblRefPwrManuf, arg1.ManufacturerIdentification);
         }
 
         void UpdateText(Control control, object obj)
@@ -263,25 +281,8 @@ namespace IRT_GUI
         
         void frmIrtGui_Load(object sender, EventArgs e)
         {
-            try
-            {
-                //m_eMotion = controller.EMotionBikePower;
-                //m_control = controller.AntRemoteControl;
-                //m_refSpeed = controller.RefBikeSpeed;
-
-
-                //m_ANT_Network = new Network(0, USER_NETWORK_KEY, ANT_FREQUENCY);
-                //m_ANT_Device = new ANT_Device();
-                //m_ANT_Device.ResetSystem();     // Soft reset
-                //System.Threading.Thread.Sleep(500);    // Delay 500ms after a reset
-
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.Write(ex);
-            }
-
         }
+
         private void btnCalibrationSet_Click(object sender, EventArgs e)
         {
             // Bounds check.
@@ -417,6 +418,12 @@ namespace IRT_GUI
         private void btnEmrSearch_Click(object sender, EventArgs e)
         {
             
+
+        }
+
+        private void btnRefPwrSearch_Click(object sender, EventArgs e)
+        {
+            //lblRefPwrWatts
 
         }
         

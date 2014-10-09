@@ -57,7 +57,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
+            this.lblRefPwrModel = new System.Windows.Forms.Label();
             this.lblRefPwrManuf = new System.Windows.Forms.Label();
             this.txtRefPwrDeviceId = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
@@ -66,7 +66,7 @@
             this.lblRefPwrWatts = new System.Windows.Forms.Label();
             this.btnRefPwrSearch = new System.Windows.Forms.Button();
             this.lblRefPwrType = new System.Windows.Forms.Label();
-            this.lblRefPwrModel = new System.Windows.Forms.Label();
+            this.label222 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.txtSlope = new System.Windows.Forms.TextBox();
@@ -408,14 +408,14 @@
             this.label4.TabIndex = 6;
             this.label4.Text = "Type";
             // 
-            // label5
+            // lblRefPwrModel
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(108, 64);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(16, 13);
-            this.label5.TabIndex = 5;
-            this.label5.Text = "...";
+            this.lblRefPwrModel.AutoSize = true;
+            this.lblRefPwrModel.Location = new System.Drawing.Point(108, 64);
+            this.lblRefPwrModel.Name = "lblRefPwrModel";
+            this.lblRefPwrModel.Size = new System.Drawing.Size(16, 13);
+            this.lblRefPwrModel.TabIndex = 5;
+            this.lblRefPwrModel.Text = "...";
             // 
             // lblRefPwrManuf
             // 
@@ -450,10 +450,10 @@
             this.groupBox2.Controls.Add(this.btnRefPwrSearch);
             this.groupBox2.Controls.Add(this.lblRefPwrType);
             this.groupBox2.Controls.Add(this.label4);
-            this.groupBox2.Controls.Add(this.label5);
+            this.groupBox2.Controls.Add(this.lblRefPwrModel);
             this.groupBox2.Controls.Add(this.lblRefPwrManuf);
             this.groupBox2.Controls.Add(this.txtRefPwrDeviceId);
-            this.groupBox2.Controls.Add(this.lblRefPwrModel);
+            this.groupBox2.Controls.Add(this.label222);
             this.groupBox2.Controls.Add(this.label14);
             this.groupBox2.Controls.Add(this.label8);
             this.groupBox2.Location = new System.Drawing.Point(563, 12);
@@ -492,6 +492,7 @@
             this.btnRefPwrSearch.TabIndex = 8;
             this.btnRefPwrSearch.Text = "Search";
             this.btnRefPwrSearch.UseVisualStyleBackColor = true;
+            this.btnRefPwrSearch.Click += new System.EventHandler(this.btnRefPwrSearch_Click);
             // 
             // lblRefPwrType
             // 
@@ -502,14 +503,14 @@
             this.lblRefPwrType.TabIndex = 7;
             this.lblRefPwrType.Text = "...";
             // 
-            // lblRefPwrModel
+            // label222
             // 
-            this.lblRefPwrModel.AutoSize = true;
-            this.lblRefPwrModel.Location = new System.Drawing.Point(7, 64);
-            this.lblRefPwrModel.Name = "lblRefPwrModel";
-            this.lblRefPwrModel.Size = new System.Drawing.Size(36, 13);
-            this.lblRefPwrModel.TabIndex = 2;
-            this.lblRefPwrModel.Text = "Model";
+            this.label222.AutoSize = true;
+            this.label222.Location = new System.Drawing.Point(7, 64);
+            this.label222.Name = "label222";
+            this.label222.Size = new System.Drawing.Size(36, 13);
+            this.label222.TabIndex = 2;
+            this.label222.Text = "Model";
             // 
             // label14
             // 
@@ -961,13 +962,13 @@
         private System.Windows.Forms.Label lblEmrHardwareRev;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label lblRefPwrModel;
         private System.Windows.Forms.Label lblRefPwrManuf;
         private System.Windows.Forms.TextBox txtRefPwrDeviceId;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label lblRefPwrType;
-        private System.Windows.Forms.Label lblRefPwrModel;
+        private System.Windows.Forms.Label label222;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label lblEmrWatts;
         private System.Windows.Forms.Button btnEmrSearch;
