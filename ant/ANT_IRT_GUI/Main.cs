@@ -94,6 +94,7 @@ namespace IRT_GUI
         {
             ExtraInfoMessage message = new ExtraInfoMessage(response);
             UpdateText(txtServoPos, message.ServoPosition);
+            UpdateText(lblFlywheel, message.FlyweelRevs);
 
             if (this.InvokeRequired)
             {
@@ -239,17 +240,18 @@ namespace IRT_GUI
             if (arg1.CumulativeOperatingTimeResolution == Common.Resolution.TwoSeconds)
             {
                 // CumulativeOperatingTime represents a tick every 2 seconds.
-                hours = arg1.CumulativeOperatingTime / (3600 / 2);
+                hours = arg1.CumulativeOperatingTime / (3600.0d / 2.0d);
             }
             else
             {
                 // CumulativeOperatingTime represents a tick every 16 seconds.
-                hours = arg1.CumulativeOperatingTime / (3600 / 16);
+                hours = arg1.CumulativeOperatingTime / (3600.0d / 16.0d);
             }
 
-            minutes = (int)Math.Round((hours - Math.Floor(hours)) / 60, 0);
+            // Convert to minutes.
+            minutes = (int)((hours - Math.Floor(hours)) * 60);
 
-            UpdateText(lblEmrBattTime, string.Format("{0}:{1:D2}", hours, minutes));
+            UpdateText(lblEmrBattTime, string.Format("{0:N0}:{1:D2}", hours, minutes));
         }
 
         void m_eMotion_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
