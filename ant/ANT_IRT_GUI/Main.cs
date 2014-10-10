@@ -40,23 +40,26 @@ namespace IRT_GUI
         private BikePowerDisplay m_refPower;
         private ANT_Device m_ANT_Device;
         private Network m_ANT_Network;
-        private ANT_Channel m_channel; 
+        private ANT_Channel m_channel;
+
+        // Wrapper for executing on the UI thread.
+        private void ExecuteOnUI(Action a)
+        {
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(a);
+            }
+            else
+            {
+                a.Invoke();
+            }
+        }
+
 
         public frmIrtGui()
         {
             InitializeComponent();
-            
             this.Load += frmIrtGui_Load;
-            this.Load += (o, e) =>
-            {
-                BindSimulator();
-                if (AdminEnabled)
-                {
-                    txtServoOffset.Enabled = true;
-                    btnServoOffset.Visible = true;
-                    btnServoOffset.Enabled = true;
-                }
-            };
         }
 
         public bool AdminEnabled
@@ -72,6 +75,25 @@ namespace IRT_GUI
             {
                 m_eMotion = (BikePowerDisplay)simulator;
             }
+        }
+
+
+        void frmIrtGui_Load(object sender, EventArgs e)
+        {
+            // Admin only features.
+            if (AdminEnabled)
+            {
+                txtServoOffset.Enabled = true;
+                btnServoOffset.Visible = true;
+                btnServoOffset.Enabled = true;
+            }
+            
+            // Setup the settings checklist box.
+            chkLstSettings.Items.Clear();
+            chkLstSettings.Items.AddRange(Enum.GetNames(typeof(Settings)));
+
+            // Configure and start listening on ANT+.
+            StartANT();
         }
 
         void m_ANT_Device_deviceResponse(ANT_Response response)
@@ -145,34 +167,31 @@ namespace IRT_GUI
             m_data.TargetLevel = m.Level;
             m_data.ResistanceMode = m.Mode;
              */
-
+            
             UpdateText(txtServoPos, message.ServoPosition);
             UpdateText(lblFlywheel, message.FlyweelRevs);
 
-            if (this.InvokeRequired)
-            {
-                this.BeginInvoke((Action)delegate()
+            ExecuteOnUI(() =>
                 {
-                    switch ((ResistanceMode)message.Mode)
-                    {
-                        case ResistanceMode.Standard:
-                            cmbResistanceMode.SelectedIndex = 0;
-                            UpdateText(lblResistanceStdLevel, message.Level);
-                            break;
-                        case ResistanceMode.Percent:
-                            cmbResistanceMode.SelectedIndex = 1;
-                            break;
-                        case ResistanceMode.Erg:
-                            cmbResistanceMode.SelectedIndex = 2;
-                            break;
-                        case ResistanceMode.Sim:
-                            cmbResistanceMode.SelectedIndex = 3;
-                            break;
-                        default:
-                            break;
-                    }
-                });
-            }
+                switch ((ResistanceMode)message.Mode)
+                {
+                    case ResistanceMode.Standard:
+                        cmbResistanceMode.SelectedIndex = 0;
+                        UpdateText(lblResistanceStdLevel, message.Level);
+                        break;
+                    case ResistanceMode.Percent:
+                        cmbResistanceMode.SelectedIndex = 1;
+                        break;
+                    case ResistanceMode.Erg:
+                        cmbResistanceMode.SelectedIndex = 2;
+                        break;
+                    case ResistanceMode.Sim:
+                        cmbResistanceMode.SelectedIndex = 3;
+                        break;
+                    default:
+                        break;
+                }
+            });
         }
 
         /// <summary>
@@ -190,11 +209,13 @@ namespace IRT_GUI
                     ushort slope = Message.BigEndian(buffer[2], buffer[3]);
                     ushort intercept = Message.BigEndian(buffer[4], buffer[5]);
 
+                    if (slope == short.MaxValue)
+                        slope = 0;
+                    if (intercept == short.MaxValue)
+                        intercept = 0;
+
                     UpdateText(txtSlope, slope);
                     UpdateText(txtOffset, intercept);
-
-                    //m_summary.Crr = (UInt32)(Message.BigEndian(buffer[6], buffer[7]) << 16) |
-                    //    Message.BigEndian(buffer[4], buffer[5]);
                     break;
 
                 case SubPages.TotalWeight:
@@ -221,6 +242,11 @@ namespace IRT_GUI
                     UpdateText(txtWheelSizeMm, wheelSize);
                     break;
 
+                case SubPages.Settings:
+                    ushort settings = Message.BigEndian(buffer[2], buffer[3]);
+                    UpdateSettings(settings);
+                    break;
+
                 default:
                     Console.WriteLine("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
                         buffer[2],
@@ -233,17 +259,35 @@ namespace IRT_GUI
             }
         }
 
-
-        void BindSimulator()
+        void UpdateSettings(ushort settings)
         {
+            ExecuteOnUI(() =>
+            {
+                for (int i = 0; i < chkLstSettings.Items.Count; i++)
+                {
+                    // Get the setting
+                    Settings setting;
+                    Enum.TryParse<Settings>(chkLstSettings.Items[i].ToString(), out setting);
+
+                    bool check = ((settings & (ushort)setting) == (ushort)setting);
+                    chkLstSettings.SetItemChecked(i, check);
+                }
+            });
+        }
+
+        void StartANT()
+        {
+            // m_eMotion could have been passed in someother way
+            // TODO: remove that path, this shouldn't be normal.
             if (m_eMotion == null)
             {
                 m_ANT_Device = new ANT_Device();
+                m_ANT_Device.ResetSystem(500);
+
                 m_ANT_Device.setNetworkKey(0x00, USER_NETWORK_KEY);
 
                 m_ANT_Network = new Network(0x00, USER_NETWORK_KEY, ANT_FREQUENCY);
                 m_channel = m_ANT_Device.getChannel(EMR_CHANNEL_ID);
-                
 
                 // Temporary - not sure how much of this I need.
                 m_channel.channelResponse += channel_channelResponse;
@@ -263,6 +307,7 @@ namespace IRT_GUI
             m_eMotion.TurnOn();
 
             m_eMotion.SensorFound += m_eMotion_SensorFound;
+            m_eMotion.ChannelStatusChanged += m_eMotion_ChannelStatusChanged;
 
             m_eMotion.ManufacturerIdentificationPageReceived += m_eMotion_ManufacturerIdentificationPageReceived;
             m_eMotion.ProductInformationPageReceived += m_eMotion_ProductInformationPageReceived;
@@ -276,12 +321,16 @@ namespace IRT_GUI
             m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
             m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
 
-
             m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
             m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
             m_refPower.SensorFound += m_refPower_SensorFound;
             
             m_refPower.TurnOn();
+        }
+
+        void m_eMotion_ChannelStatusChanged(ChannelStatus status)
+        {
+            UpdateStatus("Channel status changed: " + status.ToString());
         }
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
@@ -302,15 +351,17 @@ namespace IRT_GUI
 
         void UpdateText(Control control, object obj)
         {
+            ExecuteOnUI(() => control.Text = obj.ToString());
+            /*
             if (this.InvokeRequired)
             {
                 this.BeginInvoke((Action)delegate()
                 {
                     control.Text = obj.ToString();
                 });
-            }
+            }*/
         }
-        
+
         void m_eMotion_ManufacturerSpecificPageReceived(ManufacturerSpecificPage arg1, uint arg2)
         {
             // wahoo resistance ack pages come through here.
@@ -391,10 +442,6 @@ namespace IRT_GUI
             UpdateText(lblEmrHardwareRev, arg1.HardwareRevision);
             UpdateText(lblEmrModel, arg1.ModelNumber);
         }
-        
-        void frmIrtGui_Load(object sender, EventArgs e)
-        {
-        }
 
         private void btnCalibrationSet_Click(object sender, EventArgs e)
         {
@@ -413,8 +460,7 @@ namespace IRT_GUI
 
         private void btnParamGet_Click(object sender, EventArgs e)
         {
-            //m_eMotion.RequestDeviceParameter((SubPages)Enum.Parse(typeof(SubPages),
-            //    txtParamGet.Text));
+            //
         }
 
         private void btnParamSet_Click(object sender, EventArgs e)
@@ -542,21 +588,7 @@ namespace IRT_GUI
 
         private void btnSettingsGet_Click(object sender, EventArgs e)
         {
-            List<SubPages> parameters = new List<SubPages>();
-            parameters.Add(SubPages.TotalWeight);
-            parameters.Add(SubPages.WheelSize);
-            parameters.Add(SubPages.Settings);
-            parameters.Add(SubPages.ServoOffset);
-
-            new System.Threading.Thread(() =>
-            {
-                foreach(var p in parameters)
-                {
-                    RequestDeviceParameter(p);
-                    System.Threading.Thread.Sleep(500);
-                }
-
-            }).Start();
+            RequestSettings();
         }
         
         /*private bool TextBoxRangeCheck<T>(TextBox txt, string name, int min, int max, out T value) where T : IComparable<T>
@@ -566,7 +598,26 @@ namespace IRT_GUI
             //return false;
         }*/
 
-        public void RequestDeviceParameter(SubPages subPage)
+        private void RequestSettings()
+        {
+            List<SubPages> parameters = new List<SubPages>();
+            parameters.Add(SubPages.TotalWeight);
+            parameters.Add(SubPages.WheelSize);
+            parameters.Add(SubPages.Settings);
+            parameters.Add(SubPages.ServoOffset);
+
+            new System.Threading.Thread(() =>
+            {
+                foreach (var p in parameters)
+                {
+                    RequestDeviceParameter(p);
+                    System.Threading.Thread.Sleep(500);
+                }
+
+            }).Start();
+        }
+
+        private void RequestDeviceParameter(SubPages subPage)
         {
             int retries = 0;
 
@@ -610,5 +661,23 @@ namespace IRT_GUI
              
         }
 
+        private void chkLstSettings_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void UpdateStatus(string text)
+        {
+            ExecuteOnUI(() =>
+            {
+                txtLog.AppendText(text + '\n');
+                lblStatus.Text = text;
+            });
+        }
+
+        private void btnCalibrationGet_Click(object sender, EventArgs e)
+        {
+            RequestDeviceParameter(SubPages.Crr);
+        }
     }
 }

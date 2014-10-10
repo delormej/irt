@@ -31,6 +31,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmIrtGui));
             this.txtLog = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
             this.btnDfuEnable = new System.Windows.Forms.Button();
             this.chkCharge = new System.Windows.Forms.CheckBox();
             this.btnServoOffset = new System.Windows.Forms.Button();
@@ -61,8 +63,10 @@
             this.txtRefPwrDeviceId = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.lblRefPwrWatts = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
             this.btnRefPwrSearch = new System.Windows.Forms.Button();
             this.lblRefPwrType = new System.Windows.Forms.Label();
             this.label222 = new System.Windows.Forms.Label();
@@ -72,6 +76,10 @@
             this.txtOffset = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.lblFlywheel = new System.Windows.Forms.Label();
+            this.btnCalibrationSet = new System.Windows.Forms.Button();
+            this.label29 = new System.Windows.Forms.Label();
+            this.btnCalibrationGet = new System.Windows.Forms.Button();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.btnResistanceSet = new System.Windows.Forms.Button();
             this.txtServoPos = new System.Windows.Forms.TextBox();
@@ -94,7 +102,9 @@
             this.label26 = new System.Windows.Forms.Label();
             this.txtTotalWeight = new System.Windows.Forms.TextBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.btnSettingsGet = new System.Windows.Forms.Button();
             this.chkSettingsPersist = new System.Windows.Forms.CheckBox();
+            this.btnSettingsSet = new System.Windows.Forms.Button();
             this.chkLstSettings = new System.Windows.Forms.CheckedListBox();
             this.label21 = new System.Windows.Forms.Label();
             this.txtWheelSizeMm = new System.Windows.Forms.TextBox();
@@ -104,16 +114,7 @@
             this.btnParamSet = new System.Windows.Forms.Button();
             this.txtParamGet = new System.Windows.Forms.TextBox();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
-            this.button1 = new System.Windows.Forms.Button();
-            this.btnCalibrationSet = new System.Windows.Forms.Button();
-            this.btnSettingsGet = new System.Windows.Forms.Button();
-            this.btnSettingsSet = new System.Windows.Forms.Button();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label15 = new System.Windows.Forms.Label();
-            this.label19 = new System.Windows.Forms.Label();
-            this.label13 = new System.Windows.Forms.Label();
-            this.lblFlywheel = new System.Windows.Forms.Label();
-            this.label29 = new System.Windows.Forms.Label();
+            this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -123,6 +124,7 @@
             this.pnlResistanceStd.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox4.SuspendLayout();
+            this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // txtLog
@@ -168,6 +170,27 @@
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "E-Motion Rollers";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.Location = new System.Drawing.Point(119, 316);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(73, 13);
+            this.label13.TabIndex = 32;
+            this.label13.Text = "30 Sec Avg";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label15.Location = new System.Drawing.Point(121, 279);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(71, 37);
+            this.label15.TabIndex = 30;
+            this.label15.Text = "000";
+            this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // btnDfuEnable
             // 
@@ -465,6 +488,17 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Power Meter";
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Location = new System.Drawing.Point(73, 279);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(71, 37);
+            this.label5.TabIndex = 29;
+            this.label5.Text = "000";
+            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // label17
             // 
             this.label17.AutoSize = true;
@@ -485,6 +519,16 @@
             this.lblRefPwrWatts.TabIndex = 11;
             this.lblRefPwrWatts.Text = "000";
             this.lblRefPwrWatts.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label19.Location = new System.Drawing.Point(71, 316);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(73, 13);
+            this.label19.TabIndex = 31;
+            this.label19.Text = "30 Sec Avg";
             // 
             // btnRefPwrSearch
             // 
@@ -561,7 +605,7 @@
             this.groupBox3.Controls.Add(this.lblFlywheel);
             this.groupBox3.Controls.Add(this.btnCalibrationSet);
             this.groupBox3.Controls.Add(this.label29);
-            this.groupBox3.Controls.Add(this.button1);
+            this.groupBox3.Controls.Add(this.btnCalibrationGet);
             this.groupBox3.Controls.Add(this.label12);
             this.groupBox3.Controls.Add(this.txtOffset);
             this.groupBox3.Controls.Add(this.txtSlope);
@@ -572,6 +616,44 @@
             this.groupBox3.TabIndex = 17;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Calibration";
+            // 
+            // lblFlywheel
+            // 
+            this.lblFlywheel.AutoSize = true;
+            this.lblFlywheel.Location = new System.Drawing.Point(58, 107);
+            this.lblFlywheel.Name = "lblFlywheel";
+            this.lblFlywheel.Size = new System.Drawing.Size(13, 13);
+            this.lblFlywheel.TabIndex = 34;
+            this.lblFlywheel.Text = "..";
+            // 
+            // btnCalibrationSet
+            // 
+            this.btnCalibrationSet.Enabled = false;
+            this.btnCalibrationSet.Location = new System.Drawing.Point(84, 73);
+            this.btnCalibrationSet.Name = "btnCalibrationSet";
+            this.btnCalibrationSet.Size = new System.Drawing.Size(47, 23);
+            this.btnCalibrationSet.TabIndex = 26;
+            this.btnCalibrationSet.Text = "Set";
+            this.btnCalibrationSet.UseVisualStyleBackColor = true;
+            // 
+            // label29
+            // 
+            this.label29.AutoSize = true;
+            this.label29.Location = new System.Drawing.Point(9, 107);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(48, 13);
+            this.label29.TabIndex = 33;
+            this.label29.Text = "Flywheel";
+            // 
+            // btnCalibrationGet
+            // 
+            this.btnCalibrationGet.Location = new System.Drawing.Point(12, 73);
+            this.btnCalibrationGet.Name = "btnCalibrationGet";
+            this.btnCalibrationGet.Size = new System.Drawing.Size(47, 23);
+            this.btnCalibrationGet.TabIndex = 26;
+            this.btnCalibrationGet.Text = "Get";
+            this.btnCalibrationGet.UseVisualStyleBackColor = true;
+            this.btnCalibrationGet.Click += new System.EventHandler(this.btnCalibrationGet_Click);
             // 
             // groupBox5
             // 
@@ -793,6 +875,16 @@
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Profile";
             // 
+            // btnSettingsGet
+            // 
+            this.btnSettingsGet.Location = new System.Drawing.Point(23, 190);
+            this.btnSettingsGet.Name = "btnSettingsGet";
+            this.btnSettingsGet.Size = new System.Drawing.Size(47, 23);
+            this.btnSettingsGet.TabIndex = 27;
+            this.btnSettingsGet.Text = "Get";
+            this.btnSettingsGet.UseVisualStyleBackColor = true;
+            this.btnSettingsGet.Click += new System.EventHandler(this.btnSettingsGet_Click);
+            // 
             // chkSettingsPersist
             // 
             this.chkSettingsPersist.AutoSize = true;
@@ -805,6 +897,16 @@
             this.chkSettingsPersist.TabIndex = 29;
             this.chkSettingsPersist.Text = "Persist";
             this.chkSettingsPersist.UseVisualStyleBackColor = true;
+            // 
+            // btnSettingsSet
+            // 
+            this.btnSettingsSet.Enabled = false;
+            this.btnSettingsSet.Location = new System.Drawing.Point(95, 190);
+            this.btnSettingsSet.Name = "btnSettingsSet";
+            this.btnSettingsSet.Size = new System.Drawing.Size(47, 23);
+            this.btnSettingsSet.TabIndex = 26;
+            this.btnSettingsSet.Text = "Set";
+            this.btnSettingsSet.UseVisualStyleBackColor = true;
             // 
             // chkLstSettings
             // 
@@ -821,6 +923,7 @@
             this.chkLstSettings.Name = "chkLstSettings";
             this.chkLstSettings.Size = new System.Drawing.Size(150, 94);
             this.chkLstSettings.TabIndex = 22;
+            this.chkLstSettings.SelectedIndexChanged += new System.EventHandler(this.chkLstSettings_SelectedIndexChanged);
             // 
             // label21
             // 
@@ -890,110 +993,19 @@
             // 
             // statusStrip
             // 
+            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lblStatus});
             this.statusStrip.Location = new System.Drawing.Point(0, 539);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(784, 22);
             this.statusStrip.TabIndex = 20;
             this.statusStrip.Text = "Running";
             // 
-            // button1
+            // lblStatus
             // 
-            this.button1.Location = new System.Drawing.Point(12, 73);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(47, 23);
-            this.button1.TabIndex = 26;
-            this.button1.Text = "Get";
-            this.button1.UseVisualStyleBackColor = true;
-            // 
-            // btnCalibrationSet
-            // 
-            this.btnCalibrationSet.Enabled = false;
-            this.btnCalibrationSet.Location = new System.Drawing.Point(84, 73);
-            this.btnCalibrationSet.Name = "btnCalibrationSet";
-            this.btnCalibrationSet.Size = new System.Drawing.Size(47, 23);
-            this.btnCalibrationSet.TabIndex = 26;
-            this.btnCalibrationSet.Text = "Set";
-            this.btnCalibrationSet.UseVisualStyleBackColor = true;
-            // 
-            // btnSettingsGet
-            // 
-            this.btnSettingsGet.Location = new System.Drawing.Point(23, 190);
-            this.btnSettingsGet.Name = "btnSettingsGet";
-            this.btnSettingsGet.Size = new System.Drawing.Size(47, 23);
-            this.btnSettingsGet.TabIndex = 27;
-            this.btnSettingsGet.Text = "Get";
-            this.btnSettingsGet.UseVisualStyleBackColor = true;
-            this.btnSettingsGet.Click += new System.EventHandler(this.btnSettingsGet_Click);
-            // 
-            // btnSettingsSet
-            // 
-            this.btnSettingsSet.Enabled = false;
-            this.btnSettingsSet.Location = new System.Drawing.Point(95, 190);
-            this.btnSettingsSet.Name = "btnSettingsSet";
-            this.btnSettingsSet.Size = new System.Drawing.Size(47, 23);
-            this.btnSettingsSet.TabIndex = 26;
-            this.btnSettingsSet.Text = "Set";
-            this.btnSettingsSet.UseVisualStyleBackColor = true;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(73, 279);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(71, 37);
-            this.label5.TabIndex = 29;
-            this.label5.Text = "000";
-            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label15
-            // 
-            this.label15.AutoSize = true;
-            this.label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label15.Location = new System.Drawing.Point(121, 279);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(71, 37);
-            this.label15.TabIndex = 30;
-            this.label15.Text = "000";
-            this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label19
-            // 
-            this.label19.AutoSize = true;
-            this.label19.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label19.Location = new System.Drawing.Point(71, 316);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(73, 13);
-            this.label19.TabIndex = 31;
-            this.label19.Text = "30 Sec Avg";
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(119, 316);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(73, 13);
-            this.label13.TabIndex = 32;
-            this.label13.Text = "30 Sec Avg";
-            // 
-            // lblFlywheel
-            // 
-            this.lblFlywheel.AutoSize = true;
-            this.lblFlywheel.Location = new System.Drawing.Point(58, 107);
-            this.lblFlywheel.Name = "lblFlywheel";
-            this.lblFlywheel.Size = new System.Drawing.Size(13, 13);
-            this.lblFlywheel.TabIndex = 34;
-            this.lblFlywheel.Text = "..";
-            // 
-            // label29
-            // 
-            this.label29.AutoSize = true;
-            this.label29.Location = new System.Drawing.Point(9, 107);
-            this.label29.Name = "label29";
-            this.label29.Size = new System.Drawing.Size(48, 13);
-            this.label29.TabIndex = 33;
-            this.label29.Text = "Flywheel";
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(118, 17);
+            this.lblStatus.Text = "toolStripStatusLabel1";
             // 
             // frmIrtGui
             // 
@@ -1033,6 +1045,8 @@
             this.groupBox6.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
+            this.statusStrip.ResumeLayout(false);
+            this.statusStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1116,7 +1130,7 @@
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.CheckBox chkSettingsPersist;
         private System.Windows.Forms.Button btnCalibrationSet;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnCalibrationGet;
         private System.Windows.Forms.Button btnSettingsGet;
         private System.Windows.Forms.Button btnSettingsSet;
         private System.Windows.Forms.Label label13;
@@ -1125,6 +1139,7 @@
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Label lblFlywheel;
         private System.Windows.Forms.Label label29;
+        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
     }
 }
 
