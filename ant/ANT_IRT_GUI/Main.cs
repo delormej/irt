@@ -690,20 +690,33 @@ namespace IRT_GUI
 
         private void btnDfuEnable_Click(object sender, EventArgs e)
         {
-            //m_eMotion.SetFirmwareUpdateMode();
+            UpdateStatus("Sending DFU command, channel should disconnect.");
             // Todo: set some other kind of state / notification here.
+            SendCommand(Command.SetDFUMode);
         }
 
         private void chkCharge_CheckedChanged(object sender, EventArgs e)
         {
             // Toggles charger... need to then also wait for response back and update display.
-            //m_eMotion.SetParameter(SubPages.Charger, 1 /*any value*/ );
+            SetParameter((byte)(SubPages.Charger), 1);
         }
 
         private void btnServoOffset_Click(object sender, EventArgs e)
         {
+            uint value = 0;
+
+            try
+            {
+                value = uint.Parse(txtServoOffset.Text);
+            }
+            catch
+            {
+                UpdateStatus("Invalid servo offset.");
+                return;
+            }
+
             // TODO: this is broken, because servo offset can be negative.
-            //m_eMotion.SetParameter(SubPages.ServoOffset, uint.Parse(txtServoOffset.Text));
+            SetParameter((byte)(SubPages.ServoOffset), value);
         }
 
         private void cmbResistanceMode_SelectedIndexChanged(object sender, EventArgs e)

@@ -201,7 +201,6 @@
             this.btnDfuEnable.TabIndex = 28;
             this.btnDfuEnable.Text = "DFU";
             this.btnDfuEnable.UseVisualStyleBackColor = true;
-            this.btnDfuEnable.Visible = false;
             this.btnDfuEnable.Click += new System.EventHandler(this.btnDfuEnable_Click);
             // 
             // chkCharge
