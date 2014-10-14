@@ -431,6 +431,7 @@ namespace IRT_GUI
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
             UpdateText(lblRefPwrWatts, arg1.InstantaneousPower);
+            UpdateText(lblRefPwrWattsAvg, m_refPower.AveragePowerStandardPowerOnly);
         }
 
         void m_refPower_SensorFound(ushort arg1, byte arg2)
@@ -506,6 +507,7 @@ namespace IRT_GUI
         void m_eMotion_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
             UpdateText(lblEmrWatts, arg1.InstantaneousPower);
+            UpdateText(lblEmrWattsAvg, m_eMotion.AveragePowerStandardPowerOnly);
         }
 
 
@@ -882,7 +884,7 @@ namespace IRT_GUI
             UpdateText(lblRefPwrModel, "...");
             UpdateText(lblRefPwrType, "...");
             UpdateText(lblRefPwrWatts, "000");
-            UpdateText(lblRefPwr30SecAvg, "000");
+            UpdateText(lblRefPwrWattsAvg, "000");
         }
 
         private void CloseEmotion()
@@ -899,7 +901,7 @@ namespace IRT_GUI
             UpdateText(lblEmrModel, "...");
             UpdateText(lblEmrMph, "00.0");
             UpdateText(lblEmrWatts, "000");
-            UpdateText(lblEmrWatts30SecAvg, "000");
+            UpdateText(lblEmrWattsAvg, "000");
 
             UpdateText(txtWheelSizeMm, "");
             UpdateText(txtTotalWeight, "");

@@ -33,7 +33,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lblFlywheel = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
-            this.lblEmrWatts30SecAvg = new System.Windows.Forms.Label();
+            this.lblEmrWattsAvg = new System.Windows.Forms.Label();
             this.label29 = new System.Windows.Forms.Label();
             this.btnDfuEnable = new System.Windows.Forms.Button();
             this.chkCharge = new System.Windows.Forms.CheckBox();
@@ -65,7 +65,7 @@
             this.txtRefPwrDeviceId = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.lblRefPwr30SecAvg = new System.Windows.Forms.Label();
+            this.lblRefPwrWattsAvg = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
             this.lblRefPwrWatts = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
@@ -143,7 +143,7 @@
             // 
             this.groupBox1.Controls.Add(this.lblFlywheel);
             this.groupBox1.Controls.Add(this.label13);
-            this.groupBox1.Controls.Add(this.lblEmrWatts30SecAvg);
+            this.groupBox1.Controls.Add(this.lblEmrWattsAvg);
             this.groupBox1.Controls.Add(this.label29);
             this.groupBox1.Controls.Add(this.btnDfuEnable);
             this.groupBox1.Controls.Add(this.chkCharge);
@@ -189,22 +189,22 @@
             // 
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(119, 316);
+            this.label13.Location = new System.Drawing.Point(132, 316);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(73, 13);
+            this.label13.Size = new System.Drawing.Size(54, 13);
             this.label13.TabIndex = 32;
-            this.label13.Text = "30 Sec Avg";
+            this.label13.Text = "Average";
             // 
-            // lblEmrWatts30SecAvg
+            // lblEmrWattsAvg
             // 
-            this.lblEmrWatts30SecAvg.AutoSize = true;
-            this.lblEmrWatts30SecAvg.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblEmrWatts30SecAvg.Location = new System.Drawing.Point(121, 279);
-            this.lblEmrWatts30SecAvg.Name = "lblEmrWatts30SecAvg";
-            this.lblEmrWatts30SecAvg.Size = new System.Drawing.Size(71, 37);
-            this.lblEmrWatts30SecAvg.TabIndex = 30;
-            this.lblEmrWatts30SecAvg.Text = "000";
-            this.lblEmrWatts30SecAvg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblEmrWattsAvg.AutoSize = true;
+            this.lblEmrWattsAvg.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblEmrWattsAvg.Location = new System.Drawing.Point(121, 279);
+            this.lblEmrWattsAvg.Name = "lblEmrWattsAvg";
+            this.lblEmrWattsAvg.Size = new System.Drawing.Size(71, 37);
+            this.lblEmrWattsAvg.TabIndex = 30;
+            this.lblEmrWattsAvg.Text = "000";
+            this.lblEmrWattsAvg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label29
             // 
@@ -489,7 +489,7 @@
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.lblRefPwr30SecAvg);
+            this.groupBox2.Controls.Add(this.lblRefPwrWattsAvg);
             this.groupBox2.Controls.Add(this.label17);
             this.groupBox2.Controls.Add(this.lblRefPwrWatts);
             this.groupBox2.Controls.Add(this.label19);
@@ -509,16 +509,16 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Power Meter";
             // 
-            // lblRefPwr30SecAvg
+            // lblRefPwrWattsAvg
             // 
-            this.lblRefPwr30SecAvg.AutoSize = true;
-            this.lblRefPwr30SecAvg.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblRefPwr30SecAvg.Location = new System.Drawing.Point(73, 279);
-            this.lblRefPwr30SecAvg.Name = "lblRefPwr30SecAvg";
-            this.lblRefPwr30SecAvg.Size = new System.Drawing.Size(71, 37);
-            this.lblRefPwr30SecAvg.TabIndex = 29;
-            this.lblRefPwr30SecAvg.Text = "000";
-            this.lblRefPwr30SecAvg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblRefPwrWattsAvg.AutoSize = true;
+            this.lblRefPwrWattsAvg.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblRefPwrWattsAvg.Location = new System.Drawing.Point(73, 279);
+            this.lblRefPwrWattsAvg.Name = "lblRefPwrWattsAvg";
+            this.lblRefPwrWattsAvg.Size = new System.Drawing.Size(71, 37);
+            this.lblRefPwrWattsAvg.TabIndex = 29;
+            this.lblRefPwrWattsAvg.Text = "000";
+            this.lblRefPwrWattsAvg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label17
             // 
@@ -545,11 +545,11 @@
             // 
             this.label19.AutoSize = true;
             this.label19.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label19.Location = new System.Drawing.Point(71, 316);
+            this.label19.Location = new System.Drawing.Point(77, 316);
             this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(73, 13);
+            this.label19.Size = new System.Drawing.Size(54, 13);
             this.label19.TabIndex = 31;
-            this.label19.Text = "30 Sec Avg";
+            this.label19.Text = "Average";
             // 
             // btnRefPwrSearch
             // 
@@ -1157,8 +1157,8 @@
         private System.Windows.Forms.Button btnSettingsGet;
         private System.Windows.Forms.Button btnSettingsSet;
         private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.Label lblEmrWatts30SecAvg;
-        private System.Windows.Forms.Label lblRefPwr30SecAvg;
+        private System.Windows.Forms.Label lblEmrWattsAvg;
+        private System.Windows.Forms.Label lblRefPwrWattsAvg;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Label lblFlywheel;
         private System.Windows.Forms.Label label29;
