@@ -395,6 +395,8 @@ namespace IRT_GUI
 
                     case ChannelStatus.Searching:
                         btnEmrSearch.Enabled = false;
+                        UpdateText(lblEmrMph, "00.0");
+                        UpdateText(lblEmrWatts, "000");
                         break;
 
                     case ChannelStatus.Tracking:
