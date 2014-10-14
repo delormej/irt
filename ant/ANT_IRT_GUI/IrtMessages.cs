@@ -6,6 +6,41 @@ using System.Text;
 
 namespace IRT_GUI.IrtMessages
 {
+
+    // Represents the datapoints being collected from various sensors.
+    public class DataPoint
+    {
+        const string FORMAT = "{0:H:mm:ss.fff}, {1:N1}, {2:N1}, {3:g}, {4:g}, {5:g}, {6:g}, {7:g}";
+
+        public DateTime Timestamp;
+        public float SpeedReference;
+        public float SpeedEMotion;
+        public float SpeedMPSEMotion;
+        public short PowerReference;
+        public short PowerEMotion;
+        public ushort ServoPosition;
+        public short Accelerometer_y;
+        public byte Temperature;
+        public byte ResistanceMode;
+        public ushort TargetLevel;
+        public uint FlywheelRevs;
+        public ushort RefSpeedWheelRevs;
+        public ushort RefPowerAccumTorque;
+
+        public override string ToString()
+        {
+            return string.Format(FORMAT,
+                Timestamp,
+                SpeedReference,
+                SpeedMPSEMotion,
+                PowerReference,
+                PowerEMotion,
+                ServoPosition,
+                Accelerometer_y,
+                Temperature);
+        }
+    }
+
     public class ResistanceMessage : Message
     {
         public const byte Page = 0xF0;

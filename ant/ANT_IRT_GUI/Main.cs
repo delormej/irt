@@ -1,4 +1,5 @@
-﻿using ANT_Managed_Library;
+﻿using ANT_Console;
+using ANT_Managed_Library;
 using AntPlus.Profiles.BikePower;
 using AntPlus.Profiles.Common;
 using AntPlus.Profiles.Components;
@@ -37,6 +38,11 @@ namespace IRT_GUI
 
         bool m_PauseServoUpdate = false;
 
+        // Logging stuff.
+        private Timer m_reportTimer;
+        private LogReporter m_reporter;
+        private DataPoint m_dataPoint;
+
         // Commands
         enum Command : byte
         {
@@ -70,6 +76,7 @@ namespace IRT_GUI
         public frmIrtGui()
         {
             InitializeComponent();
+            m_dataPoint = new DataPoint(); // Last valid data.
             this.Load += frmIrtGui_Load;
         }
 
@@ -108,6 +115,8 @@ namespace IRT_GUI
 
             // Configure and start listening on ANT+.
             StartANT();
+
+            StartReporting();
         }
 
         void m_ANT_Device_deviceResponse(ANT_Response response)
@@ -181,6 +190,12 @@ namespace IRT_GUI
             m_data.TargetLevel = m.Level;
             m_data.ResistanceMode = m.Mode;
              */
+
+            m_dataPoint.ServoPosition = message.ServoPosition;
+            m_dataPoint.TargetLevel = message.Level;
+            m_dataPoint.Temperature = message.Temperature;
+            m_dataPoint.ResistanceMode = message.Mode;
+            m_dataPoint.FlywheelRevs = message.FlyweelRevs;
 
             UpdateText(lblFlywheel, message.FlyweelRevs);
 
@@ -364,6 +379,22 @@ namespace IRT_GUI
             m_refPower.ChannelStatusChanged += m_refPower_ChannelStatusChanged;
         }
 
+
+        private void StartReporting()
+        {
+            // Start logging.
+            m_reporter = new LogReporter();
+            m_reportTimer = new Timer();
+            m_reportTimer.Interval = 1000; // Every second.
+            m_reportTimer.Tick += m_reportTimer_Tick;
+            m_reportTimer.Start();
+        }
+
+        void m_reportTimer_Tick(object sender, EventArgs e)
+        {
+            m_reporter.Report(m_dataPoint);
+        }
+
         void m_refPower_ChannelStatusChanged(ChannelStatus status)
         {
             ExecuteOnUI(() =>
@@ -430,6 +461,8 @@ namespace IRT_GUI
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
+            m_dataPoint.PowerReference = (short)arg1.InstantaneousPower;
+
             UpdateText(lblRefPwrWatts, arg1.InstantaneousPower);
             //UpdateText(lblRefPwrWattsAvg, m_refPower.AveragePowerStandardPowerOnly);
         }
@@ -506,6 +539,8 @@ namespace IRT_GUI
 
         void m_eMotion_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
+            m_dataPoint.PowerEMotion = (short)arg1.InstantaneousPower;
+
             UpdateText(lblEmrWatts, arg1.InstantaneousPower);
             //UpdateText(lblEmrWattsAvg, m_eMotion.AveragePowerStandardPowerOnly);
         }
@@ -515,6 +550,7 @@ namespace IRT_GUI
         {
             // Convert to mph from km/h.
             double mph = m_eMotion.AverageSpeedWheelTorque * 0.621371;
+            m_dataPoint.SpeedEMotion = (float)mph;
             UpdateText(lblEmrMph, mph.ToString("00.0"));
         }
 
