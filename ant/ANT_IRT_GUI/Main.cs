@@ -281,14 +281,20 @@ namespace IRT_GUI
             {
                 for (int i = 0; i < chkLstSettings.Items.Count; i++)
                 {
-                    // Get the setting
-                    Settings setting;
-                    Enum.TryParse<Settings>(chkLstSettings.Items[i].ToString(), out setting);
+                    Settings setting = GetSetting(i);
 
                     bool check = ((settings & (ushort)setting) == (ushort)setting);
                     chkLstSettings.SetItemChecked(i, check);
                 }
             });
+        }
+
+        private Settings GetSetting(int index)
+        {
+            // Get the setting
+            Settings setting;
+            Enum.TryParse<Settings>(chkLstSettings.Items[index].ToString(), out setting);
+            return setting;
         }
 
         void StartANT()
@@ -907,12 +913,7 @@ namespace IRT_GUI
 
             UpdateStatus(String.Format("Unable to request parameter: {0}, return result: {1}.", subPage, result));
         }
-
-        private void chkLstSettings_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
+        
         private void UpdateStatus(string text)
         {
             ExecuteOnUI(() =>
@@ -947,8 +948,30 @@ namespace IRT_GUI
 
         private void chkLstSettings_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            UpdateStatus("Item changing..." + e.Index + " : " + e.NewValue);
-        }
+            ushort value = 0;
 
+            // Get checked status of each to update value.
+            // This is the value BEFORE the checkbox is invoked.
+            foreach (int i in chkLstSettings.CheckedIndices)
+            {
+                value |= (ushort)GetSetting(i);
+            }
+
+            // A new item was checked so also account for that.
+            if (e.NewValue == CheckState.Checked)
+            {
+                value |= (ushort)GetSetting(e.Index);
+            }
+            else if (e.NewValue == CheckState.Unchecked)
+            {
+                // Account for item being unchecked.
+                value ^= (ushort)GetSetting(e.Index);
+
+            }
+
+            // Update text boxes for get/set params
+            UpdateText(txtParamGet, (byte)SubPages.Settings);
+            UpdateText(txtParamSet, value);
+        }
     }
 }

@@ -904,7 +904,6 @@
             this.chkLstSettings.Size = new System.Drawing.Size(134, 124);
             this.chkLstSettings.TabIndex = 22;
             this.chkLstSettings.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.chkLstSettings_ItemCheck);
-            this.chkLstSettings.SelectedIndexChanged += new System.EventHandler(this.chkLstSettings_SelectedIndexChanged);
             // 
             // label21
             // 
