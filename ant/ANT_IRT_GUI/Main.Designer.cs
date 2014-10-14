@@ -704,6 +704,8 @@
             this.cmbResistanceMode.Size = new System.Drawing.Size(112, 21);
             this.cmbResistanceMode.TabIndex = 19;
             this.cmbResistanceMode.SelectedIndexChanged += new System.EventHandler(this.cmbResistanceMode_SelectedIndexChanged);
+            this.cmbResistanceMode.Enter += new System.EventHandler(this.cmbResistanceMode_Enter);
+            this.cmbResistanceMode.Leave += new System.EventHandler(this.cmbResistanceMode_Leave);
             // 
             // label22
             // 
@@ -785,6 +787,9 @@
             this.txtResistanceErgWatts.Name = "txtResistanceErgWatts";
             this.txtResistanceErgWatts.Size = new System.Drawing.Size(63, 20);
             this.txtResistanceErgWatts.TabIndex = 22;
+            this.txtResistanceErgWatts.TabStop = false;
+            this.txtResistanceErgWatts.Enter += new System.EventHandler(this.txtResistanceErgWatts_Enter);
+            this.txtResistanceErgWatts.Leave += new System.EventHandler(this.txtResistanceErgWatts_Leave);
             // 
             // label20
             // 
@@ -1016,6 +1021,7 @@
             this.txtResistancePercent.Name = "txtResistancePercent";
             this.txtResistancePercent.Size = new System.Drawing.Size(45, 20);
             this.txtResistancePercent.TabIndex = 1;
+            this.txtResistancePercent.TabStop = false;
             this.txtResistancePercent.Text = "0";
             // 
             // frmIrtGui

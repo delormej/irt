@@ -19,6 +19,7 @@ namespace IRT_GUI
 {
     public partial class frmIrtGui : Form
     {
+        const byte ANT_BURST_MSG_ID_SET_RESISTANCE = 0x48;
         const int EMR_CHANNEL_ID = 0;
         const int REF_PWR_CHANNEL_ID = 1;
         const byte ANT_FREQUENCY = 0x39;     // 2457 Mhz
@@ -175,33 +176,35 @@ namespace IRT_GUI
             m_data.ResistanceMode = m.Mode;
              */
 
+            UpdateText(lblFlywheel, message.FlyweelRevs);
+
             if (!m_PauseServoUpdate)
             {
                 UpdateText(txtServoPos, message.ServoPosition);
-            }
-            UpdateText(lblFlywheel, message.FlyweelRevs);
 
-            ExecuteOnUI(() =>
-                {
-                switch ((ResistanceMode)message.Mode)
-                {
-                    case ResistanceMode.Percent:
-                        //cmbResistanceMode.SelectedIndex = 0;
-                        break;
-                    case ResistanceMode.Standard:
-                        //cmbResistanceMode.SelectedIndex = 1;
-                        UpdateText(lblResistanceStdLevel, message.Level);
-                        break;
-                    case ResistanceMode.Erg:
-                        //cmbResistanceMode.SelectedIndex = 2;
-                        break;
-                    case ResistanceMode.Sim:
-                        //cmbResistanceMode.SelectedIndex = 3;
-                        break;
-                    default:
-                        break;
-                }
-            });
+                ExecuteOnUI(() =>
+                    {
+                        switch ((ResistanceMode)message.Mode)
+                        {
+                            case ResistanceMode.Percent:
+                                cmbResistanceMode.SelectedIndex = 0;
+                                break;
+                            case ResistanceMode.Standard:
+                                cmbResistanceMode.SelectedIndex = 1;
+                                UpdateText(lblResistanceStdLevel, message.Level);
+                                break;
+                            case ResistanceMode.Erg:
+                                cmbResistanceMode.SelectedIndex = 2;
+                                UpdateText(txtResistanceErgWatts, message.Level);
+                                break;
+                            case ResistanceMode.Sim:
+                                cmbResistanceMode.SelectedIndex = 3;
+                                break;
+                            default:
+                                break;
+                        }
+                    });
+            }
         }
 
         /// <summary>
@@ -635,10 +638,16 @@ namespace IRT_GUI
         // This uses the WAHOO method with a burst message.
         private bool SetWheelSize(ushort wheelSizeMM)
         {
+            // set wheel size mode
+            return SendBurst(0x48, (ushort)(wheelSizeMM * 10));
+        }
+
+        bool SendBurst(byte command, ushort value)
+        {
             byte[] data = { 
                 // Message 1
-                0x48,
-                0x48, // set wheel size mode
+                ANT_BURST_MSG_ID_SET_RESISTANCE,
+                command, 
                 0x00,
                 0x00,
                 0x00,
@@ -655,8 +664,8 @@ namespace IRT_GUI
                 0x00,
                 0x00, 
                 // Message 3
-                (byte)(wheelSizeMM*10),        // Wheel size LSB
-                (byte)((wheelSizeMM*10) >> 8),   // Wheel size MSB          
+                (byte)(value),        // LSB
+                (byte)((value) >> 8),   // MSB          
                 0x00,
                 0x00,
                 0x00,
@@ -666,7 +675,7 @@ namespace IRT_GUI
                           };
 
             var result = m_eMotionChannel.sendBurstTransfer(data, 500);
-            
+
             if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
             {
                 UpdateStatus("Unable to set wheel size, result: " + result);
@@ -713,12 +722,32 @@ namespace IRT_GUI
 
         private void btnResistanceInc_Click(object sender, EventArgs e)
         {
-            //m_control.RemoteControl(ANT_Console.Services.AntControl.RemoteControlCommand.Up);
+            ushort value = 0;
+            ushort.TryParse(lblResistanceStdLevel.Text, out value);
+
+            if (value < 6)
+            {
+                SendBurst((byte)ResistanceMode.Standard, ++value);
+            }
+            else
+            {
+                UpdateStatus("Max level reached.");
+            }
         }
 
         private void btnResistanceDec_Click(object sender, EventArgs e)
         {
-            //m_control.RemoteControl(ANT_Console.Services.AntControl.RemoteControlCommand.Down);
+            ushort value = 0;
+            ushort.TryParse(lblResistanceStdLevel.Text, out value);
+
+            if (value > 0)
+            {
+                SendBurst((byte)ResistanceMode.Standard, --value);
+            }
+            else
+            {
+                UpdateStatus("Min level reached.");
+            }
         }
 
         private void btnDfuEnable_Click(object sender, EventArgs e)
@@ -1021,6 +1050,36 @@ namespace IRT_GUI
             {
                 m_PauseServoUpdate = false;
             }
+        }
+
+        private void txtResistanceErgWatts_Enter(object sender, EventArgs e)
+        {
+            m_PauseServoUpdate = true;
+        }
+
+        private void txtResistanceErgWatts_Leave(object sender, EventArgs e)
+        {
+            if (txtResistanceErgWatts.Modified)
+            {
+                ushort value = 0;
+                //txtResistanceErgWatts.Text
+
+                // Send erg target.
+                //SendBurst((byte)ResistanceMode.Erg, value);
+            }
+
+            // Reset state.
+            m_PauseServoUpdate = false;
+        }
+
+        private void cmbResistanceMode_Enter(object sender, EventArgs e)
+        {
+            m_PauseServoUpdate = true;
+        }
+
+        private void cmbResistanceMode_Leave(object sender, EventArgs e)
+        {
+            // Don't do anything right now.
         }
     }
 }
