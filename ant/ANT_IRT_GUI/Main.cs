@@ -40,7 +40,8 @@ namespace IRT_GUI
         private BikePowerDisplay m_refPower;
         private ANT_Device m_ANT_Device;
         private Network m_ANT_Network;
-        private ANT_Channel m_channel;
+        private ANT_Channel m_eMotionChannel;
+        private ANT_Channel m_refChannel;
 
         // Wrapper for executing on the UI thread.
         private void ExecuteOnUI(Action a)
@@ -281,31 +282,24 @@ namespace IRT_GUI
 
         void StartANT()
         {
-            // m_eMotion could have been passed in someother way
-            // TODO: remove that path, this shouldn't be normal.
-            if (m_eMotion == null)
-            {
-                m_ANT_Device = new ANT_Device();
-                m_ANT_Device.ResetSystem(500);
+            m_ANT_Device = new ANT_Device();
+            m_ANT_Device.ResetSystem(500);
 
-                m_ANT_Device.setNetworkKey(0x00, USER_NETWORK_KEY);
+            m_ANT_Device.setNetworkKey(0x00, USER_NETWORK_KEY);
 
-                m_ANT_Network = new Network(0x00, USER_NETWORK_KEY, ANT_FREQUENCY);
-                m_channel = m_ANT_Device.getChannel(EMR_CHANNEL_ID);
+            m_ANT_Network = new Network(0x00, USER_NETWORK_KEY, ANT_FREQUENCY);
+            m_eMotionChannel = m_ANT_Device.getChannel(EMR_CHANNEL_ID);
 
-                // Temporary - not sure how much of this I need.
-                m_channel.channelResponse += channel_channelResponse;
-                m_channel.DeviceNotification += channel_DeviceNotification;
-                m_channel.rawChannelResponse += channel_rawChannelResponse;
+            // Temporary - not sure how much of this I need.
+            m_eMotionChannel.channelResponse += channel_channelResponse;
+            m_eMotionChannel.DeviceNotification += channel_DeviceNotification;
+            m_eMotionChannel.rawChannelResponse += channel_rawChannelResponse;
 
-                m_ANT_Device.serialError += m_ANT_Device_serialError;
-                m_ANT_Device.deviceResponse += m_ANT_Device_deviceResponse;
+            m_ANT_Device.serialError += m_ANT_Device_serialError;
+            m_ANT_Device.deviceResponse += m_ANT_Device_deviceResponse;
 
-                m_eMotion = new BikePowerDisplay(m_channel, m_ANT_Network);
-                m_eMotion.ChannelParameters.TransmissionType = 0xA5;
-            }
-
-            m_eMotion.TurnOn();
+            m_eMotion = new BikePowerDisplay(m_eMotionChannel, m_ANT_Network);
+            m_eMotion.ChannelParameters.TransmissionType = 0xA5;
 
             m_eMotion.SensorFound += m_eMotion_SensorFound;
             m_eMotion.ChannelStatusChanged += m_eMotion_ChannelStatusChanged;
@@ -321,11 +315,81 @@ namespace IRT_GUI
 
             m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
             m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
+
+            // Start looking for e-motion.
+            m_eMotion.TurnOn();
+
+            // Configure reference power channel, but don't start it.
+            m_refChannel = m_ANT_Device.getChannel(REF_PWR_CHANNEL_ID);
+            m_refPower = new BikePowerDisplay(m_refChannel, m_ANT_Network);
+
+            m_refPower.ChannelParameters.TransmissionType = 0x5;
+            m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
+            m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
+            m_refPower.SensorFound += m_refPower_SensorFound;
+            m_refPower.ChannelStatusChanged += m_refPower_ChannelStatusChanged;
+        }
+
+        void m_refPower_ChannelStatusChanged(ChannelStatus status)
+        {
+            ExecuteOnUI(() =>
+            {
+                switch (status)
+                {
+                    case ChannelStatus.Closed:
+                        btnRefPwrSearch.Enabled = true;
+                        txtRefPwrDeviceId.Enabled = true;
+                        btnRefPwrSearch.Text = "Search";
+                        UpdateStatus("Closed reference power meter channel.");
+                        break;
+
+                    case ChannelStatus.Searching:
+                        btnRefPwrSearch.Enabled = false;
+                        UpdateStatus("Searching for power meter.");
+                        break;
+
+                    case ChannelStatus.Tracking:
+                        btnRefPwrSearch.Enabled = true;
+                        btnRefPwrSearch.Text = "Close";
+                        txtRefPwrDeviceId.Enabled = false;
+                        UpdateStatus("Found power meter.");
+                        break;
+
+                    default:
+                        break;
+                }
+            });
         }
 
         void m_eMotion_ChannelStatusChanged(ChannelStatus status)
         {
             UpdateStatus("E-Motion channel status changed: " + status.ToString());
+
+            ExecuteOnUI(() =>
+            {
+                switch (status)
+                {
+                    case ChannelStatus.Closed:
+                        btnEmrSearch.Enabled = true;
+                        txtEmrDeviceId.Enabled = true;
+                        UpdateText(txtEmrDeviceId, 0);
+                        btnEmrSearch.Text = "Search";
+                        break;
+
+                    case ChannelStatus.Searching:
+                        btnEmrSearch.Enabled = false;
+                        break;
+
+                    case ChannelStatus.Tracking:
+                        btnEmrSearch.Enabled = true;
+                        UpdateText(btnEmrSearch, "Close");
+                        txtEmrDeviceId.Enabled = false;
+                        break;
+
+                    default:
+                        break;
+                }
+            });
         }
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
@@ -564,20 +628,87 @@ namespace IRT_GUI
 
         private void btnEmrSearch_Click(object sender, EventArgs e)
         {
-            
+            ANT_ChannelStatus status = m_eMotionChannel.requestStatus(500);
+            ANT_Managed_Library.ANT_ReferenceLibrary.BasicChannelStatusCode code = status.BasicStatus;
 
+            // Channel is open, so lets close.
+            if (code == ANT_ReferenceLibrary.BasicChannelStatusCode.TRACKING_0x3)
+            {
+                // Close the channel.
+                UpdateStatus("Closing E-Motion channel.");
+                CloseEmotion();
+            }
+            else
+            {
+                // Channel isn't open, go ahead and search for E-Motion.
+                ushort deviceId = 0;
+                ushort.TryParse(txtEmrDeviceId.Text, out deviceId);
+
+                m_eMotion.ChannelParameters.DeviceNumber = deviceId;
+                m_eMotion.TurnOn();
+            }
         }
 
         private void btnRefPwrSearch_Click(object sender, EventArgs e)
         {
-            m_refPower = new BikePowerDisplay(m_ANT_Device.getChannel(REF_PWR_CHANNEL_ID), m_ANT_Network);
-            m_refPower.ChannelParameters.TransmissionType = 0x5;
+            ANT_ChannelStatus status = m_refChannel.requestStatus(500);
+            ANT_Managed_Library.ANT_ReferenceLibrary.BasicChannelStatusCode code = status.BasicStatus;
 
-            m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
-            m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
-            m_refPower.SensorFound += m_refPower_SensorFound;
+            // Channel is open, so lets close.
+            if (code == ANT_ReferenceLibrary.BasicChannelStatusCode.TRACKING_0x3)
+            {
+                // Close the channel.
+                //m_refChannel.closeChannel(500);
+                CloseRefPower();
+            }
+            else
+            {
+                // Channel isn't open, go ahead and search for Power Meter.
+                ushort deviceId = 0;
+                ushort.TryParse(txtRefPwrDeviceId.Text, out deviceId);
 
-            m_refPower.TurnOn();
+                m_refPower.ChannelParameters.DeviceNumber = deviceId;
+
+                m_refPower.TurnOn();
+            }
+        }
+
+        private void CloseRefPower()
+        {
+            // Turn off the display
+            m_refPower.TurnOff();
+
+            // Clear all the values.
+            UpdateText(txtRefPwrDeviceId, "0");
+            UpdateText(lblRefPwrManuf, "...");
+            UpdateText(lblRefPwrModel, "...");
+            UpdateText(lblRefPwrType, "...");
+            UpdateText(lblRefPwrWatts, "000");
+            UpdateText(lblRefPwr30SecAvg, "000");
+        }
+
+        private void CloseEmotion()
+        {
+            // Turn off the display
+            m_eMotion.TurnOff();
+
+            UpdateText(txtEmrDeviceId, "0");
+            UpdateText(lblEmrBattTime, "...");
+            UpdateText(lblEmrBattVolt, "...");
+            UpdateText(lblEmrSerialNo, "...");
+            UpdateText(lblEmrFirmwareRev, "...");
+            UpdateText(lblEmrHardwareRev, "...");
+            UpdateText(lblEmrModel, "...");
+            UpdateText(lblEmrMph, "00.0");
+            UpdateText(lblEmrWatts, "000");
+            UpdateText(lblEmrWatts30SecAvg, "000");
+
+            UpdateText(txtWheelSizeMm, "");
+            UpdateText(txtTotalWeight, "");
+            UpdateText(txtSlope, "");
+            UpdateText(txtOffset, "");
+            UpdateText(txtServoOffset, 0);
+
         }
 
         private void btnSettingsGet_Click(object sender, EventArgs e)
@@ -650,12 +781,12 @@ namespace IRT_GUI
 
             while (retries++ < REQUEST_RETRY)
             {
-                result = m_channel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
+                result = m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
                 if (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass)
                     return;
             }
 
-            throw new ApplicationException(string.Format("Unable to request parameter, return result: {0}.", result));
+            UpdateStatus(String.Format("Unable to request parameter: {0}, return result: {1}.", subPage, result));
         }
 
         private void chkLstSettings_SelectedIndexChanged(object sender, EventArgs e)
