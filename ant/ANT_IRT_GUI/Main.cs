@@ -431,7 +431,7 @@ namespace IRT_GUI
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
             UpdateText(lblRefPwrWatts, arg1.InstantaneousPower);
-            UpdateText(lblRefPwrWattsAvg, m_refPower.AveragePowerStandardPowerOnly);
+            //UpdateText(lblRefPwrWattsAvg, m_refPower.AveragePowerStandardPowerOnly);
         }
 
         void m_refPower_SensorFound(ushort arg1, byte arg2)
@@ -507,7 +507,7 @@ namespace IRT_GUI
         void m_eMotion_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
             UpdateText(lblEmrWatts, arg1.InstantaneousPower);
-            UpdateText(lblEmrWattsAvg, m_eMotion.AveragePowerStandardPowerOnly);
+            //UpdateText(lblEmrWattsAvg, m_eMotion.AveragePowerStandardPowerOnly);
         }
 
 
