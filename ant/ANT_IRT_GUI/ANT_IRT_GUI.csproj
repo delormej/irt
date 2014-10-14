@@ -95,7 +95,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ANT_WrappedLib.dll">
+    <None Include="lib\ANT_WrappedLib.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="IR 1 red_alter4ICON.ico" />
