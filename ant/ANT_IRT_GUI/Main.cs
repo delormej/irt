@@ -19,7 +19,13 @@ namespace IRT_GUI
 {
     public partial class frmIrtGui : Form
     {
-        const byte ANT_BURST_MSG_ID_SET_RESISTANCE = 0x48;
+        const byte ANT_BURST_MSG_ID_SET_RESISTANCE  = 0x48;
+        const byte RESISTANCE_SET_SLOPE		        = 0x46;
+	    const byte RESISTANCE_SET_WIND			    = 0x47;
+        const byte RESISTANCE_SET_WHEEL_CR          = 0x48;
+        const byte RESISTANCE_SET_BIKE_TYPE	        = 0x44; // Co-efficient of rolling resistance
+        const byte RESISTANCE_SET_C                 = 0x45; // Wind resistance offset.
+
         const int EMR_CHANNEL_ID = 0;
         const int REF_PWR_CHANNEL_ID = 1;
         const byte ANT_FREQUENCY = 0x39;     // 2457 Mhz
@@ -1117,6 +1123,60 @@ namespace IRT_GUI
             }
 
             m_PauseServoUpdate = false;
+        }
+
+        private void txtSimSlope_Leave(object sender, EventArgs e)
+        {
+            if (txtSimSlope.Modified)
+            {
+                float grade = 0.0f;
+                if (float.TryParse(txtSimSlope.Text, out grade))
+                {
+                    /*
+                                     * 	value ^= 1 << 15u;
+                                       grade = value / 32768.0f;
+                                     */
+
+                    ushort value = 0;
+
+                    if (grade < 0.0f)
+                    {
+                        // Make the grade positive.
+                        grade *= -1;
+                    }
+                    else
+                    {
+                        // Set the high order bit.
+                        value = 32768;
+                    }
+
+                    value |= (ushort)(32768 * (grade / 100.0f));
+
+                    SendBurst(RESISTANCE_SET_SLOPE, value);
+                }
+                else
+                {
+                    UpdateStatus("Invalid grade.");
+                    return;
+                }
+            }
+        }
+
+        private void txtSimCrr_Leave(object sender, EventArgs e)
+        {
+            if (txtSimCrr.Modified)
+            {
+
+            }
+        }
+
+        private void txtSimWind_Leave(object sender, EventArgs e)
+        {
+            if (txtSimWind.Modified)
+            {
+
+            }
+
         }
     }
 }

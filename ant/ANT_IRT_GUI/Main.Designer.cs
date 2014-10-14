@@ -93,11 +93,11 @@
             this.btnResistanceInc = new System.Windows.Forms.Button();
             this.txtResistanceErgWatts = new System.Windows.Forms.TextBox();
             this.label20 = new System.Windows.Forms.Label();
-            this.textBox4 = new System.Windows.Forms.TextBox();
+            this.txtSimWind = new System.Windows.Forms.TextBox();
             this.label25 = new System.Windows.Forms.Label();
-            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.txtSimCrr = new System.Windows.Forms.TextBox();
             this.label24 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.txtSimSlope = new System.Windows.Forms.TextBox();
             this.label23 = new System.Windows.Forms.Label();
             this.label26 = new System.Windows.Forms.Label();
             this.txtTotalWeight = new System.Windows.Forms.TextBox();
@@ -718,13 +718,13 @@
             // 
             // pnlResistanceSim
             // 
-            this.pnlResistanceSim.Controls.Add(this.textBox4);
+            this.pnlResistanceSim.Controls.Add(this.txtSimWind);
             this.pnlResistanceSim.Controls.Add(this.label25);
-            this.pnlResistanceSim.Controls.Add(this.textBox3);
+            this.pnlResistanceSim.Controls.Add(this.txtSimCrr);
             this.pnlResistanceSim.Controls.Add(this.label24);
-            this.pnlResistanceSim.Controls.Add(this.textBox1);
+            this.pnlResistanceSim.Controls.Add(this.txtSimSlope);
             this.pnlResistanceSim.Controls.Add(this.label23);
-            this.pnlResistanceSim.Location = new System.Drawing.Point(156, 19);
+            this.pnlResistanceSim.Location = new System.Drawing.Point(156, 20);
             this.pnlResistanceSim.Name = "pnlResistanceSim";
             this.pnlResistanceSim.Size = new System.Drawing.Size(164, 91);
             this.pnlResistanceSim.TabIndex = 23;
@@ -800,12 +800,13 @@
             this.label20.TabIndex = 21;
             this.label20.Text = "Target Watts";
             // 
-            // textBox4
+            // txtSimWind
             // 
-            this.textBox4.Location = new System.Drawing.Point(89, 55);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(63, 20);
-            this.textBox4.TabIndex = 26;
+            this.txtSimWind.Location = new System.Drawing.Point(89, 55);
+            this.txtSimWind.Name = "txtSimWind";
+            this.txtSimWind.Size = new System.Drawing.Size(63, 20);
+            this.txtSimWind.TabIndex = 26;
+            this.txtSimWind.Leave += new System.EventHandler(this.txtSimWind_Leave);
             // 
             // label25
             // 
@@ -816,12 +817,13 @@
             this.label25.TabIndex = 25;
             this.label25.Text = "Wind (mps)";
             // 
-            // textBox3
+            // txtSimCrr
             // 
-            this.textBox3.Location = new System.Drawing.Point(89, 32);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(63, 20);
-            this.textBox3.TabIndex = 24;
+            this.txtSimCrr.Location = new System.Drawing.Point(89, 32);
+            this.txtSimCrr.Name = "txtSimCrr";
+            this.txtSimCrr.Size = new System.Drawing.Size(63, 20);
+            this.txtSimCrr.TabIndex = 24;
+            this.txtSimCrr.Leave += new System.EventHandler(this.txtSimCrr_Leave);
             // 
             // label24
             // 
@@ -832,12 +834,13 @@
             this.label24.TabIndex = 23;
             this.label24.Text = "Crr";
             // 
-            // textBox1
+            // txtSimSlope
             // 
-            this.textBox1.Location = new System.Drawing.Point(89, 9);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(63, 20);
-            this.textBox1.TabIndex = 22;
+            this.txtSimSlope.Location = new System.Drawing.Point(89, 9);
+            this.txtSimSlope.Name = "txtSimSlope";
+            this.txtSimSlope.Size = new System.Drawing.Size(63, 20);
+            this.txtSimSlope.TabIndex = 22;
+            this.txtSimSlope.Leave += new System.EventHandler(this.txtSimSlope_Leave);
             // 
             // label23
             // 
@@ -1127,11 +1130,11 @@
         private System.Windows.Forms.Label label26;
         private System.Windows.Forms.TextBox txtTotalWeight;
         private System.Windows.Forms.Panel pnlResistanceSim;
-        private System.Windows.Forms.TextBox textBox4;
+        private System.Windows.Forms.TextBox txtSimWind;
         private System.Windows.Forms.Label label25;
-        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.TextBox txtSimCrr;
         private System.Windows.Forms.Label label24;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox txtSimSlope;
         private System.Windows.Forms.Label label23;
         private System.Windows.Forms.GroupBox groupBox6;
         private System.Windows.Forms.CheckedListBox chkLstSettings;
