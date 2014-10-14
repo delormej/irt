@@ -249,7 +249,17 @@ namespace IRT_GUI
                     break;
 
                 case SubPages.Charger:
-                    // buffer[2] contains the value 0,1,2,3
+                    ExecuteOnUI(() =>
+                    {
+                        if (buffer[2] == 0x02)
+                        {
+                            chkCharge.Checked = true;
+                        }
+                        else
+                        {
+                            chkCharge.Checked = false;
+                        }
+                    });
                     break;
 
                 default:
