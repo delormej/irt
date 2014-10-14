@@ -626,13 +626,13 @@
             // 
             // btnCalibrationSet
             // 
-            this.btnCalibrationSet.Enabled = false;
             this.btnCalibrationSet.Location = new System.Drawing.Point(84, 73);
             this.btnCalibrationSet.Name = "btnCalibrationSet";
             this.btnCalibrationSet.Size = new System.Drawing.Size(47, 23);
             this.btnCalibrationSet.TabIndex = 26;
             this.btnCalibrationSet.Text = "Set";
             this.btnCalibrationSet.UseVisualStyleBackColor = true;
+            this.btnCalibrationSet.Click += new System.EventHandler(this.btnCalibrationSet_Click);
             // 
             // label29
             // 
@@ -905,6 +905,7 @@
             this.btnSettingsSet.TabIndex = 26;
             this.btnSettingsSet.Text = "Set";
             this.btnSettingsSet.UseVisualStyleBackColor = true;
+            this.btnSettingsSet.Click += new System.EventHandler(this.btnSettingsSet_Click);
             // 
             // chkLstSettings
             // 

@@ -504,15 +504,6 @@ namespace IRT_GUI
             UpdateText(lblEmrModel, arg1.ModelNumber);
         }
 
-        private void btnCalibrationSet_Click(object sender, EventArgs e)
-        {
-            // Bounds check.
-
-            UInt32 value = (UInt32) (ushort.Parse(txtSlope.Text) |
-                (ushort.Parse(txtOffset.Text) >> 16));
-
-            //m_eMotion.SetParameter(ANT_Console.Messages.SubPages.Crr, value);
-        }
 
         private void ShowInputError(string message)
         {
@@ -854,5 +845,24 @@ namespace IRT_GUI
         {
             RequestDeviceParameter(SubPages.Crr);
         }
+
+        private void btnCalibrationSet_Click(object sender, EventArgs e)
+        {
+            // Bounds check.
+            ushort slope = 0, offset = 0;
+
+            ushort.TryParse(txtSlope.Text, out slope);
+            ushort.TryParse(txtOffset.Text, out offset);
+
+            if (slope == 0 || offset == 0)
+            {
+                UpdateStatus("Failed to update calibration.  Slope/Offset must be > 0.");
+                return;
+            }
+
+            UInt32 value = (UInt32)(slope | (offset << 16));
+            SetParameter((byte)SubPages.Crr, value);
+        }
+
     }
 }
