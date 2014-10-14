@@ -1166,7 +1166,17 @@ namespace IRT_GUI
         {
             if (txtSimCrr.Modified)
             {
+                float crr = 0.0f;
+                if (float.TryParse(txtSimCrr.Text, out crr))
+                {
+                    ushort value = (ushort)(crr * 10000);
 
+                    SendBurst(RESISTANCE_SET_BIKE_TYPE, value);
+                }
+                else
+                {
+                    UpdateStatus("Invalid crr.");
+                }
             }
         }
 
