@@ -1174,7 +1174,37 @@ namespace IRT_GUI
         {
             if (txtSimWind.Modified)
             {
+                float wind = 0.0f;
+                if (float.TryParse(txtSimWind.Text, out wind))
+                {
+                    ushort value = 0;
 
+                    if (wind < -30.0f || wind > 30.0f)
+                    {
+                        UpdateStatus("Invalid Wind speed.");
+                        return;
+                    }
+
+                    if (wind < 0.0f)
+                    {
+                        // Make the wind speed positive.
+                        wind *= -1;
+                    }
+                    else
+                    {
+                        // Set the high order bit to indicate positive.
+                        value = 32768;
+                    }
+
+                    value |= (ushort)(wind * 1000);
+
+                    SendBurst(RESISTANCE_SET_WIND, value);
+                }
+                else
+                {
+                    UpdateStatus("Invalid Wind.");
+                    return;
+                }
             }
 
         }
