@@ -678,7 +678,7 @@ namespace IRT_GUI
 
             if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
             {
-                UpdateStatus("Unable to set wheel size, result: " + result);
+                UpdateStatus("Unable to send burst command, result: " + result);
             }
 
             return (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
@@ -733,6 +733,8 @@ namespace IRT_GUI
             {
                 UpdateStatus("Max level reached.");
             }
+
+            m_PauseServoUpdate = false;
         }
 
         private void btnResistanceDec_Click(object sender, EventArgs e)
@@ -748,6 +750,8 @@ namespace IRT_GUI
             {
                 UpdateStatus("Min level reached.");
             }
+
+            m_PauseServoUpdate = false;
         }
 
         private void btnDfuEnable_Click(object sender, EventArgs e)
@@ -1062,10 +1066,17 @@ namespace IRT_GUI
             if (txtResistanceErgWatts.Modified)
             {
                 ushort value = 0;
-                //txtResistanceErgWatts.Text
+                ushort.TryParse(txtResistanceErgWatts.Text, out value);
 
-                // Send erg target.
-                //SendBurst((byte)ResistanceMode.Erg, value);
+                if (value > 0 && value < 1500)
+                {
+                    // Send erg target.
+                    SendBurst((byte)ResistanceMode.Erg, value);
+                }
+                else
+                {
+                    UpdateStatus("Erg target out of range.");
+                }
             }
 
             // Reset state.
@@ -1080,6 +1091,32 @@ namespace IRT_GUI
         private void cmbResistanceMode_Leave(object sender, EventArgs e)
         {
             // Don't do anything right now.
+        }
+
+        private void txtResistancePercent_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtResistancePercent_Leave(object sender, EventArgs e)
+        {
+            float value = 0.0f;
+
+            if (txtResistancePercent.Modified)
+            {
+                float.TryParse(txtResistancePercent.Text, out value);
+
+                if (value >= 0.0f && value <= 100.0f)
+                {
+                    // Calculate percentage.
+                    ushort wireValue = 0;
+                    wireValue = (ushort)(16383 - (16383 * (value / 100.0f)));
+
+                    SendBurst((byte)ResistanceMode.Percent, wireValue);
+                }
+            }
+
+            m_PauseServoUpdate = false;
         }
     }
 }

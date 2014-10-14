@@ -1017,12 +1017,14 @@
             // txtResistancePercent
             // 
             this.txtResistancePercent.Location = new System.Drawing.Point(95, 39);
-            this.txtResistancePercent.MaxLength = 3;
+            this.txtResistancePercent.MaxLength = 6;
             this.txtResistancePercent.Name = "txtResistancePercent";
             this.txtResistancePercent.Size = new System.Drawing.Size(45, 20);
             this.txtResistancePercent.TabIndex = 1;
             this.txtResistancePercent.TabStop = false;
             this.txtResistancePercent.Text = "0";
+            this.txtResistancePercent.Enter += new System.EventHandler(this.txtResistancePercent_Enter);
+            this.txtResistancePercent.Leave += new System.EventHandler(this.txtResistancePercent_Leave);
             // 
             // frmIrtGui
             // 
