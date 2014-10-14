@@ -31,8 +31,10 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmIrtGui));
             this.txtLog = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.lblFlywheel = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.lblEmrWatts30SecAvg = new System.Windows.Forms.Label();
+            this.label29 = new System.Windows.Forms.Label();
             this.btnDfuEnable = new System.Windows.Forms.Button();
             this.chkCharge = new System.Windows.Forms.CheckBox();
             this.btnServoOffset = new System.Windows.Forms.Button();
@@ -76,9 +78,7 @@
             this.txtOffset = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.lblFlywheel = new System.Windows.Forms.Label();
             this.btnCalibrationSet = new System.Windows.Forms.Button();
-            this.label29 = new System.Windows.Forms.Label();
             this.btnCalibrationGet = new System.Windows.Forms.Button();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.btnResistanceSet = new System.Windows.Forms.Button();
@@ -104,9 +104,9 @@
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.btnSettingsGet = new System.Windows.Forms.Button();
             this.btnSettingsSet = new System.Windows.Forms.Button();
-            this.chkLstSettings = new System.Windows.Forms.CheckedListBox();
             this.label21 = new System.Windows.Forms.Label();
             this.txtWheelSizeMm = new System.Windows.Forms.TextBox();
+            this.chkLstSettings = new System.Windows.Forms.CheckedListBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.txtParamSet = new System.Windows.Forms.TextBox();
             this.btnParamGet = new System.Windows.Forms.Button();
@@ -114,6 +114,9 @@
             this.txtParamGet = new System.Windows.Forms.TextBox();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.pnlResistancePercent = new System.Windows.Forms.Panel();
+            this.label5 = new System.Windows.Forms.Label();
+            this.txtResistancePercent = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -124,6 +127,7 @@
             this.groupBox6.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.statusStrip.SuspendLayout();
+            this.pnlResistancePercent.SuspendLayout();
             this.SuspendLayout();
             // 
             // txtLog
@@ -172,6 +176,15 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "E-Motion Rollers";
             // 
+            // lblFlywheel
+            // 
+            this.lblFlywheel.AutoSize = true;
+            this.lblFlywheel.Location = new System.Drawing.Point(108, 178);
+            this.lblFlywheel.Name = "lblFlywheel";
+            this.lblFlywheel.Size = new System.Drawing.Size(13, 13);
+            this.lblFlywheel.TabIndex = 34;
+            this.lblFlywheel.Text = "..";
+            // 
             // label13
             // 
             this.label13.AutoSize = true;
@@ -192,6 +205,15 @@
             this.lblEmrWatts30SecAvg.TabIndex = 30;
             this.lblEmrWatts30SecAvg.Text = "000";
             this.lblEmrWatts30SecAvg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label29
+            // 
+            this.label29.AutoSize = true;
+            this.label29.Location = new System.Drawing.Point(7, 174);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(48, 13);
+            this.label29.TabIndex = 33;
+            this.label29.Text = "Flywheel";
             // 
             // btnDfuEnable
             // 
@@ -613,15 +635,6 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Calibration";
             // 
-            // lblFlywheel
-            // 
-            this.lblFlywheel.AutoSize = true;
-            this.lblFlywheel.Location = new System.Drawing.Point(108, 178);
-            this.lblFlywheel.Name = "lblFlywheel";
-            this.lblFlywheel.Size = new System.Drawing.Size(13, 13);
-            this.lblFlywheel.TabIndex = 34;
-            this.lblFlywheel.Text = "..";
-            // 
             // btnCalibrationSet
             // 
             this.btnCalibrationSet.Location = new System.Drawing.Point(88, 73);
@@ -631,15 +644,6 @@
             this.btnCalibrationSet.Text = "Set";
             this.btnCalibrationSet.UseVisualStyleBackColor = true;
             this.btnCalibrationSet.Click += new System.EventHandler(this.btnCalibrationSet_Click);
-            // 
-            // label29
-            // 
-            this.label29.AutoSize = true;
-            this.label29.Location = new System.Drawing.Point(7, 174);
-            this.label29.Name = "label29";
-            this.label29.Size = new System.Drawing.Size(48, 13);
-            this.label29.TabIndex = 33;
-            this.label29.Text = "Flywheel";
             // 
             // btnCalibrationGet
             // 
@@ -653,6 +657,9 @@
             // 
             // groupBox5
             // 
+            this.groupBox5.Controls.Add(this.pnlResistanceStd);
+            this.groupBox5.Controls.Add(this.pnlErg);
+            this.groupBox5.Controls.Add(this.pnlResistancePercent);
             this.groupBox5.Controls.Add(this.btnResistanceSet);
             this.groupBox5.Controls.Add(this.txtServoPos);
             this.groupBox5.Controls.Add(this.cmbResistanceMode);
@@ -667,9 +674,9 @@
             // 
             // btnResistanceSet
             // 
-            this.btnResistanceSet.Location = new System.Drawing.Point(40, 78);
+            this.btnResistanceSet.Location = new System.Drawing.Point(90, 77);
             this.btnResistanceSet.Name = "btnResistanceSet";
-            this.btnResistanceSet.Size = new System.Drawing.Size(75, 23);
+            this.btnResistanceSet.Size = new System.Drawing.Size(47, 23);
             this.btnResistanceSet.TabIndex = 18;
             this.btnResistanceSet.Text = "Set";
             this.btnResistanceSet.UseVisualStyleBackColor = true;
@@ -677,10 +684,12 @@
             // 
             // txtServoPos
             // 
-            this.txtServoPos.Location = new System.Drawing.Point(83, 48);
+            this.txtServoPos.Location = new System.Drawing.Point(26, 79);
             this.txtServoPos.Name = "txtServoPos";
             this.txtServoPos.Size = new System.Drawing.Size(63, 20);
             this.txtServoPos.TabIndex = 20;
+            this.txtServoPos.Enter += new System.EventHandler(this.txtServoPos_Enter);
+            this.txtServoPos.Leave += new System.EventHandler(this.txtServoPos_Leave);
             // 
             // cmbResistanceMode
             // 
@@ -692,14 +701,14 @@
             "Simulation"});
             this.cmbResistanceMode.Location = new System.Drawing.Point(25, 21);
             this.cmbResistanceMode.Name = "cmbResistanceMode";
-            this.cmbResistanceMode.Size = new System.Drawing.Size(121, 21);
+            this.cmbResistanceMode.Size = new System.Drawing.Size(112, 21);
             this.cmbResistanceMode.TabIndex = 19;
             this.cmbResistanceMode.SelectedIndexChanged += new System.EventHandler(this.cmbResistanceMode_SelectedIndexChanged);
             // 
             // label22
             // 
             this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(22, 51);
+            this.label22.Location = new System.Drawing.Point(23, 61);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(44, 13);
             this.label22.TabIndex = 19;
@@ -707,7 +716,6 @@
             // 
             // pnlResistanceSim
             // 
-            this.pnlResistanceSim.Controls.Add(this.pnlErg);
             this.pnlResistanceSim.Controls.Add(this.textBox4);
             this.pnlResistanceSim.Controls.Add(this.label25);
             this.pnlResistanceSim.Controls.Add(this.textBox3);
@@ -721,10 +729,9 @@
             // 
             // pnlErg
             // 
-            this.pnlErg.Controls.Add(this.pnlResistanceStd);
             this.pnlErg.Controls.Add(this.txtResistanceErgWatts);
             this.pnlErg.Controls.Add(this.label20);
-            this.pnlErg.Location = new System.Drawing.Point(0, 0);
+            this.pnlErg.Location = new System.Drawing.Point(156, 19);
             this.pnlErg.Name = "pnlErg";
             this.pnlErg.Size = new System.Drawing.Size(164, 91);
             this.pnlErg.TabIndex = 21;
@@ -734,7 +741,7 @@
             this.pnlResistanceStd.Controls.Add(this.lblResistanceStdLevel);
             this.pnlResistanceStd.Controls.Add(this.btnResistanceDec);
             this.pnlResistanceStd.Controls.Add(this.btnResistanceInc);
-            this.pnlResistanceStd.Location = new System.Drawing.Point(0, 0);
+            this.pnlResistanceStd.Location = new System.Drawing.Point(156, 19);
             this.pnlResistanceStd.Name = "pnlResistanceStd";
             this.pnlResistanceStd.Size = new System.Drawing.Size(164, 91);
             this.pnlResistanceStd.TabIndex = 20;
@@ -888,22 +895,6 @@
             this.btnSettingsSet.UseVisualStyleBackColor = true;
             this.btnSettingsSet.Click += new System.EventHandler(this.btnSettingsSet_Click);
             // 
-            // chkLstSettings
-            // 
-            this.chkLstSettings.FormattingEnabled = true;
-            this.chkLstSettings.Items.AddRange(new object[] {
-            "Accelerometer Sleeps",
-            "Bluetooth Enabled",
-            "ANT+ Control",
-            "ANT+ Bike Power",
-            "ANT+ FE-C",
-            "ANT+ Extra Info"});
-            this.chkLstSettings.Location = new System.Drawing.Point(6, 45);
-            this.chkLstSettings.Name = "chkLstSettings";
-            this.chkLstSettings.Size = new System.Drawing.Size(134, 124);
-            this.chkLstSettings.TabIndex = 22;
-            this.chkLstSettings.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.chkLstSettings_ItemCheck);
-            // 
             // label21
             // 
             this.label21.AutoSize = true;
@@ -919,6 +910,22 @@
             this.txtWheelSizeMm.Name = "txtWheelSizeMm";
             this.txtWheelSizeMm.Size = new System.Drawing.Size(75, 20);
             this.txtWheelSizeMm.TabIndex = 20;
+            // 
+            // chkLstSettings
+            // 
+            this.chkLstSettings.FormattingEnabled = true;
+            this.chkLstSettings.Items.AddRange(new object[] {
+            "Accelerometer Sleeps",
+            "Bluetooth Enabled",
+            "ANT+ Control",
+            "ANT+ Bike Power",
+            "ANT+ FE-C",
+            "ANT+ Extra Info"});
+            this.chkLstSettings.Location = new System.Drawing.Point(6, 45);
+            this.chkLstSettings.Name = "chkLstSettings";
+            this.chkLstSettings.Size = new System.Drawing.Size(134, 124);
+            this.chkLstSettings.TabIndex = 22;
+            this.chkLstSettings.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.chkLstSettings_ItemCheck);
             // 
             // groupBox4
             // 
@@ -984,6 +991,33 @@
             this.lblStatus.Size = new System.Drawing.Size(118, 17);
             this.lblStatus.Text = "toolStripStatusLabel1";
             // 
+            // pnlResistancePercent
+            // 
+            this.pnlResistancePercent.Controls.Add(this.txtResistancePercent);
+            this.pnlResistancePercent.Controls.Add(this.label5);
+            this.pnlResistancePercent.Location = new System.Drawing.Point(156, 19);
+            this.pnlResistancePercent.Name = "pnlResistancePercent";
+            this.pnlResistancePercent.Size = new System.Drawing.Size(164, 91);
+            this.pnlResistancePercent.TabIndex = 28;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(16, 41);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(61, 13);
+            this.label5.TabIndex = 0;
+            this.label5.Text = "Percent (%)";
+            // 
+            // txtResistancePercent
+            // 
+            this.txtResistancePercent.Location = new System.Drawing.Point(95, 39);
+            this.txtResistancePercent.MaxLength = 3;
+            this.txtResistancePercent.Name = "txtResistancePercent";
+            this.txtResistancePercent.Size = new System.Drawing.Size(45, 20);
+            this.txtResistancePercent.TabIndex = 1;
+            this.txtResistancePercent.Text = "0";
+            // 
             // frmIrtGui
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1024,6 +1058,8 @@
             this.groupBox4.PerformLayout();
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
+            this.pnlResistancePercent.ResumeLayout(false);
+            this.pnlResistancePercent.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1116,6 +1152,9 @@
         private System.Windows.Forms.Label lblFlywheel;
         private System.Windows.Forms.Label label29;
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
+        private System.Windows.Forms.Panel pnlResistancePercent;
+        private System.Windows.Forms.TextBox txtResistancePercent;
+        private System.Windows.Forms.Label label5;
     }
 }
 

@@ -28,6 +28,8 @@ namespace IRT_GUI
         const uint REQUEST_RETRY = 3;
         byte m_sequence;
 
+        bool m_PauseServoUpdate = false;
+
         // Commands
         enum Command : byte
         {
@@ -93,6 +95,9 @@ namespace IRT_GUI
             // Setup the settings checklist box.
             chkLstSettings.Items.Clear();
             chkLstSettings.Items.AddRange(Enum.GetNames(typeof(Settings)));
+
+            cmbResistanceMode.Items.Clear();
+            cmbResistanceMode.Items.AddRange(Enum.GetNames(typeof(ResistanceMode)));
 
             // Configure and start listening on ANT+.
             StartANT();
@@ -169,26 +174,29 @@ namespace IRT_GUI
             m_data.TargetLevel = m.Level;
             m_data.ResistanceMode = m.Mode;
              */
-            
-            UpdateText(txtServoPos, message.ServoPosition);
+
+            if (!m_PauseServoUpdate)
+            {
+                UpdateText(txtServoPos, message.ServoPosition);
+            }
             UpdateText(lblFlywheel, message.FlyweelRevs);
 
             ExecuteOnUI(() =>
                 {
                 switch ((ResistanceMode)message.Mode)
                 {
+                    case ResistanceMode.Percent:
+                        //cmbResistanceMode.SelectedIndex = 0;
+                        break;
                     case ResistanceMode.Standard:
-                        cmbResistanceMode.SelectedIndex = 0;
+                        //cmbResistanceMode.SelectedIndex = 1;
                         UpdateText(lblResistanceStdLevel, message.Level);
                         break;
-                    case ResistanceMode.Percent:
-                        cmbResistanceMode.SelectedIndex = 1;
-                        break;
                     case ResistanceMode.Erg:
-                        cmbResistanceMode.SelectedIndex = 2;
+                        //cmbResistanceMode.SelectedIndex = 2;
                         break;
                     case ResistanceMode.Sim:
-                        cmbResistanceMode.SelectedIndex = 3;
+                        //cmbResistanceMode.SelectedIndex = 3;
                         break;
                     default:
                         break;
@@ -603,6 +611,16 @@ namespace IRT_GUI
             }
         }
 
+        private void MoveServo(int position)
+        {
+            byte[] data = {
+                (byte)(position), // Position LSB
+                (byte)(position >> 8), // Position MSB
+            };
+            SendCommand(Command.MoveServo, data);
+        }
+
+
         private void SetWeight(float weight)
         {
             ushort value = (ushort)(weight * 100);
@@ -676,7 +694,20 @@ namespace IRT_GUI
 
         private void btnResistanceSet_Click(object sender, EventArgs e)
         {
-            //m_eMotion.MoveServo(ushort.Parse(txtServoPos.Text));
+            ushort position = 0;
+            ushort.TryParse(txtServoPos.Text, out position);
+
+            if (position > 500 && position < 2500)
+            {
+                MoveServo(position);
+            }
+            else
+            {
+                UpdateStatus("Invalid servo position.");
+            }
+
+            // Resume updating the servo position textbox.
+            m_PauseServoUpdate = false;
         }
 
 
@@ -723,45 +754,33 @@ namespace IRT_GUI
 
         private void cmbResistanceMode_SelectedIndexChanged(object sender, EventArgs e)
         {
-            switch ((ResistanceMode)cmbResistanceMode.SelectedIndex)
-            {
-                case ResistanceMode.Standard:
-                    pnlResistanceSim.Hide();
-                    pnlErg.Hide();
-                    //pnlResistanceStd.BringToFront();
-                    pnlResistanceStd.Show();
-                    System.Diagnostics.Debug.WriteLine("Standard selected.");
-                    break;
+            if (cmbResistanceMode.SelectedItem == null)
+                return;
 
+            ResistanceMode mode = 0;
+            Enum.TryParse<ResistanceMode>(cmbResistanceMode.SelectedItem.ToString(), out mode);
+
+            switch (mode)
+            {
                 case ResistanceMode.Percent:
-                    pnlResistanceSim.Hide();
-                    pnlErg.Hide();
-                    pnlResistanceStd.BringToFront();
-                    pnlResistanceStd.Show();
-                    System.Diagnostics.Debug.WriteLine("Percentage selected.");
+                    pnlResistancePercent.BringToFront();
+                    UpdateStatus("Percentage selected.");
                     break;
 
                 case ResistanceMode.Erg:
-                    pnlResistanceSim.Hide();
-                    pnlResistanceStd.Hide();
                     pnlErg.BringToFront();
-                    pnlErg.Show();
-                    System.Diagnostics.Debug.WriteLine("Erg selected.");
+                    UpdateStatus("Erg selected.");
                     break;
 
                 case ResistanceMode.Sim:
-                    /*pnlErg.Hide();
-                    pnlResistanceStd.Hide();
-                    pnlResistanceSim.BringToFront();*/
-                    pnlResistanceSim.Show();
-                    System.Diagnostics.Debug.WriteLine("Sim selected.");
+                    pnlResistanceSim.BringToFront();    
+                    UpdateStatus("Sim selected.");
                     break;
 
                 default:
-                    pnlResistanceSim.Hide();
-                    pnlResistanceStd.Hide();
-                    pnlErg.Hide();
-                    System.Diagnostics.Debug.WriteLine("No selection.");
+                    //case ResistanceMode.Standard:
+                    pnlResistanceStd.BringToFront();
+                    UpdateStatus("Standard selected.");
                     break;
             }
         }
@@ -987,6 +1006,21 @@ namespace IRT_GUI
             // Update text boxes for get/set params
             UpdateText(txtParamGet, (byte)SubPages.Settings);
             UpdateText(txtParamSet, value);
+        }
+
+        private void txtServoPos_Enter(object sender, EventArgs e)
+        {
+            // Once the user has entered this box, don't update.
+            m_PauseServoUpdate = true;
+        }
+
+        private void txtServoPos_Leave(object sender, EventArgs e)
+        {
+            // If the user did not modify the servo position, return to updating value.
+            if (!txtServoPos.Modified)
+            {
+                m_PauseServoUpdate = false;
+            }
         }
     }
 }
