@@ -247,6 +247,10 @@ namespace IRT_GUI
                     UpdateSettings(settings);
                     break;
 
+                case SubPages.Charger:
+                    // buffer[2] contains the value 0,1,2,3
+                    break;
+
                 default:
                     Console.WriteLine("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
                         buffer[2],
@@ -299,9 +303,6 @@ namespace IRT_GUI
 
                 m_eMotion = new BikePowerDisplay(m_channel, m_ANT_Network);
                 m_eMotion.ChannelParameters.TransmissionType = 0xA5;
-
-                m_refPower = new BikePowerDisplay(m_ANT_Device.getChannel(REF_PWR_CHANNEL_ID), m_ANT_Network);
-                m_refPower.ChannelParameters.TransmissionType = 0x5;
             }
 
             m_eMotion.TurnOn();
@@ -320,17 +321,11 @@ namespace IRT_GUI
 
             m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
             m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
-
-            m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
-            m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
-            m_refPower.SensorFound += m_refPower_SensorFound;
-            
-            m_refPower.TurnOn();
         }
 
         void m_eMotion_ChannelStatusChanged(ChannelStatus status)
         {
-            UpdateStatus("Channel status changed: " + status.ToString());
+            UpdateStatus("E-Motion channel status changed: " + status.ToString());
         }
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
@@ -352,14 +347,6 @@ namespace IRT_GUI
         void UpdateText(Control control, object obj)
         {
             ExecuteOnUI(() => control.Text = obj.ToString());
-            /*
-            if (this.InvokeRequired)
-            {
-                this.BeginInvoke((Action)delegate()
-                {
-                    control.Text = obj.ToString();
-                });
-            }*/
         }
 
         void m_eMotion_ManufacturerSpecificPageReceived(ManufacturerSpecificPage arg1, uint arg2)
@@ -460,7 +447,8 @@ namespace IRT_GUI
 
         private void btnParamGet_Click(object sender, EventArgs e)
         {
-            //
+            // Parse input from the box
+            //RequestDeviceParameter()
         }
 
         private void btnParamSet_Click(object sender, EventArgs e)
@@ -582,8 +570,14 @@ namespace IRT_GUI
 
         private void btnRefPwrSearch_Click(object sender, EventArgs e)
         {
-            //lblRefPwrWatts
+            m_refPower = new BikePowerDisplay(m_ANT_Device.getChannel(REF_PWR_CHANNEL_ID), m_ANT_Network);
+            m_refPower.ChannelParameters.TransmissionType = 0x5;
 
+            m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
+            m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
+            m_refPower.SensorFound += m_refPower_SensorFound;
+
+            m_refPower.TurnOn();
         }
 
         private void btnSettingsGet_Click(object sender, EventArgs e)
@@ -605,16 +599,20 @@ namespace IRT_GUI
             parameters.Add(SubPages.WheelSize);
             parameters.Add(SubPages.Settings);
             parameters.Add(SubPages.ServoOffset);
+            parameters.Add(SubPages.Charger);
 
-            new System.Threading.Thread(() =>
+            var t = new System.Threading.Thread(() =>
             {
                 foreach (var p in parameters)
                 {
                     RequestDeviceParameter(p);
-                    System.Threading.Thread.Sleep(500);
+                    System.Diagnostics.Debug.WriteLine("Requested param: " + p);
+                    System.Threading.Thread.Sleep(1500);
                 }
 
-            }).Start();
+            });
+            
+            t.Start();
         }
 
         private void RequestDeviceParameter(SubPages subPage)
@@ -622,35 +620,35 @@ namespace IRT_GUI
             int retries = 0;
 
             ANT_ReferenceLibrary.MessagingReturnCode result = 0;
-            RequestDataMessage message;
+            RequestDataMessage message = new RequestDataMessage();
+            //RequestDataPage request = new RequestDataPage();
 
             if (subPage == SubPages.Battery)
             {
-                message = new RequestDataMessage();
                 message.RequestedPage = (byte)SubPages.Battery;
                 //request.RequestedPageNumber = (byte)SubPages.Battery;
             }
-            else if (subPage == SubPages.Temp)
+            /*else if (subPage == SubPages.Temp)
             {
                 message = new RequestDataMessage();
                 message.RequestedPage = 0x03;
                 //request.RequestedPageNumber = (byte)SubPages.Temp;
-            }
+            }*/
             else
             {
-                RequestDataPage request = new RequestDataPage();
-                request.DescriptorByte1 = (byte)subPage;
-                request.RequestedPageNumber = (byte)GetSetMessage.Page;
-
-                m_eMotion.SendDataPageRequest(request);
-                return;
-
-                //message = new RequestDataMessage(subPage);
+                //request.DescriptorByte1 = (byte)subPage;
+                //request.RequestedPageNumber = (byte)GetSetMessage.Page;
+                message.RequestedPage = (byte)GetSetMessage.Page;
+                message.SubPage = subPage;
             }
 
-            
-            
-            while (retries < REQUEST_RETRY)
+            //request.CommandType = Common.CommandType.RequestDataPage;
+            //request.RequestedNumberTx = 2;
+            //request.UseAck = false;
+            //m_eMotion.SendDataPageRequest(request);
+
+
+            while (retries++ < REQUEST_RETRY)
             {
                 result = m_channel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
                 if (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass)
@@ -658,7 +656,6 @@ namespace IRT_GUI
             }
 
             throw new ApplicationException(string.Format("Unable to request parameter, return result: {0}.", result));
-             
         }
 
         private void chkLstSettings_SelectedIndexChanged(object sender, EventArgs e)
