@@ -172,7 +172,8 @@ namespace IRT_GUI.IrtMessages
         AntRemoteEnabled = 4,
         AntBikePowerEnabled = 8,
         AntFECEnabled = 16,
-        AntExtraInfoEnabled = 32
+        AntExtraInfoEnabled = 32,
+        Persist = 0x8000
     }
 
     public abstract class Message

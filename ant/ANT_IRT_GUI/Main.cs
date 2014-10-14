@@ -593,14 +593,6 @@ namespace IRT_GUI
                     UpdateStatus("Invalid wheel size.");
                 }
             }
-            
-            /*if (chkLstSettings. chkLstSettings.CheckedItems.Count > 0)
-            {
-                // Todo: iterate through the settings.
-                //UInt32 value = chkLstSettings.CheckedItems;
-                // m_eMotion.SetParameter(SubPaegs.Settings, value);
-
-            }*/
         }
 
         private void SetWeight(float weight)
@@ -951,6 +943,11 @@ namespace IRT_GUI
 
             UInt32 value = (UInt32)(slope | (offset << 16));
             SetParameter((byte)SubPages.Crr, value);
+        }
+
+        private void chkLstSettings_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            UpdateStatus("Item changing..." + e.Index + " : " + e.NewValue);
         }
 
     }

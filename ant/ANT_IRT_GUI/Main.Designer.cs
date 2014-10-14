@@ -103,7 +103,6 @@
             this.txtTotalWeight = new System.Windows.Forms.TextBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.btnSettingsGet = new System.Windows.Forms.Button();
-            this.chkSettingsPersist = new System.Windows.Forms.CheckBox();
             this.btnSettingsSet = new System.Windows.Forms.Button();
             this.chkLstSettings = new System.Windows.Forms.CheckedListBox();
             this.label21 = new System.Windows.Forms.Label();
@@ -138,8 +137,10 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.lblFlywheel);
             this.groupBox1.Controls.Add(this.label13);
             this.groupBox1.Controls.Add(this.lblEmrWatts30SecAvg);
+            this.groupBox1.Controls.Add(this.label29);
             this.groupBox1.Controls.Add(this.btnDfuEnable);
             this.groupBox1.Controls.Add(this.chkCharge);
             this.groupBox1.Controls.Add(this.btnServoOffset);
@@ -600,9 +601,7 @@
             // 
             // groupBox3
             // 
-            this.groupBox3.Controls.Add(this.lblFlywheel);
             this.groupBox3.Controls.Add(this.btnCalibrationSet);
-            this.groupBox3.Controls.Add(this.label29);
             this.groupBox3.Controls.Add(this.btnCalibrationGet);
             this.groupBox3.Controls.Add(this.label12);
             this.groupBox3.Controls.Add(this.txtOffset);
@@ -610,7 +609,7 @@
             this.groupBox3.Controls.Add(this.label7);
             this.groupBox3.Location = new System.Drawing.Point(13, 12);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(146, 134);
+            this.groupBox3.Size = new System.Drawing.Size(171, 103);
             this.groupBox3.TabIndex = 17;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Calibration";
@@ -618,7 +617,7 @@
             // lblFlywheel
             // 
             this.lblFlywheel.AutoSize = true;
-            this.lblFlywheel.Location = new System.Drawing.Point(58, 107);
+            this.lblFlywheel.Location = new System.Drawing.Point(108, 178);
             this.lblFlywheel.Name = "lblFlywheel";
             this.lblFlywheel.Size = new System.Drawing.Size(13, 13);
             this.lblFlywheel.TabIndex = 34;
@@ -626,7 +625,7 @@
             // 
             // btnCalibrationSet
             // 
-            this.btnCalibrationSet.Location = new System.Drawing.Point(84, 73);
+            this.btnCalibrationSet.Location = new System.Drawing.Point(88, 73);
             this.btnCalibrationSet.Name = "btnCalibrationSet";
             this.btnCalibrationSet.Size = new System.Drawing.Size(47, 23);
             this.btnCalibrationSet.TabIndex = 26;
@@ -637,7 +636,7 @@
             // label29
             // 
             this.label29.AutoSize = true;
-            this.label29.Location = new System.Drawing.Point(9, 107);
+            this.label29.Location = new System.Drawing.Point(7, 174);
             this.label29.Name = "label29";
             this.label29.Size = new System.Drawing.Size(48, 13);
             this.label29.TabIndex = 33;
@@ -645,7 +644,7 @@
             // 
             // btnCalibrationGet
             // 
-            this.btnCalibrationGet.Location = new System.Drawing.Point(12, 73);
+            this.btnCalibrationGet.Location = new System.Drawing.Point(16, 73);
             this.btnCalibrationGet.Name = "btnCalibrationGet";
             this.btnCalibrationGet.Size = new System.Drawing.Size(47, 23);
             this.btnCalibrationGet.TabIndex = 26;
@@ -858,23 +857,21 @@
             // groupBox6
             // 
             this.groupBox6.Controls.Add(this.btnSettingsGet);
-            this.groupBox6.Controls.Add(this.chkSettingsPersist);
             this.groupBox6.Controls.Add(this.btnSettingsSet);
-            this.groupBox6.Controls.Add(this.chkLstSettings);
             this.groupBox6.Controls.Add(this.label21);
             this.groupBox6.Controls.Add(this.txtWheelSizeMm);
             this.groupBox6.Controls.Add(this.label26);
             this.groupBox6.Controls.Add(this.txtTotalWeight);
-            this.groupBox6.Location = new System.Drawing.Point(169, 12);
+            this.groupBox6.Location = new System.Drawing.Point(13, 121);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(171, 219);
+            this.groupBox6.Size = new System.Drawing.Size(171, 100);
             this.groupBox6.TabIndex = 19;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Profile";
             // 
             // btnSettingsGet
             // 
-            this.btnSettingsGet.Location = new System.Drawing.Point(23, 190);
+            this.btnSettingsGet.Location = new System.Drawing.Point(16, 73);
             this.btnSettingsGet.Name = "btnSettingsGet";
             this.btnSettingsGet.Size = new System.Drawing.Size(47, 23);
             this.btnSettingsGet.TabIndex = 27;
@@ -882,22 +879,9 @@
             this.btnSettingsGet.UseVisualStyleBackColor = true;
             this.btnSettingsGet.Click += new System.EventHandler(this.btnSettingsGet_Click);
             // 
-            // chkSettingsPersist
-            // 
-            this.chkSettingsPersist.AutoSize = true;
-            this.chkSettingsPersist.Checked = true;
-            this.chkSettingsPersist.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkSettingsPersist.Enabled = false;
-            this.chkSettingsPersist.Location = new System.Drawing.Point(98, 173);
-            this.chkSettingsPersist.Name = "chkSettingsPersist";
-            this.chkSettingsPersist.Size = new System.Drawing.Size(57, 17);
-            this.chkSettingsPersist.TabIndex = 29;
-            this.chkSettingsPersist.Text = "Persist";
-            this.chkSettingsPersist.UseVisualStyleBackColor = true;
-            // 
             // btnSettingsSet
             // 
-            this.btnSettingsSet.Location = new System.Drawing.Point(95, 190);
+            this.btnSettingsSet.Location = new System.Drawing.Point(88, 73);
             this.btnSettingsSet.Name = "btnSettingsSet";
             this.btnSettingsSet.Size = new System.Drawing.Size(47, 23);
             this.btnSettingsSet.TabIndex = 26;
@@ -907,7 +891,6 @@
             // 
             // chkLstSettings
             // 
-            this.chkLstSettings.Enabled = false;
             this.chkLstSettings.FormattingEnabled = true;
             this.chkLstSettings.Items.AddRange(new object[] {
             "Accelerometer Sleeps",
@@ -916,10 +899,11 @@
             "ANT+ Bike Power",
             "ANT+ FE-C",
             "ANT+ Extra Info"});
-            this.chkLstSettings.Location = new System.Drawing.Point(8, 73);
+            this.chkLstSettings.Location = new System.Drawing.Point(6, 45);
             this.chkLstSettings.Name = "chkLstSettings";
-            this.chkLstSettings.Size = new System.Drawing.Size(150, 94);
+            this.chkLstSettings.Size = new System.Drawing.Size(134, 124);
             this.chkLstSettings.TabIndex = 22;
+            this.chkLstSettings.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.chkLstSettings_ItemCheck);
             this.chkLstSettings.SelectedIndexChanged += new System.EventHandler(this.chkLstSettings_SelectedIndexChanged);
             // 
             // label21
@@ -942,11 +926,12 @@
             // 
             this.groupBox4.Controls.Add(this.txtParamSet);
             this.groupBox4.Controls.Add(this.btnParamGet);
+            this.groupBox4.Controls.Add(this.chkLstSettings);
             this.groupBox4.Controls.Add(this.btnParamSet);
             this.groupBox4.Controls.Add(this.txtParamGet);
-            this.groupBox4.Location = new System.Drawing.Point(13, 155);
+            this.groupBox4.Location = new System.Drawing.Point(190, 12);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(146, 76);
+            this.groupBox4.Size = new System.Drawing.Size(146, 209);
             this.groupBox4.TabIndex = 18;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Get/Set Parameter";
@@ -960,7 +945,7 @@
             // 
             // btnParamGet
             // 
-            this.btnParamGet.Location = new System.Drawing.Point(12, 45);
+            this.btnParamGet.Location = new System.Drawing.Point(15, 182);
             this.btnParamGet.Name = "btnParamGet";
             this.btnParamGet.Size = new System.Drawing.Size(47, 23);
             this.btnParamGet.TabIndex = 24;
@@ -970,7 +955,7 @@
             // 
             // btnParamSet
             // 
-            this.btnParamSet.Location = new System.Drawing.Point(84, 45);
+            this.btnParamSet.Location = new System.Drawing.Point(87, 182);
             this.btnParamSet.Name = "btnParamSet";
             this.btnParamSet.Size = new System.Drawing.Size(47, 23);
             this.btnParamSet.TabIndex = 23;
@@ -1122,7 +1107,6 @@
         private System.Windows.Forms.CheckBox chkCharge;
         private System.Windows.Forms.Button btnDfuEnable;
         private System.Windows.Forms.StatusStrip statusStrip;
-        private System.Windows.Forms.CheckBox chkSettingsPersist;
         private System.Windows.Forms.Button btnCalibrationSet;
         private System.Windows.Forms.Button btnCalibrationGet;
         private System.Windows.Forms.Button btnSettingsGet;
