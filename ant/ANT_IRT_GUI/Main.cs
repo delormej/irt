@@ -531,15 +531,16 @@ namespace IRT_GUI
         private void btnParamSet_Click(object sender, EventArgs e)
         {
             UInt32 value = 0;
-            UInt32.TryParse(txtParamSet.Text, out value);
 
             byte param = GetParameter();
-            if (param == 0 || value == 0)
+            if (param == 0 || String.IsNullOrEmpty(txtParamSet.Text))
             {
                 UpdateStatus("Could not set, enter a valid parameter and value.");
                 return;
             }
 
+            // 0 value OK
+            UInt32.TryParse(txtParamSet.Text, out value);
             SetParameter(param, value);
         }
 
