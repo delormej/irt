@@ -26,6 +26,7 @@ namespace IRT_GUI
 
         const uint ACK_TIMEOUT = 1000;
         const uint REQUEST_RETRY = 3;
+        byte m_sequence;
 
         // Commands
         enum Command : byte
@@ -563,26 +564,114 @@ namespace IRT_GUI
         {
             if (txtTotalWeight.Modified)
             {
-                statusStrip.Text = "Setting total weight...";
-                
-                float weightKg = float.Parse(txtTotalWeight.Text) / 2.2f;
-                //m_eMotion.SetWeight(weightKg);
+                float weightKg = 0;
+                float.TryParse(txtTotalWeight.Text, out weightKg);
+
+                if (weightKg > 20.0f && weightKg < 140.0f)
+                {
+                    UpdateStatus("Setting total weight.");
+                    SetWeight(weightKg);
+                }
+                else
+                {
+                    UpdateStatus("Invalid weight.");
+                }
             }
 
             if (txtWheelSizeMm.Modified)
             {
-                statusStrip.Text += "Setting wheel size...";
-                //m_eMotion.SetWheelSize(int.Parse(txtWheelSizeMm.Text));
-                
+                ushort wheelSizeMM = 0;
+                ushort.TryParse(txtWheelSizeMm.Text, out wheelSizeMM);
+
+                if (wheelSizeMM > 1500 && wheelSizeMM < 3000) // Valid range? 
+                {
+                    UpdateStatus("Setting wheel size.");
+                    SetWheelSize(wheelSizeMM);
+                }
+                else
+                {
+                    UpdateStatus("Invalid wheel size.");
+                }
             }
             
-            if (chkLstSettings.CheckedItems.Count > 0)
+            /*if (chkLstSettings. chkLstSettings.CheckedItems.Count > 0)
             {
                 // Todo: iterate through the settings.
                 //UInt32 value = chkLstSettings.CheckedItems;
                 // m_eMotion.SetParameter(SubPaegs.Settings, value);
 
+            }*/
+        }
+
+        private void SetWeight(float weight)
+        {
+            ushort value = (ushort)(weight * 100);
+            byte[] data = {
+                (byte)value, // Weight LSB
+                (byte)(value >> 8), // Weight MSB
+            };
+
+            SendCommand(Command.SetWeight, data);
+        }
+
+        // This uses the WAHOO method with a burst message.
+        private bool SetWheelSize(ushort wheelSizeMM)
+        {
+            byte[] data = { 
+                // Message 1
+                0x48,
+                0x48, // set wheel size mode
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00, 
+                // Message 2
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00, 
+                0x00,
+                0x00, 
+                // Message 3
+                (byte)(wheelSizeMM*10),        // Wheel size LSB
+                (byte)((wheelSizeMM*10) >> 8),   // Wheel size MSB          
+                0x00,
+                0x00,
+                0x00,
+                0x00, 
+                0x00,
+                0x00
+                          };
+
+            var result = m_eMotionChannel.sendBurstTransfer(data, 500);
+            
+            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            {
+                UpdateStatus("Unable to set wheel size, result: " + result);
             }
+
+            return (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
+        }
+
+        bool SendCommand(Command command, byte[] value)
+        {
+            byte[] data = ResistanceMessage.GetCommand(
+                (byte)command, m_sequence++, value);
+
+            ANT_ReferenceLibrary.MessagingReturnCode ret = 
+                m_eMotionChannel.sendAcknowledgedData(data, 500);
+
+            return (ret == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
+        }
+
+        bool SendCommand(Command command)
+        {
+            byte[] value = { 0, 0 };
+            return SendCommand(command, value);
         }
 
         private void btnResistanceSet_Click(object sender, EventArgs e)

@@ -849,7 +849,6 @@
             // 
             // txtTotalWeight
             // 
-            this.txtTotalWeight.Enabled = false;
             this.txtTotalWeight.Location = new System.Drawing.Point(84, 21);
             this.txtTotalWeight.MaxLength = 6;
             this.txtTotalWeight.Name = "txtTotalWeight";
@@ -898,7 +897,6 @@
             // 
             // btnSettingsSet
             // 
-            this.btnSettingsSet.Enabled = false;
             this.btnSettingsSet.Location = new System.Drawing.Point(95, 190);
             this.btnSettingsSet.Name = "btnSettingsSet";
             this.btnSettingsSet.Size = new System.Drawing.Size(47, 23);
@@ -935,7 +933,6 @@
             // 
             // txtWheelSizeMm
             // 
-            this.txtWheelSizeMm.Enabled = false;
             this.txtWheelSizeMm.Location = new System.Drawing.Point(83, 47);
             this.txtWheelSizeMm.Name = "txtWheelSizeMm";
             this.txtWheelSizeMm.Size = new System.Drawing.Size(75, 20);
