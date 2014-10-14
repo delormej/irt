@@ -521,14 +521,50 @@ namespace IRT_GUI
 
         private void btnParamGet_Click(object sender, EventArgs e)
         {
-            // Parse input from the box
-            //RequestDeviceParameter()
+            byte param = GetParameter();
+            if (param != 0)
+            {
+                RequestDeviceParameter((SubPages)param);
+            }
         }
 
         private void btnParamSet_Click(object sender, EventArgs e)
         {
-            //m_eMotion.SetParameter((SubPages)Enum.Parse(typeof(SubPages), txtParamGet.Text),
-            //    uint.Parse(txtParamSet.Text));
+            UInt32 value = 0;
+            UInt32.TryParse(txtParamSet.Text, out value);
+
+            byte param = GetParameter();
+            if (param == 0 || value == 0)
+            {
+                UpdateStatus("Could not set, enter a valid parameter and value.");
+                return;
+            }
+
+            SetParameter(param, value);
+        }
+
+        private void SetParameter(byte subpage, UInt32 value)
+        {
+            GetSetMessage message = new GetSetMessage(subpage);
+            message.SetPayLoad(value);
+            var result = m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
+            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            {
+                UpdateStatus(string.Format("Unable to send set parameter, return result: {0}.", result));
+            }
+        }
+
+        private byte GetParameter()
+        {
+            byte param = 0;
+            byte.TryParse(txtParamGet.Text, out param);
+
+            if (param == 0)
+            {
+                UpdateStatus("Please enter a parameter number.");
+            }
+
+            return param;
         }
 
         private void btnSettingsSet_Click(object sender, EventArgs e)

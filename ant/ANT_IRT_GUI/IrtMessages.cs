@@ -291,10 +291,14 @@ namespace IRT_GUI.IrtMessages
 
         private byte m_subpage;
 
-        public GetSetMessage(SubPages subPage)
+        public GetSetMessage(byte subPage)
         {
             m_payload = new byte[8];
-            SubPage = (byte)subPage;
+            SubPage = subPage;
+        }
+
+        public GetSetMessage(SubPages subPage) : this((byte)subPage)
+        {
         }
 
         internal GetSetMessage(ANT_Response response)

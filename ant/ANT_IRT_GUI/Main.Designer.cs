@@ -962,7 +962,6 @@
             // 
             // btnParamGet
             // 
-            this.btnParamGet.Enabled = false;
             this.btnParamGet.Location = new System.Drawing.Point(12, 45);
             this.btnParamGet.Name = "btnParamGet";
             this.btnParamGet.Size = new System.Drawing.Size(47, 23);
@@ -973,7 +972,6 @@
             // 
             // btnParamSet
             // 
-            this.btnParamSet.Enabled = false;
             this.btnParamSet.Location = new System.Drawing.Point(84, 45);
             this.btnParamSet.Name = "btnParamSet";
             this.btnParamSet.Size = new System.Drawing.Size(47, 23);
