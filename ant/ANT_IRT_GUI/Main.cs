@@ -280,6 +280,7 @@ namespace IRT_GUI
                 case SubPages.WheelSize:
                     //m_eMotion.WheelCircumference
                     ushort wheelSize = Message.BigEndian(buffer[2], buffer[3]);
+                    m_eMotion.WheelCircumference = wheelSize;
                     UpdateText(txtWheelSizeMm, wheelSize);
                     break;
 
@@ -374,6 +375,9 @@ namespace IRT_GUI
 
             // Start looking for e-motion.
             m_eMotion.TurnOn();
+
+            // Request initial settings.
+            RequestSettings();
 
             // Configure reference power channel, but don't start it.
             m_refChannel = m_ANT_Device.getChannel(REF_PWR_CHANNEL_ID);
