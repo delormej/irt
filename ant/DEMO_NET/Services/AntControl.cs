@@ -3,10 +3,17 @@ using ANT_Managed_Library;
 
 namespace ANT_Console.Services
 {
-    class AntControl : AntService
+    public class AntControl : AntService
     {
         byte m_ctrl_sequence;
         byte[] serial_no = { 0xFF, 0xFF }; // No serial number - so device doesn't bond.
+
+        public enum RemoteControlCommand : byte
+        {
+            Up = 0x00,
+            Down = 0x01,
+            Select = 0x02
+        }
 
         public AntControl(int channelId, ushort deviceId = 0)
         {
@@ -24,9 +31,8 @@ namespace ANT_Console.Services
             Configure(config);
         }
 
-        public void RemoteControl(byte command)
+        public void RemoteControl(RemoteControlCommand command)
         {
-
             byte[] data = {
                               0x49, // Page 73
                               serial_no[0], // Slave serial number
@@ -34,7 +40,7 @@ namespace ANT_Console.Services
                               0xFB, // Random manufacturer ID
                               0xFB, // (con't)
                               m_ctrl_sequence++, // increment sequence
-                              command, // actual command
+                              (byte)command, // actual command
                               0x00 // Unused (extra byte for command)
                           };
 

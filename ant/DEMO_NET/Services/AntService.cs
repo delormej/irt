@@ -17,12 +17,12 @@ namespace ANT_Console.Services
 
     public delegate void MessageHandler<T>(T message) where T : Message;
 
-    abstract class AntService
+    public abstract class AntService
     {
         static byte[] USER_NETWORK_KEY = { 0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45 };
         static byte USER_NETWORK_NUM = 0;         // The network key is assigned to this network number
 
-        static ANT_Device m_device;
+        static protected ANT_Device m_device;
         protected ANT_Channel m_channel;
 
         protected ProductPage m_productPage;
@@ -88,14 +88,27 @@ namespace ANT_Console.Services
                     // Process response.
                     ProcessResponse(response);
                     break;
+
                 case ANT_ReferenceLibrary.ANTMessageID.OPEN_CHANNEL_0x4B:
                     if (Connected != null)
                         Connected(this, null);
                     break;
+
                 case ANT_ReferenceLibrary.ANTMessageID.CLOSE_CHANNEL_0x4C:
                     if (Closing !=null)
                         Closing(this, null);
                     break;
+
+                case ANT_ReferenceLibrary.ANTMessageID.RESPONSE_EVENT_0x40:
+                    ANT_ReferenceLibrary.ANTEventID eventId = response.getChannelEventCode();
+                    
+                    if (eventId == ANT_ReferenceLibrary.ANTEventID.EVENT_CHANNEL_CLOSED_0x07)
+                    {
+                        if (this.Closing != null)
+                            this.Closing(this, null);
+                    }
+                    break;
+
                 default:
                     // Nothing to process.
                     break;
@@ -116,7 +129,7 @@ namespace ANT_Console.Services
             }
         }
 
-        private ANT_Device GetDevice()
+        protected ANT_Device GetDevice()
         {
             ANT_Device device = new ANT_Device();   // Create a device instance using the automatic constructor (automatic detection of USB device number and baud rate
 
