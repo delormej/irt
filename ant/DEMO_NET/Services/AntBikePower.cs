@@ -8,7 +8,7 @@ namespace ANT_Console.Services
     // Encapsulates all ANT interactions and enriches the messages returned by ANT with
     // service context.
     //
-    class AntBikePower : AntService
+    public class AntBikePower : AntService
     {
         const uint ACK_TIMEOUT = 1000;
         const uint REQUEST_RETRY = 3;
