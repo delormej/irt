@@ -54,6 +54,7 @@
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
 #define CALIBRATION_INTERVAL			APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Calibration message interval.
+
 #define BLE_ADV_BLINK_RATE_MS			500u
 #define SCHED_QUEUE_SIZE                8                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
@@ -102,6 +103,7 @@ static void profile_update_sched(void);
 
 static void send_data_page2(uint8_t subpage, uint8_t response_type);
 static void send_temperature();
+static void on_enable_dfu_mode();
 
 /* TODO:	Total hack for request data page & resistance control ack, we will fix.
  *		 	Simple logic right now.  If there is a pending request data page, send
@@ -898,12 +900,20 @@ static void on_button_menu(void)
 }
 
 // This is the button on the board.
-static void on_button_pbsw(void)
+static void on_button_pbsw(bool long_press)
 {
-	// TODO: this button needs to be debounced and a LONG press should power down.
-	LOG("[MAIN] Push button switch pressed.\r\n");
-	// Shutting device down.
-	on_power_down(true);
+	if (long_press)
+	{
+		// TODO: this button needs to be debounced and a LONG press should power down.
+		LOG("[MAIN] Push button switch pressed (long).\r\n");
+		on_enable_dfu_mode();
+	}
+	else
+	{
+		LOG("[MAIN] Push button switch pressed (short).\r\n");
+		// Shutting device down.
+		on_power_down(true);
+	}
 }
 
 // This event is triggered when there is data to be read from accelerometer.

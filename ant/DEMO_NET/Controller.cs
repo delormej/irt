@@ -78,8 +78,8 @@ namespace ANT_Console
             }
 
             Console.WriteLine("E-Motion Device: {0}", m_eMotionDeviceId);
-            Console.WriteLine("Reference Power: {0}", m_refPower.GetDeviceNumber());
-            Console.WriteLine("Reference Speed: {0}", m_refSpeed.GetDeviceNumber());
+            //Console.WriteLine("Reference Power: {0}", m_refPower.GetDeviceNumber());
+            //Console.WriteLine("Reference Speed: {0}", m_refSpeed.GetDeviceNumber());
 
             m_summary.EmotionDeviceId = m_eMotionDeviceId;
 
@@ -108,21 +108,23 @@ namespace ANT_Console
                     m_summary.EmotionModel = m_eMotionPower.Manufacturer.Model;
                 }
 
-                if (m_refPower.Manufacturer != null)
+                if (m_refPower != null)
                 {
-                    m_summary.RefPowerManfId = m_refPower.Manufacturer.Manufacturer;
-                    m_summary.RefPowerModel = m_refPower.Manufacturer.Model;
-                    m_summary.EmotionHWRev = m_refPower.Manufacturer.HardwareRevision;
+                    if (m_refPower.Manufacturer != null)
+                    {
+                        m_summary.RefPowerManfId = m_refPower.Manufacturer.Manufacturer;
+                        m_summary.RefPowerModel = m_refPower.Manufacturer.Model;
+                        m_summary.EmotionHWRev = m_refPower.Manufacturer.HardwareRevision;
+                    }
+
+                    // Request these settings.
+                    m_refPower.RequestDeviceParameter(SubPages.Crr);
+                    System.Threading.Thread.Sleep(500);
+                    m_refPower.RequestDeviceParameter(SubPages.TotalWeight);
+                    System.Threading.Thread.Sleep(500);
+                    m_refPower.RequestDeviceParameter(SubPages.Settings);
+                    System.Threading.Thread.Sleep(500);
                 }
-
-                // Request these settings.
-                m_refPower.RequestDeviceParameter(SubPages.Crr);
-                System.Threading.Thread.Sleep(500);
-                m_refPower.RequestDeviceParameter(SubPages.TotalWeight);
-                System.Threading.Thread.Sleep(500);
-                m_refPower.RequestDeviceParameter(SubPages.Settings);
-                System.Threading.Thread.Sleep(500);
-
             };
             t.Start();
 
@@ -150,7 +152,6 @@ namespace ANT_Console
                 (int)AntChannel.RefSpeed, 0);
             m_refSpeed.SpeedEvent += ProcessMessage;
             */
-
             // Configure E-Motion power reporting.
             m_eMotionPower = new AntBikePower(
                 (int)AntChannel.EMotionPower, deviceId, emotion_transmission_type);

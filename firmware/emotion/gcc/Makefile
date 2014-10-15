@@ -28,7 +28,8 @@ SOURCE_PATHS +=  ../libraries/
 SOURCE_PATHS +=  ../services/
 LIBRARY_PATHS += ../libraries/
 LIBRARY_PATHS += ../services/
-DEPLOY_PATH = '../../../../../SkyDrive/InsideRide/'
+DEPLOY_PATH = '../../../../../Google Drive/Firmware/'
+DEPLOY_PATH2 = '../../../../../SkyDrive/InsideRide/Builds/'
 
 DEVICE = NRF51
 BOARD = BOARD_IRT_V2_REV_A1
@@ -75,7 +76,7 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 9
-SW_REVISION_BLD := 3
+SW_REVISION_BLD := 5
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -113,8 +114,8 @@ include $(TEMPLATE_PATH)Makefile
 debug: all 
 
 deploy:
-	cp $(BIN) $(DEPLOY_PATH)$(OUTPUT_NAME).bin
 	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
+	cp $(HEX) $(DEPLOY_PATH2)$(OUTPUT_NAME).hex
 
 ############################################
 # Flashes both the bootloader & app.

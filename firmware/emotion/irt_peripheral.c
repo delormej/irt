@@ -14,6 +14,7 @@
 #include "boards.h"
 #include "debug.h"
 #include "battery.h"
+#include "irt_button.h"
 
 /**@brief Debug logging for main module.
  *
@@ -24,10 +25,13 @@
 #define PH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-static peripheral_evt_t *mp_on_peripheral_evt;
-static app_timer_id_t m_led1_blink_timer_id;
-//static app_timer_id_t m_led2_blink_timer_id;
-static app_gpiote_user_id_t mp_user_id;
+#define DEBOUNCE_INTERVAL				APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)   	// Debounce interval 5ms.
+
+static peripheral_evt_t 				*mp_on_peripheral_evt;
+static app_timer_id_t 					m_led1_blink_timer_id;
+//static app_timer_id_t 				m_led2_blink_timer_id;
+static app_timer_id_t					m_debounce_timer_id;						// Timer used for debouncing button input.
+static app_gpiote_user_id_t 			mp_user_id;
 
 /**@brief Function for handling interrupt events.
  *
@@ -53,11 +57,6 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 		// Detects when the power adapter is plugged in.
 		mp_on_peripheral_evt->on_power_plug(true);
 	}
-	// TODO: This button should be debounced.
-	else if (event_pins_high_to_low & (1 << PIN_PBSW))
-	{
-		mp_on_peripheral_evt->on_button_pbsw();
-	}
 #endif
 }
 
@@ -67,6 +66,26 @@ static void blink_timeout_handler(void * p_context)
 
 	// Toggle the green LED_1 on/off.
 	nrf_gpio_pin_toggle(PIN_LED_B);
+}
+
+/**@brief	Called every 50ms.
+ *
+ */
+static void debounce_timeout_handler(void * p_context)
+{
+	switch (irt_button_debounce())
+	{
+		case ShortPress:
+			mp_on_peripheral_evt->on_button_pbsw(false);
+			break;
+
+		case LongPress:
+			mp_on_peripheral_evt->on_button_pbsw(true);
+			break;
+
+		default:
+			break;
+	}
 }
 
 /**@brief	Returns 0 = adapter power, 1= no adapter.
@@ -95,10 +114,6 @@ static void irt_gpio_init()
 	{
 		nrf_gpio_cfg_output(PIN_LED_C);		// Red #2
 		nrf_gpio_cfg_output(PIN_LED_D);		// Green #2
-
-		// User push button on the board.
-		// TODO: this needs to be debounced.
-		nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
 
 		// Enable servo / LED.
 		nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
@@ -152,7 +167,7 @@ static void irt_gpio_init()
 
 	pins_high_to_low_mask = ( 1 << PIN_SHAKE
 #ifdef IRT_REV_2A_H
-			| 1 << PIN_PBSW			// On user push button switch
+			//| 1 << PIN_PBSW			// On user push button switch
 			| 1 << PIN_PG_N			// On power adapter plugged in
 #endif
 			);
@@ -168,6 +183,33 @@ static void irt_gpio_init()
 	err_code = app_gpiote_user_enable(mp_user_id);
 	APP_ERROR_CHECK(err_code);
 }    
+
+static void button_init()
+{
+	uint32_t err_code;
+
+	if (HW_REVISION >= 2)
+	{
+		// User push button on the board.
+		nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
+
+		// Initialize the pin to wake the device on button push.
+		nrf_gpio_cfg_sense_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
+
+		// Initialize the debounce checking module.
+		irt_button_init(PIN_PBSW);
+
+		// Create debounce timer.
+		err_code = app_timer_create(&m_debounce_timer_id,
+									APP_TIMER_MODE_REPEATED,
+									debounce_timeout_handler);
+		APP_ERROR_CHECK(err_code);
+
+		// Start button debouncing.
+		err_code = app_timer_start(m_debounce_timer_id, DEBOUNCE_INTERVAL, NULL);
+		APP_ERROR_CHECK(err_code);
+	}
+}
 
 void set_led_red(uint8_t led_mask)
 {
@@ -342,8 +384,11 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	clear_led(LED_1);
 	set_led_green(LED_2);
 
-	// Turn aux power on.
-	peripheral_aux_pwr_set(false);
+	// Ensure aux power is off for right now, we're not using.
+	peripheral_aux_pwr_set(true);
+
+	// Initialize the button if available.
+	button_init();
 
 	// Create the timer for blinking led #1.
 	err_code = app_timer_create(&m_led1_blink_timer_id,

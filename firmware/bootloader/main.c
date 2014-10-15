@@ -267,12 +267,12 @@ int main(void)
     //
     // 1. User push button is pressed during boot to force bootloader starting.
     // Check if user push button switch is held down.
-    // NOTE: Only available on IRT_REV_2A or higher.
+    /* NOTE: Only available on IRT_REV_2A or higher.
 #ifdef PIN_PBSW
     nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
     start_bootloader = ((nrf_gpio_pin_read(PIN_PBSW) == 0)? true: false);
 #endif
-    //
+    */
     // 2. the GP reg was set to 0x1 - as indicated by the app to start DFU mode
     //
     if (!start_bootloader)

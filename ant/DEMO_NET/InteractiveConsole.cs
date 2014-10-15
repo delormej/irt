@@ -140,6 +140,19 @@ namespace ANT_Console
                         SimulateSpeedCommand();
                         break;
 
+                    case ConsoleKey.Spacebar:
+                        
+                        if (m_eMotion != null)
+                        {
+                            Console.WriteLine("Device ID: " + m_eMotion.GetDeviceNumber());
+
+                            if (m_eMotion.Product != null)
+                            { 
+                                Console.WriteLine("Serial: " + m_eMotion.Product.SerialNumber);
+                            }
+                        }
+                        break;
+
                     default:
                         WriteCommand("Unrecognized command.");
                         ShowHelp();
