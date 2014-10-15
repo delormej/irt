@@ -113,10 +113,17 @@ namespace IRT_GUI
             cmbResistanceMode.Items.Clear();
             cmbResistanceMode.Items.AddRange(Enum.GetNames(typeof(ResistanceMode)));
 
+            this.FormClosed += frmIrtGui_FormClosed;
+
             // Configure and start listening on ANT+.
             StartANT();
-
             StartReporting();
+        }
+
+        void frmIrtGui_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            m_reportTimer.Stop();
+            m_reporter.Dispose();
         }
 
         void m_ANT_Device_deviceResponse(ANT_Response response)
@@ -548,10 +555,18 @@ namespace IRT_GUI
 
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {
-            // Convert to mph from km/h.
-            double mph = m_eMotion.AverageSpeedWheelTorque * 0.621371;
-            m_dataPoint.SpeedEMotion = (float)mph;
-            UpdateText(lblEmrMph, mph.ToString("00.0"));
+            if (!double.IsInfinity(m_eMotion.AverageSpeedWheelTorque))
+            {
+                // Convert to mph from km/h.
+                double mph = m_eMotion.AverageSpeedWheelTorque * 0.621371;
+                m_dataPoint.SpeedEMotion = (float)mph;
+                UpdateText(lblEmrMph, mph.ToString("00.0"));
+            }
+            else
+            {
+                m_dataPoint.SpeedEMotion = 0;
+                UpdateText(lblEmrMph, "00.0");
+            }
         }
 
         void m_eMotion_ProductInformationPageReceived(AntPlus.Profiles.Common.ProductInformationPage arg1, uint arg2)
