@@ -122,8 +122,11 @@ namespace IRT_GUI
 
         void frmIrtGui_FormClosed(object sender, FormClosedEventArgs e)
         {
-            m_reportTimer.Stop();
-            m_reporter.Dispose();
+            if (m_reportTimer != null)
+                m_reportTimer.Stop();
+
+            if (m_reporter != null)
+                m_reporter.Dispose();
         }
 
         void m_ANT_Device_deviceResponse(ANT_Response response)
@@ -338,54 +341,69 @@ namespace IRT_GUI
 
         void StartANT()
         {
-            m_ANT_Device = new ANT_Device();
-            m_ANT_Device.ResetSystem(500);
+            try
+            {
+                m_ANT_Device = new ANT_Device();
+                m_ANT_Device.ResetSystem(500);
 
-            m_ANT_Device.setNetworkKey(0x00, USER_NETWORK_KEY);
+                m_ANT_Device.setNetworkKey(0x00, USER_NETWORK_KEY);
 
-            m_ANT_Network = new Network(0x00, USER_NETWORK_KEY, ANT_FREQUENCY);
-            m_eMotionChannel = m_ANT_Device.getChannel(EMR_CHANNEL_ID);
+                m_ANT_Network = new Network(0x00, USER_NETWORK_KEY, ANT_FREQUENCY);
+                m_eMotionChannel = m_ANT_Device.getChannel(EMR_CHANNEL_ID);
 
-            // Temporary - not sure how much of this I need.
-            m_eMotionChannel.channelResponse += channel_channelResponse;
-            m_eMotionChannel.DeviceNotification += channel_DeviceNotification;
-            m_eMotionChannel.rawChannelResponse += channel_rawChannelResponse;
+                // Temporary - not sure how much of this I need.
+                m_eMotionChannel.channelResponse += channel_channelResponse;
+                m_eMotionChannel.DeviceNotification += channel_DeviceNotification;
+                m_eMotionChannel.rawChannelResponse += channel_rawChannelResponse;
 
-            m_ANT_Device.serialError += m_ANT_Device_serialError;
-            m_ANT_Device.deviceResponse += m_ANT_Device_deviceResponse;
+                m_ANT_Device.serialError += m_ANT_Device_serialError;
+                m_ANT_Device.deviceResponse += m_ANT_Device_deviceResponse;
 
-            m_eMotion = new BikePowerDisplay(m_eMotionChannel, m_ANT_Network);
-            m_eMotion.ChannelParameters.TransmissionType = 0xA5;
+                m_eMotion = new BikePowerDisplay(m_eMotionChannel, m_ANT_Network);
+                m_eMotion.ChannelParameters.TransmissionType = 0xA5;
 
-            m_eMotion.SensorFound += m_eMotion_SensorFound;
-            m_eMotion.ChannelStatusChanged += m_eMotion_ChannelStatusChanged;
+                m_eMotion.SensorFound += m_eMotion_SensorFound;
+                m_eMotion.ChannelStatusChanged += m_eMotion_ChannelStatusChanged;
 
-            m_eMotion.ManufacturerIdentificationPageReceived += m_eMotion_ManufacturerIdentificationPageReceived;
-            m_eMotion.ProductInformationPageReceived += m_eMotion_ProductInformationPageReceived;
+                m_eMotion.ManufacturerIdentificationPageReceived += m_eMotion_ManufacturerIdentificationPageReceived;
+                m_eMotion.ProductInformationPageReceived += m_eMotion_ProductInformationPageReceived;
 
-            m_eMotion.BatteryStatusPageReceived += m_eMotion_BatteryStatusPageReceived;
-            m_eMotion.DataPageReceived += m_eMotion_DataPageReceived;
-            m_eMotion.ManufacturerSpecificPageReceived += m_eMotion_ManufacturerSpecificPageReceived;
-            m_eMotion.GetSetParametersPageReceived += m_eMotion_GetSetParametersPageReceived;
-            m_eMotion.TemperatureSubPageReceived += m_eMotion_TemperatureSubPageReceived;
+                m_eMotion.BatteryStatusPageReceived += m_eMotion_BatteryStatusPageReceived;
+                m_eMotion.DataPageReceived += m_eMotion_DataPageReceived;
+                m_eMotion.ManufacturerSpecificPageReceived += m_eMotion_ManufacturerSpecificPageReceived;
+                m_eMotion.GetSetParametersPageReceived += m_eMotion_GetSetParametersPageReceived;
+                m_eMotion.TemperatureSubPageReceived += m_eMotion_TemperatureSubPageReceived;
 
-            m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
-            m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
+                m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
+                m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
 
-            // Start looking for e-motion.
-            m_eMotion.TurnOn();
+                // Start looking for e-motion.
+                m_eMotion.TurnOn();
 
-            // Configure reference power channel, but don't start it.
-            m_refChannel = m_ANT_Device.getChannel(REF_PWR_CHANNEL_ID);
-            m_refPower = new BikePowerDisplay(m_refChannel, m_ANT_Network);
+                // Configure reference power channel, but don't start it.
+                m_refChannel = m_ANT_Device.getChannel(REF_PWR_CHANNEL_ID);
+                m_refPower = new BikePowerDisplay(m_refChannel, m_ANT_Network);
 
-            m_refPower.ChannelParameters.TransmissionType = 0x5;
-            m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
-            m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
-            m_refPower.SensorFound += m_refPower_SensorFound;
-            m_refPower.ChannelStatusChanged += m_refPower_ChannelStatusChanged;
+                m_refPower.ChannelParameters.TransmissionType = 0x5;
+                m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
+                m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
+                m_refPower.SensorFound += m_refPower_SensorFound;
+                m_refPower.ChannelStatusChanged += m_refPower_ChannelStatusChanged;
+            }
+            catch (ANT_Managed_Library.ANT_Exception e)
+            {
+                MessageBox.Show(
+                    "Please ensure that your ANT+ USB key is \n" +
+                    "inserted and no other application is using\n" +
+                    "(i.e. TrainerRoad/Garmin Device Sync)\n\n" +
+                    "Restart the application once you have verified.",
+                    "Unable to connect to ANT+ USB Key",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
+                Application.Exit();
+            }
         }
-
 
         private void StartReporting()
         {
