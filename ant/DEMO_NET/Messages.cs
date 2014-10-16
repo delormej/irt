@@ -476,6 +476,16 @@ namespace ANT_Console.Messages
         // Shutdown, etc...
     }
 
+    public enum Settings
+    {
+        AccelerometerSleep = 1,
+        BluetoothEnabled = 2,
+        AntRemoteEnabled = 4,
+        AntBikePowerEnabled = 8,
+        AntFECEnabled = 16,
+        AntExtraInfoEnabled = 32
+    }
+
     // This is mostly used to Set values on the device.
     public class GetSetMessage : Message
     {

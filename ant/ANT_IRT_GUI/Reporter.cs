@@ -1,6 +1,6 @@
-﻿using System;
+﻿using IRT_GUI.IrtMessages;
+using System;
 using System.IO;
-using ANT_Console.Messages;
 
 namespace ANT_Console
 {
@@ -35,7 +35,6 @@ namespace ANT_Console
     public class LogReporter : IReporter, IDisposable
     {
         StreamWriter m_logFileWriter;
-        System.Timers.Timer m_timer;
         const string report_format = "{0:H:mm:ss.fff}, {1:N4}, {2:N4}, {3:N1}, {4:g}, {5:g}, {6:g}, {7:g}, {8:g}, {9:g}, {10:g}, {11:g}";
 
         public LogReporter()
@@ -78,7 +77,6 @@ namespace ANT_Console
 
         public void Dispose()
         {
-            m_timer.Stop();
             m_logFileWriter.Flush();
             m_logFileWriter.Close();
         }
