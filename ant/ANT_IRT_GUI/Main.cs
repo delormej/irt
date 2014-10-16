@@ -498,6 +498,8 @@ namespace IRT_GUI
         void m_eMotion_SensorFound(ushort arg1, byte arg2)
         {
             UpdateText(txtEmrDeviceId, arg1);
+            // Go grab the latest settings from the device.
+            RequestSettings();
         }
 
         void m_eMotion_TemperatureSubPageReceived(AntPlus.Profiles.Common.TemperatureSubPage arg1, uint arg2)
@@ -614,15 +616,12 @@ namespace IRT_GUI
             SetParameter(param, value);
         }
 
-        private void SetParameter(byte subpage, UInt32 value)
+        private bool SetParameter(byte subpage, UInt32 value)
         {
             GetSetMessage message = new GetSetMessage(subpage);
             message.SetPayLoad(value);
             var result = m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
-            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
-            {
-                UpdateStatus(string.Format("Unable to send set parameter, return result: {0}.", result));
-            }
+            return (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
         }
 
         private byte GetParameter()
@@ -642,34 +641,56 @@ namespace IRT_GUI
         {
             if (txtTotalWeight.Modified)
             {
+                txtTotalWeight.Enabled = false;
+
                 float weightKg = 0;
                 float.TryParse(txtTotalWeight.Text, out weightKg);
 
                 if (weightKg > 20.0f && weightKg < 140.0f)
                 {
                     UpdateStatus("Setting total weight.");
-                    SetWeight(weightKg);
+                    if (SetWeight(weightKg))
+                    {
+                        UpdateStatus("Updated weight.");
+                    }
+                    else
+                    {
+                        UpdateStatus("Failed to update weight.");
+                    }
                 }
                 else
                 {
                     UpdateStatus("Invalid weight.");
                 }
+
+                txtTotalWeight.Enabled = true;
             }
 
             if (txtWheelSizeMm.Modified)
             {
+                txtWheelSizeMm.Enabled = false;
+
                 ushort wheelSizeMM = 0;
                 ushort.TryParse(txtWheelSizeMm.Text, out wheelSizeMM);
 
                 if (wheelSizeMM > 1500 && wheelSizeMM < 3000) // Valid range? 
                 {
                     UpdateStatus("Setting wheel size.");
-                    SetWheelSize(wheelSizeMM);
+                    if (SetWheelSize(wheelSizeMM))
+                    {
+                        UpdateStatus("Updated wheel size.");
+                    }
+                    else
+                    {
+                        UpdateStatus("Failed to update wheel size.");
+                    }
                 }
                 else
                 {
                     UpdateStatus("Invalid wheel size.");
                 }
+
+                txtWheelSizeMm.Enabled = true;
             }
         }
 
@@ -683,7 +704,7 @@ namespace IRT_GUI
         }
 
 
-        private void SetWeight(float weight)
+        private bool SetWeight(float weight)
         {
             ushort value = (ushort)(weight * 100);
             byte[] data = {
@@ -691,7 +712,7 @@ namespace IRT_GUI
                 (byte)(value >> 8), // Weight MSB
             };
 
-            SendCommand(Command.SetWeight, data);
+            return SendCommand(Command.SetWeight, data);
         }
 
         // This uses the WAHOO method with a burst message.
@@ -1064,12 +1085,19 @@ namespace IRT_GUI
 
             if (slope == 0 || offset == 0)
             {
-                UpdateStatus("Failed to update calibration.  Slope/Offset must be > 0.");
+                UpdateStatus("ERROR: Slope/offset must be > 0.");
                 return;
             }
 
             UInt32 value = (UInt32)(slope | (offset << 16));
-            SetParameter((byte)SubPages.Crr, value);
+            if (SetParameter((byte)SubPages.Crr, value))
+            {
+                UpdateStatus("Updated slope/offset.");
+            }
+            else
+            {
+                UpdateStatus("Failed to update slope/offset.");
+            }
         }
 
         private void chkLstSettings_ItemCheck(object sender, ItemCheckEventArgs e)
