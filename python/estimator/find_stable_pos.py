@@ -14,9 +14,11 @@ def find_seq(speeds, watts, offset, pos):
 			while seq_end < speeds.size and (speeds[i:seq_end+1].ptp() <= x): # try to extend sequence
 				seq_end += 1
 			last_end = seq_end
+			calc_speed = round((speeds[i:seq_end].min()+speeds[i:seq_end].max())/2, 1)
+			calc_watts = np.median(watts[i:seq_end])
+			calc_force = round(calc_watts / (calc_speed * 0.44704), 2)  # derive force from speed (in mps)   		
 			print([i+offset, seq_end-1+offset],
-				round((speeds[i:seq_end].min()+speeds[i:seq_end].max())/2, 1),
-				np.median(watts[i:seq_end]), pos)
+				calc_speed, calc_watts, pos, calc_force)
 
 def main():
 	speeds, watts, pos = np.loadtxt(input_file_name, delimiter=',', skiprows=1, usecols=[2, 3, 4], unpack=True)
