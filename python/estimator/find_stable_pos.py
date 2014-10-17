@@ -1,6 +1,6 @@
 input_file_name = "black_arm_level_1-4_15mph_newdev.csv"
-n = 5       # min. sequence length
-x = 0.1 * 2 # total range of allowed variation
+n = 9       # min. sequence length
+x = 0.3 * 2 # total range of allowed variation
 
 import numpy as np
 
