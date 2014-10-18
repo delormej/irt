@@ -26,7 +26,7 @@ All rights reserved.
 #define DEVICE_NAME                 "E-Motion"                          /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME           "Inside Ride"            			/**< Manufacturer. Will be passed to Device Information Service. */
 //#define HW_REVISION                 0x01  							// This is now defined in boards.h	/**< Hardware revision for manufacturer's identification common page. */
-#define MANUFACTURER_ID             0xAAAA             				  	/**< Manufacturer ID for manufacturer's identification common page. */
+#define MANUFACTURER_ID             0x005D             				  	// Manufacturer ID 93 (0x005D) for Inside Ride
 #define MODEL_NUMBER                0x5248								// Model 'HR' in ASCII /**< Model number for manufacturer's identification common page. */
 
 /* VERSION is currently defined in make file.
