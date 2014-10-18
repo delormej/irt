@@ -25,7 +25,7 @@ All rights reserved.
 
 /**@brief Returns true if battery charger is off.
  */
-#define BATTERY_CHARGE_OFF 			(battery_charge_status() == BATTERY_CHARGE_FAULT)
+#define BATTERY_CHARGER_IS_OFF 			(battery_charge_status() == BATTERY_CHARGE_FAULT)
 
 typedef void (*on_battery_result_t)(uint16_t battery_level);
 

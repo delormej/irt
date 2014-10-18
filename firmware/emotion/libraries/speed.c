@@ -34,6 +34,12 @@
 static uint16_t m_wheel_size;										// Wheel diameter size in mm.
 static float m_flywheel_to_wheel_revs;								// Ratio of flywheel revolutions for 1 wheel revolution.
 
+#ifdef SIM_SPEED
+// # of ticks to simulate in debug mode.
+uint8_t  speed_debug_ticks;
+#endif
+
+
 /**@brief	Configure GPIO input from flywheel revolution pin and create an 
  *				event on achannel. 
  */
@@ -185,7 +191,7 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 
 #ifdef SIM_SPEED
 	// DEBUG ONLY, simulate ~16mph.
-	p_current->accum_flywheel_ticks = 32u + (p_last->accum_flywheel_ticks);
+	p_current->accum_flywheel_ticks = speed_debug_ticks + (p_last->accum_flywheel_ticks);
 	//SP_LOG("[SP] accum_flywheel_ticks %lu \r\n", p_current->accum_flywheel_ticks);
 #else
 	// Get the flywheel ticks (2 per rev).
