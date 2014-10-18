@@ -1,7 +1,9 @@
 input_file_name = "black_arm_level_1-4_15mph_newdev.csv"
+input_file_name = "black_arm_level_1-4_15mph_olddev.csv"
 output_file_name = "find_stable_result.csv"
 n = 7       # min. sequence length
-x = 0.1 * 2 # total range of allowed variation
+x = 0.2 * 2 # total range of allowed variation
+s = 10  # allowable stdev for watts
 
 from itertools import groupby
 import csv
@@ -13,6 +15,7 @@ def find_seq(speeds, watts, offset, pos):
 	def check_seq(se): # test range [i..se) for a valid sequence
 		if se > speeds.size:
 			return False
+#   		print watts[se-1], np.mean(watts[i:se])
 		return speeds[i:se].ptp() <= x and watts[i:se].all()
 		
 	last_end = -1 # where last found sequence ended
@@ -29,7 +32,7 @@ def find_seq(speeds, watts, offset, pos):
 				'beg': i+offset,
 				'end': last_end-1+offset,
 				'speed': (speeds[i:last_end].min()+speeds[i:last_end].max())/2,
-				'watts': np.median(watts[i:last_end]),
+				'watts': np.mean(watts[i:last_end]),
 				'position': pos,
 				'stdev': np.std(watts[i:last_end])    
 			})
@@ -57,6 +60,7 @@ def main():
 		
 	for seq in lone_seqs:
 		seq['speed'] = format(seq['speed'], '.1f')
+		seq['watts'] = format(seq['watts'], '.0f')
   		force = round(float(seq['watts']) / (float(seq['speed']) * 0.44704),2)
   		print seq['speed'], ',', seq['watts'], ',', seq['position'], ',', force, ',', seq['stdev'],',',(seq['beg'], seq['end'])
     
