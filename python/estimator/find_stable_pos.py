@@ -1,7 +1,7 @@
 input_file_name = "black_arm_level_1-4_15mph_newdev.csv"
 output_file_name = "find_stable_result.csv"
-n = 3       # min. sequence length
-x = 0.2 * 2 # total range of allowed variation
+n = 7       # min. sequence length
+x = 0.1 * 2 # total range of allowed variation
 
 from itertools import groupby
 import csv
@@ -55,6 +55,8 @@ def main():
 		
 	for seq in lone_seqs:
 		seq['speed'] = format(seq['speed'], '.1f')
+  		force = round(float(seq['watts']) / (float(seq['speed']) * 0.44704),2)
+  		print seq['speed'], ',', seq['watts'], ',', seq['position'], ',', force, ',', (seq['beg'], seq['end'])
 
 	if lone_seqs:
 		with open(output_file_name, 'w') as output_file:
