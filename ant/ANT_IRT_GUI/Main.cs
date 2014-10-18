@@ -344,6 +344,7 @@ namespace IRT_GUI
             try
             {
                 m_ANT_Device = new ANT_Device();
+                //m_ANT_Device.ResetUSB();
                 m_ANT_Device.ResetSystem(500);
 
                 m_ANT_Device.setNetworkKey(0x00, USER_NETWORK_KEY);
@@ -386,6 +387,7 @@ namespace IRT_GUI
 
                 m_refPower.ChannelParameters.TransmissionType = 0x5;
                 m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
+                m_refPower.CrankTorqueFrequencyPageReceived += m_refPower_CrankTorqueFrequencyPageReceived;
                 m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
                 m_refPower.SensorFound += m_refPower_SensorFound;
                 m_refPower.ChannelStatusChanged += m_refPower_ChannelStatusChanged;
@@ -403,6 +405,11 @@ namespace IRT_GUI
 
                 Application.Exit();
             }
+        }
+
+        void m_refPower_CrankTorqueFrequencyPageReceived(CrankTorqueFrequencyPage arg1, uint arg2)
+        {
+            //UpdateStatus("CTF Page" + arg2);
         }
 
         private void StartReporting()
