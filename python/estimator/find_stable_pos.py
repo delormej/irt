@@ -24,12 +24,14 @@ def find_seq(speeds, watts, offset, pos):
 			while check_seq(seq_end+1): # extend the sequence while we can
 				seq_end += 1
 			last_end = seq_end
+   
 			seqs.append({
 				'beg': i+offset,
 				'end': last_end-1+offset,
 				'speed': (speeds[i:last_end].min()+speeds[i:last_end].max())/2,
 				'watts': np.median(watts[i:last_end]),
-				'position': pos
+				'position': pos,
+				'stdev': np.std(watts[i:last_end])    
 			})
 
 def main():
@@ -56,11 +58,14 @@ def main():
 	for seq in lone_seqs:
 		seq['speed'] = format(seq['speed'], '.1f')
   		force = round(float(seq['watts']) / (float(seq['speed']) * 0.44704),2)
-  		print seq['speed'], ',', seq['watts'], ',', seq['position'], ',', force, ',', (seq['beg'], seq['end'])
-
+  		print seq['speed'], ',', seq['watts'], ',', seq['position'], ',', force, ',', seq['stdev'],',',(seq['beg'], seq['end'])
+    
+	"""
 	if lone_seqs:
 		with open(output_file_name, 'w') as output_file:
 			writer = csv.DictWriter(output_file, ('beg', 'end', 'speed', 'watts', 'position'))
 			writer.writeheader()
 			writer.writerows(lone_seqs)
+	"""
+   
 main()
