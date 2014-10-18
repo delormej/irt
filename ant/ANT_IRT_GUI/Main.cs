@@ -500,7 +500,7 @@ namespace IRT_GUI
         void m_refPower_ManufacturerIdentificationPageReceived(ManufacturerIdentificationPage arg1, uint arg2)
         {
             UpdateText(lblRefPwrModel, arg1.ModelNumber);
-            UpdateText(lblRefPwrManuf, arg1.ManufacturerIdentification);
+            UpdateText(txtRefPwrManuf, arg1.ManufacturerIdentification);
         }
 
         void UpdateText(Control control, object obj)
@@ -970,7 +970,7 @@ namespace IRT_GUI
 
             // Clear all the values.
             UpdateText(txtRefPwrDeviceId, "0");
-            UpdateText(lblRefPwrManuf, "...");
+            UpdateText(txtRefPwrManuf, "0");
             UpdateText(lblRefPwrModel, "...");
             UpdateText(lblRefPwrType, "...");
             UpdateText(lblRefPwrWatts, "000");
@@ -1083,8 +1083,11 @@ namespace IRT_GUI
         {
             ExecuteOnUI(() =>
             {
-                txtLog.AppendText(text + '\n');
-                lblStatus.Text = text;
+                if (txtLog != null)
+                    txtLog.AppendText(text + '\n');
+
+                if (lblStatus != null)
+                    lblStatus.Text = text;
             });
         }
 
