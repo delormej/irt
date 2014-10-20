@@ -296,11 +296,20 @@ namespace IRT_GUI
                     {
                         if (buffer[2] == 0x02)
                         {
-                            chkCharge.Checked = true;
+                            if (chkCharge.Checked == false)
+                            {
+                                chkCharge.Checked = true;
+                                System.Diagnostics.Debug.WriteLine("STARTED charging: " + System.DateTime.Now);
+                            }
                         }
                         else
                         {
-                            chkCharge.Checked = false;
+                            if (chkCharge.Checked == true)
+                            {
+                                chkCharge.Checked = false;
+                                // Display in debug console
+                                System.Diagnostics.Debug.WriteLine("DONE charging: " + System.DateTime.Now);
+                            }
                         }
                     });
                     break;
