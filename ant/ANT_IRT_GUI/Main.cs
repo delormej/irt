@@ -258,19 +258,23 @@ namespace IRT_GUI
                     if (intercept == short.MaxValue)
                         intercept = 0;
 
+                    UpdateStatus("Received CRR parameter.");
                     UpdateText(txtSlope, slope);
                     UpdateText(txtOffset, intercept);
+                    
                     break;
 
                 case SubPages.TotalWeight:
                     int grams = Message.BigEndian(buffer[2], buffer[3]);
                     double kg = grams / 100.0;
+                    UpdateStatus("Received weight parameter.");
                     UpdateText(txtTotalWeight, kg.ToString("N2"));
 
                     break;
 
                 case SubPages.ServoOffset:
                     ushort servoOffset = Message.BigEndian(buffer[2], buffer[3]);
+                    UpdateStatus("Received ServoOffset parameter.");
                     UpdateText(txtServoOffset, servoOffset);
                     break;
 
@@ -283,15 +287,19 @@ namespace IRT_GUI
                 case SubPages.WheelSize:
                     //m_eMotion.WheelCircumference
                     ushort wheelSize = Message.BigEndian(buffer[2], buffer[3]);
+                    UpdateStatus("Received wheelsize parameter.");
                     UpdateText(txtWheelSizeMm, wheelSize);
                     break;
 
                 case SubPages.Settings:
                     ushort settings = Message.BigEndian(buffer[2], buffer[3]);
+                    UpdateStatus("Received settings parameter.");
                     UpdateSettings(settings);
                     break;
 
                 case SubPages.Charger:
+                    UpdateStatus("Received charger parameter.");
+
                     ExecuteOnUI(() =>
                     {
                         if (buffer[2] == 0x02)
@@ -315,13 +323,13 @@ namespace IRT_GUI
                     break;
 
                 default:
-                    Console.WriteLine("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
+                    UpdateStatus(string.Format("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
                         buffer[2],
                         buffer[3],
                         buffer[4],
                         buffer[5],
                         buffer[6],
-                        buffer[7]);
+                        buffer[7]));
                     break;
             }
         }
@@ -1081,8 +1089,11 @@ namespace IRT_GUI
             while (retries++ < REQUEST_RETRY)
             {
                 result = m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
+                UpdateStatus(String.Format("Requesting parameter: {0}.", subPage));
                 if (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass)
                     return;
+                else
+                    System.Threading.Thread.Sleep(250); // pause for a 1/4 second.
             }
 
             UpdateStatus(String.Format("Unable to request parameter: {0}, return result: {1}.", subPage, result));
