@@ -2,6 +2,7 @@
 // This module wraps all peripheral interaction by the device.
 //
 
+#include <stdbool.h>
 #include "irt_peripheral.h"
 #include "nrf_delay.h"
 #include "nordic_common.h"
@@ -25,7 +26,7 @@
 #define PH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define DEBOUNCE_INTERVAL				APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)   	// Debounce interval 5ms.
+#define DEBOUNCE_INTERVAL				APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)   	// Debounce interval.
 
 static peripheral_evt_t 				*mp_on_peripheral_evt;
 static app_timer_id_t 					m_led1_blink_timer_id;
@@ -73,6 +74,36 @@ static void blink_timeout_handler(void * p_context)
  */
 static void debounce_timeout_handler(void * p_context)
 {
+	bool changed = false;
+	bool pressed = false;
+
+	static uint32_t count = 0;
+	static uint32_t LONG_PRESS = 2000 / 5; // every 5 ms we check, so 2 seconds.
+
+	DebounceSwitch1(&changed, &pressed);
+
+	if (changed && pressed)
+	{
+		count = 0; // just got pressed
+	}
+	else if (!changed && pressed)
+	{
+		count++; // increment counter.
+	}
+	else if (changed && !pressed)
+	{
+		if (count >= LONG_PRESS)
+		{
+			PH_LOG("Button LONG pushed: %i.\r\n", count);
+		}
+		else
+		{
+			PH_LOG("Button pushed.\r\n");
+		}
+		count = 0;
+	}
+
+	/*
 	switch (irt_button_debounce())
 	{
 		case ShortPress:
@@ -85,7 +116,8 @@ static void debounce_timeout_handler(void * p_context)
 
 		default:
 			break;
-	}
+	}*/
+
 }
 
 /**@brief	Returns 0 = adapter power, 1= no adapter.
@@ -206,7 +238,7 @@ static void button_init()
 		APP_ERROR_CHECK(err_code);
 
 		// Start button debouncing.
-		err_code = app_timer_start(m_debounce_timer_id, DEBOUNCE_INTERVAL, NULL);
+		err_code = app_timer_start(m_debounce_timer_id, DEBOUNCE_INTERVAL, NULL); // ((void *)0));
 		APP_ERROR_CHECK(err_code);
 	}
 }

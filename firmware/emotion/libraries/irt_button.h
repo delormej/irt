@@ -22,4 +22,6 @@ void irt_button_init(uint32_t button_pin);
 
 irt_button_state_t irt_button_debounce();
 
+void DebounceSwitch1(bool *Key_changed, bool *Key_pressed);
+
 #endif /* IRT_BUTTON_H_ */
