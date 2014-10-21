@@ -43,6 +43,11 @@ namespace IRT_GUI
         private LogReporter m_reporter;
         private DataPoint m_dataPoint;
 
+        // Used for calculating moving average.
+        private List<ushort> m_RefPowerList;
+        private List<ushort> m_eMotionPowerList;
+        private List<double> m_SpeedList;
+
         // Commands
         enum Command : byte
         {
@@ -750,6 +755,15 @@ namespace IRT_GUI
             return SendCommand(Command.SetWeight, data);
         }
 
+        private bool SetResistancePercent(float value)
+        {
+            // Calculate percentage.
+            ushort wireValue = 0;
+            wireValue = (ushort)(16383 - (16383 * (value / 100.0f)));
+
+            return SendBurst((byte)ResistanceMode.Percent, wireValue);
+        }
+
         // This uses the WAHOO method with a burst message.
         private bool SetWheelSize(ushort wheelSizeMM)
         {
@@ -1233,11 +1247,7 @@ namespace IRT_GUI
 
                 if (value >= 0.0f && value <= 100.0f)
                 {
-                    // Calculate percentage.
-                    ushort wireValue = 0;
-                    wireValue = (ushort)(16383 - (16383 * (value / 100.0f)));
-
-                    SendBurst((byte)ResistanceMode.Percent, wireValue);
+                    SetResistancePercent(value);
                 }
             }
 
