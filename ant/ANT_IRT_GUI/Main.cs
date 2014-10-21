@@ -473,17 +473,27 @@ namespace IRT_GUI
                 m_RefPowerList[m_movingAvgPosition] = m_refPower.StandardPowerOnly.InstantaneousPower;
             }
 
+            var eMotionAvg = CalcAverage(m_eMotionPowerList);
+            var refPowerAvg = CalcAverage(m_RefPowerList);
+            var speedAvg = CalcAverage(m_SpeedList);
+
+            UpdateText(lblEmrWattsAvg, (int)eMotionAvg);
+            UpdateText(lblRefPwrWattsAvg, (int)refPowerAvg);
+            UpdateText(lblSpeedAvg, string.Format("{0:0}", speedAvg));
+        }
+
+        private double CalcAverage<T>(List<T> list)
+        {
             // Non-zeros
             var nonZero = m_eMotionPowerList.Where(x => x > 0);
-            var avg = 0;
+            double avg = 0.0; 
 
             if (nonZero.Count() > 0)
             {
-                avg = (int)nonZero.Average(x => x);
+                avg = (double)nonZero.Average(x => x);
             }
 
-            UpdateText(lblEmrWattsAvg, avg);
-
+            return avg;
         }
 
         void m_refPower_ChannelStatusChanged(ChannelStatus status)
