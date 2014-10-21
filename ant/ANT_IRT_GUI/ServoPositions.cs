@@ -9,13 +9,28 @@ using System.Windows.Forms;
 
 namespace IRT_GUI
 {
+    public class Position
+    {
+        public ushort Value { get; private set; }
+
+        public Position(ushort value)
+        {
+            this.Value = value;
+        }
+
+        public static implicit operator Position(int value)
+        {
+            return new Position(value);
+        }
+    }
+
     public partial class ServoPositions : Form
     {
         public ServoPositions()
         {
             InitializeComponent();
 
-            var positions = new List<ushort>();
+            var positions = new List<Position>();
             positions.Add(2000);
             positions.Add(1300);
             positions.Add(1200);
@@ -24,8 +39,8 @@ namespace IRT_GUI
             positions.Add(900);
             positions.Add(800);
 
-            dgResistancePositions.DataSource = positions; 
-
+            dgResistancePositions.DataSource = positions;
+            dgResistancePositions.DataMember = "Value";
 
             numResistancePositions.Value = positions.Count();
 
