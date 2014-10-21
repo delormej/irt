@@ -9,21 +9,6 @@ using System.Windows.Forms;
 
 namespace IRT_GUI
 {
-    public class Position
-    {
-        public ushort Value { get; private set; }
-
-        public Position(ushort value)
-        {
-            this.Value = value;
-        }
-
-        public static implicit operator Position(int value)
-        {
-            return new Position(value);
-        }
-    }
-
     public partial class ServoPositions : Form
     {
         public ServoPositions()
@@ -40,8 +25,6 @@ namespace IRT_GUI
             positions.Add(800);
 
             dgResistancePositions.DataSource = positions;
-            dgResistancePositions.DataMember = "Value";
-
             numResistancePositions.Value = positions.Count();
 
         }
@@ -55,6 +38,27 @@ namespace IRT_GUI
         {
             var x = dgResistancePositions.DataSource;
             System.Diagnostics.Debug.WriteLine(x);
+        }
+
+        private void dgResistancePositions_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
+        {
+            if (dgResistancePositions.Columns[e.ColumnIndex].Name == "Value")
+            {
+                int value = 0;
+
+                if (!int.TryParse(e.FormattedValue.ToString(), out value) ||
+                    value < 700 || value > 2000)
+                {
+                    string error = "Position must be a valid number between 700 and 2000";
+                    dgResistancePositions.Rows[e.RowIndex].ErrorText = error;
+                    MessageBox.Show(error,
+                        "Invalid Position",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                        
+                    e.Cancel = true;
+                }
+            }
         }
     }
 }
