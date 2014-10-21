@@ -44,6 +44,7 @@ namespace IRT_GUI
         private DataPoint m_dataPoint;
 
         // Used for calculating moving average.
+        private int m_movingAvgPosition = 0;
         private List<ushort> m_RefPowerList;
         private List<ushort> m_eMotionPowerList;
         private List<double> m_SpeedList;
@@ -117,6 +118,9 @@ namespace IRT_GUI
 
             cmbResistanceMode.Items.Clear();
             cmbResistanceMode.Items.AddRange(Enum.GetNames(typeof(ResistanceMode)));
+
+            numMovingAvgSec.Value = 30;
+            InitMovingAverage((int)numMovingAvgSec.Value);
 
             this.FormClosed += frmIrtGui_FormClosed;
 
@@ -440,6 +444,46 @@ namespace IRT_GUI
         void m_reportTimer_Tick(object sender, EventArgs e)
         {
             m_reporter.Report(m_dataPoint);
+            UpdateMovingAverage();
+        }
+
+        private void UpdateMovingAverage()
+        {
+            // length
+            int len = (int)numMovingAvgSec.Value;
+
+            if (++m_movingAvgPosition == len)
+            {
+                m_movingAvgPosition = 0;
+            }
+
+
+            if (m_eMotion != null)
+            {
+                m_SpeedList[m_movingAvgPosition] = m_eMotion.AverageSpeedWheelTorque;
+
+                if (m_eMotion.StandardPowerOnly != null)
+                {
+                    m_eMotionPowerList[m_movingAvgPosition] = m_eMotion.StandardPowerOnly.InstantaneousPower;
+                }
+            }
+
+            if (m_refPower != null && m_refPower.StandardPowerOnly != null)
+            {
+                m_RefPowerList[m_movingAvgPosition] = m_refPower.StandardPowerOnly.InstantaneousPower;
+            }
+
+            // Non-zeros
+            var nonZero = m_eMotionPowerList.Where(x => x > 0);
+            var avg = 0;
+
+            if (nonZero.Count() > 0)
+            {
+                avg = (int)nonZero.Average(x => x);
+            }
+
+            UpdateText(lblEmrWattsAvg, avg);
+
         }
 
         void m_refPower_ChannelStatusChanged(ChannelStatus status)
@@ -1379,6 +1423,28 @@ namespace IRT_GUI
             UpdateText(txtResistancePercent, trackBarResistancePct.Value);
             
             SetResistancePercent((float)trackBarResistancePct.Value);
+        }
+
+        private void numMovingAvgSec_ValueChanged(object sender, EventArgs e)
+        {
+            InitMovingAverage((int)numMovingAvgSec.Value);
+        }
+
+        private void InitMovingAverage(int count)
+        {
+            m_movingAvgPosition = 0;
+            InitializeArray(count, ref m_eMotionPowerList);
+            InitializeArray(count, ref m_RefPowerList);
+            InitializeArray(count, ref m_SpeedList);
+        }
+
+        private void InitializeArray<T>(int count, ref List<T> list)
+        {
+            list = new List<T>(count);
+            for (int i = 0; i < count; i++)
+            {
+                list.Add(default(T));
+            }
         }
     }
 }

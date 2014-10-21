@@ -118,6 +118,8 @@
             this.txtParamGet = new System.Windows.Forms.TextBox();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.numMovingAvgSec = new System.Windows.Forms.NumericUpDown();
+            this.label15 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -130,6 +132,7 @@
             this.groupBox6.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.statusStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
             this.SuspendLayout();
             // 
             // txtLog
@@ -191,7 +194,7 @@
             // 
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(132, 316);
+            this.label13.Location = new System.Drawing.Point(129, 316);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(54, 13);
             this.label13.TabIndex = 32;
@@ -491,6 +494,8 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label15);
+            this.groupBox2.Controls.Add(this.numMovingAvgSec);
             this.groupBox2.Controls.Add(this.lblRefPwrWattsAvg);
             this.groupBox2.Controls.Add(this.label17);
             this.groupBox2.Controls.Add(this.lblRefPwrWatts);
@@ -515,7 +520,7 @@
             // 
             this.lblRefPwrWattsAvg.AutoSize = true;
             this.lblRefPwrWattsAvg.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblRefPwrWattsAvg.Location = new System.Drawing.Point(73, 279);
+            this.lblRefPwrWattsAvg.Location = new System.Drawing.Point(20, 277);
             this.lblRefPwrWattsAvg.Name = "lblRefPwrWattsAvg";
             this.lblRefPwrWattsAvg.Size = new System.Drawing.Size(71, 37);
             this.lblRefPwrWattsAvg.TabIndex = 29;
@@ -526,7 +531,7 @@
             // 
             this.label17.AutoSize = true;
             this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label17.Location = new System.Drawing.Point(90, 252);
+            this.label17.Location = new System.Drawing.Point(33, 252);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(40, 13);
             this.label17.TabIndex = 12;
@@ -536,7 +541,7 @@
             // 
             this.lblRefPwrWatts.AutoSize = true;
             this.lblRefPwrWatts.Font = new System.Drawing.Font("Microsoft Sans Serif", 32F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblRefPwrWatts.Location = new System.Drawing.Point(63, 196);
+            this.lblRefPwrWatts.Location = new System.Drawing.Point(6, 196);
             this.lblRefPwrWatts.Name = "lblRefPwrWatts";
             this.lblRefPwrWatts.Size = new System.Drawing.Size(94, 51);
             this.lblRefPwrWatts.TabIndex = 11;
@@ -547,7 +552,7 @@
             // 
             this.label19.AutoSize = true;
             this.label19.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label19.Location = new System.Drawing.Point(77, 316);
+            this.label19.Location = new System.Drawing.Point(28, 314);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(54, 13);
             this.label19.TabIndex = 31;
@@ -1040,6 +1045,29 @@
             this.lblStatus.Size = new System.Drawing.Size(118, 17);
             this.lblStatus.Text = "toolStripStatusLabel1";
             // 
+            // numMovingAvgSec
+            // 
+            this.numMovingAvgSec.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.numMovingAvgSec.Location = new System.Drawing.Point(130, 273);
+            this.numMovingAvgSec.Name = "numMovingAvgSec";
+            this.numMovingAvgSec.Size = new System.Drawing.Size(75, 23);
+            this.numMovingAvgSec.TabIndex = 32;
+            this.numMovingAvgSec.Value = new decimal(new int[] {
+            30,
+            0,
+            0,
+            0});
+            this.numMovingAvgSec.ValueChanged += new System.EventHandler(this.numMovingAvgSec_ValueChanged);
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(115, 257);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(90, 13);
+            this.label15.TabIndex = 33;
+            this.label15.Text = "Moving Avg (sec)";
+            // 
             // frmIrtGui
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1083,6 +1111,7 @@
             this.groupBox4.PerformLayout();
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1179,6 +1208,8 @@
         private System.Windows.Forms.TextBox txtResistancePercent;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TrackBar trackBarResistancePct;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.NumericUpDown numMovingAvgSec;
     }
 }
 
