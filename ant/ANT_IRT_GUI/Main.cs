@@ -757,11 +757,24 @@ namespace IRT_GUI
 
         private bool SetResistancePercent(float value)
         {
+            bool success = false;
+
             // Calculate percentage.
             ushort wireValue = 0;
             wireValue = (ushort)(16383 - (16383 * (value / 100.0f)));
 
-            return SendBurst((byte)ResistanceMode.Percent, wireValue);
+            success = SendBurst((byte)ResistanceMode.Percent, wireValue);
+
+            if (success)
+            {
+                UpdateStatus(String.Format("Set resistance to {0} percent.", value));
+            }
+            else
+            {
+                UpdateStatus("Failed to set resistance percent.");
+            }
+
+            return success;
         }
 
         // This uses the WAHOO method with a burst message.
@@ -1247,6 +1260,10 @@ namespace IRT_GUI
 
                 if (value >= 0.0f && value <= 100.0f)
                 {
+                    ExecuteOnUI(() =>
+                    {
+                        trackBarResistancePct.Value = (int)value;
+                    });
                     SetResistancePercent(value);
                 }
             }
@@ -1346,6 +1363,13 @@ namespace IRT_GUI
                 }
             }
 
+        }
+
+        private void trackBarResistancePct_Scroll(object sender, EventArgs e)
+        {
+            UpdateText(txtResistancePercent, trackBarResistancePct.Value);
+            
+            SetResistancePercent((float)trackBarResistancePct.Value);
         }
     }
 }
