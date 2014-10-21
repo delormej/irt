@@ -460,7 +460,8 @@ namespace IRT_GUI
 
             if (m_eMotion != null)
             {
-                if (m_eMotion.AverageSpeedWheelTorque > 0 && 
+                if (!double.IsInfinity(m_eMotion.AverageSpeedWheelTorque) &&
+                    m_eMotion.AverageSpeedWheelTorque > 0 && 
                     m_eMotion.AverageSpeedWheelTorque != ushort.MaxValue)
                 {
                     m_SpeedList[m_movingAvgPosition] = m_eMotion.AverageSpeedWheelTorque * 0.621371;
