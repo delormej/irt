@@ -460,7 +460,15 @@ namespace IRT_GUI
 
             if (m_eMotion != null)
             {
-                m_SpeedList[m_movingAvgPosition] = m_eMotion.AverageSpeedWheelTorque;
+                if (m_eMotion.AverageSpeedWheelTorque > 0 && 
+                    m_eMotion.AverageSpeedWheelTorque != ushort.MaxValue)
+                {
+                    m_SpeedList[m_movingAvgPosition] = m_eMotion.AverageSpeedWheelTorque * 0.621371;
+                }
+                else
+                {
+                    m_SpeedList[m_movingAvgPosition] = 0;
+                }
 
                 if (m_eMotion.StandardPowerOnly != null)
                 {
@@ -479,7 +487,7 @@ namespace IRT_GUI
 
             UpdateText(lblEmrWattsAvg, (int)eMotionAvg);
             UpdateText(lblRefPwrWattsAvg, (int)refPowerAvg);
-            UpdateText(lblSpeedAvg, string.Format("{0:0}", speedAvg));
+            UpdateText(lblSpeedAvg, string.Format("{0:0.0}", speedAvg));
         }
 
         private double CalcAverage(List<ushort> list)
