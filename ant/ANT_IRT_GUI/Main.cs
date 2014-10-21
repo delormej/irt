@@ -932,6 +932,15 @@ namespace IRT_GUI
             if (cmbResistanceMode.SelectedItem == null)
                 return;
 
+            // Iterate through each panel in group box.
+            foreach (var ctl in groupBoxResistance.Controls)
+            {
+                if (ctl is Panel)
+                {
+                    System.Diagnostics.Debug.WriteLine(((Panel)ctl).Name);
+                }
+            }
+
             ResistanceMode mode = 0;
             Enum.TryParse<ResistanceMode>(cmbResistanceMode.SelectedItem.ToString(), out mode);
 
