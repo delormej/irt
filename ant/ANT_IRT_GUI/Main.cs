@@ -1456,5 +1456,11 @@ namespace IRT_GUI
                 list.Add(default(T));
             }
         }
+
+        private void btnSetResistancePositions_Click(object sender, EventArgs e)
+        {
+            ServoPositions pos = new ServoPositions();
+            pos.ShowDialog();
+        }
     }
 }

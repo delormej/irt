@@ -122,6 +122,7 @@
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.label27 = new System.Windows.Forms.Label();
             this.lblSpeedAvg = new System.Windows.Forms.Label();
+            this.btnSetResistancePositions = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
@@ -747,6 +748,7 @@
             // 
             // groupBoxResistance
             // 
+            this.groupBoxResistance.Controls.Add(this.btnSetResistancePositions);
             this.groupBoxResistance.Controls.Add(this.pnlResistanceStd);
             this.groupBoxResistance.Controls.Add(this.pnlResistancePercent);
             this.groupBoxResistance.Controls.Add(this.pnlErg);
@@ -958,7 +960,7 @@
             // 
             // btnResistanceSet
             // 
-            this.btnResistanceSet.Location = new System.Drawing.Point(135, 118);
+            this.btnResistanceSet.Location = new System.Drawing.Point(134, 90);
             this.btnResistanceSet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnResistanceSet.Name = "btnResistanceSet";
             this.btnResistanceSet.Size = new System.Drawing.Size(70, 35);
@@ -969,7 +971,7 @@
             // 
             // txtServoPos
             // 
-            this.txtServoPos.Location = new System.Drawing.Point(39, 122);
+            this.txtServoPos.Location = new System.Drawing.Point(38, 94);
             this.txtServoPos.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtServoPos.Name = "txtServoPos";
             this.txtServoPos.Size = new System.Drawing.Size(92, 26);
@@ -997,7 +999,7 @@
             // label22
             // 
             this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(34, 94);
+            this.label22.Location = new System.Drawing.Point(33, 66);
             this.label22.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(65, 20);
@@ -1192,6 +1194,17 @@
             this.lblSpeedAvg.Text = "00.0";
             this.lblSpeedAvg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // btnSetResistancePositions
+            // 
+            this.btnSetResistancePositions.Location = new System.Drawing.Point(37, 135);
+            this.btnSetResistancePositions.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnSetResistancePositions.Name = "btnSetResistancePositions";
+            this.btnSetResistancePositions.Size = new System.Drawing.Size(167, 35);
+            this.btnSetResistancePositions.TabIndex = 29;
+            this.btnSetResistancePositions.Text = "Positions";
+            this.btnSetResistancePositions.UseVisualStyleBackColor = true;
+            this.btnSetResistancePositions.Click += new System.EventHandler(this.btnSetResistancePositions_Click);
+            // 
             // frmIrtGui
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -1337,6 +1350,7 @@
         private System.Windows.Forms.NumericUpDown numMovingAvgSec;
         private System.Windows.Forms.Label label27;
         private System.Windows.Forms.Label lblSpeedAvg;
+        private System.Windows.Forms.Button btnSetResistancePositions;
     }
 }
 
