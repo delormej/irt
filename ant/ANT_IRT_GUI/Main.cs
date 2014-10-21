@@ -482,10 +482,10 @@ namespace IRT_GUI
             UpdateText(lblSpeedAvg, string.Format("{0:0}", speedAvg));
         }
 
-        private double CalcAverage<T>(List<T> list)
+        private double CalcAverage(List<ushort> list)
         {
             // Non-zeros
-            var nonZero = m_eMotionPowerList.Where(x => x > 0);
+            var nonZero = list.Where(x => x > 0);
             double avg = 0.0; 
 
             if (nonZero.Count() > 0)
@@ -495,6 +495,21 @@ namespace IRT_GUI
 
             return avg;
         }
+
+        private double CalcAverage(List<double> list)
+        {
+            // Non-zeros
+            var nonZero = list.Where(x => x > 0.0);
+            double avg = 0.0;
+
+            if (nonZero.Count() > 0)
+            {
+                avg = (double)nonZero.Average(x => x);
+            }
+
+            return avg;
+        }
+
 
         void m_refPower_ChannelStatusChanged(ChannelStatus status)
         {
@@ -1191,6 +1206,9 @@ namespace IRT_GUI
         
         private void UpdateStatus(string text)
         {
+            if (txtLog == null)
+                return;
+
             ExecuteOnUI(() =>
             {
                 txtLog.AppendText(text + '\n');
