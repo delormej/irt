@@ -561,7 +561,7 @@
             // label15
             // 
             this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(172, 395);
+            this.label15.Location = new System.Drawing.Point(162, 486);
             this.label15.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(129, 20);
@@ -571,7 +571,7 @@
             // numMovingAvgSec
             // 
             this.numMovingAvgSec.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.numMovingAvgSec.Location = new System.Drawing.Point(195, 420);
+            this.numMovingAvgSec.Location = new System.Drawing.Point(179, 448);
             this.numMovingAvgSec.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numMovingAvgSec.Name = "numMovingAvgSec";
             this.numMovingAvgSec.Size = new System.Drawing.Size(112, 30);
