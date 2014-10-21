@@ -14,6 +14,7 @@
 #include "user_profile.h"
 
 #define RESISTANCE_LEVELS 	7 	// Number of resistance levels available.
+#define ERG_ADJUST_LEVEL	2U	// Watts to adjust increment /decrement
 
 /**@brief		Array representing the servo position in micrseconds (us) by 
  *				resistance level 0-9, with a larger number representing more

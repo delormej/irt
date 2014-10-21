@@ -854,7 +854,7 @@ static void on_resistance_dec(void)
 			m_sim_forces.erg_watts > 50u)
 	{
 		// Decrement by 15 watts;
-		m_sim_forces.erg_watts -= 15u;
+		m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
 		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 }
@@ -870,8 +870,8 @@ static void on_resistance_inc(void)
 	}
 	else if (m_resistance_mode == RESISTANCE_SET_ERG)
 	{
-		// Increment by 15 watts;
-		m_sim_forces.erg_watts += 15u;
+		// Increment by x watts;
+		m_sim_forces.erg_watts += ERG_ADJUST_LEVEL;
 		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 	}
 }
