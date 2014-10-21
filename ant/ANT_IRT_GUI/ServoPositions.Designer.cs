@@ -57,7 +57,7 @@
             this.dgResistancePositions.RowTemplate.Height = 18;
             this.dgResistancePositions.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dgResistancePositions.ScrollBars = System.Windows.Forms.ScrollBars.None;
-            this.dgResistancePositions.Size = new System.Drawing.Size(95, 257);
+            this.dgResistancePositions.Size = new System.Drawing.Size(95, 207);
             this.dgResistancePositions.TabIndex = 0;
             this.dgResistancePositions.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.dgResistancePositions_CellValidating);
             // 
@@ -84,7 +84,7 @@
             this.numResistancePositions.Location = new System.Drawing.Point(77, 11);
             this.numResistancePositions.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.numResistancePositions.Maximum = new decimal(new int[] {
-            9,
+            10,
             0,
             0,
             0});
@@ -101,6 +101,7 @@
             0,
             0,
             0});
+            this.numResistancePositions.ValueChanged += new System.EventHandler(this.numResistancePositions_ValueChanged);
             // 
             // btnSetServoPositions
             // 
