@@ -319,27 +319,9 @@ namespace IRT_GUI
 
                 case SubPages.Charger:
                     UpdateStatus("Received charger parameter.");
+                    bool check = (buffer[2] == 0x02); // Charging
+                    UpdateCheckbox(chkCharge, check);
 
-                    ExecuteOnUI(() =>
-                    {
-                        if (buffer[2] == 0x02)
-                        {
-                            if (chkCharge.Checked == false)
-                            {
-                                chkCharge.Checked = true;
-                                System.Diagnostics.Debug.WriteLine("STARTED charging: " + System.DateTime.Now);
-                            }
-                        }
-                        else
-                        {
-                            if (chkCharge.Checked == true)
-                            {
-                                chkCharge.Checked = false;
-                                // Display in debug console
-                                System.Diagnostics.Debug.WriteLine("DONE charging: " + System.DateTime.Now);
-                            }
-                        }
-                    });
                     break;
 
                 default:
@@ -671,6 +653,8 @@ namespace IRT_GUI
         {
             float volts = (float)arg1.CoarseBatteryVoltage + 
                 ((float)arg1.FractionalBatteryVoltage / 255);
+
+            UpdateStatus("Received battery reading.");
 
             UpdateText(lblEmrBattVolt, volts.ToString("0.00"));
             // Update the color of the battery status, Red, Green, Yellow.
@@ -1022,7 +1006,10 @@ namespace IRT_GUI
         private void chkCharge_CheckedChanged(object sender, EventArgs e)
         {
             // Toggles charger... need to then also wait for response back and update display.
-            SetParameter((byte)(SubPages.Charger), 1);
+            // BUG: When the box is checked via code this handler is invoked and issues a toggle command
+            // on the charge flag... disabled for now.  
+            // WORKAROUND: use a flag to suppress when set via code and check that.
+            //SetParameter((byte)(SubPages.Charger), 1);
         }
 
         private void btnServoOffset_Click(object sender, EventArgs e)
@@ -1251,6 +1238,17 @@ namespace IRT_GUI
             UpdateStatus(String.Format("Unable to request parameter: {0}, return result: {1}.", subPage, result));
         }
         
+        private void UpdateCheckbox(CheckBox ctl, bool check)
+        {
+            if (check != ctl.Checked)
+            {
+                ExecuteOnUI(() => 
+                {
+                    ctl.Checked = check;
+                });
+            }
+        }
+
         private void UpdateStatus(string text)
         {
             if (txtLog == null)
