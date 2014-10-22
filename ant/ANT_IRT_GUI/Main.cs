@@ -119,6 +119,9 @@ namespace IRT_GUI
             cmbResistanceMode.Items.Clear();
             cmbResistanceMode.Items.AddRange(Enum.GetNames(typeof(ResistanceMode)));
 
+            cmbParamGet.Items.Clear();
+            cmbParamGet.Items.AddRange(Enum.GetNames(typeof(SubPages)));
+
             numMovingAvgSec.Value = 30;
             InitMovingAverage((int)numMovingAvgSec.Value);
 
@@ -762,15 +765,17 @@ namespace IRT_GUI
 
         private byte GetParameter()
         {
-            byte param = 0;
-            byte.TryParse(txtParamGet.Text, out param);
+            SubPages param = 0;
 
-            if (param == 0)
+            if (!Enum.TryParse<SubPages>(cmbParamGet.Text, out param))
             {
                 UpdateStatus("Please enter a parameter number.");
+                return 0;   
             }
-
-            return param;
+            else
+            {
+                return (byte)param;
+            }
         }
 
         private void btnSettingsSet_Click(object sender, EventArgs e)
@@ -1297,7 +1302,7 @@ namespace IRT_GUI
             }
 
             // Update text boxes for get/set params
-            UpdateText(txtParamGet, (byte)SubPages.Settings);
+            UpdateText(cmbParamGet, (byte)SubPages.Settings);
             UpdateText(txtParamSet, value);
         }
 

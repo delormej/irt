@@ -120,9 +120,9 @@
             this.txtParamSet = new System.Windows.Forms.TextBox();
             this.btnParamGet = new System.Windows.Forms.Button();
             this.btnParamSet = new System.Windows.Forms.Button();
-            this.txtParamGet = new System.Windows.Forms.TextBox();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.cmbParamGet = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
@@ -1137,11 +1137,11 @@
             // 
             // groupBox4
             // 
+            this.groupBox4.Controls.Add(this.cmbParamGet);
             this.groupBox4.Controls.Add(this.txtParamSet);
             this.groupBox4.Controls.Add(this.btnParamGet);
             this.groupBox4.Controls.Add(this.chkLstSettings);
             this.groupBox4.Controls.Add(this.btnParamSet);
-            this.groupBox4.Controls.Add(this.txtParamGet);
             this.groupBox4.Location = new System.Drawing.Point(285, 18);
             this.groupBox4.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox4.Name = "groupBox4";
@@ -1153,10 +1153,10 @@
             // 
             // txtParamSet
             // 
-            this.txtParamSet.Location = new System.Drawing.Point(114, 29);
+            this.txtParamSet.Location = new System.Drawing.Point(135, 29);
             this.txtParamSet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtParamSet.Name = "txtParamSet";
-            this.txtParamSet.Size = new System.Drawing.Size(94, 26);
+            this.txtParamSet.Size = new System.Drawing.Size(73, 26);
             this.txtParamSet.TabIndex = 11;
             // 
             // btnParamGet
@@ -1181,14 +1181,6 @@
             this.btnParamSet.UseVisualStyleBackColor = true;
             this.btnParamSet.Click += new System.EventHandler(this.btnParamSet_Click);
             // 
-            // txtParamGet
-            // 
-            this.txtParamGet.Location = new System.Drawing.Point(9, 29);
-            this.txtParamGet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.txtParamGet.Name = "txtParamGet";
-            this.txtParamGet.Size = new System.Drawing.Size(88, 26);
-            this.txtParamGet.TabIndex = 10;
-            // 
             // statusStrip
             // 
             this.statusStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
@@ -1206,6 +1198,16 @@
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(181, 25);
             this.lblStatus.Text = "toolStripStatusLabel1";
+            // 
+            // cmbParamGet
+            // 
+            this.cmbParamGet.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this.cmbParamGet.CausesValidation = false;
+            this.cmbParamGet.FormattingEnabled = true;
+            this.cmbParamGet.Location = new System.Drawing.Point(7, 27);
+            this.cmbParamGet.Name = "cmbParamGet";
+            this.cmbParamGet.Size = new System.Drawing.Size(121, 28);
+            this.cmbParamGet.TabIndex = 10;
             // 
             // frmIrtGui
             // 
@@ -1325,7 +1327,6 @@
         private System.Windows.Forms.TextBox txtParamSet;
         private System.Windows.Forms.Button btnParamGet;
         private System.Windows.Forms.Button btnParamSet;
-        private System.Windows.Forms.TextBox txtParamGet;
         private System.Windows.Forms.TextBox txtServoOffset;
         private System.Windows.Forms.Label label28;
         private System.Windows.Forms.Button btnServoOffset;
@@ -1353,6 +1354,7 @@
         private System.Windows.Forms.Label label27;
         private System.Windows.Forms.Label lblSpeedAvg;
         private System.Windows.Forms.Button btnSetResistancePositions;
+        private System.Windows.Forms.ComboBox cmbParamGet;
     }
 }
 
