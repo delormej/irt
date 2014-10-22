@@ -140,7 +140,7 @@
             // 
             // txtLog
             // 
-            this.txtLog.Location = new System.Drawing.Point(20, 580);
+            this.txtLog.Location = new System.Drawing.Point(20, 560);
             this.txtLog.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
