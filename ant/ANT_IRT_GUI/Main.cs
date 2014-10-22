@@ -1401,7 +1401,7 @@ namespace IRT_GUI
 
         private void cmbResistanceMode_Enter(object sender, EventArgs e)
         {
-            m_PauseServoUpdate = true;
+            //m_PauseServoUpdate = true;
         }
 
         private void cmbResistanceMode_Leave(object sender, EventArgs e)
