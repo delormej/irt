@@ -41,8 +41,8 @@ static const uint16_t RESISTANCE_LEVEL[RESISTANCE_LEVELS] = {
 	900,
 	800 };
 
-#define MIN_RESISTANCE_LEVEL	RESISTANCE_LEVEL[0]						// Minimum by which there is no longer resistance.
-#define MAX_RESISTANCE_LEVEL	RESISTANCE_LEVEL[RESISTANCE_LEVELS-1]	// Maximum resistance.
+#define MIN_RESISTANCE_LEVEL	resistance_position_min()	// Minimum by which there is no longer resistance.
+#define MAX_RESISTANCE_LEVEL	resistance_position_max()	// Maximum resistance.
 
 /**@brief Bike types, used for predefined resistance coefficients. */
 typedef enum
@@ -135,6 +135,14 @@ uint16_t resistance_position_get(void);
  */
 uint16_t resistance_position_set(uint16_t position);
 
+/**@brief		Gets the minimum (magnet off) resistance position.
+ */
+uint16_t resistance_position_min(void);
+
+/**@brief 		Gets the maximum resistance position.
+ */
+uint16_t resistance_position_max(void);
+
 /**@brief		Sets the resistance to a specific level by moving the servo to the 
  *					corresponding position.
  *
@@ -156,4 +164,6 @@ void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 		resistance_mode_t resistance_mode,
 		float 				rr_force);
 
-#endif
+
+
+#endif //__RESISTANCE_H__

@@ -130,6 +130,20 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 	return m_servo_pos;
 }
 
+/**@brief		Gets the minimum (magnet off) resistance position.
+ */
+uint16_t resistance_position_min(void)
+{
+	return RESISTANCE_LEVEL[0];
+}
+
+/**@brief 		Gets the maximum resistance position.
+ */
+uint16_t resistance_position_max(void)
+{
+	return RESISTANCE_LEVEL[RESISTANCE_LEVELS-1];
+}
+
 uint16_t resistance_level_set(uint8_t level)
 {
 	// Sets the resistance to a standard 0-9 level.
