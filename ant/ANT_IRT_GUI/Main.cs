@@ -20,6 +20,7 @@ namespace IRT_GUI
 {
     public partial class frmIrtGui : Form
     {
+        const byte ANT_BURST_MSG_ID_SET_POSITIONS   = 0x49;
         const byte ANT_BURST_MSG_ID_SET_RESISTANCE  = 0x48;
         const byte RESISTANCE_SET_SLOPE		        = 0x46;
 	    const byte RESISTANCE_SET_WIND			    = 0x47;
@@ -885,6 +886,18 @@ namespace IRT_GUI
             return SendBurst(0x48, (ushort)(wheelSizeMM * 10));
         }
 
+        bool SendBurstData(byte[] data)
+        {
+            var result = m_eMotionChannel.sendBurstTransfer(data, 500);
+
+            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            {
+                UpdateStatus("Unable to send burst command, result: " + result);
+            }
+
+            return (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
+        }
+
         bool SendBurst(byte command, ushort value)
         {
             byte[] data = { 
@@ -917,14 +930,7 @@ namespace IRT_GUI
                 0x00
                           };
 
-            var result = m_eMotionChannel.sendBurstTransfer(data, 500);
-
-            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
-            {
-                UpdateStatus("Unable to send burst command, result: " + result);
-            }
-
-            return (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
+            return SendBurstData(data);
         }
 
         bool SendCommand(Command command, byte[] value)
