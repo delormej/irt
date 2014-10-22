@@ -193,7 +193,7 @@
             // 
             this.label27.AutoSize = true;
             this.label27.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label27.Location = new System.Drawing.Point(42, 483);
+            this.label27.Location = new System.Drawing.Point(47, 483);
             this.label27.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label27.Name = "label27";
             this.label27.Size = new System.Drawing.Size(77, 20);
@@ -903,7 +903,7 @@
             // txtResistanceErgWatts
             // 
             this.txtResistanceErgWatts.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtResistanceErgWatts.Location = new System.Drawing.Point(221, 32);
+            this.txtResistanceErgWatts.Location = new System.Drawing.Point(114, 34);
             this.txtResistanceErgWatts.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtResistanceErgWatts.Name = "txtResistanceErgWatts";
             this.txtResistanceErgWatts.Size = new System.Drawing.Size(115, 62);
