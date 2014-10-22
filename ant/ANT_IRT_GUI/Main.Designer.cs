@@ -117,12 +117,13 @@
             this.txtWheelSizeMm = new System.Windows.Forms.TextBox();
             this.chkLstSettings = new System.Windows.Forms.CheckedListBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.cmbParamGet = new System.Windows.Forms.ComboBox();
             this.txtParamSet = new System.Windows.Forms.TextBox();
             this.btnParamGet = new System.Windows.Forms.Button();
             this.btnParamSet = new System.Windows.Forms.Button();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            this.cmbParamGet = new System.Windows.Forms.ComboBox();
+            this.btnChartOpen = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
@@ -558,6 +559,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.btnChartOpen);
             this.groupBox2.Controls.Add(this.label15);
             this.groupBox2.Controls.Add(this.numMovingAvgSec);
             this.groupBox2.Controls.Add(this.lblRefPwrWattsAvg);
@@ -1151,6 +1153,16 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Get/Set Parameter";
             // 
+            // cmbParamGet
+            // 
+            this.cmbParamGet.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this.cmbParamGet.CausesValidation = false;
+            this.cmbParamGet.FormattingEnabled = true;
+            this.cmbParamGet.Location = new System.Drawing.Point(7, 27);
+            this.cmbParamGet.Name = "cmbParamGet";
+            this.cmbParamGet.Size = new System.Drawing.Size(121, 28);
+            this.cmbParamGet.TabIndex = 10;
+            // 
             // txtParamSet
             // 
             this.txtParamSet.Location = new System.Drawing.Point(135, 29);
@@ -1199,15 +1211,16 @@
             this.lblStatus.Size = new System.Drawing.Size(181, 25);
             this.lblStatus.Text = "toolStripStatusLabel1";
             // 
-            // cmbParamGet
+            // btnChartOpen
             // 
-            this.cmbParamGet.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
-            this.cmbParamGet.CausesValidation = false;
-            this.cmbParamGet.FormattingEnabled = true;
-            this.cmbParamGet.Location = new System.Drawing.Point(7, 27);
-            this.cmbParamGet.Name = "cmbParamGet";
-            this.cmbParamGet.Size = new System.Drawing.Size(121, 28);
-            this.cmbParamGet.TabIndex = 10;
+            this.btnChartOpen.Location = new System.Drawing.Point(231, 390);
+            this.btnChartOpen.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnChartOpen.Name = "btnChartOpen";
+            this.btnChartOpen.Size = new System.Drawing.Size(76, 35);
+            this.btnChartOpen.TabIndex = 34;
+            this.btnChartOpen.Text = "Chart";
+            this.btnChartOpen.UseVisualStyleBackColor = true;
+            this.btnChartOpen.Click += new System.EventHandler(this.btnChartOpen_Click);
             // 
             // frmIrtGui
             // 
@@ -1355,6 +1368,7 @@
         private System.Windows.Forms.Label lblSpeedAvg;
         private System.Windows.Forms.Button btnSetResistancePositions;
         private System.Windows.Forms.ComboBox cmbParamGet;
+        private System.Windows.Forms.Button btnChartOpen;
     }
 }
 

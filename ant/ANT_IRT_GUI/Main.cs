@@ -40,7 +40,7 @@ namespace IRT_GUI
 
         // Logging stuff.
         private Timer m_reportTimer;
-        private LogReporter m_reporter;
+        private List<IReporter> m_reporters;
         private DataPoint m_dataPoint;
 
         // Used for calculating moving average.
@@ -137,8 +137,13 @@ namespace IRT_GUI
             if (m_reportTimer != null)
                 m_reportTimer.Stop();
 
-            if (m_reporter != null)
-                m_reporter.Dispose();
+            // Dispose of all reporters properly.
+            foreach (IReporter r in m_reporters)
+            {
+                var id = r as IDisposable;
+                if (id != null)
+                    id.Dispose();
+            }
         }
 
         void m_ANT_Device_deviceResponse(ANT_Response response)
@@ -437,7 +442,9 @@ namespace IRT_GUI
         private void StartReporting()
         {
             // Start logging.
-            m_reporter = new LogReporter();
+            m_reporters = new List<IReporter>();
+            m_reporters.Add(new LogReporter());
+
             m_reportTimer = new Timer();
             m_reportTimer.Interval = 1000; // Every second.
             m_reportTimer.Tick += m_reportTimer_Tick;
@@ -446,7 +453,9 @@ namespace IRT_GUI
 
         void m_reportTimer_Tick(object sender, EventArgs e)
         {
-            m_reporter.Report(m_dataPoint);
+            foreach (IReporter r in m_reporters)
+                r.Report(m_dataPoint);
+            
             UpdateMovingAverage();
         }
 
@@ -1511,6 +1520,18 @@ namespace IRT_GUI
         {
             ServoPositions pos = new ServoPositions();
             pos.ShowDialog();
+        }
+
+        private void btnChartOpen_Click(object sender, EventArgs e)
+        {
+            GraphForm graph = new GraphForm();
+            m_reporters.Add(graph);
+            graph.FormClosing += (o, v) =>
+            {
+                m_reporters.Remove(graph);
+            };
+
+            graph.Show();
         }
     }
 }
