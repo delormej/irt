@@ -71,7 +71,7 @@
 #define DEFAULT_CRR						30ul										// Default Co-efficient for rolling resistance used when no slope/intercept defined.  Divide by 1000 to get 0.03f.
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
-
+#define CRR_ADJUST_VALUE				1											// Amount to adjust (up/down) CRR on button command.
 //
 // General purpose retention register states used.
 //
@@ -746,6 +746,7 @@ static void send_temperature()
  */
 static void calibration_start(void)
 {
+	/*
 	uint32_t err_code;
 
 	// Stop existing ANT timer, start the new one.
@@ -761,8 +762,9 @@ static void calibration_start(void)
 
     err_code = app_timer_start(m_ca_timer_id, CALIBRATION_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
-
+	 */
     set_led_red(LED_1);
+
     m_crr_adjust_mode = true;
 }
 
@@ -770,17 +772,20 @@ static void calibration_start(void)
  */
 static void calibration_stop(void)
 {
+	/*
 	uint32_t err_code;
 
 	// Stop the calibration timer.
 	err_code = app_timer_stop(m_ca_timer_id);
     APP_ERROR_CHECK(err_code);
-
+	*/
 	clear_led(LED_1);
 	m_crr_adjust_mode = false;
 
+	/*
 	// Restart the normal timer.
 	application_timers_start();
+	*/
 }
 
 /**@brief	Updates settings either temporarily or with persistence.
@@ -811,6 +816,20 @@ static void settings_update(uint8_t* buffer)
 				m_user_profile.settings);
 		// Schedule update to the profile.
 		profile_update_sched();
+	}
+}
+
+/**@brief	Adjusts the crr intercept by the value.
+ *
+ */
+static void crr_adjust(int8_t value)
+{
+	if (m_user_profile.ca_intercept != 0xFFFF)
+	{
+		// Wire value of intercept is sent in 1/1000, i.e. 57236 == 57.236
+		m_user_profile.ca_intercept += (value * 1000);
+		power_init(&m_user_profile, DEFAULT_CRR);
+		send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
 	}
 }
 
@@ -1129,10 +1148,8 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 	{
 		case ANT_CTRL_BUTTON_UP:
 			if (m_crr_adjust_mode)
-			{/*
-				m_user_profile.ca_slope += 50;
-				power_init(&m_user_profile, DEFAULT_CRR);
-				send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);*/
+			{
+				crr_adjust(CRR_ADJUST_VALUE);
 			}
 			else
 			{
@@ -1143,13 +1160,8 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 
 		case ANT_CTRL_BUTTON_DOWN:
 			if (m_crr_adjust_mode)
-			{/*
-				if (m_user_profile.ca_slope > 50)
-				{
-					m_user_profile.ca_slope -= 50;
-					power_init(&m_user_profile, DEFAULT_CRR);
-					send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
-				}*/
+			{
+				crr_adjust(CRR_ADJUST_VALUE*-1);
 			}
 			else
 			{
