@@ -31,6 +31,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmIrtGui));
             this.txtLog = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label27 = new System.Windows.Forms.Label();
+            this.lblSpeedAvg = new System.Windows.Forms.Label();
             this.lblFlywheel = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.lblEmrWattsAvg = new System.Windows.Forms.Label();
@@ -83,6 +85,7 @@
             this.btnCalibrationSet = new System.Windows.Forms.Button();
             this.btnCalibrationGet = new System.Windows.Forms.Button();
             this.groupBoxResistance = new System.Windows.Forms.GroupBox();
+            this.btnSetResistancePositions = new System.Windows.Forms.Button();
             this.pnlResistanceStd = new System.Windows.Forms.Panel();
             this.lblResistanceStdLevel = new System.Windows.Forms.Label();
             this.btnResistanceDec = new System.Windows.Forms.Button();
@@ -120,9 +123,6 @@
             this.txtParamGet = new System.Windows.Forms.TextBox();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            this.label27 = new System.Windows.Forms.Label();
-            this.lblSpeedAvg = new System.Windows.Forms.Label();
-            this.btnSetResistancePositions = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
@@ -188,6 +188,29 @@
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "E-Motion Rollers";
+            // 
+            // label27
+            // 
+            this.label27.AutoSize = true;
+            this.label27.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label27.Location = new System.Drawing.Point(42, 483);
+            this.label27.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(77, 20);
+            this.label27.TabIndex = 36;
+            this.label27.Text = "Average";
+            // 
+            // lblSpeedAvg
+            // 
+            this.lblSpeedAvg.AutoSize = true;
+            this.lblSpeedAvg.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblSpeedAvg.Location = new System.Drawing.Point(30, 426);
+            this.lblSpeedAvg.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblSpeedAvg.Name = "lblSpeedAvg";
+            this.lblSpeedAvg.Size = new System.Drawing.Size(118, 55);
+            this.lblSpeedAvg.TabIndex = 35;
+            this.lblSpeedAvg.Text = "00.0";
+            this.lblSpeedAvg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lblFlywheel
             // 
@@ -766,12 +789,23 @@
             this.groupBoxResistance.TabStop = false;
             this.groupBoxResistance.Text = "Resistance";
             // 
+            // btnSetResistancePositions
+            // 
+            this.btnSetResistancePositions.Location = new System.Drawing.Point(37, 136);
+            this.btnSetResistancePositions.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnSetResistancePositions.Name = "btnSetResistancePositions";
+            this.btnSetResistancePositions.Size = new System.Drawing.Size(167, 35);
+            this.btnSetResistancePositions.TabIndex = 29;
+            this.btnSetResistancePositions.Text = "Positions";
+            this.btnSetResistancePositions.UseVisualStyleBackColor = true;
+            this.btnSetResistancePositions.Click += new System.EventHandler(this.btnSetResistancePositions_Click);
+            // 
             // pnlResistanceStd
             // 
             this.pnlResistanceStd.Controls.Add(this.lblResistanceStdLevel);
             this.pnlResistanceStd.Controls.Add(this.btnResistanceDec);
             this.pnlResistanceStd.Controls.Add(this.btnResistanceInc);
-            this.pnlResistanceStd.Location = new System.Drawing.Point(234, 29);
+            this.pnlResistanceStd.Location = new System.Drawing.Point(221, 32);
             this.pnlResistanceStd.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pnlResistanceStd.Name = "pnlResistanceStd";
             this.pnlResistanceStd.Size = new System.Drawing.Size(246, 140);
@@ -818,7 +852,7 @@
             this.pnlResistancePercent.Controls.Add(this.trackBarResistancePct);
             this.pnlResistancePercent.Controls.Add(this.txtResistancePercent);
             this.pnlResistancePercent.Controls.Add(this.label5);
-            this.pnlResistancePercent.Location = new System.Drawing.Point(234, 29);
+            this.pnlResistancePercent.Location = new System.Drawing.Point(221, 32);
             this.pnlResistancePercent.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pnlResistancePercent.Name = "pnlResistancePercent";
             this.pnlResistancePercent.Size = new System.Drawing.Size(246, 140);
@@ -860,7 +894,7 @@
             // 
             this.pnlErg.Controls.Add(this.txtResistanceErgWatts);
             this.pnlErg.Controls.Add(this.label20);
-            this.pnlErg.Location = new System.Drawing.Point(234, 29);
+            this.pnlErg.Location = new System.Drawing.Point(221, 32);
             this.pnlErg.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pnlErg.Name = "pnlErg";
             this.pnlErg.Size = new System.Drawing.Size(246, 140);
@@ -868,10 +902,11 @@
             // 
             // txtResistanceErgWatts
             // 
-            this.txtResistanceErgWatts.Location = new System.Drawing.Point(134, 54);
+            this.txtResistanceErgWatts.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtResistanceErgWatts.Location = new System.Drawing.Point(221, 32);
             this.txtResistanceErgWatts.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtResistanceErgWatts.Name = "txtResistanceErgWatts";
-            this.txtResistanceErgWatts.Size = new System.Drawing.Size(92, 26);
+            this.txtResistanceErgWatts.Size = new System.Drawing.Size(115, 62);
             this.txtResistanceErgWatts.TabIndex = 22;
             this.txtResistanceErgWatts.TabStop = false;
             this.txtResistanceErgWatts.Enter += new System.EventHandler(this.txtResistanceErgWatts_Enter);
@@ -880,7 +915,7 @@
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(9, 58);
+            this.label20.Location = new System.Drawing.Point(9, 56);
             this.label20.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(101, 20);
@@ -895,7 +930,7 @@
             this.pnlResistanceSim.Controls.Add(this.label24);
             this.pnlResistanceSim.Controls.Add(this.txtSimSlope);
             this.pnlResistanceSim.Controls.Add(this.label23);
-            this.pnlResistanceSim.Location = new System.Drawing.Point(234, 31);
+            this.pnlResistanceSim.Location = new System.Drawing.Point(221, 32);
             this.pnlResistanceSim.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pnlResistanceSim.Name = "pnlResistanceSim";
             this.pnlResistanceSim.Size = new System.Drawing.Size(246, 140);
@@ -960,21 +995,22 @@
             // 
             // btnResistanceSet
             // 
-            this.btnResistanceSet.Location = new System.Drawing.Point(134, 90);
+            this.btnResistanceSet.Location = new System.Drawing.Point(134, 92);
             this.btnResistanceSet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnResistanceSet.Name = "btnResistanceSet";
             this.btnResistanceSet.Size = new System.Drawing.Size(70, 35);
-            this.btnResistanceSet.TabIndex = 18;
+            this.btnResistanceSet.TabIndex = 21;
             this.btnResistanceSet.Text = "Set";
             this.btnResistanceSet.UseVisualStyleBackColor = true;
             this.btnResistanceSet.Click += new System.EventHandler(this.btnResistanceSet_Click);
             // 
             // txtServoPos
             // 
-            this.txtServoPos.Location = new System.Drawing.Point(38, 94);
+            this.txtServoPos.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtServoPos.Location = new System.Drawing.Point(38, 88);
             this.txtServoPos.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtServoPos.Name = "txtServoPos";
-            this.txtServoPos.Size = new System.Drawing.Size(92, 26);
+            this.txtServoPos.Size = new System.Drawing.Size(92, 39);
             this.txtServoPos.TabIndex = 20;
             this.txtServoPos.Enter += new System.EventHandler(this.txtServoPos_Enter);
             this.txtServoPos.Leave += new System.EventHandler(this.txtServoPos_Leave);
@@ -1096,7 +1132,7 @@
             this.chkLstSettings.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chkLstSettings.Name = "chkLstSettings";
             this.chkLstSettings.Size = new System.Drawing.Size(199, 172);
-            this.chkLstSettings.TabIndex = 22;
+            this.chkLstSettings.TabIndex = 12;
             this.chkLstSettings.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.chkLstSettings_ItemCheck);
             // 
             // groupBox4
@@ -1121,7 +1157,7 @@
             this.txtParamSet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtParamSet.Name = "txtParamSet";
             this.txtParamSet.Size = new System.Drawing.Size(94, 26);
-            this.txtParamSet.TabIndex = 25;
+            this.txtParamSet.TabIndex = 11;
             // 
             // btnParamGet
             // 
@@ -1129,7 +1165,7 @@
             this.btnParamGet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnParamGet.Name = "btnParamGet";
             this.btnParamGet.Size = new System.Drawing.Size(70, 35);
-            this.btnParamGet.TabIndex = 24;
+            this.btnParamGet.TabIndex = 13;
             this.btnParamGet.Text = "Get";
             this.btnParamGet.UseVisualStyleBackColor = true;
             this.btnParamGet.Click += new System.EventHandler(this.btnParamGet_Click);
@@ -1140,7 +1176,7 @@
             this.btnParamSet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnParamSet.Name = "btnParamSet";
             this.btnParamSet.Size = new System.Drawing.Size(70, 35);
-            this.btnParamSet.TabIndex = 23;
+            this.btnParamSet.TabIndex = 14;
             this.btnParamSet.Text = "Set";
             this.btnParamSet.UseVisualStyleBackColor = true;
             this.btnParamSet.Click += new System.EventHandler(this.btnParamSet_Click);
@@ -1170,40 +1206,6 @@
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(181, 25);
             this.lblStatus.Text = "toolStripStatusLabel1";
-            // 
-            // label27
-            // 
-            this.label27.AutoSize = true;
-            this.label27.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label27.Location = new System.Drawing.Point(42, 483);
-            this.label27.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size(77, 20);
-            this.label27.TabIndex = 36;
-            this.label27.Text = "Average";
-            // 
-            // lblSpeedAvg
-            // 
-            this.lblSpeedAvg.AutoSize = true;
-            this.lblSpeedAvg.Font = new System.Drawing.Font("Microsoft Sans Serif", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSpeedAvg.Location = new System.Drawing.Point(30, 426);
-            this.lblSpeedAvg.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.lblSpeedAvg.Name = "lblSpeedAvg";
-            this.lblSpeedAvg.Size = new System.Drawing.Size(118, 55);
-            this.lblSpeedAvg.TabIndex = 35;
-            this.lblSpeedAvg.Text = "00.0";
-            this.lblSpeedAvg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // btnSetResistancePositions
-            // 
-            this.btnSetResistancePositions.Location = new System.Drawing.Point(37, 135);
-            this.btnSetResistancePositions.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnSetResistancePositions.Name = "btnSetResistancePositions";
-            this.btnSetResistancePositions.Size = new System.Drawing.Size(167, 35);
-            this.btnSetResistancePositions.TabIndex = 29;
-            this.btnSetResistancePositions.Text = "Positions";
-            this.btnSetResistancePositions.UseVisualStyleBackColor = true;
-            this.btnSetResistancePositions.Click += new System.EventHandler(this.btnSetResistancePositions_Click);
             // 
             // frmIrtGui
             // 

@@ -736,6 +736,8 @@ namespace IRT_GUI
 
         private bool SetParameter(byte subpage, UInt32 value)
         {
+            UpdateStatus(string.Format("Sending {0} parameter.", (SubPages)subpage));
+
             GetSetMessage message = new GetSetMessage(subpage);
             message.SetPayLoad(value);
             var result = m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
