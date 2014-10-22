@@ -20,7 +20,7 @@ namespace IRT_GUI
 {
     public partial class frmIrtGui : Form
     {
-        const byte ANT_BURST_MSG_ID_SET_POSITIONS   = 0x49;
+        const byte ANT_BURST_MSG_ID_SET_POSITIONS   = 0x59;
         const byte ANT_BURST_MSG_ID_SET_RESISTANCE  = 0x48;
         const byte RESISTANCE_SET_SLOPE		        = 0x46;
 	    const byte RESISTANCE_SET_WIND			    = 0x47;
@@ -1560,10 +1560,42 @@ namespace IRT_GUI
 
         private void btnSetResistancePositions_Click(object sender, EventArgs e)
         {
+            byte[] data = { 
+                // Message 1
+                ANT_BURST_MSG_ID_SET_POSITIONS,
+                0x09,   // COUNT
+                0x78,   // 0 
+                0x05,   // 0
+                0x78,   // 1
+                0x04,   // 1
+                0x78,   // 2
+                0x03,   // 2
+                // Message 2
+                0x88,   // 3
+                0x05,   // 3
+                0x88,   // 4
+                0x04,   // 4
+                0x83,   // 5
+                0x04,   // 5
+                0x82,   // 6
+                0x01,   // 6
+                // Message 3
+                0x74,   // 7
+                0x01,   // 7
+                0x74,   // 8
+                0x02,   // 8
+                0x74,   // 9
+                0x03,   // 9
+                0xFF,   // BLANK
+                0xFF    // BLANK
+                          };
+
+            SendBurstData(data);
+
             ServoPositions pos = new ServoPositions();
             pos.ShowDialog();
         }
-
+        
         private void btnChartOpen_Click(object sender, EventArgs e)
         {
             GraphForm graph = new GraphForm();
