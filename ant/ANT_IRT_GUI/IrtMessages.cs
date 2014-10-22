@@ -27,6 +27,10 @@ namespace IRT_GUI.IrtMessages
         public ushort RefSpeedWheelRevs;
         public ushort RefPowerAccumTorque;
 
+        public short PowerReferenceAvg;
+        public short PowerEMotionAvg;
+        public float SpeedEmotionAvg;
+
         public override string ToString()
         {
             return string.Format(FORMAT,

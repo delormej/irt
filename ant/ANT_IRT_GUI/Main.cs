@@ -137,12 +137,15 @@ namespace IRT_GUI
             if (m_reportTimer != null)
                 m_reportTimer.Stop();
 
-            // Dispose of all reporters properly.
-            foreach (IReporter r in m_reporters)
+            if (m_reporters != null)
             {
-                var id = r as IDisposable;
-                if (id != null)
-                    id.Dispose();
+                // Dispose of all reporters properly.
+                foreach (IReporter r in m_reporters)
+                {
+                    var id = r as IDisposable;
+                    if (id != null)
+                        id.Dispose();
+                }
             }
         }
 
@@ -469,7 +472,6 @@ namespace IRT_GUI
                 m_movingAvgPosition = 0;
             }
 
-
             if (m_eMotion != null)
             {
                 if (!double.IsInfinity(m_eMotion.AverageSpeedWheelTorque) &&
@@ -507,6 +509,10 @@ namespace IRT_GUI
             var eMotionAvg = CalcAverage(m_eMotionPowerList);
             var refPowerAvg = CalcAverage(m_RefPowerList);
             var speedAvg = CalcAverage(m_SpeedList);
+
+            m_dataPoint.PowerEMotionAvg = (short)eMotionAvg;
+            m_dataPoint.PowerReferenceAvg = (short)refPowerAvg;
+            m_dataPoint.SpeedEmotionAvg = (float)speedAvg;
 
             UpdateText(lblEmrWattsAvg, (int)eMotionAvg);
             UpdateText(lblRefPwrWattsAvg, (int)refPowerAvg);
