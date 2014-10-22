@@ -1535,6 +1535,11 @@ namespace IRT_GUI
                 m_reporters.Remove(graph);
             };
 
+            Screen screen = Screen.FromControl(this);
+            int width = screen.WorkingArea.Width;
+            graph.Width = width;
+            graph.Height = (int)(screen.WorkingArea.Height * 0.4);
+            graph.SetDesktopLocation(0, 0);
             graph.Show();
         }
     }
