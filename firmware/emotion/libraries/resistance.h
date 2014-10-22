@@ -13,8 +13,9 @@
 #include "irt_common.h"
 #include "user_profile.h"
 
-#define RESISTANCE_LEVELS 	7 	// Number of resistance levels available.
-#define ERG_ADJUST_LEVEL	2U	// Watts to adjust increment /decrement
+#define MAX_RESISTANCE_LEVEL_COUNT 	10u 	// Max number of resistance levels possible to set.
+#define RESISTANCE_LEVELS 	7 				// Number of resistance levels available.
+#define ERG_ADJUST_LEVEL	2U				// Watts to adjust increment /decrement
 
 /**@brief		Array representing the servo position in micrseconds (us) by 
  *				resistance level 0-9, with a larger number representing more
@@ -96,6 +97,14 @@ typedef struct
 	resistance_mode_t 	operation;				// Operation to perform or mode to set for resistance.
 	uint8_t				*pBuffer; 				// Pointer to values required for the operation.
 } rc_evt_t;
+
+/**@brief	Servo positions available.
+ */
+typedef struct
+{
+	uint8_t				count;
+	uint16_t			positions[MAX_RESISTANCE_LEVEL_COUNT];
+} servo_positions_t;
 
 /**@brief Set resistance event handler type. */
 typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);

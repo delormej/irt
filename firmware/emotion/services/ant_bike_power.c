@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "stdio.h"
+#include "string.h"
 #include "app_util.h"
 #include "ant_bike_power.h"
 #include "ant_parameters.h"
@@ -274,6 +275,51 @@ static void handle_set_weight(ant_evt_t * p_ant_evt)
 	mp_evt_handlers->on_set_resistance(evt);
 }
 
+/**@brief	Parses the packets into positions.
+ *
+ */
+static void process_servo_positions(servo_positions_t* p_pos, const uint8_t* p_buffer, uint8_t start_idx, uint8_t max)
+{
+	for (uint8_t i = 0; i < p_pos->count && i < max; i++)
+	{
+		p_pos->positions[start_idx+i] = uint16_decode(&p_buffer[(sizeof(uint16_t) * i)]);
+	}
+}
+
+/**@brief	Handles the burst packets that contain the servo positions.
+ *
+ */
+static void handle_burst_set_positions(const uint8_t* p_buffer)
+{
+	static servo_positions_t positions;
+
+	if (BURST_SEQ_FIRST_PACKET(p_buffer[2]))
+	{
+		// Initialize the struct, and the count.
+		memset(&positions, 0, sizeof(servo_positions_t));
+		positions.count = p_buffer[4];
+
+		// This message will contain the first 3 positions.
+		process_servo_positions(&positions, &p_buffer[5], 0, 3);
+	}
+	else if (BURST_SEQ_LAST_PACKET(p_buffer[2]))
+	{
+		// Process last sequence.
+		process_servo_positions(&positions, &p_buffer[3], 7, 3);
+
+		// Notify & report out that we're done here.
+		for (uint8_t i = 0; i <= positions.count; i++)
+		{
+			BP_LOG("[BP] handle_burst_set_position[%i]: %i\r\n", i, positions.positions[i]);
+		}
+	}
+	else
+	{
+		// Just process positions.
+		process_servo_positions(&positions, &p_buffer[3], 3, 4);
+	}
+}
+
 /**@brief	Manages the state of a burst sequence which has 3 messages
  *			and starts with a byte that represent the type of message.
  */
@@ -282,6 +328,7 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 	static bool in_burst = false;
 	static uint8_t message_id = 0;
 
+	// TODO: for some reason, I can't seem to break these out into separate functions.
 	static rc_evt_t	resistance_evt; // resistance message
 
 	if (BURST_SEQ_FIRST_PACKET(p_ant_evt->evt_buffer[2]))
@@ -298,6 +345,7 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 				break;
 
 			case ANT_BURST_MSG_ID_SET_POSITIONS:
+				handle_burst_set_positions(p_ant_evt->evt_buffer);
 				break;
 
 			default:
@@ -319,7 +367,7 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 				break;
 
 			case ANT_BURST_MSG_ID_SET_POSITIONS:
-				//
+				handle_burst_set_positions(p_ant_evt->evt_buffer);
 				break;
 
 			default:
@@ -329,7 +377,10 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 	}
 	else
 	{
-		// Middle message.
+		if (message_id == ANT_BURST_MSG_ID_SET_POSITIONS)
+		{
+			handle_burst_set_positions(p_ant_evt->evt_buffer);
+		}
 	}
 
 	/*BP_LOG("[BP]:handle_burst [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
