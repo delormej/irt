@@ -471,15 +471,25 @@ namespace IRT_GUI
                     m_SpeedList[m_movingAvgPosition] = 0;
                 }
 
-                if (m_eMotion.StandardPowerOnly != null)
+                if (m_eMotion.StandardPowerOnly != null &&
+                    m_eMotion.StandardPowerOnly.InstantaneousPower != ushort.MaxValue)
                 {
                     m_eMotionPowerList[m_movingAvgPosition] = m_eMotion.StandardPowerOnly.InstantaneousPower;
                 }
+                else
+                {
+                    m_eMotionPowerList[m_movingAvgPosition] = 0;
+                }
             }
 
-            if (m_refPower != null && m_refPower.StandardPowerOnly != null)
+            if (m_refPower != null && m_refPower.StandardPowerOnly != null &&
+                m_refPower.StandardPowerOnly.InstantaneousPower != ushort.MaxValue)
             {
                 m_RefPowerList[m_movingAvgPosition] = m_refPower.StandardPowerOnly.InstantaneousPower;
+            }
+            else
+            {
+                m_RefPowerList[m_movingAvgPosition] = 0;
             }
 
             var eMotionAvg = CalcAverage(m_eMotionPowerList);
@@ -586,10 +596,13 @@ namespace IRT_GUI
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
-            m_dataPoint.PowerReference = (short)arg1.InstantaneousPower;
+            if (arg1.InstantaneousPower != ushort.MaxValue)
+            {
+                m_dataPoint.PowerReference = (short)arg1.InstantaneousPower;
 
-            UpdateText(lblRefPwrWatts, arg1.InstantaneousPower);
-            //UpdateText(lblRefPwrWattsAvg, m_refPower.AveragePowerStandardPowerOnly);
+                UpdateText(lblRefPwrWatts, arg1.InstantaneousPower);
+                //UpdateText(lblRefPwrWattsAvg, m_refPower.AveragePowerStandardPowerOnly);
+            }
         }
 
         void m_refPower_SensorFound(ushort arg1, byte arg2)
@@ -666,10 +679,13 @@ namespace IRT_GUI
 
         void m_eMotion_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
-            m_dataPoint.PowerEMotion = (short)arg1.InstantaneousPower;
+            if (arg1.InstantaneousPower != ushort.MaxValue)
+            {
+                m_dataPoint.PowerEMotion = (short)arg1.InstantaneousPower;
 
-            UpdateText(lblEmrWatts, arg1.InstantaneousPower);
-            //UpdateText(lblEmrWattsAvg, m_eMotion.AveragePowerStandardPowerOnly);
+                UpdateText(lblEmrWatts, arg1.InstantaneousPower);
+                //UpdateText(lblEmrWattsAvg, m_eMotion.AveragePowerStandardPowerOnly);
+            }
         }
 
 
