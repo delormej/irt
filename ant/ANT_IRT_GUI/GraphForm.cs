@@ -16,10 +16,20 @@ namespace IRT_GUI
         public GraphForm()
         {
             InitializeComponent();
+
+            chart1.ChartAreas[0].AxisX.Maximum = 60*10; // 10 minutes.
+            chart1.ChartAreas[0].AxisX.Minimum = 0;
         }
 
         public void Report(IrtMessages.DataPoint data)
         {
+            if (chart1.Series["RefPower"].Points.Count > chart1.ChartAreas[0].AxisX.Maximum)
+            {
+                chart1.ChartAreas[0].AxisX.Maximum++;
+                chart1.ChartAreas[0].AxisX.Minimum++;
+                chart1.ChartAreas[0].AxisX.ScaleView.Scroll(chart1.ChartAreas[0].AxisX.Maximum);
+            }
+
             chart1.Series["RefPower"].Points.AddY(data.PowerReference);
             chart1.Series["EMotionPower"].Points.AddY(data.PowerEMotion);
             chart1.Series["Speed"].Points.AddY(data.SpeedEMotion);

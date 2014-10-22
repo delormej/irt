@@ -468,7 +468,8 @@ namespace IRT_GUI
                 }
 
                 if (m_eMotion.StandardPowerOnly != null &&
-                    m_eMotion.StandardPowerOnly.InstantaneousPower != ushort.MaxValue)
+                    m_eMotion.StandardPowerOnly.InstantaneousPower < 3000) // sometimes we get just huge values here.
+                    //m_eMotion.StandardPowerOnly.InstantaneousPower != ushort.MaxValue)
                 {
                     m_eMotionPowerList[m_movingAvgPosition] = m_eMotion.StandardPowerOnly.InstantaneousPower;
                 }
@@ -681,7 +682,7 @@ namespace IRT_GUI
 
         void m_eMotion_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
-            if (arg1.InstantaneousPower != ushort.MaxValue)
+            if (arg1.InstantaneousPower < 3000) // Sometimes we just get huge #s here...
             {
                 m_dataPoint.PowerEMotion = (short)arg1.InstantaneousPower;
 
@@ -1540,6 +1541,7 @@ namespace IRT_GUI
             graph.Width = width;
             graph.Height = (int)(screen.WorkingArea.Height * 0.4);
             graph.SetDesktopLocation(0, 0);
+            
             graph.Show();
         }
     }
