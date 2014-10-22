@@ -42,10 +42,19 @@ namespace IRT_GUI
             // 
             // chart1
             // 
+            chartArea1.AxisX.IsMarksNextToAxis = false;
+            chartArea1.AxisX.LabelStyle.Enabled = false;
+            chartArea1.AxisX.LineDashStyle = System.Windows.Forms.DataVisualization.Charting.ChartDashStyle.NotSet;
+            chartArea1.AxisX.MajorGrid.Enabled = false;
+            chartArea1.AxisY.LineColor = System.Drawing.Color.LightGray;
+            chartArea1.AxisY.MajorGrid.LineColor = System.Drawing.Color.LightGray;
+            chartArea1.AxisY.MajorTickMark.LineColor = System.Drawing.Color.LightGray;
             chartArea1.AxisY.Title = "Watts";
+            chartArea1.AxisY2.MajorGrid.Enabled = false;
             chartArea1.AxisY2.Maximum = 40D;
             chartArea1.AxisY2.Minimum = 5D;
             chartArea1.AxisY2.Title = "Speed (Mph)";
+            chartArea1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             chartArea1.Name = "ChartArea1";
             this.chart1.ChartAreas.Add(chartArea1);
             this.chart1.Dock = System.Windows.Forms.DockStyle.Fill;
