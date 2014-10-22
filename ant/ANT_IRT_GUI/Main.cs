@@ -27,6 +27,7 @@ namespace IRT_GUI
         const byte RESISTANCE_SET_WHEEL_CR          = 0x48;
         const byte RESISTANCE_SET_BIKE_TYPE	        = 0x44; // Co-efficient of rolling resistance
         const byte RESISTANCE_SET_C                 = 0x45; // Wind resistance offset.
+        const byte MAX_RESISTANCE_LEVELS = 9;
 
         const int EMR_CHANNEL_ID = 0;
         const int REF_PWR_CHANNEL_ID = 1;
@@ -857,6 +858,11 @@ namespace IRT_GUI
             return SendCommand(Command.SetWeight, data);
         }
 
+        private bool SetResistanceStandard(ushort level)
+        {
+            return SendBurst((byte)ResistanceMode.Standard, level);
+        }
+
         private bool SetResistancePercent(float value)
         {
             bool success = false;
@@ -974,9 +980,16 @@ namespace IRT_GUI
             ushort value = 0;
             ushort.TryParse(lblResistanceStdLevel.Text, out value);
 
-            if (value < 6)
+            if (value < MAX_RESISTANCE_LEVELS)
             {
-                SendBurst((byte)ResistanceMode.Standard, ++value);
+                if (SetResistanceStandard(++value))
+                {
+                    UpdateStatus("Set standard level resistance.");
+                }
+                else
+                {
+                    UpdateStatus("Unable to set standard level.");
+                }
             }
             else
             {
@@ -993,7 +1006,15 @@ namespace IRT_GUI
 
             if (value > 0)
             {
-                SendBurst((byte)ResistanceMode.Standard, --value);
+                if (SetResistanceStandard(--value))
+                {
+                    UpdateStatus("Set standard level resistance.");
+                }
+                else
+                {
+                    UpdateStatus("Unable to set standard level.");
+                }
+
             }
             else
             {
@@ -1064,6 +1085,11 @@ namespace IRT_GUI
                 case ResistanceMode.Erg:
                     pnlErg.BringToFront();
                     UpdateStatus("Erg selected.");
+                    ExecuteOnUI(() =>
+                        {
+                            txtResistanceErgWatts.Text = "";
+                            txtResistanceErgWatts.Focus();
+                        });
                     break;
 
                 case ResistanceMode.Sim:
@@ -1071,10 +1097,15 @@ namespace IRT_GUI
                     UpdateStatus("Sim selected.");
                     break;
 
-                default:
-                    //case ResistanceMode.Standard:
+                case ResistanceMode.Standard:
+                    // set the level to 0
+                    SetResistanceStandard(0);
                     pnlResistanceStd.BringToFront();
                     UpdateStatus("Standard selected.");
+                    break;
+
+                default:
+                    UpdateStatus("Unknown resistance mode.");
                     break;
             }
         }
