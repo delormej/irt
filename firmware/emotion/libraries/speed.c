@@ -23,12 +23,20 @@
 #endif // ENABLE_DEBUG_LOG
 
 /*
- * Flywheel is actually 40cm in circumference, but transfers via belt to the drum (virtual road surface).
- * Flywheel to drum ratio creates a virtual road distance travelled of 11.176cm per revolution of the flywheel.
- * 1 meter of travel is equal to 8.9477452 rotations (1 / 0.11176)
- * Flywheel generates 2 ticks per revolution == 1 meter of travel is equal to 17.89549 flywheel ticks.
+ * Flywheel is 40cm in circumference, but transfers via belt to the drum (virtual road surface)
+ * at ratio of 10cm (pully circumference) : 22.5cm (drum belt slot circumference).
+ *
+ * Virtual road distance traveled is 11.5cm per revolution of the flywheel.
+ * 1 drum rotation = 22.5/10=2.25 flywheel rotations
+ *
+ * 1 meter of travel is equal to 8.695652174 rotations (1 / 0.115)
+ * Flywheel generates 2 ticks per revolution == 1 meter of travel is equal to 17.3913 flywheel ticks.
+ *
+ * NOTE: if magnet power is a function of a static force per position * flywheel speed, we should make sure
+ * to calculate based on actual flywheel speed and not virtual road speed.
+ *
  */
-#define FLYWHEEL_SIZE				0.11176f						// Distance traveled in meters per complete flywheel rev.
+#define FLYWHEEL_SIZE				0.115f							// Distance traveled in meters per complete flywheel rev.
 #define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_SIZE) * 2.0f)	// 2 ticks per rev.
 
 static uint16_t m_wheel_size;										// Wheel diameter size in mm.
@@ -237,10 +245,10 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 				avg_wheel_period,
 				p_current->event_time_2048);
 
-		/*SP_LOG("[SP] flywheel:%i, speed:%.1f, period:%i\r\n",
+		/*SP_LOG("[SP] flywheel:%i, speed:%.1f, ratio:%.4f\r\n",
 				p_current->accum_flywheel_ticks,
 				p_current->instant_speed_mps,
-				event_period);*/
+				m_flywheel_to_wheel_revs);*/
 	}
 	else
 	{
