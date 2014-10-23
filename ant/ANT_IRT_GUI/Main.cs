@@ -323,7 +323,12 @@ namespace IRT_GUI
                     UpdateStatus("Received charger parameter.");
                     bool check = (buffer[2] == 0x02); // Charging
                     UpdateCheckbox(chkCharge, check);
+                    break;
 
+                case SubPages.Features:
+                    UpdateStatus("Received features parameter.");
+                    ushort features = Message.BigEndian(buffer[2], buffer[3]);
+                    UpdateText(lblFeatures, features);
                     break;
 
                 default:
@@ -1215,6 +1220,7 @@ namespace IRT_GUI
             parameters.Add(SubPages.Settings);
             parameters.Add(SubPages.ServoOffset);
             parameters.Add(SubPages.Charger);
+            parameters.Add(SubPages.Features);
 
             var t = new System.Threading.Thread(() =>
             {

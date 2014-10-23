@@ -197,7 +197,7 @@ namespace IRT_GUI.IrtMessages
         Temp = 26,           // Get the temperature from the device.  This isn't a
         Sleep = 27,          // Sets the device to go to sleep.
         SpeedDebug = 28,
-        // Features = 29,
+        Features = 29,
         Battery = 0x52
 
         // Should we send commands this way, i.e.:
