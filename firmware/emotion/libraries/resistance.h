@@ -13,33 +13,9 @@
 #include "irt_common.h"
 #include "user_profile.h"
 
-#define MAX_RESISTANCE_LEVEL_COUNT 	10u 	// Max number of resistance levels possible to set.
-#define RESISTANCE_LEVELS 	7 				// Number of resistance levels available.
-#define ERG_ADJUST_LEVEL	2U				// Watts to adjust increment /decrement
-
-/**@brief		Array representing the servo position in micrseconds (us) by 
- *				resistance level 0-9, with a larger number representing more
- *				resistance applied.  0 is NO resistance.
- *
- */
-static const uint16_t RESISTANCE_LEVEL[RESISTANCE_LEVELS] = { 
-	2000, // 0 - no resistance
-/*	1300,
-	1225,
-	1150,
-	1075,
-	1000,
-	925,
-	850,
-	775, 
-	700}; // Max resistance
-*/ // TESTING 7 positions.
-	1300,
-	1200,
-	1100,
-	1000,
-	900,
-	800 };
+#define MAX_RESISTANCE_LEVEL_COUNT 	10u 						// Max number of resistance levels possible to set.
+#define RESISTANCE_LEVELS 			resistance_level_count() 	// Number of resistance levels available.
+#define ERG_ADJUST_LEVEL			2U							// Watts to adjust increment /decrement
 
 #define MIN_RESISTANCE_LEVEL	resistance_position_min()	// Minimum by which there is no longer resistance.
 #define MAX_RESISTANCE_LEVEL	resistance_position_max()	// Maximum resistance.
@@ -150,10 +126,15 @@ uint16_t resistance_position_max(void);
  */
 uint16_t resistance_level_set(uint8_t level);
 
+/**@brief		Gets the levels of standard resistance available.
+  */
+uint8_t resistance_level_count(void);
+
 /**@brief		Sets the resistance to a value 0-100 percent.
  *
  */
 uint16_t resistance_pct_set(float percent);
+
 
 /**@brief		Adjusts magnetic resistance for erg and simulation modes.
  *

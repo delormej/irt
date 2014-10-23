@@ -33,8 +33,11 @@
 		((POS - m_servo_pos) > MIN_THRESHOLD_MOVE || 			\
 				(m_servo_pos - POS > MIN_THRESHOLD_MOVE))		\
 
+#define RESISTANCE_LEVEL m_servo_positions.positions
+
 static uint16_t	m_servo_pos;		// State of current servo position.
 static user_profile_t* mp_user_profile;
+static servo_positions_t m_servo_positions;
 
 /**@brief	Sets the servo by specifying magnet force required.
  */
@@ -54,6 +57,16 @@ static uint16_t position_set_by_force(float mag_force)
 uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile)
 {
 	mp_user_profile = p_user_profile;
+
+	// TODO: Load positions from profile.
+	m_servo_positions.count = 7;
+	m_servo_positions.positions[0] = 2000;
+	m_servo_positions.positions[1] = 1300;
+	m_servo_positions.positions[2] = 1200;
+	m_servo_positions.positions[3] = 1100;
+	m_servo_positions.positions[4] = 1000;
+	m_servo_positions.positions[5] = 900;
+	m_servo_positions.positions[6] = 800;
 
 	// Initialize pulse-width-modulation.
 	pwm_init(servo_pin_number);
@@ -153,6 +166,13 @@ uint16_t resistance_level_set(uint8_t level)
 	}
 
 	return resistance_position_set(RESISTANCE_LEVEL[level]);
+}
+
+/**@brief		Gets the levels of standard resistance available.
+  */
+uint8_t resistance_level_count()
+{
+	return m_servo_positions.count;
 }
 
 uint16_t resistance_pct_set(float percent)
