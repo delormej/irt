@@ -451,7 +451,10 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
  */
 static void profile_update_sched(void)
 {
-	app_sched_event_put(NULL, 0, profile_update_sched_handler);
+	uint32_t err_code;
+
+	err_code = app_sched_event_put(NULL, 0, profile_update_sched_handler);
+	APP_ERROR_CHECK(err_code);
 }
 
 /**@brief	Sends a heart beat message for the ANT+ remote control.
