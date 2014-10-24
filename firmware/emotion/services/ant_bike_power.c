@@ -308,7 +308,7 @@ static void handle_burst_set_positions(const uint8_t* p_buffer)
 		process_servo_positions(&positions, &p_buffer[3], 7, 3);
 
 		// Notify & report out that we're done here.
-		for (uint8_t i = 0; i <= positions.count; i++)
+		for (uint8_t i = 0; i <= positions.count-1; i++)
 		{
 			BP_LOG("[BP] handle_burst_set_position[%i]: %i\r\n", i, positions.positions[i]);
 		}

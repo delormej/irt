@@ -1651,6 +1651,12 @@ namespace IRT_GUI
                 Message.LittleEndian(p.Value, out data[index++], out data[index++]);
             }
 
+            while (index < data.Length)
+            {
+                // Fill in blanks.
+                data[index++] = 0xFF;
+            }
+
             if (SendBurstData(data))
             {
                 UpdateStatus("Set new servo positions.");
