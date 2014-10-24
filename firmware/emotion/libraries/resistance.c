@@ -176,6 +176,9 @@ bool resistance_positions_validate(servo_positions_t* positions)
 
 uint16_t resistance_level_set(uint8_t level)
 {
+	/*RC_LOG("[RC] resistance_level_set: %i, max: %i\r\n",
+			level, RESISTANCE_LEVELS);*/
+
 	// Sets the resistance to a standard 0-9 level.
 	if (level >= RESISTANCE_LEVELS)
 	{

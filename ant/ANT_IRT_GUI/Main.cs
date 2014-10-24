@@ -1619,25 +1619,11 @@ namespace IRT_GUI
 
         private void btnSetResistancePositions_Click(object sender, EventArgs e)
         {
-            ServoPositions pos = new ServoPositions(2000, 700);
-            pos.SetPositions += OnSetPositions;
-            
-            /* Default positions
-            var positions = pos.Positions;
-            positions.Add(1400);
-            positions.Add(1300);
-            positions.Add(1200);
-            positions.Add(1100);
-            positions.Add(1000);
-            positions.Add(900);
-            positions.Add(800); */
-            //m_positions.Add(850);
-            //m_positions.Add(700);
-            
-            /* Set location of the box
-            pos.SetDesktopLocation(0, pos.Size.Height + btnSetResistancePositions.Location.Y + 
-                btnSetResistancePositions.Size.Height); */
+            //int offset = 0;
+            //int.TryParse(txtServoOffset.Text, out offset);
 
+            ServoPositions pos = new ServoPositions(2000, 700); // (ushort)(700 + offset)); 
+            pos.SetPositions += OnSetPositions;
             pos.ShowDialog();
         }
 
