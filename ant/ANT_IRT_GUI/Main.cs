@@ -39,6 +39,8 @@ namespace IRT_GUI
         const int ANT_RETRY_DELAY = 250;
         byte m_sequence;
 
+        ushort m_settings = 0;
+
         bool m_PauseServoUpdate = false;
 
         // Logging stuff.
@@ -145,11 +147,48 @@ namespace IRT_GUI
                 // Dispose of all reporters properly.
                 foreach (IReporter r in m_reporters)
                 {
+                    if (r is LogReporter)
+                    {
+                        ReportSummary(r);
+                    }
+
                     var id = r as IDisposable;
                     if (id != null)
                         id.Dispose();
                 }
             }
+        }
+
+        void ReportSummary(IReporter reporter)
+        {
+            // List of settings and the control their value lives in.
+            Dictionary<string, Control> items = new Dictionary<string, Control>();
+            items.Add("DeviceID", txtEmrDeviceId);
+            items.Add("SerialNo", lblEmrSerialNo);
+            items.Add("FirmwareRev", lblEmrFirmwareRev);
+            items.Add("HardwareRev", lblEmrHardwareRev);
+            items.Add("Model", lblEmrModel);
+            items.Add("BattVolt", lblEmrBattVolt);
+            items.Add("BattOpTime", lblEmrBattTime);
+            items.Add("ServoOffset", txtServoOffset);
+            items.Add("Features", lblFeatures);
+            items.Add("CrrSlope", txtSlope);
+            items.Add("CrrOffset", txtOffset);
+            items.Add("Weight", txtTotalWeight);
+            items.Add("WheelSize", txtWheelSizeMm);
+            items.Add("RefPwrManuf", lblRefPwrManuf);
+
+            // items.Add("Settings", lblFeatures);
+            string message = "\"{0}\",\"{1}\"\n";
+
+            foreach(var item in items)
+            {
+                reporter.Report(string.Format(message, 
+                    item.Key, item.Value.Text));
+            }
+
+            // Report Settings
+            reporter.Report(string.Format(message, "Settings", m_settings));
         }
 
         void m_ANT_Device_deviceResponse(ANT_Response response)
@@ -315,9 +354,9 @@ namespace IRT_GUI
                     break;
 
                 case SubPages.Settings:
-                    ushort settings = Message.BigEndian(buffer[2], buffer[3]);
+                    m_settings = Message.BigEndian(buffer[2], buffer[3]);
                     UpdateStatus("Received settings parameter.");
-                    UpdateSettings(settings);
+                    UpdateSettings(m_settings);
                     break;
 
                 case SubPages.Charger:
@@ -1223,6 +1262,7 @@ namespace IRT_GUI
             parameters.Add(SubPages.ServoOffset);
             parameters.Add(SubPages.Charger);
             parameters.Add(SubPages.Features);
+            parameters.Add(SubPages.Crr);
 
             var t = new System.Threading.Thread(() =>
             {
@@ -1308,11 +1348,11 @@ namespace IRT_GUI
 
         private void UpdateStatus(string text)
         {
-            if (txtLog == null)
-                return;
-
             ExecuteOnUI(() =>
             {
+                if (txtLog == null || txtLog.IsDisposed)
+                    return;
+                
                 txtLog.AppendText(text + '\n');
                 lblStatus.Text = text;
             });
