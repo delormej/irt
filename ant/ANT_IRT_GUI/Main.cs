@@ -111,13 +111,13 @@ namespace IRT_GUI
 
         void frmIrtGui_Load(object sender, EventArgs e)
         {
-            // Admin only features.
+            /* Admin only features.  Disabling for now - all will be on.
             if (AdminEnabled)
-            {
+            {*/
                 txtServoOffset.Enabled = true;
                 btnServoOffset.Visible = true;
                 btnServoOffset.Enabled = true;
-            }
+            //}
             
             // Setup the settings checklist box.
             chkLstSettings.Items.Clear();
@@ -1166,48 +1166,62 @@ namespace IRT_GUI
 
         private void btnEmrSearch_Click(object sender, EventArgs e)
         {
-            ANT_ChannelStatus status = m_eMotionChannel.requestStatus(500);
-            ANT_Managed_Library.ANT_ReferenceLibrary.BasicChannelStatusCode code = status.BasicStatus;
-
-            // Channel is open, so lets close.
-            if (code == ANT_ReferenceLibrary.BasicChannelStatusCode.TRACKING_0x3)
+            try
             {
-                // Close the channel.
-                UpdateStatus("Closing E-Motion channel.");
-                CloseEmotion();
+                ANT_ChannelStatus status = m_eMotionChannel.requestStatus(500);
+                ANT_Managed_Library.ANT_ReferenceLibrary.BasicChannelStatusCode code = status.BasicStatus;
+
+                // Channel is open, so lets close.
+                if (code == ANT_ReferenceLibrary.BasicChannelStatusCode.TRACKING_0x3)
+                {
+                    // Close the channel.
+                    UpdateStatus("Closing E-Motion channel.");
+                    CloseEmotion();
+                }
+                else
+                {
+                    // Channel isn't open, go ahead and search for E-Motion.
+                    ushort deviceId = 0;
+                    ushort.TryParse(txtEmrDeviceId.Text, out deviceId);
+
+                    m_eMotion.ChannelParameters.DeviceNumber = deviceId;
+                    m_eMotion.TurnOn();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Channel isn't open, go ahead and search for E-Motion.
-                ushort deviceId = 0;
-                ushort.TryParse(txtEmrDeviceId.Text, out deviceId);
-
-                m_eMotion.ChannelParameters.DeviceNumber = deviceId;
-                m_eMotion.TurnOn();
+                UpdateStatus("ANT Exception connecting to E-Motion Rollers: " + ex.Message);
             }
         }
 
         private void btnRefPwrSearch_Click(object sender, EventArgs e)
         {
-            ANT_ChannelStatus status = m_refChannel.requestStatus(500);
-            ANT_Managed_Library.ANT_ReferenceLibrary.BasicChannelStatusCode code = status.BasicStatus;
-
-            // Channel is open, so lets close.
-            if (code == ANT_ReferenceLibrary.BasicChannelStatusCode.TRACKING_0x3)
+            try
             {
-                // Close the channel.
-                //m_refChannel.closeChannel(500);
-                CloseRefPower();
+                ANT_ChannelStatus status = m_refChannel.requestStatus(500);
+                ANT_Managed_Library.ANT_ReferenceLibrary.BasicChannelStatusCode code = status.BasicStatus;
+
+                // Channel is open, so lets close.
+                if (code == ANT_ReferenceLibrary.BasicChannelStatusCode.TRACKING_0x3)
+                {
+                    // Close the channel.
+                    //m_refChannel.closeChannel(500);
+                    CloseRefPower();
+                }
+                else
+                {
+                    // Channel isn't open, go ahead and search for Power Meter.
+                    ushort deviceId = 0;
+                    ushort.TryParse(txtRefPwrDeviceId.Text, out deviceId);
+
+                    m_refPower.ChannelParameters.DeviceNumber = deviceId;
+
+                    m_refPower.TurnOn();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Channel isn't open, go ahead and search for Power Meter.
-                ushort deviceId = 0;
-                ushort.TryParse(txtRefPwrDeviceId.Text, out deviceId);
-
-                m_refPower.ChannelParameters.DeviceNumber = deviceId;
-
-                m_refPower.TurnOn();
+                UpdateStatus("ANT Exception connecting to power meter: " + ex.Message);
             }
         }
 
