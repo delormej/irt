@@ -167,6 +167,10 @@ bool resistance_positions_validate(servo_positions_t* positions)
 
 	do
 	{
+		// If it's the home position 2,000 it's valid.
+		if (positions->positions[index] == MAX_SERVO_RANGE)
+			continue;
+
 		value = ACTUAL_SERVO_POS(positions->positions[index]);
 		if (value > MAX_SERVO_RANGE || value < MIN_SERVO_RANGE)
 		{
