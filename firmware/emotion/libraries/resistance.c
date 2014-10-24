@@ -18,7 +18,7 @@
 #include "debug.h"
 
 #define MIN_THRESHOLD_MOVE	2		// Minimum threshold for a servo move.
-#define MIN_SERVO_RANGE		1000	// Defined spec for servo is between 2ms and 1ms
+#define MIN_SERVO_RANGE		699		// Defined spec for servo is between 2ms and 1ms, but we have a little legacy where we were setting to 699 - this should be eliminated.
 #define MAX_SERVO_RANGE		2000
 
 #define ACTUAL_SERVO_POS(POS)	POS + mp_user_profile->servo_offset
@@ -160,13 +160,17 @@ bool resistance_positions_validate(servo_positions_t* positions)
 	uint16_t value = 0;
 
 	if (positions->count > MAX_RESISTANCE_LEVEL_COUNT)
+	{
+		RC_LOG("[RC] resistance_positions_validate too many: %i\r\n", positions->count);
 		return false;
+	}
 
 	do
 	{
 		value = ACTUAL_SERVO_POS(positions->positions[index]);
 		if (value > MAX_SERVO_RANGE || value < MIN_SERVO_RANGE)
 		{
+			RC_LOG("[RC] resistance_positions_validate adjusted value invalid: %i\r\n", value);
 			return false;
 		}
 	} while (++index < positions->count);
