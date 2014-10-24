@@ -11,36 +11,57 @@ namespace IRT_GUI
 {
     public partial class ServoPositions : Form
     {
-
-        List<Position> m_positions = new List<Position>();
+        ushort min = 0, max = 0;
+        List<Position> m_positions;
         BindingSource m_source = null;
-        const string INVALID_POSITION = "Position must be a valid number between 700 and 2000";
+        const string INVALID_POSITION = "Position must be a valid number between {0} and {1}";
+        const string INVALID_POSISTION_FIRST = INVALID_POSITION + ".\nFirst position must be {0}.";
+
+        public event EventHandler SetPositions;
 
         public ServoPositions()
         {
             InitializeComponent();
+        }
 
-            m_positions.Add(2000);
-            m_positions.Add(1400);
-            m_positions.Add(1300);
-            m_positions.Add(1200);
-            m_positions.Add(1100);
-            m_positions.Add(1000);
-            m_positions.Add(900);
-            //m_positions.Add(800);
-            //m_positions.Add(850);
-            //m_positions.Add(700);
+        public ServoPositions(ushort min, ushort max) : this()
+        {
+            this.min = min;
+            this.max = max;
 
+            this.Load += ServoPositions_Load;
+
+            lblMinPosition.Text = min.ToString();
+            lblMaxPosition.Text = max.ToString();
+            lblInstructions.Text += min.ToString();
+
+            m_positions = new List<Position>();
+            m_positions.Add(new Position(min));
             m_source = new BindingSource();
             m_source.DataSource = m_positions;
             dgResistancePositions.DataSource = m_source;
+            dgResistancePositions.AutoGenerateColumns = false;
+            dgResistancePositions.Columns.Clear();
+            var col = new DataGridViewTextBoxColumn();
+            col.Name = "Position";
+            col.DataPropertyName = "Value";
+            col.HeaderText = "Position";
+
+            dgResistancePositions.ShowRowErrors = true;
+            
+            dgResistancePositions.Columns.Add(col);
             dgResistancePositions.AllowUserToAddRows = false;
-            numResistancePositions.Value = m_positions.Count();
+            numResistancePositions.Value = m_positions.Count() - 1;
+        }
+        
+        public List<Position> Positions
+        {
+            get { return m_positions; }
         }
 
         private void ShowError()
         {
-            MessageBox.Show(INVALID_POSITION,
+            MessageBox.Show(string.Format(INVALID_POSISTION_FIRST, min, max),
                 "Invalid Position",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
@@ -48,7 +69,7 @@ namespace IRT_GUI
 
         private void ServoPositions_Load(object sender, EventArgs e)
         {
-
+            dgResistancePositions.CellValidating += dgResistancePositions_CellValidating;
         }
 
         private void btnSetServoPositions_Click(object sender, EventArgs e)
@@ -56,27 +77,45 @@ namespace IRT_GUI
             var x = dgResistancePositions.DataSource;
             System.Diagnostics.Debug.WriteLine(x);
 
+            if (m_source.Count < 1)
+            {
+                ShowError();
+                return;
+            }
+
+            Position first = m_source[0] as Position;
+            if (first.Value != min)
+            {
+                ShowError();
+                return;
+            }
+
             foreach(Position p in m_source)
             {
-                if (p.Value < 700 || p.Value > 2000)
+                if (p.Value < max || p.Value > min)
                 {
                     ShowError();
                     return;
                 }
             }
+
+            if (SetPositions != null)
+            {
+                SetPositions(this, EventArgs.Empty);
+            }
         }
 
         private void dgResistancePositions_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
         {
-            if (dgResistancePositions.Columns[e.ColumnIndex].Name == "Value")
+            if (dgResistancePositions.Columns[e.ColumnIndex].Name == "Position")
             {
                 int value = 0;
 
                 if (!int.TryParse(e.FormattedValue.ToString(), out value) ||
-                    value < 700 || value > 2000)
+                    value < max || value > min)
                 {
-                    dgResistancePositions.Rows[e.RowIndex].ErrorText = INVALID_POSITION;
-                    ShowError();
+                    dgResistancePositions.Rows[e.RowIndex].ErrorText = string.Format(INVALID_POSITION, min, max);
+                    //ShowError();
                         
                     e.Cancel = true;
                 }
@@ -85,22 +124,20 @@ namespace IRT_GUI
 
         private void numResistancePositions_ValueChanged(object sender, EventArgs e)
         {
-            if (numResistancePositions.Value > m_positions.Count())
+            while (numResistancePositions.Value > m_positions.Count()-1)
             {
-                while (numResistancePositions.Value > m_positions.Count())
-                {
-                    //m_positions.Add(0);
-                    m_source.Add(new Position(0));
-                }
+                m_source.Add(new Position(max));
             }
-            else if (numResistancePositions.Value < m_positions.Count())
+        
+            while (numResistancePositions.Value < m_positions.Count()-1)
             {
-                while (numResistancePositions.Value < m_positions.Count())
-                {
-                    //m_positions.RemoveAt(m_positions.Count() - 1);
-                    m_source.RemoveAt(m_positions.Count() - 1);
-                }
+                m_source.RemoveAt(m_positions.Count() - 1);
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

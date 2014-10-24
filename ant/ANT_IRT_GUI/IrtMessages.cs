@@ -258,6 +258,13 @@ namespace IRT_GUI.IrtMessages
         {
             return (short)(lsb | msb << 8);
         }
+
+        // Returns lsb and msb of a ushort.
+        public static void LittleEndian(ushort value, out byte lsb, out byte msb)
+        {
+            lsb = (byte)value;
+            msb = (byte)((value & 0x0000FF00) >> 8);
+        }
     }
 
     public enum ResistanceMode : byte

@@ -35,7 +35,8 @@ namespace IRT_GUI
         readonly byte[] USER_NETWORK_KEY = { 0xb9, 0xa5, 0x21, 0xfb, 0xbd, 0x72, 0xc3, 0x45 };
 
         const uint ACK_TIMEOUT = 1000;
-        const uint REQUEST_RETRY = 3;
+        const int ANT_RETRY_REQUESTS = 3;
+        const int ANT_RETRY_DELAY = 250;
         byte m_sequence;
 
         bool m_PauseServoUpdate = false;
@@ -899,14 +900,15 @@ namespace IRT_GUI
 
         bool SendBurstData(byte[] data)
         {
-            var result = m_eMotionChannel.sendBurstTransfer(data, 500);
+            bool result = RetryCommand(ANT_RETRY_REQUESTS, ANT_RETRY_DELAY, () =>
+                { return m_eMotionChannel.sendBurstTransfer(data, 500); });
 
-            if (result != ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+            if (!result)
             {
-                UpdateStatus("Unable to send burst command, result: " + result);
+                UpdateStatus("Unable to send burst command, result");
             }
 
-            return (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
+            return result;
         }
 
         bool SendBurst(byte command, ushort value)
@@ -940,7 +942,7 @@ namespace IRT_GUI
                 0x00,
                 0x00
                           };
-
+            
             return SendBurstData(data);
         }
 
@@ -1236,11 +1238,8 @@ namespace IRT_GUI
             t.Start();
         }
 
-        private void RequestDeviceParameter(SubPages subPage)
+        private bool RequestDeviceParameter(SubPages subPage)
         {
-            int retries = 0;
-
-            ANT_ReferenceLibrary.MessagingReturnCode result = 0;
             RequestDataMessage message = new RequestDataMessage();
             //RequestDataPage request = new RequestDataPage();
 
@@ -1268,20 +1267,34 @@ namespace IRT_GUI
             //request.UseAck = false;
             //m_eMotion.SendDataPageRequest(request);
 
+            UpdateStatus(String.Format("Requesting parameter: {0}.", subPage));
+            bool result = RetryCommand(ANT_RETRY_REQUESTS, ANT_RETRY_DELAY, () =>
+                { return m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT); });
 
-            while (retries++ < REQUEST_RETRY)
+            if (!result)
             {
-                result = m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
-                UpdateStatus(String.Format("Requesting parameter: {0}.", subPage));
-                if (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass)
-                    return;
-                else
-                    System.Threading.Thread.Sleep(250); // pause for a 1/4 second.
+                UpdateStatus(String.Format("Unable to request parameter: {0}, return result: {1}.", subPage, result));
             }
 
-            UpdateStatus(String.Format("Unable to request parameter: {0}, return result: {1}.", subPage, result));
+            return result;
         }
         
+        private bool RetryCommand(int times, int delay_ms, Func<ANT_ReferenceLibrary.MessagingReturnCode> command)
+        {
+            int retries = 0;
+
+            while (retries++ < times)
+            {
+                var result = command();
+                if (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass)
+                    return true;
+                else
+                    System.Threading.Thread.Sleep(delay_ms); // pause for a 1/4 second.
+            }
+
+            return false;
+        }
+
         private void UpdateCheckbox(CheckBox ctl, bool check)
         {
             if (check != ctl.Checked)
@@ -1566,7 +1579,35 @@ namespace IRT_GUI
 
         private void btnSetResistancePositions_Click(object sender, EventArgs e)
         {
-            byte[] data = { 
+            ServoPositions pos = new ServoPositions(2000, 700);
+            pos.SetPositions += OnSetPositions;
+            
+            /* Default positions
+            var positions = pos.Positions;
+            positions.Add(1400);
+            positions.Add(1300);
+            positions.Add(1200);
+            positions.Add(1100);
+            positions.Add(1000);
+            positions.Add(900);
+            positions.Add(800); */
+            //m_positions.Add(850);
+            //m_positions.Add(700);
+            
+            /* Set location of the box
+            pos.SetDesktopLocation(0, pos.Size.Height + btnSetResistancePositions.Location.Y + 
+                btnSetResistancePositions.Size.Height); */
+
+            pos.ShowDialog();
+        }
+
+        void OnSetPositions(object sender, EventArgs e)
+        {
+            ServoPositions dialog = sender as ServoPositions;
+            if (dialog == null)
+                return;
+
+            /*byte[] data; = { 
                 // Message 1
                 ANT_BURST_MSG_ID_SET_POSITIONS,
                 0x09,   // COUNT
@@ -1595,11 +1636,31 @@ namespace IRT_GUI
                 0xFF,   // BLANK
                 0xFF    // BLANK
                           };
+             */
 
-            SendBurstData(data);
+            // 3 messages * 8 bytes each
+            byte[] data = new byte[24];
+            data[0] = ANT_BURST_MSG_ID_SET_POSITIONS;
+            data[1] = (byte)dialog.Positions.Count();
 
-            ServoPositions pos = new ServoPositions();
-            pos.ShowDialog();
+            // Start index for positions.
+            int index = 2;
+
+            foreach (Position p in dialog.Positions)
+            {
+                Message.LittleEndian(p.Value, out data[index++], out data[index++]);
+            }
+
+            if (SendBurstData(data))
+            {
+                UpdateStatus("Set new servo positions.");
+                dialog.Close();
+            }
+            else
+            {
+                UpdateStatus("Failed to set servo positions.");
+            }
+
         }
         
         private void btnChartOpen_Click(object sender, EventArgs e)
