@@ -275,7 +275,7 @@ static void handle_set_weight(ant_evt_t * p_ant_evt)
 	mp_evt_handlers->on_set_resistance(evt);
 }
 
-/**@brief	Parses the packets into positions.
+/**@brief	Parses the packets into position values.
  *
  */
 static void process_servo_positions(servo_positions_t* p_pos, const uint8_t* p_buffer, uint8_t start_idx, uint8_t max)
@@ -308,10 +308,7 @@ static void handle_burst_set_positions(const uint8_t* p_buffer)
 		process_servo_positions(&positions, &p_buffer[3], 7, 3);
 
 		// Notify & report out that we're done here.
-		for (uint8_t i = 0; i <= positions.count-1; i++)
-		{
-			BP_LOG("[BP] handle_burst_set_position[%i]: %i\r\n", i, positions.positions[i]);
-		}
+		mp_evt_handlers->on_set_servo_positions(&positions);
 	}
 	else
 	{

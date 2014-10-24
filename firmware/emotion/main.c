@@ -1342,6 +1342,17 @@ static void on_set_parameter(uint8_t* buffer)
 	}
 }
 
+/**@brief	Called when a command is received to set servo positions.
+ *
+ */
+static void on_set_servo_positions(servo_positions_t* positions)
+{
+	for (uint8_t i = 0; i <= positions->count-1; i++)
+	{
+		LOG("[MAIN] handle_burst_set_position[%i]: %i\r\n", i, positions->positions[i]);
+	}
+}
+
 /**@brief	Called when the result of the battery is determined.
  *
  */
@@ -1513,7 +1524,8 @@ int main(void)
 		on_ant_ctrl_command,
 		on_enable_dfu_mode,
 		on_request_data,
-		on_set_parameter
+		on_set_parameter,
+		on_set_servo_positions
 	};
 
 	// Initialize and enable the softdevice.
