@@ -40,8 +40,10 @@ namespace IRT_GUI
         byte m_sequence;
 
         ushort m_settings = 0;
+        ushort m_EmrDeviceId = 0;
 
         bool m_PauseServoUpdate = false;
+        bool m_requestingSettings = false;
 
         // Logging stuff.
         private Timer m_reportTimer;
@@ -678,7 +680,13 @@ namespace IRT_GUI
         {
             UpdateText(txtEmrDeviceId, arg1);
             // Go grab the latest settings from the device.
-            RequestSettings();
+
+            // Save last connected device id, don't request params again.
+            if (arg1 != m_EmrDeviceId)
+            {
+                m_EmrDeviceId = arg1;
+                RequestSettings();
+            }
         }
 
         void m_eMotion_TemperatureSubPageReceived(AntPlus.Profiles.Common.TemperatureSubPage arg1, uint arg2)
@@ -1255,27 +1263,39 @@ namespace IRT_GUI
 
         private void RequestSettings()
         {
-            List<SubPages> parameters = new List<SubPages>();
-            parameters.Add(SubPages.TotalWeight);
-            parameters.Add(SubPages.WheelSize);
-            parameters.Add(SubPages.Settings);
-            parameters.Add(SubPages.ServoOffset);
-            parameters.Add(SubPages.Charger);
-            parameters.Add(SubPages.Features);
-            parameters.Add(SubPages.Crr);
-
-            var t = new System.Threading.Thread(() =>
+            if (!m_requestingSettings)
             {
-                foreach (var p in parameters)
+                lock (this)
                 {
-                    RequestDeviceParameter(p);
-                    System.Diagnostics.Debug.WriteLine("Requested param: " + p);
-                    System.Threading.Thread.Sleep(1500);
-                }
+                    m_requestingSettings = true;
 
-            });
-            
-            t.Start();
+                    List<SubPages> parameters = new List<SubPages>();
+                    parameters.Add(SubPages.TotalWeight);
+                    parameters.Add(SubPages.WheelSize);
+                    parameters.Add(SubPages.Settings);
+                    parameters.Add(SubPages.ServoOffset);
+                    parameters.Add(SubPages.Charger);
+                    parameters.Add(SubPages.Features);
+                    parameters.Add(SubPages.Crr);
+
+                    var t = new System.Threading.Thread(() =>
+                    {
+                        foreach (var p in parameters)
+                        {
+                            RequestDeviceParameter(p);
+                            System.Diagnostics.Debug.WriteLine("Requested param: " + p);
+                            System.Threading.Thread.Sleep(1500);
+                        }
+
+                        m_requestingSettings = false;
+                    });
+
+                    t.Start();
+                }
+            }
+            else
+            {
+            }
         }
 
         private bool RequestDeviceParameter(SubPages subPage)
@@ -1619,10 +1639,10 @@ namespace IRT_GUI
 
         private void btnSetResistancePositions_Click(object sender, EventArgs e)
         {
-            //int offset = 0;
-            //int.TryParse(txtServoOffset.Text, out offset);
+            int offset = 0;
+            int.TryParse(txtServoOffset.Text, out offset);
 
-            ServoPositions pos = new ServoPositions(2000, 700); // (ushort)(700 + offset)); 
+            ServoPositions pos = new ServoPositions(2000, (ushort)(700 + offset)); 
             pos.SetPositions += OnSetPositions;
             pos.ShowDialog();
         }
@@ -1632,37 +1652,6 @@ namespace IRT_GUI
             ServoPositions dialog = sender as ServoPositions;
             if (dialog == null)
                 return;
-
-            /*byte[] data; = { 
-                // Message 1
-                ANT_BURST_MSG_ID_SET_POSITIONS,
-                0x09,   // COUNT
-                0x78,   // 0 
-                0x05,   // 0
-                0x78,   // 1
-                0x04,   // 1
-                0x78,   // 2
-                0x03,   // 2
-                // Message 2
-                0x88,   // 3
-                0x05,   // 3
-                0x88,   // 4
-                0x04,   // 4
-                0x83,   // 5
-                0x04,   // 5
-                0x82,   // 6
-                0x01,   // 6
-                // Message 3
-                0x74,   // 7
-                0x01,   // 7
-                0x74,   // 8
-                0x02,   // 8
-                0x74,   // 9
-                0x03,   // 9
-                0xFF,   // BLANK
-                0xFF    // BLANK
-                          };
-             */
 
             // 3 messages * 8 bytes each
             byte[] data = new byte[24];
