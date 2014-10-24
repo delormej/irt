@@ -18,6 +18,10 @@
 #include "debug.h"
 
 #define MIN_THRESHOLD_MOVE	2		// Minimum threshold for a servo move.
+#define MIN_SERVO_RANGE		1000	// Defined spec for servo is between 2ms and 1ms
+#define MAX_SERVO_RANGE		2000
+
+#define ACTUAL_SERVO_POS(POS)	POS + mp_user_profile->servo_offset
 
 /**@brief Debug logging for resistance control module.
  */
@@ -33,11 +37,11 @@
 		((POS - m_servo_pos) > MIN_THRESHOLD_MOVE || 			\
 				(m_servo_pos - POS > MIN_THRESHOLD_MOVE))		\
 
-#define RESISTANCE_LEVEL m_servo_positions.positions
+// MACRO for getting to the array.
+#define RESISTANCE_LEVEL 	mp_user_profile->servo_positions.positions
 
 static uint16_t	m_servo_pos;		// State of current servo position.
 static user_profile_t* mp_user_profile;
-static servo_positions_t m_servo_positions;
 
 /**@brief	Sets the servo by specifying magnet force required.
  */
@@ -57,16 +61,6 @@ static uint16_t position_set_by_force(float mag_force)
 uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile)
 {
 	mp_user_profile = p_user_profile;
-
-	// TODO: Load positions from profile.
-	m_servo_positions.count = 7;
-	m_servo_positions.positions[0] = 2000;
-	m_servo_positions.positions[1] = 1300;
-	m_servo_positions.positions[2] = 1200;
-	m_servo_positions.positions[3] = 1100;
-	m_servo_positions.positions[4] = 1000;
-	m_servo_positions.positions[5] = 900;
-	m_servo_positions.positions[6] = 800;
 
 	// Initialize pulse-width-modulation.
 	pwm_init(servo_pin_number);
@@ -121,16 +115,16 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 		 * Adjusted offset for the 2,000 - 1,000 range is -301, but since testing was done at -50,
 		 * the new baseline offset is 351 for a servo that is factory calibrated to 1,451.
 		*/
-		actual_servo_pos = servo_pos + mp_user_profile->servo_offset;
+		actual_servo_pos = ACTUAL_SERVO_POS(servo_pos);
 
 		// Using offset, guard to acceptable range of 2000-1000
-		if (actual_servo_pos > 2000)
+		if (actual_servo_pos > MAX_SERVO_RANGE)
 		{
-			actual_servo_pos = 2000;
+			actual_servo_pos = MAX_SERVO_RANGE;
 		}
-		else if (actual_servo_pos < 1000)
+		else if (actual_servo_pos < MIN_SERVO_RANGE)
 		{
-			actual_servo_pos = 1000;
+			actual_servo_pos = MIN_SERVO_RANGE;
 		}
 
 		err_code = pwm_set_servo(actual_servo_pos);
@@ -157,6 +151,29 @@ uint16_t resistance_position_max(void)
 	return RESISTANCE_LEVEL[RESISTANCE_LEVELS-1];
 }
 
+/**@brief		Validates the values of positions are in range.
+ *
+ */
+bool resistance_positions_validate(servo_positions_t* positions)
+{
+	uint8_t index = 0;
+	uint16_t value = 0;
+
+	if (positions->count > MAX_RESISTANCE_LEVEL_COUNT)
+		return false;
+
+	do
+	{
+		value = ACTUAL_SERVO_POS(positions->positions[index]);
+		if (value > MAX_SERVO_RANGE || value < MIN_SERVO_RANGE)
+		{
+			return false;
+		}
+	} while (++index < positions->count);
+
+	return true;
+}
+
 uint16_t resistance_level_set(uint8_t level)
 {
 	// Sets the resistance to a standard 0-9 level.
@@ -172,7 +189,7 @@ uint16_t resistance_level_set(uint8_t level)
   */
 uint8_t resistance_level_count()
 {
-	return m_servo_positions.count;
+	return mp_user_profile->servo_positions.count;
 }
 
 uint16_t resistance_pct_set(float percent)

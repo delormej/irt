@@ -354,6 +354,8 @@ static void profile_init(void)
 {
 		uint32_t err_code;
 
+		//LOG("[MAIN] profile_init size:%i, %i\r\n", sizeof(user_profile_t), sizeof(servo_positions_t));
+
 		err_code = user_profile_init();
 		APP_ERROR_CHECK(err_code);
 
@@ -386,6 +388,11 @@ static void profile_init(void)
 		}
 		else
 		{
+			// TODO: this should be refactored into profile class?
+			// should all DEFAULT_x defines live in profile.h? The reason they don't today is that
+			// certain settings don't live in the profile - so it makes sense to keep all the default DEFINES together
+			// Check profile defaults.
+
 			if (m_user_profile.wheel_size_mm == 0 ||
 					m_user_profile.wheel_size_mm == 0xFFFF)
 			{
@@ -401,6 +408,21 @@ static void profile_init(void)
 				// Total weight of rider + bike + shoes, clothing, etc...
 				m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
 			}
+		}
+
+		// Check for default servo positions.
+		if (m_user_profile.servo_positions.count == 0xFF)
+		{
+			LOG("[MAIN]: Setting default servo positions.\r\n");
+
+			m_user_profile.servo_positions.count = 7;
+			m_user_profile.servo_positions.positions[0] = 2000;
+			m_user_profile.servo_positions.positions[1] = 1300;
+			m_user_profile.servo_positions.positions[2] = 1200;
+			m_user_profile.servo_positions.positions[3] = 1100;
+			m_user_profile.servo_positions.positions[4] = 1000;
+			m_user_profile.servo_positions.positions[5] = 900;
+			m_user_profile.servo_positions.positions[6] = 800;
 		}
 
 	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004. 
@@ -1347,10 +1369,27 @@ static void on_set_parameter(uint8_t* buffer)
  */
 static void on_set_servo_positions(servo_positions_t* positions)
 {
-	for (uint8_t i = 0; i <= positions->count-1; i++)
+	if (!resistance_positions_validate(positions))
 	{
-		LOG("[MAIN] handle_burst_set_position[%i]: %i\r\n", i, positions->positions[i]);
+		LOG("[MAIN] on_set_servo_positions ERROR: invalid servo positions.\r\n");
+		return;
 	}
+
+	// Save the value.
+	m_user_profile.servo_positions = *positions;
+
+#ifdef ENABLE_DEBUG_LOG
+	LOG("[MAIN] on_set_servo_positions count:%i\r\n",
+			m_user_profile.servo_positions.count);
+
+	for (uint8_t i = 0; i <= m_user_profile.servo_positions.count-1; i++)
+	{
+		LOG("[MAIN] handle_burst_set_position[%i]: %i\r\n", i,
+				m_user_profile.servo_positions.positions[i]);
+	}
+#endif
+
+	// profile_update_sched();
 }
 
 /**@brief	Called when the result of the battery is determined.
