@@ -113,14 +113,12 @@ namespace IRT_GUI
 
         void frmIrtGui_Load(object sender, EventArgs e)
         {
-            /* Admin only features.  Disabling for now - all will be on.
-            if (AdminEnabled)
-            {*/
-                txtServoOffset.Enabled = true;
-                btnServoOffset.Visible = true;
-                btnServoOffset.Enabled = true;
-            //}
-            
+            // Admin only features.  
+            txtServoOffset.Enabled = AdminEnabled;
+            btnServoOffset.Visible = AdminEnabled;
+            btnServoOffset.Enabled = AdminEnabled;
+            btnParamSet.Enabled = AdminEnabled;
+
             // Setup the settings checklist box.
             chkLstSettings.Items.Clear();
             chkLstSettings.Items.AddRange(Enum.GetNames(typeof(Settings)));
