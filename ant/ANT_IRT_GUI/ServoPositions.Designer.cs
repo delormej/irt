@@ -66,7 +66,7 @@
             this.dgResistancePositions.ScrollBars = System.Windows.Forms.ScrollBars.None;
             this.dgResistancePositions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this.dgResistancePositions.Size = new System.Drawing.Size(118, 207);
-            this.dgResistancePositions.TabIndex = 0;
+            this.dgResistancePositions.TabIndex = 1;
             // 
             // Position
             // 
@@ -97,7 +97,7 @@
             0});
             this.numResistancePositions.Name = "numResistancePositions";
             this.numResistancePositions.Size = new System.Drawing.Size(42, 20);
-            this.numResistancePositions.TabIndex = 2;
+            this.numResistancePositions.TabIndex = 0;
             this.numResistancePositions.Value = new decimal(new int[] {
             2,
             0,
@@ -107,11 +107,12 @@
             // 
             // btnSetServoPositions
             // 
+            this.btnSetServoPositions.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnSetServoPositions.Location = new System.Drawing.Point(103, 260);
             this.btnSetServoPositions.Margin = new System.Windows.Forms.Padding(2);
             this.btnSetServoPositions.Name = "btnSetServoPositions";
             this.btnSetServoPositions.Size = new System.Drawing.Size(61, 23);
-            this.btnSetServoPositions.TabIndex = 3;
+            this.btnSetServoPositions.TabIndex = 2;
             this.btnSetServoPositions.Text = "OK";
             this.btnSetServoPositions.UseVisualStyleBackColor = true;
             this.btnSetServoPositions.Click += new System.EventHandler(this.btnSetServoPositions_Click);
@@ -122,7 +123,7 @@
             this.button1.Location = new System.Drawing.Point(209, 260);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(61, 23);
-            this.button1.TabIndex = 4;
+            this.button1.TabIndex = 3;
             this.button1.Text = "Cancel";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);

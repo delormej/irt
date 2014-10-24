@@ -28,6 +28,8 @@ namespace IRT_GUI
         const byte RESISTANCE_SET_BIKE_TYPE	        = 0x44; // Co-efficient of rolling resistance
         const byte RESISTANCE_SET_C                 = 0x45; // Wind resistance offset.
         const byte MAX_RESISTANCE_LEVELS = 9;
+        const ushort MIN_SERVO_POS = 2000;
+        const ushort MAX_SERVO_POS = 700;
 
         const int EMR_CHANNEL_ID = 0;
         const int REF_PWR_CHANNEL_ID = 1;
@@ -1653,10 +1655,21 @@ namespace IRT_GUI
 
         private void btnSetResistancePositions_Click(object sender, EventArgs e)
         {
-            int offset = 0;
-            int.TryParse(txtServoOffset.Text, out offset);
+            /*
+            Do NOT use this offset logic BECAUSE the device will translate max servo pos (700)
+            into a valid position + the offset.  In order to actually get the modeled 700 position
+            we need to send the modeled positions, not the new positions.  See servo offset logic.
 
-            ServoPositions pos = new ServoPositions(2000, (ushort)(700 + offset)); 
+            ushort offset = 0;
+            ushort.TryParse(txtServoOffset.Text, out offset);
+
+            ushort max = (ushort)(MAX_SERVO_POS + offset);
+            // Max position resistance should always be able to be 1,000.
+            if (max > 1000)
+                max = 1000;
+            */
+            ServoPositions pos = new ServoPositions(MIN_SERVO_POS, MAX_SERVO_POS);
+                
             pos.SetPositions += OnSetPositions;
             pos.ShowDialog();
         }
@@ -1667,10 +1680,13 @@ namespace IRT_GUI
             if (dialog == null)
                 return;
 
+            // Insert the HOME position which user cannot change.
+            dialog.Positions.Insert(0, new Position(MIN_SERVO_POS));
+
             // 3 messages * 8 bytes each
             byte[] data = new byte[24];
             data[0] = ANT_BURST_MSG_ID_SET_POSITIONS;
-            data[1] = (byte)dialog.Positions.Count();
+            data[1] = (byte)(dialog.Positions.Count());
 
             // Start index for positions.
             int index = 2;

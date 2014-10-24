@@ -83,13 +83,6 @@ namespace IRT_GUI
                 return;
             }
 
-            Position first = m_source[0] as Position;
-            if (first.Value != min)
-            {
-                ShowError();
-                return;
-            }
-
             foreach(Position p in m_source)
             {
                 if (p.Value < max || p.Value > min)
@@ -124,12 +117,12 @@ namespace IRT_GUI
 
         private void numResistancePositions_ValueChanged(object sender, EventArgs e)
         {
-            while (numResistancePositions.Value > m_positions.Count()-1)
+            while (numResistancePositions.Value > m_positions.Count())
             {
                 m_source.Add(new Position(max));
             }
         
-            while (numResistancePositions.Value < m_positions.Count()-1)
+            while (numResistancePositions.Value < m_positions.Count())
             {
                 m_source.RemoveAt(m_positions.Count() - 1);
             }
