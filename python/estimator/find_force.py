@@ -1,4 +1,4 @@
-input_file_name = "180lb_large_mag_range_adjust_speed.csv"
+input_file_name = "jason_test_1-6_modified_servo_pos.csv"
 n = 7       # min. sequence length
 x = 0.2 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
@@ -75,6 +75,9 @@ def main():
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
 		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True)
 
+	# convert to meters per second, then to flywheel meters per second
+	speeds = ((speeds * 0.44704) * (0.4/0.115))
+
 	valid_data = defaultdict(list) # { postion: [indices of all good values] } 
 	splits = np.flatnonzero(np.ediff1d(positions, to_begin=1, to_end=1)) # indexes where pos changed, split original sequence there
 	for i_beg, i_end in zip(splits[:-1], splits[1:]): # iterate pairs of splits
@@ -97,10 +100,12 @@ def main():
 	pos_list = [p for p in valid_data if p < 2000]
 	pos_list.sort()
 
+	"""
 	print("\nposition\tspeed\tforce\tadd_force")
 	for p in pos_list:
 		for i in valid_data[p]:
 			print(p, speeds[i], forces[i], forces[i] - speeds[i]*slope - intercept)
+	"""
 
 	print("\nposition\tforce\tadd_force")
 	for p in pos_list:
