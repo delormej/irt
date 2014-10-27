@@ -1,8 +1,8 @@
-input_file_name = "jason_test_1-6_modified_servo_pos.csv"
+#input_file_name = "jason_test_1-6_modified_servo_pos.csv"
 n = 7       # min. sequence length
 x = 0.2 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
-skip_rows = 200 # data rows skipped at the beginning
+skip_rows = 600 # data rows skipped at the beginning
 
 import sys
 from collections import defaultdict
@@ -71,12 +71,13 @@ def find_seq(speeds, watts, offset):
 	split_cluster(cluster)
 	return sorted(result)
 	
-def main():
+def main(input_file_name):
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
 		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True)
 
 	# convert to meters per second, then to flywheel meters per second
-	speeds = ((speeds * 0.44704) * (0.4/0.115))
+	speeds_mps = (speeds * 0.44704)
+	flywheel_mps = (speeds_mps * (0.4/0.115))
 
 	valid_data = defaultdict(list) # { postion: [indices of all good values] } 
 	splits = np.flatnonzero(np.ediff1d(positions, to_begin=1, to_end=1)) # indexes where pos changed, split original sequence there
@@ -93,7 +94,10 @@ def main():
 	id2000 = np.fromiter(chain.from_iterable((ids for p, ids in valid_data.items() if p >= 2000)), dtype=int)
 	sp2000 = speeds[id2000]
 	f2000 = forces[id2000]
-	slope, intercept = np.linalg.lstsq(np.vstack([sp2000, np.ones_like(sp2000)]).T, f2000)[0]
+	w2000 = watts[id2000]
+	#slope, intercept = np.linalg.lstsq(np.vstack([sp2000, np.ones_like(sp2000)]).T, w2000)[0]
+	slope, intercept = np.linalg.lstsq(np.vstack([speeds_mps[id2000], np.ones_like(speeds_mps[id2000])]).T, w2000)[0]
+
 	print("slope, intercept")
 	print(slope, intercept)
 	
@@ -111,6 +115,7 @@ def main():
 	for p in pos_list:
 		ids = valid_data[p]
 		if ids:
-			print(p, forces[ids].mean(), (forces[ids] - speeds[ids]*slope - intercept).mean())
+			print(p, forces[ids].mean(), (forces[ids] - ((speeds_mps[ids]*slope - intercept)/speeds_mps[ids])).mean())
 
-main()
+if __name__ == "__main__":
+   main(sys.argv[1])
