@@ -36,8 +36,8 @@
  * to calculate based on actual flywheel speed and not virtual road speed.
  *
  */
-#define FLYWHEEL_SIZE				0.115f							// Distance traveled in meters per complete flywheel rev.
-#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_SIZE) * 2.0f)	// 2 ticks per rev.
+#define FLYWHEEL_ROAD_DISTANCE				0.115f							// Virtual road distance traveled in meters per complete flywheel rev.
+#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_ROAD_DISTANCE) * 2.0f)	// 2 ticks per rev.
 
 static uint16_t m_wheel_size;										// Wheel diameter size in mm.
 static float m_flywheel_to_wheel_revs;								// Ratio of flywheel revolutions for 1 wheel revolution.
@@ -164,7 +164,7 @@ void speed_wheel_size_set(uint16_t wheel_size_mm)
 		 1 servo_rev = 0.11176 distance_meters (FLYWHEEL_SIZE)
 	*/
 	// For every 1 wheel revolution, the flywheel revolves this many times *2 (we get 2 reads per rev).
-	m_flywheel_to_wheel_revs = (((wheel_size_mm / 1000.0f) / FLYWHEEL_SIZE) * 2.0f);
+	m_flywheel_to_wheel_revs = (((wheel_size_mm / 1000.0f) / FLYWHEEL_ROAD_DISTANCE) * 2.0f);
 }
 
 void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
@@ -224,7 +224,7 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 			event_period = p_current->event_time_2048 - p_last->event_time_2048;
 		}
 
-		// Distance in meters.
+		// Virtual road distance traveled in meters.
 		distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
 
 		// Calculate speed in meters per second.

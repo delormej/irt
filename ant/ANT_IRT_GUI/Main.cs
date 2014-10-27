@@ -31,6 +31,8 @@ namespace IRT_GUI
         const ushort MIN_SERVO_POS = 2000;
         const ushort MAX_SERVO_POS = 700;
 
+        const ushort DEFAULT_WHEEL_SIZE = 2096;
+
         const int EMR_CHANNEL_ID = 0;
         const int REF_PWR_CHANNEL_ID = 1;
         const byte ANT_FREQUENCY = 0x39;     // 2457 Mhz
@@ -351,6 +353,7 @@ namespace IRT_GUI
                 case SubPages.WheelSize:
                     //m_eMotion.WheelCircumference
                     ushort wheelSize = Message.BigEndian(buffer[2], buffer[3]);
+                    m_eMotion.WheelCircumference = wheelSize;
                     UpdateStatus("Received wheelsize parameter.");
                     UpdateText(txtWheelSizeMm, wheelSize);
                     break;
@@ -444,6 +447,9 @@ namespace IRT_GUI
 
                 m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
                 m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
+
+                // Set the default to the defaulto f the device (2096)
+                m_eMotion.WheelCircumference = DEFAULT_WHEEL_SIZE;
 
                 // Start looking for e-motion.
                 m_eMotion.TurnOn();
