@@ -10,6 +10,7 @@ from itertools import groupby, chain
 import numpy as np, numpy.ma as ma
 import bottleneck 
 import itertools
+import matplotlib.pyplot as plt
 
 if len(sys.argv) > 1:
 	input_file_name = sys.argv[1]
@@ -152,10 +153,12 @@ def main(input_file_name):
 	pos_list = [p for p in valid_data if p < 2000]
 	pos_list.sort()
 
+	"""
 	print("\nposition\tspeed\tforce\tadd_force")
 	for p in pos_list:
 		for i in valid_data[p]:
 			print(p, flywheel_mps[i], forces[i], forces[i] - ((flywheel_mps[i]*slope - intercept)/flywheel_mps[i]))
+	"""
 
 	print("\nposition\tforce\tadd_force")
 	for p in pos_list:
@@ -163,6 +166,10 @@ def main(input_file_name):
 		if ids:
 			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
 			print(p, bottleneck.nanmedian(forces[ids]), bottleneck.nanmedian(forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])))
+	
+	plt.scatter(flywheel_mps[id2000], w2000)
+	plt.plot(flywheel_mps[id2000], flywheel_mps[id2000]*slope + intercept, 'r')
+	plt.show()
 
 if __name__ == "__main__":
    main(sys.argv[1])
