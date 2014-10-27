@@ -13,7 +13,7 @@
   </xsl:template>
 
   <xsl:template match="tcx:Trackpoint">
-    <xsl:value-of select="tcx:Time" />,,,<xsl:value-of select="tcx:Extensions/tpx:TPX/tpx:Speed" />,,<xsl:value-of select="tcx:Extensions/tpx:TPX/tpx:Watts" />,,2000,,,,<xsl:text>&#10;</xsl:text>
+    <xsl:value-of select="tcx:Time" />,,<xsl:value-of select="tcx:Extensions/tpx:TPX/tpx:Speed" />,<xsl:value-of select="tcx:Extensions/tpx:TPX/tpx:Speed * 2.23694" />,,<xsl:value-of select="tcx:Extensions/tpx:TPX/tpx:Watts" />,,2000,,,,<xsl:text>&#10;</xsl:text>
   </xsl:template>
   
 </xsl:stylesheet>
