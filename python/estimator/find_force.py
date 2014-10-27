@@ -152,18 +152,18 @@ def main(input_file_name):
 	pos_list = [p for p in valid_data if p < 2000]
 	pos_list.sort()
 
-	"""
 	print("\nposition\tspeed\tforce\tadd_force")
 	for p in pos_list:
 		for i in valid_data[p]:
-			print(p, speeds[i], forces[i], forces[i] - speeds[i]*slope - intercept)
-	"""
+			print(p, flywheel_mps[i], forces[i], forces[i] - ((flywheel_mps[i]*slope - intercept)/flywheel_mps[i]))
 
 	print("\nposition\tforce\tadd_force")
 	for p in pos_list:
 		ids = valid_data[p]
 		if ids:
-			print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
+			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
+			print(p, bottleneck.nanmedian(forces[ids]), bottleneck.nanmedian(forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])))
 
 if __name__ == "__main__":
    main(sys.argv[1])
+
