@@ -154,7 +154,11 @@ def process_file(input_file_name):
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
 		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True, comments='"')
 
-	print(speeds.shape)
+	minval = np.min(speeds[np.nonzero(speeds)])
+	maxval = np.max(speeds[np.nonzero(speeds)])
+	if (maxval - minval) < 7:
+		print("not enough speed diff.")
+		return
 
 	# convert to meters per second, then to flywheel meters per second
 	speeds_mps = (speeds * 0.44704)
