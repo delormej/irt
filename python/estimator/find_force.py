@@ -210,16 +210,22 @@ def get_files(rootdir):
 				filepath = os.path.join(root, filename)
 				yield filepath
 
+def graph_file(file):
+	print('Processing: ' + file)
+	try:
+		s, w, sl, i = process_file(file)
+		graph(s, w, sl, i, color1=np.random.rand(3,1))
+	except:
+		print("Had to skip that one.")
 	
 def main(input_file_name):
-	rootdir = 'C:/Users/Jason/SkyDrive/InsideRide/Tech/Ride Logs/Jason'
-	for file in get_files(rootdir):
-		print('Processing: ' + file)
-		try:
-			s, w, sl, i = process_file(file)
-		except:
-			print("Had to skip that one.")
-		graph(s, w, sl, i, color1=np.random.rand(3,1))
+	input_file_name = 'C:/Users/Jason/SkyDrive/InsideRide/Tech/Ride Logs/Jason'
+
+	if os.path.isdir(input_file_name):
+		for file in get_files(input_file_name):
+			graph_file(file)
+	else:
+		graph_file(file)
 
 	plt.show()
 
