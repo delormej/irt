@@ -1,9 +1,9 @@
-input_file_name = "180lb_large_mag_range_adjust_speed.csv"
+#input_file_name = "180lb_large_mag_range_adjust_speed.csv"
 n = 7       # min. sequence length
 x = 0.2 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
 skip_rows = 600 # data rows skipped at the beginning
-xsl_filename = '../../tcx-to-csv.xslt'
+#xsl_filename = '../../tcx-to-csv.xslt'
 
 import sys
 from collections import defaultdict
@@ -12,7 +12,7 @@ import numpy as np, numpy.ma as ma
 import bottleneck 
 import itertools
 import matplotlib.pyplot as plt
-import lxml.etree as ET
+#import lxml.etree as ET
 
 if len(sys.argv) > 1:
 	input_file_name = sys.argv[1]
@@ -135,13 +135,14 @@ def find_seq(speeds, watts, offset):
 	return sorted(result)
 	
 def main(input_file_name):
+	"""
     if input_file_name.endswith('.tcx'):
         print("Parsing tcx file...")        
         xsl(input_file_name)
         #input_file_name.replace()        
     else:
         exit()
-    
+	"""    
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
 		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True)
 
@@ -171,7 +172,7 @@ def main(input_file_name):
 
 	print("slope, intercept")
 	print(slope / (0.4/0.115), intercept)
- 	#print(slope, intercept)
+	#print(slope, intercept)
 	
 	pos_list = [p for p in valid_data if p < 2000]
 	pos_list.sort()
@@ -196,5 +197,5 @@ def main(input_file_name):
 	plt.show()
 
 if __name__ == "__main__":
-   #main(sys.argv[1])
-   main(input_file_name)
+   main(sys.argv[1])
+   #main(input_file_name)
