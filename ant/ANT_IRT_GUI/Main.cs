@@ -493,6 +493,8 @@ namespace IRT_GUI
 
         void m_reportTimer_Tick(object sender, EventArgs e)
         {
+            m_dataPoint.Timestamp = DateTime.UtcNow;
+
             foreach (IReporter r in m_reporters)
                 r.Report(m_dataPoint);
             
