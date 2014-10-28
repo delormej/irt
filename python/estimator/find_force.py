@@ -139,8 +139,8 @@ def find_seq(speeds, watts, offset):
 		last_end = s[1]
 	split_cluster(cluster)
 	return sorted(result)
-	
-def main(input_file_name):
+
+def process_file(input_file_name):
 	"""
     if input_file_name.endswith('.tcx'):
         print("Parsing tcx file...")        
@@ -197,9 +197,13 @@ def main(input_file_name):
 		if ids:
 			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
 			print(p, bottleneck.nanmedian(forces[ids]), bottleneck.nanmedian(forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])))
+
 	
-	graph(speeds[id2000], w2000, slope, intercept)
-	plt.show()
+def main(input_file_name):
+	
+	process_file(input_file_name)
+	#graph(speeds[id2000], w2000, slope, intercept)
+	#plt.show()
 
 if __name__ == "__main__":
    main(sys.argv[1])
