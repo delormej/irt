@@ -198,12 +198,19 @@ def process_file(input_file_name):
 			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
 			print(p, bottleneck.nanmedian(forces[ids]), bottleneck.nanmedian(forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])))
 
+	return sp2000, w2000, slope, intercept
+
 	
 def main(input_file_name):
 	
-	process_file(input_file_name)
+	s1, w1, sl1, i1 = process_file(input_file_name)
+	#s2, w2, sl2, i2 = process_file('activity_617538989.csv')
 	#graph(speeds[id2000], w2000, slope, intercept)
-	#plt.show()
+	graph(s1, w1, sl1, i1)
+	#graph(s2, w2, sl2, i2, color1='y', color2='g')
+	#c=numpy.random.rand(3,1)
+
+	plt.show()
 
 if __name__ == "__main__":
    main(sys.argv[1])
