@@ -145,7 +145,7 @@ def main(input_file_name):
 	"""    
 
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
-		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True)
+		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True, comments='"')
 
 	# convert to meters per second, then to flywheel meters per second
 	speeds_mps = (speeds * 0.44704)
