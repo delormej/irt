@@ -904,7 +904,14 @@ namespace IRT_GUI
                 (byte)(position), // Position LSB
                 (byte)(position >> 8), // Position MSB
             };
-            SendCommand(Command.MoveServo, data);
+            if (SendCommand(Command.MoveServo, data))
+            {
+                UpdateStatus(string.Format("Moving servo to position: {0}", position));
+            }
+            else
+            {
+                UpdateStatus("Failed to send servo move command.");
+            }
         }
 
 
@@ -1023,15 +1030,18 @@ namespace IRT_GUI
             ushort position = 0;
             ushort.TryParse(txtServoPos.Text, out position);
 
-            if (position > 500 && position < 2500)
+            // do a check for valid range if not in admin mode
+            if (!AdminEnabled) 
             {
-                MoveServo(position);
-            }
-            else
-            {
-                UpdateStatus("Invalid servo position.");
+                if (position < 500 && position > 2500)
+                {
+                    m_PauseServoUpdate = false;
+                    UpdateStatus("Invalid servo position.");
+                    return;
+                }
             }
 
+            MoveServo(position);
             // Resume updating the servo position textbox.
             m_PauseServoUpdate = false;
         }
