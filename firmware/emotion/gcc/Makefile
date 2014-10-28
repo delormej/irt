@@ -60,6 +60,7 @@ LDFLAGS += -Wl,--gc-sections
 ############################################
 # For debugging purposes
 ############################################
+debug : CFLAGS += -DKURT						# KURT specific build
 debug : CFLAGS += -DENABLE_DEBUG_LOG			# Enable debug logging.
 debug : CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
 #debug : CFLAGS += -DBLE_NUS_ENABLED			# Use Nordic BLE UART for logging.
@@ -132,6 +133,6 @@ name:
 prep:
 	$(NRFJPROG) --memwr 0x3fc00 --val 1		
 	$(NRFJPROG) --memwr 0x3fc04 --val 0		
-	$(NRFJPROG) --memwr 0x3fc90 --val 64	
+	#$(NRFJPROG) --memwr 0x3fc90 --val 64	
 
 .PHONY: debug deploy name prep

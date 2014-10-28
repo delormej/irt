@@ -13,4 +13,13 @@ void pwm_init(uint32_t pwm_pin_output_number);
 uint32_t pwm_set_servo(uint32_t pulse_width_us);
 uint32_t pwm_stop_servo(void);
 
+#ifdef KURT
+
+/**@brief	Moves a continuous rotation servo forward / backward / stop.
+ * 			Speed is a percentage of speed -100...+100
+ * 			- = reverse, 0 = stop + = forward
+ */
+uint32_t pwm_continuous_servo(int8_t speed);
+#endif
+
 #endif

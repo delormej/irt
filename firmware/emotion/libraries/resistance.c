@@ -21,6 +21,15 @@
 #define MIN_SERVO_RANGE		699		// Defined spec for servo is between 2ms and 1ms, but we have a little legacy where we were setting to 699 - this should be eliminated.
 #define MAX_SERVO_RANGE		2000
 
+#ifdef KURT
+#include "irt_adc.h"
+#include "nrf_delay.h"
+#define AIN_SLIDE_POT	ADC_CONFIG_PSEL_AnalogInput2	// P0.01 AIN2 (pin J7-4 on board)
+
+static int16_t m_target_servo_pos = 0;
+
+#endif // KURT
+
 #define ACTUAL_SERVO_POS(POS)	POS + mp_user_profile->servo_offset
 
 /**@brief Debug logging for resistance control module.
@@ -56,6 +65,41 @@ static uint16_t position_set_by_force(float mag_force)
 	return resistance_position_set(servo_pos);
 }
 
+#ifdef KURT
+static void on_adc_result(uint16_t result)
+{
+	static uint16_t count;
+
+	uint32_t retry = 0;
+	m_servo_pos = result;
+
+	// Every once in a while report out.
+	if (count++ % 1024 == 0)
+	{
+		RC_LOG("[RC] on_adc_result: %i\r\n", result);
+	}
+
+	// ****
+	// TODO: FIX as this doesn't handle when you OVERSHOOT the goal.
+	// ****
+
+	if (result == m_target_servo_pos)
+	{
+		// Clear target.
+		m_target_servo_pos = 0;
+
+		// Stop the servo.
+		pwm_continuous_servo(0);
+	}
+	else
+	{
+		// TODO: check recursion here.
+		resistance_position_set(m_target_servo_pos);
+	}
+}
+#endif
+
+
 /**@brief	Initializes the resistance module which controls the servo.
  */
 uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile)
@@ -65,11 +109,26 @@ uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profi
 	// Initialize pulse-width-modulation.
 	pwm_init(servo_pin_number);
 
-	// Always start off with resistance at level 0.
-	//return resistance_level_set(0);
-	#pragma message "TODO: Hard coded to return 2,000 - fix this."
+#ifdef KURT
+	RC_LOG("[RC] resistance_init\r\n");
+
+	// Initialize the ADC for our purposes.
+    uint32_t config     = (ADC_CONFIG_RES_10bit                        		<< ADC_CONFIG_RES_Pos)     |
+                          (ADC_CONFIG_INPSEL_AnalogInputOneThirdPrescaling	<< ADC_CONFIG_INPSEL_Pos)  |
+                          (ADC_CONFIG_REFSEL_VBG							<< ADC_CONFIG_REFSEL_Pos)  |
+						  (AIN_SLIDE_POT							  		<< ADC_CONFIG_PSEL_Pos) |
+						  (ADC_CONFIG_EXTREFSEL_None                  		<< ADC_CONFIG_EXTREFSEL_Pos);
+
+    irt_adc_init(config, on_adc_result);
+
+	// TODO: Hard coded to return 2,000 - fix this.
 	m_servo_pos = 2000;
-	return 2000;
+
+	return m_servo_pos;
+#else
+	// Always start off with resistance at level 0.
+	return resistance_level_set(0);
+#endif // KURT
 }
 
 /**@brief	Returns the last known position of the servo.
@@ -84,6 +143,60 @@ uint16_t resistance_position_get()
  */
 uint16_t resistance_position_set(uint16_t servo_pos)
 {
+#ifdef KURT
+
+	/* NOTE: the range with a 10bit ADC is 0-939.  This is because we're referencing against
+	 * 1.2VBG and doing 1/3 pre-scaling.  The voltage off the pin is 3.3V, thus:
+	 * 		3.3 / 3.6 = 0.9167 * 1024 = 938.7008
+	 */
+
+	if (m_target_servo_pos == 0)
+	{
+		//
+		// TODO: Handle situation when we get an OVERRIDE call, move to another position
+		// before the first time was called.
+		//
+		if (m_servo_pos == servo_pos)
+		{
+			RC_LOG("[RC] resistance_position_set already at position: %i\r\n", servo_pos);
+			return m_servo_pos;
+		}
+
+		// Record the target
+		m_target_servo_pos = servo_pos;
+
+		// First time we're being called to set a position.
+		RC_LOG("[RC] resistance_position_set setting target pos: %i\r\n", servo_pos);
+
+		if (m_servo_pos > m_target_servo_pos)
+		{
+			// issue reverse
+			pwm_continuous_servo(-100);
+		}
+		else
+		{
+			// issue forward
+			pwm_continuous_servo(100);
+		}
+	}
+	else
+	{
+		// TODO:
+		// We're being called from the adc handler.
+		// Check here if we overshot?
+	}
+
+	// Read the adc, all the magic happens in on_adc_result
+	// TODO: yeah... lots to do, fix this so that it doesn't sit & loop indefinitely potentially.
+	if (irt_adc_start() == NRF_ERROR_BUSY)
+	{
+		RC_LOG("[RC] resistance_position_set adc is busy.\r\n");
+		// TODO: raise an error, retry, etc...
+	}
+
+	// Just return where we know we are for now.
+	return m_servo_pos;
+#else
 	uint32_t err_code;
 	// Actual servo position after calibration.
 	uint16_t actual_servo_pos;
@@ -136,7 +249,7 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 		m_servo_pos = servo_pos;
 		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
 	}
-
+#endif // KURT
 	return m_servo_pos;
 }
 

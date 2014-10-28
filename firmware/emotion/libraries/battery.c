@@ -53,7 +53,7 @@ static uint8_t m_pin_charge_stop;					// Pin used to tell the charger to stop.
  * @details  This function will fetch the conversion result from the ADC, convert the value into
  *           percentage and send it to peer.
  */
-void ADC_IRQHandler(void)
+void ADC_IRQHandler2(void)
 {
     if (NRF_ADC->EVENTS_END != 0)
     {
@@ -89,6 +89,8 @@ void ADC_IRQHandler(void)
  */
 void battery_read_start()
 {
+	return;
+
     uint32_t err_code;
 
     // Stop any running conversions.
@@ -123,6 +125,8 @@ void battery_read_start()
  */
 irt_battery_status_t battery_status(uint16_t millivolts, uint32_t operating_time)
 {
+	return;
+
 	irt_battery_status_t status;
 
 	float volts = millivolts / 1000.0f;
@@ -196,6 +200,8 @@ void battery_charge_set(bool enable)
  */
 void battery_init(uint8_t pin_battery_enable, uint8_t pin_charge_stop, on_battery_result_t on_battery_result)
 {
+	return;
+
 	m_on_battery_result = on_battery_result;
 	// TODO: This pin goes away, except for 1 test board.  We can remove in future build or ifdef.
 	m_pin_battery_read = pin_battery_enable;

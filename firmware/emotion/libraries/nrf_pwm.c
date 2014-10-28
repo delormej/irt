@@ -136,6 +136,35 @@ static void pwm_ppi_init(void)
 	APP_ERROR_CHECK(err_code);
 }
 
+#ifdef KURT
+/**@brief	Moves a continuous rotation servo forward / backward / stop.
+ * 			Speed is a percentage of speed -100...+100
+ * 			- = reverse, 0 = stop + = forward
+ */
+uint32_t pwm_continuous_servo(int8_t speed)
+{
+	// TODO: figure out speed, see onenote for details.
+	uint32_t position = 0;
+
+	if (speed == 0)
+	{
+		position = pwm_set_servo(1523); // stop position 1521 - 1525
+	}
+	else if (speed < 0)
+	{
+		// reverse
+		position = pwm_set_servo(1703); // 40% speed
+	}
+	else
+	{
+		position = pwm_set_servo(1297); // 40% speed
+		// move forward
+	}
+
+	return position;
+}
+#endif
+
 /**@brief	Starts the process of moving the servo to valid range (1,000 - 2,000) as
  * 			defined in microseconds.
  *			This call returns immediately and doesn't wait for the move to complete.

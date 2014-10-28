@@ -384,8 +384,13 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	clear_led(LED_1);
 	set_led_green(LED_2);
 
+#ifdef KURT
+	// Ensure aux power is on.
+	peripheral_aux_pwr_set(false);
+#else
 	// Ensure aux power is off for right now, we're not using.
 	peripheral_aux_pwr_set(true);
+#endif
 
 	// Initialize the button if available.
 	button_init();

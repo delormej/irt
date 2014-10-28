@@ -73,6 +73,10 @@ static float inline slope_calc(float y, float slope, float intercept)
  */
 static float servo_force(uint16_t servo_pos)
 {
+#ifdef KURT
+	return 0;
+#endif // KURT
+
 	float force;
 
 	if (servo_pos >= MIN_RESISTANCE_LEVEL)
