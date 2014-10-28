@@ -1,8 +1,9 @@
-#input_file_name = "jason_test_1-6_modified_servo_pos.csv"
+input_file_name = "180lb_large_mag_range_adjust_speed.csv"
 n = 7       # min. sequence length
 x = 0.2 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
 skip_rows = 600 # data rows skipped at the beginning
+xsl_filename = '../../tcx-to-csv.xslt'
 
 import sys
 from collections import defaultdict
@@ -11,9 +12,23 @@ import numpy as np, numpy.ma as ma
 import bottleneck 
 import itertools
 import matplotlib.pyplot as plt
+import lxml.etree as ET
 
 if len(sys.argv) > 1:
 	input_file_name = sys.argv[1]
+
+def xsl(xml_filename):
+    """
+    parses garmin tcx file and outputs csv file
+    """
+    print(xml_filename)
+    xslt = ET.parse(xsl_filename)
+    transform = ET.XSLT(xslt)
+
+    dom = ET.parse(xml_filename)
+    newdom = transform(dom)
+    #ET.write(sys.stdout)
+    print(ET.tostring(newdom)) #, pretty_print=True))
 
 def theil_sen(x,y, sample= "auto", n_samples = 1e7):
     """
@@ -120,6 +135,13 @@ def find_seq(speeds, watts, offset):
 	return sorted(result)
 	
 def main(input_file_name):
+    if input_file_name.endswith('.tcx'):
+        print("Parsing tcx file...")        
+        xsl(input_file_name)
+        #input_file_name.replace()        
+    else:
+        exit()
+    
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
 		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True)
 
@@ -148,7 +170,8 @@ def main(input_file_name):
 	slope, intercept = theil_sen(flywheel_mps[id2000], watts[id2000], False)
 
 	print("slope, intercept")
-	print(slope, intercept)
+	print(slope / (0.4/0.115), intercept)
+ 	#print(slope, intercept)
 	
 	pos_list = [p for p in valid_data if p < 2000]
 	pos_list.sort()
@@ -167,10 +190,11 @@ def main(input_file_name):
 			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
 			print(p, bottleneck.nanmedian(forces[ids]), bottleneck.nanmedian(forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])))
 	
-	plt.scatter(flywheel_mps[id2000], w2000)
-	plt.plot(flywheel_mps[id2000], flywheel_mps[id2000]*slope + intercept, 'r')
+	#plt.scatter(flywheel_mps[id2000], w2000)
+	plt.scatter(speeds[id2000], w2000)
+	plt.plot(speeds[id2000], flywheel_mps[id2000]*slope + intercept, 'r')
 	plt.show()
 
 if __name__ == "__main__":
-   main(sys.argv[1])
-
+   #main(sys.argv[1])
+   main(input_file_name)
