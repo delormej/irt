@@ -30,6 +30,12 @@ def xsl(xml_filename):
     #ET.write(sys.stdout)
     print(ET.tostring(newdom)) #, pretty_print=True))
 
+def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
+	# convert slope to wheel speed in mph from flywheel mps
+	slope = slope * (0.4/0.115) * 0.44704
+	plt.scatter(speeds_mph, watts, c=color1)
+	plt.plot(speeds_mph, speeds_mph*slope + intercept, color2)
+
 def theil_sen(x,y, sample= "auto", n_samples = 1e7):
     """
     Computes the Theil-Sen estimator for 2d data.
@@ -192,9 +198,7 @@ def main(input_file_name):
 			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
 			print(p, bottleneck.nanmedian(forces[ids]), bottleneck.nanmedian(forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])))
 	
-	#plt.scatter(flywheel_mps[id2000], w2000)
-	plt.scatter(speeds[id2000], w2000)
-	plt.plot(speeds[id2000], flywheel_mps[id2000]*slope + intercept, 'r')
+	graph(speeds[id2000], w2000, slope, intercept)
 	plt.show()
 
 if __name__ == "__main__":
