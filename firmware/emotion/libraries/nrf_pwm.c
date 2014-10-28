@@ -153,11 +153,11 @@ uint32_t pwm_continuous_servo(int8_t speed)
 	else if (speed < 0)
 	{
 		// reverse
-		position = pwm_set_servo(1703); // 40% speed
+		position = pwm_set_servo(2000); // 40% speed
 	}
 	else
 	{
-		position = pwm_set_servo(1297); // 40% speed
+		position = pwm_set_servo(1000); // 40% speed
 		// move forward
 	}
 

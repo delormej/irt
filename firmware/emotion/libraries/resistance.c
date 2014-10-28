@@ -24,7 +24,10 @@
 #ifdef KURT
 #include "irt_adc.h"
 #include "nrf_delay.h"
+
 #define AIN_SLIDE_POT	ADC_CONFIG_PSEL_AnalogInput2	// P0.01 AIN2 (pin J7-4 on board)
+#define MAX_ADC_READ	938								// See explanation in method below (3.3f {Vout} / 3.6f {VBG*3} * 1024 {10bit})
+#define MIN_ADC_READ	1
 
 static int16_t m_target_servo_pos = 0;
 
@@ -83,7 +86,8 @@ static void on_adc_result(uint16_t result)
 	// TODO: FIX as this doesn't handle when you OVERSHOOT the goal.
 	// ****
 
-	if (result == m_target_servo_pos)
+	if (result >= MAX_ADC_READ || result <= MIN_ADC_READ ||
+			result == m_target_servo_pos)
 	{
 		// Clear target.
 		m_target_servo_pos = 0;
@@ -145,10 +149,21 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 {
 #ifdef KURT
 
-	/* NOTE: the range with a 10bit ADC is 0-939.  This is because we're referencing against
+	/* NOTE: the range with a 10bit ADC is 1-939.  This is because we're referencing against
 	 * 1.2VBG and doing 1/3 pre-scaling.  The voltage off the pin is 3.3V, thus:
 	 * 		3.3 / 3.6 = 0.9167 * 1024 = 938.7008
 	 */
+	if (servo_pos > MAX_ADC_READ)
+	{
+		servo_pos = MAX_ADC_READ;
+		RC_LOG("[RC] resistance_position_set using MAX, servo_pos too high: %i\r\n", servo_pos);
+	}
+	else if (servo_pos == 0)
+	{
+		servo_pos = MIN_ADC_READ;
+		RC_LOG("[RC] resistance_position_set using MIN, servo_pos can't be 0.\r\n");
+	}
+
 
 	if (m_target_servo_pos == 0)
 	{
