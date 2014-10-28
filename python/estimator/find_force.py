@@ -172,7 +172,7 @@ def main(input_file_name):
 	slope, intercept = theil_sen(flywheel_mps[id2000], watts[id2000], False)
 
 	print("slope, intercept")
-	print(slope / (0.4/0.115), intercept)
+	print(slope * (0.4/0.115), intercept)
 	#print(slope, intercept)
 	
 	pos_list = [p for p in valid_data if p < 2000]
