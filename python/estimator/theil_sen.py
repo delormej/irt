@@ -64,10 +64,10 @@ def slope( x_1, x_2, y_1, y_2):
     
 if __name__=="__main__":
     from numpy import genfromtxt
-    my_data = genfromtxt('./python/estimator/data.csv', delimiter=',', names=True, usecols = (2,3) )
+    my_data = genfromtxt('jason_test_1-6_modified_servo_pos.csv', delimiter=',', names=True, usecols = (3,5) )
 
-    x = my_data['speed']
-    y = my_data['watts']
+    x = my_data['emotion_speed_mph']
+    y = my_data['quarq_power']
 
     print (x.shape)
 
