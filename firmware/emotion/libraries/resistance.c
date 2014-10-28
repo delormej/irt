@@ -18,6 +18,10 @@
 #include "debug.h"
 
 #define MIN_THRESHOLD_MOVE	2		// Minimum threshold for a servo move.
+#define MIN_SERVO_RANGE		699		// Defined spec for servo is between 2ms and 1ms, but we have a little legacy where we were setting to 699 - this should be eliminated.
+#define MAX_SERVO_RANGE		2000
+
+#define ACTUAL_SERVO_POS(POS)	POS + mp_user_profile->servo_offset
 
 /**@brief Debug logging for resistance control module.
  */
@@ -32,6 +36,9 @@
 #define ABOVE_TRESHOLD(POS)										\
 		((POS - m_servo_pos) > MIN_THRESHOLD_MOVE || 			\
 				(m_servo_pos - POS > MIN_THRESHOLD_MOVE))		\
+
+// MACRO for getting to the array.
+#define RESISTANCE_LEVEL 	mp_user_profile->servo_positions.positions
 
 static uint16_t	m_servo_pos;		// State of current servo position.
 static user_profile_t* mp_user_profile;
@@ -111,16 +118,16 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 		 * Adjusted offset for the 2,000 - 1,000 range is -301, but since testing was done at -50,
 		 * the new baseline offset is 351 for a servo that is factory calibrated to 1,451.
 		*/
-		actual_servo_pos = servo_pos + mp_user_profile->servo_offset;
+		actual_servo_pos = ACTUAL_SERVO_POS(servo_pos);
 
 		// Using offset, guard to acceptable range of 2000-1000
-		if (actual_servo_pos > 2000)
+		if (actual_servo_pos > MAX_SERVO_RANGE)
 		{
-			actual_servo_pos = 2000;
+			actual_servo_pos = MAX_SERVO_RANGE;
 		}
-		else if (actual_servo_pos < 1000)
+		else if (actual_servo_pos < MIN_SERVO_RANGE)
 		{
-			actual_servo_pos = 1000;
+			actual_servo_pos = MIN_SERVO_RANGE;
 		}
 
 		err_code = pwm_set_servo(actual_servo_pos);
@@ -133,8 +140,56 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 	return m_servo_pos;
 }
 
+/**@brief		Gets the minimum (magnet off) resistance position.
+ */
+uint16_t resistance_position_min(void)
+{
+	return RESISTANCE_LEVEL[0];
+}
+
+/**@brief 		Gets the maximum resistance position.
+ */
+uint16_t resistance_position_max(void)
+{
+	return RESISTANCE_LEVEL[RESISTANCE_LEVELS-1];
+}
+
+/**@brief		Validates the values of positions are in range.
+ *
+ */
+bool resistance_positions_validate(servo_positions_t* positions)
+{
+	uint8_t index = 0;
+	uint16_t value = 0;
+
+	if (positions->count > MAX_RESISTANCE_LEVEL_COUNT)
+	{
+		RC_LOG("[RC] resistance_positions_validate too many: %i\r\n", positions->count);
+		return false;
+	}
+
+	do
+	{
+		// If it's the home position 2,000 it's valid.
+		if (positions->positions[index] == MAX_SERVO_RANGE)
+			continue;
+
+		value = ACTUAL_SERVO_POS(positions->positions[index]);
+		if (value > MAX_SERVO_RANGE || value < MIN_SERVO_RANGE)
+		{
+			RC_LOG("[RC] resistance_positions_validate adjusted value invalid: %i\r\n", value);
+			return false;
+		}
+	} while (++index < positions->count);
+
+	return true;
+}
+
 uint16_t resistance_level_set(uint8_t level)
 {
+	/*RC_LOG("[RC] resistance_level_set: %i, max: %i\r\n",
+			level, RESISTANCE_LEVELS);*/
+
 	// Sets the resistance to a standard 0-9 level.
 	if (level >= RESISTANCE_LEVELS)
 	{
@@ -142,6 +197,13 @@ uint16_t resistance_level_set(uint8_t level)
 	}
 
 	return resistance_position_set(RESISTANCE_LEVEL[level]);
+}
+
+/**@brief		Gets the levels of standard resistance available.
+  */
+uint8_t resistance_level_count()
+{
+	return mp_user_profile->servo_positions.count;
 }
 
 uint16_t resistance_pct_set(float percent)

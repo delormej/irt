@@ -14,7 +14,7 @@
 
 #include <stdint.h>
 
-#define PROFILE_VERSION					5u	// Current version of the profile.
+#define PROFILE_VERSION					6u	// Current version of the profile.
 
 #define SETTING_ACL_SLEEP_ON			1UL				// Put device to sleep when accelerometer signals no motion.
 #define SETTING_BTLE_ENABLED			2UL				// BTLE Enabled
@@ -23,6 +23,8 @@
 #define SETTING_ANT_FEC_ENABLED			16UL			// ANT+ Fitness Equipment Control profile enabled.
 #define SETTING_ANT_EXTRA_INFO_ENABLED	32UL			// Send custom IRT EXTRA_INFO message (mostly for debugging).
 #define SETTING_INVALID					65535UL			// Max for 16 bit settings.
+
+#define MAX_RESISTANCE_LEVEL_COUNT 		10u 			// Max number of resistance levels possible to set.
 
 /**@brief	Helper macro for determining if a setting is flagged.
  */
@@ -39,6 +41,14 @@
 #define SETTING_VALUE(SETTING) \
 	(SETTING & 0x7FFF)
 
+/**@brief	Servo positions available.
+ */
+typedef struct servo_positions_s
+{
+	uint8_t				count;
+	uint16_t			positions[MAX_RESISTANCE_LEVEL_COUNT];
+} servo_positions_t;
+
 /**@brief	Structure used to for storing/reading user profile.
  * 			Must be at least PSTORAGE_MIN_BLOCK_SIZE (i.e. 16 bytes) in size and should be word aligned (16 bits).
  */
@@ -50,9 +60,11 @@ typedef struct user_profile_s {
 	uint16_t	wheel_size_mm;
 	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/1,000 e.g. 20741 = 20.741
 	uint16_t	ca_intercept;				// Calibration intercept. This value is inverted on the wire -1/1,000 e.g. 40144 = -40.144
-	float		ca_temp;					// Temperature recorded when calibration was set.  See: Bicycling Science (1% drop in Crr proportional to 1 degree change in temp).
+	uint16_t	ca_temp;					// need Temperature recorded when calibration was set.  See: Bicycling Science (1% drop in Crr proportional to 1 degree change in temp).
+	uint16_t	ca_reserved;				// Placeholder for another calibration value if necessary.
 	int16_t		servo_offset;				// Calibration offset for servo position.
-	uint8_t		future[2];					// For block size alignment -- 16 bytes
+	servo_positions_t servo_positions;		// Servo positions (size should be 21 bytes)
+	uint8_t		reserved_2[7]; // (sizeof(servo_positions_t)+2) % 16];					// For block size alignment -- 16 bit alignment
 } user_profile_t;
 
 /**@brief Initializes access to storage. */

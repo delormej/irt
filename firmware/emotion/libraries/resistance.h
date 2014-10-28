@@ -13,34 +13,11 @@
 #include "irt_common.h"
 #include "user_profile.h"
 
-#define RESISTANCE_LEVELS 	7 	// Number of resistance levels available.
+#define RESISTANCE_LEVELS 		resistance_level_count() 	// Number of resistance levels available.
+#define ERG_ADJUST_LEVEL		2U							// Watts to adjust increment /decrement
 
-/**@brief		Array representing the servo position in micrseconds (us) by 
- *				resistance level 0-9, with a larger number representing more
- *				resistance applied.  0 is NO resistance.
- *
- */
-static const uint16_t RESISTANCE_LEVEL[RESISTANCE_LEVELS] = { 
-	2000, // 0 - no resistance
-/*	1300,
-	1225,
-	1150,
-	1075,
-	1000,
-	925,
-	850,
-	775, 
-	700}; // Max resistance
-*/ // TESTING 7 positions.
-	1300,
-	1200,
-	1100,
-	1000,
-	900,
-	800 };
-
-#define MIN_RESISTANCE_LEVEL	RESISTANCE_LEVEL[0]						// Minimum by which there is no longer resistance.
-#define MAX_RESISTANCE_LEVEL	RESISTANCE_LEVEL[RESISTANCE_LEVELS-1]	// Maximum resistance.
+#define MIN_RESISTANCE_LEVEL	resistance_position_min()	// Minimum by which there is no longer resistance.
+#define MAX_RESISTANCE_LEVEL	resistance_position_max()	// Maximum resistance.
 
 /**@brief Bike types, used for predefined resistance coefficients. */
 typedef enum
@@ -125,6 +102,19 @@ uint16_t resistance_position_get(void);
  */
 uint16_t resistance_position_set(uint16_t position);
 
+/**@brief		Gets the minimum (magnet off) resistance position.
+ */
+uint16_t resistance_position_min(void);
+
+/**@brief 		Gets the maximum resistance position.
+ */
+uint16_t resistance_position_max(void);
+
+/**@brief		Validates the values of positions are in range.
+ *
+ */
+bool resistance_positions_validate(servo_positions_t* positions);
+
 /**@brief		Sets the resistance to a specific level by moving the servo to the 
  *					corresponding position.
  *
@@ -132,10 +122,15 @@ uint16_t resistance_position_set(uint16_t position);
  */
 uint16_t resistance_level_set(uint8_t level);
 
+/**@brief		Gets the levels of standard resistance available.
+  */
+uint8_t resistance_level_count(void);
+
 /**@brief		Sets the resistance to a value 0-100 percent.
  *
  */
 uint16_t resistance_pct_set(float percent);
+
 
 /**@brief		Adjusts magnetic resistance for erg and simulation modes.
  *
@@ -146,4 +141,6 @@ void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 		resistance_mode_t resistance_mode,
 		float 				rr_force);
 
-#endif
+
+
+#endif //__RESISTANCE_H__

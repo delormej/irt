@@ -5,8 +5,8 @@
 #include <stdint.h>
 
 #define APP_TIMER_PRESCALER         0   /**< Value of the RTC1 PRESCALER register. */
-#define APP_TIMER_MAX_TIMERS        4   /**< Maximum number of simultaneously created timers. */
-#define APP_TIMER_OP_QUEUE_SIZE     4   /**< Size of timer operation queues. */
+#define APP_TIMER_MAX_TIMERS        5   /**< Maximum number of simultaneously created timers. */
+#define APP_TIMER_OP_QUEUE_SIZE     5   /**< Size of timer operation queues. */
 #define APP_GPIOTE_MAX_USERS        1	/**< Maximum number of users of the GPIOTE handler. */
 
 // RTC1 is based on a 32.768khz crystal, or in other words it oscillates
@@ -23,7 +23,7 @@
 
 typedef struct peripheral_evt_s
 {
-	void (*on_button_pbsw)(void);
+	void (*on_button_pbsw)(bool long_press);
 	void (*on_accelerometer_evt)(void);
 	void (*on_power_plug)(bool plugged_in);
 	void (*on_battery_result)(uint16_t);

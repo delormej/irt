@@ -19,23 +19,50 @@ namespace ANT_Console
         AntControl m_control;
         SpeedSimulator m_speedSim;
 
-        public InteractiveConsole(AntBikePower eMotion, AntControl control, AntBikeSpeed refSpeed)
+        public static void Main()
         {
-            m_eMotion = eMotion;
-            m_control = control;
-            m_refSpeed = refSpeed;
+            Console.Title = "IRT Debug Console";
+            InteractiveConsole console = new InteractiveConsole();
+            console.Run();
         }
 
         public void Run()
         {
-            PreventShutdown();
+            Controller controller = null;
 
-            const string header = "Time         |  mph  | Watts | Watts2| Servo  | Target | Flywheel";
+            try
+            {
+                controller = new Controller();
+
+                // Check to see if we should connect to a specific E-Motion Device.
+                Console.Write("E-Motion Rollers Device ID or <ENTER>:");
+                
+                ushort deviceId = 0;
+                ushort.TryParse(Console.ReadLine(), out deviceId);
+
+                controller.ConfigureServices(deviceId);
+
+                m_eMotion = controller.EMotionBikePower;
+                m_control = controller.AntRemoteControl;
+                m_refSpeed = controller.RefBikeSpeed;
+
+                // configure ourselves as a reporter and start.
+                controller.Reporters.Add(this);
+                controller.ConfigureReporters();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return;
+            }
+
+            Utility.PreventShutdown();
+
             ConsoleKeyInfo cki;
 
             Console.CursorVisible = false;
             Console.WriteLine("Starting....");
-            Console.WriteLine(header);
+            Console.Write(ReportHelper.Header);
 
             do
             {
@@ -44,17 +71,17 @@ namespace ANT_Console
                 switch (cki.Key)
                 {
                     case ConsoleKey.U:
-                        m_control.RemoteControl(0x00);
+                        m_control.RemoteControl(ANT_Console.Services.AntControl.RemoteControlCommand.Up);
                         WriteCommand("Sent UP command.");
                         break;
 
                     case ConsoleKey.D:
-                        m_control.RemoteControl(0x01);
+                        m_control.RemoteControl(ANT_Console.Services.AntControl.RemoteControlCommand.Down);
                         WriteCommand("Sent DOWN command.");
                         break;
 
                     case ConsoleKey.S:
-                        m_control.RemoteControl(0x02);
+                        m_control.RemoteControl(ANT_Console.Services.AntControl.RemoteControlCommand.Select);
                         WriteCommand("Sent SELECT command.");
                         break;
 
@@ -113,12 +140,28 @@ namespace ANT_Console
                         SimulateSpeedCommand();
                         break;
 
+                    case ConsoleKey.Spacebar:
+                        
+                        if (m_eMotion != null)
+                        {
+                            Console.WriteLine("Device ID: " + m_eMotion.GetDeviceNumber());
+
+                            if (m_eMotion.Product != null)
+                            { 
+                                Console.WriteLine("Serial: " + m_eMotion.Product.SerialNumber);
+                            }
+                        }
+                        break;
+
                     default:
                         WriteCommand("Unrecognized command.");
                         ShowHelp();
                         break;
                 }
             } while (cki.Key != ConsoleKey.X);
+
+            // Signal to wrap up and report out summary.
+            controller.Shutdown();
         }
 
         public void Report(string message)
@@ -133,8 +176,6 @@ namespace ANT_Console
 
             if (data.Timestamp <= m_lastReport)
                 return;
-
-            const string format = "{0:H:mm:ss.fff} | {1,5:N1} | {2,5:N0} | {3,5:N0} | {4,6:N0} | {5,4}:{6} | {7}";
 
             // Leave 2 rows at the bottom for command.
             int lastLine = Console.CursorTop;
@@ -170,16 +211,7 @@ namespace ANT_Console
             Console.SetCursorPosition(Console.WindowLeft, Console.WindowTop + Console.WindowHeight - 1);
             Console.Write("<enter cmd>");
             Console.SetCursorPosition(Console.WindowLeft, lastLine);
-            Console.WriteLine(format,
-                data.Timestamp,
-                //data.SpeedReference,
-                data.SpeedEMotion,
-                data.PowerEMotion,
-                data.PowerReference,
-                data.ServoPosition,
-                data.ResistanceMode == 0x41 ? "S" : data.ResistanceMode == 0x42 ? "E" : "",
-                data.TargetLevel,
-                data.FlywheelRevs);
+            Console.Write(ReportHelper.Format(data));
         }
 
         void ShowHelp()
@@ -552,14 +584,6 @@ namespace ANT_Console
                 m_lastReport = data.Timestamp;
             }
         }
-
-        private void PreventShutdown()
-        {
-            Utility.SetThreadExecutionState(
-                Utility.ThreadExecutionState.CONTINUOUS | 
-                Utility.ThreadExecutionState.DISPLAY_REQUIRED |
-                Utility.ThreadExecutionState.SYSTEM_REQUIRED);
-        }
     }
 
     public static class Utility
@@ -572,6 +596,14 @@ namespace ANT_Console
             CONTINUOUS = 0x80000000,
             DISPLAY_REQUIRED = 0x00000002,
             SYSTEM_REQUIRED = 0x00000001
+        }
+
+        public static void PreventShutdown()
+        {
+            Utility.SetThreadExecutionState(
+                Utility.ThreadExecutionState.CONTINUOUS | 
+                Utility.ThreadExecutionState.DISPLAY_REQUIRED |
+                Utility.ThreadExecutionState.SYSTEM_REQUIRED);
         }
     }
 }

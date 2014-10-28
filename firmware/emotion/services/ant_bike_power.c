@@ -1,8 +1,11 @@
 /* Copyright (c) 2013 Inside Ride Technologies, LLC. All Rights Reserved.
 */
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "stdio.h"
+#include "string.h"
+#include "app_util.h"
 #include "ant_bike_power.h"
 #include "ant_parameters.h"
 #include "ant_interface.h"
@@ -57,8 +60,8 @@
 #define ANT_BAT_DESC_INDEX	 	 	 7
 
 
-#define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48																				 /** Message ID used when setting resistance via an ANT BURST. */
-/** Message ID used when setting resistance via an ANT BURST. */
+#define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48									/** Message ID used when setting resistance via an ANT BURST. */
+#define ANT_BURST_MSG_ID_SET_POSITIONS	0x59									/** Message ID used when setting servo button stop positions via an ANT BURST. */
 
 static const uint8_t 				ACK_MESSAGE_RETRIES = 3;
 static const uint8_t 				ACK_MESSAGE_RETRY_DELAY = 5; // milliseconds
@@ -272,55 +275,121 @@ static void handle_set_weight(ant_evt_t * p_ant_evt)
 	mp_evt_handlers->on_set_resistance(evt);
 }
 
-// Right now all this method does is handle resistance control messages.
+/**@brief	Parses the packets into position values.
+ *
+ */
+static void process_servo_positions(servo_positions_t* p_pos, const uint8_t* p_buffer, uint8_t start_idx, uint8_t max)
+{
+	for (uint8_t i = 0; i < p_pos->count && i < max; i++)
+	{
+		p_pos->positions[start_idx+i] = uint16_decode(&p_buffer[(sizeof(uint16_t) * i)]);
+	}
+}
+
+/**@brief	Handles the burst packets that contain the servo positions.
+ *
+ */
+static void handle_burst_set_positions(const uint8_t* p_buffer)
+{
+	static servo_positions_t positions;
+
+	if (BURST_SEQ_FIRST_PACKET(p_buffer[2]))
+	{
+		// Initialize the struct, and the count.
+		memset(&positions, 0, sizeof(servo_positions_t));
+		positions.count = p_buffer[4];
+
+		// This message will contain the first 3 positions.
+		process_servo_positions(&positions, &p_buffer[5], 0, 3);
+	}
+	else if (BURST_SEQ_LAST_PACKET(p_buffer[2]))
+	{
+		// Process last sequence.
+		process_servo_positions(&positions, &p_buffer[3], 7, 3);
+
+		// Notify & report out that we're done here.
+		mp_evt_handlers->on_set_servo_positions(&positions);
+	}
+	else
+	{
+		// Just process positions.
+		process_servo_positions(&positions, &p_buffer[3], 3, 4);
+	}
+}
+
+/**@brief	Manages the state of a burst sequence which has 3 messages
+ *			and starts with a byte that represent the type of message.
+ */
 static void handle_burst(ant_evt_t * p_ant_evt)
 {
-	static bool 				receiving_burst_resistance = false;
-	static resistance_mode_t	resistance_mode = RESISTANCE_SET_STANDARD;
+	static bool in_burst = false;
+	static uint8_t message_id = 0;
 
-	// TODO: there is probably a more defined way to deal with burst data, but this
-	// should work for now.  i.e. use  some derivation of sd_ant_burst_handler_request
-	// Although that method looks as though it's for sending bursts, not receiving.
-	uint8_t message_id = p_ant_evt->evt_buffer[3];			// forth byte.
+	// TODO: for some reason, I can't seem to break these out into separate functions.
+	static rc_evt_t	resistance_evt; // resistance message
 
-	//
-	// All WAHOO messages seem to have 3 messages per BURST, first, middle, last.
-	// Middle message does not seem to contain anything relevant.
-	//
-
-	if (BURST_SEQ_FIRST_PACKET(p_ant_evt->evt_buffer[2])
-			&& message_id == ANT_BURST_MSG_ID_SET_RESISTANCE)
+	if (BURST_SEQ_FIRST_PACKET(p_ant_evt->evt_buffer[2]))
 	{
-		// Burst has begun, fifth byte has the mode, need to wait for subsequent messages
-		// to parse the level.
-		receiving_burst_resistance = true;
-		resistance_mode = (resistance_mode_t) p_ant_evt->evt_buffer[4];
+		// Flag that we'll be receiving multiple messages.
+		in_burst = true;
+		message_id = p_ant_evt->evt_buffer[3];
+
+		switch (message_id)
+		{
+			case ANT_BURST_MSG_ID_SET_RESISTANCE:
+				memset(&resistance_evt, 0, sizeof(rc_evt_t));
+				resistance_evt.operation = (resistance_mode_t) p_ant_evt->evt_buffer[4];
+				break;
+
+			case ANT_BURST_MSG_ID_SET_POSITIONS:
+				handle_burst_set_positions(p_ant_evt->evt_buffer);
+				break;
+
+			default:
+				BP_LOG("[BP] handle_burst WARN: unrecognized message_id: %i\r\n", message_id);
+				break;
+		}
 	}
-	else if (BURST_SEQ_LAST_PACKET(p_ant_evt->evt_buffer[2])
-			&& receiving_burst_resistance)
+	else if (BURST_SEQ_LAST_PACKET(p_ant_evt->evt_buffer[2]) && in_burst)
 	{
-		// Value for the operation exists in this message sequence.  
-
-		rc_evt_t evt;
-		evt.operation = resistance_mode;
-		evt.pBuffer = &(p_ant_evt->evt_buffer[3]);
-
 		// Reset state.
-		receiving_burst_resistance = false;
+		in_burst = false;
 
-		BP_LOG("[BP]:handle_burst [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-				p_ant_evt->evt_buffer[0],
-				p_ant_evt->evt_buffer[1],
-				p_ant_evt->evt_buffer[2],
-				p_ant_evt->evt_buffer[3],
-				p_ant_evt->evt_buffer[4],
-				p_ant_evt->evt_buffer[5],
-				p_ant_evt->evt_buffer[6],
-				p_ant_evt->evt_buffer[7],
-				p_ant_evt->evt_buffer[8]);
+		switch (message_id)
+		{
+			case ANT_BURST_MSG_ID_SET_RESISTANCE:
+				// Value for the operation exists in this message sequence.
+				resistance_evt.pBuffer = &(p_ant_evt->evt_buffer[3]);
+				mp_evt_handlers->on_set_resistance(resistance_evt);
+				break;
 
-		mp_evt_handlers->on_set_resistance(evt);
+			case ANT_BURST_MSG_ID_SET_POSITIONS:
+				handle_burst_set_positions(p_ant_evt->evt_buffer);
+				break;
+
+			default:
+				BP_LOG("[BP] handle_burst WARN: unrecognized message_id: %i\r\n", message_id);
+				break;
+		}
 	}
+	else
+	{
+		if (message_id == ANT_BURST_MSG_ID_SET_POSITIONS)
+		{
+			handle_burst_set_positions(p_ant_evt->evt_buffer);
+		}
+	}
+
+	/*BP_LOG("[BP]:handle_burst [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+			p_ant_evt->evt_buffer[0],
+			p_ant_evt->evt_buffer[1],
+			p_ant_evt->evt_buffer[2],
+			p_ant_evt->evt_buffer[3],
+			p_ant_evt->evt_buffer[4],
+			p_ant_evt->evt_buffer[5],
+			p_ant_evt->evt_buffer[6],
+			p_ant_evt->evt_buffer[7],
+			p_ant_evt->evt_buffer[8]);*/
 }
 
 /**@brief	Handles WAHOO API specific commands.

@@ -64,38 +64,11 @@ def slope( x_1, x_2, y_1, y_2):
     
 if __name__=="__main__":
     from numpy import genfromtxt
-    my_data = genfromtxt('/users/jasondel/dev/InsideRide/python/estimator/data.csv', delimiter=',', names=True, usecols = (3,5,7) )
+    my_data = genfromtxt('jason_test_1-6_modified_servo_pos.csv', delimiter=',', names=True, usecols = (3,5) )
 
-    #ix = my_data['emotion_speed_mph'] >= 13.0 
-    #print (ix)
-    #filter(lambda a: 3 < a < 8, a)
+    x = my_data['emotion_speed_mph']
+    y = my_data['quarq_power']
 
-    # This filters out the first 5 minutes:
-    my_data = my_data[300:]
-
-    # Filter anything except servo position 2,000 or greater (magnet off).
-    z1 = my_data['servo_pos']
-    my_data = my_data[z1>=2000]
-
-    x1 = my_data['emotion_speed_mph'] 
-    #y1 = my_data['quarq_power']
-    filtered_data = my_data[x1>10.0]
-    y1 = filtered_data['quarq_power']
-    filtered_data = filtered_data[y1>0]
-
-    #filtered_data = filtered_data[:,range(300, 900)]
-    #idx=(my_data[:,0]>10.0) & (my_data[:,1]>0) #errors in too many indices
-
-    #list = np.array( filter(lambda x: x['emotion_speed_mph'] >= 13.0 and x['quarq_power'] > 0, my_data) ) 
-    #cond = np.logical_and(my_data[:, 0] >= 10.0, my_data[:, 1] > 0)
-
-    #print (filtered_data[idx].shape)
-    #filtered_data = my_data[cond, :]
-    x = filtered_data['emotion_speed_mph'] 
-    y = filtered_data['quarq_power']
-    
-    #x = my_data['emotion_speed_mph'] 
-    #y = my_data['quarq_power'] 
     print (x.shape)
 
     #x = np.asarray( [ 0.0000, 0.2987, 0.4648, 0.5762, 0.8386 ] ) 

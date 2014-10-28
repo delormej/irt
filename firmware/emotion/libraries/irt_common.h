@@ -26,7 +26,7 @@ All rights reserved.
 #define DEVICE_NAME                 "E-Motion"                          /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME           "Inside Ride"            			/**< Manufacturer. Will be passed to Device Information Service. */
 //#define HW_REVISION                 0x01  							// This is now defined in boards.h	/**< Hardware revision for manufacturer's identification common page. */
-#define MANUFACTURER_ID             0xAAAA             				  	/**< Manufacturer ID for manufacturer's identification common page. */
+#define MANUFACTURER_ID             0x005D             				  	// Manufacturer ID 93 (0x005D) for Inside Ride
 #define MODEL_NUMBER                0x5248								// Model 'HR' in ASCII /**< Model number for manufacturer's identification common page. */
 
 /* VERSION is currently defined in make file.
@@ -96,7 +96,8 @@ static bool __inline__ irt_feature_is_available(uint16_t feature)
 #define IRT_MSG_SUBPAGE_AUXPWR				25u					// Gets/set whether power goes to J7-4.
 #define IRT_MSG_SUBPAGE_TEMP				26u					// TODO: this is not really a get/set, move this. Gets current temperature.
 #define IRT_MSG_SUBPAGE_SLEEP				27u					// When set puts the device in lower power mode.
-
+#define IRT_MSG_SUBPAGE_DEBUG_SPEED			28u					// # of ticks to emulate at 4hz for debugging simulated speed.
+#define IRT_MSG_SUBPAGE_FEATURES			29u					// Configured features.
 
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 

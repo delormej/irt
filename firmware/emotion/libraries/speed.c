@@ -23,16 +23,30 @@
 #endif // ENABLE_DEBUG_LOG
 
 /*
- * Flywheel is actually 40cm in circumference, but transfers via belt to the drum (virtual road surface).
- * Flywheel to drum ratio creates a virtual road distance travelled of 11.176cm per revolution of the flywheel.
- * 1 meter of travel is equal to 8.9477452 rotations (1 / 0.11176)
- * Flywheel generates 2 ticks per revolution == 1 meter of travel is equal to 17.89549 flywheel ticks.
+ * Flywheel is 40cm in circumference, but transfers via belt to the drum (virtual road surface)
+ * at ratio of 10cm (pully circumference) : 22.5cm (drum belt slot circumference).
+ *
+ * Virtual road distance traveled is 11.5cm per revolution of the flywheel.
+ * 1 drum rotation = 22.5/10=2.25 flywheel rotations
+ *
+ * 1 meter of travel is equal to 8.695652174 rotations (1 / 0.115)
+ * Flywheel generates 2 ticks per revolution == 1 meter of travel is equal to 17.3913 flywheel ticks.
+ *
+ * NOTE: if magnet power is a function of a static force per position * flywheel speed, we should make sure
+ * to calculate based on actual flywheel speed and not virtual road speed.
+ *
  */
-#define FLYWHEEL_SIZE				0.11176f						// Distance traveled in meters per complete flywheel rev.
-#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_SIZE) * 2.0f)	// 2 ticks per rev.
+#define FLYWHEEL_ROAD_DISTANCE				0.115f								// Virtual road distance traveled in meters per complete flywheel rev.
+#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_ROAD_DISTANCE) * 2.0f)	// 2 ticks per rev.
 
 static uint16_t m_wheel_size;										// Wheel diameter size in mm.
 static float m_flywheel_to_wheel_revs;								// Ratio of flywheel revolutions for 1 wheel revolution.
+
+#ifdef SIM_SPEED
+// # of ticks to simulate in debug mode.
+uint8_t  speed_debug_ticks;
+#endif
+
 
 /**@brief	Configure GPIO input from flywheel revolution pin and create an 
  *				event on achannel. 
@@ -150,7 +164,7 @@ void speed_wheel_size_set(uint16_t wheel_size_mm)
 		 1 servo_rev = 0.11176 distance_meters (FLYWHEEL_SIZE)
 	*/
 	// For every 1 wheel revolution, the flywheel revolves this many times *2 (we get 2 reads per rev).
-	m_flywheel_to_wheel_revs = (((wheel_size_mm / 1000.0f) / FLYWHEEL_SIZE) * 2.0f);
+	m_flywheel_to_wheel_revs = (((wheel_size_mm / 1000.0f) / FLYWHEEL_ROAD_DISTANCE) * 2.0f);
 }
 
 void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
@@ -185,7 +199,7 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 
 #ifdef SIM_SPEED
 	// DEBUG ONLY, simulate ~16mph.
-	p_current->accum_flywheel_ticks = 32u + (p_last->accum_flywheel_ticks);
+	p_current->accum_flywheel_ticks = speed_debug_ticks + (p_last->accum_flywheel_ticks);
 	//SP_LOG("[SP] accum_flywheel_ticks %lu \r\n", p_current->accum_flywheel_ticks);
 #else
 	// Get the flywheel ticks (2 per rev).
@@ -210,7 +224,7 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 			event_period = p_current->event_time_2048 - p_last->event_time_2048;
 		}
 
-		// Distance in meters.
+		// Virtual road distance traveled in meters.
 		distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
 
 		// Calculate speed in meters per second.
@@ -231,10 +245,10 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 				avg_wheel_period,
 				p_current->event_time_2048);
 
-		/*SP_LOG("[SP] flywheel:%i, speed:%.1f, period:%i\r\n",
+		/*SP_LOG("[SP] flywheel:%i, speed:%.1f, ratio:%.4f\r\n",
 				p_current->accum_flywheel_ticks,
 				p_current->instant_speed_mps,
-				event_period);*/
+				m_flywheel_to_wheel_revs);*/
 	}
 	else
 	{

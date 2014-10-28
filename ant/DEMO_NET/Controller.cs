@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace ANT_Console
 {
-    class Controller
+    public class Controller
     {
         ushort m_eMotionDeviceId = 0;
         DataPoint m_data;
@@ -16,7 +16,6 @@ namespace ANT_Console
         AntBikePower m_eMotionPower;
         AntBikeSpeed m_refSpeed;
         AntBikePower m_refPower;
-        InteractiveConsole m_console;
         IList<IReporter> m_reporters;
         CalibrationSpeed m_last_calibration;
         Timer m_ReportingTimer;
@@ -29,46 +28,43 @@ namespace ANT_Console
             AntControl
         }
 
-        public static void Main()
-        {
-            Console.Title = "IRT Debug Console";
-
-            try
-            {
-                Controller controller = new Controller();
-                controller.Run();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
-
         public Controller()
         {
             m_data = new DataPoint();
             m_summary = new SummaryInfo();
+            m_reporters = new List<IReporter>();
         }
 
-        public void Run()
+        public void Shutdown()
         {
-            // Check to see if we should connect to a specific E-Motion Device.
-            Console.Write("E-Motion Rollers Device ID or <ENTER>:");
-            ushort.TryParse(Console.ReadLine(), out m_eMotionDeviceId);
-            ConfigureServices(m_eMotionDeviceId);
-
-            m_console = new InteractiveConsole(m_eMotionPower, m_control, m_refSpeed);
-
-            GetSummaryInfo();
-
-            ConfigureReporters();
-            
-            // Kick off the console and block here until done.
-            m_console.Run();
-
             m_ReportingTimer.Stop();
             // Report out summary.
             Report(m_summary);
+        }
+
+        public IList<IReporter> Reporters
+        {
+            get { return m_reporters;  }
+        }
+
+        public AntBikePower EMotionBikePower
+        {
+            get { return m_eMotionPower; }
+        }
+            
+        public AntControl AntRemoteControl
+        {
+            get { return m_control; }
+        }
+
+        public AntBikeSpeed RefBikeSpeed
+        {
+            get { return m_refSpeed; }
+        }
+
+        public AntBikePower RefBikePower
+        {
+            get { return RefBikePower;  }
         }
 
         private void GetSummaryInfo()
@@ -82,8 +78,8 @@ namespace ANT_Console
             }
 
             Console.WriteLine("E-Motion Device: {0}", m_eMotionDeviceId);
-            Console.WriteLine("Reference Power: {0}", m_refPower.GetDeviceNumber());
-            Console.WriteLine("Reference Speed: {0}", m_refSpeed.GetDeviceNumber());
+            //Console.WriteLine("Reference Power: {0}", m_refPower.GetDeviceNumber());
+            //Console.WriteLine("Reference Speed: {0}", m_refSpeed.GetDeviceNumber());
 
             m_summary.EmotionDeviceId = m_eMotionDeviceId;
 
@@ -112,31 +108,37 @@ namespace ANT_Console
                     m_summary.EmotionModel = m_eMotionPower.Manufacturer.Model;
                 }
 
-                if (m_refPower.Manufacturer != null)
+                if (m_refPower != null)
                 {
-                    m_summary.RefPowerManfId = m_refPower.Manufacturer.Manufacturer;
-                    m_summary.RefPowerModel = m_refPower.Manufacturer.Model;
-                    m_summary.EmotionHWRev = m_refPower.Manufacturer.HardwareRevision;
+                    if (m_refPower.Manufacturer != null)
+                    {
+                        m_summary.RefPowerManfId = m_refPower.Manufacturer.Manufacturer;
+                        m_summary.RefPowerModel = m_refPower.Manufacturer.Model;
+                        m_summary.EmotionHWRev = m_refPower.Manufacturer.HardwareRevision;
+                    }
+
+                    // Request these settings.
+                    m_refPower.RequestDeviceParameter(SubPages.Crr);
+                    System.Threading.Thread.Sleep(500);
+                    m_refPower.RequestDeviceParameter(SubPages.TotalWeight);
+                    System.Threading.Thread.Sleep(500);
+                    m_refPower.RequestDeviceParameter(SubPages.Settings);
+                    System.Threading.Thread.Sleep(500);
                 }
-
-                // Request these settings.
-                m_refPower.RequestDeviceParameter(SubPages.Crr);
-                System.Threading.Thread.Sleep(500);
-                m_refPower.RequestDeviceParameter(SubPages.TotalWeight);
-                System.Threading.Thread.Sleep(500);
-                m_refPower.RequestDeviceParameter(SubPages.Settings);
-                System.Threading.Thread.Sleep(500);
-
             };
             t.Start();
 
         }
 
 
-        private void ConfigureServices(ushort deviceId = 0)
+        public void ConfigureServices(ushort deviceId = 0)
         {
             const byte emotion_transmission_type = 0xA5;
             const byte quarq_transmission_type = 0x5;
+
+            // Open a background scanning channel for devices (speed, power, etc...)
+
+            /*
 
             // Configure reference power.
             m_refPower = new AntBikePower(
@@ -149,7 +151,7 @@ namespace ANT_Console
             m_refSpeed = new AntBikeSpeed(
                 (int)AntChannel.RefSpeed, 0);
             m_refSpeed.SpeedEvent += ProcessMessage;
-
+            */
             // Configure E-Motion power reporting.
             m_eMotionPower = new AntBikePower(
                 (int)AntChannel.EMotionPower, deviceId, emotion_transmission_type);
@@ -162,10 +164,9 @@ namespace ANT_Console
             m_eMotionPower.Connected += m_eMotionPower_Connected;
             m_eMotionPower.MeasureOutputEvent += ProcessMessage;
             m_eMotionPower.Closing += m_eMotionPower_Closing;
-            
 
             // Configure the remote control service.
-            m_control = new AntControl((int)AntChannel.AntControl);
+            //m_control = new AntControl((int)AntChannel.AntControl);
         }
 
         //
@@ -194,12 +195,10 @@ namespace ANT_Console
         // End
         //
 
-        private void ConfigureReporters()
+        public void ConfigureReporters()
         {
             // Temporary reporter.
-            m_reporters = new List<IReporter>(2);
             m_reporters.Add(new LogReporter());
-            m_reporters.Add(m_console);
 
             m_ReportingTimer = new Timer(1000);
             m_ReportingTimer.Elapsed += (o, e) =>

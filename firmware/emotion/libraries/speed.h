@@ -59,5 +59,10 @@ void speed_wheel_size_set(uint16_t wheel_size_mm);
  */
 uint32_t speed_calc(irt_power_meas_t * current, irt_power_meas_t * last);
 
+#ifdef SIM_SPEED
+// Declaration of
+// # of ticks to simulate in debug mode.
+extern uint8_t  speed_debug_ticks;
+#endif
 
 #endif
