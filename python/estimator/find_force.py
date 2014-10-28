@@ -6,6 +6,7 @@ skip_rows = 600 # data rows skipped at the beginning
 #xsl_filename = '../../tcx-to-csv.xslt'
 
 import sys
+import os
 from collections import defaultdict
 from itertools import groupby, chain
 import numpy as np, numpy.ma as ma
@@ -153,6 +154,8 @@ def process_file(input_file_name):
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
 		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True, comments='"')
 
+	print(speeds.shape)
+
 	# convert to meters per second, then to flywheel meters per second
 	speeds_mps = (speeds * 0.44704)
 	flywheel_mps = (speeds_mps * (0.4/0.115))
@@ -200,15 +203,23 @@ def process_file(input_file_name):
 
 	return sp2000, w2000, slope, intercept
 
+def get_files(rootdir):
+	for root, dirs, files in os.walk(rootdir):
+		for filename in files:
+			if filename.endswith('.csv'):
+				filepath = os.path.join(root, filename)
+				yield filepath
+
 	
 def main(input_file_name):
-	
-	s1, w1, sl1, i1 = process_file(input_file_name)
-	#s2, w2, sl2, i2 = process_file('activity_617538989.csv')
-	#graph(speeds[id2000], w2000, slope, intercept)
-	graph(s1, w1, sl1, i1)
-	#graph(s2, w2, sl2, i2, color1='y', color2='g')
-	#c=numpy.random.rand(3,1)
+	rootdir = 'C:/Users/Jason/SkyDrive/InsideRide/Tech/Ride Logs/Jason'
+	for file in get_files(rootdir):
+		print('Processing: ' + file)
+		try:
+			s, w, sl, i = process_file(file)
+		except:
+			print("Had to skip that one.")
+		graph(s, w, sl, i, color1=np.random.rand(3,1))
 
 	plt.show()
 
