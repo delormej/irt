@@ -28,6 +28,7 @@
 #include "ble_sensorsim.h"
 #include "irt_peripheral.h"
 #include "ant_bike_power.h"
+#include "ant_bike_speed.h"
 #include "ble_dis.h"
 #include "ble_nus.h"
 #include "ble_cps.h"
@@ -266,6 +267,9 @@ static void services_init() {
 	// Initialize the ANT+ remote control service.
 	ant_ctrl_tx_init(ANT_CTRL_CHANNEL,
 			mp_ant_ble_evt_handlers->on_ant_ctrl_command);
+
+	// Initialize the ANT+ speed channel.
+	ant_sp_tx_init();
 }
 
 /**@brief Connection Parameters Module handler.
@@ -588,6 +592,9 @@ void ble_ant_start() {
 
 	// Open the ANT channel for transmitting power.
 	ant_bp_tx_start();
+
+	// Open the ANT channel for transimitting speed.
+	ant_sp_tx_start();
 
 	// Open the ANT channel to start broadcasting availability for remote control.
 	ant_ctrl_tx_start();

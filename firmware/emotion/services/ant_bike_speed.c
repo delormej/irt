@@ -56,17 +56,28 @@ void ant_sp_tx_init()
                                      ANT_SP_EXT_ASSIGN);
     APP_ERROR_CHECK(err_code);
 
-    err_code = sd_ant_channel_id_set(ANT_BP_TX_CHANNEL,
+    err_code = sd_ant_channel_id_set(ANT_SP_TX_CHANNEL,
                                      ANT_DEVICE_NUMBER,
                                      ANT_SP_DEVICE_TYPE,
                                      ANT_SP_TRANS_TYPE);
     APP_ERROR_CHECK(err_code);
 
-    err_code = sd_ant_channel_radio_freq_set(ANT_BP_TX_CHANNEL, ANTPLUS_RF_FREQ);
+    err_code = sd_ant_channel_radio_freq_set(ANT_SP_TX_CHANNEL, ANTPLUS_RF_FREQ);
     APP_ERROR_CHECK(err_code);
 
-    err_code = sd_ant_channel_period_set(ANT_BP_TX_CHANNEL, ANT_SP_MSG_PERIOD);
+    err_code = sd_ant_channel_period_set(ANT_SP_TX_CHANNEL, ANT_SP_MSG_PERIOD);
     APP_ERROR_CHECK(err_code);
+
+    BS_LOG("[BS] ant_sp_tx_init bike speed initialized.\r\n");
+}
+
+/**@brief	Opens the channel to start sending speed data.
+ *
+ */
+void ant_sp_tx_start()
+{
+	uint32_t err_code = sd_ant_channel_open(ANT_SP_TX_CHANNEL);
+	APP_ERROR_CHECK(err_code);
 }
 
 /**@brief	Sends the required ANT speed message.

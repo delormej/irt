@@ -44,6 +44,7 @@
 #include "wahoo.h"
 #include "ble_ant.h"
 #include "ant_bike_power.h"
+#include "ant_bike_speed.h"
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 #include "app_timer.h"
@@ -634,6 +635,10 @@ static void ant_4hz_timeout_handler(void * p_context)
 					m_resistance_mode, rr_force);
 		}
 	}
+
+	// Send speed data.
+	ant_sp_tx_send(p_power_meas_current->last_wheel_event_2048 / 2, 	// Requires 1/1024 time
+			(int16_t)p_power_meas_current->accum_wheel_revs); 			// Requires truncating to 16 bits.
 
 	// Send remote control a heartbeat.
 	ant_ctrl_available();
