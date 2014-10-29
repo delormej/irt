@@ -9,6 +9,7 @@
 #define APP_TIMER_OP_QUEUE_SIZE     5   /**< Size of timer operation queues. */
 #define APP_GPIOTE_MAX_USERS        1	/**< Maximum number of users of the GPIOTE handler. */
 
+// Number of ticks per second.
 // RTC1 is based on a 32.768khz crystal, or in other words it oscillates
 // 32768 times per second.  The PRESCALER determines how often a tick gets
 // 32768 times per second.  The PRESCALER determins how often a tick gets
