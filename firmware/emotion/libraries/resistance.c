@@ -26,8 +26,8 @@
 #include "nrf_delay.h"
 
 #define AIN_SLIDE_POT	ADC_CONFIG_PSEL_AnalogInput2	// P0.01 AIN2 (pin J7-4 on board)
-#define MAX_ADC_READ	938								// See explanation in method below (3.3f {Vout} / 3.6f {VBG*3} * 1024 {10bit})
-#define MIN_ADC_READ	1
+#define MAX_SERVO_POS	938								// See explanation in method below (3.3f {Vout} / 3.6f {VBG*3} * 1024 {10bit})
+#define MIN_SERVO_POS	1
 
 static int16_t m_target_servo_pos = 0;
 
@@ -69,7 +69,7 @@ static uint16_t position_set_by_force(float mag_force)
 }
 
 #ifdef KURT
-static void on_adc_result(uint16_t result)
+static void on_position_read(uint16_t result)
 {
 	static uint16_t count;
 
@@ -79,15 +79,14 @@ static void on_adc_result(uint16_t result)
 	// Every once in a while report out.
 	if (count++ % 1024 == 0)
 	{
-		RC_LOG("[RC] on_adc_result: %i\r\n", result);
+		RC_LOG("[RC] on_position_read: %i\r\n", result);
 	}
 
 	// ****
 	// TODO: FIX as this doesn't handle when you OVERSHOOT the goal.
 	// ****
 
-	if (result >= MAX_ADC_READ || result <= MIN_ADC_READ ||
-			result == m_target_servo_pos)
+	if (result == m_target_servo_pos)
 	{
 		// Clear target.
 		m_target_servo_pos = 0;
@@ -95,7 +94,7 @@ static void on_adc_result(uint16_t result)
 		// Stop the servo.
 		pwm_continuous_servo(0);
 	}
-	else
+	else if (m_target_servo_pos > 0)
 	{
 		// TODO: check recursion here.
 		resistance_position_set(m_target_servo_pos);
@@ -123,10 +122,12 @@ uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profi
 						  (AIN_SLIDE_POT							  		<< ADC_CONFIG_PSEL_Pos) |
 						  (ADC_CONFIG_EXTREFSEL_None                  		<< ADC_CONFIG_EXTREFSEL_Pos);
 
-    irt_adc_init(config, on_adc_result);
+    irt_adc_init(config, on_position_read);
 
 	// TODO: Hard coded to return 2,000 - fix this.
-	m_servo_pos = 2000;
+	m_servo_pos = 0;
+	// Issue a read.
+	irt_adc_start();
 
 	return m_servo_pos;
 #else
@@ -153,17 +154,16 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 	 * 1.2VBG and doing 1/3 pre-scaling.  The voltage off the pin is 3.3V, thus:
 	 * 		3.3 / 3.6 = 0.9167 * 1024 = 938.7008
 	 */
-	if (servo_pos > MAX_ADC_READ)
+	if (servo_pos > MAX_SERVO_POS)
 	{
-		servo_pos = MAX_ADC_READ;
+		servo_pos = MAX_SERVO_POS;
 		RC_LOG("[RC] resistance_position_set using MAX, servo_pos too high: %i\r\n", servo_pos);
 	}
-	else if (servo_pos == 0)
+	else if (servo_pos < MIN_SERVO_POS)
 	{
-		servo_pos = MIN_ADC_READ;
+		servo_pos = MIN_SERVO_POS;
 		RC_LOG("[RC] resistance_position_set using MIN, servo_pos can't be 0.\r\n");
 	}
-
 
 	if (m_target_servo_pos == 0)
 	{
@@ -183,25 +183,39 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 		// First time we're being called to set a position.
 		RC_LOG("[RC] resistance_position_set setting target pos: %i\r\n", servo_pos);
 
+		// Compare to current position to determine direction.
 		if (m_servo_pos > m_target_servo_pos)
-		{
-			// issue reverse
-			pwm_continuous_servo(-100);
-		}
-		else
 		{
 			// issue forward
 			pwm_continuous_servo(100);
 		}
+		else
+		{
+			// issue reverse
+			pwm_continuous_servo(-100);
+		}
 	}
 	else
 	{
-		// TODO:
 		// We're being called from the adc handler.
-		// Check here if we overshot?
+		// TODO: Check here if we overshot?
+
+		// Ensure we're not toping out or bottoming out.
+		if ( (m_target_servo_pos < m_servo_pos && m_servo_pos <= MIN_SERVO_POS) ||
+				(m_target_servo_pos > m_servo_pos && m_servo_pos >= MAX_SERVO_POS) )
+		{
+			// Stop servo
+			pwm_continuous_servo(0);
+			m_target_servo_pos = 0;
+
+			RC_LOG("[RC] resistance_position_set boundary reached: %i.\r\n", m_servo_pos);
+
+			// Don't fall through to restarting the ADC.
+			return m_servo_pos;
+		}
 	}
 
-	// Read the adc, all the magic happens in on_adc_result
+	// Read the adc, all the magic happens in on_position_read
 	// TODO: yeah... lots to do, fix this so that it doesn't sit & loop indefinitely potentially.
 	if (irt_adc_start() == NRF_ERROR_BUSY)
 	{
