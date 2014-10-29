@@ -1,7 +1,9 @@
 /* Copyright (c) 2013 Inside Ride Technologies, LLC. All Rights Reserved.
  */
 
+#include <stdint.h>
 #include "ant_bike_speed.h"
+#include "ant_interface.h"
 #include "ble_ant.h"
 #include "nrf_error.h"
 #include "debug.h"
@@ -16,15 +18,15 @@
 #endif // ENABLE_DEBUG_LOG
 
 typedef struct ant_sp_page_s {
-	uint8_t page_change:1 = 0;
-	uint8_t page_number:7 = 0;
-	uint8_t reserved1 = 0xFF;
-	uint8_t reserved2 = 0xFF;
-	uint8_t reserved3 = 0xFF;
-	uint8_t event_time_lsb = 0;
-	uint8_t event_time_msb = 0;
-	uint8_t rev_count_lsb = 0;
-	uint8_t rev_count_msb = 0;
+	uint8_t page_change:1;
+	uint8_t page_number:7;
+	uint8_t reserved1;
+	uint8_t reserved2;
+	uint8_t reserved3;
+	uint8_t event_time_lsb;
+	uint8_t event_time_msb;
+	uint8_t rev_count_lsb;
+	uint8_t rev_count_msb;
 } ant_sp_page_t;
 
 static ant_sp_page_t page0;

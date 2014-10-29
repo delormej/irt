@@ -259,6 +259,10 @@ static void services_init() {
 	ble_dis_service_init();		// Discovery Service
 	ble_nus_service_init();		// Debug Info Service (BLE_UART)
 	ble_cps_service_init();		// Cycling Power Service
+
+	// Initialize ANT bike power channel.
+	ant_bp_tx_init(mp_ant_ble_evt_handlers);
+
 	// Initialize the ANT+ remote control service.
 	ant_ctrl_tx_init(ANT_CTRL_CHANNEL,
 			mp_ant_ble_evt_handlers->on_ant_ctrl_command);
@@ -553,9 +557,6 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 	services_init();
 	advertising_init();
 	conn_params_init();
-
-	// Initialize ANT bike power channel.
-	ant_bp_tx_init(ant_ble_evt_handlers);
 }
 
 /**@brief Start advertising.
