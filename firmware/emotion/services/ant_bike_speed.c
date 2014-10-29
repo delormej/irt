@@ -9,6 +9,10 @@
 #include "irt_common.h"
 #include "debug.h"
 
+#define MSG_PAGE_CHANGE			4u
+#define MSG_MANUFACTURER		65u
+#define MSG_PRODUCT				130u
+
 /**@brief Debug logging for module.
  *
  */
@@ -19,8 +23,8 @@
 #endif // ENABLE_DEBUG_LOG
 
 typedef struct ant_sp_page_s {
-	uint8_t page_change:1;
 	uint8_t page_number:7;
+	uint8_t page_change:1;
 	uint8_t reserved1;
 	uint8_t reserved2;
 	uint8_t reserved3;
@@ -30,7 +34,7 @@ typedef struct ant_sp_page_s {
 	uint8_t rev_count_msb;
 } ant_sp_page_t;
 
-static ant_sp_page_t page0 = {
+static ant_sp_page_t page = {
 		.page_change = 0,
 		.page_number = 0,
 		.reserved1 = 0xFF,
@@ -87,18 +91,56 @@ uint32_t ant_sp_tx_send(uint16_t event_time_1024, uint16_t cum_rev_count)
 {
 	uint32_t err_code;
 
-	if (message_count % 4 == 0)
+	// Toggle page change every 4th message.
+	if (message_count % MSG_PAGE_CHANGE == 0)
 	{
-		// Toggle page change.
-		page0.page_change = ~page0.page_change;
+		page.page_change = ~page.page_change;
 	}
 
-	page0.event_time_lsb = LOW_BYTE(event_time_1024);
-	page0.event_time_msb = HIGH_BYTE(event_time_1024);
-	page0.rev_count_lsb = LOW_BYTE(cum_rev_count);
-	page0.rev_count_msb = HIGH_BYTE(cum_rev_count);
+	if (message_count % MSG_PRODUCT == 0)
+	{
+		// Send product page.
+		page.page_number = 0x03;
+		page.reserved1 = HW_REVISION;
+		page.reserved2 = SW_REVISION_MAJ;
+		page.reserved3 = LOW_BYTE(MODEL_NUMBER);	// Truncate to fit.
+	}
+	else if (message_count % MSG_MANUFACTURER == 0)
+	{
+		 // Send manufacturer page.
+		page.page_number = 0x02;
+		page.reserved1 = LOW_BYTE(MANUFACTURER_ID);
+		page.reserved2 = LOW_BYTE(SERIAL_NUMBER >> 16);
+		page.reserved3 = HIGH_BYTE(SERIAL_NUMBER >> 16);
+	}
+	else
+	{
+		// Send default page 0.
+		page.page_number = 0;
+		page.reserved1 = 0xFF;
+		page.reserved2 = 0xFF;
+		page.reserved3 = 0xFF;
+	}
 
-	err_code = sd_ant_broadcast_message_tx(ANT_SP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&page0);
+	// Always send this payload.
+	page.event_time_lsb = LOW_BYTE(event_time_1024);
+	page.event_time_msb = HIGH_BYTE(event_time_1024);
+	page.rev_count_lsb = LOW_BYTE(cum_rev_count);
+	page.rev_count_msb = HIGH_BYTE(cum_rev_count);
+
+	err_code = sd_ant_broadcast_message_tx(ANT_SP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&page);
+
+	/*
+	 uint8_t* p_page = (uint8_t)&page;
+	 BS_LOG("[BS] [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+			p_page[0],
+			p_page[1],
+			p_page[2],
+			p_page[3],
+			p_page[4],
+			p_page[5],
+			p_page[6],
+			p_page[7]); */
 
 	if (ANT_ERROR_AS_WARN(err_code))
 	{
