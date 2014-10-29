@@ -66,6 +66,7 @@ debug : CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
 debug : CFLAGS += -DENABLE_DEBUG_ASSERT			# This will block code on error and wait for debugger to attach.
 #debug : CFLAGS += -DSIM_SPEED					# Simulate speed.
 debug : CFLAGS += -g							# Enable debug symbols.
+debug : CFLAGS += -Wno-format					# Disable warnings on printf formating
 debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 #debug : CFLAGS += -DSETTINGS=2					# Sets the device so the accelerometer doesn't turn off
 
