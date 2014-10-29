@@ -85,9 +85,6 @@ namespace IRT_GUI
 
         private void btnSetServoPositions_Click(object sender, EventArgs e)
         {
-            var x = dgResistancePositions.DataSource;
-            System.Diagnostics.Debug.WriteLine(x);
-
             if (m_source.Count < 1)
             {
                 ShowError();
@@ -101,6 +98,13 @@ namespace IRT_GUI
                     ShowError();
                     return;
                 }
+            }
+
+            // First position set?
+            if (Positions[0].Value != min)
+            {
+                // Insert the HOME position which user cannot change.
+                Positions.Insert(0, new Position(min));
             }
 
             if (SetPositions != null)

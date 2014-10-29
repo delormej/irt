@@ -1706,9 +1706,6 @@ namespace IRT_GUI
             if (dialog == null)
                 return;
 
-            // Insert the HOME position which user cannot change.
-            dialog.Positions.Insert(0, new Position(MIN_SERVO_POS));
-
             // 3 messages * 8 bytes each
             byte[] data = new byte[24];
             data[0] = ANT_BURST_MSG_ID_SET_POSITIONS;
