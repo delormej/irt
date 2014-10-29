@@ -6,6 +6,7 @@
 #include "ant_interface.h"
 #include "ble_ant.h"
 #include "nrf_error.h"
+#include "irt_common.h"
 #include "debug.h"
 
 /**@brief Debug logging for module.
@@ -29,8 +30,44 @@ typedef struct ant_sp_page_s {
 	uint8_t rev_count_msb;
 } ant_sp_page_t;
 
-static ant_sp_page_t page0;
+static ant_sp_page_t page0 = {
+		.page_change = 0,
+		.page_number = 0,
+		.reserved1 = 0xFF,
+		.reserved2 = 0xFF,
+		.reserved3 = 0xFF,
+		.event_time_lsb = 0,
+		.event_time_msb = 0,
+		.rev_count_lsb = 0,
+		.rev_count_msb = 0
+};
 static uint8_t message_count = 0;
+
+/**@brief	Initialize the speed channel.
+ *
+ */
+void ant_sp_tx_init()
+{
+    uint32_t err_code;
+
+    err_code = sd_ant_channel_assign(ANT_SP_TX_CHANNEL,
+                                     ANT_SP_CHANNEL_TYPE,
+                                     ANTPLUS_NETWORK_NUMBER,
+                                     ANT_SP_EXT_ASSIGN);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = sd_ant_channel_id_set(ANT_BP_TX_CHANNEL,
+                                     ANT_DEVICE_NUMBER,
+                                     ANT_SP_DEVICE_TYPE,
+                                     ANT_SP_TRANS_TYPE);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = sd_ant_channel_radio_freq_set(ANT_BP_TX_CHANNEL, ANTPLUS_RF_FREQ);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = sd_ant_channel_period_set(ANT_BP_TX_CHANNEL, ANT_SP_MSG_PERIOD);
+    APP_ERROR_CHECK(err_code);
+}
 
 /**@brief	Sends the required ANT speed message.
  *			Determines when to send MANUF and PROD pages.
