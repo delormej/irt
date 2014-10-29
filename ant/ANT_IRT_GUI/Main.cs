@@ -48,6 +48,7 @@ namespace IRT_GUI
 
         bool m_PauseServoUpdate = false;
         bool m_requestingSettings = false;
+        bool m_SystemUiUpdate = false;
 
         // Logging stuff.
         private Timer m_reportTimer;
@@ -79,6 +80,9 @@ namespace IRT_GUI
         // Wrapper for executing on the UI thread.
         private void ExecuteOnUI(Action a)
         {
+            // Flag that we're updating UI elements.
+            m_SystemUiUpdate = true;
+
             if (this.InvokeRequired)
             {
                 this.BeginInvoke(a);
@@ -87,6 +91,8 @@ namespace IRT_GUI
             {
                 a.Invoke();
             }
+
+            m_SystemUiUpdate = false;
         }
 
 
@@ -1160,7 +1166,10 @@ namespace IRT_GUI
                     ExecuteOnUI(() =>
                         {
                             txtResistanceErgWatts.Text = "";
-                            txtResistanceErgWatts.Focus();
+                            if (!m_SystemUiUpdate)
+                            { 
+                                txtResistanceErgWatts.Focus();
+                            }
                         });
                     break;
 
@@ -1512,17 +1521,18 @@ namespace IRT_GUI
 
         private void cmbResistanceMode_Enter(object sender, EventArgs e)
         {
-            //m_PauseServoUpdate = true;
+            m_PauseServoUpdate = true;
         }
 
         private void cmbResistanceMode_Leave(object sender, EventArgs e)
         {
             // Don't do anything right now.
+            m_PauseServoUpdate = false;
         }
 
         private void txtResistancePercent_Enter(object sender, EventArgs e)
         {
-
+            m_PauseServoUpdate = true;
         }
 
         private void txtResistancePercent_Leave(object sender, EventArgs e)
