@@ -22,14 +22,19 @@ def xsl(xml_filename):
     """
     parses garmin tcx file and outputs csv file
     """
-    print(xml_filename)
-    xslt = ET.parse(xsl_filename)
-    transform = ET.XSLT(xslt)
 
-    dom = ET.parse(xml_filename)
-    newdom = transform(dom)
-    #ET.write(sys.stdout)
-    print(ET.tostring(newdom)) #, pretty_print=True))
+    try:
+        print(xml_filename)
+        xslt = ET.parse(xsl_filename)
+        transform = ET.XSLT(xslt)
+        print('Parsed xsl')
+        dom = ET.parse(xml_filename)
+        newdom = transform(dom)
+        #ET.write(sys.stdout)
+        print('transformed')
+        print(ET.tostring(newdom, pretty_print=True))
+    except:
+        print("Unexpected error:", sys.exc_info())
 
 def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
 	# convert slope to wheel speed in mph from flywheel mps
@@ -143,12 +148,11 @@ def find_seq(speeds, watts, offset):
 
 def process_file(input_file_name):
 	"""
-    if input_file_name.endswith('.tcx'):
-        print("Parsing tcx file...")        
-        xsl(input_file_name)
-        #input_file_name.replace()        
-    else:
-        exit()
+	if input_file_name.endswith('.tcx'):
+		print('Parsing tcx file...')
+		xsl(input_file_name)
+
+	exit()
 	"""    
 
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
@@ -223,13 +227,13 @@ def graph_file(file):
 		print("Had to skip that one.")
 	
 def main(input_file_name):
-	input_file_name = 'C:/Users/Jason/SkyDrive/InsideRide/Tech/Ride Logs/Jason'
+	#input_file_name = 'C:/Users/Jason/SkyDrive/InsideRide/Tech/Ride Logs/Jason'
 
 	if os.path.isdir(input_file_name):
 		for file in get_files(input_file_name):
 			graph_file(file)
 	else:
-		graph_file(file)
+		graph_file(input_file_name)
 
 	plt.show()
 
