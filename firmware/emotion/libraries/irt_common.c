@@ -10,15 +10,16 @@
 #include <string.h>
 #include "irt_common.h"
 #include "nrf_error.h"
+#include "nrf_soc.h"
 #include "debug.h"
 
 /**@brief Debug logging for resistance control module.
  */
-//#ifdef ENABLE_DEBUG_LOG
-//#define CN_LOG debug_log
-//#else
+#ifdef ENABLE_DEBUG_LOG
+#define CN_LOG debug_log
+#else
 #define CN_LOG(...)
-//#endif // ENABLE_DEBUG_LOG
+#endif // ENABLE_DEBUG_LOG
 
 static irt_power_meas_t* 	mp_buf_power_meas;
 static uint8_t				m_buf_size;
@@ -59,7 +60,7 @@ irt_power_meas_t* irt_power_meas_fifo_next()
 	// Increment the index.
 	m_fifo_index++;
 
-	CN_LOG("[CN] _next %i \r\n", idx_write);
+	//CN_LOG("[CN] _next %i \r\n", idx_write);
 
 	// Set pointer of the current event to write.
 	return &mp_buf_power_meas[idx_write];
@@ -74,7 +75,7 @@ irt_power_meas_t* irt_power_meas_fifo_first()
 	uint8_t idx_read;
 
 	idx_read = (m_fifo_index+1) % m_buf_size;
-	CN_LOG("[CN] _first %i \r\n", idx_read);
+	//CN_LOG("[CN] _first %i \r\n", idx_read);
 
 	// Return the pointer to the oldest event in the stack.
 	return &mp_buf_power_meas[idx_read];
@@ -88,7 +89,28 @@ irt_power_meas_t* irt_power_meas_fifo_last()
 	uint8_t idx_read;
 
 	idx_read = (m_fifo_index + m_buf_size - 2) % m_buf_size;
-	CN_LOG("[CN] _last %i \r\n", idx_read);
+	//CN_LOG("[CN] _last %i \r\n", idx_read);
 
 	return &mp_buf_power_meas[idx_read];
 }
+
+/**@brief Stores features value on flash. */
+uint32_t features_store(uint32_t* p_buffer)
+{
+	uint32_t err_code;
+	uint32_t value = 0;
+
+	// Make a local copy.
+	memcpy(&value, p_buffer, sizeof(uint32_t));
+
+	err_code = sd_flash_write((uint32_t *)(FACTORY_SETTINGS_BASE),
+                            &value,
+                            sizeof(uint32_t));
+
+	CN_LOG("[CN] features_store storing value: %i, returned: %i.\r\n",
+			value, err_code);
+
+	return err_code;
+}
+
+

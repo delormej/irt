@@ -1294,6 +1294,8 @@ static void on_request_data(uint8_t* buffer)
  */
 static void on_set_parameter(uint8_t* buffer)
 {
+	uint32_t err_code;
+
 	LOG("[MAIN]:set param message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 			buffer[0],
 			buffer[1],
@@ -1352,6 +1354,11 @@ static void on_set_parameter(uint8_t* buffer)
 			{
 				LOG("[MAIN] on_set_parameter: No battery charger present.\r\n");
 			}
+			break;
+
+		case IRT_MSG_SUBPAGE_FEATURES:
+			err_code = features_store(&buffer[IRT_MSG_PAGE2_DATA_INDEX]);
+			APP_ERROR_CHECK(err_code);
 			break;
 
 #ifdef SIM_SPEED
