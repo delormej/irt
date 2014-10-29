@@ -1694,7 +1694,7 @@ namespace IRT_GUI
             if (max > 1000)
                 max = 1000;
             */
-            ServoPositions pos = new ServoPositions(MIN_SERVO_POS, MAX_SERVO_POS);
+            ServoPositions pos = new ServoPositions(MIN_SERVO_POS, MAX_SERVO_POS, AdminEnabled);
                 
             pos.SetPositions += OnSetPositions;
             pos.ShowDialog();

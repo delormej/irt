@@ -36,9 +36,9 @@
             this.button1 = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.lblMaxPosition = new System.Windows.Forms.Label();
-            this.lblMinPosition = new System.Windows.Forms.Label();
             this.lblInstructions = new System.Windows.Forms.Label();
+            this.txtMinPosition = new System.Windows.Forms.TextBox();
+            this.txtMaxPosition = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgResistancePositions)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numResistancePositions)).BeginInit();
             this.SuspendLayout();
@@ -55,8 +55,7 @@
             this.dgResistancePositions.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgResistancePositions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Position});
-            this.dgResistancePositions.Location = new System.Drawing.Point(228, 21);
-            this.dgResistancePositions.Margin = new System.Windows.Forms.Padding(2);
+            this.dgResistancePositions.Location = new System.Drawing.Point(342, 32);
             this.dgResistancePositions.Name = "dgResistancePositions";
             this.dgResistancePositions.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
             this.dgResistancePositions.RowHeadersVisible = false;
@@ -65,7 +64,7 @@
             this.dgResistancePositions.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dgResistancePositions.ScrollBars = System.Windows.Forms.ScrollBars.None;
             this.dgResistancePositions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dgResistancePositions.Size = new System.Drawing.Size(118, 207);
+            this.dgResistancePositions.Size = new System.Drawing.Size(177, 318);
             this.dgResistancePositions.TabIndex = 1;
             // 
             // Position
@@ -79,24 +78,22 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(21, 155);
-            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label1.Location = new System.Drawing.Point(32, 238);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(49, 13);
+            this.label1.Size = new System.Drawing.Size(73, 20);
             this.label1.TabIndex = 1;
             this.label1.Text = "Positions";
             // 
             // numResistancePositions
             // 
-            this.numResistancePositions.Location = new System.Drawing.Point(76, 153);
-            this.numResistancePositions.Margin = new System.Windows.Forms.Padding(2);
+            this.numResistancePositions.Location = new System.Drawing.Point(114, 235);
             this.numResistancePositions.Maximum = new decimal(new int[] {
             9,
             0,
             0,
             0});
             this.numResistancePositions.Name = "numResistancePositions";
-            this.numResistancePositions.Size = new System.Drawing.Size(42, 20);
+            this.numResistancePositions.Size = new System.Drawing.Size(63, 26);
             this.numResistancePositions.TabIndex = 0;
             this.numResistancePositions.Value = new decimal(new int[] {
             2,
@@ -108,10 +105,9 @@
             // btnSetServoPositions
             // 
             this.btnSetServoPositions.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnSetServoPositions.Location = new System.Drawing.Point(103, 260);
-            this.btnSetServoPositions.Margin = new System.Windows.Forms.Padding(2);
+            this.btnSetServoPositions.Location = new System.Drawing.Point(154, 396);
             this.btnSetServoPositions.Name = "btnSetServoPositions";
-            this.btnSetServoPositions.Size = new System.Drawing.Size(61, 23);
+            this.btnSetServoPositions.Size = new System.Drawing.Size(92, 35);
             this.btnSetServoPositions.TabIndex = 2;
             this.btnSetServoPositions.Text = "OK";
             this.btnSetServoPositions.UseVisualStyleBackColor = true;
@@ -120,9 +116,10 @@
             // button1
             // 
             this.button1.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.button1.Location = new System.Drawing.Point(209, 260);
+            this.button1.Location = new System.Drawing.Point(314, 396);
+            this.button1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(61, 23);
+            this.button1.Size = new System.Drawing.Size(92, 35);
             this.button1.TabIndex = 3;
             this.button1.Text = "Cancel";
             this.button1.UseVisualStyleBackColor = true;
@@ -131,59 +128,60 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(21, 41);
+            this.label2.Location = new System.Drawing.Point(32, 63);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(69, 13);
+            this.label2.Size = new System.Drawing.Size(103, 20);
             this.label2.TabIndex = 5;
             this.label2.Text = "Magnet OFF:";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(21, 66);
+            this.label3.Location = new System.Drawing.Point(32, 102);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(72, 13);
+            this.label3.Size = new System.Drawing.Size(106, 20);
             this.label3.TabIndex = 6;
             this.label3.Text = "Magnet MAX:";
-            // 
-            // lblMaxPosition
-            // 
-            this.lblMaxPosition.AutoSize = true;
-            this.lblMaxPosition.Location = new System.Drawing.Point(113, 66);
-            this.lblMaxPosition.Name = "lblMaxPosition";
-            this.lblMaxPosition.Size = new System.Drawing.Size(16, 13);
-            this.lblMaxPosition.TabIndex = 7;
-            this.lblMaxPosition.Text = "...";
-            // 
-            // lblMinPosition
-            // 
-            this.lblMinPosition.AutoSize = true;
-            this.lblMinPosition.Location = new System.Drawing.Point(113, 41);
-            this.lblMinPosition.Name = "lblMinPosition";
-            this.lblMinPosition.Size = new System.Drawing.Size(16, 13);
-            this.lblMinPosition.TabIndex = 8;
-            this.lblMinPosition.Text = "...";
             // 
             // lblInstructions
             // 
             this.lblInstructions.AutoSize = true;
             this.lblInstructions.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblInstructions.Location = new System.Drawing.Point(21, 95);
+            this.lblInstructions.Location = new System.Drawing.Point(32, 146);
+            this.lblInstructions.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblInstructions.Name = "lblInstructions";
-            this.lblInstructions.Size = new System.Drawing.Size(193, 39);
+            this.lblInstructions.Size = new System.Drawing.Size(288, 60);
             this.lblInstructions.TabIndex = 9;
-            this.lblInstructions.Text = "Choose up to 9 positions starting\r\nwith a value greater than the \r\nMagnet OFF: ";
+            this.lblInstructions.Text = "Choose up to 9 positions starting\r\nwith a value greater than the \r\nMagnet OFF ";
+            // 
+            // txtMinPosition
+            // 
+            this.txtMinPosition.Enabled = false;
+            this.txtMinPosition.Location = new System.Drawing.Point(154, 63);
+            this.txtMinPosition.Name = "txtMinPosition";
+            this.txtMinPosition.Size = new System.Drawing.Size(74, 26);
+            this.txtMinPosition.TabIndex = 10;
+            // 
+            // txtMaxPosition
+            // 
+            this.txtMaxPosition.Enabled = false;
+            this.txtMaxPosition.Location = new System.Drawing.Point(154, 102);
+            this.txtMaxPosition.Name = "txtMaxPosition";
+            this.txtMaxPosition.Size = new System.Drawing.Size(74, 26);
+            this.txtMaxPosition.TabIndex = 11;
             // 
             // ServoPositions
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.button1;
-            this.ClientSize = new System.Drawing.Size(373, 305);
+            this.ClientSize = new System.Drawing.Size(560, 469);
             this.ControlBox = false;
+            this.Controls.Add(this.txtMaxPosition);
+            this.Controls.Add(this.txtMinPosition);
             this.Controls.Add(this.lblInstructions);
-            this.Controls.Add(this.lblMinPosition);
-            this.Controls.Add(this.lblMaxPosition);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.button1);
@@ -192,7 +190,6 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.dgResistancePositions);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ServoPositions";
@@ -215,8 +212,8 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label lblMaxPosition;
-        private System.Windows.Forms.Label lblMinPosition;
         private System.Windows.Forms.Label lblInstructions;
+        private System.Windows.Forms.TextBox txtMinPosition;
+        private System.Windows.Forms.TextBox txtMaxPosition;
     }
 }
