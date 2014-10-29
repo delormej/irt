@@ -6,6 +6,7 @@ skip_rows = 600 # data rows skipped at the beginning
 #xsl_filename = '../../tcx-to-csv.xslt'
 
 import sys
+import os
 from collections import defaultdict
 from itertools import groupby, chain
 import numpy as np, numpy.ma as ma
@@ -29,6 +30,12 @@ def xsl(xml_filename):
     newdom = transform(dom)
     #ET.write(sys.stdout)
     print(ET.tostring(newdom)) #, pretty_print=True))
+
+def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
+	# convert slope to wheel speed in mph from flywheel mps
+	slope = slope * (0.4/0.115) * 0.44704
+	plt.scatter(speeds_mph, watts, c=color1)
+	plt.plot(speeds_mph, speeds_mph*slope + intercept, color2)
 
 def theil_sen(x,y, sample= "auto", n_samples = 1e7):
     """
@@ -133,8 +140,8 @@ def find_seq(speeds, watts, offset):
 		last_end = s[1]
 	split_cluster(cluster)
 	return sorted(result)
-	
-def main(input_file_name):
+
+def process_file(input_file_name):
 	"""
     if input_file_name.endswith('.tcx'):
         print("Parsing tcx file...")        
@@ -143,8 +150,15 @@ def main(input_file_name):
     else:
         exit()
 	"""    
+
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
-		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True)
+		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True, comments='"')
+
+	minval = np.min(speeds[np.nonzero(speeds)])
+	maxval = np.max(speeds[np.nonzero(speeds)])
+	if (maxval - minval) < 7:
+		print("not enough speed diff.")
+		return
 
 	# convert to meters per second, then to flywheel meters per second
 	speeds_mps = (speeds * 0.44704)
@@ -171,7 +185,7 @@ def main(input_file_name):
 	slope, intercept = theil_sen(flywheel_mps[id2000], watts[id2000], False)
 
 	print("slope, intercept")
-	print(slope / (0.4/0.115), intercept)
+	print(slope * (0.4/0.115), intercept)
 	#print(slope, intercept)
 	
 	pos_list = [p for p in valid_data if p < 2000]
@@ -190,10 +204,33 @@ def main(input_file_name):
 		if ids:
 			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
 			print(p, bottleneck.nanmedian(forces[ids]), bottleneck.nanmedian(forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])))
+
+	return sp2000, w2000, slope, intercept
+
+def get_files(rootdir):
+	for root, dirs, files in os.walk(rootdir):
+		for filename in files:
+			if filename.endswith('.csv'):
+				filepath = os.path.join(root, filename)
+				yield filepath
+
+def graph_file(file):
+	print('Processing: ' + file)
+	try:
+		s, w, sl, i = process_file(file)
+		graph(s, w, sl, i, color1=np.random.rand(3,1))
+	except:
+		print("Had to skip that one.")
 	
-	#plt.scatter(flywheel_mps[id2000], w2000)
-	plt.scatter(speeds[id2000], w2000)
-	plt.plot(speeds[id2000], flywheel_mps[id2000]*slope + intercept, 'r')
+def main(input_file_name):
+	input_file_name = 'C:/Users/Jason/SkyDrive/InsideRide/Tech/Ride Logs/Jason'
+
+	if os.path.isdir(input_file_name):
+		for file in get_files(input_file_name):
+			graph_file(file)
+	else:
+		graph_file(file)
+
 	plt.show()
 
 if __name__ == "__main__":
