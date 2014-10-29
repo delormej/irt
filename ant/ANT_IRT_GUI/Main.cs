@@ -735,16 +735,20 @@ namespace IRT_GUI
             if (arg1.CumulativeOperatingTimeResolution == Common.Resolution.TwoSeconds)
             {
                 // CumulativeOperatingTime represents a tick every 2 seconds.
-                hours = arg1.CumulativeOperatingTime / (3600.0d / 2.0d);
+                hours = arg1.CumulativeOperatingTime * 2 / 3600.0d;
             }
             else
             {
+                //minutes = arg1.CumulativeOperatingTime * 16 / 60;
+                //hours = minutes / 60;
+
                 // CumulativeOperatingTime represents a tick every 16 seconds.
-                hours = arg1.CumulativeOperatingTime / (3600.0d / 16.0d);
+                hours = arg1.CumulativeOperatingTime * 16 / 3600.0d;
             }
 
             // Convert to minutes.
-            minutes = (int)((hours - Math.Floor(hours)) * 60);
+            //minutes = (int)((hours - Math.Floor(hours)) * 60);
+            minutes = (int)(hours - Math.Floor(hours)) * 60;
 
             UpdateText(lblEmrBattTime, string.Format("{0:N0}:{1:D2}", hours, minutes));
         }
