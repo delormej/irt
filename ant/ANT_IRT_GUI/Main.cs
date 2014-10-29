@@ -48,6 +48,7 @@ namespace IRT_GUI
 
         bool m_PauseServoUpdate = false;
         bool m_requestingSettings = false;
+        bool m_SystemUiUpdate = false;
 
         // Logging stuff.
         private Timer m_reportTimer;
@@ -79,6 +80,9 @@ namespace IRT_GUI
         // Wrapper for executing on the UI thread.
         private void ExecuteOnUI(Action a)
         {
+            // Flag that we're updating UI elements.
+            m_SystemUiUpdate = true;
+
             if (this.InvokeRequired)
             {
                 this.BeginInvoke(a);
@@ -87,6 +91,8 @@ namespace IRT_GUI
             {
                 a.Invoke();
             }
+
+            m_SystemUiUpdate = false;
         }
 
 
@@ -904,7 +910,14 @@ namespace IRT_GUI
                 (byte)(position), // Position LSB
                 (byte)(position >> 8), // Position MSB
             };
-            SendCommand(Command.MoveServo, data);
+            if (SendCommand(Command.MoveServo, data))
+            {
+                UpdateStatus(string.Format("Moving servo to position: {0}", position));
+            }
+            else
+            {
+                UpdateStatus("Failed to send servo move command.");
+            }
         }
 
 
@@ -1023,15 +1036,18 @@ namespace IRT_GUI
             ushort position = 0;
             ushort.TryParse(txtServoPos.Text, out position);
 
-            if (position > 500 && position < 2500)
+            // do a check for valid range if not in admin mode
+            if (!AdminEnabled) 
             {
-                MoveServo(position);
-            }
-            else
-            {
-                UpdateStatus("Invalid servo position.");
+                if (position < 500 && position > 2500)
+                {
+                    m_PauseServoUpdate = false;
+                    UpdateStatus("Invalid servo position.");
+                    return;
+                }
             }
 
+            MoveServo(position);
             // Resume updating the servo position textbox.
             m_PauseServoUpdate = false;
         }
@@ -1150,7 +1166,10 @@ namespace IRT_GUI
                     ExecuteOnUI(() =>
                         {
                             txtResistanceErgWatts.Text = "";
-                            txtResistanceErgWatts.Focus();
+                            if (!m_SystemUiUpdate)
+                            { 
+                                txtResistanceErgWatts.Focus();
+                            }
                         });
                     break;
 
@@ -1502,17 +1521,18 @@ namespace IRT_GUI
 
         private void cmbResistanceMode_Enter(object sender, EventArgs e)
         {
-            //m_PauseServoUpdate = true;
+            m_PauseServoUpdate = true;
         }
 
         private void cmbResistanceMode_Leave(object sender, EventArgs e)
         {
             // Don't do anything right now.
+            m_PauseServoUpdate = false;
         }
 
         private void txtResistancePercent_Enter(object sender, EventArgs e)
         {
-
+            m_PauseServoUpdate = true;
         }
 
         private void txtResistancePercent_Leave(object sender, EventArgs e)
@@ -1674,7 +1694,7 @@ namespace IRT_GUI
             if (max > 1000)
                 max = 1000;
             */
-            ServoPositions pos = new ServoPositions(MIN_SERVO_POS, MAX_SERVO_POS);
+            ServoPositions pos = new ServoPositions(MIN_SERVO_POS, MAX_SERVO_POS, AdminEnabled);
                 
             pos.SetPositions += OnSetPositions;
             pos.ShowDialog();
@@ -1685,9 +1705,6 @@ namespace IRT_GUI
             ServoPositions dialog = sender as ServoPositions;
             if (dialog == null)
                 return;
-
-            // Insert the HOME position which user cannot change.
-            dialog.Positions.Insert(0, new Position(MIN_SERVO_POS));
 
             // 3 messages * 8 bytes each
             byte[] data = new byte[24];

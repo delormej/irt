@@ -19,21 +19,32 @@ namespace IRT_GUI
 
         public event EventHandler SetPositions;
 
+        public ushort Min { get { return this.min; } set { this.min = value; } }
+        public ushort Max { get { return this.max; } set { this.max = value; } }
+
         public ServoPositions()
         {
             InitializeComponent();
         }
 
-        public ServoPositions(ushort min, ushort max) : this()
+        public ServoPositions(ushort min, ushort max, bool admin) : this()
         {
-            this.min = min;
-            this.max = max;
+            this.Min = min;
+            this.Max = max;
 
             this.Load += ServoPositions_Load;
 
-            lblMinPosition.Text = min.ToString();
-            lblMaxPosition.Text = max.ToString();
-            lblInstructions.Text += min.ToString();
+            txtMinPosition.Text = min.ToString();
+            txtMaxPosition.Text = max.ToString();
+            //lblInstructions.Text += min.ToString();
+
+            if (admin)
+            {
+                txtMinPosition.Enabled = true;
+                txtMaxPosition.Enabled = true;
+                txtMinPosition.DataBindings.Add("Text", this, "Min");
+                txtMaxPosition.DataBindings.Add("Text", this, "Max");
+            }
 
             m_positions = new List<Position>();
             m_positions.Add(new Position(min));
@@ -74,9 +85,6 @@ namespace IRT_GUI
 
         private void btnSetServoPositions_Click(object sender, EventArgs e)
         {
-            var x = dgResistancePositions.DataSource;
-            System.Diagnostics.Debug.WriteLine(x);
-
             if (m_source.Count < 1)
             {
                 ShowError();
@@ -90,6 +98,13 @@ namespace IRT_GUI
                     ShowError();
                     return;
                 }
+            }
+
+            // First position set?
+            if (Positions[0].Value != min)
+            {
+                // Insert the HOME position which user cannot change.
+                Positions.Insert(0, new Position(min));
             }
 
             if (SetPositions != null)
