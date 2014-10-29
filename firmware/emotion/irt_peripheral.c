@@ -327,27 +327,19 @@ void peripheral_aux_pwr_set(bool disable)
 	}
 }
 
-//
-// Cuts power to servo and optical sensor and other peripherals.
-// Optionally will put the accelerometer in standby and it will
-// not wake the device.
-//
-void peripheral_powerdown(bool accelerometer_off)
+/**@brief	Cuts power to all non-critical components.
+ *
+ */
+void peripheral_low_power_set()
 {
-	PH_LOG("[PH] Powering down peripherals.\r\n");
-
-	if (accelerometer_off)
-	{
-		// Put accelerometer to sleep so we don't get awaken by it's AUTO-SLEEP/AUTO-WAKE interrupts.
-		accelerometer_standby();
-	}
+	PH_LOG("[PH] peripheral_low_power_set cutting power to all non-critical components.\r\n");
 
     // Shutdown temperature sensor.
 	temperature_shutdown();
 
 	if (HW_REVISION >= 2) // IRT_REV_2A_H
 	{
-			// Disable servo / LED.
+			// Disable servo / Optical sensor.
 			nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
 
 			if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
@@ -364,6 +356,24 @@ void peripheral_powerdown(bool accelerometer_off)
 	} // IRT_REV_2A_H
 
 	peripheral_aux_pwr_set(true);
+}
+
+//
+// Cuts power to servo and optical sensor and other peripherals.
+// Optionally will put the accelerometer in standby and it will
+// not wake the device.
+//
+void peripheral_powerdown(bool accelerometer_off)
+{
+	PH_LOG("[PH] Powering down peripherals.\r\n");
+
+	if (accelerometer_off)
+	{
+		// Put accelerometer to sleep so we don't get awaken by it's AUTO-SLEEP/AUTO-WAKE interrupts.
+		accelerometer_standby();
+	}
+
+	peripheral_low_power_set();
 
 	// Shut down the leds.
 	clear_led(LED_BOTH);

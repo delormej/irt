@@ -136,13 +136,25 @@ irt_battery_status_t battery_status(uint16_t millivolts, uint32_t operating_time
 	// lithium ion battery.
 	// TODO: also implement operating time of battery.
 
-	if (status.coarse_volt > 6)
+	if (millivolts > 7900)
 	{
-		status.status = BAT_GOOD;
+		status.status = BAT_NEW;		// <20% discharge
+	}
+	else if (millivolts > 7600)
+	{
+		status.status = BAT_GOOD;		// <40% discharge
+	}
+	else if (millivolts > 7300)
+	{
+		status.status = BAT_OK;			// <80% discharge
+	}
+	else if (millivolts > 6800)
+	{
+		status.status = BAT_LOW;
 	}
 	else
 	{
-		status.status = BAT_LOW;
+		status.status = BAT_CRITICAL;	// start to shut things down!
 	}
 
 	return status;

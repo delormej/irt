@@ -1419,6 +1419,23 @@ static void on_battery_result(uint16_t battery_level)
 			ROUNDED_DIV(NRF_RTC1->COUNTER, TICK_FREQUENCY) );
 
 	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
+
+
+	if (m_battery_status.status == BAT_CRITICAL)
+	{
+		// Critical battery level.
+		LOG("[MAIN] on_battery_result critical low battery level: %i.%i\r\n",
+				m_battery_status.coarse_volt,
+				m_battery_status.fractional_volt / 256);
+
+		// Start blinking the LED orange.
+
+		// Set the servo to HOME position.
+		on_resistance_off();
+
+		// Turn all extra power off.
+		peripheral_low_power_set();
+	}
 }
 
 /**@brief	Configures chip power options.
