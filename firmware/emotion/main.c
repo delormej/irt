@@ -72,6 +72,7 @@
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 #define CRR_ADJUST_VALUE				1											// Amount to adjust (up/down) CRR on button command.
+#define SHUTDOWN_VOLTS					6											// Shut the device down when battery drops below 6.0v
 //
 // General purpose retention register states used.
 //
@@ -1424,17 +1425,27 @@ static void on_battery_result(uint16_t battery_level)
 	if (m_battery_status.status == BAT_CRITICAL)
 	{
 		// Critical battery level.
-		LOG("[MAIN] on_battery_result critical low battery level: %i.%i\r\n",
-				m_battery_status.coarse_volt,
-				m_battery_status.fractional_volt / 256);
+		LOG("[MAIN] on_battery_result critical low battery coarse volts: %i\r\n",
+				m_battery_status.coarse_volt);
 
 		// Start blinking the LED orange.
 
 		// Set the servo to HOME position.
 		on_resistance_off();
 
-		// Turn all extra power off.
-		peripheral_low_power_set();
+		// If we're below 6 volts, shut it all the way down.
+		if (m_battery_status.coarse_volt < SHUTDOWN_VOLTS)
+		{
+			clear_led(LED_BOTH);
+			set_led_red(LED_2);
+			nrf_delay_ms(1500); // sleep for 1.5 seconds to show indicator.
+			on_power_down(false);
+		}
+		else
+		{
+			// Turn all extra power off.
+			peripheral_low_power_set();
+		}
 	}
 }
 
