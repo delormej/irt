@@ -748,7 +748,7 @@ namespace IRT_GUI
 
             // Convert to minutes.
             //minutes = (int)((hours - Math.Floor(hours)) * 60);
-            minutes = (int)(hours - Math.Floor(hours)) * 60;
+            minutes = (int)((hours - Math.Floor(hours)) * 60);
 
             UpdateText(lblEmrBattTime, string.Format("{0:N0}:{1:D2}", hours, minutes));
         }
