@@ -242,7 +242,7 @@ int main(void)
     uint32_t err_code;
 	uint32_t gp_power_reg;
 
-	bool     start_bootloader = false;
+	bool     start_dfu = false;
     
 	debug_init();
 	BL_LOG("[BL] Starting bootloader.\r\n");
@@ -275,26 +275,26 @@ int main(void)
     */
     // 2. the GP reg was set to 0x1 - as indicated by the app to start DFU mode
     //
-    if (!start_bootloader)
+    if (!start_dfu)
     {
 		// Read the general purpose power register for a flag.
 		err_code = sd_power_gpregret_get(&gp_power_reg);
 		APP_ERROR_CHECK(err_code);
 	
-		start_bootloader = (gp_power_reg & GPREG_DFU_UPDATE_MASK);
+		start_dfu = (gp_power_reg & GPREG_DFU_UPDATE_MASK);
     }
 
     //
     // 3. App in BANK_0 is not valid.
     //
-    if (!start_bootloader)
+    if (!start_dfu)
     {
-    	start_bootloader = (!bootloader_app_is_valid(DFU_BANK_0_REGION_START));
+    	start_dfu = (!bootloader_app_is_valid(DFU_BANK_0_REGION_START));
     }
 
-    if (start_bootloader)
+    if (start_dfu)
     {
-    	BL_LOG("[BL] Starting bootloader.\r\n");
+    	BL_LOG("[BL] Starting DFU.\r\n");
 
 		nrf_gpio_pin_clear(LED_ERR);
 		nrf_gpio_pin_set(LED_STATUS);

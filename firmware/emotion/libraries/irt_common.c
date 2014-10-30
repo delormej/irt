@@ -100,6 +100,14 @@ uint32_t features_store(uint32_t* p_buffer)
 	uint32_t err_code;
 	uint32_t value = 0;
 
+	// This only works if the value has not been previously written.
+	// Ensure the value is currently 0xFF.
+	if (! (*FEATURES == 0xFFFF))
+	{
+		CN_LOG("[CN] features_store ERROR: can only store if not previously written..\r\n");
+		return NRF_ERROR_INVALID_STATE;
+	}
+
 	// Make a local copy.
 	memcpy(&value, p_buffer, sizeof(uint32_t));
 

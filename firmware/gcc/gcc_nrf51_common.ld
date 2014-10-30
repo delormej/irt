@@ -31,7 +31,7 @@ ENTRY(Reset_Handler)
 
 SECTIONS
 {
-    .bootloader_settings_block 0x0003FC00 :
+    .bootloader_settings_block 0x0003F800 :
     {
         KEEP(*(.bootloader_settings_sect))
     } > bootloader_settings
