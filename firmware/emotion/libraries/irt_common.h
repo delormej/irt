@@ -106,9 +106,9 @@ static bool __inline__ irt_feature_is_available(uint16_t feature)
 typedef struct irt_battery_status_s
 {
 	uint8_t	  	fractional_volt;
-	uint8_t		coarse_volt : 3;
+	uint8_t		coarse_volt : 4;
 	uint8_t		status : 3;
-	uint8_t		resolution : 2;
+	uint8_t		resolution : 1;
 	uint32_t	operating_time;
 } irt_battery_status_t;
 
