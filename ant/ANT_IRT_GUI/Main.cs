@@ -371,7 +371,7 @@ namespace IRT_GUI
                     break;
 
                 case SubPages.Charger:
-                    UpdateStatus("Received charger parameter.");
+                    UpdateStatus(string.Format("Received charger parameter {0}.", buffer[2]));
                     bool check = (buffer[2] == 0x02); // Charging
                     UpdateCheckbox(chkCharge, check);
                     break;
