@@ -33,6 +33,11 @@ typedef struct peripheral_evt_s
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);
 void peripheral_powerdown(bool accelerometer_off);
 
+/**@brief Returns true if the ac adapter is plugged in, otherwise false.
+ *
+ */
+bool peripheral_plugged_in(void);
+
 /**@brief	Cuts power to all non-critical components.
  *
  */
@@ -48,7 +53,6 @@ void set_led_green(uint8_t led_mask);
 void clear_led(uint8_t led_mask);
 void blink_led_green_start(uint8_t led_mask, uint16_t interval_ms);
 void blink_led_green_stop(uint8_t led_mask);
-
 
 /**@brief Get the current time in 1/2048s.
  *

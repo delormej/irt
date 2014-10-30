@@ -88,17 +88,6 @@ static void debounce_timeout_handler(void * p_context)
 	}
 }
 
-/**@brief	Returns 0 = adapter power, 1= no adapter.
- */
-static __INLINE uint32_t ac_adapter_off(void)
-{
-#ifdef PIN_PG_N
-	return nrf_gpio_pin_read(PIN_PG_N);
-#else // PIN_PG_N
-	return 1;
-#endif // PIN_PG_N
-}
-
 /**@brief Initialize all peripherial pins.
  */
 static void irt_gpio_init()
@@ -348,7 +337,7 @@ void peripheral_low_power_set()
 				nrf_gpio_pin_clear(PIN_SLEEP_N);
 
 				// Check if AC power is plugged in.  If not, cut power to charger.
-				if (ac_adapter_off())
+				if (!peripheral_plugged_in())
 				{
 					battery_charge_set(false);
 				}
@@ -356,6 +345,20 @@ void peripheral_low_power_set()
 	} // IRT_REV_2A_H
 
 	peripheral_aux_pwr_set(true);
+}
+
+
+/**@brief Returns true if the ac adapter is plugged in, otherwise false.
+ *
+ */
+bool peripheral_plugged_in()
+{
+#ifdef PIN_PG_N
+	// Pin will read 0 when plugged in, 1 when not.  Flip the bit for boolean response.
+	return !(nrf_gpio_pin_read(PIN_PG_N));
+#else // PIN_PG_N
+	return false;
+#endif // PIN_PG_N
 }
 
 //
@@ -393,6 +396,8 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	nrf_delay_ms(10);
 	clear_led(LED_1);
 	set_led_green(LED_2);
+
+	PH_LOG("[PH] peripheral_init: power plugged in? %i\r\n", peripheral_plugged_in());
 
 	// Ensure aux power is off for right now, we're not using.
 	peripheral_aux_pwr_set(true);

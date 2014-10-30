@@ -1421,14 +1421,14 @@ static void on_battery_result(uint16_t battery_level)
 
 	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
 
-
-	if (m_battery_status.status == BAT_CRITICAL)
+	// If battery is critically low and power is not plugged in.
+	if (m_battery_status.status == BAT_CRITICAL && !peripheral_plugged_in())
 	{
 		// Critical battery level.
 		LOG("[MAIN] on_battery_result critical low battery coarse volts: %i\r\n",
 				m_battery_status.coarse_volt);
 
-		// Start blinking the LED orange.
+		// TODO: Start blinking the LED orange.
 
 		// Set the servo to HOME position.
 		on_resistance_off();
