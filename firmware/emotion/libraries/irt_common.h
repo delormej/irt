@@ -44,10 +44,10 @@ All rights reserved.
 // Available device features.
 //
 #define FEATURE_RESERVED			1UL
-#define FEATURE_SMALL_MAG			2UL				// Small magnet is installed vs. Big magnet
-#define FEATURE_74_SERVO			32UL			// 7.4 Volt Servo feature.
+//#define FEATURE_BIG_MAG			2UL				// Small magnet is installed vs. Big magnet
+//#define FEATURE_74_SERVO			32UL			// 7.4 Volt Servo feature.
 #define FEATURE_BATTERY_CHARGER		64UL			// Device has a battery charger IC installed.
-#define FEATURE_BATTERY_READ_PIN	128UL			// Device requires the use of enabling flow to a capacitor before reading battery voltage.
+//#define FEATURE_BATTERY_READ_PIN	128UL			// Device requires the use of enabling flow to a capacitor before reading battery voltage.
 #define FEATURE_INVALID				65535UL			// Max feature setting of 16 bit.
 
 /*
@@ -106,9 +106,9 @@ static bool __inline__ irt_feature_is_available(uint16_t feature)
 typedef struct irt_battery_status_s
 {
 	uint8_t	  	fractional_volt;
-	uint8_t		coarse_volt : 3;
+	uint8_t		coarse_volt : 4;
 	uint8_t		status : 3;
-	uint8_t		resolution : 2;
+	uint8_t		resolution : 1;
 	uint32_t	operating_time;
 } irt_battery_status_t;
 
@@ -196,5 +196,9 @@ void 	 			irt_power_meas_fifo_free();
 irt_power_meas_t* 	irt_power_meas_fifo_next();
 irt_power_meas_t* 	irt_power_meas_fifo_first();
 irt_power_meas_t* 	irt_power_meas_fifo_last();
+
+
+/**@brief Stores features value on flash. */
+uint32_t features_store(uint32_t* value);
 
 #endif // IRT_COMMON_H

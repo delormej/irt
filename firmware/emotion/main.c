@@ -44,6 +44,7 @@
 #include "wahoo.h"
 #include "ble_ant.h"
 #include "ant_bike_power.h"
+#include "ant_bike_speed.h"
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 #include "app_timer.h"
@@ -52,14 +53,13 @@
 #include "battery.h"
 #include "irt_error_log.h"
 
-#define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Remote control & bike power sent at 4hz.
-#define CALIBRATION_INTERVAL			APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  // Calibration message interval.
+#define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	 // Remote control & bike power sent at 4hz.
+#define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
 
 #define BLE_ADV_BLINK_RATE_MS			500u
 #define SCHED_QUEUE_SIZE                8                                          /**< Maximum number of events in the scheduler queue. */
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
-#define BATTERY_4HZ_INTERVAL			512											// Every 2 minutes read the battery voltage (512 * 4hz) read the battery.
 
 //
 // Default profile and simulation values.
@@ -72,6 +72,7 @@
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 #define CRR_ADJUST_VALUE				1											// Amount to adjust (up/down) CRR on button command.
+#define SHUTDOWN_VOLTS					6											// Shut the device down when battery drops below 6.0v
 //
 // General purpose retention register states used.
 //
@@ -84,11 +85,12 @@ static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
 
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
-static app_timer_id_t					m_ca_timer_id;								// Timer used during calibration.
+static app_timer_id_t					m_sensor_read_timer_id;						// Timer used to read sensors, out of phase from the 4hz messages.
 
 static user_profile_t  					m_user_profile  __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
 static rc_sim_forces_t					m_sim_forces;
 static accelerometer_data_t 			m_accelerometer_data;
+static float							m_temperature = 0.0f;						// Last temperature read.
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
@@ -493,7 +495,6 @@ static void ant_ctrl_available(void)
 
 /**@brief Called during calibration to send frequent calibration messages.
  *
- */
 static void calibration_timeout_handler(void * p_context)
 {
 	static uint8_t count;
@@ -511,13 +512,8 @@ static void calibration_timeout_handler(void * p_context)
 	memcpy(&response[2], &flywheel, sizeof(uint32_t));
 
 	ant_bp_page2_tx_send(IRT_MSG_SUBPAGE_CA_SPEED, response, DATA_PAGE_RESPONSE_TYPE);
-
-	/* Send remote control heart beat less frequently.
-	if (count++ % 8 == 0)
-	{
-		ant_ctrl_available();
-	}*/
 }
+*/
 
 /**@brief Function for handling the ANT 4hz measurement timer timeout.
  *
@@ -529,15 +525,14 @@ static void calibration_timeout_handler(void * p_context)
  */
 static void ant_4hz_timeout_handler(void * p_context)
 {
-	static uint8_t event_count;
 	UNUSED_PARAMETER(p_context);
+	static uint16_t event_count;
+
 	uint32_t err_code;
 	float rr_force;	// Calculated rolling resistance force.
 	irt_power_meas_t* p_power_meas_current 		= NULL;
 	irt_power_meas_t* p_power_meas_first 		= NULL;
 	irt_power_meas_t* p_power_meas_last 		= NULL;
-
-	//LOG("[MAIN] Enter 4hz: %.2f \r\n", SECONDS_CURRENT);
 
 	// All ANT messages on the Bike Power channel are sent in this function:
 
@@ -546,11 +541,9 @@ static void ant_4hz_timeout_handler(void * p_context)
 	// Extra Info debug messages (to be removed before production and replaced with request data page)
 	// Acknowledgments to resistance control
 
-	// If there was another ANT+ message dequeued, move on.
+	// If there was another ANT+ message response dequeued and sent, wait until next timeslot..
 	if (dequeue_ant_response())
-	{
 		return;
-	}
 
 	// Maintain a static event count, we don't do everything each time.
 	event_count++;
@@ -578,24 +571,6 @@ static void ant_4hz_timeout_handler(void * p_context)
 	p_power_meas_current->servo_position = resistance_position_get();
 	p_power_meas_current->battery_status = m_battery_status;
 
-	// Every 32 seconds.
-	if (event_count % 128 == 0)
-	{
-		// Get current temperature.
-		p_power_meas_current->temp = temperature_read();
-		LOG("[MAIN] Temperature read: %2.1f. \r\n", p_power_meas_current->temp);
-	}
-	else
-	{
-		p_power_meas_current->temp = p_power_meas_last->temp;
-	}
-
-	if (event_count % BATTERY_4HZ_INTERVAL == 0)
-	{
-		// Every 2 minutes initiate battery read.
-		battery_read_start();
-	}
-
 	// Report on accelerometer data.
 	if (m_accelerometer_data.source & ACCELEROMETER_SRC_FF_MT)
 	{
@@ -608,7 +583,9 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Record event time.
 	p_power_meas_current->event_time_2048 = seconds_2048_get();
-	//LOG("[MAIN] event_time: %i\r\n", p_power_meas_current->event_time_2048);
+
+	// Last temperature reading.
+	p_power_meas_current->temp = m_temperature;
 
 	// Calculate speed.
 	err_code = speed_calc(p_power_meas_current, p_power_meas_last);
@@ -635,10 +612,27 @@ static void ant_4hz_timeout_handler(void * p_context)
 		}
 	}
 
+	// Send speed data.
+	ant_sp_tx_send(p_power_meas_current->last_wheel_event_2048 / 2, 	// Requires 1/1024 time
+			(int16_t)p_power_meas_current->accum_wheel_revs); 			// Requires truncating to 16 bits.
+
 	// Send remote control a heartbeat.
 	ant_ctrl_available();
 
 	//LOG("[MAIN] Exit 4hz: %.2f \r\n", SECONDS_CURRENT);
+}
+
+/**@brief	Timer handler for reading sensors.
+ *
+ */
+static void sensor_read_timeout_handler(void * p_context)
+{
+	// Initiate async battery read.
+	battery_read_start();
+
+	// Read temperature sensor.
+	m_temperature = temperature_read();
+	LOG("[MAIN] Temperature read: %2.1f. \r\n", m_temperature);
 }
 
 /**@brief Function for starting the application timers.
@@ -650,6 +644,11 @@ static void application_timers_start(void)
     // Start application timers
     err_code = app_timer_start(m_ant_4hz_timer_id, ANT_4HZ_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
+
+    err_code = app_timer_start(m_sensor_read_timer_id, SENSOR_READ_INTERVAL, NULL);
+    APP_ERROR_CHECK(err_code);
+
+    //LOG("[MAIN] Started 4hz timer with %i ticks.\r\n", ANT_4HZ_INTERVAL);
 }
 
 static void application_timers_stop(void)
@@ -657,6 +656,9 @@ static void application_timers_stop(void)
 	uint32_t err_code;
 		
 	err_code = app_timer_stop(m_ant_4hz_timer_id);
+    APP_ERROR_CHECK(err_code);
+
+	err_code = app_timer_stop(m_sensor_read_timer_id);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -674,7 +676,11 @@ static void timers_init(void)
     err_code = app_timer_create(&m_ant_4hz_timer_id,
                                 APP_TIMER_MODE_REPEATED,
                                 ant_4hz_timeout_handler);
-    
+	APP_ERROR_CHECK(err_code);
+
+    err_code = app_timer_create(&m_sensor_read_timer_id,
+                                APP_TIMER_MODE_REPEATED,
+                                sensor_read_timeout_handler);
 	APP_ERROR_CHECK(err_code);
 }
 
@@ -1289,6 +1295,8 @@ static void on_request_data(uint8_t* buffer)
  */
 static void on_set_parameter(uint8_t* buffer)
 {
+	uint32_t err_code;
+
 	LOG("[MAIN]:set param message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 			buffer[0],
 			buffer[1],
@@ -1349,6 +1357,11 @@ static void on_set_parameter(uint8_t* buffer)
 			}
 			break;
 
+		case IRT_MSG_SUBPAGE_FEATURES:
+			err_code = features_store(&buffer[IRT_MSG_PAGE2_DATA_INDEX]);
+			APP_ERROR_CHECK(err_code);
+			break;
+
 #ifdef SIM_SPEED
 		case IRT_MSG_SUBPAGE_DEBUG_SPEED:
 			// # of ticks to simulate in debug mode.
@@ -1398,16 +1411,42 @@ static void on_set_servo_positions(servo_positions_t* positions)
 static void on_battery_result(uint16_t battery_level)
 {
 	// Increment battery ticks.  Each "tick" represents 16 seconds.
-	// BATTERY_4HZ_INTERVAL is the number of events in between reads, each event is @4hz.
-	// i.e. { 512 == ~2 mins (128 seconds) } / {16 second reporting * 4 per second}
-	//
-	m_battery_start_ticks += (BATTERY_4HZ_INTERVAL / (16*4));
+	// TODO: first read will cause this to always be ~2 minutes more than actually running.
+	m_battery_start_ticks += (uint32_t)(SENSOR_READ_INTERVAL / 32768 / 16);
 
 	// TODO: Hard coded for the moment, we will send battery page.
-	LOG("[MAIN] on_battery_result %i, ticks: %i \r\n", battery_level, m_battery_start_ticks);
-	//ant_bp_page2_tx_send(0x52, (uint8_t*)&battery_level, DATA_PAGE_RESPONSE_TYPE);
+	LOG("[MAIN] on_battery_result %i, ticks: %i, seconds: %i \r\n", battery_level,
+			m_battery_start_ticks,
+			ROUNDED_DIV(NRF_RTC1->COUNTER, TICK_FREQUENCY) );
 
 	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
+
+	// If battery is critically low and power is not plugged in.
+	if (m_battery_status.status == BAT_CRITICAL && !peripheral_plugged_in())
+	{
+		// Critical battery level.
+		LOG("[MAIN] on_battery_result critical low battery coarse volts: %i\r\n",
+				m_battery_status.coarse_volt);
+
+		// TODO: Start blinking the LED orange.
+
+		// Set the servo to HOME position.
+		on_resistance_off();
+
+		// If we're below 6 volts, shut it all the way down.
+		if (m_battery_status.coarse_volt < SHUTDOWN_VOLTS)
+		{
+			clear_led(LED_BOTH);
+			set_led_red(LED_2);
+			nrf_delay_ms(1500); // sleep for 1.5 seconds to show indicator.
+			on_power_down(false);
+		}
+		else
+		{
+			// Turn all extra power off.
+			peripheral_low_power_set();
+		}
+	}
 }
 
 /**@brief	Configures chip power options.

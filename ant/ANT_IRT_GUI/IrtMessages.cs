@@ -214,6 +214,7 @@ namespace IRT_GUI.IrtMessages
         AntBikePowerEnabled = 8,
         AntFECEnabled = 16,
         AntExtraInfoEnabled = 32,
+        AntBikeSpeedEnabled = 64,
         Persist = 0x8000
     }
 

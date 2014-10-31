@@ -9,6 +9,7 @@
 #define APP_TIMER_OP_QUEUE_SIZE     5   /**< Size of timer operation queues. */
 #define APP_GPIOTE_MAX_USERS        1	/**< Maximum number of users of the GPIOTE handler. */
 
+// Number of ticks per second.
 // RTC1 is based on a 32.768khz crystal, or in other words it oscillates
 // 32768 times per second.  The PRESCALER determines how often a tick gets
 // 32768 times per second.  The PRESCALER determins how often a tick gets
@@ -31,6 +32,16 @@ typedef struct peripheral_evt_s
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);
 void peripheral_powerdown(bool accelerometer_off);
+
+/**@brief Returns true if the ac adapter is plugged in, otherwise false.
+ *
+ */
+bool peripheral_plugged_in(void);
+
+/**@brief	Cuts power to all non-critical components.
+ *
+ */
+void peripheral_low_power_set(void);
 
 /**@brief	Turn J7-6 power on/off.
  */

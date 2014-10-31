@@ -263,9 +263,9 @@ int main(void)
     scheduler_init();
 	
     //
-    // 3 conditions for which we'll start the bootloader.
+    // 3 conditions for which we'll start the device firmware update (DFU).
     //
-    // 1. User push button is pressed during boot to force bootloader starting.
+    // 1. User push button is pressed during boot to force DFU starting.
     // Check if user push button switch is held down.
     /* NOTE: Only available on IRT_REV_2A or higher.
 #ifdef PIN_PBSW

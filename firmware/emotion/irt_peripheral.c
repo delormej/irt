@@ -88,17 +88,6 @@ static void debounce_timeout_handler(void * p_context)
 	}
 }
 
-/**@brief	Returns 0 = adapter power, 1= no adapter.
- */
-static __INLINE uint32_t ac_adapter_off(void)
-{
-#ifdef PIN_PG_N
-	return nrf_gpio_pin_read(PIN_PG_N);
-#else // PIN_PG_N
-	return 1;
-#endif // PIN_PG_N
-}
-
 /**@brief Initialize all peripherial pins.
  */
 static void irt_gpio_init()
@@ -327,6 +316,51 @@ void peripheral_aux_pwr_set(bool disable)
 	}
 }
 
+/**@brief	Cuts power to all non-critical components.
+ *
+ */
+void peripheral_low_power_set()
+{
+	PH_LOG("[PH] peripheral_low_power_set cutting power to all non-critical components.\r\n");
+
+    // Shutdown temperature sensor.
+	temperature_shutdown();
+
+	if (HW_REVISION >= 2) // IRT_REV_2A_H
+	{
+			// Disable servo / Optical sensor.
+			nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
+
+			if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+			{
+				// Disable the power regulator if the board is configured for.
+				nrf_gpio_pin_clear(PIN_SLEEP_N);
+
+				// Check if AC power is plugged in.  If not, cut power to charger.
+				if (!peripheral_plugged_in())
+				{
+					battery_charge_set(false);
+				}
+			}
+	} // IRT_REV_2A_H
+
+	peripheral_aux_pwr_set(true);
+}
+
+
+/**@brief Returns true if the ac adapter is plugged in, otherwise false.
+ *
+ */
+bool peripheral_plugged_in()
+{
+#ifdef PIN_PG_N
+	// Pin will read 0 when plugged in, 1 when not.  Flip the bit for boolean response.
+	return !(nrf_gpio_pin_read(PIN_PG_N));
+#else // PIN_PG_N
+	return false;
+#endif // PIN_PG_N
+}
+
 //
 // Cuts power to servo and optical sensor and other peripherals.
 // Optionally will put the accelerometer in standby and it will
@@ -342,28 +376,7 @@ void peripheral_powerdown(bool accelerometer_off)
 		accelerometer_standby();
 	}
 
-    // Shutdown temperature sensor.
-	temperature_shutdown();
-
-	if (HW_REVISION >= 2) // IRT_REV_2A_H
-	{
-			// Disable servo / LED.
-			nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
-
-			if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
-			{
-				// Disable the power regulator if the board is configured for.
-				nrf_gpio_pin_clear(PIN_SLEEP_N);
-
-				// Check if AC power is plugged in.  If not, cut power to charger.
-				if (ac_adapter_off())
-				{
-					battery_charge_set(false);
-				}
-			}
-	} // IRT_REV_2A_H
-
-	peripheral_aux_pwr_set(true);
+	peripheral_low_power_set();
 
 	// Shut down the leds.
 	clear_led(LED_BOTH);
@@ -391,6 +404,7 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	// Ensure aux power is off for right now, we're not using.
 	peripheral_aux_pwr_set(true);
 #endif
+	PH_LOG("[PH] peripheral_init: power plugged in? %i\r\n", peripheral_plugged_in());
 
 	// Initialize the button if available.
 	button_init();
