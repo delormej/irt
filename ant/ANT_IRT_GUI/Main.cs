@@ -736,6 +736,30 @@ namespace IRT_GUI
             UpdateText(lblEmrBattVolt, volts.ToString("0.00"));
             // Update the color of the battery status, Red, Green, Yellow.
 
+            Color changeColor = SystemColors.ControlText;
+
+            switch (arg1.BatteryStatus)
+            {
+                case Common.BatteryStatus.Critical:
+                    changeColor = Color.Red;
+                    break;
+                case Common.BatteryStatus.New:
+                case Common.BatteryStatus.Good:
+                    changeColor = Color.Green;
+                    break;
+                case Common.BatteryStatus.Low:
+                    changeColor = Color.Yellow;
+                    break;
+                default:
+                    changeColor = SystemColors.ControlText;
+                    break;
+            }
+
+            if (lblEmrBattVolt.ForeColor != changeColor)
+            {
+                ExecuteOnUI(() => { lblEmrBattVolt.ForeColor = changeColor; });
+            }
+
             double hours = 0.0; 
             int minutes = 0;
 
