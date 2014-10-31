@@ -17,11 +17,14 @@
 #include "math.h"
 #include "debug.h"
 
+#ifndef KURT
+
 #define MIN_THRESHOLD_MOVE	2		// Minimum threshold for a servo move.
 #define MIN_SERVO_RANGE		699		// Defined spec for servo is between 2ms and 1ms, but we have a little legacy where we were setting to 699 - this should be eliminated.
 #define MAX_SERVO_RANGE		2000
 
-#ifdef KURT
+#else // KURT
+
 #include "irt_adc.h"
 #include "nrf_delay.h"
 
@@ -77,7 +80,7 @@ static void on_position_read(uint16_t result)
 	m_servo_pos = result;
 
 	// Every once in a while report out.
-	if (count++ % 1024 == 0)
+	if (count++ % 4096 == 0)
 	{
 		RC_LOG("[RC] on_position_read: %i\r\n", result);
 	}
@@ -309,7 +312,7 @@ bool resistance_positions_validate(servo_positions_t* positions)
 		RC_LOG("[RC] resistance_positions_validate too many: %i\r\n", positions->count);
 		return false;
 	}
-
+#ifndef KURT
 	do
 	{
 		// If it's the home position 2,000 it's valid.
@@ -323,7 +326,7 @@ bool resistance_positions_validate(servo_positions_t* positions)
 			return false;
 		}
 	} while (++index < positions->count);
-
+#endif // KURT
 	return true;
 }
 
