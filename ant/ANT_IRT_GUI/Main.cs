@@ -1346,32 +1346,24 @@ namespace IRT_GUI
         private bool RequestDeviceParameter(SubPages subPage, byte descriptor2 = 0xFF)
         {
             RequestDataMessage message = new RequestDataMessage();
-            //RequestDataPage request = new RequestDataPage();
 
             if (subPage == SubPages.Battery)
             {
                 message.RequestedPage = (byte)SubPages.Battery;
-                //request.RequestedPageNumber = (byte)SubPages.Battery;
             }
-            /*else if (subPage == SubPages.Temp)
-            {
-                message = new RequestDataMessage();
-                message.RequestedPage = 0x03;
-                //request.RequestedPageNumber = (byte)SubPages.Temp;
-            }*/
             else
             {
-                //request.DescriptorByte1 = (byte)subPage;
-                //request.RequestedPageNumber = (byte)GetSetMessage.Page;
-                message.RequestedPage = (byte)GetSetMessage.Page;
-                message.Descriptor2 = descriptor2;
-                message.SubPage = subPage;
-            }
+                if (subPage == SubPages.ServoPositions)
+                {
+                    byte startIdx = 0;
+                    byte.TryParse(txtParamSet.Text, out startIdx);
+                    descriptor2 = startIdx;
+                }
 
-            //request.CommandType = Common.CommandType.RequestDataPage;
-            //request.RequestedNumberTx = 2;
-            //request.UseAck = false;
-            //m_eMotion.SendDataPageRequest(request);
+                message.RequestedPage = (byte)GetSetMessage.Page;
+                message.SubPage = subPage;
+                message.Descriptor2 = descriptor2;
+            }
 
             UpdateStatus(String.Format("Requesting parameter: {0}.", subPage));
             bool result = RetryCommand(ANT_RETRY_REQUESTS, ANT_RETRY_DELAY, () =>
@@ -1740,6 +1732,7 @@ namespace IRT_GUI
                 UpdateStatus("Failed to set servo positions.");
             }
 
+            //RequestDeviceParameter(SubPages.ServoPositions /*, start index */);
         }
         
         private void btnChartOpen_Click(object sender, EventArgs e)
