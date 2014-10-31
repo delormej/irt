@@ -1343,7 +1343,7 @@ namespace IRT_GUI
             }
         }
 
-        private bool RequestDeviceParameter(SubPages subPage)
+        private bool RequestDeviceParameter(SubPages subPage, byte descriptor2 = 0xFF)
         {
             RequestDataMessage message = new RequestDataMessage();
             //RequestDataPage request = new RequestDataPage();
@@ -1364,6 +1364,7 @@ namespace IRT_GUI
                 //request.DescriptorByte1 = (byte)subPage;
                 //request.RequestedPageNumber = (byte)GetSetMessage.Page;
                 message.RequestedPage = (byte)GetSetMessage.Page;
+                message.Descriptor2 = descriptor2;
                 message.SubPage = subPage;
             }
 
