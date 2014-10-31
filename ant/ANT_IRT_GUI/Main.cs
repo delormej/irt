@@ -27,9 +27,10 @@ namespace IRT_GUI
         const byte RESISTANCE_SET_WHEEL_CR          = 0x48;
         const byte RESISTANCE_SET_BIKE_TYPE	        = 0x44; // Co-efficient of rolling resistance
         const byte RESISTANCE_SET_C                 = 0x45; // Wind resistance offset.
-        const byte MAX_RESISTANCE_LEVELS = 9;
-        const ushort MIN_SERVO_POS = 2000;
-        const ushort MAX_SERVO_POS = 700;
+
+        byte m_max_resistance_levels = 9;
+        ushort m_min_servo_pos = 2000;
+        ushort m_max_servo_pos = 700;
 
         const ushort DEFAULT_WHEEL_SIZE = 2096;
 
@@ -382,6 +383,12 @@ namespace IRT_GUI
                     UpdateText(lblFeatures, features);
                     break;
 
+                case SubPages.ServoPositions:
+                    UpdateStatus("Received servo positions message. Max positions: " +
+                        buffer[2]);
+                    m_max_resistance_levels = (byte)(buffer[2] - (byte)1);
+
+                    goto default;
                 default:
                     UpdateStatus(string.Format("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
                         buffer[2],
@@ -1062,7 +1069,7 @@ namespace IRT_GUI
             ushort value = 0;
             ushort.TryParse(lblResistanceStdLevel.Text, out value);
 
-            if (value < MAX_RESISTANCE_LEVELS)
+            if (value < m_max_resistance_levels)
             {
                 if (SetResistanceStandard(++value))
                 {
@@ -1322,6 +1329,7 @@ namespace IRT_GUI
                     parameters.Add(SubPages.Charger);
                     parameters.Add(SubPages.Features);
                     parameters.Add(SubPages.Crr);
+                    parameters.Add(SubPages.ServoPositions);
 
                     var t = new System.Threading.Thread(() =>
                     {
@@ -1691,7 +1699,7 @@ namespace IRT_GUI
             if (max > 1000)
                 max = 1000;
             */
-            ServoPositions pos = new ServoPositions(MIN_SERVO_POS, MAX_SERVO_POS, AdminEnabled);
+            ServoPositions pos = new ServoPositions(m_min_servo_pos, m_max_servo_pos, AdminEnabled);
                 
             pos.SetPositions += OnSetPositions;
             pos.ShowDialog();
