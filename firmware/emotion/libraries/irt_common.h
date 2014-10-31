@@ -88,7 +88,7 @@ static bool __inline__ irt_feature_is_available(uint16_t feature)
 #define IRT_MSG_SUBPAGE_SETTINGS			17u
 #define IRT_MSG_SUBPAGE_WEIGHT				18u
 #define IRT_MSG_SUBPAGE_WHEEL_SIZE			19u
-#define IRT_MSG_SUBPAGE_BUTTON_STOPS		20u
+#define IRT_MSG_SUBPAGE_SERVO_POS			20u					// Gets servo positions.
 #define IRT_MSG_SUBPAGE_CHARGER				21u					// Get/set charger status.
 #define IRT_MSG_SUBPAGE_GET_ERROR			22u					// Gets the last error code.
 #define IRT_MSG_SUBPAGE_SERVO_OFFSET		23u					// Get/set servo offset.
