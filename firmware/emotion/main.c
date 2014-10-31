@@ -103,7 +103,7 @@ static bool								m_crr_adjust_mode;							// Indicator that we're in manual ca
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 static void profile_update_sched(void);
 
-static void send_data_page2(uint8_t subpage, uint8_t response_type);
+static void send_data_page2(ant_request_data_page_t* p_request);
 static void send_temperature();
 static void on_enable_dfu_mode();
 
@@ -245,7 +245,7 @@ static bool dequeue_ant_response(void)
 				break;
 
 			default:
-				send_data_page2(m_request_data_pending.descriptor[0], m_request_data_pending.tx_response);
+				send_data_page2(&m_request_data_pending);
 				break;
 		}
 		// byte 1 of the buffer contains the flag for either acknowledged (0x80) or a value
@@ -694,6 +694,40 @@ static void scheduler_init(void)
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 }
 
+/**@brief	Sets relevant servo positions in response.
+ */
+static void servo_pos_to_response(ant_request_data_page_t* p_request, uint8_t* p_response)
+{
+	uint8_t roffset = 0;	// Start data position offset in the response buffer.
+	uint8_t start_idx;
+
+	// If not specified, start at index 0.
+	start_idx = p_request->descriptor[1] == 0xFF ? 0 : p_request->descriptor[1];
+
+	p_response[roffset++] = RESISTANCE_LEVELS;	// # of levels
+	p_response[roffset++] = start_idx; // start index.
+
+	LOG("[MAIN] sending servo_positions count:%i, start %i\r\n", p_response[0], p_response[1]);
+
+	// send 2 positions, 2 bytes each
+	for (uint8_t i = start_idx; i < (start_idx + 2); i++)
+	{
+		LOG("[MAIN] servo_position[%i] %i\r\n", i,
+				m_user_profile.servo_positions.positions[i]);
+
+		if (i >= RESISTANCE_LEVELS)
+		{
+			p_response[roffset++] = 0xFF;
+			p_response[roffset++] = 0xFF;
+		}
+		else
+		{
+			p_response[roffset++] = LOW_BYTE(m_user_profile.servo_positions.positions[i]);
+			p_response[roffset++] = HIGH_BYTE(m_user_profile.servo_positions.positions[i]);
+		}
+	}
+}
+
 /**@brief	Copies the last error to a response structure.
  */
 static void error_to_response(uint8_t* p_response)
@@ -708,10 +742,12 @@ static void error_to_response(uint8_t* p_response)
 
 /**@brief	Sends data page 2 response.
  */
-static void send_data_page2(uint8_t subpage, uint8_t response_type)
+static void send_data_page2(ant_request_data_page_t* p_request)
 {
+	uint8_t subpage;
 	uint8_t response[6];
 
+	subpage = p_request->descriptor[0];
 	memset(&response, 0, sizeof(response));
 
 	switch (subpage)
@@ -749,12 +785,17 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 			response[0] = *FEATURES;
 			break;
 
+		case IRT_MSG_SUBPAGE_SERVO_POS:
+			// Start index is stored in descriptor[1]
+			servo_pos_to_response(p_request, response);
+			break;
+
 		default:
 			LOG("[MAIN] Unrecognized page request. \r\n");
 			return;
 	}
 
-	ant_bp_page2_tx_send(subpage, response, response_type);
+	ant_bp_page2_tx_send(subpage, response, p_request->tx_response);
 }
 
 /**@brief	Sends temperature value as measurement output page (0x03)
@@ -855,12 +896,19 @@ static void settings_update(uint8_t* buffer)
  */
 static void crr_adjust(int8_t value)
 {
+	ant_request_data_page_t request = {
+			.data_page = 0x46, // RequestDataPage -- TODO: this is defined somewhere
+			.descriptor[0] = IRT_MSG_SUBPAGE_CRR,
+			.tx_page = 0x02, // Get / set parameter page.
+			.tx_response = DATA_PAGE_RESPONSE_TYPE
+	};
+
 	if (m_user_profile.ca_intercept != 0xFFFF)
 	{
 		// Wire value of intercept is sent in 1/1000, i.e. 57236 == 57.236
 		m_user_profile.ca_intercept += (value * 1000);
 		power_init(&m_user_profile, DEFAULT_CRR);
-		send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
+		queue_data_response(request);
 	}
 }
 
@@ -1402,7 +1450,7 @@ static void on_set_servo_positions(servo_positions_t* positions)
 	}
 #endif
 
-	// profile_update_sched();
+	profile_update_sched();
 }
 
 /**@brief	Called when the result of the battery is determined.

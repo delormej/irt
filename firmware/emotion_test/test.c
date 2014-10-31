@@ -154,6 +154,12 @@ uint16_t power_servo_pos_calc(float force)
 	return servo_pos;
 }
 
+void copy(double* p_from, double* p_to)
+{
+	memset(p_to, 0, sizeof(double) * 2);
+	memcpy(&p_to[3], p_from, sizeof(double) * 2);
+}
+
 int main(int argc, char *argv [])
 {
 	//				  [       uint32_t     ], [       uint32_t     ]
@@ -192,10 +198,35 @@ int main(int argc, char *argv [])
 	printf("Servo Pos: %.4f\r\n.", power_servo_pos_calc(54.28f));
 	printf("Servo Pos: %i\r\n", (uint16_t)power_servo_pos_calc(54.28f));
 	printf("Servo Pos: %#32x\r\n", power_servo_pos_calc(54.28f));
-	*/
-
+	
 	printf("Value %i\r\n",
 		((65535UL & 1UL) == (1UL & 0x7FFF))
 		);
+		*/
+	/* an array with 5 elements */
+	double balance[5] = { 1000.0, 2.0, 3.4, 17.0, 50.0 };
+	double new_balance[5];
+	double *p;
+	double *p2;
+	int i;
 
+	p = balance;
+	p2 = new_balance;
+
+	/* output each array element's value */
+	printf("Array values using pointer\n");
+	for (i = 0; i < 5; i++)
+	{
+		printf("*(p + %d) : %f\n", i, *(p + i));
+	}
+
+	copy(p, new_balance);
+
+	printf("Array values using balance as address %i \n", sizeof(double));
+	for (i = 0; i < 5; i++)
+	{
+		printf("*(balance + %d) : %f\n", i, new_balance[i]);
+	}
+
+	return 0;
 }
