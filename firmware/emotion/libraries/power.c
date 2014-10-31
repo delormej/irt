@@ -27,7 +27,7 @@
 static float m_rr_force;
 static float m_ca_slope;			// calibration parameters
 static float m_ca_intercept;
-static bool  m_use_small_mag;
+//static bool  m_use_big_mag;
 
 /* Calculates angular velocity based on wheel ticks and time.
 static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
@@ -86,13 +86,11 @@ static float servo_force(uint16_t servo_pos)
 	}
 	else if (servo_pos < MAX_RESISTANCE_LEVEL)
 	{
-		PW_LOG("[PW] servo_force ERROR servo_pos:%i -- bounds should be %i:%i\r\n", servo_pos,
-				MIN_RESISTANCE_LEVEL, MAX_RESISTANCE_LEVEL);
 		APP_ERROR_HANDLER(NRF_ERROR_INVALID_PARAM);
 	}
 	else
 	{
-		if (m_use_small_mag)
+		/*if (!m_use_big_mag)
 		{
 			force = (
 					-0.00000000000033469583 * pow(servo_pos,5)
@@ -103,7 +101,7 @@ static float servo_force(uint16_t servo_pos)
 					+562.4577135);
 		}
 		else // BIG_MAG
-		{
+		{*/
 			force = (
 					-0.0000000000012401 * pow(servo_pos,5)
 					+0.0000000067486647 * pow(servo_pos,4)
@@ -111,7 +109,7 @@ static float servo_force(uint16_t servo_pos)
 					+0.0142639827784839 * pow(servo_pos,2)
 					-6.92836459712442 * servo_pos
 					+1351.463567618);
-		}
+		//}
 	}
 
 	// Force unsigned float - 0.0 is minimum.
@@ -130,7 +128,7 @@ uint16_t power_servo_pos_calc(float force)
 	float value;
 	uint16_t servo_pos;
 
-	if (m_use_small_mag)
+	/*if (!m_use_big_mag)
 	{
 		value = (
 				0.001461686  * pow(force,5)
@@ -141,7 +139,7 @@ uint16_t power_servo_pos_calc(float force)
 				+1526.614724);
 	}
 	else // BIG_MAG
-	{
+	{*/
 		value = (
 				-0.0000940913669469  * pow(force,5)
 				+ 0.0108240213514885 * pow(force,4)
@@ -149,7 +147,7 @@ uint16_t power_servo_pos_calc(float force)
 				+8.9640144624266 	 * pow(force,2)
 				-87.5217493343533 	 * force
 				+1558.47782198543);
-	}
+	//}
 
 	if (value > MIN_RESISTANCE_LEVEL)
 	{
@@ -181,8 +179,8 @@ uint16_t power_servo_pos_calc(float force)
  */
 void power_init(user_profile_t* p_profile, uint16_t default_crr)
 {
-	m_use_small_mag = FEATURE_AVAILABLE(FEATURE_SMALL_MAG);
-	PW_LOG("[PW] Use small mag?: %i\r\n", m_use_small_mag);
+	//m_use_big_mag = FEATURE_AVAILABLE(FEATURE_BIG_MAG);
+	//PW_LOG("[PW] Use small mag?: %i\r\n", m_use_big_mag);
 
 	if (p_profile->ca_slope != 0xFFFF)
 	{
