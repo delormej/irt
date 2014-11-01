@@ -38,6 +38,7 @@
 
 /* CTRL_REG2 bits. */
 #define AUTO_SLEEP_ENABLE	_BIT(2)
+#define SOFTWARE_RESET		_BIT(6)
 
 /* CTRL_REG3 wake bits. */
 #define WAKE_FF_MT			_BIT(3)		// Wake from freefall/motion interrupt.
@@ -165,23 +166,6 @@ static bool accelerometer_write(uint8_t reg, uint8_t data)
 							 true);
 }
 
-static bool accelerometer_reset(void)
-{
-	uint8_t val = 0;
-	uint8_t tries = 100;
-
-	accelerometer_write(REG8652_CTRL_REG2, 0x40);		// Reset all registers to POR values
-
-	do		// Wait for the RST bit to clear
-	{
-		accelerometer_read(REG8652_CTRL_REG2, &val, sizeof(val));
-		tries--;
-	} 	while (tries &&  (val & 0x40));
-
-	// Returns success if happened in less than max tries.
-	return (tries > 0);
-}
-
 static void enable_interrupt(void)
 {
 	/* To WAKE the device, the desired function(s) must be enabled in CTRL_REG4 
@@ -280,7 +264,6 @@ static void enable_interrupt(void)
 	RET_CHECK(ret);
 }
 
-
 static void read_test(void)
 {
 	uint8_t data;
@@ -301,11 +284,27 @@ static void read_test(void)
 	//	printf("WAKE mode\n");
 }
 
+bool accelerometer_reset(void)
+{
+	uint8_t val = 0;
+	uint8_t tries = 100;
+
+	accelerometer_write(REG8652_CTRL_REG2, SOFTWARE_RESET);		// Reset all registers to POR values
+
+	do		// Wait for the RST bit to clear
+	{
+		accelerometer_read(REG8652_CTRL_REG2, &val, sizeof(val));
+		tries--;
+	} 	while (tries &&  (val & SOFTWARE_RESET));
+
+	// Returns success if happened in less than max tries.
+	return (tries > 0);
+}
+
 void accelerometer_standby(void)
 {
 	bool ret;
 
-	//
 	// Set device to STANDBY by setting bit 0 to value 0 in CTRL_REG1.
 	//
 	ret = accelerometer_write(REG8652_CTRL_REG1, MMA8652FC_STANDBY);

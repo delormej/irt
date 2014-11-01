@@ -57,7 +57,11 @@
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
 
 #define BLE_ADV_BLINK_RATE_MS			500u
+#ifdef ENABLE_DEBUG_LOG
+#define SCHED_QUEUE_SIZE                32
+#else // ENABLE_DEBUG_LOG
 #define SCHED_QUEUE_SIZE                8                                          /**< Maximum number of events in the scheduler queue. */
+#endif // ENABLE_DEBUG_LOG
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
 
@@ -922,13 +926,15 @@ static void on_power_down(bool accelerometer_wake_disable)
 {
 	LOG("[MAIN]:on_power_down \r\n");
 
-	// TODO: should we be gracefully closing ANT and BLE channels here?
+	CRITICAL_REGION_ENTER()
+	//sd_softdevice_disable();							// Disable the radios, so no new commands come in.
 	application_timers_stop();							// Stop running timers.
-	irt_power_meas_fifo_free();							// Free heap allocation.
-
+	//irt_power_meas_fifo_free();							// Free heap allocation.
 	peripheral_powerdown(accelerometer_wake_disable);	// Shutdown peripherals.
+	CRITICAL_REGION_EXIT()
 
 	sd_power_system_off();								// Enter lower power mode.
+	//NRF_POWER->SYSTEMOFF = 1;
 }
 
 static void on_resistance_off(void)
