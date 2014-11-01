@@ -99,7 +99,7 @@ static float							m_temperature = 0.0f;						// Last temperature read.
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
 static irt_battery_status_t				m_battery_status;
-static uint32_t 						m_battery_start_ticks __attribute__ ((section (".noinit")));			// Time (in ticks) when we started running on battery.
+static uint32_t 						m_battery_start_ticks;						// __attribute__ ((section (".noinit")));			// Time (in ticks) when we started running on battery.
 
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
