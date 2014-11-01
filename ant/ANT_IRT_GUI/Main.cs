@@ -1168,7 +1168,14 @@ namespace IRT_GUI
             }
 
             // TODO: this is broken, because servo offset can be negative.
-            SetParameter((byte)(SubPages.ServoOffset), value);
+            if (SetParameter((byte)(SubPages.ServoOffset), value))
+            {
+                UpdateStatus("Sent servo offset command.");
+            }
+            else
+            {
+                UpdateStatus("Failed to send servo offset command.");
+            }
         }
 
         private void cmbResistanceMode_SelectedIndexChanged(object sender, EventArgs e)
