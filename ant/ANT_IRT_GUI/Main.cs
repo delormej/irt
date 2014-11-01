@@ -748,7 +748,7 @@ namespace IRT_GUI
                     changeColor = Color.Green;
                     break;
                 case Common.BatteryStatus.Low:
-                    changeColor = Color.Yellow;
+                    changeColor = Color.Goldenrod;
                     break;
                 default:
                     changeColor = SystemColors.ControlText;
