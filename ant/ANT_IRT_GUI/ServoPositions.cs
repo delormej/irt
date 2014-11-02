@@ -80,6 +80,7 @@ namespace IRT_GUI
 
         private void ServoPositions_Load(object sender, EventArgs e)
         {
+            numResistancePositions.Value = m_positions.Count();
             dgResistancePositions.CellValidating += dgResistancePositions_CellValidating;
         }
 

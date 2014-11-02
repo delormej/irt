@@ -32,6 +32,8 @@ namespace IRT_GUI
         ushort m_min_servo_pos = 2000;
         ushort m_max_servo_pos = 700;
 
+        Position[] m_positions; 
+
         const ushort DEFAULT_WHEEL_SIZE = 2096;
 
         const int EMR_CHANNEL_ID = 0;
@@ -260,6 +262,7 @@ namespace IRT_GUI
             catch (Exception e)
             {
                 // log
+                UpdateStatus("Error on channel: " + e.Message);
             }
         }
 
@@ -386,7 +389,7 @@ namespace IRT_GUI
                 case SubPages.ServoPositions:
                     UpdateStatus("Received servo positions message. Max positions: " +
                         buffer[2]);
-                    m_max_resistance_levels = (byte)(buffer[2] - (byte)1);
+                    ProcessServoPositions(buffer);
 
                     goto default;
                 default:
@@ -837,7 +840,16 @@ namespace IRT_GUI
             byte param = GetParameter();
             if (param != 0)
             {
-                RequestDeviceParameter((SubPages)param);
+                byte descriptor2 = 0xFF;
+
+                if ((SubPages)param == SubPages.ServoPositions)
+                {
+                    byte startIdx = 0;
+                    byte.TryParse(txtParamSet.Text, out startIdx);
+                    descriptor2 = startIdx;
+                }
+
+                RequestDeviceParameter((SubPages)param, descriptor2);
             }
         }
 
@@ -1093,7 +1105,7 @@ namespace IRT_GUI
             ushort value = 0;
             ushort.TryParse(lblResistanceStdLevel.Text, out value);
 
-            if (value < m_max_resistance_levels)
+            if (value < m_max_resistance_levels-1)
             {
                 if (SetResistanceStandard(++value))
                 {
@@ -1392,13 +1404,6 @@ namespace IRT_GUI
             }
             else
             {
-                if (subPage == SubPages.ServoPositions)
-                {
-                    byte startIdx = 0;
-                    byte.TryParse(txtParamSet.Text, out startIdx);
-                    descriptor2 = startIdx;
-                }
-
                 message.RequestedPage = (byte)GetSetMessage.Page;
                 message.SubPage = subPage;
                 message.Descriptor2 = descriptor2;
@@ -1731,7 +1736,8 @@ namespace IRT_GUI
                 max = 1000;
             */
             ServoPositions pos = new ServoPositions(m_min_servo_pos, m_max_servo_pos, AdminEnabled);
-                
+            pos.Positions.AddRange(m_positions);   
+
             pos.SetPositions += OnSetPositions;
             pos.ShowDialog();
         }
@@ -1750,7 +1756,9 @@ namespace IRT_GUI
             // Start index for positions.
             int index = 2;
 
-            foreach (Position p in dialog.Positions)
+            m_positions = dialog.Positions.ToArray<Position>();
+
+            foreach (Position p in m_positions)
             {
                 Message.LittleEndian(p.Value, out data[index++], out data[index++]);
             }
@@ -1773,7 +1781,48 @@ namespace IRT_GUI
 
             //RequestDeviceParameter(SubPages.ServoPositions /*, start index */);
         }
-        
+
+        // Safety against too many recursive calls to get the next sequence.
+        private int m_lastPositionRequestIndex = 0;  
+
+        private void ProcessServoPositions(byte[] buffer)
+        {
+            m_max_resistance_levels = (byte)buffer[2];      // Count of resistance levels, 0 == no resistance level.
+            byte startIndex = buffer[3];                    // Start index for these 2 levels.
+
+            if (m_positions == null || m_positions.Length != m_max_resistance_levels)
+            {
+                m_positions = new Position[m_max_resistance_levels];
+                m_lastPositionRequestIndex = 0;
+            }
+
+            for (byte i = 0; startIndex < m_max_resistance_levels && i < 3; ) // can only read 2 positions per buffer.
+            {
+                Position p = new Position(Message.BigEndian(buffer[4 + i++], buffer[4 + i++]));
+                m_positions[startIndex++] = p; 
+            }
+
+            // Set minimum servo position value.
+            if (m_min_servo_pos != m_positions[0].Value)
+            {
+                m_min_servo_pos = m_positions[0].Value;
+            }
+
+            // Request next series of servo positions if there are more.
+            if (startIndex < m_max_resistance_levels && m_lastPositionRequestIndex != startIndex)
+            {
+                if (RequestDeviceParameter(SubPages.ServoPositions, startIndex))
+                {
+                    UpdateStatus(String.Format("Requested servo positions from position: {0}", startIndex));
+                    m_lastPositionRequestIndex = startIndex;
+                }
+                else
+                {
+                    UpdateStatus(String.Format("Failed to request servo positions from: {0}.", startIndex));
+                }
+            }
+        }
+
         private void btnChartOpen_Click(object sender, EventArgs e)
         {
             GraphForm graph = new GraphForm();
