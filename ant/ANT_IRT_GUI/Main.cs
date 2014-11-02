@@ -1735,11 +1735,33 @@ namespace IRT_GUI
             if (max > 1000)
                 max = 1000;
             */
-            ServoPositions pos = new ServoPositions(m_min_servo_pos, m_max_servo_pos, AdminEnabled);
-            pos.Positions.AddRange(m_positions);   
+            try
+            {
+                ServoPositions pos = new ServoPositions(m_min_servo_pos, m_max_servo_pos, AdminEnabled);
+                if (m_positions != null)
+                {
+                    pos.Positions.Clear();
+                    for (int i = 0; i < m_positions.Length; i++)
+                    {
+                        if (m_positions[i] != null && m_positions[i].Value > 0)
+                        {
+                            pos.Positions.Add(m_positions[i]);
+                        }
+                        else
+                        {
+                            // Exit out.
+                            break;
+                        }
+                    }
+                }
 
-            pos.SetPositions += OnSetPositions;
-            pos.ShowDialog();
+                pos.SetPositions += OnSetPositions;
+                pos.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus("Error occurred in setting servo positions: " + ex.Message);
+            }
         }
 
         void OnSetPositions(object sender, EventArgs e)
@@ -1773,6 +1795,13 @@ namespace IRT_GUI
             {
                 UpdateStatus("Set new servo positions.");
                 dialog.Close();
+                
+                // Initiate a request to verify.
+                var t = new System.Threading.Timer(o =>
+                    {
+                        RequestDeviceParameter(SubPages.ServoPositions, 0);
+                    }
+                    , null, 500, System.Threading.Timeout.Infinite);
             }
             else
             {
@@ -1795,7 +1824,7 @@ namespace IRT_GUI
                 m_positions = new Position[m_max_resistance_levels];
                 m_lastPositionRequestIndex = 0;
             }
-
+            
             for (byte i = 0; startIndex < m_max_resistance_levels && i < 3; ) // can only read 2 positions per buffer.
             {
                 Position p = new Position(Message.BigEndian(buffer[4 + i++], buffer[4 + i++]));
