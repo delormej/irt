@@ -161,8 +161,8 @@ uint16_t power_servo_pos_calc(float force)
 		servo_pos = (uint16_t)value;
 	}
 
-	PW_LOG("[PW] power_servo_pos_calc force:%.2f == servo_pos:%i\r\n",
-			force, servo_pos);
+	//PW_LOG("[PW] power_servo_pos_calc force:%.2f == servo_pos:%i\r\n",
+	//		force, servo_pos);
 
 	return servo_pos;
 }

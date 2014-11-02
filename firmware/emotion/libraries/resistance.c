@@ -292,7 +292,7 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
 	// Determine the additional force required from the magnet if necessary.
 	mag_force = ( (wind + rolling + gravitational) - rr_force );
 
-	RC_LOG("[RC]:resistance_sim_set: mag_force: %.2f\r\n", mag_force);
+	//RC_LOG("[RC]:resistance_sim_set: mag_force: %.2f\r\n", mag_force);
 	/*
 	RC_LOG("[RC]:rr_force: %.2f\r\n", rr_force);
 	RC_LOG("[RC]:grade: %.2f\r\n", p_sim_forces->grade);
