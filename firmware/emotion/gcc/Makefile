@@ -118,12 +118,6 @@ deploy:
 	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
 	cp $(HEX) $(DEPLOY_PATH2)$(OUTPUT_NAME).hex
 
-############################################
-# Flashes both the bootloader & app.
-############################################
-flash-all: 
-	$(NRFJPROG) --program $(HEX) ../../bootloader/gcc/_build/bootloader.hex --verify --reset
-
 name:
 	@echo $(PROJECT_NAME)
 
