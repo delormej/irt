@@ -186,7 +186,7 @@ namespace IRT_GUI.IrtMessages
         Settings = 17,
         TotalWeight = 18,
         WheelSize = 19, // I'm sure this is defined in a standard message somewhere.
-        ButtonStops = 20, // Ability to configure custom button stops on the servo.
+        ServoPositions = 20, // Ability to configure custom button stops on the servo.
         Charger = 21,       // Get/set charger status.
         GetLastError = 22,
         ServoOffset = 23,
@@ -317,14 +317,16 @@ namespace IRT_GUI.IrtMessages
         // The type of command, i.e. 0x01 for Requesting a Data Page, 0x02 for Setting parameters.
         public byte CommandType;
 
+        public byte Descriptor2 = 0xFF;
+
         public byte[] AsBytes()
         {
             byte[] data = {
                               Page,
                               0xFF,
                               0xFF,
-                              (byte)SubPage,
-                              0xFF,
+                              (byte)SubPage, // Descriptor byte 1
+                              Descriptor2, // 0xFF,
                               RequestTransmissionResponse,
                               RequestedPage,
                               CommandType

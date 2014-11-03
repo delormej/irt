@@ -57,7 +57,11 @@
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
 
 #define BLE_ADV_BLINK_RATE_MS			500u
+#ifdef ENABLE_DEBUG_LOG
+#define SCHED_QUEUE_SIZE                32
+#else // ENABLE_DEBUG_LOG
 #define SCHED_QUEUE_SIZE                8                                          /**< Maximum number of events in the scheduler queue. */
+#endif // ENABLE_DEBUG_LOG
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
 
@@ -95,7 +99,7 @@ static float							m_temperature = 0.0f;						// Last temperature read.
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
 static irt_battery_status_t				m_battery_status;
-static uint32_t 						m_battery_start_ticks __attribute__ ((section (".noinit")));			// Time (in ticks) when we started running on battery.
+static uint32_t 						m_battery_start_ticks;						// __attribute__ ((section (".noinit")));			// Time (in ticks) when we started running on battery.
 
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
@@ -103,7 +107,7 @@ static bool								m_crr_adjust_mode;							// Indicator that we're in manual ca
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 static void profile_update_sched(void);
 
-static void send_data_page2(uint8_t subpage, uint8_t response_type);
+static void send_data_page2(ant_request_data_page_t* p_request);
 static void send_temperature();
 static void on_enable_dfu_mode();
 
@@ -245,7 +249,7 @@ static bool dequeue_ant_response(void)
 				break;
 
 			default:
-				send_data_page2(m_request_data_pending.descriptor[0], m_request_data_pending.tx_response);
+				send_data_page2(&m_request_data_pending);
 				break;
 		}
 		// byte 1 of the buffer contains the flag for either acknowledged (0x80) or a value
@@ -356,8 +360,6 @@ static void profile_init(void)
 {
 		uint32_t err_code;
 
-		//LOG("[MAIN] profile_init size:%i, %i\r\n", sizeof(user_profile_t), sizeof(servo_positions_t));
-
 		err_code = user_profile_init();
 		APP_ERROR_CHECK(err_code);
 
@@ -371,33 +373,28 @@ static void profile_init(void)
 		err_code = user_profile_load(&m_user_profile);
 		APP_ERROR_CHECK(err_code);
 
+		// TODO: this should be refactored into profile class?
+		// should all DEFAULT_x defines live in profile.h? The reason they don't today is that
+		// certain settings don't live in the profile - so it makes sense to keep all the default DEFINES together
+		// Check profile defaults.
+
 		//
 		// Check the version of the profile, if it's not the current version
 		// set the default parameters.
 		//
 		if (m_user_profile.version != PROFILE_VERSION)
 		{
-			LOG("[MAIN]: Older profile version %i. Loading defaults and upgrading. \r\n",
+			LOG("[MAIN]: Older profile version %i. Setting defaults where needed.\r\n",
 					m_user_profile.version);
-			m_user_profile.version			= PROFILE_VERSION;
-			m_user_profile.wheel_size_mm 	= DEFAULT_WHEEL_SIZE_MM;
-			m_user_profile.total_weight_kg 	= DEFAULT_TOTAL_WEIGHT_KG;
-			m_user_profile.settings 		= DEFAULT_SETTINGS;
-			m_user_profile.servo_offset		= 0;
 
-			// Schedule an update.
-			profile_update_sched();
-		}
-		else
-		{
-			// TODO: this should be refactored into profile class?
-			// should all DEFAULT_x defines live in profile.h? The reason they don't today is that
-			// certain settings don't live in the profile - so it makes sense to keep all the default DEFINES together
-			// Check profile defaults.
+			m_user_profile.version = PROFILE_VERSION;
 
+			// TODO: under what situation would these ever be 0?
 			if (m_user_profile.wheel_size_mm == 0 ||
 					m_user_profile.wheel_size_mm == 0xFFFF)
 			{
+				LOG("[MAIN]:profile_init using default wheel circumference.\r\n");
+
 				// Wheel circumference in mm.
 				m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
 			}
@@ -405,26 +402,35 @@ static void profile_init(void)
 			if (m_user_profile.total_weight_kg == 0 ||
 					m_user_profile.total_weight_kg == 0xFFFF)
 			{
-				LOG("[MAIN]:profile_init using default weight.");
+				LOG("[MAIN]:profile_init using default weight.\r\n");
 
 				// Total weight of rider + bike + shoes, clothing, etc...
 				m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
 			}
-		}
 
-		// Check for default servo positions.
-		if (m_user_profile.servo_positions.count == 0xFF)
-		{
-			LOG("[MAIN]: Setting default servo positions.\r\n");
+			if (m_user_profile.servo_offset == -1) 	// -1 == (int16_t)0xFFFF
+			{
+				LOG("[MAIN]:profile_init using default servo offset.\r\n");
+				m_user_profile.servo_offset = 0; // default to 0 offset.
+			}
 
-			m_user_profile.servo_positions.count = 7;
-			m_user_profile.servo_positions.positions[0] = 2000;
-			m_user_profile.servo_positions.positions[1] = 1300;
-			m_user_profile.servo_positions.positions[2] = 1200;
-			m_user_profile.servo_positions.positions[3] = 1100;
-			m_user_profile.servo_positions.positions[4] = 1000;
-			m_user_profile.servo_positions.positions[5] = 900;
-			m_user_profile.servo_positions.positions[6] = 800;
+			// Check for default servo positions.
+			if (m_user_profile.servo_positions.count == 0xFF)
+			{
+				LOG("[MAIN]: Setting default servo positions.\r\n");
+
+				m_user_profile.servo_positions.count = 7;
+				m_user_profile.servo_positions.positions[0] = 2000;
+				m_user_profile.servo_positions.positions[1] = 1300;
+				m_user_profile.servo_positions.positions[2] = 1200;
+				m_user_profile.servo_positions.positions[3] = 1100;
+				m_user_profile.servo_positions.positions[4] = 1000;
+				m_user_profile.servo_positions.positions[5] = 900;
+				m_user_profile.servo_positions.positions[6] = 800;
+			}
+
+			// Schedule an update.
+			profile_update_sched();
 		}
 
 	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004. 
@@ -694,6 +700,40 @@ static void scheduler_init(void)
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
 }
 
+/**@brief	Sets relevant servo positions in response.
+ */
+static void servo_pos_to_response(ant_request_data_page_t* p_request, uint8_t* p_response)
+{
+	uint8_t roffset = 0;	// Start data position offset in the response buffer.
+	uint8_t start_idx;
+
+	// If not specified, start at index 0.
+	start_idx = p_request->descriptor[1] == 0xFF ? 0 : p_request->descriptor[1];
+
+	p_response[roffset++] = RESISTANCE_LEVELS;	// # of levels
+	p_response[roffset++] = start_idx; // start index.
+
+	LOG("[MAIN] sending servo_positions count:%i, start %i\r\n", p_response[0], p_response[1]);
+
+	// send 2 positions, 2 bytes each
+	for (uint8_t i = start_idx; i < (start_idx + 2); i++)
+	{
+		LOG("[MAIN] servo_position[%i] %i\r\n", i,
+				m_user_profile.servo_positions.positions[i]);
+
+		if (i >= RESISTANCE_LEVELS)
+		{
+			p_response[roffset++] = 0xFF;
+			p_response[roffset++] = 0xFF;
+		}
+		else
+		{
+			p_response[roffset++] = LOW_BYTE(m_user_profile.servo_positions.positions[i]);
+			p_response[roffset++] = HIGH_BYTE(m_user_profile.servo_positions.positions[i]);
+		}
+	}
+}
+
 /**@brief	Copies the last error to a response structure.
  */
 static void error_to_response(uint8_t* p_response)
@@ -708,10 +748,12 @@ static void error_to_response(uint8_t* p_response)
 
 /**@brief	Sends data page 2 response.
  */
-static void send_data_page2(uint8_t subpage, uint8_t response_type)
+static void send_data_page2(ant_request_data_page_t* p_request)
 {
+	uint8_t subpage;
 	uint8_t response[6];
 
+	subpage = p_request->descriptor[0];
 	memset(&response, 0, sizeof(response));
 
 	switch (subpage)
@@ -749,12 +791,17 @@ static void send_data_page2(uint8_t subpage, uint8_t response_type)
 			response[0] = *FEATURES;
 			break;
 
+		case IRT_MSG_SUBPAGE_SERVO_POS:
+			// Start index is stored in descriptor[1]
+			servo_pos_to_response(p_request, response);
+			break;
+
 		default:
 			LOG("[MAIN] Unrecognized page request. \r\n");
 			return;
 	}
 
-	ant_bp_page2_tx_send(subpage, response, response_type);
+	ant_bp_page2_tx_send(subpage, response, p_request->tx_response);
 }
 
 /**@brief	Sends temperature value as measurement output page (0x03)
@@ -855,12 +902,19 @@ static void settings_update(uint8_t* buffer)
  */
 static void crr_adjust(int8_t value)
 {
+	ant_request_data_page_t request = {
+			.data_page = 0x46, // RequestDataPage -- TODO: this is defined somewhere
+			.descriptor[0] = IRT_MSG_SUBPAGE_CRR,
+			.tx_page = 0x02, // Get / set parameter page.
+			.tx_response = DATA_PAGE_RESPONSE_TYPE
+	};
+
 	if (m_user_profile.ca_intercept != 0xFFFF)
 	{
 		// Wire value of intercept is sent in 1/1000, i.e. 57236 == 57.236
 		m_user_profile.ca_intercept += (value * 1000);
 		power_init(&m_user_profile, DEFAULT_CRR);
-		send_data_page2(IRT_MSG_SUBPAGE_CRR, DATA_PAGE_RESPONSE_TYPE);
+		queue_data_response(request);
 	}
 }
 
@@ -874,13 +928,15 @@ static void on_power_down(bool accelerometer_wake_disable)
 {
 	LOG("[MAIN]:on_power_down \r\n");
 
-	// TODO: should we be gracefully closing ANT and BLE channels here?
+	CRITICAL_REGION_ENTER()
+	//sd_softdevice_disable();							// Disable the radios, so no new commands come in.
 	application_timers_stop();							// Stop running timers.
-	irt_power_meas_fifo_free();							// Free heap allocation.
-
+	//irt_power_meas_fifo_free();							// Free heap allocation.
 	peripheral_powerdown(accelerometer_wake_disable);	// Shutdown peripherals.
+	CRITICAL_REGION_EXIT()
 
 	sd_power_system_off();								// Enter lower power mode.
+	//NRF_POWER->SYSTEMOFF = 1;
 }
 
 static void on_resistance_off(void)
@@ -1402,7 +1458,7 @@ static void on_set_servo_positions(servo_positions_t* positions)
 	}
 #endif
 
-	// profile_update_sched();
+	profile_update_sched();
 }
 
 /**@brief	Called when the result of the battery is determined.

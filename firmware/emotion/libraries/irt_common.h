@@ -44,10 +44,10 @@ All rights reserved.
 // Available device features.
 //
 #define FEATURE_RESERVED			1UL
-#define FEATURE_SMALL_MAG			2UL				// Small magnet is installed vs. Big magnet
-#define FEATURE_74_SERVO			32UL			// 7.4 Volt Servo feature.
+//#define FEATURE_BIG_MAG			2UL				// Small magnet is installed vs. Big magnet
+//#define FEATURE_74_SERVO			32UL			// 7.4 Volt Servo feature.
 #define FEATURE_BATTERY_CHARGER		64UL			// Device has a battery charger IC installed.
-#define FEATURE_BATTERY_READ_PIN	128UL			// Device requires the use of enabling flow to a capacitor before reading battery voltage.
+//#define FEATURE_BATTERY_READ_PIN	128UL			// Device requires the use of enabling flow to a capacitor before reading battery voltage.
 #define FEATURE_INVALID				65535UL			// Max feature setting of 16 bit.
 
 /*
@@ -88,7 +88,7 @@ static bool __inline__ irt_feature_is_available(uint16_t feature)
 #define IRT_MSG_SUBPAGE_SETTINGS			17u
 #define IRT_MSG_SUBPAGE_WEIGHT				18u
 #define IRT_MSG_SUBPAGE_WHEEL_SIZE			19u
-#define IRT_MSG_SUBPAGE_BUTTON_STOPS		20u
+#define IRT_MSG_SUBPAGE_SERVO_POS			20u					// Gets servo positions.
 #define IRT_MSG_SUBPAGE_CHARGER				21u					// Get/set charger status.
 #define IRT_MSG_SUBPAGE_GET_ERROR			22u					// Gets the last error code.
 #define IRT_MSG_SUBPAGE_SERVO_OFFSET		23u					// Get/set servo offset.

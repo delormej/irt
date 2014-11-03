@@ -27,9 +27,12 @@ namespace IRT_GUI
         const byte RESISTANCE_SET_WHEEL_CR          = 0x48;
         const byte RESISTANCE_SET_BIKE_TYPE	        = 0x44; // Co-efficient of rolling resistance
         const byte RESISTANCE_SET_C                 = 0x45; // Wind resistance offset.
-        const byte MAX_RESISTANCE_LEVELS = 9;
-        const ushort MIN_SERVO_POS = 2000;
-        const ushort MAX_SERVO_POS = 700;
+
+        byte m_max_resistance_levels = 9;
+        ushort m_min_servo_pos = 2000;
+        ushort m_max_servo_pos = 700;
+
+        Position[] m_positions; 
 
         const ushort DEFAULT_WHEEL_SIZE = 2096;
 
@@ -123,8 +126,8 @@ namespace IRT_GUI
         {
             // Admin only features.  
             txtServoOffset.Enabled = AdminEnabled;
-            btnServoOffset.Visible = AdminEnabled;
-            btnServoOffset.Enabled = AdminEnabled;
+            btnServoOffset.Visible = true; //  AdminEnabled;
+            btnServoOffset.Enabled = true; //  AdminEnabled;
             btnParamSet.Enabled = AdminEnabled;
 
             // Setup the settings checklist box.
@@ -259,6 +262,7 @@ namespace IRT_GUI
             catch (Exception e)
             {
                 // log
+                UpdateStatus("Error on channel: " + e.Message);
             }
         }
 
@@ -382,6 +386,12 @@ namespace IRT_GUI
                     UpdateText(lblFeatures, features);
                     break;
 
+                case SubPages.ServoPositions:
+                    UpdateStatus("Received servo positions message. Max positions: " +
+                        buffer[2]);
+                    ProcessServoPositions(buffer);
+
+                    goto default;
                 default:
                     UpdateStatus(string.Format("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
                         buffer[2],
@@ -729,6 +739,30 @@ namespace IRT_GUI
             UpdateText(lblEmrBattVolt, volts.ToString("0.00"));
             // Update the color of the battery status, Red, Green, Yellow.
 
+            Color changeColor = SystemColors.ControlText;
+
+            switch (arg1.BatteryStatus)
+            {
+                case Common.BatteryStatus.Critical:
+                    changeColor = Color.Red;
+                    break;
+                case Common.BatteryStatus.New:
+                case Common.BatteryStatus.Good:
+                    changeColor = Color.Green;
+                    break;
+                case Common.BatteryStatus.Low:
+                    changeColor = Color.Goldenrod;
+                    break;
+                default:
+                    changeColor = SystemColors.ControlText;
+                    break;
+            }
+
+            if (lblEmrBattVolt.ForeColor != changeColor)
+            {
+                ExecuteOnUI(() => { lblEmrBattVolt.ForeColor = changeColor; });
+            }
+
             double hours = 0.0; 
             int minutes = 0;
 
@@ -806,7 +840,16 @@ namespace IRT_GUI
             byte param = GetParameter();
             if (param != 0)
             {
-                RequestDeviceParameter((SubPages)param);
+                byte descriptor2 = 0xFF;
+
+                if ((SubPages)param == SubPages.ServoPositions)
+                {
+                    byte startIdx = 0;
+                    byte.TryParse(txtParamSet.Text, out startIdx);
+                    descriptor2 = startIdx;
+                }
+
+                RequestDeviceParameter((SubPages)param, descriptor2);
             }
         }
 
@@ -1062,7 +1105,7 @@ namespace IRT_GUI
             ushort value = 0;
             ushort.TryParse(lblResistanceStdLevel.Text, out value);
 
-            if (value < MAX_RESISTANCE_LEVELS)
+            if (value < m_max_resistance_levels-1)
             {
                 if (SetResistanceStandard(++value))
                 {
@@ -1137,7 +1180,14 @@ namespace IRT_GUI
             }
 
             // TODO: this is broken, because servo offset can be negative.
-            SetParameter((byte)(SubPages.ServoOffset), value);
+            if (SetParameter((byte)(SubPages.ServoOffset), value))
+            {
+                UpdateStatus("Sent servo offset command.");
+            }
+            else
+            {
+                UpdateStatus("Failed to send servo offset command.");
+            }
         }
 
         private void cmbResistanceMode_SelectedIndexChanged(object sender, EventArgs e)
@@ -1322,6 +1372,7 @@ namespace IRT_GUI
                     parameters.Add(SubPages.Charger);
                     parameters.Add(SubPages.Features);
                     parameters.Add(SubPages.Crr);
+                    parameters.Add(SubPages.ServoPositions);
 
                     var t = new System.Threading.Thread(() =>
                     {
@@ -1343,34 +1394,20 @@ namespace IRT_GUI
             }
         }
 
-        private bool RequestDeviceParameter(SubPages subPage)
+        private bool RequestDeviceParameter(SubPages subPage, byte descriptor2 = 0xFF)
         {
             RequestDataMessage message = new RequestDataMessage();
-            //RequestDataPage request = new RequestDataPage();
 
             if (subPage == SubPages.Battery)
             {
                 message.RequestedPage = (byte)SubPages.Battery;
-                //request.RequestedPageNumber = (byte)SubPages.Battery;
             }
-            /*else if (subPage == SubPages.Temp)
-            {
-                message = new RequestDataMessage();
-                message.RequestedPage = 0x03;
-                //request.RequestedPageNumber = (byte)SubPages.Temp;
-            }*/
             else
             {
-                //request.DescriptorByte1 = (byte)subPage;
-                //request.RequestedPageNumber = (byte)GetSetMessage.Page;
                 message.RequestedPage = (byte)GetSetMessage.Page;
                 message.SubPage = subPage;
+                message.Descriptor2 = descriptor2;
             }
-
-            //request.CommandType = Common.CommandType.RequestDataPage;
-            //request.RequestedNumberTx = 2;
-            //request.UseAck = false;
-            //m_eMotion.SendDataPageRequest(request);
 
             UpdateStatus(String.Format("Requesting parameter: {0}.", subPage));
             bool result = RetryCommand(ANT_RETRY_REQUESTS, ANT_RETRY_DELAY, () =>
@@ -1698,10 +1735,33 @@ namespace IRT_GUI
             if (max > 1000)
                 max = 1000;
             */
-            ServoPositions pos = new ServoPositions(MIN_SERVO_POS, MAX_SERVO_POS, AdminEnabled);
-                
-            pos.SetPositions += OnSetPositions;
-            pos.ShowDialog();
+            try
+            {
+                ServoPositions pos = new ServoPositions(m_min_servo_pos, m_max_servo_pos, AdminEnabled);
+                if (m_positions != null)
+                {
+                    pos.Positions.Clear();
+                    for (int i = 0; i < m_positions.Length; i++)
+                    {
+                        if (m_positions[i] != null && m_positions[i].Value > 0)
+                        {
+                            pos.Positions.Add(m_positions[i]);
+                        }
+                        else
+                        {
+                            // Exit out.
+                            break;
+                        }
+                    }
+                }
+
+                pos.SetPositions += OnSetPositions;
+                pos.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus("Error occurred in setting servo positions: " + ex.Message);
+            }
         }
 
         void OnSetPositions(object sender, EventArgs e)
@@ -1718,7 +1778,9 @@ namespace IRT_GUI
             // Start index for positions.
             int index = 2;
 
-            foreach (Position p in dialog.Positions)
+            m_positions = dialog.Positions.ToArray<Position>();
+
+            foreach (Position p in m_positions)
             {
                 Message.LittleEndian(p.Value, out data[index++], out data[index++]);
             }
@@ -1733,14 +1795,63 @@ namespace IRT_GUI
             {
                 UpdateStatus("Set new servo positions.");
                 dialog.Close();
+                
+                // Initiate a request to verify.
+                var t = new System.Threading.Timer(o =>
+                    {
+                        RequestDeviceParameter(SubPages.ServoPositions, 0);
+                    }
+                    , null, 500, System.Threading.Timeout.Infinite);
             }
             else
             {
                 UpdateStatus("Failed to set servo positions.");
             }
 
+            //RequestDeviceParameter(SubPages.ServoPositions /*, start index */);
         }
-        
+
+        // Safety against too many recursive calls to get the next sequence.
+        private int m_lastPositionRequestIndex = 0;  
+
+        private void ProcessServoPositions(byte[] buffer)
+        {
+            m_max_resistance_levels = (byte)buffer[2];      // Count of resistance levels, 0 == no resistance level.
+            byte startIndex = buffer[3];                    // Start index for these 2 levels.
+
+            if (m_positions == null || m_positions.Length != m_max_resistance_levels)
+            {
+                m_positions = new Position[m_max_resistance_levels];
+                m_lastPositionRequestIndex = 0;
+            }
+            
+            for (byte i = 0; startIndex < m_max_resistance_levels && i < 3; ) // can only read 2 positions per buffer.
+            {
+                Position p = new Position(Message.BigEndian(buffer[4 + i++], buffer[4 + i++]));
+                m_positions[startIndex++] = p; 
+            }
+
+            // Set minimum servo position value.
+            if (m_min_servo_pos != m_positions[0].Value)
+            {
+                m_min_servo_pos = m_positions[0].Value;
+            }
+
+            // Request next series of servo positions if there are more.
+            if (startIndex < m_max_resistance_levels && m_lastPositionRequestIndex != startIndex)
+            {
+                if (RequestDeviceParameter(SubPages.ServoPositions, startIndex))
+                {
+                    UpdateStatus(String.Format("Requested servo positions from position: {0}", startIndex));
+                    m_lastPositionRequestIndex = startIndex;
+                }
+                else
+                {
+                    UpdateStatus(String.Format("Failed to request servo positions from: {0}.", startIndex));
+                }
+            }
+        }
+
         private void btnChartOpen_Click(object sender, EventArgs e)
         {
             GraphForm graph = new GraphForm();
