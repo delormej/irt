@@ -126,8 +126,8 @@ namespace IRT_GUI
         {
             // Admin only features.  
             txtServoOffset.Enabled = AdminEnabled;
-            btnServoOffset.Visible = AdminEnabled;
-            btnServoOffset.Enabled = AdminEnabled;
+            btnServoOffset.Visible = true; //  AdminEnabled;
+            btnServoOffset.Enabled = true; //  AdminEnabled;
             btnParamSet.Enabled = AdminEnabled;
 
             // Setup the settings checklist box.
