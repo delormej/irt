@@ -240,6 +240,7 @@ def main(input_file_name):
 	else:
 		graph_file(input_file_name)
 
+	plt.savefig('slope.png')
 	plt.show()
 
 if __name__ == "__main__":
