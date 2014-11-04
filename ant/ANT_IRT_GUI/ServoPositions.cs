@@ -32,11 +32,12 @@ namespace IRT_GUI
             this.Min = min;
             this.Max = max;
 
-            this.Load += ServoPositions_Load;
-
             txtMinPosition.Text = min.ToString();
             txtMaxPosition.Text = max.ToString();
             //lblInstructions.Text += min.ToString();
+
+            m_positions = new List<Position>();
+            m_positions.Add(new Position(min));
 
             if (admin)
             {
@@ -45,24 +46,6 @@ namespace IRT_GUI
                 txtMinPosition.DataBindings.Add("Text", this, "Min");
                 txtMaxPosition.DataBindings.Add("Text", this, "Max");
             }
-
-            m_positions = new List<Position>();
-            m_positions.Add(new Position(min));
-            m_source = new BindingSource();
-            m_source.DataSource = m_positions;
-            dgResistancePositions.DataSource = m_source;
-            dgResistancePositions.AutoGenerateColumns = false;
-            dgResistancePositions.Columns.Clear();
-            var col = new DataGridViewTextBoxColumn();
-            col.Name = "Position";
-            col.DataPropertyName = "Value";
-            col.HeaderText = "Position";
-
-            dgResistancePositions.ShowRowErrors = true;
-            
-            dgResistancePositions.Columns.Add(col);
-            dgResistancePositions.AllowUserToAddRows = false;
-            numResistancePositions.Value = m_positions.Count() - 1;
         }
         
         public List<Position> Positions
@@ -80,6 +63,28 @@ namespace IRT_GUI
 
         private void ServoPositions_Load(object sender, EventArgs e)
         {
+            m_source = new BindingSource();
+            m_source.DataSource = m_positions;
+
+            dgResistancePositions.DataSource = m_source;
+            dgResistancePositions.AutoGenerateColumns = false;
+            dgResistancePositions.Columns.Clear();
+            
+            var col = new DataGridViewTextBoxColumn();
+            col.Name = "Position";
+            col.DataPropertyName = "Value";
+            col.HeaderText = "Position";
+
+            dgResistancePositions.ShowRowErrors = true;
+
+            dgResistancePositions.Columns.Add(col);
+            dgResistancePositions.AllowUserToAddRows = false;
+
+            int count = m_positions.Count();
+            if (count > 0 && count >= numResistancePositions.Minimum)
+            {
+                numResistancePositions.Value = count;
+            }
             dgResistancePositions.CellValidating += dgResistancePositions_CellValidating;
         }
 
@@ -124,7 +129,7 @@ namespace IRT_GUI
                 {
                     dgResistancePositions.Rows[e.RowIndex].ErrorText = string.Format(INVALID_POSITION, min, max);
                     //ShowError();
-                        
+
                     e.Cancel = true;
                 }
             }
@@ -136,7 +141,7 @@ namespace IRT_GUI
             {
                 m_source.Add(new Position(max));
             }
-        
+
             while (numResistancePositions.Value < m_positions.Count())
             {
                 m_source.RemoveAt(m_positions.Count() - 1);

@@ -18,6 +18,9 @@ typedef struct
  */ 
 void accelerometer_init(void);
 
+/**@brief Resets all settings to default; disables all interrupts and puts device in standby mode. */
+bool accelerometer_reset(void);
+
 /**@brief Puts the accelerometer in standby mode. */
 void accelerometer_standby(void);
 

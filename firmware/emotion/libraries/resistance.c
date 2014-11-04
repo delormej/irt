@@ -440,14 +440,16 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
 	// Determine the additional force required from the magnet if necessary.
 	mag_force = ( (wind + rolling + gravitational) - rr_force );
 
-	RC_LOG("[RC]:resistance_sim_set: mag_force: %.2f\r\n", mag_force);
-	/*
-	RC_LOG("[RC]:rr_force: %.2f\r\n", rr_force);
-	RC_LOG("[RC]:grade: %.2f\r\n", p_sim_forces->grade);
-	RC_LOG("[RC]:gravitational: %.2f\r\n", gravitational);
-	RC_LOG("[RC]:rolling: %.2f\r\n", rolling);
-	RC_LOG("[RC]:wind_speed: %.2f\r\n", p_sim_forces->wind_speed_mps);
-	 */
+	// If we have some wildly large force number returned, log what caused it.
+	if (mag_force > 500.0f)
+	{
+		RC_LOG("[RC]:resistance_sim_set mag_force seems to high: %.2f\r\n", mag_force);
+		RC_LOG("[RC]:rr_force: %.2f\r\n", rr_force);
+		RC_LOG("[RC]:grade: %.2f\r\n", p_sim_forces->grade);
+		RC_LOG("[RC]:gravitational: %.2f\r\n", gravitational);
+		RC_LOG("[RC]:rolling: %.2f\r\n", rolling);
+		RC_LOG("[RC]:wind_speed: %.2f\r\n", p_sim_forces->wind_speed_mps);
+	}
 
 	// No support for negative force.
 	if (mag_force < 0.0f)

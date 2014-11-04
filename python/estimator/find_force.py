@@ -2,7 +2,8 @@
 n = 7       # min. sequence length
 x = 0.2 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
-skip_rows = 600 # data rows skipped at the beginning
+skip_rows = 120 # data rows skipped at the beginning
+txt_offset = 200
 #xsl_filename = '../../tcx-to-csv.xslt'
 
 import sys
@@ -13,6 +14,7 @@ import numpy as np, numpy.ma as ma
 import bottleneck 
 import itertools
 import matplotlib.pyplot as plt
+import math
 #import lxml.etree as ET
 
 if len(sys.argv) > 1:
@@ -37,10 +39,13 @@ def xsl(xml_filename):
         print("Unexpected error:", sys.exc_info())
 
 def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
+	global txt_offset
 	# convert slope to wheel speed in mph from flywheel mps
 	slope = slope * (0.4/0.115) * 0.44704
 	plt.scatter(speeds_mph, watts, c=color1)
 	plt.plot(speeds_mph, speeds_mph*slope + intercept, color2)
+	txt_offset = txt_offset + 20
+	plt.text(10, txt_offset, "slope: %s, offset: %i" % (math.trunc((slope * 2.23694)*1000), math.trunc(abs(intercept)*1000)))
 
 def theil_sen(x,y, sample= "auto", n_samples = 1e7):
     """
@@ -190,17 +195,18 @@ def process_file(input_file_name):
 
 	print("slope, intercept")
 	print(slope * (0.4/0.115), intercept)
+	#plt.text(10, 200, "slope: %s, offset: %i" % (round((slope * (0.4/0.115)),3), round(intercept,3)))
 	#print(slope, intercept)
 	
 	pos_list = [p for p in valid_data if p < 2000]
 	pos_list.sort()
 
-	"""
+	
 	print("\nposition\tspeed\tforce\tadd_force")
 	for p in pos_list:
 		for i in valid_data[p]:
 			print(p, flywheel_mps[i], forces[i], forces[i] - ((flywheel_mps[i]*slope - intercept)/flywheel_mps[i]))
-	"""
+	
 
 	print("\nposition\tforce\tadd_force")
 	for p in pos_list:
@@ -224,18 +230,20 @@ def graph_file(file):
 		s, w, sl, i = process_file(file)
 		graph(s, w, sl, i, color1=np.random.rand(3,1))
 	except:
-		print("Had to skip that one.")
+		print("Had to skip that one because: ", sys.exc_info())
 	
 def main(input_file_name):
-	#input_file_name = 'C:/Users/Jason/SkyDrive/InsideRide/Tech/Ride Logs/Jason'
-
 	if os.path.isdir(input_file_name):
+		dir = input_file_name
 		for file in get_files(input_file_name):
 			graph_file(file)
 	else:
 		graph_file(input_file_name)
+		dir = os.path.dirname(os.path.realpath(input_file_name))
 
-	plt.show()
+	if (os.path.isdir(dir)):
+		plt.savefig(os.path.join(dir, 'slope.png'))
+		plt.show()
 
 if __name__ == "__main__":
    main(sys.argv[1])

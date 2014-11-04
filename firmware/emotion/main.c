@@ -57,7 +57,11 @@
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
 
 #define BLE_ADV_BLINK_RATE_MS			500u
+#ifdef ENABLE_DEBUG_LOG
+#define SCHED_QUEUE_SIZE                32
+#else // ENABLE_DEBUG_LOG
 #define SCHED_QUEUE_SIZE                8                                          /**< Maximum number of events in the scheduler queue. */
+#endif // ENABLE_DEBUG_LOG
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
 
@@ -95,7 +99,7 @@ static float							m_temperature = 0.0f;						// Last temperature read.
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
 static irt_battery_status_t				m_battery_status;
-static uint32_t 						m_battery_start_ticks __attribute__ ((section (".noinit")));			// Time (in ticks) when we started running on battery.
+static uint32_t 						m_battery_start_ticks;						// __attribute__ ((section (".noinit")));			// Time (in ticks) when we started running on battery.
 
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
@@ -356,8 +360,6 @@ static void profile_init(void)
 {
 		uint32_t err_code;
 
-		//LOG("[MAIN] profile_init size:%i, %i\r\n", sizeof(user_profile_t), sizeof(servo_positions_t));
-
 		err_code = user_profile_init();
 		APP_ERROR_CHECK(err_code);
 
@@ -371,33 +373,28 @@ static void profile_init(void)
 		err_code = user_profile_load(&m_user_profile);
 		APP_ERROR_CHECK(err_code);
 
+		// TODO: this should be refactored into profile class?
+		// should all DEFAULT_x defines live in profile.h? The reason they don't today is that
+		// certain settings don't live in the profile - so it makes sense to keep all the default DEFINES together
+		// Check profile defaults.
+
 		//
 		// Check the version of the profile, if it's not the current version
 		// set the default parameters.
 		//
 		if (m_user_profile.version != PROFILE_VERSION)
 		{
-			LOG("[MAIN]: Older profile version %i. Loading defaults and upgrading. \r\n",
+			LOG("[MAIN]: Older profile version %i. Setting defaults where needed.\r\n",
 					m_user_profile.version);
-			m_user_profile.version			= PROFILE_VERSION;
-			m_user_profile.wheel_size_mm 	= DEFAULT_WHEEL_SIZE_MM;
-			m_user_profile.total_weight_kg 	= DEFAULT_TOTAL_WEIGHT_KG;
-			m_user_profile.settings 		= DEFAULT_SETTINGS;
-			m_user_profile.servo_offset		= 0;
 
-			// Schedule an update.
-			profile_update_sched();
-		}
-		else
-		{
-			// TODO: this should be refactored into profile class?
-			// should all DEFAULT_x defines live in profile.h? The reason they don't today is that
-			// certain settings don't live in the profile - so it makes sense to keep all the default DEFINES together
-			// Check profile defaults.
+			m_user_profile.version = PROFILE_VERSION;
 
+			// TODO: under what situation would these ever be 0?
 			if (m_user_profile.wheel_size_mm == 0 ||
 					m_user_profile.wheel_size_mm == 0xFFFF)
 			{
+				LOG("[MAIN]:profile_init using default wheel circumference.\r\n");
+
 				// Wheel circumference in mm.
 				m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
 			}
@@ -405,26 +402,35 @@ static void profile_init(void)
 			if (m_user_profile.total_weight_kg == 0 ||
 					m_user_profile.total_weight_kg == 0xFFFF)
 			{
-				LOG("[MAIN]:profile_init using default weight.");
+				LOG("[MAIN]:profile_init using default weight.\r\n");
 
 				// Total weight of rider + bike + shoes, clothing, etc...
 				m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
 			}
-		}
 
-		// Check for default servo positions.
-		if (m_user_profile.servo_positions.count == 0xFF)
-		{
-			LOG("[MAIN]: Setting default servo positions.\r\n");
+			if (m_user_profile.servo_offset == -1) 	// -1 == (int16_t)0xFFFF
+			{
+				LOG("[MAIN]:profile_init using default servo offset.\r\n");
+				m_user_profile.servo_offset = 0; // default to 0 offset.
+			}
 
-			m_user_profile.servo_positions.count = 7;
-			m_user_profile.servo_positions.positions[0] = 2000;
-			m_user_profile.servo_positions.positions[1] = 1300;
-			m_user_profile.servo_positions.positions[2] = 1200;
-			m_user_profile.servo_positions.positions[3] = 1100;
-			m_user_profile.servo_positions.positions[4] = 1000;
-			m_user_profile.servo_positions.positions[5] = 900;
-			m_user_profile.servo_positions.positions[6] = 800;
+			// Check for default servo positions.
+			if (m_user_profile.servo_positions.count == 0xFF)
+			{
+				LOG("[MAIN]: Setting default servo positions.\r\n");
+
+				m_user_profile.servo_positions.count = 7;
+				m_user_profile.servo_positions.positions[0] = 2000;
+				m_user_profile.servo_positions.positions[1] = 1300;
+				m_user_profile.servo_positions.positions[2] = 1200;
+				m_user_profile.servo_positions.positions[3] = 1100;
+				m_user_profile.servo_positions.positions[4] = 1000;
+				m_user_profile.servo_positions.positions[5] = 900;
+				m_user_profile.servo_positions.positions[6] = 800;
+			}
+
+			// Schedule an update.
+			profile_update_sched();
 		}
 
 	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004. 
@@ -922,13 +928,15 @@ static void on_power_down(bool accelerometer_wake_disable)
 {
 	LOG("[MAIN]:on_power_down \r\n");
 
-	// TODO: should we be gracefully closing ANT and BLE channels here?
+	CRITICAL_REGION_ENTER()
+	//sd_softdevice_disable();							// Disable the radios, so no new commands come in.
 	application_timers_stop();							// Stop running timers.
-	irt_power_meas_fifo_free();							// Free heap allocation.
-
+	//irt_power_meas_fifo_free();							// Free heap allocation.
 	peripheral_powerdown(accelerometer_wake_disable);	// Shutdown peripherals.
+	CRITICAL_REGION_EXIT()
 
 	sd_power_system_off();								// Enter lower power mode.
+	//NRF_POWER->SYSTEMOFF = 1;
 }
 
 static void on_resistance_off(void)

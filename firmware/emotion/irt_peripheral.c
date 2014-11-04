@@ -2,6 +2,7 @@
 // This module wraps all peripheral interaction by the device.
 //
 
+#include <stdbool.h>
 #include "irt_peripheral.h"
 #include "nrf_delay.h"
 #include "nordic_common.h"
@@ -372,8 +373,10 @@ void peripheral_powerdown(bool accelerometer_off)
 
 	if (accelerometer_off)
 	{
-		// Put accelerometer to sleep so we don't get awaken by it's AUTO-SLEEP/AUTO-WAKE interrupts.
-		accelerometer_standby();
+		// Put accelerometer to sleep by reseting AUTO-WAKE interrupts and putting the device in standby.
+		accelerometer_reset();
+
+		PH_LOG("[PH] Disabled accelerometer AUTO-WAKE interrupt.\r\n");
 	}
 
 	peripheral_low_power_set();
