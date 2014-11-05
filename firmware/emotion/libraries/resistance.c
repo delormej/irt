@@ -30,7 +30,7 @@
 
 #define AIN_SLIDE_POT	ADC_CONFIG_PSEL_AnalogInput2	// P0.01 AIN2 (pin J7-4 on board)
 #define MAX_SERVO_POS	938								// See explanation in method below (3.3f {Vout} / 3.6f {VBG*3} * 1024 {10bit})
-#define MIN_SERVO_POS	1
+#define MIN_SERVO_POS	270
 
 static int16_t m_target_servo_pos = 0;
 
