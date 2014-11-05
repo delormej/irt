@@ -73,10 +73,6 @@ static float inline slope_calc(float y, float slope, float intercept)
  */
 static float servo_force(uint16_t servo_pos)
 {
-#ifdef KURT
-	return 0;
-#endif // KURT
-
 	float force;
 
 	if (servo_pos >= MIN_RESISTANCE_LEVEL)
@@ -86,10 +82,16 @@ static float servo_force(uint16_t servo_pos)
 	}
 	else if (servo_pos < MAX_RESISTANCE_LEVEL)
 	{
-		APP_ERROR_HANDLER(NRF_ERROR_INVALID_PARAM);
+		PW_LOG("[PW] servo_force Can not calculate resistance at %i, out of max range: %i.\r\n",
+				servo_pos, MAX_RESISTANCE_LEVEL);
+		return 0.0f;
 	}
 	else
 	{
+#ifdef KURT
+		force = servo_pos * -0.1692f + 133.63f;
+
+#else
 		/*if (!m_use_big_mag)
 		{
 			force = (
@@ -110,6 +112,7 @@ static float servo_force(uint16_t servo_pos)
 					-6.92836459712442 * servo_pos
 					+1351.463567618);
 		//}
+#endif // KURT
 	}
 
 	// Force unsigned float - 0.0 is minimum.
@@ -128,6 +131,12 @@ uint16_t power_servo_pos_calc(float force)
 	float value;
 	uint16_t servo_pos;
 
+#ifdef KURT
+
+	servo_pos = (uint16_t)(force * -5.667340604f + 780.6361591f);
+
+	PW_LOG("[PW] power_servo_pos_calc force:%.2f, pos: %i\r\n", force, servo_pos);
+
 	/*if (!m_use_big_mag)
 	{
 		value = (
@@ -140,6 +149,7 @@ uint16_t power_servo_pos_calc(float force)
 	}
 	else // BIG_MAG
 	{*/
+#else
 		value = (
 				-0.0000940913669469  * pow(force,5)
 				+ 0.0108240213514885 * pow(force,4)
@@ -148,7 +158,7 @@ uint16_t power_servo_pos_calc(float force)
 				-87.5217493343533 	 * force
 				+1558.47782198543);
 	//}
-
+#endif // KURT
 	if (value > MIN_RESISTANCE_LEVEL)
 	{
 		// Value is greater than the minimum resistance level, i.e. 2000.
