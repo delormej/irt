@@ -125,7 +125,7 @@ namespace IRT_GUI
         void frmIrtGui_Load(object sender, EventArgs e)
         {
             // Admin only features.  
-            txtServoOffset.Enabled = AdminEnabled;
+            txtServoOffset.Enabled = true;
             btnServoOffset.Visible = true; //  AdminEnabled;
             btnServoOffset.Enabled = true; //  AdminEnabled;
             btnParamSet.Enabled = AdminEnabled;
