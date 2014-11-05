@@ -1754,6 +1754,11 @@ namespace IRT_GUI
                         }
                     }
                 }
+                else
+                {
+                    pos.Positions.Clear();
+                    pos.Positions.Add(new Position(m_min_servo_pos));
+                }
 
                 pos.SetPositions += OnSetPositions;
                 pos.ShowDialog();
