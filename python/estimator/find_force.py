@@ -3,7 +3,7 @@ n = 7       # min. sequence length
 x = 0.2 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
 skip_rows = 120 # data rows skipped at the beginning
-txt_offset = 200
+txt_offset = 300
 #xsl_filename = '../../tcx-to-csv.xslt'
 
 import sys
@@ -45,7 +45,7 @@ def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
 	plt.scatter(speeds_mph, watts, c=color1)
 	plt.plot(speeds_mph, speeds_mph*slope + intercept, color2)
 	txt_offset = txt_offset + 20
-	plt.text(10, txt_offset, "slope: %s, offset: %i" % (math.trunc((slope * 2.23694)*1000), math.trunc(abs(intercept)*1000)))
+	plt.text(15, txt_offset, "slope: %s, offset: %i" % (math.trunc((slope * 2.23694)*1000), math.trunc(abs(intercept)*1000)))
 
 def theil_sen(x,y, sample= "auto", n_samples = 1e7):
     """
@@ -161,7 +161,8 @@ def process_file(input_file_name):
 	"""    
 
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
-		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True, comments='"')
+		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True, comments='"',
+		converters = {5: lambda s: float(s.strip() or 0)})
 
 	minval = np.min(speeds[np.nonzero(speeds)])
 	maxval = np.max(speeds[np.nonzero(speeds)])
