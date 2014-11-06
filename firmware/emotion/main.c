@@ -166,6 +166,11 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	LOG("[MAIN]:app_error_handler {HALTED ON ERROR: %#.8x}: %s:%lu\r\nCOUNT = %i\r\n",
 			error_code, p_file_name, line_num, p_error->failure);
 
+	#if defined(PIN_EN_SERVO_PWR)
+	// Kill power to the servo in case it's in flight.
+	nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
+	#endif // PIN_EN_SERVO_PWR
+
 	// TODO: figure out how to display the stack (p_error->stack_info).
 
 #if defined(PIN_PBSW)
