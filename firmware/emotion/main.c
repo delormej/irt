@@ -153,6 +153,9 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	// Fetch the stack and save the error.
 	irt_error_save(error_code, line_num, p_file_name);
 
+	// Kill power to the servo in case it's in flight.
+	peripheral_low_power_set();
+
     // Indicate error state in General Purpose Register.
 	sd_power_gpregret_set(IRT_GPREG_ERROR);
 
