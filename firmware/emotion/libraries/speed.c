@@ -78,41 +78,14 @@ static void revs_init_ppi()
 	APP_ERROR_CHECK(err_code);
 }
 
-/**@brief 	Function called when a specified number of flywheel revolutions occur.
- *
- */
-static void REVS_IRQHandler()
-{
-	REVS_TIMER->EVENTS_COMPARE[0] = 0;	// This stops the IRQHandler from getting called indefinitely.
-	/*
-	uint32_t revs = 0;
-
-	REVS_TIMER->TASKS_CAPTURE[0] = 1;
-	revs = REVS_TIMER->CC[0]; */
-}
-
 /**@brief		Initializes the counter which tracks the # of flywheel revolutions.
  *
  */
 static void revs_init_timer()
 {
 	REVS_TIMER->MODE		= TIMER_MODE_MODE_Counter;
-	REVS_TIMER->BITMODE   	= TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
+	REVS_TIMER->BITMODE   	= TIMER_BITMODE_BITMODE_32Bit << TIMER_BITMODE_BITMODE_Pos;
 	REVS_TIMER->TASKS_CLEAR = 1;
-	
-	/**
-		Uncomment this code to set up a trigger that will call REVS_IRQHandler after a 
-		certain number of revolutions.
-	 **
-
-	REVS_TIMER->CC[0] 			= REVS_TO_TRIGGER;
-
-	// Clear the counter every time we hit the trigger value.
-	REVS_TIMER->SHORTS 			= TIMER_SHORTS_COMPARE0_CLEAR_Msk;
-	
-	// Interrupt setup.
-  REVS_TIMER->INTENSET 		= (TIMER_INTENSET_COMPARE0_Enabled << TIMER_INTENSET_COMPARE0_Pos);	
-	*/
 }
 
 /**@brief		Calculates how long it would have taken since the last complete 
@@ -208,9 +181,17 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 	p_current->accum_flywheel_ticks = flywheel_ticks_get();
 #endif
 
-	// TODO: Handle rollover, but this will be rare given 32 bit #.
 	// Ticks in the event period.
-	flywheel_ticks = p_current->accum_flywheel_ticks - p_last->accum_flywheel_ticks;
+	if (p_current->accum_flywheel_ticks < p_last->accum_flywheel_ticks)
+	{
+		// Handle ticks rollover.
+		event_period = (p_last->accum_flywheel_ticks ^ 0xFFFFFFFF) +
+				p_current->accum_flywheel_ticks;
+	}
+	else
+	{
+		flywheel_ticks = p_current->accum_flywheel_ticks - p_last->accum_flywheel_ticks;
+	}
 
 	// Only calculate speed if the flywheel has rotated since last.
 	if (flywheel_ticks > 0)
