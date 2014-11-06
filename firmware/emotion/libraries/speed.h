@@ -26,9 +26,6 @@
 #define __REVOLUTIONS_H__
 
 #define REVS_TIMER 					NRF_TIMER1
-#define REVS_IRQHandler				TIMER1_IRQHandler
-#define REVS_IRQn					TIMER1_IRQn
-
 #define REVS_CHANNEL_TASK_TOGGLE	2
 
 #include <stdbool.h>
@@ -39,10 +36,6 @@
 #include "nrf_gpio.h"
 #include "irt_common.h"
 
-/**@brief 	Returns the accumulated count of flywheel revolutions since the
- *					counter started.
- */
-uint32_t flywheel_ticks_get(void);
 
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.
 *
