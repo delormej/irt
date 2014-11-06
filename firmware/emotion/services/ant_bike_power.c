@@ -247,7 +247,7 @@ static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 	buffer[EXTRA_INFO_SERVO_POS_MSB]	= HIGH_BYTE(p_power_meas->servo_position);
 	buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
 	buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
-	flywheel 							= (uint16_t)p_power_meas->accum_flywheel_ticks;
+	flywheel 							= p_power_meas->accum_flywheel_ticks;
 	buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]= LOW_BYTE(flywheel);
 	buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]= HIGH_BYTE(flywheel);
 	buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);

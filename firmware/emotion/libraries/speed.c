@@ -83,9 +83,12 @@ static void revs_init_ppi()
  */
 static void revs_init_timer()
 {
+	REVS_TIMER->TASKS_STOP 	= 1;
+	REVS_TIMER->PRESCALER 	= 0;
 	REVS_TIMER->MODE		= TIMER_MODE_MODE_Counter;
-	REVS_TIMER->BITMODE   	= TIMER_BITMODE_BITMODE_32Bit << TIMER_BITMODE_BITMODE_Pos;
+	REVS_TIMER->BITMODE   	= TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
 	REVS_TIMER->TASKS_CLEAR = 1;
+	REVS_TIMER->TASKS_START = 1;
 }
 
 /**@brief		Calculates how long it would have taken since the last complete 
@@ -107,26 +110,21 @@ static uint16_t last_wheel_time_calc(float wheel_revs, float avg_wheel_period, u
 	return (event_time - time_to_full_rev_2048);
 }
 
+/**@brief 	Returns the accumulated count of flywheel revolutions since the
+ *					counter started.
+ *
+ */
+static inline uint16_t flywheel_ticks_get()
+{
+	REVS_TIMER->TASKS_CAPTURE[0] = 1;
+	return REVS_TIMER->CC[0];
+}
 
 /*****************************************************************************
 *
 * Public functions, see function descriptions in header.
 *
 *****************************************************************************/
-
-/**@brief 	Returns the accumulated count of flywheel revolutions since the
- *					counter started.
- *
- */
-uint32_t flywheel_ticks_get()
-{
-	uint32_t revs;
-
-	REVS_TIMER->TASKS_CAPTURE[0] = 1;
-	revs = REVS_TIMER->CC[0];
-
-	return revs;
-}
 
 void speed_wheel_size_set(uint16_t wheel_size_mm)
 {
@@ -150,13 +148,6 @@ void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 	revs_init_gpiote(pin_flywheel_rev);
 	revs_init_ppi();
 	revs_init_timer();
-	
-	// TODO: I think we can remove this? Not required by PPI, but used by GPIOTE??
-	// Enable interrupt handler which will internally map to REVS_IRQHandler.
-	NVIC_EnableIRQ(REVS_IRQn);
-
-	// Start the counter.
-	REVS_TIMER->TASKS_START = 1;
 }
 
 /**@brief	Calculates and records current speed measurement relative to last measurement
@@ -165,7 +156,7 @@ void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 {
 	// Store delta between last event and current.
-	uint32_t flywheel_ticks;
+	uint16_t flywheel_ticks;
 
 	float distance_m;
 	float fractional_wheel_revs;
@@ -177,7 +168,7 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 	p_current->accum_flywheel_ticks = speed_debug_ticks + (p_last->accum_flywheel_ticks);
 	//SP_LOG("[SP] accum_flywheel_ticks %lu \r\n", p_current->accum_flywheel_ticks);
 #else
-	// Get the flywheel ticks (2 per rev).
+	// Get the flywheel ticks.
 	p_current->accum_flywheel_ticks = flywheel_ticks_get();
 #endif
 
@@ -185,8 +176,10 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 	if (p_current->accum_flywheel_ticks < p_last->accum_flywheel_ticks)
 	{
 		// Handle ticks rollover.
-		event_period = (p_last->accum_flywheel_ticks ^ 0xFFFFFFFF) +
+		flywheel_ticks = (p_last->accum_flywheel_ticks ^ 0xFFFF) +
 				p_current->accum_flywheel_ticks;
+
+		SP_LOG("[SP] speed_calc had a accum tick rollover.\r\n");
 	}
 	else
 	{

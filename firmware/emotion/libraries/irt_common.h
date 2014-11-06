@@ -121,7 +121,7 @@ typedef struct irt_power_meas_s
 	uint16_t	accum_torque;												// Unit is in newton meters with a resolution of 1/32
 	uint32_t	accum_wheel_revs;											// BLE uses 32bit value, ANT uses 8 bit.
 	uint16_t	accum_wheel_period;											// Increments of 1/2048s rolls over at 32 seconds.
-	uint32_t	accum_flywheel_ticks;										// Currently 2 ticks per flywheel rev.
+	uint16_t	accum_flywheel_ticks;										// Currently 2 ticks per flywheel rev.
 	// TODO: ble cps spec uses accum_energy but we haven't implmented it yet.
 	// uint16_t	accum_energy;												// Unit is in kilojoules with a resolution of 1 (used by ble cps).
 	uint16_t	last_wheel_event_2048;										// Last time the virtual wheel completed a rotation, basd on wheel size.
