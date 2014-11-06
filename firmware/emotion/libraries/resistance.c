@@ -29,8 +29,8 @@
 #include "nrf_delay.h"
 
 #define AIN_SLIDE_POT	ADC_CONFIG_PSEL_AnalogInput2	// P0.01 AIN2 (pin J7-4 on board)
-#define MAX_SERVO_POS	938								// See explanation in method below (3.3f {Vout} / 3.6f {VBG*3} * 1024 {10bit})
-#define MIN_SERVO_POS	270
+#define MAX_SERVO_RANGE	938								// See explanation in method below (3.3f {Vout} / 3.6f {VBG*3} * 1024 {10bit})
+#define MIN_SERVO_RANGE	270
 
 #define FORWARD 		0x8000
 #define REVERSE			0x4000
@@ -107,9 +107,9 @@ static void on_position_read(uint16_t result)
 	}
 	else if (IN_STOP)
 	{
-		// We have a target and we're not moving, determine the direction.
+		// Target set, determine the direction and start moving.
 
-		if (TARGET > m_servo_pos)
+		if (TARGET < m_servo_pos)
 		{
 			// Move the servo forward.
 			pwm_continuous_servo(PWM_FULL_FORWARD);
@@ -117,7 +117,7 @@ static void on_position_read(uint16_t result)
 			// Flag the direction.
 			m_target_servo_pos |= FORWARD;
 		}
-		else if (TARGET < m_servo_pos)
+		else if (TARGET > m_servo_pos)
 		{
 			// Move the servo in reverse.
 			pwm_continuous_servo(PWM_FULL_REVERSE);
@@ -185,6 +185,19 @@ uint16_t resistance_position_get()
 uint16_t resistance_position_set(uint16_t servo_pos)
 {
 #ifdef KURT
+	if (servo_pos > MAX_SERVO_RANGE)
+	{
+		RC_LOG("[RC] resistance_position_set %i is too high, setting to max: %i\r\n",
+				servo_pos, MAX_SERVO_RANGE);
+		servo_pos = MAX_SERVO_RANGE;
+	}
+	else if  (servo_pos < MIN_SERVO_RANGE)
+	{
+		RC_LOG("[RC] resistance_position_set %i is too low, setting to min: %i\r\n",
+				servo_pos, MIN_SERVO_RANGE);
+		servo_pos = MIN_SERVO_RANGE;
+	}
+
 	// Set the target.
 	m_target_servo_pos = servo_pos;
 
