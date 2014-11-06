@@ -96,8 +96,8 @@ static void on_position_read(uint16_t result)
 	}
 
 	// Did it hit the target yet?
-	if ( (IN_FORWARD && result >= TARGET) ||
-			(IN_REVERSE && result <= TARGET) )
+	if ( (IN_FORWARD && result <= TARGET) ||
+			(IN_REVERSE && result >= TARGET) )
 	{
 		// Stop the servo.
 		pwm_continuous_servo(PWM_STOP);
@@ -109,7 +109,7 @@ static void on_position_read(uint16_t result)
 	{
 		// Target set, determine the direction and start moving.
 
-		if (TARGET < m_servo_pos)
+		if (m_servo_pos > TARGET)
 		{
 			// Move the servo forward.
 			pwm_continuous_servo(PWM_FULL_FORWARD);
@@ -117,7 +117,7 @@ static void on_position_read(uint16_t result)
 			// Flag the direction.
 			m_target_servo_pos |= FORWARD;
 		}
-		else if (TARGET > m_servo_pos)
+		else if (m_servo_pos < TARGET)
 		{
 			// Move the servo in reverse.
 			pwm_continuous_servo(PWM_FULL_REVERSE);
