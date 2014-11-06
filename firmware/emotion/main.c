@@ -153,9 +153,6 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	// Fetch the stack and save the error.
 	irt_error_save(error_code, line_num, p_file_name);
 
-	// Kill power to the servo in case it's in flight.
-	peripheral_low_power_set();
-
     // Indicate error state in General Purpose Register.
 	sd_power_gpregret_set(IRT_GPREG_ERROR);
 
@@ -168,6 +165,11 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 
 	LOG("[MAIN]:app_error_handler {HALTED ON ERROR: %#.8x}: %s:%lu\r\nCOUNT = %i\r\n",
 			error_code, p_file_name, line_num, p_error->failure);
+
+	#if defined(PIN_EN_SERVO_PWR)
+	// Kill power to the servo in case it's in flight.
+	nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
+	#endif // PIN_EN_SERVO_PWR
 
 	// TODO: figure out how to display the stack (p_error->stack_info).
 
