@@ -132,11 +132,10 @@ uint16_t power_servo_pos_calc(float force)
 	uint16_t servo_pos;
 
 #ifdef KURT
+	// TODO: Simple linear power curve for now.
+	value = (force * -5.667340604f + 780.6361591f);
 
-	servo_pos = (uint16_t)(force * -5.667340604f + 780.6361591f);
-
-	PW_LOG("[PW] power_servo_pos_calc force:%.2f, pos: %i\r\n", force, servo_pos);
-
+#else
 	/*if (!m_use_big_mag)
 	{
 		value = (
@@ -149,7 +148,7 @@ uint16_t power_servo_pos_calc(float force)
 	}
 	else // BIG_MAG
 	{*/
-#else
+
 		value = (
 				-0.0000940913669469  * pow(force,5)
 				+ 0.0108240213514885 * pow(force,4)
