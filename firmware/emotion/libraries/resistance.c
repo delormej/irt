@@ -32,7 +32,17 @@
 #define MAX_SERVO_POS	938								// See explanation in method below (3.3f {Vout} / 3.6f {VBG*3} * 1024 {10bit})
 #define MIN_SERVO_POS	270
 
-static int16_t m_target_servo_pos = 0;
+#define FORWARD 		0x8000
+#define REVERSE			0x4000
+
+// Upper 2 bits of position indicate direction.
+#define IN_FORWARD		(m_target_servo_pos & FORWARD)   		// MSB is 1
+#define IN_REVERSE		(m_target_servo_pos & REVERSE)			// 2nd MSB is 1
+#define IN_STOP			((m_target_servo_pos & 0xC000) == 0)	// Undetermined or stopped when top two MSBs are 0.
+#define POSITION_MASK	0x3FFF
+#define TARGET			(m_target_servo_pos & POSITION_MASK)
+
+static int16_t 			m_target_servo_pos = 0;
 
 #endif // KURT
 
@@ -76,8 +86,46 @@ static void on_position_read(uint16_t result)
 {
 	static uint16_t count;
 
-	uint32_t retry = 0;
+	// Record current state.
 	m_servo_pos = result;
+
+	// If we don't have a target, just exit.
+	if (m_target_servo_pos == 0)
+	{
+		return;
+	}
+
+	// Did it hit the target yet?
+	if ( (IN_FORWARD && result >= TARGET) ||
+			(IN_REVERSE && result <= TARGET) )
+	{
+		// Stop the servo.
+		pwm_continuous_servo(PWM_STOP);
+
+		// Clear target.
+		m_target_servo_pos = 0;
+	}
+	else if (IN_STOP)
+	{
+		// We have a target and we're not moving, determine the direction.
+
+		if (TARGET > m_servo_pos)
+		{
+			// Move the servo forward.
+			pwm_continuous_servo(PWM_FULL_FORWARD);
+
+			// Flag the direction.
+			m_target_servo_pos |= FORWARD;
+		}
+		else if (TARGET < m_servo_pos)
+		{
+			// Move the servo in reverse.
+			pwm_continuous_servo(PWM_FULL_REVERSE);
+
+			// Flag the direction.
+			m_target_servo_pos |= REVERSE;
+		}
+	}
 
 	// Every once in a while report out.
 	if (count++ % 4096 == 0)
@@ -85,23 +133,8 @@ static void on_position_read(uint16_t result)
 		RC_LOG("[RC] on_position_read: %i\r\n", result);
 	}
 
-	// ****
-	// TODO: FIX as this doesn't handle when you OVERSHOOT the goal.
-	// ****
-
-	if (result == m_target_servo_pos)
-	{
-		// Clear target.
-		m_target_servo_pos = 0;
-
-		// Stop the servo.
-		pwm_continuous_servo(0);
-	}
-	else if (m_target_servo_pos > 0)
-	{
-		// TODO: check recursion here.
-		resistance_position_set(m_target_servo_pos);
-	}
+	// Kick off the next read.
+	irt_adc_start();
 }
 #endif
 
@@ -152,81 +185,13 @@ uint16_t resistance_position_get()
 uint16_t resistance_position_set(uint16_t servo_pos)
 {
 #ifdef KURT
+	// Set the target.
+	m_target_servo_pos = servo_pos;
 
-	/* NOTE: the range with a 10bit ADC is 1-939.  This is because we're referencing against
-	 * 1.2VBG and doing 1/3 pre-scaling.  The voltage off the pin is 3.3V, thus:
-	 * 		3.3 / 3.6 = 0.9167 * 1024 = 938.7008
-	 */
-	if (servo_pos > MAX_SERVO_POS)
-	{
-		servo_pos = MAX_SERVO_POS;
-		RC_LOG("[RC] resistance_position_set using MAX, servo_pos too high: %i\r\n", servo_pos);
-	}
-	else if (servo_pos < MIN_SERVO_POS)
-	{
-		servo_pos = MIN_SERVO_POS;
-		RC_LOG("[RC] resistance_position_set using MIN, servo_pos can't be 0.\r\n");
-	}
+	// All the servo movement logic lives in the adc callback after a read occurs.
+	irt_adc_start();
 
-	if (m_target_servo_pos == 0)
-	{
-		//
-		// TODO: Handle situation when we get an OVERRIDE call, move to another position
-		// before the first time was called.
-		//
-		if (m_servo_pos == servo_pos)
-		{
-			RC_LOG("[RC] resistance_position_set already at position: %i\r\n", servo_pos);
-			return m_servo_pos;
-		}
-
-		// Record the target
-		m_target_servo_pos = servo_pos;
-
-		// First time we're being called to set a position.
-		RC_LOG("[RC] resistance_position_set setting target pos: %i\r\n", servo_pos);
-
-		// Compare to current position to determine direction.
-		if (m_servo_pos > m_target_servo_pos)
-		{
-			// issue forward
-			pwm_continuous_servo(100);
-		}
-		else
-		{
-			// issue reverse
-			pwm_continuous_servo(-100);
-		}
-	}
-	else
-	{
-		// We're being called from the adc handler.
-		// TODO: Check here if we overshot?
-
-		// Ensure we're not toping out or bottoming out.
-		if ( (m_target_servo_pos < m_servo_pos && m_servo_pos <= MIN_SERVO_POS) ||
-				(m_target_servo_pos > m_servo_pos && m_servo_pos >= MAX_SERVO_POS) )
-		{
-			// Stop servo
-			pwm_continuous_servo(0);
-			m_target_servo_pos = 0;
-
-			RC_LOG("[RC] resistance_position_set boundary reached: %i.\r\n", m_servo_pos);
-
-			// Don't fall through to restarting the ADC.
-			return m_servo_pos;
-		}
-	}
-
-	// Read the adc, all the magic happens in on_position_read
-	// TODO: yeah... lots to do, fix this so that it doesn't sit & loop indefinitely potentially.
-	if (irt_adc_start() == NRF_ERROR_BUSY)
-	{
-		RC_LOG("[RC] resistance_position_set adc is busy.\r\n");
-		// TODO: raise an error, retry, etc...
-	}
-
-	// Just return where we know we are for now.
+	// Send back where we currently are.
 	return m_servo_pos;
 #else
 	uint32_t err_code;
