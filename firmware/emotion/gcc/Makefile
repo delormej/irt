@@ -57,10 +57,11 @@ CFLAGS = -Os -flto -ffunction-sections -fdata-sections -fno-builtin
 LDFLAGS += --specs=nano.specs -lc -lnosys
 LDFLAGS += -Wl,--gc-sections
 
+CFLAGS += -DKURT								# KURT specific build
+
 ############################################
 # For debugging purposes
 ############################################
-debug : CFLAGS += -DKURT						# KURT specific build
 debug : CFLAGS += -DENABLE_DEBUG_LOG			# Enable debug logging.
 debug : CFLAGS += -DSIMPLE_UART					# Use the Simple_UART module for logging.
 #debug : CFLAGS += -DBLE_NUS_ENABLED			# Use Nordic BLE UART for logging.
