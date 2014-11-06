@@ -128,7 +128,7 @@ static void on_position_read(uint16_t result)
 	}
 
 	// Every once in a while report out.
-	if (count++ % 4096 == 0)
+	if (count++ % 0x4000 == 0)
 	{
 		RC_LOG("[RC] on_position_read: %i\r\n", result);
 	}
@@ -185,6 +185,8 @@ uint16_t resistance_position_get()
 uint16_t resistance_position_set(uint16_t servo_pos)
 {
 #ifdef KURT
+	RC_LOG("[RC] resistance_position_set setting to: %i\r\n", servo_pos);
+
 	if (servo_pos > MAX_SERVO_RANGE)
 	{
 		RC_LOG("[RC] resistance_position_set %i is too high, setting to max: %i\r\n",
@@ -379,6 +381,13 @@ static uint16_t resistance_erg_set(int16_t target_watts, float speed_mps, float 
 	//
 	mag_force = ( (((float)target_watts) / speed_mps) - rr_force );
 
+	// Don't allow negative force.
+	if (mag_force < 0.0f)
+	{
+		RC_LOG("[RC] resistance_erg_set negative force not supported.\r\n");
+		mag_force = 0.0f;
+	}
+
 	return position_set_by_force(mag_force);
 }
 
@@ -432,6 +441,7 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
 	// No support for negative force.
 	if (mag_force < 0.0f)
 	{
+		RC_LOG("[RC] resistance_sim_set negative force not supported.\r\n");
 		mag_force = 0.0f;
 	}
 
