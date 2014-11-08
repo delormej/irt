@@ -3,7 +3,7 @@ n = 7       # min. sequence length
 x = 0.2 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
 skip_rows = 120 # data rows skipped at the beginning
-txt_offset = 200
+txt_offset = 300
 #xsl_filename = '../../tcx-to-csv.xslt'
 
 import sys
@@ -38,6 +38,47 @@ def xsl(xml_filename):
     except:
         print("Unexpected error:", sys.exc_info())
 
+def speed_watt_median(data):
+	#data = [(22.600000000000001, 204), (25.5, 247), (16.0, 129), (16.0, 139), (15.9, 126), (16.0, 132), (16.699999999999999, 133), (16.800000000000001, 134), (23.0, 200), (23.0, 219)]
+	global txt_offset
+
+	groups = []
+
+	#print("\r\ndata:")
+	keyfunc = lambda x: float(x[0])
+	data = sorted(data, key=keyfunc)
+	for k, g in groupby(data, keyfunc):
+		items = []
+		for i in g:
+			items.append(i[1])
+		med = np.median(items)
+		groups.append((k, med))
+		#print(k, med)
+	
+	npgroups = np.array(groups)
+
+	x = npgroups[:,0]
+	y = npgroups[:,1]
+
+	#pars, covar = np.curve_fit(power_law, x, y)
+
+	# calculate the polynomial
+	z = np.polyfit(x, y, 2)
+	f = np.poly1d(z) # get a function for the polynomial
+
+	# calculate new x / y
+	x_new = np.linspace(x[0], x[-1], len(x))
+	y_new = f(x_new)
+
+	# plot them
+	plt.plot(x,y,'o', x_new, y_new)
+	plt.xlim(x[0]-1, x[-1]+1)
+	txt_offset = txt_offset + 20
+	plt.text(15, txt_offset, "a: %f, b: %f, c: %f" % (z[0], z[1], z[2]))
+	#plt.show()
+
+	return
+
 def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
 	global txt_offset
 	# convert slope to wheel speed in mph from flywheel mps
@@ -45,7 +86,7 @@ def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
 	plt.scatter(speeds_mph, watts, c=color1)
 	plt.plot(speeds_mph, speeds_mph*slope + intercept, color2)
 	txt_offset = txt_offset + 20
-	plt.text(10, txt_offset, "slope: %s, offset: %i" % (math.trunc((slope * 2.23694)*1000), math.trunc(abs(intercept)*1000)))
+	plt.text(15, txt_offset, "slope: %s, offset: %i" % (math.trunc((slope * 2.23694)*1000), math.trunc(abs(intercept)*1000)))
 
 def theil_sen(x,y, sample= "auto", n_samples = 1e7):
     """
@@ -161,7 +202,8 @@ def process_file(input_file_name):
 	"""    
 
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
-		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True, comments='"')
+		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True, comments='"',
+		converters = {5: lambda s: float(s.strip() or 0)})
 
 	minval = np.min(speeds[np.nonzero(speeds)])
 	maxval = np.max(speeds[np.nonzero(speeds)])
@@ -201,7 +243,20 @@ def process_file(input_file_name):
 	pos_list = [p for p in valid_data if p < 2000]
 	pos_list.sort()
 
-	
+	"""
+	 Get the median of the watts for groups of consistent speed data.
+	"""
+	data_tuples = []
+
+	for id in id2000:
+		if id < id2000.size:
+			data_tuples.append((sp2000[id], w2000[id]))
+	speed_watt_median(data_tuples)
+
+	"""
+	End of median calc
+	"""
+
 	print("\nposition\tspeed\tforce\tadd_force")
 	for p in pos_list:
 		for i in valid_data[p]:
@@ -229,6 +284,7 @@ def graph_file(file):
 	try:
 		s, w, sl, i = process_file(file)
 		graph(s, w, sl, i, color1=np.random.rand(3,1))
+
 	except:
 		print("Had to skip that one because: ", sys.exc_info())
 	
