@@ -75,7 +75,11 @@ def speed_watt_median(data):
 	x_new = np.linspace(5, 40, 50)
 	plt.plot(x_new, power_func(x_new, *pars), 'r--')
 
-	print(pars, covar)
+	# advance the text offset vertically
+	txt_offset+=20
+
+	func_txt = ("y = %fx^%f" % (pars[0], pars[1]))
+	plt.text(15, txt_offset, func_txt)
 
 	# calculate the polynomial
 	#z = np.polyfit(x, y, 2)
