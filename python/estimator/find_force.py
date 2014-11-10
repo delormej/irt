@@ -46,6 +46,9 @@ def speed_watt_median(data):
 	#data = [(22.600000000000001, 204), (25.5, 247), (16.0, 129), (16.0, 139), (15.9, 126), (16.0, 132), (16.699999999999999, 133), (16.800000000000001, 134), (23.0, 200), (23.0, 219)]
 	global txt_offset
 
+	"""
+	Cluster speeds and find the median watts for these speeds.
+	"""
 	groups = []
 
 	#print("\r\ndata:")
@@ -64,9 +67,15 @@ def speed_watt_median(data):
 	x = npgroups[:,0]
 	y = npgroups[:,1]
 
-	# calculate power function (y = ax^b)
+	# Calculate power function (y = ax^b)
 	pars, covar = spo.curve_fit(power_func, x, y)
-	plt.plot(x, power_func(x, *pars), 'c--')
+
+	# Create a new set of speed points between 5, 40 mph
+	#x_new = np.linspace(x[0], x[-1], len(x))
+	x_new = np.linspace(5, 40, 50)
+	plt.plot(x_new, power_func(x_new, *pars), 'r--')
+
+	print(pars, covar)
 
 	# calculate the polynomial
 	#z = np.polyfit(x, y, 2)
@@ -90,7 +99,7 @@ def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
 	# convert slope to wheel speed in mph from flywheel mps
 	slope = slope * (0.4/0.115) * 0.44704
 	plt.scatter(speeds_mph, watts, c=color1)
-	plt.plot(speeds_mph, speeds_mph*slope + intercept, color2)
+	#plt.plot(speeds_mph, speeds_mph*slope + intercept, color2)
 	txt_offset = txt_offset + 20
 	plt.text(15, txt_offset, "slope: %s, offset: %i" % (math.trunc((slope * 2.23694)*1000), math.trunc(abs(intercept)*1000)))
 
