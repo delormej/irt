@@ -4,6 +4,9 @@ x = 0.2 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
 skip_rows = 120 # data rows skipped at the beginning
 txt_offset = 300
+speed_col = 3
+watts_col = 5
+servo_col = 7
 #xsl_filename = '../../tcx-to-csv.xslt'
 
 import sys
@@ -221,7 +224,7 @@ def process_file(input_file_name):
 	"""    
 
 	speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
-		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True, comments='"',
+		dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[speed_col, watts_col, servo_col], unpack=True, comments='"',
 		converters = {5: lambda s: float(s.strip() or 0)})
 
 	minval = np.min(speeds[np.nonzero(speeds)])
@@ -321,5 +324,7 @@ def main(input_file_name):
 		plt.show()
 
 if __name__ == "__main__":
-   main(sys.argv[1])
-   #main(input_file_name)
+	if (len(sys.argv) > 2):
+		speed_col = int(sys.argv[2])
+	main(sys.argv[1])
+	#main(input_file_name)
