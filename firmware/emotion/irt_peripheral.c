@@ -3,6 +3,7 @@
 //
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "irt_peripheral.h"
 #include "nrf_delay.h"
 #include "nordic_common.h"
@@ -16,6 +17,7 @@
 #include "debug.h"
 #include "battery.h"
 #include "irt_button.h"
+#include "irt_led.h"
 
 /**@brief Debug logging for main module.
  *
@@ -29,8 +31,6 @@
 #define DEBOUNCE_INTERVAL				APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)   	// Debounce interval 5ms.
 
 static peripheral_evt_t 				*mp_on_peripheral_evt;
-static app_timer_id_t 					m_led1_blink_timer_id;
-//static app_timer_id_t 				m_led2_blink_timer_id;
 static app_timer_id_t					m_debounce_timer_id;						// Timer used for debouncing button input.
 static app_gpiote_user_id_t 			mp_user_id;
 
@@ -61,14 +61,6 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 #endif
 }
 
-static void blink_timeout_handler(void * p_context)
-{
-	UNUSED_PARAMETER(p_context);
-
-	// Toggle the green LED_1 on/off.
-	nrf_gpio_pin_toggle(PIN_LED_B);
-}
-
 /**@brief	Called every 50ms.
  *
  */
@@ -96,16 +88,9 @@ static void irt_gpio_init()
 	uint32_t err_code;
 	uint32_t pins_low_to_high_mask, pins_high_to_low_mask;
 
-	// Initialize the LED pins.
-	nrf_gpio_cfg_output(PIN_LED_A);		// Green
-	nrf_gpio_cfg_output(PIN_LED_B);		// Red
-
 	if (HW_REVISION >= 2)	// IRT_V2_REV_A
 	{
-		nrf_gpio_cfg_output(PIN_LED_C);		// Red #2
-		nrf_gpio_cfg_output(PIN_LED_D);		// Green #2
-
-		// Enable servo / LED.
+		// Enable servo / optical sensor.
 		nrf_gpio_cfg_output(PIN_EN_SERVO_PWR);
 		nrf_gpio_pin_set(PIN_EN_SERVO_PWR);
 
@@ -200,88 +185,6 @@ static void button_init()
 		APP_ERROR_CHECK(err_code);
 	}
 }
-
-void set_led_red(uint8_t led_mask)
-{
-	if ((led_mask & LED_1) == LED_1)
-	{
-		nrf_gpio_pin_clear(PIN_LED_A);
-		nrf_gpio_pin_set(PIN_LED_B);
-	}
-
-	if (HW_REVISION >= 2 && (led_mask & LED_2) == LED_2) // IRT_REV_2A_H and later
-	{
-		nrf_gpio_pin_clear(PIN_LED_C);
-		nrf_gpio_pin_set(PIN_LED_D);
-	}
-}
-
-void set_led_green(uint8_t led_mask)
-{
-	if ((led_mask & LED_1) == LED_1)
-	{
-		nrf_gpio_pin_clear(PIN_LED_B);
-		nrf_gpio_pin_set(PIN_LED_A);
-	}
-
-	if (HW_REVISION >= 2 && (led_mask & LED_2) == LED_2) // IRT_REV_2A_H and later
-	{
-		nrf_gpio_pin_clear(PIN_LED_D);
-		nrf_gpio_pin_set(PIN_LED_C);
-	}
-}
-
-void clear_led(uint8_t led_mask)
-{
-	if ((led_mask & LED_1) == LED_1)
-	{
-		nrf_gpio_pin_set(PIN_LED_A);
-		nrf_gpio_pin_set(PIN_LED_B);
-	}
-	if (HW_REVISION >= 2 && (led_mask & LED_2) == LED_2) // IRT_REV_2A_H and later
-	{
-		nrf_gpio_pin_set(PIN_LED_C);
-		nrf_gpio_pin_set(PIN_LED_D);
-	}
-}
-
-void blink_led_green_start(uint8_t led_mask, uint16_t interval_ms)
-{
-	uint32_t err_code;
-	uint32_t interval_ticks;
-
-	// Determine # of ticks based on ms.
-	interval_ticks = APP_TIMER_TICKS(interval_ms, APP_TIMER_PRESCALER);
-
-	// Stop any current LED flash.
-	//clear_led(led_mask);
-
-	// Start the timer.
-	err_code = app_timer_start(m_led1_blink_timer_id, interval_ticks, NULL);
-	APP_ERROR_CHECK(err_code);
-}
-
-void blink_led_green_stop(uint8_t led_mask)
-{
-	uint32_t err_code;
-
-	err_code = app_timer_stop(m_led1_blink_timer_id);
-	APP_ERROR_CHECK(err_code);
-
-	clear_led(led_mask);
-}
-
-/*
-void blink_led_red_start(uint8_t led_mask, uint16_t interval_ms)
-{
-
-}
-
-void blink_led_red_stop(uint8_t led_mask)
-{
-
-}
-*/
 
 /**@brief 	Returns the count of 1/2048th seconds (2048 per second) since the
  *			the counter started.
@@ -382,7 +285,7 @@ void peripheral_powerdown(bool accelerometer_off)
 	peripheral_low_power_set();
 
 	// Shut down the leds.
-	clear_led(LED_BOTH);
+	led_off(LED_MASK_ALL);
 }
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
@@ -390,15 +293,10 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	uint32_t err_code;
 	mp_on_peripheral_evt = p_on_peripheral_evt;
 	
+	led_init();
     irt_gpio_init();
     accelerometer_init();
 	temperature_init();
-
-	// Blink both LEDS
-	set_led_red(LED_BOTH);
-	nrf_delay_ms(10);
-	clear_led(LED_1);
-	set_led_green(LED_2);
 
 	PH_LOG("[PH] peripheral_init: power plugged in? %i\r\n", peripheral_plugged_in());
 
@@ -407,19 +305,6 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 
 	// Initialize the button if available.
 	button_init();
-
-	// Create the timer for blinking led #1.
-	err_code = app_timer_create(&m_led1_blink_timer_id,
-		APP_TIMER_MODE_REPEATED, // APP_TIMER_MODE_SINGLE_SHOT
-		blink_timeout_handler);
-	APP_ERROR_CHECK(err_code);
-
-	/*
-	// Create the timer for blinking led #2.
-	err_code = app_timer_create(&m_led2_blink_timer_id,
-		APP_TIMER_MODE_REPEATED,
-		blink_timeout_handler);
-	APP_ERROR_CHECK(err_code); */
 
 #ifndef PIN_ENBATT
 #define PIN_ENBATT -1

@@ -18,10 +18,6 @@
 // # of 2048th's would then be ticks / 16.
 #define	TICK_FREQUENCY	(32768 / (NRF_RTC1->PRESCALER + 1))
 
-#define LED_1						1
-#define LED_2						2
-#define LED_BOTH					LED_1 | LED_2
-
 typedef struct peripheral_evt_s
 {
 	void (*on_button_pbsw)(bool long_press);
@@ -46,13 +42,6 @@ void peripheral_low_power_set(void);
 /**@brief	Turn J7-6 power on/off.
  */
 void peripheral_aux_pwr_set(bool turn_on);
-
-// LED functions.
-void set_led_red(uint8_t led_mask);
-void set_led_green(uint8_t led_mask);
-void clear_led(uint8_t led_mask);
-void blink_led_green_start(uint8_t led_mask, uint16_t interval_ms);
-void blink_led_green_stop(uint8_t led_mask);
 
 /**@brief Get the current time in 1/2048s.
  *

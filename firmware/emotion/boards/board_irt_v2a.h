@@ -44,9 +44,4 @@
 #define PIN_UART_CTS				25
 #define UART_HWFC					false
 
-// Until I update the code. 										
-#define ADVERTISING_LED_PIN_NO		PIN_LED_A
-#define CONNECTED_LED_PIN_NO		PIN_LED_A
-#define ASSERT_LED_PIN_NO			PIN_LED_B
-
 #endif // IRT_REV_2A_H

@@ -52,6 +52,7 @@
 #include "boards.h"
 #include "battery.h"
 #include "irt_error_log.h"
+#include "irt_led.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	 // Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
@@ -148,7 +149,7 @@ static ant_request_data_page_t			m_request_data_pending;
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
 	// Set LED indicator.
-	set_led_red(LED_BOTH);
+	led_on(LED_MASK_ERROR);
 
 	// Fetch the stack and save the error.
 	irt_error_save(error_code, line_num, p_file_name);
@@ -846,7 +847,7 @@ static void calibration_start(void)
     err_code = app_timer_start(m_ca_timer_id, CALIBRATION_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 	 */
-    set_led_red(LED_1);
+    //led_on(1UL << LED_BACK_RED);
 
     m_crr_adjust_mode = true;
 }
@@ -862,7 +863,7 @@ static void calibration_stop(void)
 	err_code = app_timer_stop(m_ca_timer_id);
     APP_ERROR_CHECK(err_code);
 	*/
-	clear_led(LED_1);
+	//led_off(1UL << LED_BACK_RED);
 	m_crr_adjust_mode = false;
 
 	/*
@@ -950,40 +951,95 @@ static void on_resistance_off(void)
 	m_resistance_level = 0;
 	resistance_level_set(m_resistance_level);
 	queue_resistance_ack(m_resistance_mode, m_resistance_level);
+
+	// Quick blink for feedback.
+	blink_t blink = LED_BLINK_BUTTON_STD;
+	led_blink(blink);
 }
 
 static void on_resistance_dec(void)
 {
+	blink_t blink = { .interval_ms = 0 };
+
 	// decrement
-	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
-			m_resistance_level > 0)
+	switch (m_resistance_mode)
 	{
-		resistance_level_set(--m_resistance_level);
-		queue_resistance_ack(m_resistance_mode, m_resistance_level);
+		case RESISTANCE_SET_STANDARD:
+			if (m_resistance_level > 0)
+			{
+				resistance_level_set(--m_resistance_level);
+				queue_resistance_ack(m_resistance_mode, m_resistance_level);
+				//blink = LED_BLINK_BUTTON_DOWN;
+			}
+			else
+			{
+				LOG("[MAIN] on_resistance_dec hit minimum.\r\n");
+				//blink = LED_BLINK_BUTTON_MIN;
+			}
+			break;
+
+		case RESISTANCE_SET_ERG:
+			if (m_sim_forces.erg_watts > 50u)
+			{
+				// Decrement by n watts;
+				m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
+				queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+				//blink = LED_BLINK_BUTTON_DOWN;
+			}
+			else
+			{
+				//blink = LED_BLINK_BUTTON_MIN;
+			}
+			break;
+
+		default:
+			break;
 	}
-	else if (m_resistance_mode == RESISTANCE_SET_ERG &&
-			m_sim_forces.erg_watts > 50u)
+
+	// Blink for user feedback.
+	if (blink.interval_ms > 0)
 	{
-		// Decrement by 15 watts;
-		m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
-		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		led_blink(blink);
 	}
 }
 
 static void on_resistance_inc(void)
 {
+	blink_t blink = { .interval_ms = 0 };
+
 	// increment
-	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
-			m_resistance_level < (RESISTANCE_LEVELS-1))
+	switch (m_resistance_mode)
 	{
-		resistance_level_set(++m_resistance_level);
-		queue_resistance_ack(m_resistance_mode, m_resistance_level);
+		case RESISTANCE_SET_STANDARD:
+			if (m_resistance_level < (RESISTANCE_LEVELS-1))
+			{
+				resistance_level_set(++m_resistance_level);
+				queue_resistance_ack(m_resistance_mode, m_resistance_level);
+				//blink = LED_BLINK_BUTTON_UP;
+			}
+			else
+			{
+				//blink = LED_BLINK_BUTTON_MAX;
+			}
+
+			break;
+
+		case RESISTANCE_SET_ERG:
+			// Increment by x watts;
+			m_sim_forces.erg_watts += ERG_ADJUST_LEVEL;
+			queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+
+			//blink = LED_BLINK_BUTTON_UP;
+			break;
+
+		default:
+			break;
 	}
-	else if (m_resistance_mode == RESISTANCE_SET_ERG)
+
+	// Blink for user feedback.
+	if (blink.interval_ms > 0)
 	{
-		// Increment by x watts;
-		m_sim_forces.erg_watts += ERG_ADJUST_LEVEL;
-		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		led_blink(blink);
 	}
 }
 
@@ -993,6 +1049,10 @@ static void on_resistance_max(void)
 	m_resistance_level = RESISTANCE_LEVELS-1;
 	resistance_level_set(m_resistance_level);
 	queue_resistance_ack(m_resistance_mode, m_resistance_level);
+
+	// Quick blink for feedback.
+	blink_t blink = LED_BLINK_BUTTON_UP;
+	led_blink(blink);
 }
 
 static void on_button_menu(void)
@@ -1006,6 +1066,10 @@ static void on_button_menu(void)
 			m_sim_forces.erg_watts = DEFAULT_ERG_WATTS;
 		}
 		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+
+		// Quick blink for feedback.
+		blink_t blink = LED_BLINK_BUTTON_ERG;
+		led_blink(blink);
 	}
 	else
 	{
@@ -1088,17 +1152,15 @@ static void on_power_plug(bool plugged_in)
 
 static void on_ble_connected(void) 
 {
-	blink_led_green_stop(LED_1);
-	set_led_green(LED_1);
-
+	led_blink_stop();
+	led_on(LED_MASK_BLE_CONNECTED);
 	LOG("[MAIN]:on_ble_connected\r\n");
 }
 	
 static void on_ble_disconnected(void) 
 {
 	// Clear connection LED.
-	clear_led(LED_1);
-	
+	led_off(LED_MASK_BLE_CONNECTED);
 	LOG("[MAIN]:on_ble_disconnected\r\n");
 
 	// Restart advertising.
@@ -1107,13 +1169,14 @@ static void on_ble_disconnected(void)
 
 static void on_ble_timeout(void) 
 {
-	blink_led_green_stop(LED_1);
+	led_blink_stop();
 	LOG("[MAIN]:on_ble_timeout\r\n");
 }
 
 static void on_ble_advertising(void)
 {
-	blink_led_green_start(LED_1, BLE_ADV_BLINK_RATE_MS);
+	blink_t blink = LED_BLINK_BLE_ADV;
+	led_blink(blink);
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
@@ -1259,6 +1322,9 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			{
 				// Decrement resistance.
 				on_resistance_dec();
+				// Quick blink for feedback.
+				blink_t blink = LED_BLINK_BUTTON_DOWN;
+				led_blink(blink);
 			}
 			break;
 
@@ -1497,8 +1563,8 @@ static void on_battery_result(uint16_t battery_level)
 		// If we're below 6 volts, shut it all the way down.
 		if (m_battery_status.coarse_volt < SHUTDOWN_VOLTS)
 		{
-			clear_led(LED_BOTH);
-			set_led_red(LED_2);
+			//led_blink_stop();
+			//led_on(1UL << LED_FRONT_RED);
 			nrf_delay_ms(1500); // sleep for 1.5 seconds to show indicator.
 			on_power_down(false);
 		}
