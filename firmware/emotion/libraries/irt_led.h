@@ -28,16 +28,30 @@
 #define LED_MASK_ERROR			(1UL << LED_BACK_RED | 1UL << LED_FRONT_RED)
 #define LED_MASK_ALL 			(1UL << LED_FRONT_GREEN | 1UL << LED_FRONT_RED | 1UL << LED_BACK_GREEN | 1UL << LED_BACK_RED)
 
-#define LED_BLINK_EMPTY			{ .interval_ms = 0 }
+#define LED_BLINK_EMPTY			(blink_t){ .interval_ms = 0 }
 
-#define LED_BLINK_BLE_ADV		{ .interval_ms = 150, .pin_mask = 1UL << LED_BACK_GREEN, .count = 0, .pattern = 0b11110000, .repeated = 1 }
-#define LED_BLINK_BUTTON_UP		{ .interval_ms = 150, .pin_mask = 1UL << LED_FRONT_GREEN, .count = 0, .pattern = 0b10101110, .repeated = 0 }
-#define LED_BLINK_BUTTON_DOWN	{ .interval_ms = 150, .pin_mask = 1UL << LED_BACK_GREEN, .count = 0, .pattern = 0b10101110, .repeated = 0 }
-#define LED_BLINK_BUTTON_MAX	{ .interval_ms = 150, .pin_mask = 1UL << LED_FRONT_RED, .count = 0, .pattern = 0b10101110, .repeated = 0 }
-#define LED_BLINK_BUTTON_MIN	{ .interval_ms = 150, .pin_mask = 1UL << LED_BACK_RED, .count = 0, .pattern = 0b10101110, .repeated = 0 }
-#define LED_BLINK_BUTTON_STD	{ .interval_ms = 200, .pin_mask = (1UL << LED_FRONT_GREEN | 1UL << LED_BACK_GREEN), .count = 0, .pattern = 0b10000000, .repeated = 0 }
-#define LED_BLINK_BUTTON_ERG	{ .interval_ms = 200, .pin_mask = (1UL << LED_FRONT_GREEN | 1UL << LED_BACK_GREEN), .count = 0, .pattern = 0b10001000, .repeated = 0 }
-#define LED_BLINK_CALIBRATION	{ .interval_ms = 150, .pin_mask = 1UL << LED_FRONT_RED, .count = 0, .pattern = 0b10101010, .repeated = 0 }
+#define LED_BLINK_BLE_ADV		(blink_t){ .interval_ms = 150, .pin_mask = 1UL << LED_BACK_GREEN, .count = 0, .pattern = 0b11110000, .repeated = 1 }
+#define LED_BLINK_BUTTON_UP		(blink_t){ .interval_ms = 150, .pin_mask = 1UL << LED_FRONT_GREEN, .count = 0, .pattern = 0b10101110, .repeated = 0 }
+#define LED_BLINK_BUTTON_DOWN	(blink_t){ .interval_ms = 150, .pin_mask = 1UL << LED_BACK_GREEN, .count = 0, .pattern = 0b10101110, .repeated = 0 }
+#define LED_BLINK_BUTTON_MAX	(blink_t){ .interval_ms = 150, .pin_mask = 1UL << LED_FRONT_RED, .count = 0, .pattern = 0b10100000, .repeated = 0 }
+#define LED_BLINK_BUTTON_MIN	(blink_t){ .interval_ms = 150, .pin_mask = 1UL << LED_BACK_RED, .count = 0, .pattern = 0b10100000, .repeated = 0 }
+#define LED_BLINK_BUTTON_STD	(blink_t){ .interval_ms = 150, .pin_mask = (1UL << LED_FRONT_GREEN | 1UL << LED_BACK_GREEN), .count = 0, .pattern = 0b10000000, .repeated = 0 }
+#define LED_BLINK_BUTTON_ERG	(blink_t){ .interval_ms = 150, .pin_mask = (1UL << LED_FRONT_GREEN | 1UL << LED_BACK_GREEN), .count = 0, .pattern = 0b10100000, .repeated = 0 }
+#define LED_BLINK_CALIBRATION	(blink_t){ .interval_ms = 150, .pin_mask = 1UL << LED_FRONT_RED, .count = 0, .pattern = 0b10101010, .repeated = 0 }
+
+/*
+enum
+{
+	LED_BLINK_BLE_ADV,
+	LED_BLINK_BUTTON_UP,
+	LED_BLINK_BUTTON_DOWN,
+	LED_BLINK_BUTTON_MAX,
+	LED_BLINK_BUTTON_MIN,
+	LED_BLINK_BUTTON_STD,
+	LED_BLINK_BUTTON_ERG,
+	LED_BLINK_CALIBRATION
+} blink_e;
+*/
 
 /**@brief	Structure for managing blink pattern.
  */

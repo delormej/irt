@@ -942,7 +942,6 @@ static void on_power_down(bool accelerometer_wake_disable)
 	CRITICAL_REGION_EXIT()
 
 	sd_power_system_off();								// Enter lower power mode.
-	//NRF_POWER->SYSTEMOFF = 1;
 }
 
 static void on_resistance_off(void)
@@ -953,14 +952,11 @@ static void on_resistance_off(void)
 	queue_resistance_ack(m_resistance_mode, m_resistance_level);
 
 	// Quick blink for feedback.
-	blink_t blink = LED_BLINK_BUTTON_STD;
-	led_blink(blink);
+	led_blink(LED_BLINK_BUTTON_STD);
 }
 
 static void on_resistance_dec(void)
 {
-	blink_t blink = { .interval_ms = 0 };
-
 	// decrement
 	switch (m_resistance_mode)
 	{
@@ -969,12 +965,12 @@ static void on_resistance_dec(void)
 			{
 				resistance_level_set(--m_resistance_level);
 				queue_resistance_ack(m_resistance_mode, m_resistance_level);
-				//blink = LED_BLINK_BUTTON_DOWN;
+				led_blink(LED_BLINK_BUTTON_DOWN);
 			}
 			else
 			{
 				LOG("[MAIN] on_resistance_dec hit minimum.\r\n");
-				//blink = LED_BLINK_BUTTON_MIN;
+				led_blink(LED_BLINK_BUTTON_MIN);
 			}
 			break;
 
@@ -984,29 +980,21 @@ static void on_resistance_dec(void)
 				// Decrement by n watts;
 				m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
 				queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
-				//blink = LED_BLINK_BUTTON_DOWN;
+				led_blink(LED_BLINK_BUTTON_DOWN);
 			}
 			else
 			{
-				//blink = LED_BLINK_BUTTON_MIN;
+				led_blink(LED_BLINK_BUTTON_MIN);
 			}
 			break;
 
 		default:
 			break;
 	}
-
-	// Blink for user feedback.
-	if (blink.interval_ms > 0)
-	{
-		led_blink(blink);
-	}
 }
 
 static void on_resistance_inc(void)
 {
-	blink_t blink = { .interval_ms = 0 };
-
 	// increment
 	switch (m_resistance_mode)
 	{
@@ -1015,11 +1003,11 @@ static void on_resistance_inc(void)
 			{
 				resistance_level_set(++m_resistance_level);
 				queue_resistance_ack(m_resistance_mode, m_resistance_level);
-				//blink = LED_BLINK_BUTTON_UP;
+				led_blink(LED_BLINK_BUTTON_UP);
 			}
 			else
 			{
-				//blink = LED_BLINK_BUTTON_MAX;
+				led_blink(LED_BLINK_BUTTON_MAX);
 			}
 
 			break;
@@ -1029,17 +1017,11 @@ static void on_resistance_inc(void)
 			m_sim_forces.erg_watts += ERG_ADJUST_LEVEL;
 			queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 
-			//blink = LED_BLINK_BUTTON_UP;
+			led_blink(LED_BLINK_BUTTON_UP);
 			break;
 
 		default:
 			break;
-	}
-
-	// Blink for user feedback.
-	if (blink.interval_ms > 0)
-	{
-		led_blink(blink);
 	}
 }
 
@@ -1051,8 +1033,7 @@ static void on_resistance_max(void)
 	queue_resistance_ack(m_resistance_mode, m_resistance_level);
 
 	// Quick blink for feedback.
-	blink_t blink = LED_BLINK_BUTTON_UP;
-	led_blink(blink);
+	led_blink(LED_BLINK_BUTTON_UP);
 }
 
 static void on_button_menu(void)
@@ -1068,8 +1049,7 @@ static void on_button_menu(void)
 		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 
 		// Quick blink for feedback.
-		blink_t blink = LED_BLINK_BUTTON_ERG;
-		led_blink(blink);
+		led_blink(LED_BLINK_BUTTON_ERG);
 	}
 	else
 	{
@@ -1175,8 +1155,7 @@ static void on_ble_timeout(void)
 
 static void on_ble_advertising(void)
 {
-	blink_t blink = LED_BLINK_BLE_ADV;
-	led_blink(blink);
+	led_blink(LED_BLINK_BLE_ADV);
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
@@ -1322,9 +1301,6 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			{
 				// Decrement resistance.
 				on_resistance_dec();
-				// Quick blink for feedback.
-				blink_t blink = LED_BLINK_BUTTON_DOWN;
-				led_blink(blink);
 			}
 			break;
 
