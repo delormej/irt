@@ -22,145 +22,172 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "nrf_error.h"
+#include "app_error.h"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
-//#include "app_gpiote.h"
 #include "boards.h"
 #include "simple_uart.h"
 #include "nrf51.h"
 #include "nrf51_bitfields.h"
+#include "app_timer.h"
 
 #define PIN_VIN					1
 #define PIN_POT_PWR				3
-#define LED_0					PIN_LED_A
-#define LED_1					PIN_LED_B
+//#define LED_0					PIN_LED_A
+//#define LED_1					PIN_LED_B
 
-int _write(int fd, char * str, int len)
+#define LED_FRONT_GREEN			PIN_LED_D
+#define LED_FRONT_RED			PIN_LED_C
+#define LED_BACK_GREEN			PIN_LED_B
+#define LED_BACK_RED			PIN_LED_A
+
+#define APP_TIMER_PRESCALER		0
+#define APP_TIMER_MAX_TIMERS    2
+#define APP_TIMER_OP_QUEUE_SIZE APP_TIMER_MAX_TIMERS
+
+
+typedef struct blink_s
 {
-	for (int i = 0; i < len; i++)
-	{
-		simple_uart_put(str[i]);
-	}
-	return len;
-}
+	uint32_t pin_mask; 			// Mask of pins to toggle
+	uint8_t pattern; 			// each bit represents what to in 1 of 8 slots
+	uint8_t count : 3; 			// running count of where in the sequence
+	uint8_t interval_ms;		// Interval time to repeat in ms.
+} blink_t;
+
+static blink_t m_repeated_blink = { .interval_ms = 0 };
+static app_timer_id_t m_blink_timer;
 
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
+	nrf_gpio_pin_clear(LED_FRONT_RED);
 }
 
-static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
+static void blink_gpio_init()
 {
-	simple_uart_put('|');
-}
-/*
-static void gpio_init()
-{
-	uint32_t err_code;
-	uint32_t pins_low_to_high_mask, pins_high_to_low_mask;
-	app_gpiote_user_id_t p_user_id;
+	// Configure LED-pins as outputs.
+	nrf_gpio_cfg_output(LED_FRONT_GREEN);
+	nrf_gpio_cfg_output(LED_FRONT_RED);
+	nrf_gpio_cfg_output(LED_BACK_GREEN);
+	nrf_gpio_cfg_output(LED_BACK_RED);
 
-	APP_GPIOTE_INIT(1);
-
-	pins_low_to_high_mask = 1;
-	pins_high_to_low_mask = 0;
-
-	err_code = app_gpiote_user_register(&p_user_id,
-		pins_low_to_high_mask,
-		pins_high_to_low_mask,
-		interrupt_handler);
-	//APP_ERROR_CHECK(err_code);
-
-	err_code = app_gpiote_user_enable(p_user_id);
-	//APP_ERROR_CHECK(err_code);
-}*/
-
-static void config_adc()
-{
-	// Configure ADC
-	NRF_ADC->INTENSET = ADC_INTENSET_END_Msk;
-	NRF_ADC->CONFIG = (ADC_CONFIG_RES_10bit << ADC_CONFIG_RES_Pos) |
-		(ADC_CONFIG_INPSEL_AnalogInputOneThirdPrescaling << ADC_CONFIG_INPSEL_Pos) |
-		(ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos) |
-		(ADC_CONFIG_PSEL_AnalogInput2 << ADC_CONFIG_PSEL_Pos) |
-		(ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);
+	// Clear all LEDs to start
+	NRF_GPIO->OUTSET = (1UL << LED_BACK_RED | 1UL << LED_FRONT_RED | 1UL << LED_BACK_GREEN | 1UL << LED_FRONT_GREEN);
 }
 
-static void start_adc()
+static inline void blink_timer_start(blink_t *p_blink)
 {
 	uint32_t err_code;
 
-	// Stop any running conversions.
-	NRF_ADC->EVENTS_END = 0;
+	// Setup for 20ms
+	uint32_t ticks = APP_TIMER_TICKS(p_blink->interval_ms, APP_TIMER_PRESCALER);
 
-	// Enable the ADC and start it.
-	NRF_ADC->ENABLE = ADC_ENABLE_ENABLE_Enabled;
-	NRF_ADC->TASKS_START = 1;
+	err_code = app_timer_start(m_blink_timer, ticks, p_blink);
+	APP_ERROR_CHECK(err_code);
 }
 
+static inline void blink_timer_restart()
+{
+	app_timer_stop(m_blink_timer);
+
+	// If there is a repeated timer, restart it.
+	if (m_repeated_blink.interval_ms != 0)
+	{
+		blink_timer_start(&m_repeated_blink);
+	}
+}
+
+static void blink_handler(void * p_context)
+{
+	blink_t* p_blink = (blink_t*)p_context;
+
+	if ( --(p_blink->count) == 0 && p_blink != &m_repeated_blink)
+	{
+		// Not in a repeated timer, we're through with a pattern, so restart repeated.
+		blink_timer_restart();
+	}
+	else
+	{
+		// Pattern is a bitmask of positions indicating when to turn on/off.
+		// Walk through the pattern in reverse, eg. 10100000 starts with most significant bit 1.
+		if ( p_blink->pattern & (1 << p_blink->count) )
+		{
+			// Turn on
+			NRF_GPIO->OUTCLR = p_blink->pin_mask;
+		}
+		else
+		{
+			// Turn off
+			NRF_GPIO->OUTSET = p_blink->pin_mask;
+		}
+	}
+}
+
+static void blink_timer_init()
+{
+	uint32_t err_code;
+
+	// Initialize the APP timer.
+	APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
+
+	NRF_CLOCK->TASKS_LFCLKSTART = 1;
+
+	while (NRF_CLOCK->EVENTS_LFCLKSTARTED == 0);
+	NRF_CLOCK->EVENTS_LFCLKSTARTED = 0;
+
+	NRF_CLOCK->TASKS_LFCLKSTART = 1;
+
+	while (NRF_CLOCK->EVENTS_LFCLKSTARTED == 0);
+
+    err_code = app_timer_create(&m_blink_timer,
+                                APP_TIMER_MODE_REPEATED,
+                                blink_handler);
+	APP_ERROR_CHECK(err_code);
+}
 
 /**
  * @brief Function for application main entry.
  */
 int main(void)
 {
-  // Configure LED-pins as outputs.
-  nrf_gpio_cfg_output(LED_0);
-  nrf_gpio_cfg_output(LED_1);
-  //nrf_gpio_cfg_input(PIN_FLYWHEEL, NRF_GPIO_PIN_NOPULL);
- 
-  // Send power to the POT.
-  nrf_gpio_cfg_output(PIN_POT_PWR);
-  nrf_gpio_pin_set(PIN_POT_PWR);
+	blink_gpio_init();
+	blink_timer_init();
 
-  simple_uart_config(PIN_UART_RTS, PIN_UART_TXD, PIN_UART_CTS, PIN_UART_RXD, UART_HWFC);
+	blink_t blink = {
+			.pin_mask = (1UL << LED_BACK_GREEN),	// Just blink 1 LED.
+			.pattern =  0b11001100,	// 0b10101000,
+			.count = 0,
+			.interval_ms = 200 };
 
-  simple_uart_putstring((const uint8_t *)" \n\rBlinky Starting\n\r: ");
-  /*
-  config_adc();
-  start_adc();
+	m_repeated_blink = blink;
 
-  uint32_t result, last_result;
-  
-  while (true)
-  {
-	  if (!NRF_ADC->BUSY)
-	  {
-		  result = NRF_ADC->RESULT;
+	blink_timer_start(&m_repeated_blink);
 
-		  if (result != last_result)
-		  {
-			  printf("Read: %i\r\n", result);
-			  last_result = result;
-		  }
+	nrf_delay_ms(2000);
 
-		  // Start it again.
-		  start_adc();
-		  nrf_delay_ms(100);
-	  }
-  } */
+	app_timer_stop(m_blink_timer);
 
-#ifdef PIN_PBSW
-  nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
-  while( (nrf_gpio_pin_read(PIN_PBSW) == 0) )
-#else
-  // LED 0 and LED 1 blink alternately.
-  while(true)
-#endif
-  {
-    nrf_gpio_pin_clear(LED_0);
-    nrf_gpio_pin_set(LED_1);
-    
-    nrf_delay_ms(500);
-	
-	simple_uart_put('.');
-    
-    nrf_gpio_pin_clear(LED_1);
-    nrf_gpio_pin_set(LED_0);
-    
-    nrf_delay_ms(500);
-  }
+	blink_t blink2 = {
+			.pin_mask = (1UL << LED_FRONT_GREEN),	// Just blink 1 LED.
+			.pattern =  0b11100000,	// 0b10101000,
+			.count = 0,
+			.interval_ms = 200 };
 
-  // Reset the system.
-  NVIC_SystemReset();
+	blink_timer_start(&blink2);
+
+	/*
+	nrf_gpio_pin_set(LED_BACK_RED);
+	nrf_gpio_pin_set(LED_FRONT_RED);
+	nrf_gpio_pin_set(LED_BACK_GREEN);
+	nrf_gpio_pin_set(LED_FRONT_GREEN);
+	 */
+
+	for(;;)
+	{
+
+	}
+
+	// Reset the system.
+	NVIC_SystemReset();
 }
 
