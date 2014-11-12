@@ -31,18 +31,6 @@ static blink_t m_active_blink;		// actively running blink pattern
 static app_timer_id_t m_blink_timer;
 
 
-static inline void blink_timer_start()
-{
-	uint32_t err_code;
-
-	uint32_t ticks = APP_TIMER_TICKS(m_active_blink.interval_ms, APP_TIMER_PRESCALER);
-
-	err_code = app_timer_start(m_blink_timer, ticks, NULL);
-	APP_ERROR_CHECK(err_code);
-
-	m_running = true;
-}
-
 static void led_gpio_init()
 {
 	// Configure LED-pins as outputs.
@@ -57,15 +45,42 @@ static void led_gpio_init()
 			1UL << LED_BACK_GREEN | 1UL << LED_FRONT_GREEN);
 }
 
+/**@brief 	Stops the active running blink pattern and clears state.
+ */
+static void blink_stop()
+{
+	app_timer_stop(m_blink_timer);
+
+	// Turn any of these LEDs off.
+	led_off(m_active_blink.pin_mask);
+
+	// Clear the active blink.
+	m_active_blink = LED_BLINK_EMPTY;
+
+	m_running = false;
+}
+
+static void blink_start()
+{
+	uint32_t err_code;
+
+	uint32_t ticks = APP_TIMER_TICKS(m_active_blink.interval_ms, APP_TIMER_PRESCALER);
+
+	err_code = app_timer_start(m_blink_timer, ticks, NULL);
+	APP_ERROR_CHECK(err_code);
+
+	m_running = true;
+}
+
 static void blink_handler(void * p_context)
 {
 	UNUSED_PARAMETER(p_context);
 
 	// Walk through the pattern in reverse, eg. 10100000 starts with most significant bit 1.
-	// If this isn't a repeating blink pattern, stop it.
 	if (--m_active_blink.count == 0 && !m_active_blink.repeated)
 	{
-		led_blink_stop();
+		// If this isn't a repeating blink pattern, stop it.
+		blink_stop();
 
 		// Restore last pin mask.
 		NRF_GPIO->OUTCLR = m_last_pin_mask;
@@ -74,22 +89,22 @@ static void blink_handler(void * p_context)
 		if (m_repeating_blink.repeated)
 		{
 			m_active_blink = m_repeating_blink;
-			blink_timer_start();
+			blink_start();
 		}
-
-		return;
-	}
-
-	// Pattern is a bitmask of positions indicating when to turn on/off.
-	if ( m_active_blink.pattern & (1UL << m_active_blink.count) )
-	{
-		// Turn on
-		NRF_GPIO->OUTCLR = m_active_blink.pin_mask;
 	}
 	else
 	{
-		// Turn off
-		NRF_GPIO->OUTSET = m_active_blink.pin_mask;
+		// Pattern is a bitmask of positions indicating when to turn on/off.
+		if ( m_active_blink.pattern & (1UL << m_active_blink.count) )
+		{
+			// Turn on
+			NRF_GPIO->OUTCLR = m_active_blink.pin_mask;
+		}
+		else
+		{
+			// Turn off
+			NRF_GPIO->OUTSET = m_active_blink.pin_mask;
+		}
 	}
 }
 
@@ -107,6 +122,7 @@ static void blink_timer_init()
  */
 void led_on(uint32_t pin_mask)
 {
+	// Save the state to restore if we get a blink pattern.
 	m_last_pin_mask = pin_mask;
 	// TODO: this is dangerous because we don't validate that it's an LED pin.
 	NRF_GPIO->OUTCLR = pin_mask;
@@ -129,18 +145,13 @@ void led_blink_stop()
 	// Shut down the running blink
 	if (m_running)
 	{
-		app_timer_stop(m_blink_timer);
-		m_running = false;
-
-		// Turn any of these LEDs off.
-		led_off(m_active_blink.pin_mask);
-
+		// If the active blink is repeated, clear it.
 		if (m_active_blink.repeated)
 		{
-			// Copy for later use and clear the active one.
-			m_repeating_blink = m_active_blink;
-			memset(&m_active_blink, 0, sizeof(blink_t));
+			m_repeating_blink = LED_BLINK_EMPTY;
 		}
+
+		blink_stop();
 	}
 }
 
@@ -149,18 +160,25 @@ void led_blink_stop()
  */
 void led_blink(blink_t blink)
 {
-	// Stop a current blink if there is one running.
-	led_blink_stop();
-
-	// if this is not a repeating blink, clear any existing LEDs temporarily.
-	if (!blink.repeated)
+	if (m_running)
 	{
-		// Clear any existing LEDs.
+		// Stop a current blink if there is one running.
+		blink_stop();
+	}
+
+	// If this new blink is repeating save it.
+	if (blink.repeated)
+	{
+		m_repeating_blink = blink;
+	}
+	else
+	{
+		// If this isn't repeated, clear any existing LEDs for this temporary blink.
 		led_off(LED_MASK_ALL);
 	}
 
 	m_active_blink = blink;
-	blink_timer_start();
+	blink_start();
 }
 
 /**@brief	Initializes the LEDs vio GPIO and the timer use to control.
