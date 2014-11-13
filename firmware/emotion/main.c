@@ -1109,7 +1109,9 @@ static void on_accelerometer(void)
         NRF_GPIO->PIN_CNF[PIN_SHAKE] &= ~GPIO_PIN_CNF_SENSE_Msk;
         NRF_GPIO->PIN_CNF[PIN_SHAKE] |= GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos;
 
-        if ((SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON)))
+        // Don't shut down if set as such OR if we're in a BLE connection.
+        if ( (SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON)) &&
+        		(irt_ble_ant_state != CONNECTED) )
         {
     		LOG("[MAIN]:about to power down from accelerometer sleep.\r\n");;
         	on_power_down(false);
@@ -1546,7 +1548,8 @@ static void on_battery_result(uint16_t battery_level)
 			LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, powering down.\r\n",
 					m_battery_status.coarse_volt);
 
-			led_off(LED_MASK_ALL);
+			// Turn off the power LED.
+			led_off(LED_MASK_POWER_ON);
 			led_blink(LED_BLINK_BATTERY_CRIT);
 			nrf_delay_ms(3000); // sleep for a few seconds to show indicator.
 			on_power_down(false);
@@ -1557,8 +1560,8 @@ static void on_battery_result(uint16_t battery_level)
 			LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, displaying warning.\r\n",
 					m_battery_status.coarse_volt);
 
-			// Blink a warning.
-			led_off(LED_MASK_ALL);
+			// Turn off the power LED & blink a warning.
+			led_off(LED_MASK_POWER_ON);
 			led_blink(LED_BLINK_BATTERY_WARN);
 
 			// Turn all extra power off.
