@@ -52,13 +52,6 @@ extern ble_state_e irt_ble_ant_state;
 			ERR == NRF_ANT_ERROR_TRANSFER_IN_PROGRESS)
 
 
-/**@brief	Checks to see if this BLE error could be treated as a warning.
- */
-#define BLE_ERROR_AS_WARN(ERR) \
-		(ERR ==  NRF_ERROR_INVALID_STATE || \
-			ERR == BLE_ERROR_NO_TX_BUFFERS || \
-			ERR == NRF_ERROR_BUSY)
-
 // MACRO for sending manufacturer and product pages.
 #define ANT_COMMON_PAGE_TRANSMIT(ANT_CHANNEL, COMMON_PAGE)					\
     do																		\
