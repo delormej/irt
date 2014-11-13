@@ -86,6 +86,9 @@
 
 #define DATA_PAGE_RESPONSE_TYPE			0x80										// 0X80 For acknowledged response or number of times to send broadcast data requests.
 
+// Battery critical state.
+#define BATTERY_CRITICAL				(m_battery_status.status == BAT_CRITICAL && !peripheral_plugged_in())
+
 static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
 
@@ -1141,7 +1144,14 @@ static void on_power_plug(bool plugged_in)
 
 static void on_ble_connected(void) 
 {
+	// Stop blinking
 	led_blink_stop();
+
+	if (BATTERY_CRITICAL)
+	{
+		// temporary hack, we still need to blink battery warning.
+		led_blink(LED_BLINK_BATTERY_WARN);
+	}
 	led_on(LED_MASK_BLE_CONNECTED);
 	LOG("[MAIN]:on_ble_connected\r\n");
 }
@@ -1160,11 +1170,29 @@ static void on_ble_timeout(void)
 {
 	led_blink_stop();
 	LOG("[MAIN]:on_ble_timeout\r\n");
+
+	if (BATTERY_CRITICAL)
+	{
+		// temporary hack, we still need to blink battery warning.
+		led_blink(LED_BLINK_BATTERY_WARN);
+	}
 }
 
 static void on_ble_advertising(void)
 {
-	led_blink(LED_BLINK_BLE_ADV);
+	if (BATTERY_CRITICAL)
+	{
+		// Combine the blink patterns.
+		blink_t blink = LED_BLINK_BLE_ADV;
+		blink.pin_mask |= LED_BLINK_BATTERY_WARN.pin_mask;
+
+		// Blink a warning.
+		led_blink(blink);
+	}
+	else
+	{
+		led_blink(LED_BLINK_BLE_ADV);
+	}
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
@@ -1536,7 +1564,7 @@ static void on_battery_result(uint16_t battery_level)
 	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
 
 	// If battery is critically low and power is not plugged in.
-	if (m_battery_status.status == BAT_CRITICAL && !peripheral_plugged_in())
+	if (BATTERY_CRITICAL)
 	{
 		// Set the servo to HOME position.
 		on_resistance_off();
@@ -1560,9 +1588,18 @@ static void on_battery_result(uint16_t battery_level)
 			LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, displaying warning.\r\n",
 					m_battery_status.coarse_volt);
 
-			// Turn off the power LED & blink a warning.
-			led_off(LED_MASK_POWER_ON);
-			led_blink(LED_BLINK_BATTERY_WARN);
+			if (irt_ble_ant_state == ADVERTISING)
+			{
+				// Turn off the power LED
+				led_off(LED_MASK_POWER_ON);
+
+				// Combine the blink patterns.
+				blink_t blink = LED_BLINK_BLE_ADV;
+				blink.pin_mask |= LED_BLINK_BATTERY_WARN.pin_mask;
+
+				// Blink a warning.
+				led_blink(blink);
+			}
 
 			// Turn all extra power off.
 			peripheral_low_power_set();
