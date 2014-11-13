@@ -122,8 +122,17 @@ static void blink_timer_init()
  */
 void led_on(uint32_t pin_mask)
 {
-	// Save the state to restore if we get a blink pattern.
-	m_last_pin_mask = pin_mask;
+	if (pin_mask == LED_MASK_ERROR)
+	{
+		led_blink_stop();		// Stop any blinking lights.
+		led_off(LED_MASK_ALL);	// Turn any other LEDs off
+	}
+	else
+	{
+		// Save the state to restore if we get a blink pattern.
+		m_last_pin_mask = pin_mask;
+	}
+
 	// TODO: this is dangerous because we don't validate that it's an LED pin.
 	NRF_GPIO->OUTCLR = pin_mask;
 }
