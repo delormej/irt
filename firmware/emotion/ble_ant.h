@@ -36,6 +36,15 @@ static const uint8_t m_ant_network_key[] = ANT_NETWORK_KEY;
 uint8_t ant_product_page[TX_BUFFER_SIZE];
 uint8_t ant_manufacturer_page[TX_BUFFER_SIZE];
 
+typedef enum
+{
+	DISCONNECTED,
+	CONNECTED,
+	ADVERTISING
+} ble_state_e;
+
+extern ble_state_e irt_ble_ant_state;
+
 /**@brief	Checks to see if this ANT error could be treated as a warning.
  */
 #define ANT_ERROR_AS_WARN(ERR) \

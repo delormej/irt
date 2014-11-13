@@ -112,6 +112,7 @@ static void send_data_page2(ant_request_data_page_t* p_request);
 static void send_temperature();
 static void on_enable_dfu_mode();
 
+
 /* TODO:	Total hack for request data page & resistance control ack, we will fix.
  *		 	Simple logic right now.  If there is a pending request data page, send
  *		 	up to 2 of these messages as priority (based on requested tx count).
@@ -847,7 +848,7 @@ static void calibration_start(void)
     err_code = app_timer_start(m_ca_timer_id, CALIBRATION_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 	 */
-    //led_on(1UL << LED_BACK_RED);
+	led_blink(LED_BLINK_CALIBRATION);
 
     m_crr_adjust_mode = true;
 }
@@ -863,8 +864,14 @@ static void calibration_stop(void)
 	err_code = app_timer_stop(m_ca_timer_id);
     APP_ERROR_CHECK(err_code);
 	*/
-	//led_off(1UL << LED_BACK_RED);
+	led_blink_stop();
 	m_crr_adjust_mode = false;
+
+	if (irt_ble_ant_state == ADVERTISING)
+	{
+		// Restart advertising blinking.
+		led_blink(LED_BLINK_BLE_ADV);
+	}
 
 	/*
 	// Restart the normal timer.
@@ -1284,6 +1291,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			if (m_crr_adjust_mode)
 			{
 				crr_adjust(CRR_ADJUST_VALUE);
+				led_blink(LED_BLINK_BUTTON_UP);
 			}
 			else
 			{
@@ -1296,6 +1304,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			if (m_crr_adjust_mode)
 			{
 				crr_adjust(CRR_ADJUST_VALUE*-1);
+				led_blink(LED_BLINK_BUTTON_DOWN);
 			}
 			else
 			{
@@ -1531,7 +1540,9 @@ static void on_battery_result(uint16_t battery_level)
 		LOG("[MAIN] on_battery_result critical low battery coarse volts: %i\r\n",
 				m_battery_status.coarse_volt);
 
-		// TODO: Start blinking the LED orange.
+		// Start blinking a warning.
+		led_off(LED_MASK_ALL);
+		led_blink(LED_BLINK_BATTERY_WARN);
 
 		// Set the servo to HOME position.
 		on_resistance_off();
@@ -1539,9 +1550,9 @@ static void on_battery_result(uint16_t battery_level)
 		// If we're below 6 volts, shut it all the way down.
 		if (m_battery_status.coarse_volt < SHUTDOWN_VOLTS)
 		{
-			//led_blink_stop();
-			//led_on(1UL << LED_FRONT_RED);
-			nrf_delay_ms(1500); // sleep for 1.5 seconds to show indicator.
+			led_off(LED_MASK_ALL);
+			led_blink(LED_BLINK_BATTERY_CRIT);
+			nrf_delay_ms(3000); // sleep for a few seconds to show indicator.
 			on_power_down(false);
 		}
 		else

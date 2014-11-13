@@ -60,9 +60,10 @@
 #define DEAD_BEEF                       0xDEADBEEF                                   /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
-static bool m_is_advertising = false; /**< True when in advertising state, False otherwise. */
 static ble_cps_t m_cps; /**< Structure used to identify the cycling power service. */
 static ant_ble_evt_handlers_t * mp_ant_ble_evt_handlers;
+
+ble_state_e irt_ble_ant_state = DISCONNECTED;
 
 /**@brief Debug logging for module.
  *
@@ -380,12 +381,13 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 	switch (p_ble_evt->header.evt_id)
 	{
 		case BLE_GAP_EVT_CONNECTED:
-			m_is_advertising = false;
+			irt_ble_ant_state = CONNECTED;
 			mp_ant_ble_evt_handlers->on_ble_connected();
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 			break;
 
 		case BLE_GAP_EVT_DISCONNECTED:
+			irt_ble_ant_state = DISCONNECTED;
 			mp_ant_ble_evt_handlers->on_ble_disconnected();
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
@@ -399,7 +401,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 			if (p_ble_evt->evt.gap_evt.params.timeout.src
 					== BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
 			{
-				m_is_advertising = false;
+				irt_ble_ant_state = DISCONNECTED;
 				mp_ant_ble_evt_handlers->on_ble_timeout();
 			}
 			break;
@@ -581,8 +583,7 @@ void ble_advertising_start(void) {
 	err_code = sd_ble_gap_adv_start(&adv_params);
 	APP_ERROR_CHECK(err_code);
 
-	m_is_advertising = true;
-
+	irt_ble_ant_state = ADVERTISING;
 	mp_ant_ble_evt_handlers->on_ble_advertising();
 }
 
