@@ -1536,20 +1536,16 @@ static void on_battery_result(uint16_t battery_level)
 	// If battery is critically low and power is not plugged in.
 	if (m_battery_status.status == BAT_CRITICAL && !peripheral_plugged_in())
 	{
-		// Critical battery level.
-		LOG("[MAIN] on_battery_result critical low battery coarse volts: %i\r\n",
-				m_battery_status.coarse_volt);
-
-		// Start blinking a warning.
-		led_off(LED_MASK_ALL);
-		led_blink(LED_BLINK_BATTERY_WARN);
-
 		// Set the servo to HOME position.
 		on_resistance_off();
 
 		// If we're below 6 volts, shut it all the way down.
 		if (m_battery_status.coarse_volt < SHUTDOWN_VOLTS)
 		{
+			// Critical battery level.
+			LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, powering down.\r\n",
+					m_battery_status.coarse_volt);
+
 			led_off(LED_MASK_ALL);
 			led_blink(LED_BLINK_BATTERY_CRIT);
 			nrf_delay_ms(3000); // sleep for a few seconds to show indicator.
@@ -1557,6 +1553,14 @@ static void on_battery_result(uint16_t battery_level)
 		}
 		else
 		{
+			// Critical battery level.
+			LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, displaying warning.\r\n",
+					m_battery_status.coarse_volt);
+
+			// Blink a warning.
+			led_off(LED_MASK_ALL);
+			led_blink(LED_BLINK_BATTERY_WARN);
+
 			// Turn all extra power off.
 			peripheral_low_power_set();
 		}
