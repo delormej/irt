@@ -13,6 +13,7 @@
 #include "app_timer.h"
 #include "app_util.h"
 #include "nordic_common.h"
+#include "ble_ant.h"		// included because we check BLE connection status.
 #include "debug.h"
 
 /**@brief Debug logging for main module.
@@ -85,8 +86,8 @@ static void pattern_set(led_e led, blink_pattern_e pattern, bool repeated)
 	active_pattern[led].pattern = pattern;				// Set the active patter for the specified led
 	active_pattern[led_pair].pattern ^= (pattern & active_pattern[led_pair].pattern); 		// XOR of matching bits.
 
-	LED_LOG("[LED] setting: %i, pair: %i, pattern: %i, pair: %i\r\n",
-			led, led_pair, active_pattern[led].pattern, active_pattern[led_pair].pattern);
+	/*LED_LOG("[LED] setting: %i, pair: %i, pattern: %i, pair: %i\r\n",
+			led, led_pair, active_pattern[led].pattern, active_pattern[led_pair].pattern);*/
 
 	if (repeated)
 	{
@@ -234,6 +235,7 @@ void led_set(led_state_e state)
 			break;
 
 		case LED_BUTTON_UP:
+		case LED_BUTTON_DOWN:
 			pattern_set(LED_BACK_GREEN, FAST_BLINK_3, false);
 			break;
 
@@ -250,11 +252,28 @@ void led_set(led_state_e state)
 			break;
 
 		case LED_CALIBRATION_ENTER:
+			pattern_set(LED_BACK_GREEN, OFF, true);
 			pattern_set(LED_BACK_RED, FAST_BLINK_3, true);
 			break;
 
 		case LED_CALIBRATION_EXIT:
+			// Turn off the LED that was blinking.
 			pattern_set(LED_BACK_RED, OFF, true);
+
+			// Return BLE status indicator.
+			switch (irt_ble_ant_state)
+			{
+				case CONNECTED:
+					led_set(LED_BLE_CONNECTED);
+					break;
+
+				case ADVERTISING:
+					led_set(LED_BLE_ADVERTISTING);
+					break;
+
+				default:
+					break;
+			}
 			break;
 
 		case LED_POWERING_DOWN:
@@ -269,11 +288,12 @@ void led_set(led_state_e state)
 
 		default:
 			// THROW AN ERROR, not a supported state.
+			LED_LOG("[LED] invalid button state? %i\r\n", state);
 			APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
 			break;
 	}
 
-	LED_LOG("[LED] Setting LED state: %i\r\n", state);
+	//LED_LOG("[LED] Setting LED state: %i\r\n", state);
 
 	// restart the timer
 	timer_start();

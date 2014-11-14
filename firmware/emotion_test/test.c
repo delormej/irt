@@ -151,7 +151,6 @@ int main(int argc, char *argv [])
 	red = 161;
 	red ^= (green & red);
 
-
 	printf("Starting...%u,%u\r\n", green, red);
 	
 	return;
