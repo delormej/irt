@@ -33,11 +33,6 @@
 #define LED_BACK_GREEN_PIN			PIN_LED_B
 #define LED_BACK_RED_PIN			PIN_LED_A
 
-#define LED_FRONT_GREEN			0
-#define LED_FRONT_RED			1
-#define LED_BACK_GREEN			2
-#define LED_BACK_RED			3
-
 #define LED_PINS				(1UL << LED_FRONT_GREEN_PIN | 1UL << LED_FRONT_RED_PIN | 1UL << LED_BACK_GREEN_PIN | 1UL << LED_BACK_RED_PIN )
 #define PATTERN_LEN				4								// Working with 4 pins (2 LEDs, 2 pins each)
 #define PATTERN_END(POS)		(POS == 0x0)
@@ -47,29 +42,51 @@
 									[LED_BACK_GREEN] =	{ .pin = LED_BACK_GREEN_PIN, 	.pattern = 0b00000000 },	\
 									[LED_BACK_RED] =	{ .pin = LED_BACK_RED_PIN, 		.pattern = 0b00000000 }		\
 								}
+typedef enum
+{
+	OFF = 0,
+	SOLID	= 0b11111111,
+	SLOW_BLINK = 0b11110000,
+	FAST_BLINK = 0b10000000,
+	FAST_BLINK_2 = 0b10100000,
+	FAST_BLINK_3 = 0b10101000
+} blink_pattern_e;
+
+typedef enum
+{
+	LED_FRONT_GREEN	=		0,
+	LED_FRONT_RED =			1,
+	LED_BACK_GREEN =		2,
+	LED_BACK_RED =			3
+} led_e;
 
 typedef struct
 {
 	const uint8_t pin;
-	uint8_t pattern;
+	blink_pattern_e pattern;
 } pattern_t;
 
 // active pattern per pin
 static pattern_t active_pattern[PATTERN_LEN] = PATTERN_DEFAULT;
 // storage for patterns that repeat
-static uint8_t repeating_pattern[PATTERN_LEN];
+static blink_pattern_e repeating_pattern[PATTERN_LEN];
 
 static app_timer_id_t m_blink_timer;
 static bool m_running = false;
 
 /**@brief	Helper function to set active pattern.
- *
+ *			Pattern is a series of 8 bits representing a sequential pattern for 1 ON, 0 OFF
+ *			as the timer advances 1 sequence position of the pattern each tick.
+ *			A repeated pattern is one that continues, vs. an temporary pattern only executes one cycle.
  */
-static void pattern_set(uint8_t led, uint8_t pattern, bool repeated)
+static void pattern_set(led_e led, blink_pattern_e pattern, bool repeated)
 {
 	uint8_t led_pair = (led & 0x1) ? led-1: led+1;		// LEDs are in pairs, get it's pair
 	active_pattern[led].pattern = pattern;				// Set the active patter for the specified led
-	active_pattern[led_pair].pattern ^= pattern; 		// Set the corresponding led pattern to the XOR
+	active_pattern[led_pair].pattern ^= (pattern & active_pattern[led_pair].pattern); 		// XOR of matching bits.
+
+	LED_LOG("[LED] setting: %i, pair: %i, pattern: %i, pair: %i\r\n",
+			led, led_pair, active_pattern[led].pattern, active_pattern[led_pair].pattern);
 
 	if (repeated)
 	{
@@ -161,12 +178,12 @@ static void blink_timer_init()
 /**@brief	Turn one or more LEDs on.
  *
  */
-void led_set(led_pattern_e type)
+void led_set(led_state_e state)
 {
 	// stop the timer
 	timer_stop();
 
-	switch (type)
+	switch (state)
 	{
 		case LED_POWER_OFF:
 			// Clear them all, don't restart the timer and exit.
@@ -174,44 +191,80 @@ void led_set(led_pattern_e type)
 			return;
 
 		case LED_POWER_ON:
-			pattern_set(LED_FRONT_GREEN, 0b11111111, true);
+			pattern_set(LED_FRONT_GREEN, SOLID, true);
 			break;
 
 		case LED_BATT_LOW:
 			// 1 fast red blink
-			pattern_set(LED_FRONT_RED, 0b10000000, true);
+			pattern_set(LED_FRONT_RED, FAST_BLINK, true);
 			break;
 
 		case LED_BATT_WARN:
 			// 2 fast red blinks
-			pattern_set(LED_FRONT_RED, 0b10100000, true);
+			pattern_set(LED_FRONT_RED, FAST_BLINK_2, true);
 			break;
 
 		case LED_BATT_CRITICAL:
 			// Turn off the front green led.
-			pattern_set(LED_FRONT_GREEN, 0b00000000, true);
+			pattern_set(LED_FRONT_GREEN, OFF, true);
 			// 3 fast blinks.
-			pattern_set(LED_FRONT_RED, 0b10101000, true);
+			pattern_set(LED_FRONT_RED, FAST_BLINK_3, true);
 			break;
 
 		case LED_CHARGING:
-		case LED_CHARGED:
+			pattern_set(LED_FRONT_GREEN, SLOW_BLINK, true);
+			break;
 
-			// Function indicators
+		case LED_CHARGED:
+			pattern_set(LED_FRONT_GREEN, FAST_BLINK_2, true);
+			break;
+
+		// Function indicators
 		case LED_BLE_ADVERTISTING:
+			pattern_set(LED_BACK_GREEN, SLOW_BLINK, true);
+			break;
+
 		case LED_BLE_CONNECTED:
+			pattern_set(LED_BACK_GREEN, SOLID, true);
+			break;
+
 		case LED_BLE_DISCONNECTED:
 		case LED_BLE_TIMEOUT:
+			pattern_set(LED_BACK_GREEN, OFF, true);
+			break;
+
 		case LED_BUTTON_UP:
-		case LED_BUTTON_DOWN:
+			pattern_set(LED_BACK_GREEN, FAST_BLINK_3, false);
+			break;
+
 		case LED_MODE_STANDARD:
+			pattern_set(LED_BACK_GREEN, FAST_BLINK_2, false);
+			break;
+
 		case LED_MODE_ERG:
+			pattern_set(LED_BACK_GREEN, FAST_BLINK, false);
+			break;
+
 		case LED_MIN_MAX:
+			pattern_set(LED_BACK_RED, FAST_BLINK_2, false);
+			break;
+
 		case LED_CALIBRATION_ENTER:
+			pattern_set(LED_BACK_RED, FAST_BLINK_3, true);
+			break;
+
 		case LED_CALIBRATION_EXIT:
+			pattern_set(LED_BACK_RED, OFF, true);
+			break;
 
 		case LED_POWERING_DOWN:
+			pattern_set(LED_FRONT_RED, FAST_BLINK, true);
+			pattern_set(LED_BACK_RED, FAST_BLINK, true);
+			break;
+
 		case LED_ERROR:
+			pattern_set(LED_FRONT_RED, SLOW_BLINK, true);
+			pattern_set(LED_BACK_RED, SLOW_BLINK, true);
 			break;
 
 		default:
@@ -219,6 +272,8 @@ void led_set(led_pattern_e type)
 			APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
 			break;
 	}
+
+	LED_LOG("[LED] Setting LED state: %i\r\n", state);
 
 	// restart the timer
 	timer_start();

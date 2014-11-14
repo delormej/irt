@@ -145,13 +145,17 @@ static void led_set(led_pattern_e type)
 
 int main(int argc, char *argv [])
 {
-	uint8_t my = 0, other =0;
+	uint8_t green = 0, red = 0, new_red = 0;
 
-	//my = other = 6;
-	my = 128;
-	other = ~my;
+	green = 160;
+	red = 161;
+	red ^= (green & red);
 
-	printf("Starting...%i,%i\r\n", my, other);
+
+	printf("Starting...%u,%u\r\n", green, red);
+	
+	return;
+
 	led_set(LED_POWER_ON);
 
 	memset(active_pattern, 0, PATTERN_LEN * sizeof(pattern_t));

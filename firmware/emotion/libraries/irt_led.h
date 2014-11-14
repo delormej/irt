@@ -36,12 +36,12 @@ typedef enum
 	LED_POWERING_DOWN,
 	LED_ERROR
 
-} led_pattern_e;
+} led_state_e;
 
 /**@brief	Turn one or more LEDs on.
  *
  */
-void led_set(led_pattern_e pattern);
+void led_set(led_state_e pattern);
 
 /**@brief	Initializes the LEDs vio GPIO and the timer use to control.
  *
