@@ -7,8 +7,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 #include "irt_led.h"
+#include "boards.h"
 #include "nrf_gpio.h"
 #include "app_timer.h"
 #include "app_util.h"
@@ -24,86 +24,127 @@
 #define LED_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-static bool m_running = false;
-static uint32_t m_last_pin_mask; 	// holds state of the last set of lights to be set on.
-static blink_t m_repeating_blink = { .interval_ms = 0 };			// holds onto the last running blink pattern
-static blink_t m_active_blink;		// actively running blink pattern
-static app_timer_id_t m_blink_timer;
+#define APP_TIMER_PRESCALER		0
+#define BLINK_RATE_TICKS		APP_TIMER_TICKS(150, APP_TIMER_PRESCALER)	// 75ms in ticks
 
+// TODO: this module doesn't support HW_VERSION <2
+#define LED_FRONT_GREEN_PIN			PIN_LED_D
+#define LED_FRONT_RED_PIN			PIN_LED_C
+#define LED_BACK_GREEN_PIN			PIN_LED_B
+#define LED_BACK_RED_PIN			PIN_LED_A
+
+#define LED_FRONT_GREEN			0
+#define LED_FRONT_RED			1
+#define LED_BACK_GREEN			2
+#define LED_BACK_RED			3
+
+#define LED_PINS				(1UL << LED_FRONT_GREEN_PIN | 1UL << LED_FRONT_RED_PIN | 1UL << LED_BACK_GREEN_PIN | 1UL << LED_BACK_RED_PIN )
+#define PATTERN_LEN				4								// Working with 4 pins (2 LEDs, 2 pins each)
+#define PATTERN_END(POS)		(POS == 0x0)
+#define PATTERN_DEFAULT			{			\
+									[LED_FRONT_GREEN] = { .pin = LED_FRONT_GREEN_PIN, 	.pattern = 0b00000000 }, 	\
+									[LED_FRONT_RED] =	{ .pin = LED_FRONT_RED_PIN, 	.pattern = 0b00000000 },	\
+									[LED_BACK_GREEN] =	{ .pin = LED_BACK_GREEN_PIN, 	.pattern = 0b00000000 },	\
+									[LED_BACK_RED] =	{ .pin = LED_BACK_RED_PIN, 		.pattern = 0b00000000 }		\
+								}
+
+typedef struct
+{
+	const uint8_t pin;
+	uint8_t pattern;
+} pattern_t;
+
+// active pattern per pin
+static pattern_t active_pattern[PATTERN_LEN] = PATTERN_DEFAULT;
+// storage for patterns that repeat
+static uint8_t repeating_pattern[PATTERN_LEN];
+
+static app_timer_id_t m_blink_timer;
+static bool m_running = false;
+
+/**@brief	Helper function to set active pattern.
+ *
+ */
+static void pattern_set(uint8_t led, uint8_t pattern, bool repeated)
+{
+	uint8_t led_pair = (led & 0x1) ? led-1: led+1;		// LEDs are in pairs, get it's pair
+	active_pattern[led].pattern = pattern;				// Set the active patter for the specified led
+	active_pattern[led_pair].pattern ^= pattern; 		// Set the corresponding led pattern to the XOR
+
+	if (repeated)
+	{
+		repeating_pattern[led] = active_pattern[led].pattern;
+		repeating_pattern[led_pair] = active_pattern[led_pair].pattern;
+	}
+}
 
 static void led_gpio_init()
 {
 	// Configure LED-pins as outputs.
-	nrf_gpio_cfg_output(LED_FRONT_GREEN);
-	nrf_gpio_cfg_output(LED_FRONT_RED);
-	nrf_gpio_cfg_output(LED_BACK_GREEN);
-	nrf_gpio_cfg_output(LED_BACK_RED);
+	nrf_gpio_cfg_output(LED_FRONT_GREEN_PIN);
+	nrf_gpio_cfg_output(LED_FRONT_RED_PIN);
+	nrf_gpio_cfg_output(LED_BACK_GREEN_PIN);
+	nrf_gpio_cfg_output(LED_BACK_RED_PIN);
 
 	// Clear all LEDs to start
-	NRF_GPIO->OUTSET = (
-			1UL << LED_BACK_RED | 1UL << LED_FRONT_RED |
-			1UL << LED_BACK_GREEN | 1UL << LED_FRONT_GREEN);
+	NRF_GPIO->OUTSET = LED_PINS;
 }
 
-/**@brief 	Stops the active running blink pattern and clears state.
- */
-static void blink_stop()
-{
-	app_timer_stop(m_blink_timer);
-
-	// Turn any of these LEDs off.
-	NRF_GPIO->OUTSET = m_active_blink.pin_mask;
-
-	// Clear the active blink.
-	m_active_blink = LED_BLINK_EMPTY;
-
-	m_running = false;
-}
-
-static void blink_start()
+static void timer_start()
 {
 	uint32_t err_code;
 
-	uint32_t ticks = APP_TIMER_TICKS(m_active_blink.interval_ms, APP_TIMER_PRESCALER);
-
-	err_code = app_timer_start(m_blink_timer, ticks, NULL);
+	err_code = app_timer_start(m_blink_timer, BLINK_RATE_TICKS, NULL);
 	APP_ERROR_CHECK(err_code);
 
 	m_running = true;
+}
+
+static void timer_stop()
+{
+	if (m_running)
+	{
+		app_timer_stop(m_blink_timer);
+		m_running = false;
+	}
 }
 
 static void blink_handler(void * p_context)
 {
 	UNUSED_PARAMETER(p_context);
 
-	// Walk through the pattern in reverse, eg. 10100000 starts with most significant bit 1.
-	if (--m_active_blink.count == 0 && !m_active_blink.repeated)
+	// running position count
+	static uint8_t position = 0;
+
+	// move position in reverse order, 0 == end of pattern
+	position = (--position & 0x7);
+
+	// if the end of a non-repeating pattern, restore repeated pattern
+	if (PATTERN_END(position))
 	{
-		// If this isn't a repeating blink pattern, stop it.
-		blink_stop();
-
-		// Restore last pin mask, turning on the original LEDs.
-		NRF_GPIO->OUTCLR = m_last_pin_mask;
-
-		// If we have a repeating pattern saved, restart it.
-		if (m_repeating_blink.repeated)
+		for (uint8_t i = 0; i < PATTERN_LEN; i++)
 		{
-			m_active_blink = m_repeating_blink;
-			blink_start();
+			// is this the repeating pattern for this pin?
+			if (active_pattern[i].pattern != repeating_pattern[i])
+			{
+				active_pattern[i].pattern = repeating_pattern[i];
+			}
 		}
 	}
-	else
+
+	// for each pin, determine if the current pattern position sets it ON
+	for (uint8_t i = 0; i < PATTERN_LEN; i++)
 	{
-		// Pattern is a bitmask of positions indicating when to turn on/off.
-		if ( m_active_blink.pattern & (1UL << m_active_blink.count) )
+		// if we're supposed to turn the led on, add it to the clear mask.
+		if (active_pattern[i].pattern & (1UL << position))
 		{
-			// Turn on
-			NRF_GPIO->OUTCLR = m_active_blink.pin_mask;
+			// Turn on.
+			nrf_gpio_pin_clear(active_pattern[i].pin);
 		}
 		else
 		{
-			// Turn off
-			NRF_GPIO->OUTSET = m_active_blink.pin_mask;
+			// Turn off.
+			nrf_gpio_pin_set(active_pattern[i].pin);
 		}
 	}
 }
@@ -120,76 +161,67 @@ static void blink_timer_init()
 /**@brief	Turn one or more LEDs on.
  *
  */
-void led_on(uint32_t pin_mask)
+void led_set(led_pattern_e type)
 {
-	if (pin_mask == LED_MASK_ERROR)
+	// stop the timer
+	timer_stop();
+
+	switch (type)
 	{
-		led_blink_stop();		// Stop any blinking lights.
-		led_off(LED_MASK_ALL);	// Turn any other LEDs off
-	}
-	else
-	{
-		// Save the state to restore if we get a blink pattern.
-		m_last_pin_mask = pin_mask;
-	}
+		case LED_POWER_OFF:
+			// Clear them all, don't restart the timer and exit.
+			NRF_GPIO->OUTSET = LED_PINS;
+			return;
 
-	// TODO: this is dangerous because we don't validate that it's an LED pin.
-	NRF_GPIO->OUTCLR = pin_mask;
-}
+		case LED_POWER_ON:
+			pattern_set(LED_FRONT_GREEN, 0b11111111, true);
+			break;
 
-/**@brief	Turn one or more LEDs off.
- *
- */
-void led_off(uint32_t pin_mask)
-{
-	m_last_pin_mask = 0;
+		case LED_BATT_LOW:
+			// 1 fast red blink
+			pattern_set(LED_FRONT_RED, 0b10000000, true);
+			break;
 
-	// TODO: this is dangerous because we don't validate that it's an LED pin.
-	NRF_GPIO->OUTSET = pin_mask;
-}
+		case LED_BATT_WARN:
+			// 2 fast red blinks
+			pattern_set(LED_FRONT_RED, 0b10100000, true);
+			break;
 
-/**@brief	Stop blinking, shut off all LEDs.
- *
- */
-void led_blink_stop()
-{
-	// Shut down the running blink
-	if (m_running)
-	{
-		// If the active blink is repeated, clear it.
-		if (m_active_blink.repeated)
-		{
-			m_repeating_blink = LED_BLINK_EMPTY;
-		}
+		case LED_BATT_CRITICAL:
+			// Turn off the front green led.
+			pattern_set(LED_FRONT_GREEN, 0b00000000, true);
+			// 3 fast blinks.
+			pattern_set(LED_FRONT_RED, 0b10101000, true);
+			break;
 
-		blink_stop();
-	}
-}
+		case LED_CHARGING:
+		case LED_CHARGED:
 
-/**@brief	Blink LED according to the pattern defined.
- *
- */
-void led_blink(blink_t blink)
-{
-	if (m_running)
-	{
-		// Stop a current blink if there is one running.
-		blink_stop();
-	}
+			// Function indicators
+		case LED_BLE_ADVERTISTING:
+		case LED_BLE_CONNECTED:
+		case LED_BLE_DISCONNECTED:
+		case LED_BLE_TIMEOUT:
+		case LED_BUTTON_UP:
+		case LED_BUTTON_DOWN:
+		case LED_MODE_STANDARD:
+		case LED_MODE_ERG:
+		case LED_MIN_MAX:
+		case LED_CALIBRATION_ENTER:
+		case LED_CALIBRATION_EXIT:
 
-	// If this new blink is repeating save it.
-	if (blink.repeated)
-	{
-		m_repeating_blink = blink;
-	}
-	else
-	{
-		// If this isn't repeated, shut off existing LEDs for this temporary blink.
-		NRF_GPIO->OUTSET = LED_MASK_ALL;
+		case LED_POWERING_DOWN:
+		case LED_ERROR:
+			break;
+
+		default:
+			// THROW AN ERROR, not a supported state.
+			APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+			break;
 	}
 
-	m_active_blink = blink;
-	blink_start();
+	// restart the timer
+	timer_start();
 }
 
 /**@brief	Initializes the LEDs vio GPIO and the timer use to control.
@@ -199,8 +231,5 @@ void led_init(void)
 {
 	led_gpio_init();
 	blink_timer_init();
-
-	// Turn on the power light.
-	led_on(LED_MASK_POWER_ON);
 }
 

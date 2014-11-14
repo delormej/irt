@@ -285,7 +285,7 @@ void peripheral_powerdown(bool accelerometer_off)
 	peripheral_low_power_set();
 
 	// Shut down the leds.
-	led_off(LED_MASK_ALL);
+	led_set(LED_POWER_OFF);
 }
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
@@ -294,7 +294,12 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	mp_on_peripheral_evt = p_on_peripheral_evt;
 	
 	led_init();
+
+	// Turn on the power light.
+	led_set(LED_POWER_ON);
+
     irt_gpio_init();
+    button_init();
     accelerometer_init();
 	temperature_init();
 
@@ -302,9 +307,6 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 
 	// Ensure aux power is off for right now, we're not using.
 	peripheral_aux_pwr_set(true);
-
-	// Initialize the button if available.
-	button_init();
 
 #ifndef PIN_ENBATT
 #define PIN_ENBATT -1

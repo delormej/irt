@@ -86,9 +86,6 @@
 
 #define DATA_PAGE_RESPONSE_TYPE			0x80										// 0X80 For acknowledged response or number of times to send broadcast data requests.
 
-// Battery critical state.
-#define BATTERY_CRITICAL				(m_battery_status.status == BAT_CRITICAL && !peripheral_plugged_in())
-
 static uint8_t 							m_resistance_level;
 static resistance_mode_t				m_resistance_mode;
 
@@ -153,7 +150,7 @@ static ant_request_data_page_t			m_request_data_pending;
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
 	// Set LED indicator.
-	led_on(LED_MASK_ERROR);
+	led_set(LED_ERROR);
 
 	// Fetch the stack and save the error.
 	irt_error_save(error_code, line_num, p_file_name);
@@ -851,7 +848,7 @@ static void calibration_start(void)
     err_code = app_timer_start(m_ca_timer_id, CALIBRATION_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 	 */
-	led_blink(LED_BLINK_CALIBRATION);
+	led_set(LED_CALIBRATION_ENTER);
 
     m_crr_adjust_mode = true;
 }
@@ -867,14 +864,8 @@ static void calibration_stop(void)
 	err_code = app_timer_stop(m_ca_timer_id);
     APP_ERROR_CHECK(err_code);
 	*/
-	led_blink_stop();
 	m_crr_adjust_mode = false;
-
-	if (irt_ble_ant_state == ADVERTISING)
-	{
-		// Restart advertising blinking.
-		led_blink(LED_BLINK_BLE_ADV);
-	}
+	led_set(LED_CALIBRATION_EXIT);
 
 	/*
 	// Restart the normal timer.
@@ -962,7 +953,7 @@ static void on_resistance_off(void)
 	queue_resistance_ack(m_resistance_mode, m_resistance_level);
 
 	// Quick blink for feedback.
-	led_blink(LED_BLINK_BUTTON_STD);
+	led_set(LED_MODE_STANDARD);
 }
 
 static void on_resistance_dec(void)
@@ -975,12 +966,12 @@ static void on_resistance_dec(void)
 			{
 				resistance_level_set(--m_resistance_level);
 				queue_resistance_ack(m_resistance_mode, m_resistance_level);
-				led_blink(LED_BLINK_BUTTON_DOWN);
+				led_set(LED_BUTTON_DOWN);
 			}
 			else
 			{
 				LOG("[MAIN] on_resistance_dec hit minimum.\r\n");
-				led_blink(LED_BLINK_BUTTON_MIN);
+				led_set(LED_MIN_MAX);
 			}
 			break;
 
@@ -990,11 +981,11 @@ static void on_resistance_dec(void)
 				// Decrement by n watts;
 				m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
 				queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
-				led_blink(LED_BLINK_BUTTON_DOWN);
+				led_set(LED_BUTTON_DOWN);
 			}
 			else
 			{
-				led_blink(LED_BLINK_BUTTON_MIN);
+				led_set(LED_MIN_MAX);
 			}
 			break;
 
@@ -1013,11 +1004,11 @@ static void on_resistance_inc(void)
 			{
 				resistance_level_set(++m_resistance_level);
 				queue_resistance_ack(m_resistance_mode, m_resistance_level);
-				led_blink(LED_BLINK_BUTTON_UP);
+				led_set(LED_BUTTON_UP);
 			}
 			else
 			{
-				led_blink(LED_BLINK_BUTTON_MAX);
+				led_set(LED_MIN_MAX);
 			}
 
 			break;
@@ -1027,7 +1018,7 @@ static void on_resistance_inc(void)
 			m_sim_forces.erg_watts += ERG_ADJUST_LEVEL;
 			queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 
-			led_blink(LED_BLINK_BUTTON_UP);
+			led_set(LED_BUTTON_UP);
 			break;
 
 		default:
@@ -1043,7 +1034,7 @@ static void on_resistance_max(void)
 	queue_resistance_ack(m_resistance_mode, m_resistance_level);
 
 	// Quick blink for feedback.
-	led_blink(LED_BLINK_BUTTON_UP);
+	led_set(LED_BUTTON_UP);
 }
 
 static void on_button_menu(void)
@@ -1059,12 +1050,14 @@ static void on_button_menu(void)
 		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 
 		// Quick blink for feedback.
-		led_blink(LED_BLINK_BUTTON_ERG);
+		led_set(LED_MODE_ERG);
 	}
 	else
 	{
 		m_resistance_mode = RESISTANCE_SET_STANDARD;
 		on_resistance_off();
+
+		led_set(LED_MODE_STANDARD);
 	}
 }
 
@@ -1144,22 +1137,14 @@ static void on_power_plug(bool plugged_in)
 
 static void on_ble_connected(void) 
 {
-	// Stop blinking
-	led_blink_stop();
-
-	if (BATTERY_CRITICAL)
-	{
-		// temporary hack, we still need to blink battery warning.
-		led_blink(LED_BLINK_BATTERY_WARN);
-	}
-	led_on(LED_MASK_BLE_CONNECTED);
+	led_set(LED_BLE_CONNECTED);
 	LOG("[MAIN]:on_ble_connected\r\n");
 }
 	
 static void on_ble_disconnected(void) 
 {
 	// Clear connection LED.
-	led_off(LED_MASK_BLE_CONNECTED);
+	led_set(LED_BLE_DISCONNECTED);
 	LOG("[MAIN]:on_ble_disconnected\r\n");
 
 	// Restart advertising.
@@ -1168,31 +1153,13 @@ static void on_ble_disconnected(void)
 
 static void on_ble_timeout(void) 
 {
-	led_blink_stop();
 	LOG("[MAIN]:on_ble_timeout\r\n");
-
-	if (BATTERY_CRITICAL)
-	{
-		// temporary hack, we still need to blink battery warning.
-		led_blink(LED_BLINK_BATTERY_WARN);
-	}
+	led_set(LED_BLE_TIMEOUT);
 }
 
 static void on_ble_advertising(void)
 {
-	if (BATTERY_CRITICAL)
-	{
-		// Combine the blink patterns.
-		blink_t blink = LED_BLINK_BLE_ADV;
-		blink.pin_mask |= LED_BLINK_BATTERY_WARN.pin_mask;
-
-		// Blink a warning.
-		led_blink(blink);
-	}
-	else
-	{
-		led_blink(LED_BLINK_BLE_ADV);
-	}
+	led_set(LED_BLE_ADVERTISTING);
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
@@ -1321,7 +1288,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			if (m_crr_adjust_mode)
 			{
 				crr_adjust(CRR_ADJUST_VALUE);
-				led_blink(LED_BLINK_BUTTON_UP);
+				led_set(LED_BUTTON_UP);
 			}
 			else
 			{
@@ -1334,7 +1301,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			if (m_crr_adjust_mode)
 			{
 				crr_adjust(CRR_ADJUST_VALUE*-1);
-				led_blink(LED_BLINK_BUTTON_DOWN);
+				led_set(LED_BUTTON_DOWN);
 			}
 			else
 			{
@@ -1563,46 +1530,50 @@ static void on_battery_result(uint16_t battery_level)
 
 	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
 
-	// If battery is critically low and power is not plugged in.
-	if (BATTERY_CRITICAL)
+	// If we're not plugged in and we have a LOW or CRITICAL status, display warnings.
+	if (!peripheral_plugged_in())
 	{
-		// Set the servo to HOME position.
-		on_resistance_off();
-
-		// If we're below 6 volts, shut it all the way down.
-		if (m_battery_status.coarse_volt < SHUTDOWN_VOLTS)
+		switch (m_battery_status.status)
 		{
-			// Critical battery level.
-			LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, powering down.\r\n",
-					m_battery_status.coarse_volt);
-
-			// Turn off the power LED.
-			led_off(LED_MASK_POWER_ON);
-			led_blink(LED_BLINK_BATTERY_CRIT);
-			nrf_delay_ms(3000); // sleep for a few seconds to show indicator.
-			on_power_down(false);
-		}
-		else
-		{
-			// Critical battery level.
-			LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, displaying warning.\r\n",
-					m_battery_status.coarse_volt);
-
-			if (irt_ble_ant_state == ADVERTISING)
-			{
-				// Turn off the power LED
-				led_off(LED_MASK_POWER_ON);
-
-				// Combine the blink patterns.
-				blink_t blink = LED_BLINK_BLE_ADV;
-				blink.pin_mask |= LED_BLINK_BATTERY_WARN.pin_mask;
-
+			case BAT_LOW:
 				// Blink a warning.
-				led_blink(blink);
-			}
+				led_set(LED_BATT_LOW);
 
-			// Turn all extra power off.
-			peripheral_low_power_set();
+				break;
+
+			case BAT_CRITICAL:
+
+				// Set the servo to HOME position.
+				on_resistance_off();
+
+				// If we're below 6 volts, shut it all the way down.
+				if (m_battery_status.coarse_volt < SHUTDOWN_VOLTS)
+				{
+					// Indicate and then shut down.
+					led_set(LED_BATT_CRITICAL);
+
+					// Critical battery level.
+					LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, powering down.\r\n",
+							m_battery_status.coarse_volt);
+					nrf_delay_ms(3000);
+					on_power_down(false);
+				}
+				else
+				{
+					// Blink a warning.
+					led_set(LED_BATT_WARN);
+
+					// Critical battery level.
+					LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, displaying warning.\r\n",
+							m_battery_status.coarse_volt);
+
+					// Turn all extra power off.
+					peripheral_low_power_set();
+				}
+				break;
+
+			default:
+				break;
 		}
 	}
 }
