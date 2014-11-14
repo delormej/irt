@@ -72,6 +72,8 @@ static pattern_t active_pattern[PATTERN_LEN] = PATTERN_DEFAULT;
 // storage for patterns that repeat
 static blink_pattern_e repeating_pattern[PATTERN_LEN];
 
+// running position count
+static uint8_t m_position = 0;
 static app_timer_id_t m_blink_timer;
 static bool m_running = false;
 
@@ -123,6 +125,7 @@ static void timer_stop()
 	if (m_running)
 	{
 		app_timer_stop(m_blink_timer);
+		m_position = 0;
 		m_running = false;
 	}
 }
@@ -131,14 +134,11 @@ static void blink_handler(void * p_context)
 {
 	UNUSED_PARAMETER(p_context);
 
-	// running position count
-	static uint8_t position = 0;
-
 	// move position in reverse order, 0 == end of pattern
-	position = (--position & 0x7);
+	m_position = (--m_position & 0x7);
 
 	// if the end of a non-repeating pattern, restore repeated pattern
-	if (PATTERN_END(position))
+	if (PATTERN_END(m_position))
 	{
 		for (uint8_t i = 0; i < PATTERN_LEN; i++)
 		{
@@ -154,7 +154,7 @@ static void blink_handler(void * p_context)
 	for (uint8_t i = 0; i < PATTERN_LEN; i++)
 	{
 		// if we're supposed to turn the led on, add it to the clear mask.
-		if (active_pattern[i].pattern & (1UL << position))
+		if (active_pattern[i].pattern & (1UL << m_position))
 		{
 			// Turn on.
 			nrf_gpio_pin_clear(active_pattern[i].pin);
