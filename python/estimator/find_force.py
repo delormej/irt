@@ -3,7 +3,7 @@ n = 7       # min. sequence length
 x = 0.2 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
 skip_rows = 120 # data rows skipped at the beginning
-txt_offset = 300
+txt_offset = 150
 speed_col = 3
 watts_col = 5
 servo_col = 7
@@ -19,6 +19,7 @@ import bottleneck
 import itertools
 import matplotlib.pyplot as plt
 import math
+import traceback
 #import lxml.etree as ET
 
 if len(sys.argv) > 1:
@@ -99,16 +100,17 @@ def speed_watt_median(data):
 	#plt.text(15, txt_offset, "a: %f, b: %f, c: %f" % (z[0], z[1], z[2]))
 	#plt.show()
 
-	return
+	return pars[0], pars[1]
 
 def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
 	global txt_offset
 	# convert slope to wheel speed in mph from flywheel mps
-	slope = slope * (0.4/0.115) * 0.44704
+	#slope = slope * (0.4/0.115) * 0.44704
+	#plt.xlim([speeds_mph.min(),speeds_mph.max()])
 	plt.scatter(speeds_mph, watts, c=color1)
-	#plt.plot(speeds_mph, speeds_mph*slope + intercept, color2)
+	plt.plot(speeds_mph, (speeds_mph*0.44704)*slope + intercept, color2)
 	txt_offset = txt_offset + 20
-	plt.text(15, txt_offset, "slope: %s, offset: %i" % (math.trunc((slope * 2.23694)*1000), math.trunc(abs(intercept)*1000)))
+	plt.text(15, txt_offset, "slope: %s, offset: %i" % (math.trunc(slope*1000), math.trunc(abs(intercept)*1000)))
 
 def theil_sen(x,y, sample= "auto", n_samples = 1e7):
     """
@@ -235,7 +237,7 @@ def process_file(input_file_name):
 
 	# convert to meters per second, then to flywheel meters per second
 	speeds_mps = (speeds * 0.44704)
-	flywheel_mps = (speeds_mps * (0.4/0.115))
+	#flywheel_mps = (speeds_mps * (0.4/0.115))
 
 	valid_data = defaultdict(list) # { postion: [indices of all good values] } 
 	splits = np.flatnonzero(np.ediff1d(positions, to_begin=1, to_end=1)) # indexes where pos changed, split original sequence there
@@ -246,8 +248,8 @@ def process_file(input_file_name):
 		)
 
 	old_err = np.seterr(divide="ignore", invalid="ignore")
-	#forces = watts / (speeds * 0.44704)
-	forces = watts / flywheel_mps
+	forces = watts / (speeds * 0.44704)
+	#forces = watts / flywheel_mps
 	np.seterr(**old_err)
 	
 	id2000 = np.fromiter(chain.from_iterable((ids for p, ids in valid_data.items() if p >= 2000)), dtype=int)
@@ -255,12 +257,12 @@ def process_file(input_file_name):
 	f2000 = forces[id2000]
 	w2000 = watts[id2000]
 	#slope, intercept = np.linalg.lstsq(np.vstack([sp2000, np.ones_like(sp2000)]).T, w2000)[0]
-	slope, intercept = theil_sen(flywheel_mps[id2000], watts[id2000], False)
+	slope, intercept = theil_sen(speeds_mps[id2000], watts[id2000], False)
 
-	print("slope, intercept")
-	print(slope * (0.4/0.115), intercept)
+	print("\r\nslope, intercept")
+	#print(slope * (0.4/0.115), intercept)
 	#plt.text(10, 200, "slope: %s, offset: %i" % (round((slope * (0.4/0.115)),3), round(intercept,3)))
-	#print(slope, intercept)
+	print(slope, intercept)
 	
 	pos_list = [p for p in valid_data if p < 2000]
 	pos_list.sort()
@@ -273,25 +275,29 @@ def process_file(input_file_name):
 	for id in id2000:
 		if id < id2000.size:
 			data_tuples.append((sp2000[id], w2000[id]))
-	speed_watt_median(data_tuples)
+	a, b = speed_watt_median(data_tuples)
 
 	"""
 	End of median calc
 	"""
 
-	print("\nposition\tspeed\tforce\tadd_force")
+	"""
+	print("\nposition\tspeed\tforce")
 	for p in pos_list:
 		for i in valid_data[p]:
-			print(p, flywheel_mps[i], forces[i], forces[i] - ((flywheel_mps[i]*slope - intercept)/flywheel_mps[i]))
-	
+			print(p, speeds[i], forces[i])
+	"""
 
 	print("\nposition\tforce\tadd_force")
 	for p in pos_list:
 		ids = valid_data[p]
 		if ids:
 			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
-			print(p, bottleneck.nanmedian(forces[ids]), bottleneck.nanmedian(forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])))
-
+			print(p, 
+				bottleneck.nanmedian(speeds[ids]),
+				bottleneck.nanmedian(watts[ids]) )
+				#				bottleneck.nanmedian( forces[ids] - (power_func(speeds[ids], a, b)/speeds[ids]) ))
+	
 	return sp2000, w2000, slope, intercept
 
 def get_files(rootdir):
@@ -308,7 +314,7 @@ def graph_file(file):
 		graph(s, w, sl, i, color1=np.random.rand(3,1))
 
 	except:
-		print("Had to skip that one because: ", sys.exc_info())
+		print("Had to skip that one because: ", traceback.format_exc())
 	
 def main(input_file_name):
 	if os.path.isdir(input_file_name):
