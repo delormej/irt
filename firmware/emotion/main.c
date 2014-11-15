@@ -57,6 +57,8 @@
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	 // Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
 
+#define WATCHDOG_COUNTER				32768 * 60 * 10 							// (NRF_WDT->CRV + 1)/32768 seconds * 60 seconds * 'n' minutes
+
 #define BLE_ADV_BLINK_RATE_MS			500u
 #ifdef ENABLE_DEBUG_LOG
 #define SCHED_QUEUE_SIZE                32
@@ -633,6 +635,12 @@ static void ant_4hz_timeout_handler(void * p_context)
 	ant_ctrl_available();
 
 	//LOG("[MAIN] Exit 4hz: %.2f \r\n", SECONDS_CURRENT);
+
+	// Reload the WDT if there was motion OR in BLE connection, preventing the device from going to sleep.
+	if (p_power_meas_last->instant_speed_mps > 0.0f || irt_ble_ant_state == CONNECTED)
+	{
+		NRF_WDT->RR[0] = WDT_RR_RR_Reload;
+	}
 }
 
 /**@brief	Timer handler for reading sensors.
@@ -673,6 +681,21 @@ static void application_timers_stop(void)
 
 	err_code = app_timer_stop(m_sensor_read_timer_id);
     APP_ERROR_CHECK(err_code);
+}
+
+/**@brief	Initializes the watchdog timer which is configured to
+ * 			force a device reset after a period of inactivity, either
+ * 			a CPU hang or no real user activity.  The reaset reason is
+ * 			inspected on load to see if the WDT caused the reset.
+ */
+static void wdt_init(void)
+{
+    // Configure to keep running while CPU is in sleep mode.
+    NRF_WDT->CONFIG = (WDT_CONFIG_SLEEP_Run << WDT_CONFIG_SLEEP_Pos);
+    NRF_WDT->CRV = WATCHDOG_COUNTER;
+    // This is the reload register, write to this to signal activity.
+    NRF_WDT->RREN = WDT_RREN_RR0_Enabled << WDT_RREN_RR0_Pos;
+    NRF_WDT->TASKS_START = 1;
 }
 
 /**@brief Timer initialization.
@@ -1083,6 +1106,9 @@ static void on_accelerometer(void)
 {
 	uint32_t err_code;
 
+	// Reload the WDT.
+	NRF_WDT->RR[0] = WDT_RR_RR_Reload;
+
 	// Clear the struct.
 	memset(&m_accelerometer_data, 0, sizeof(m_accelerometer_data));
 
@@ -1094,29 +1120,6 @@ static void on_accelerometer(void)
 			m_accelerometer_data.source,
 			m_accelerometer_data.out_y_lsb |=
 					m_accelerometer_data.out_y_msb << 8);
-
-	// Received a sleep interrupt from the accelerometer meaning no motion for a while.
-	if (m_accelerometer_data.source == ACCELEROMETER_SRC_WAKE_SLEEP)
-	{
-		//
-		// This is a workaround to deal with GPIOTE toggling the SENSE bits which forces
-		// the device to wake up immediately after going to sleep without this.
-		//
-        NRF_GPIO->PIN_CNF[PIN_SHAKE] &= ~GPIO_PIN_CNF_SENSE_Msk;
-        NRF_GPIO->PIN_CNF[PIN_SHAKE] |= GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos;
-
-        // Don't shut down if set as such OR if we're in a BLE connection.
-        if ( (SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON)) &&
-        		(irt_ble_ant_state != CONNECTED) )
-        {
-    		LOG("[MAIN]:about to power down from accelerometer sleep.\r\n");;
-        	on_power_down(false);
-        }
-        else
-        {
-    		LOG("[MAIN]:skipping sleep signal from accelerometer.\r\n");;
-        }
-	}
 }
 
 // Called when the power adapter is plugged in.
@@ -1626,6 +1629,21 @@ static uint32_t check_reset_reason()
 		// Clear the reason by writing 1 bits.
 		NRF_POWER->RESETREAS = reason;
 		LOG("[MAIN]:Reset reason: %#08lx\r\n", reason);
+
+		// If reset from the WDT, we timed out from no activity or system hang.
+		if (reason & POWER_RESETREAS_DOG_Msk)
+		{
+			LOG("[MAIN] WDT timeout caused reset, enabling interupts and shutting down.\r\n");
+
+			// Initialize the status LEDs, which ensures they are off.
+			led_init();
+
+			// Enable interupts that will wake the system.
+			peripheral_wakeup_set();
+
+			// Shut the system down.
+			NRF_POWER->SYSTEMOFF = 1;
+		}
 	}
 	else
 	{
@@ -1705,6 +1723,9 @@ int main(void)
 
 	// Determine what the reason for startup is and log appropriately.
 	check_reset_reason();
+
+	// Initialize the watchdog timer.
+	wdt_init();
 
 	// Initialize timers.
 	timers_init();

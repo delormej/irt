@@ -143,28 +143,11 @@ static void led_set(led_pattern_e type)
 	// restart the timer
 }
 
+#define POWER_RESETREAS_DOG_Pos (1UL) /*!< Position of DOG field. */
+#define POWER_RESETREAS_DOG_Msk (0x1UL << POWER_RESETREAS_DOG_Pos) /*!< Bit mask of DOG field. */
+
 int main(int argc, char *argv [])
 {
-	uint8_t green = 0, red = 0, new_red = 0;
-
-	green = 160;
-	red = 161;
-	red ^= (green & red);
-
-	printf("Starting...%u,%u\r\n", green, red);
-	
-	return;
-
-	led_set(LED_POWER_ON);
-
-	memset(active_pattern, 0, PATTERN_LEN * sizeof(pattern_t));
-	memset(repeating_pattern, 0, PATTERN_LEN * sizeof(pattern_t));
-
-	while (1)
-	{
-		blink_handler((void*) 0);
-		Sleep(750);
-	}
-
+	printf("%i\r\n", POWER_RESETREAS_DOG_Msk & 4);
 	return 0;
 }

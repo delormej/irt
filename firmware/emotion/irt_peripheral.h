@@ -26,6 +26,10 @@ typedef struct peripheral_evt_s
 	void (*on_battery_result)(uint16_t);
 } peripheral_evt_t;
 
+/**@brief	Sets the pins to wake the device from sleep.
+ *
+ */
+void peripheral_wakeup_set(void);
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt);
 void peripheral_powerdown(bool accelerometer_off);
 
