@@ -52,6 +52,7 @@
 #include "boards.h"
 #include "battery.h"
 #include "irt_error_log.h"
+#include "irt_led.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	 // Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
@@ -111,6 +112,7 @@ static void send_data_page2(ant_request_data_page_t* p_request);
 static void send_temperature();
 static void on_enable_dfu_mode();
 
+
 /* TODO:	Total hack for request data page & resistance control ack, we will fix.
  *		 	Simple logic right now.  If there is a pending request data page, send
  *		 	up to 2 of these messages as priority (based on requested tx count).
@@ -148,7 +150,7 @@ static ant_request_data_page_t			m_request_data_pending;
 void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
 {
 	// Set LED indicator.
-	set_led_red(LED_BOTH);
+	led_set(LED_ERROR);
 
 	// Fetch the stack and save the error.
 	irt_error_save(error_code, line_num, p_file_name);
@@ -682,7 +684,7 @@ static void timers_init(void)
     uint32_t err_code;
 
 	// Initialize timer module
-    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, true);
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
 
     err_code = app_timer_create(&m_ant_4hz_timer_id,
                                 APP_TIMER_MODE_REPEATED,
@@ -846,7 +848,7 @@ static void calibration_start(void)
     err_code = app_timer_start(m_ca_timer_id, CALIBRATION_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 	 */
-    set_led_red(LED_1);
+	led_set(LED_CALIBRATION_ENTER);
 
     m_crr_adjust_mode = true;
 }
@@ -862,8 +864,8 @@ static void calibration_stop(void)
 	err_code = app_timer_stop(m_ca_timer_id);
     APP_ERROR_CHECK(err_code);
 	*/
-	clear_led(LED_1);
 	m_crr_adjust_mode = false;
+	led_set(LED_CALIBRATION_EXIT);
 
 	/*
 	// Restart the normal timer.
@@ -941,7 +943,6 @@ static void on_power_down(bool accelerometer_wake_disable)
 	CRITICAL_REGION_EXIT()
 
 	sd_power_system_off();								// Enter lower power mode.
-	//NRF_POWER->SYSTEMOFF = 1;
 }
 
 static void on_resistance_off(void)
@@ -950,40 +951,78 @@ static void on_resistance_off(void)
 	m_resistance_level = 0;
 	resistance_level_set(m_resistance_level);
 	queue_resistance_ack(m_resistance_mode, m_resistance_level);
+
+	// Quick blink for feedback.
+	led_set(LED_MODE_STANDARD);
 }
 
 static void on_resistance_dec(void)
 {
 	// decrement
-	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
-			m_resistance_level > 0)
+	switch (m_resistance_mode)
 	{
-		resistance_level_set(--m_resistance_level);
-		queue_resistance_ack(m_resistance_mode, m_resistance_level);
-	}
-	else if (m_resistance_mode == RESISTANCE_SET_ERG &&
-			m_sim_forces.erg_watts > 50u)
-	{
-		// Decrement by 15 watts;
-		m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
-		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		case RESISTANCE_SET_STANDARD:
+			if (m_resistance_level > 0)
+			{
+				resistance_level_set(--m_resistance_level);
+				queue_resistance_ack(m_resistance_mode, m_resistance_level);
+				led_set(LED_BUTTON_DOWN);
+			}
+			else
+			{
+				LOG("[MAIN] on_resistance_dec hit minimum.\r\n");
+				led_set(LED_MIN_MAX);
+			}
+			break;
+
+		case RESISTANCE_SET_ERG:
+			if (m_sim_forces.erg_watts > 50u)
+			{
+				// Decrement by n watts;
+				m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
+				queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+				led_set(LED_BUTTON_DOWN);
+			}
+			else
+			{
+				led_set(LED_MIN_MAX);
+			}
+			break;
+
+		default:
+			break;
 	}
 }
 
 static void on_resistance_inc(void)
 {
 	// increment
-	if (m_resistance_mode == RESISTANCE_SET_STANDARD &&
-			m_resistance_level < (RESISTANCE_LEVELS-1))
+	switch (m_resistance_mode)
 	{
-		resistance_level_set(++m_resistance_level);
-		queue_resistance_ack(m_resistance_mode, m_resistance_level);
-	}
-	else if (m_resistance_mode == RESISTANCE_SET_ERG)
-	{
-		// Increment by x watts;
-		m_sim_forces.erg_watts += ERG_ADJUST_LEVEL;
-		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		case RESISTANCE_SET_STANDARD:
+			if (m_resistance_level < (RESISTANCE_LEVELS-1))
+			{
+				resistance_level_set(++m_resistance_level);
+				queue_resistance_ack(m_resistance_mode, m_resistance_level);
+				led_set(LED_BUTTON_UP);
+			}
+			else
+			{
+				led_set(LED_MIN_MAX);
+			}
+
+			break;
+
+		case RESISTANCE_SET_ERG:
+			// Increment by x watts;
+			m_sim_forces.erg_watts += ERG_ADJUST_LEVEL;
+			queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+
+			led_set(LED_BUTTON_UP);
+			break;
+
+		default:
+			break;
 	}
 }
 
@@ -993,6 +1032,9 @@ static void on_resistance_max(void)
 	m_resistance_level = RESISTANCE_LEVELS-1;
 	resistance_level_set(m_resistance_level);
 	queue_resistance_ack(m_resistance_mode, m_resistance_level);
+
+	// Quick blink for feedback.
+	led_set(LED_BUTTON_UP);
 }
 
 static void on_button_menu(void)
@@ -1006,11 +1048,16 @@ static void on_button_menu(void)
 			m_sim_forces.erg_watts = DEFAULT_ERG_WATTS;
 		}
 		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+
+		// Quick blink for feedback.
+		led_set(LED_MODE_ERG);
 	}
 	else
 	{
 		m_resistance_mode = RESISTANCE_SET_STANDARD;
 		on_resistance_off();
+
+		led_set(LED_MODE_STANDARD);
 	}
 }
 
@@ -1058,7 +1105,9 @@ static void on_accelerometer(void)
         NRF_GPIO->PIN_CNF[PIN_SHAKE] &= ~GPIO_PIN_CNF_SENSE_Msk;
         NRF_GPIO->PIN_CNF[PIN_SHAKE] |= GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos;
 
-        if ((SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON)))
+        // Don't shut down if set as such OR if we're in a BLE connection.
+        if ( (SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON)) &&
+        		(irt_ble_ant_state != CONNECTED) )
         {
     		LOG("[MAIN]:about to power down from accelerometer sleep.\r\n");;
         	on_power_down(false);
@@ -1088,17 +1137,14 @@ static void on_power_plug(bool plugged_in)
 
 static void on_ble_connected(void) 
 {
-	blink_led_green_stop(LED_1);
-	set_led_green(LED_1);
-
+	led_set(LED_BLE_CONNECTED);
 	LOG("[MAIN]:on_ble_connected\r\n");
 }
 	
 static void on_ble_disconnected(void) 
 {
 	// Clear connection LED.
-	clear_led(LED_1);
-	
+	led_set(LED_BLE_DISCONNECTED);
 	LOG("[MAIN]:on_ble_disconnected\r\n");
 
 	// Restart advertising.
@@ -1107,13 +1153,13 @@ static void on_ble_disconnected(void)
 
 static void on_ble_timeout(void) 
 {
-	blink_led_green_stop(LED_1);
 	LOG("[MAIN]:on_ble_timeout\r\n");
+	led_set(LED_BLE_TIMEOUT);
 }
 
 static void on_ble_advertising(void)
 {
-	blink_led_green_start(LED_1, BLE_ADV_BLINK_RATE_MS);
+	led_set(LED_BLE_ADVERTISTING);
 }
 
 static void on_ble_uart(uint8_t * data, uint16_t length)
@@ -1242,6 +1288,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			if (m_crr_adjust_mode)
 			{
 				crr_adjust(CRR_ADJUST_VALUE);
+				led_set(LED_BUTTON_UP);
 			}
 			else
 			{
@@ -1254,6 +1301,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			if (m_crr_adjust_mode)
 			{
 				crr_adjust(CRR_ADJUST_VALUE*-1);
+				led_set(LED_BUTTON_DOWN);
 			}
 			else
 			{
@@ -1482,30 +1530,50 @@ static void on_battery_result(uint16_t battery_level)
 
 	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
 
-	// If battery is critically low and power is not plugged in.
-	if (m_battery_status.status == BAT_CRITICAL && !peripheral_plugged_in())
+	// If we're not plugged in and we have a LOW or CRITICAL status, display warnings.
+	if (!peripheral_plugged_in())
 	{
-		// Critical battery level.
-		LOG("[MAIN] on_battery_result critical low battery coarse volts: %i\r\n",
-				m_battery_status.coarse_volt);
-
-		// TODO: Start blinking the LED orange.
-
-		// Set the servo to HOME position.
-		on_resistance_off();
-
-		// If we're below 6 volts, shut it all the way down.
-		if (m_battery_status.coarse_volt < SHUTDOWN_VOLTS)
+		switch (m_battery_status.status)
 		{
-			clear_led(LED_BOTH);
-			set_led_red(LED_2);
-			nrf_delay_ms(1500); // sleep for 1.5 seconds to show indicator.
-			on_power_down(false);
-		}
-		else
-		{
-			// Turn all extra power off.
-			peripheral_low_power_set();
+			case BAT_LOW:
+				// Blink a warning.
+				led_set(LED_BATT_LOW);
+
+				break;
+
+			case BAT_CRITICAL:
+
+				// Set the servo to HOME position.
+				on_resistance_off();
+
+				// If we're below 6 volts, shut it all the way down.
+				if (m_battery_status.coarse_volt < SHUTDOWN_VOLTS)
+				{
+					// Indicate and then shut down.
+					led_set(LED_BATT_CRITICAL);
+
+					// Critical battery level.
+					LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, powering down.\r\n",
+							m_battery_status.coarse_volt);
+					nrf_delay_ms(3000);
+					on_power_down(false);
+				}
+				else
+				{
+					// Blink a warning.
+					led_set(LED_BATT_WARN);
+
+					// Critical battery level.
+					LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, displaying warning.\r\n",
+							m_battery_status.coarse_volt);
+
+					// Turn all extra power off.
+					peripheral_low_power_set();
+				}
+				break;
+
+			default:
+				break;
 		}
 	}
 }

@@ -33,9 +33,4 @@
 
 // Port pins P0.16-P0.18 and P0.21-P0.23 are brought out to test points for possible use.
 
-// Until I update the code. 										
-#define ADVERTISING_LED_PIN_NO		PIN_LED_A
-#define CONNECTED_LED_PIN_NO		PIN_LED_A
-#define ASSERT_LED_PIN_NO			PIN_LED_B
-
 #endif // IRT_REV_A_H

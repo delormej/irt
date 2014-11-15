@@ -14,7 +14,7 @@ APPLICATION_SRCS :=
 # Bootloader Application
 APPLICATION_SRCS += main.c
 APPLICATION_SRCS += nrf_delay.c
-#APPLICATION_SRCS += app_gpiote.c
+APPLICATION_SRCS += app_timer.c
 APPLICATION_SRCS += simple_uart.c
 
 LIBRARY_PATHS += ../../emotion
@@ -23,7 +23,7 @@ LIBRARY_PATHS += ../../emotion
 PROJECT_NAME := $(shell basename "$(realpath ../)")
 
 DEVICE = NRF51
-BOARD = BOARD_IRT_REV_A
+BOARD = BOARD_IRT_V2_REV_A1
 #BOARD = BOARD_PCA10001
 #SEGGER_SERIAL = 
 #TARGET_DEVICE = nRF51422_xxAA

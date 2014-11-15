@@ -7,7 +7,8 @@ import numpy as np
 from itertools import groupby
 
 def find_stable(input_file_name):
-    speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=1, usecols=[2, 3, 4], unpack=True)
+    speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=1,
+	    dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[3, 5, 7], unpack=True, comments='"')
     #speeds = np.array([18.8, 19.3, 19.8, 20.4, 21.3, 20.9, 21.4, 20.9, 21.4, 21.4, 21.4, 22, 21.4, 21.4, 21.6, 21.7, 21.4, 20.1, 16.7, 16.3, 16.1, 16.3, 16.4, 16.1, 16.6, 15.9])
     #speeds = np.array([16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8, 16.9])
     
@@ -37,11 +38,11 @@ def main(argv):
    try:
       opts, args = getopt.getopt(argv,"hi:o:")
    except getopt.GetoptError:
-      print usage
+      print(usage)
       sys.exit(2)
    for opt, arg in opts:
       if opt == '-h':
-         print usage
+         print(usage)
          sys.exit()
       elif opt in ("-i"):
          inputfile = arg
@@ -49,7 +50,7 @@ def main(argv):
          outputfile = arg         
 
    if not inputfile or inputfile.isspace():
-       print usage
+       print(usage)
        sys.exit(2)
 
    find_stable(inputfile)

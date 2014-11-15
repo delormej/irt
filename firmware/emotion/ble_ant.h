@@ -36,19 +36,21 @@ static const uint8_t m_ant_network_key[] = ANT_NETWORK_KEY;
 uint8_t ant_product_page[TX_BUFFER_SIZE];
 uint8_t ant_manufacturer_page[TX_BUFFER_SIZE];
 
+typedef enum
+{
+	DISCONNECTED,
+	CONNECTED,
+	ADVERTISING
+} ble_state_e;
+
+extern ble_state_e irt_ble_ant_state;
+
 /**@brief	Checks to see if this ANT error could be treated as a warning.
  */
 #define ANT_ERROR_AS_WARN(ERR) \
 		(ERR == NRF_ANT_ERROR_TRANSFER_BUSY || \
 			ERR == NRF_ANT_ERROR_TRANSFER_IN_PROGRESS)
 
-
-/**@brief	Checks to see if this BLE error could be treated as a warning.
- */
-#define BLE_ERROR_AS_WARN(ERR) \
-		(ERR ==  NRF_ERROR_INVALID_STATE || \
-			ERR == BLE_ERROR_NO_TX_BUFFERS || \
-			ERR == NRF_ERROR_BUSY)
 
 // MACRO for sending manufacturer and product pages.
 #define ANT_COMMON_PAGE_TRANSMIT(ANT_CHANNEL, COMMON_PAGE)					\

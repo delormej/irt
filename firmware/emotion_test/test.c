@@ -11,221 +11,159 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <math.h>
 #include <float.h>
+#include <windows.h>
 
-#define GRAVITY 9.8f;
+#define LED_FRONT_GREEN_PIN		18
+#define LED_FRONT_RED_PIN		19
+#define LED_BACK_GREEN_PIN		20
+#define LED_BACK_RED_PIN		21
 
-#define debug_log printf
+#define LED_FRONT_GREEN			0
+#define LED_FRONT_RED			1
+#define LED_BACK_GREEN			2
+#define LED_BACK_RED			3
 
-#ifndef DM_DIABLE_LOGS
-#define DM_LOG debug_log   /**< Used for logging details. */
-#else // DM_DIABLE_LOGS
-#define DM_LOG(...)        /**< Diasbles detailed logs. */
-#endif // DM_DIABLE_LOGS
+#define LED_PINS				(1UL << LED_FRONT_GREEN | 1UL << LED_FRONT_RED | 1UL << LED_BACK_GREEN | 1UL << LED_BACK_RED )
+#define PATTERN_LEN				4								// Working with 4 pins (2 LEDs, 2 pins each)
+#define PATTERN_END(POS)		(POS == 0x0)
+#define PATTERN_DEFAULT			{			\
+									[LED_FRONT_GREEN] = { .pin = LED_FRONT_GREEN_PIN }, \
+									[LED_FRONT_RED] =	{ .pin = LED_FRONT_RED_PIN },	\
+									[LED_BACK_GREEN] =	{ .pin = LED_BACK_GREEN_PIN },	\
+									[LED_BACK_RED] =	{ .pin = LED_BACK_RED_PIN }		\
+								}
 
-#define IRT_ERROR_BASE_NUM      (0x80000)       				///< Error base, hopefully well away from anything else.
-#define IRT_ERROR_RC_BASE_NUM   IRT_ERROR_BASE_NUM + (0x100)   	///< Error base for Resistance Control
+#define POSITION_NEXT(POS)		(POS = (--POS & 0x7))
 
-#define RESISTANCE_LEVELS 	7 	// Number of resistance levels available.
-
-typedef struct irt_battery_status_s
+// this goes in the header:
+typedef enum
 {
-	uint8_t	  	fractional_volt;
-	uint8_t		coarse_volt : 3;
-	uint8_t		status : 3;
-	uint8_t		resolution : 2;
-} irt_battery_status_t;
+	LED_POWER_ON,
+	LED_BLE_ADV,
+	LED_BUTTON_UP,
+	LED_BATT_WARN,
+	LED_BATT_LOW,
+
+	LED_CALIBRATION_ENTER,
+	LED_CALIBRATION_EXIT		// Need this state to clear.
 
 
-/**@brief		Array representing the servo position in micrseconds (us) by
-*					resistance level 0-9.
-*
+} led_pattern_e;
+
+typedef union 
+{
+	const uint8_t pin;
+	uint8_t repeat  : 1;
+	uint8_t pattern : 7;
+} pattern_t;
+
+// active pattern per pin
+static pattern_t active_pattern[PATTERN_LEN] = PATTERN_DEFAULT;
+// storage for patterns that repeat
+static uint8_t repeating_pattern[PATTERN_LEN];
+
+static void blink_handler(void * p_context)
+{
+	// running position count
+	static uint8_t position = 0;
+	uint32_t pin_mask_clear = 0, pin_mask_set = 0;
+	
+	// move position in reverse order, 0 == end of pattern
+	POSITION_NEXT(position);
+
+	// if the end of a non-repeating pattern, restore repeated pattern
+	if (PATTERN_END(position))
+	{
+		for (uint8_t i = 0; i < PATTERN_LEN; i++)
+		{
+			if (active_pattern[i].repeat == 0)
+			{
+				active_pattern[i].pattern = repeating_pattern[i];
+			}
+		}
+
+		//POSITION_NEXT(position);
+	}
+	
+	// for each pin, determine if the current pattern position sets it ON 
+	for (uint8_t i; i < PATTERN_LEN; i++)
+	{
+		// if we're supposed to turn the led on, add it to the clear mask.
+		if (active_pattern[i].pattern & (1UL << position))
+		{
+			pin_mask_clear |= (1UL << active_pattern[i].pin);
+		}
+		else
+		{
+			pin_mask_set |= (1UL << active_pattern[i].pin);
+		}
+	}
+
+	printf("position: %u\tpin state: %#.8x, %#.8x\r\n", position, pin_mask_clear, pin_mask_set);
+}
+
+// we could eliminate repeat bit and just say if (active_pattern[i].pattern == repeat_pattern[i])
+
+/*
+	Method has the logic required to figure out what lights to turn on / off based on state type passed in.
 */
-static const uint16_t RESISTANCE_LEVEL[RESISTANCE_LEVELS] = {
-	2000, // 0 - no resistance
-	/*	1300,
-	1225,
-	1150,
-	1075,
-	1000,
-	925,
-	850,
-	775,
-	700}; // Max resistance
-	*/ // TESTING 7 positions.
-	1300,
-	1200,
-	1100,
-	1000,
-	900,
-	800 };
 
-#define MIN_RESISTANCE_LEVEL	1700					// Minimum by which there is no longer resistance.
-#define MAX_RESISTANCE_LEVEL	RESISTANCE_LEVEL[RESISTANCE_LEVELS-1]
-
-
-int16_t calc_watts(float grade, float speed_mps, float wind_mps, float weight_kg, float _c, float _crr)
+static void led_set(led_pattern_e type)
 {
-	float f_wind;
-	float f_rolling;
-	float f_slope;
-	float result;
+	// stop the timer
 
-	f_wind = 0.5f * (_c * pow((speed_mps + wind_mps), 2));
-
-	// Weight * GRAVITY * Co-efficient of rolling resistance.
-	f_rolling = (weight_kg * 9.8f * _crr);
-
-	f_slope = (weight_kg * 9.8f * grade);
-
-	result = ((f_wind + f_rolling + f_slope) * speed_mps);
-	printf("f_wind:%f, f_rolling:%f, f_slope:%f\r\n", 
-		f_wind, f_rolling, f_slope);
-
-	return (int16_t) ((f_wind + f_rolling + f_slope) * speed_mps);
-}
-
-void check(uint32_t err)
-{
-	if ((err & IRT_ERROR_RC_BASE_NUM) == IRT_ERROR_RC_BASE_NUM)
+	switch (type)
 	{
-		printf("Yes\r\n");
+		case LED_POWER_ON:
+			active_pattern[LED_FRONT_GREEN].pattern = 5;
+			active_pattern[LED_FRONT_GREEN].repeat = 1;
+			break;
+
+		case LED_BLE_ADV:
+			active_pattern[LED_BACK_GREEN].pattern = 10; // 0b1111111;
+			active_pattern[LED_BACK_GREEN].repeat = 1;
+			break;
+
+		case LED_BATT_LOW:
+			// Invert the green pattern.
+			active_pattern[LED_FRONT_GREEN].pattern = 10; // 0b1111111;
+			active_pattern[LED_FRONT_GREEN].repeat = 1;
+			active_pattern[LED_FRONT_RED].pattern = 10; // 0b1111111;
+			active_pattern[LED_FRONT_RED].repeat = 1;
+			break;
+
+		default:
+			// THROW AN ERROR, not a supported state.
+			break;
 	}
-	else
-	{
-		printf("No\r\n");
-	}
-}
 
-
-
-uint16_t slope_calc(float y, float slope, float intercept)
-{
-	float x;
-	x = y * slope + intercept;
-
-	return (uint16_t) x;
-}
-
-float servo_pos_force_calc(uint16_t servo_pos)
-{
-	float force;
-
-	force = (
-		-0.0000000000012401 * pow(servo_pos, 5)
-		+ 0.0000000067486647 * pow(servo_pos, 4)
-		- 0.0000141629606351 * pow(servo_pos, 3)
-		+ 0.0142639827784839 * pow(servo_pos, 2)
-		- 6.92836459712442 * servo_pos
-		+ 1351.463567618);
-
-	return force;
-}
-
-//
-// Calculates the desired servo position given speed in mps, weight in kg
-// and additional needed force in newton meters.
-//
-uint16_t power_servo_pos_calc(float force)
-{
-	//int16_t servo_pos;
-	float servo_pos;
-
-	/*
-	servo_pos = (
-		0.001461686  * pow(force, 5)
-		- 0.076119976 * pow(force, 4)
-		+ 1.210189005 * pow(force, 3)
-		- 5.221468861 * pow(force, 2)
-		- 37.59134617 * force
-		+ 1526.614724);
-	*/
-	servo_pos =
-		-0.0000940913669469  * pow(force, 5)
-		+ 0.0108240213514885 * pow(force, 4)
-		- 0.46173964201648 	 * pow(force, 3)
-		+ 8.9640144624266 	 * pow(force, 2)
-		- 87.5217493343533 	 * force
-		+ 1558.47782198543;
-
-	if (servo_pos )
-
-	return servo_pos;
-}
-
-void copy(double* p_from, double* p_to)
-{
-	memset(p_to, 0, sizeof(double) * 2);
-	memcpy(&p_to[3], p_from, sizeof(double) * 2);
+	// restart the timer
 }
 
 int main(int argc, char *argv [])
 {
-	//				  [       uint32_t     ], [       uint32_t     ]
-	/*uint8_t arr[] = { 0x00, 0x00, 0x03, 0x00, 0x00, 0x05, 0x00, 0x00 };
-	uint32_t value_24;
-	uint32_t value;
+	uint8_t green = 0, red = 0, new_red = 0;
 
-	int16_t servo_pos, millivolts;
-	float force;
-	float volts;
-	irt_battery_status_t status;
+	green = 160;
+	red = 161;
+	red ^= (green & red);
+
+	printf("Starting...%u,%u\r\n", green, red);
 	
-	millivolts = 1935;
-	volts = millivolts / 1000.0f;
+	return;
 
-	status.coarse_volt = (uint8_t) volts;
-	status.fractional_volt = (uint8_t) ((volts - status.coarse_volt) * 255);
+	led_set(LED_POWER_ON);
 
-	printf("Size: %i, (volt)%i, (mV)%i, Volt: %1.3f\r\n", sizeof(irt_battery_status_t),
-		status.coarse_volt, status.fractional_volt,
-		status.coarse_volt + (status.fractional_volt/255.0f));
+	memset(active_pattern, 0, PATTERN_LEN * sizeof(pattern_t));
+	memset(repeating_pattern, 0, PATTERN_LEN * sizeof(pattern_t));
 
-	uint8_t sequence;
-	sequence = 0x21;
-
-	printf("Sequence is: %i\r\n", (sequence >> 5));;
-	printf("Last byte: %i\r\n", ((sequence >> 5) & 0x04) == 0x04);
-
-	value = 0xAABBCCDD;
-	value_24 = value & 0x00FFFFFF;
-
-	printf("Result MSB: %i\r\n", (value_24 & 0x00FF0000) >> 16);
-	printf("Result 1: %i\r\n", (value_24 & 0x0000FF00) >> 8);
-	printf("Result 2: %i\r\n", (uint8_t)value_24);
-
-	printf("Servo Pos: %.4f\r\n.", power_servo_pos_calc(54.28f));
-	printf("Servo Pos: %i\r\n", (uint16_t)power_servo_pos_calc(54.28f));
-	printf("Servo Pos: %#32x\r\n", power_servo_pos_calc(54.28f));
-	
-	printf("Value %i\r\n",
-		((65535UL & 1UL) == (1UL & 0x7FFF))
-		);
-		*/
-	/* an array with 5 elements */
-	double balance[5] = { 1000.0, 2.0, 3.4, 17.0, 50.0 };
-	double new_balance[5];
-	double *p;
-	double *p2;
-	int i;
-
-	p = balance;
-	p2 = new_balance;
-
-	/* output each array element's value */
-	printf("Array values using pointer\n");
-	for (i = 0; i < 5; i++)
+	while (1)
 	{
-		printf("*(p + %d) : %f\n", i, *(p + i));
-	}
-
-	copy(p, new_balance);
-
-	printf("Array values using balance as address %i \n", sizeof(double));
-	for (i = 0; i < 5; i++)
-	{
-		printf("*(balance + %d) : %f\n", i, new_balance[i]);
+		blink_handler((void*) 0);
+		Sleep(750);
 	}
 
 	return 0;

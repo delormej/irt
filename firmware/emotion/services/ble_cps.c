@@ -596,7 +596,7 @@ uint32_t ble_cps_resistance_indicate(ble_cps_t * p_cps, uint8_t op_code, uint16_
 
         if (err_code != NRF_SUCCESS)
         {
-        	CPS_LOG("[CPS]:ble_cps_resistance_indicate returned %lu\r\n", err_code);
+        	CPS_LOG("[CPS]:ble_cps_resistance_indicate returned %#.8x\r\n", err_code);
         }
 	}
 	else

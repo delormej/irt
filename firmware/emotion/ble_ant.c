@@ -60,9 +60,10 @@
 #define DEAD_BEEF                       0xDEADBEEF                                   /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
-static bool m_is_advertising = false; /**< True when in advertising state, False otherwise. */
 static ble_cps_t m_cps; /**< Structure used to identify the cycling power service. */
 static ant_ble_evt_handlers_t * mp_ant_ble_evt_handlers;
+
+ble_state_e irt_ble_ant_state = DISCONNECTED;
 
 /**@brief Debug logging for module.
  *
@@ -82,6 +83,33 @@ static void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length
 }
 #endif
 
+
+
+/**@brief	Checks to see if this BLE error could be treated as a warning.
+ */
+#define BLE_ERROR_AS_WARN(ERR) \
+		(ERR ==  NRF_ERROR_INVALID_STATE || \
+			ERR == BLE_ERROR_NO_TX_BUFFERS || \
+			ERR == NRF_ERROR_BUSY)
+
+/**@brief	Combined with above macro, checks the BLE error to see if we can resolve.
+ */
+#define BLE_ERROR_CHECK(ERR)							\
+do														\
+{														\
+	if (ERR != NRF_SUCCESS)								\
+	{													\
+		if (ERR == BLE_ERROR_GATTS_SYS_ATTR_MISSING)	\
+		{												\
+			sys_attr_missing_set();						\
+		}												\
+		else if (!BLE_ERROR_AS_WARN(ERR))				\
+		{												\
+			APP_ERROR_CHECK(err_code);					\
+		}												\
+	}													\
+} while(0)
+
 /**@brief Assert macro callback function.
  *
  * @details This function will be called in case of an assert in the SoftDevice.
@@ -95,6 +123,15 @@ static void uart_data_handler(ble_nus_t * p_nus, uint8_t * data, uint16_t length
  */
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name) {
 	app_error_handler(DEAD_BEEF, line_num, p_file_name);
+}
+
+/**@brief	Checks to see if the error is a BLE_ERROR_GATTS_SYS_ATTR_MISSING,
+ * 			if so respond to resolve.
+ */
+static void sys_attr_missing_set()
+{
+	BA_LOG("[BA]:cycling_power_send sd_ble_gatts_sys_attr_set\r\n");
+	APP_ERROR_CHECK(sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0));
 }
 
 /**@brief GAP initialization.
@@ -327,6 +364,7 @@ static void conn_params_error_handler(uint32_t nrf_error) {
 	APP_ERROR_HANDLER(nrf_error);
 }
 
+
 /**@brief Initialize the Connection Parameters module.
  */
 static void conn_params_init(void) {
@@ -380,12 +418,13 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 	switch (p_ble_evt->header.evt_id)
 	{
 		case BLE_GAP_EVT_CONNECTED:
-			m_is_advertising = false;
+			irt_ble_ant_state = CONNECTED;
 			mp_ant_ble_evt_handlers->on_ble_connected();
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 			break;
 
 		case BLE_GAP_EVT_DISCONNECTED:
+			irt_ble_ant_state = DISCONNECTED;
 			mp_ant_ble_evt_handlers->on_ble_disconnected();
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
@@ -399,15 +438,13 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 			if (p_ble_evt->evt.gap_evt.params.timeout.src
 					== BLE_GAP_TIMEOUT_SRC_ADVERTISEMENT)
 			{
-				m_is_advertising = false;
+				irt_ble_ant_state = DISCONNECTED;
 				mp_ant_ble_evt_handlers->on_ble_timeout();
 			}
 			break;
 
 		case BLE_GATTS_EVT_SYS_ATTR_MISSING:
-			err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
-			BA_LOG("[BA]:on_ble_evt sd_ble_gatts_sys_attr_set\r\n");
-			APP_ERROR_CHECK(err_code);
+			sys_attr_missing_set();
 			break;
 
 		case BLE_GAP_EVT_AUTH_STATUS:
@@ -478,16 +515,7 @@ void ble_ant_resistance_ack(uint8_t op_code, uint16_t value)
 	if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
 	{
 		err_code = ble_cps_resistance_indicate(&m_cps, op_code, value);
-	}
-
-	if (BLE_ERROR_AS_WARN(err_code))
-	{
-		BA_LOG("[BA]:ble_ant_resistance_ack WARN: %#.8lx.\r\n", err_code);
-		err_code = NRF_SUCCESS;
-	}
-	else
-	{
-		APP_ERROR_CHECK(err_code);
+		BLE_ERROR_CHECK(err_code);
 	}
 
 	BA_LOG("[BA]:ble_ant_resistance_ack op:%i value:%i\r\n", op_code, value);
@@ -499,36 +527,22 @@ void ble_ant_resistance_ack(uint8_t op_code, uint16_t value)
 void cycling_power_send(irt_power_meas_t * p_cps_meas)
 {
 	uint32_t err_code;
-
 	// TODO: THIS IS A HACK, BUT NEED TO REFACTOR.
-	static uint32_t event_count;
+	static uint32_t event_count = 0;
+
+	// Always send ANT+ message.
+	ant_bp_tx_send(p_cps_meas);
 
 	// Only send BLE power every 4 messages (1hz vs. ANT is 4hz)
-	if (++event_count % 4 == 0) {
+	if (++event_count % 4 == 0)
+	{
 		// Send ble message only if connected.
 		if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
 		{
 			err_code = ble_cps_cycling_power_measurement_send(&m_cps, p_cps_meas);
-
-			if (err_code != NRF_SUCCESS)
-			{
-				if (err_code == BLE_ERROR_GATTS_SYS_ATTR_MISSING)
-				{
-					err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0);
-					BA_LOG("[BA]:cycling_power_send sd_ble_gatts_sys_attr_set\r\n");
-
-					APP_ERROR_CHECK(err_code);
-				}
-				else if (!(BLE_ERROR_AS_WARN(err_code)))
-				{
-					APP_ERROR_HANDLER(err_code);
-				}
-			}
+			BLE_ERROR_CHECK(err_code);
 		}
 	}
-
-	// Send ANT+ message.
-	ant_bp_tx_send(p_cps_meas);
 }
 
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
@@ -581,8 +595,7 @@ void ble_advertising_start(void) {
 	err_code = sd_ble_gap_adv_start(&adv_params);
 	APP_ERROR_CHECK(err_code);
 
-	m_is_advertising = true;
-
+	irt_ble_ant_state = ADVERTISING;
 	mp_ant_ble_evt_handlers->on_ble_advertising();
 }
 
