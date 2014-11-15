@@ -648,6 +648,9 @@ static void ant_4hz_timeout_handler(void * p_context)
  */
 static void sensor_read_timeout_handler(void * p_context)
 {
+	// Increment battery ticks.  Each "tick" represents 16 seconds.
+	m_battery_start_ticks += (uint32_t)(SENSOR_READ_INTERVAL / 32768 / 16);
+
 	// Initiate async battery read.
 	battery_read_start();
 
@@ -1558,11 +1561,6 @@ static void on_charge_status(irt_charge_status_e status)
  */
 static void on_battery_result(uint16_t battery_level)
 {
-	// Increment battery ticks.  Each "tick" represents 16 seconds.
-	// TODO: first read will cause this to always be ~2 minutes more than actually running.
-	m_battery_start_ticks += (uint32_t)(SENSOR_READ_INTERVAL / 32768 / 16);
-
-	// TODO: Hard coded for the moment, we will send battery page.
 	LOG("[MAIN] on_battery_result %i, ticks: %i, seconds: %i \r\n", battery_level,
 			m_battery_start_ticks,
 			ROUNDED_DIV(NRF_RTC1->COUNTER, TICK_FREQUENCY) );
