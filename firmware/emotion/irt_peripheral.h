@@ -18,12 +18,20 @@
 // # of 2048th's would then be ticks / 16.
 #define	TICK_FREQUENCY	(32768 / (NRF_RTC1->PRESCALER + 1))
 
+typedef enum
+{
+	CHARGING,
+	CHARGED,
+	ERROR
+} irt_charge_status_e;
+
 typedef struct peripheral_evt_s
 {
 	void (*on_button_pbsw)(bool long_press);
 	void (*on_accelerometer_evt)(void);
 	void (*on_power_plug)(bool plugged_in);
 	void (*on_battery_result)(uint16_t);
+	void (*on_charge_status)(irt_charge_status_e);
 } peripheral_evt_t;
 
 /**@brief	Sets the pins to wake the device from sleep.

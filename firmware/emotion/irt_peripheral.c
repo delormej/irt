@@ -58,6 +58,14 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 		// Detects when the power adapter is plugged in.
 		mp_on_peripheral_evt->on_power_plug(true);
 	}
+	else if (event_pins_low_to_high & (1 << PIN_STAT1))
+	{
+		mp_on_peripheral_evt->on_charge_status(CHARGING);
+	}
+	else if (event_pins_low_to_high & (1 << PIN_STAT2))
+	{
+		mp_on_peripheral_evt->on_charge_status(CHARGED);
+	}
 #endif
 }
 
@@ -130,12 +138,12 @@ static void irt_gpio_init()
 		//nrf_gpio_cfg_input(PIN_ANALOG_READ, NRF_GPIO_PIN_NOPULL);
 	}
 
-
 	pins_low_to_high_mask = 1 << PIN_PG_N;			// On power adapter unplugged.
 
 	if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
 	{
-		pins_low_to_high_mask |= 1 << PIN_STAT1;	// On battery charger status changing.
+		pins_low_to_high_mask |= 1 << PIN_STAT1;	// Charge status 1. Indicates charge in process.
+		pins_low_to_high_mask |= 1 << PIN_STAT2;	// Charge status 2. Indicates charge complete.
 	}
 
 	pins_high_to_low_mask = ( 1 << PIN_SHAKE

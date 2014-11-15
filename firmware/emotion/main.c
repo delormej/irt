@@ -1517,6 +1517,27 @@ static void on_set_servo_positions(servo_positions_t* positions)
 	profile_update_sched();
 }
 
+/**@brief	Called when a charge status has been indicated.
+ *
+ */
+static void on_charge_status(irt_charge_status_e status)
+{
+	LOG("[MAIN] on_charge_status: %i\r\n", status);
+
+	switch  (status)
+	{
+		case CHARGING:
+			led_set(LED_CHARGING);
+			break;
+		case CHARGED:
+			led_set(LED_CHARGED);
+			break;
+		default:
+			// not handling charge error yet.
+			break;
+	}
+}
+
 /**@brief	Called when the result of the battery is determined.
  *
  */
@@ -1635,11 +1656,11 @@ static uint32_t check_reset_reason()
 		{
 			LOG("[MAIN] WDT timeout caused reset, enabling interupts and shutting down.\r\n");
 
-			// Initialize the status LEDs, which ensures they are off.
-			led_init();
-
 			// Enable interupts that will wake the system.
 			peripheral_wakeup_set();
+
+			// Initialize the status LEDs, which ensures they are off.
+			led_init();
 
 			// Shut the system down.
 			NRF_POWER->SYSTEMOFF = 1;
