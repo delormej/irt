@@ -1116,10 +1116,25 @@ static void on_accelerometer(void)
 	err_code = accelerometer_data_get(&m_accelerometer_data);
 	APP_ERROR_CHECK(err_code);
 
-	LOG("[MAIN]:on_accelerometer source:%i y:%i \r\n",
-			m_accelerometer_data.source,
-			m_accelerometer_data.out_y_lsb |=
-					m_accelerometer_data.out_y_msb << 8);
+	// Received a sleep interrupt from the accelerometer meaning no motion for a while.
+	if (m_accelerometer_data.source == ACCELEROMETER_SRC_WAKE_SLEEP)
+	{
+		//
+		// This is a workaround to deal with GPIOTE toggling the SENSE bits which forces
+		// the device to wake up immediately after going to sleep without this.
+		//
+        NRF_GPIO->PIN_CNF[PIN_SHAKE] &= ~GPIO_PIN_CNF_SENSE_Msk;
+        NRF_GPIO->PIN_CNF[PIN_SHAKE] |= GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos;
+
+        LOG("[MAIN]:on_accelerometer received sleep signal.\r\n");;
+	}
+	else
+	{
+		LOG("[MAIN]:on_accelerometer source:%i y:%i \r\n",
+				m_accelerometer_data.source,
+				m_accelerometer_data.out_y_lsb |=
+						m_accelerometer_data.out_y_msb << 8);
+	}
 }
 
 // Called when the power adapter is plugged in.
@@ -1656,14 +1671,22 @@ static uint32_t check_reset_reason()
 		{
 			LOG("[MAIN] WDT timeout caused reset, enabling interupts and shutting down.\r\n");
 
-			// Enable interupts that will wake the system.
-			peripheral_wakeup_set();
-
 			// Initialize the status LEDs, which ensures they are off.
 			led_init();
 
+			// Enable interupts that will wake the system.
+			peripheral_wakeup_set();
+
+			// Ensure a few CPU cycles take place before forcing a shutdown.
+			nrf_delay_ms(50);
+
 			// Shut the system down.
 			NRF_POWER->SYSTEMOFF = 1;
+		}
+
+		if (reason & POWER_RESETREAS_OFF_Msk)
+		{
+			// if this was because of a SENSE input, reset the DETECT.
 		}
 	}
 	else

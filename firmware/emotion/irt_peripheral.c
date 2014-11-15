@@ -11,6 +11,7 @@
 #include "app_gpiote.h"
 #include "app_timer.h"
 #include "app_button.h"
+#include "nrf_gpio.h"
 #include "accelerometer.h"
 #include "temperature.h"
 #include "boards.h"
@@ -43,8 +44,7 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 	//event_pins_low_to_high
 	if (event_pins_high_to_low & (1 << PIN_SHAKE))
 	{
-		// testing - Turn off pin sense for a moment.
-		//app_gpiote_user_disable(mp_user_id);
+
 		mp_on_peripheral_evt->on_accelerometer_evt();
 	}
 #ifdef IRT_REV_2A_H
@@ -126,6 +126,8 @@ static void irt_gpio_init()
 			nrf_gpio_cfg_output(PIN_ENBATT);
 		}
 		#endif
+
+		// TODO: I don't think we need to configure Analog input pins, the ADC should just take control.  Verify, then remove.
 		// Configure input for the battery AIN.
 		// This is available whether or not the board is built with battery charge support.
 		NRF_GPIO->PIN_CNF[PIN_BATT_VOLT] = (GPIO_PIN_CNF_INPUT_Disconnect << GPIO_PIN_CNF_INPUT_Pos);
@@ -171,9 +173,6 @@ static void button_init()
 
 	if (HW_REVISION >= 2)
 	{
-		// User push button on the board.
-		nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
-
 		// Initialize the debounce checking module.
 		irt_button_init(PIN_PBSW);
 
@@ -296,6 +295,12 @@ void peripheral_powerdown(bool accelerometer_off)
  */
 void peripheral_wakeup_set()
 {
+	//
+	// Always enable the pin input buffer first, then enable sense input as per PANv2.1 #8.
+	//
+	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
+	nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
+
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
 
