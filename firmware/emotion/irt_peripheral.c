@@ -305,13 +305,7 @@ void peripheral_powerdown(bool accelerometer_off)
 void peripheral_wakeup_set()
 {
 	// Initialize the status LEDs, which ensures they are off.
-	nrf_gpio_cfg_output(PIN_LED_D);
-	nrf_gpio_cfg_output(PIN_LED_C);
-	nrf_gpio_cfg_output(PIN_LED_B);
-	nrf_gpio_cfg_output(PIN_LED_A);
-
-	// Clear all LEDs
-	NRF_GPIO->OUTSET = (1UL << PIN_LED_D | 1UL << PIN_LED_C | 1UL << PIN_LED_B | 1UL << PIN_LED_A );
+	led_init();
 
 	/* Push button switch */
 	NRF_GPIO->PIN_CNF[PIN_PBSW] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
