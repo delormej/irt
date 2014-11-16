@@ -1100,7 +1100,7 @@ static void on_button_pbsw(bool long_press)
 	{
 		LOG("[MAIN] Push button switch pressed (short).\r\n");
 		// Shutting device down.
-		//on_power_down(true);
+		on_power_down(true);
 	}
 }
 
