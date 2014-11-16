@@ -243,20 +243,20 @@ void peripheral_low_power_set()
 
 	if (HW_REVISION >= 2) // IRT_REV_2A_H
 	{
-			// Disable servo / Optical sensor.
-			nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
+		// Disable servo / Optical sensor.
+		nrf_gpio_pin_clear(PIN_EN_SERVO_PWR);
 
-			if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+		if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+		{
+			// Disable the power regulator if the board is configured for.
+			nrf_gpio_pin_clear(PIN_SLEEP_N);
+
+			// Check if AC power is plugged in.  If not, cut power to charger.
+			if (!peripheral_plugged_in())
 			{
-				// Disable the power regulator if the board is configured for.
-				nrf_gpio_pin_clear(PIN_SLEEP_N);
-
-				// Check if AC power is plugged in.  If not, cut power to charger.
-				if (!peripheral_plugged_in())
-				{
-					battery_charge_set(false);
-				}
+				battery_charge_set(false);
 			}
+		}
 	} // IRT_REV_2A_H
 
 	peripheral_aux_pwr_set(true);
@@ -304,17 +304,6 @@ void peripheral_powerdown(bool accelerometer_off)
  */
 void peripheral_wakeup_set()
 {
-	// Initialize the status LEDs, which ensures they are off.
-	led_init();
-
-	/* Push button switch */
-	NRF_GPIO->PIN_CNF[PIN_PBSW] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-            | (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
-            | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-            | (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);
-	// SENSE transition from high to LOW.  Configure the pin sense separately per PANv2.1 #8
-	NRF_GPIO->PIN_CNF[PIN_PBSW] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
-
 	/* Accelerometer interrupt signal */
 	NRF_GPIO->PIN_CNF[PIN_SHAKE] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
             | (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
@@ -322,6 +311,36 @@ void peripheral_wakeup_set()
             | (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);
 	// SENSE transition from high to LOW.  Configure the pin sense separately per PANv2.1 #8
 	NRF_GPIO->PIN_CNF[PIN_SHAKE] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
+
+	if (HW_REVISION >= 2) // IRT_REV_2A_H
+	{
+		/* Push button switch */
+		NRF_GPIO->PIN_CNF[PIN_PBSW] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
+	            | (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
+	            | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
+	            | (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);
+		// SENSE transition from high to LOW.  Configure the pin sense separately per PANv2.1 #8
+		NRF_GPIO->PIN_CNF[PIN_PBSW] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
+
+		/* Indicates device was plugged in. */
+		NRF_GPIO->PIN_CNF[PIN_PG_N] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
+				| (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
+				| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
+				| (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);
+		// SENSE transition from high to LOW.  Configure the pin sense separately per PANv2.1 #8
+		NRF_GPIO->PIN_CNF[PIN_PG_N] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
+
+		if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
+		{
+			/* Charge status 2. Indicates charge complete. */
+			NRF_GPIO->PIN_CNF[PIN_STAT2] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
+					| (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
+					| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
+					| (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);
+			// Configure the pin sense separately per PANv2.1 #8
+			NRF_GPIO->PIN_CNF[PIN_STAT2] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
+		}
+	}
 }
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)

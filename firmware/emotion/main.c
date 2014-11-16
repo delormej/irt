@@ -1669,6 +1669,9 @@ static uint32_t check_reset_reason()
 		{
 			LOG("[MAIN] WDT timeout caused reset, enabling interrupts and shutting down.\r\n");
 
+			// Initialize the status LEDs, which ensures they are off.
+			led_init();
+
 			// Enable interrupts that will wake the system.
 			peripheral_wakeup_set();
 
