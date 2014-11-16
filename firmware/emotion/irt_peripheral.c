@@ -104,8 +104,11 @@ static void irt_gpio_init()
 
 		if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
 		{
+			PH_LOG("[PH] irt_gpio_init enabling charger and power regulator.\r\n");
+
 			// Configure pin for enabling or disabling battery charger. 0=on, 1=off
 			nrf_gpio_cfg_output(PIN_CHG_EN_N);
+			nrf_gpio_pin_clear(PIN_CHG_EN_N);
 
 			// Enable the power regulator if the board is built with power regulator.
 			nrf_gpio_cfg_output(PIN_SLEEP_N);
