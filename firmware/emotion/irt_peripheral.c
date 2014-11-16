@@ -140,6 +140,9 @@ static void irt_gpio_init()
 		//nrf_gpio_cfg_input(PIN_ANALOG_READ, NRF_GPIO_PIN_NOPULL);
 	}
 
+	// Initialize the pin to wake the device on movement from the accelerometer.
+	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
+
 	pins_low_to_high_mask = 1 << PIN_PG_N;			// On power adapter unplugged.
 
 	if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
@@ -173,6 +176,12 @@ static void button_init()
 
 	if (HW_REVISION >= 2)
 	{
+		// User push button on the board.
+		nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
+
+		// Initialize the pin to wake the device on button push.
+		nrf_gpio_cfg_sense_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
+
 		// Initialize the debounce checking module.
 		irt_button_init(PIN_PBSW);
 
@@ -319,7 +328,7 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	led_set(LED_POWER_ON);
 
     irt_gpio_init();
-    peripheral_wakeup_set();
+    //peripheral_wakeup_set();
     button_init();
     accelerometer_init();
 	temperature_init();
