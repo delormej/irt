@@ -299,22 +299,35 @@ void peripheral_powerdown(bool accelerometer_off)
 	led_set(LED_POWER_OFF);
 }
 
-/**@brief	Sets the pins to wake the device from sleep.
+/**@brief	Sets the pins to wake the device from sleep (button push and accelerometer).
  *
  */
 void peripheral_wakeup_set()
 {
-	//
-	// Always enable the pin input buffer first, then enable sense input as per PANv2.1 #8.
-	//
-	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
-	nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
+	// Initialize the status LEDs, which ensures they are off.
+	nrf_gpio_cfg_output(PIN_LED_D);
+	nrf_gpio_cfg_output(PIN_LED_C);
+	nrf_gpio_cfg_output(PIN_LED_B);
+	nrf_gpio_cfg_output(PIN_LED_A);
 
-	// Initialize the pin to wake the device on movement from the accelerometer.
-	nrf_gpio_cfg_sense_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
+	// Clear all LEDs
+	NRF_GPIO->OUTSET = (1UL << PIN_LED_D | 1UL << PIN_LED_C | 1UL << PIN_LED_B | 1UL << PIN_LED_A );
 
-	// Initialize the pin to wake the device on button push.
-	nrf_gpio_cfg_sense_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
+	/* Push button switch */
+	NRF_GPIO->PIN_CNF[PIN_PBSW] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
+            | (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
+            | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
+            | (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);
+	// SENSE transition from high to LOW.  Configure the pin sense separately per PANv2.1 #8
+	NRF_GPIO->PIN_CNF[PIN_PBSW] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
+
+	/* Accelerometer interrupt signal */
+	NRF_GPIO->PIN_CNF[PIN_SHAKE] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
+            | (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
+            | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
+            | (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);
+	// SENSE transition from high to LOW.  Configure the pin sense separately per PANv2.1 #8
+	NRF_GPIO->PIN_CNF[PIN_SHAKE] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
 }
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)

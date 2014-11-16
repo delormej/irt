@@ -57,7 +57,7 @@
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	 // Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
 
-#define WATCHDOG_COUNTER				32768 * 60 * 1 							// (NRF_WDT->CRV + 1)/32768 seconds * 60 seconds * 'n' minutes
+#define WATCHDOG_COUNTER				32768 * 60 * 5 							// (NRF_WDT->CRV + 1)/32768 seconds * 60 seconds * 'n' minutes
 
 #define BLE_ADV_BLINK_RATE_MS			500u
 #ifdef ENABLE_DEBUG_LOG
@@ -1669,48 +1669,8 @@ static uint32_t check_reset_reason()
 		{
 			LOG("[MAIN] WDT timeout caused reset, enabling interrupts and shutting down.\r\n");
 
-			// Initialize the status LEDs, which ensures they are off.
-			//led_init();
-			// Configure LED-pins as outputs.
-			nrf_gpio_cfg_output(PIN_LED_D);
-			nrf_gpio_cfg_output(PIN_LED_C);
-			nrf_gpio_cfg_output(PIN_LED_B);
-			nrf_gpio_cfg_output(PIN_LED_A);
-
-			// Clear all LEDs to start
-			NRF_GPIO->OUTSET = (1UL << PIN_LED_D | 1UL << PIN_LED_C | 1UL << PIN_LED_B | 1UL << PIN_LED_A );
-
 			// Enable interrupts that will wake the system.
-			//peripheral_wakeup_set();
-
-			/* Push button switch */
-
-			// configure PBSW as an input
-			NRF_GPIO->PIN_CNF[PIN_PBSW] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-                    | (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
-                    | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-                    | (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);
-
-			// separately, configure the pin sense
-			NRF_GPIO->PIN_CNF[PIN_PBSW] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
-
-
-			/* Accelerometer */
-
-			// configure accelerometer signal as wake
-			NRF_GPIO->PIN_CNF[PIN_SHAKE] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
-                    | (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
-                    | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
-                    | (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);
-
-			// separately, configure the pin sense
-			NRF_GPIO->PIN_CNF[PIN_SHAKE] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
-
-
-			// Ensure a few CPU cycles take place before forcing a shutdown.
-			//nrf_delay_ms(50);
-			//peripheral_init(NULL);
-			//peripheral_powerdown(false);
+			peripheral_wakeup_set();
 
 			// Shut the system down.
 			NRF_POWER->SYSTEMOFF = 1;
