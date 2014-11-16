@@ -171,8 +171,9 @@ uint8_t battery_charge_status()
 
     if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
     {
-		status = nrf_gpio_pin_read(PIN_STAT1);
-		status |= (nrf_gpio_pin_read(PIN_STAT2) << 1);
+    	// 1 == "OFF",  0 == "ON"
+		status = nrf_gpio_pin_read(PIN_STAT1);			// 0 = charge-in progress, 1 = complete OR other status combined with stat2
+		status |= (nrf_gpio_pin_read(PIN_STAT2) << 1);	// 0 = charge complete, 1 = another status when combined with stat1
     }
     else
     {

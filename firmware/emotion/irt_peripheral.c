@@ -307,7 +307,7 @@ void peripheral_powerdown(bool accelerometer_off)
  */
 void peripheral_wakeup_set()
 {
-	/* Accelerometer interrupt signal */
+	// Accelerometer interrupt signal
 	NRF_GPIO->PIN_CNF[PIN_SHAKE] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
             | (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
             | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
@@ -317,7 +317,7 @@ void peripheral_wakeup_set()
 
 	if (HW_REVISION >= 2) // IRT_REV_2A_H
 	{
-		/* Push button switch */
+		// Push button switch
 		NRF_GPIO->PIN_CNF[PIN_PBSW] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
 	            | (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
 	            | (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
@@ -325,17 +325,21 @@ void peripheral_wakeup_set()
 		// SENSE transition from high to LOW.  Configure the pin sense separately per PANv2.1 #8
 		NRF_GPIO->PIN_CNF[PIN_PBSW] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
 
-		/* Indicates device was plugged in. */
+		/* Indicates device was plugged in.
+		 *
+		 * This is commented out because it causes an immediate wake up when plugged-in, not sure
+		 * why, but we really don't need because accelerometer will wake it anyways in most cases.
+		 *
 		NRF_GPIO->PIN_CNF[PIN_PG_N] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
 				| (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
 				| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
 				| (GPIO_PIN_CNF_DIR_Input << GPIO_PIN_CNF_DIR_Pos);
 		// SENSE transition from high to LOW.  Configure the pin sense separately per PANv2.1 #8
-		NRF_GPIO->PIN_CNF[PIN_PG_N] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos);
+		NRF_GPIO->PIN_CNF[PIN_PG_N] |= (GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos); */
 
 		if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
 		{
-			/* Charge status 2. Indicates charge complete. */
+			// Charge status 2. Indicates charge complete.
 			NRF_GPIO->PIN_CNF[PIN_STAT2] = (GPIO_PIN_CNF_DRIVE_S0S1 << GPIO_PIN_CNF_DRIVE_Pos)
 					| (NRF_GPIO_PIN_NOPULL << GPIO_PIN_CNF_PULL_Pos)
 					| (GPIO_PIN_CNF_INPUT_Connect << GPIO_PIN_CNF_INPUT_Pos)
