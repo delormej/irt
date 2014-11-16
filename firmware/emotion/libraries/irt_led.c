@@ -74,7 +74,7 @@ static blink_pattern_e repeating_pattern[PATTERN_LEN];
 
 // running position count
 static uint8_t m_position = 0;
-static app_timer_id_t m_blink_timer;
+static app_timer_id_t m_blink_timer = 0;
 static bool m_running = false;
 
 /**@brief	Helper function to set active pattern.
@@ -96,18 +96,6 @@ static void pattern_set(led_e led, blink_pattern_e pattern, bool repeated)
 		repeating_pattern[led] = active_pattern[led].pattern;
 		repeating_pattern[led_pair] = active_pattern[led_pair].pattern;
 	}
-}
-
-static void led_gpio_init()
-{
-	// Configure LED-pins as outputs.
-	nrf_gpio_cfg_output(LED_FRONT_GREEN_PIN);
-	nrf_gpio_cfg_output(LED_FRONT_RED_PIN);
-	nrf_gpio_cfg_output(LED_BACK_GREEN_PIN);
-	nrf_gpio_cfg_output(LED_BACK_RED_PIN);
-
-	// Clear all LEDs to start
-	NRF_GPIO->OUTSET = LED_PINS;
 }
 
 static void timer_start()
@@ -181,8 +169,16 @@ static void blink_timer_init()
  */
 void led_set(led_state_e state)
 {
-	// stop the timer
-	timer_stop();
+	if (m_blink_timer == 0)
+	{
+		// initialize the blink timer.
+		blink_timer_init();
+	}
+	else
+	{
+		// stop the timer
+		timer_stop();
+	}
 
 	switch (state)
 	{
@@ -304,7 +300,13 @@ void led_set(led_state_e state)
  */
 void led_init(void)
 {
-	led_gpio_init();
-	blink_timer_init();
+	// Configure LED-pins as outputs.
+	nrf_gpio_cfg_output(LED_FRONT_GREEN_PIN);
+	nrf_gpio_cfg_output(LED_FRONT_RED_PIN);
+	nrf_gpio_cfg_output(LED_BACK_GREEN_PIN);
+	nrf_gpio_cfg_output(LED_BACK_RED_PIN);
+
+	// Clear all LEDs to start
+	NRF_GPIO->OUTSET = LED_PINS;
 }
 
