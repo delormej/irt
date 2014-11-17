@@ -679,10 +679,7 @@ static void application_timers_stop(void)
 {
 	uint32_t err_code;
 		
-	err_code = app_timer_stop(m_ant_4hz_timer_id);
-    APP_ERROR_CHECK(err_code);
-
-	err_code = app_timer_stop(m_sensor_read_timer_id);
+	err_code = app_timer_stop_all();
     APP_ERROR_CHECK(err_code);
 }
 
