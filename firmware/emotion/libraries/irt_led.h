@@ -19,6 +19,7 @@ typedef enum
 	LED_BATT_CRITICAL,
 	LED_CHARGING,
 	LED_CHARGED,
+	LED_NOT_CHARGING,
 
 	// Function indicators
 	LED_BLE_ADVERTISTING,

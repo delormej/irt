@@ -12,26 +12,32 @@ All rights reserved.
 #include "irt_common.h"
 
 /* Battery status indicators, uses 2 GPIO pins combined to get status.
+ *
+ * 10k pull-up resistor is on these pins so: 1 == "OFF",  0 == "ON"
+ *
  * 	2 bits (MSB)	(LSB)
  * 			STAT2	STAT1
 			0		1				Charge complete
 			1		0				Charge-in-progress
-			1		1				Fault = No battery, charger off, overvoltage, timer fault, suspended
+			1		1				Charge suspend, timer fault, overvoltage, sleep mode, battery absent
  */
-#define BATTERY_CHARGE_NONE			0u	// If no battery charger is present.
-#define BATTERY_CHARGE_COMPLETE		1u
-#define BATTERY_CHARGING			2u
-#define BATTERY_CHARGE_FAULT		3u	//
+typedef enum
+{
+	BATTERY_CHARGE_NONE			= 0u,	// No battery charger is present.
+	BATTERY_CHARGE_COMPLETE		= 1u,
+	BATTERY_CHARGING			= 2u,
+	BATTERY_CHARGE_OFF			= 3u
+} irt_charger_status_t;
 
 /**@brief Returns true if battery charger is off.
  */
-#define BATTERY_CHARGER_IS_OFF 			(battery_charge_status() == BATTERY_CHARGE_FAULT)
+#define BATTERY_CHARGER_IS_OFF 			(battery_charge_status() == BATTERY_CHARGE_OFF)
 
 typedef void (*on_battery_result_t)(uint16_t battery_level);
 
 /**@brief	Battery statuses defined in ANT spec for common page 0x82.
  */
-enum IRT_BATTERY_STATUS
+typedef enum 
 {
 	BAT_NEW = 0x01,
 	BAT_GOOD,
@@ -39,7 +45,7 @@ enum IRT_BATTERY_STATUS
 	BAT_LOW,
 	BAT_CRITICAL,
 	BAT_INVALID = 0x07
-};
+} irt_battery_level_t;
 
 // Begins a read of the battery voltage.
 void battery_read_start(void);
@@ -50,7 +56,7 @@ irt_battery_status_t battery_status(uint16_t millivolts, uint32_t operating_time
 
 // Reads the charger status.
 // TODO: Connect this with PPI to one of the LEDs.
-uint8_t battery_charge_status(void);
+irt_charger_status_t battery_charge_status(void);
 
 /**@brief	Starts or stops the battery charge process.
  */

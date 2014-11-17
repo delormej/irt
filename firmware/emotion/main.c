@@ -1538,20 +1538,22 @@ static void on_set_servo_positions(servo_positions_t* positions)
 /**@brief	Called when a charge status has been indicated.
  *
  */
-static void on_charge_status(irt_charge_status_e status)
+static void on_charge_status(irt_charger_status_t status)
 {
 	LOG("[MAIN] on_charge_status: %i\r\n", status);
 
 	switch  (status)
 	{
-		case CHARGING:
+		case BATTERY_CHARGING:
 			led_set(LED_CHARGING);
 			break;
-		case CHARGED:
+
+		case BATTERY_CHARGE_COMPLETE:
 			led_set(LED_CHARGED);
 			break;
+
 		default:
-			// not handling charge error yet.
+			led_set(LED_NOT_CHARGING);
 			break;
 	}
 }
@@ -1774,7 +1776,8 @@ int main(void)
 		on_button_pbsw,
 		on_accelerometer,
 		on_power_plug,
-		on_battery_result
+		on_battery_result,
+		on_charge_status
 	};
 
 	// Initialize connected peripherals (temp, accelerometer, buttons, etc..).

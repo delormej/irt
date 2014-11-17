@@ -58,13 +58,10 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 		// Detects when the power adapter is plugged in.
 		mp_on_peripheral_evt->on_power_plug(true);
 	}
-	else if (event_pins_low_to_high & (1 << PIN_STAT1))
+	else if (event_pins_high_to_low & ((1 << PIN_STAT1) | (1 << PIN_STAT2)))
 	{
-		mp_on_peripheral_evt->on_charge_status(CHARGING);
-	}
-	else if (event_pins_low_to_high & (1 << PIN_STAT2))
-	{
-		mp_on_peripheral_evt->on_charge_status(CHARGED);
+		irt_charger_status_t status = battery_charge_status();
+		mp_on_peripheral_evt->on_charge_status(status);
 	}
 #endif
 }
@@ -140,21 +137,27 @@ static void irt_gpio_init()
 	{
 		nrf_gpio_cfg_output(PIN_3VPWR_DIS);
 		nrf_gpio_cfg_input(PIN_AC_PWR, NRF_GPIO_PIN_NOPULL);
-		//nrf_gpio_cfg_input(PIN_ANALOG_READ, NRF_GPIO_PIN_NOPULL);
 	}
 
 	// Initialize the pin to wake the device on movement from the accelerometer.
 	nrf_gpio_cfg_input(PIN_SHAKE, NRF_GPIO_PIN_NOPULL);
 
+	//
+	// Setup pin masks for low to high and high to low
+	//
+	pins_low_to_high_mask = 0;
+	pins_high_to_low_mask = 0;
+
 	pins_low_to_high_mask = 1 << PIN_PG_N;			// On power adapter unplugged.
 
 	if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
 	{
-		pins_low_to_high_mask |= 1 << PIN_STAT1;	// Charge status 1. Indicates charge in process.
-		pins_low_to_high_mask |= 1 << PIN_STAT2;	// Charge status 2. Indicates charge complete.
+		PH_LOG("[PH] irt_gpio_init: configuring charger status.\r\n");
+		pins_high_to_low_mask |= 1 << PIN_STAT1;	// Charge status 1. Indicates charge in process.
+		pins_high_to_low_mask |= 1 << PIN_STAT2;	// Charge status 2. Indicates charge complete.
 	}
 
-	pins_high_to_low_mask = ( 1 << PIN_SHAKE
+	pins_high_to_low_mask |= ( 1 << PIN_SHAKE
 #ifdef IRT_REV_2A_H
 			//| 1 << PIN_PBSW			// On user push button switch
 			| 1 << PIN_PG_N			// On power adapter plugged in
@@ -361,7 +364,6 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	led_set(LED_POWER_ON);
 
     irt_gpio_init();
-    //peripheral_wakeup_set();
     button_init();
     accelerometer_init();
 	temperature_init();

@@ -165,9 +165,9 @@ irt_battery_status_t battery_status(uint16_t millivolts, uint32_t operating_time
  * 			BATTERY_CHARGING
  * 			BATTERY_CHARGE_FAULT
  */
-uint8_t battery_charge_status()
+irt_charger_status_t battery_charge_status()
 {
-	uint8_t status;
+	irt_charger_status_t status;
 
     if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
     {

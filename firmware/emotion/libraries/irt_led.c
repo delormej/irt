@@ -188,6 +188,7 @@ void led_set(led_state_e state)
 			return;
 
 		case LED_POWER_ON:
+		case LED_NOT_CHARGING:
 			pattern_set(LED_FRONT_GREEN, SOLID, true);
 			break;
 
