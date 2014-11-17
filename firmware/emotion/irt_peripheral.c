@@ -52,13 +52,18 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 	{
 		// Detects when the power adapter is unplugged.
 		mp_on_peripheral_evt->on_power_plug(false);
+
+		// If we were charging, we stopped.  Check and report status.
+		irt_charger_status_t status = battery_charge_status();
+		mp_on_peripheral_evt->on_charge_status(status);
 	}
 	else if (event_pins_high_to_low & (1 << PIN_PG_N))
 	{
 		// Detects when the power adapter is plugged in.
 		mp_on_peripheral_evt->on_power_plug(true);
 	}
-	else if (event_pins_high_to_low & ((1 << PIN_STAT1) | (1 << PIN_STAT2)))
+	else if ( event_pins_high_to_low & (1 << PIN_STAT1) ||
+			event_pins_high_to_low & (1 << PIN_STAT2) )
 	{
 		irt_charger_status_t status = battery_charge_status();
 		mp_on_peripheral_evt->on_charge_status(status);
@@ -380,6 +385,9 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	if (FEATURE_AVAILABLE(FEATURE_BATTERY_CHARGER))
 	{
 		battery_init(PIN_ENBATT, PIN_CHG_EN_N, p_on_peripheral_evt->on_battery_result);
+
+		irt_charger_status_t status = battery_charge_status();
+		mp_on_peripheral_evt->on_charge_status(status);
 	}
 	else
 	{
