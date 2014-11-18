@@ -63,13 +63,26 @@ namespace IRT_GUI
             }
         }
 
+        private Single CalculateHz(float speedMph)
+        {
+            const float flywheelDistPerRev = 0.11176f;
+            float hz = 0.0f;
+
+            hz = ((((speedMph * 0.44704f) / flywheelDistPerRev) / 2.0f) * 4.0f) / 2.0f;
+
+            return hz;
+        }
+
         public SimulateState State { get { return m_state; } }
 
         public void Load()
         {
+            const string waveFormat = "{0}\t{1:f}\t3.3\t1\r\n";
+
             Stream stream = null;
             OpenFileDialog dlg = new OpenFileDialog();
             m_power = new List<ushort>();
+            StringBuilder wave = new StringBuilder();
 
             dlg.InitialDirectory = Environment.CurrentDirectory;
             dlg.Filter = "Ride Logs (*.csv)|*.csv|All files (*.*)|*.*";
@@ -84,9 +97,13 @@ namespace IRT_GUI
                     {
                         using (var reader = new StreamReader(stream))
                         {
-                            /* Advance through first line.
+                            // Advance through first line.
                             if (!reader.EndOfStream)
-                                reader.ReadLine(); */
+                            {
+                                reader.ReadLine();
+                                 // Dummy first line @1hz.
+                                wave.AppendFormat(waveFormat, 2, 1.0f);
+                            }
 
                             while (!reader.EndOfStream)
                             {
@@ -95,11 +112,31 @@ namespace IRT_GUI
 
                                 if (values.Length > 5)
                                 {
+                                    // Reference Power
                                     ushort power = 0;
                                     ushort.TryParse(values[5], out power);
                                     m_power.Add(power);
+
+                                    // Speed
+                                    float speed = 0;
+                                    Single hz = 0;
+
+                                    if (float.TryParse(values[3], out speed))
+                                    {
+                                        // Valid speed?
+                                        if (!float.IsInfinity(speed) && !float.IsNaN(speed) && speed > 0.0f)
+                                        {
+                                            hz = CalculateHz(speed);
+                                        }
+                                    }
+                                    
+                                    wave.AppendFormat(waveFormat, 0, hz);
                                 }
                             }
+
+                            // Add 0's to finish it off.
+                            m_power.Add(0);
+                            wave.AppendFormat(waveFormat, 0, 0.0f);
                         }
                     }
                 }
@@ -107,6 +144,15 @@ namespace IRT_GUI
                 {
                     MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
                 }
+            }
+
+
+            var result = MessageBox.Show("Copy speed wave to clipboard?", "Wave Generator",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+
+            if (result == DialogResult.Yes)
+            {
+                Clipboard.SetText(wave.ToString());
             }
 
             OnStateChange(SimulateState.Loaded);
