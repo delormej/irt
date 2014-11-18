@@ -126,7 +126,7 @@ namespace IRT_GUI
 
                                     // Speed
                                     float speed = 0;
-                                    Single hz = 0;
+                                    Single hz = 1.0f; // Pclab doesn't like 0 
 
                                     if (float.TryParse(values[3], out speed))
                                     {
@@ -134,6 +134,10 @@ namespace IRT_GUI
                                         if (!float.IsInfinity(speed) && !float.IsNaN(speed) && speed > 0.0f)
                                         {
                                             hz = CalculateHz(speed);
+                                        }
+                                        else
+                                        {
+                                            hz = 1.0f; // doesn't like 0
                                         }
                                     }
                                     
@@ -143,7 +147,7 @@ namespace IRT_GUI
 
                             // Add 0's to finish it off.
                             m_power.Add(0);
-                            wave.AppendFormat(waveFormat, 0, 0.0f);
+                            wave.AppendFormat(waveFormat, 0, 1.0f);
                         }
 
                         var result = MessageBox.Show("Copy speed wave to clipboard?", "Wave Generator",
