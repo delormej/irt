@@ -84,6 +84,7 @@
     <Compile Include="ServoPositions.Designer.cs">
       <DependentUpon>ServoPositions.cs</DependentUpon>
     </Compile>
+    <Compile Include="SimulateRefPower.cs" />
     <EmbeddedResource Include="GraphForm.resx">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </EmbeddedResource>

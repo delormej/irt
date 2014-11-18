@@ -118,14 +118,15 @@
             this.txtWheelSizeMm = new System.Windows.Forms.TextBox();
             this.chkLstSettings = new System.Windows.Forms.CheckedListBox();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.lblFeatures = new System.Windows.Forms.Label();
             this.cmbParamGet = new System.Windows.Forms.ComboBox();
+            this.label31 = new System.Windows.Forms.Label();
             this.txtParamSet = new System.Windows.Forms.TextBox();
             this.btnParamGet = new System.Windows.Forms.Button();
             this.btnParamSet = new System.Windows.Forms.Button();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            this.lblFeatures = new System.Windows.Forms.Label();
-            this.label31 = new System.Windows.Forms.Label();
+            this.btnSimRefPower = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
@@ -523,6 +524,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.btnSimRefPower);
             this.groupBox2.Controls.Add(this.btnChartOpen);
             this.groupBox2.Controls.Add(this.label15);
             this.groupBox2.Controls.Add(this.numMovingAvgSec);
@@ -1073,16 +1075,34 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Get/Set Parameter";
             // 
+            // lblFeatures
+            // 
+            this.lblFeatures.AutoSize = true;
+            this.lblFeatures.Location = new System.Drawing.Point(87, 157);
+            this.lblFeatures.Name = "lblFeatures";
+            this.lblFeatures.Size = new System.Drawing.Size(13, 13);
+            this.lblFeatures.TabIndex = 38;
+            this.lblFeatures.Text = "..";
+            // 
             // cmbParamGet
             // 
             this.cmbParamGet.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
             this.cmbParamGet.CausesValidation = false;
             this.cmbParamGet.FormattingEnabled = true;
             this.cmbParamGet.Location = new System.Drawing.Point(5, 18);
-            this.cmbParamGet.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.cmbParamGet.Margin = new System.Windows.Forms.Padding(2);
             this.cmbParamGet.Name = "cmbParamGet";
             this.cmbParamGet.Size = new System.Drawing.Size(82, 21);
             this.cmbParamGet.TabIndex = 10;
+            // 
+            // label31
+            // 
+            this.label31.AutoSize = true;
+            this.label31.Location = new System.Drawing.Point(6, 157);
+            this.label31.Name = "label31";
+            this.label31.Size = new System.Drawing.Size(48, 13);
+            this.label31.TabIndex = 37;
+            this.label31.Text = "Features";
             // 
             // txtParamSet
             // 
@@ -1128,23 +1148,15 @@
             this.lblStatus.Size = new System.Drawing.Size(118, 17);
             this.lblStatus.Text = "toolStripStatusLabel1";
             // 
-            // lblFeatures
+            // btnSimRefPower
             // 
-            this.lblFeatures.AutoSize = true;
-            this.lblFeatures.Location = new System.Drawing.Point(87, 157);
-            this.lblFeatures.Name = "lblFeatures";
-            this.lblFeatures.Size = new System.Drawing.Size(13, 13);
-            this.lblFeatures.TabIndex = 38;
-            this.lblFeatures.Text = "..";
-            // 
-            // label31
-            // 
-            this.label31.AutoSize = true;
-            this.label31.Location = new System.Drawing.Point(6, 157);
-            this.label31.Name = "label31";
-            this.label31.Size = new System.Drawing.Size(48, 13);
-            this.label31.TabIndex = 37;
-            this.label31.Text = "Features";
+            this.btnSimRefPower.Location = new System.Drawing.Point(154, 221);
+            this.btnSimRefPower.Name = "btnSimRefPower";
+            this.btnSimRefPower.Size = new System.Drawing.Size(51, 23);
+            this.btnSimRefPower.TabIndex = 35;
+            this.btnSimRefPower.Text = "Load";
+            this.btnSimRefPower.UseVisualStyleBackColor = true;
+            this.btnSimRefPower.Click += new System.EventHandler(this.btnSimRefPower_Click);
             // 
             // frmIrtGui
             // 
@@ -1294,6 +1306,7 @@
         private System.Windows.Forms.Button btnChartOpen;
         private System.Windows.Forms.Label lblFeatures;
         private System.Windows.Forms.Label label31;
+        private System.Windows.Forms.Button btnSimRefPower;
     }
 }
 

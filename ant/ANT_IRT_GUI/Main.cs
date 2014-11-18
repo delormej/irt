@@ -64,6 +64,8 @@ namespace IRT_GUI
         private List<ushort> m_eMotionPowerList;
         private List<double> m_SpeedList;
 
+        private SimulateRefPower m_simRefPower = null;
+
         // Commands
         enum Command : byte
         {
@@ -1873,6 +1875,59 @@ namespace IRT_GUI
             graph.SetDesktopLocation(0, 0);
             
             graph.Show();
+        }
+
+        private void btnSimRefPower_Click(object sender, EventArgs e)
+        {
+            if (m_simRefPower == null)
+            {
+                m_simRefPower = new SimulateRefPower();
+
+                m_simRefPower.StateChanged += m_simRefPower_StateChanged;
+                m_simRefPower.SimluatedPowerMessage += m_refPower_StandardPowerOnlyPageReceived;
+            }
+
+            switch (m_simRefPower.State)
+            {
+                case SimulateState.Invalid:
+                    m_simRefPower.Load();
+                    break;
+                case SimulateState.Loaded:
+                    m_simRefPower.Run();
+                    break;
+                case SimulateState.Running:
+                    m_simRefPower.Stop();
+                    break;
+                case SimulateState.Cancelling:
+                    m_simRefPower.Stop();
+                    break;
+                case SimulateState.Stopped:
+                    m_simRefPower.Load();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        void m_simRefPower_StateChanged(SimulateState state)
+        {
+            switch (state)
+            {
+                case SimulateState.Loaded:
+                    btnSimRefPower.Text = "Run";
+                    break;
+                case SimulateState.Cancelling:
+                    btnSimRefPower.Enabled = false;
+                    break;
+                case SimulateState.Running:
+                    btnSimRefPower.Text = "Stop";
+                    break;
+                case SimulateState.Stopped:
+                    btnSimRefPower.Text = "Load";
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }
