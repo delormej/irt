@@ -23,6 +23,7 @@ namespace IRT_GUI
         private List<ushort> m_power;
         private Timer m_timer;
         private int m_position;
+        private string m_lastPath = Environment.CurrentDirectory;
 
         public SimulateState m_state = SimulateState.Invalid;
         public event Action<StandardPowerOnlyPage, uint> SimluatedPowerMessage;
@@ -90,10 +91,10 @@ namespace IRT_GUI
             m_power = new List<ushort>();
             StringBuilder wave = new StringBuilder();
 
-            dlg.InitialDirectory = Environment.CurrentDirectory;
+            dlg.InitialDirectory = m_lastPath;
             dlg.Filter = "Ride Logs (*.csv)|*.csv|All files (*.*)|*.*";
             dlg.FilterIndex = 1;
-            dlg.RestoreDirectory = true;
+            dlg.RestoreDirectory = false;
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
@@ -144,21 +145,22 @@ namespace IRT_GUI
                             m_power.Add(0);
                             wave.AppendFormat(waveFormat, 0, 0.0f);
                         }
+
+                        var result = MessageBox.Show("Copy speed wave to clipboard?", "Wave Generator",
+                            MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+
+                        if (result == DialogResult.Yes)
+                        {
+                            Clipboard.SetText(wave.ToString());
+                        }
+
+                        m_lastPath = Path.GetDirectoryName(dlg.FileName);
                     }
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
                 }
-            }
-
-
-            var result = MessageBox.Show("Copy speed wave to clipboard?", "Wave Generator",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
-
-            if (result == DialogResult.Yes)
-            {
-                Clipboard.SetText(wave.ToString());
             }
 
             OnStateChange(SimulateState.Loaded);
