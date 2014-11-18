@@ -67,6 +67,8 @@
             this.txtRefPwrDeviceId = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.progressSimRefPower = new System.Windows.Forms.ProgressBar();
+            this.btnSimRefPower = new System.Windows.Forms.Button();
             this.btnChartOpen = new System.Windows.Forms.Button();
             this.label15 = new System.Windows.Forms.Label();
             this.numMovingAvgSec = new System.Windows.Forms.NumericUpDown();
@@ -126,8 +128,7 @@
             this.btnParamSet = new System.Windows.Forms.Button();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            this.btnSimRefPower = new System.Windows.Forms.Button();
-            this.progressSimRefPower = new System.Windows.Forms.ProgressBar();
+            this.btnPauseSimRefPower = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
@@ -525,6 +526,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.btnPauseSimRefPower);
             this.groupBox2.Controls.Add(this.progressSimRefPower);
             this.groupBox2.Controls.Add(this.btnSimRefPower);
             this.groupBox2.Controls.Add(this.btnChartOpen);
@@ -549,6 +551,25 @@
             this.groupBox2.TabIndex = 10;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Power Meter";
+            // 
+            // progressSimRefPower
+            // 
+            this.progressSimRefPower.Location = new System.Drawing.Point(10, 153);
+            this.progressSimRefPower.Name = "progressSimRefPower";
+            this.progressSimRefPower.Size = new System.Drawing.Size(195, 23);
+            this.progressSimRefPower.Step = 1;
+            this.progressSimRefPower.TabIndex = 36;
+            this.progressSimRefPower.Visible = false;
+            // 
+            // btnSimRefPower
+            // 
+            this.btnSimRefPower.Location = new System.Drawing.Point(142, 127);
+            this.btnSimRefPower.Name = "btnSimRefPower";
+            this.btnSimRefPower.Size = new System.Drawing.Size(63, 23);
+            this.btnSimRefPower.TabIndex = 35;
+            this.btnSimRefPower.Text = "Load";
+            this.btnSimRefPower.UseVisualStyleBackColor = true;
+            this.btnSimRefPower.Click += new System.EventHandler(this.btnSimRefPower_Click);
             // 
             // btnChartOpen
             // 
@@ -1150,24 +1171,16 @@
             this.lblStatus.Size = new System.Drawing.Size(118, 17);
             this.lblStatus.Text = "toolStripStatusLabel1";
             // 
-            // btnSimRefPower
+            // btnPauseSimRefPower
             // 
-            this.btnSimRefPower.Location = new System.Drawing.Point(154, 127);
-            this.btnSimRefPower.Name = "btnSimRefPower";
-            this.btnSimRefPower.Size = new System.Drawing.Size(51, 23);
-            this.btnSimRefPower.TabIndex = 35;
-            this.btnSimRefPower.Text = "Load";
-            this.btnSimRefPower.UseVisualStyleBackColor = true;
-            this.btnSimRefPower.Click += new System.EventHandler(this.btnSimRefPower_Click);
-            // 
-            // progressSimRefPower
-            // 
-            this.progressSimRefPower.Location = new System.Drawing.Point(10, 153);
-            this.progressSimRefPower.Name = "progressSimRefPower";
-            this.progressSimRefPower.Size = new System.Drawing.Size(195, 23);
-            this.progressSimRefPower.Step = 1;
-            this.progressSimRefPower.TabIndex = 36;
-            this.progressSimRefPower.Visible = false;
+            this.btnPauseSimRefPower.Location = new System.Drawing.Point(76, 127);
+            this.btnPauseSimRefPower.Name = "btnPauseSimRefPower";
+            this.btnPauseSimRefPower.Size = new System.Drawing.Size(63, 23);
+            this.btnPauseSimRefPower.TabIndex = 37;
+            this.btnPauseSimRefPower.Text = "Pause";
+            this.btnPauseSimRefPower.UseVisualStyleBackColor = true;
+            this.btnPauseSimRefPower.Visible = false;
+            this.btnPauseSimRefPower.Click += new System.EventHandler(this.btnPauseSimRefPower_Click);
             // 
             // frmIrtGui
             // 
@@ -1319,6 +1332,7 @@
         private System.Windows.Forms.Label label31;
         private System.Windows.Forms.Button btnSimRefPower;
         private System.Windows.Forms.ProgressBar progressSimRefPower;
+        private System.Windows.Forms.Button btnPauseSimRefPower;
     }
 }
 

@@ -557,7 +557,7 @@ namespace IRT_GUI
             if (m_refPower != null && m_refPower.StandardPowerOnly != null &&
                 m_refPower.StandardPowerOnly.InstantaneousPower != ushort.MaxValue)
             {
-                m_RefPowerList[m_movingAvgPosition] = m_refPower.StandardPowerOnly.InstantaneousPower;
+                m_RefPowerList[m_movingAvgPosition] = (ushort)m_dataPoint.PowerReference; // m_refPower.StandardPowerOnly.InstantaneousPower;
             }
             else
             {
@@ -1902,6 +1902,9 @@ namespace IRT_GUI
                 case SimulateState.Cancelling:
                     m_simRefPower.Stop();
                     break;
+                case SimulateState.Paused:
+                    m_simRefPower.Stop();
+                    break;
                 case SimulateState.Stopped:
                     progressSimRefPower.Value = 0;
                     progressSimRefPower.Visible = false;
@@ -1935,13 +1938,31 @@ namespace IRT_GUI
                     break;
                 case SimulateState.Running:
                     btnSimRefPower.Text = "Stop";
+                    btnPauseSimRefPower.Text = "Pause";
+                    btnPauseSimRefPower.Visible = true;
                     break;
                 case SimulateState.Stopped:
                     progressSimRefPower.Visible = false;
+                    btnPauseSimRefPower.Visible = false;
                     btnSimRefPower.Text = "Load";
+                    break;
+                case SimulateState.Paused:
+                    btnPauseSimRefPower.Text = "Resume";
                     break;
                 default:
                     break;
+            }
+        }
+
+        private void btnPauseSimRefPower_Click(object sender, EventArgs e)
+        {
+            if (m_simRefPower.State == SimulateState.Paused)
+            {
+                m_simRefPower.Run();
+            }
+            else if (m_simRefPower.State == SimulateState.Running)
+            {
+                m_simRefPower.Stop(true);
             }
         }
     }

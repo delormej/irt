@@ -15,6 +15,7 @@ namespace IRT_GUI
         Loaded,
         Running,
         Cancelling,
+        Paused,
         Stopped
     }
 
@@ -172,24 +173,32 @@ namespace IRT_GUI
 
         public void Run()
         {
-            if (m_state != SimulateState.Loaded)
+            if (m_state != SimulateState.Paused)
             {
-                throw new Exception("Must be loaded to run.");
+                m_position = 0;
+                m_timer = new Timer();
+                m_timer.Interval = 1000; // 1 second interval
+                m_timer.Tick += m_timer_Tick;
             }
 
-            m_timer = new Timer();
-            m_timer.Interval = 1000; // 1 second interval
-            m_timer.Tick += m_timer_Tick;
             m_timer.Start();
 
             OnStateChange(SimulateState.Running);
         }
 
-        public void Stop()
+        public void Stop(bool pause = false)
         {
             if (m_state == SimulateState.Running)
             {
                 m_timer.Stop();
+            }
+
+            if (pause)
+            {
+                OnStateChange(SimulateState.Paused);
+            }
+            else
+            {
                 OnStateChange(SimulateState.Stopped);
             }
         }
