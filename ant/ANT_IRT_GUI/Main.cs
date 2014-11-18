@@ -548,6 +548,10 @@ namespace IRT_GUI
                 {
                     m_eMotionPowerList[m_movingAvgPosition] = m_eMotion.StandardPowerOnly.InstantaneousPower;
                 }
+                else if (m_simRefPower != null && m_simRefPower.State == SimulateState.Running)
+                {
+                    m_eMotionPowerList[m_movingAvgPosition] = (ushort)m_dataPoint.PowerReference;
+                }
                 else
                 {
                     m_eMotionPowerList[m_movingAvgPosition] = 0;
