@@ -127,6 +127,7 @@
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.btnSimRefPower = new System.Windows.Forms.Button();
+            this.progressSimRefPower = new System.Windows.Forms.ProgressBar();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
@@ -524,6 +525,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.progressSimRefPower);
             this.groupBox2.Controls.Add(this.btnSimRefPower);
             this.groupBox2.Controls.Add(this.btnChartOpen);
             this.groupBox2.Controls.Add(this.label15);
@@ -1150,13 +1152,22 @@
             // 
             // btnSimRefPower
             // 
-            this.btnSimRefPower.Location = new System.Drawing.Point(154, 221);
+            this.btnSimRefPower.Location = new System.Drawing.Point(154, 127);
             this.btnSimRefPower.Name = "btnSimRefPower";
             this.btnSimRefPower.Size = new System.Drawing.Size(51, 23);
             this.btnSimRefPower.TabIndex = 35;
             this.btnSimRefPower.Text = "Load";
             this.btnSimRefPower.UseVisualStyleBackColor = true;
             this.btnSimRefPower.Click += new System.EventHandler(this.btnSimRefPower_Click);
+            // 
+            // progressSimRefPower
+            // 
+            this.progressSimRefPower.Location = new System.Drawing.Point(10, 153);
+            this.progressSimRefPower.Name = "progressSimRefPower";
+            this.progressSimRefPower.Size = new System.Drawing.Size(195, 23);
+            this.progressSimRefPower.Step = 1;
+            this.progressSimRefPower.TabIndex = 36;
+            this.progressSimRefPower.Visible = false;
             // 
             // frmIrtGui
             // 
@@ -1307,6 +1318,7 @@
         private System.Windows.Forms.Label lblFeatures;
         private System.Windows.Forms.Label label31;
         private System.Windows.Forms.Button btnSimRefPower;
+        private System.Windows.Forms.ProgressBar progressSimRefPower;
     }
 }
 

@@ -27,6 +27,7 @@ namespace IRT_GUI
         public SimulateState m_state = SimulateState.Invalid;
         public event Action<StandardPowerOnlyPage, uint> SimluatedPowerMessage;
         public event Action<SimulateState> StateChanged;
+        public event Action<int, int> Progress;
 
         private void m_timer_Tick(object sender, EventArgs e)
         {
@@ -45,6 +46,11 @@ namespace IRT_GUI
                 if (SimluatedPowerMessage != null)
                 {
                     SimluatedPowerMessage(msg, 0);
+                }
+
+                if (Progress != null)
+                {
+                    Progress(m_position, m_power.Count);
                 }
             }
             else

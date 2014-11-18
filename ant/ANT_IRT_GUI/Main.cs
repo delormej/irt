@@ -1885,6 +1885,7 @@ namespace IRT_GUI
 
                 m_simRefPower.StateChanged += m_simRefPower_StateChanged;
                 m_simRefPower.SimluatedPowerMessage += m_refPower_StandardPowerOnlyPageReceived;
+                m_simRefPower.Progress += m_simRefPower_Progress;
             }
 
             switch (m_simRefPower.State)
@@ -1902,6 +1903,8 @@ namespace IRT_GUI
                     m_simRefPower.Stop();
                     break;
                 case SimulateState.Stopped:
+                    progressSimRefPower.Value = 0;
+                    progressSimRefPower.Visible = false;
                     m_simRefPower.Load();
                     break;
                 default:
@@ -1909,11 +1912,22 @@ namespace IRT_GUI
             }
         }
 
+        void m_simRefPower_Progress(int current, int total)
+        {
+            if (progressSimRefPower.Maximum != total)
+            {
+                progressSimRefPower.Maximum = total;
+            }
+
+            progressSimRefPower.Value = current;
+        }
+
         void m_simRefPower_StateChanged(SimulateState state)
         {
             switch (state)
             {
                 case SimulateState.Loaded:
+                    progressSimRefPower.Visible = true;
                     btnSimRefPower.Text = "Run";
                     break;
                 case SimulateState.Cancelling:
@@ -1923,6 +1937,7 @@ namespace IRT_GUI
                     btnSimRefPower.Text = "Stop";
                     break;
                 case SimulateState.Stopped:
+                    progressSimRefPower.Visible = false;
                     btnSimRefPower.Text = "Load";
                     break;
                 default:
