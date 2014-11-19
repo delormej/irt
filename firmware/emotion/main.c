@@ -56,10 +56,10 @@
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	 // Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
+#define CALIBRATION_READ_INTERVAL		APP_TIMER_TICKS(50, APP_TIMER_PRESCALER) 	 // 20HZ, every 50ms - read
 
-#define WATCHDOG_COUNTER				32768 * 60 * 5 							// (NRF_WDT->CRV + 1)/32768 seconds * 60 seconds * 'n' minutes
+#define WATCHDOG_TICK_COUNT				APP_TIMER_CLOCK_FREQ * 60 * 5 				 // (NRF_WDT->CRV + 1)/32768 seconds * 60 seconds * 'n' minutes
 
-#define BLE_ADV_BLINK_RATE_MS			500u
 #ifdef ENABLE_DEBUG_LOG
 #define SCHED_QUEUE_SIZE                32
 #else // ENABLE_DEBUG_LOG
@@ -692,7 +692,7 @@ static void wdt_init(void)
 {
     // Configure to keep running while CPU is in sleep mode.
     NRF_WDT->CONFIG = (WDT_CONFIG_SLEEP_Run << WDT_CONFIG_SLEEP_Pos);
-    NRF_WDT->CRV = WATCHDOG_COUNTER;
+    NRF_WDT->CRV = WATCHDOG_TICK_COUNT;
     // This is the reload register, write to this to signal activity.
     NRF_WDT->RREN = WDT_RREN_RR0_Enabled << WDT_RREN_RR0_Pos;
     NRF_WDT->TASKS_START = 1;
