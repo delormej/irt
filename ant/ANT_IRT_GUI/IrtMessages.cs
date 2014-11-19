@@ -112,7 +112,7 @@ namespace IRT_GUI.IrtMessages
 
     public class ExtraInfoMessage : Message
     {
-        public const byte Page = 0x24;
+        public const byte Page = 0xF1;
 
         internal ExtraInfoMessage(ANT_Response response) : base(response) { }
 

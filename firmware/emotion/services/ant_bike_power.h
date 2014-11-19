@@ -13,7 +13,7 @@
 #define ANT_BP_PAGE_CALIBRATION			0x01	// Calibration page
 #define ANT_BP_PAGE_STANDARD_POWER_ONLY 0x10   /**< Standard Power only main data page. */
 #define ANT_BP_PAGE_TORQUE_AT_WHEEL		0x11   /**< Power reported as torque at wheel data page, which includes speed. */
-#define ANT_BP_PAGE_EXTRA_INFO			0x24   // TODO: This should be a manufacturer specific page
+#define ANT_BP_PAGE_EXTRA_INFO			0xF1   // Manufacturer specific page.
 
 // Generic ANT pages.
 #define ANT_PAGE_GETSET_PARAMETERS		0x02
