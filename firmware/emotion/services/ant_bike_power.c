@@ -562,11 +562,11 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 	return err_code;
 }
 
-uint32_t ant_bp_calibration_speed_tx_send(uint8_t sequence, uint8_t flywheel_delta[5])
+uint32_t ant_bp_calibration_speed_tx_send(uint8_t* flywheel_delta)
 {
 	tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
 	tx_buffer[1] = 		ANT_BP_CAL_PARAM_RESPONSE;
-	tx_buffer[2] = 		sequence;
+	tx_buffer[2] = 		m_event_count++;
 	tx_buffer[3] = 		flywheel_delta[0];
 	tx_buffer[4] = 		flywheel_delta[1];
 	tx_buffer[5] = 		flywheel_delta[2];

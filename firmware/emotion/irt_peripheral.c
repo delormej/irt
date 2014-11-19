@@ -29,7 +29,7 @@
 #define PH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define DEBOUNCE_INTERVAL				APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)   	// Debounce interval 5ms.
+#define DEBOUNCE_INTERVAL				APP_TIMER_TICKS(20, APP_TIMER_PRESCALER)   	// Debounce interval .
 
 static peripheral_evt_t 				*mp_on_peripheral_evt;
 static app_timer_id_t					m_debounce_timer_id;						// Timer used for debouncing button input.

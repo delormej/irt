@@ -26,27 +26,24 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #define LED_BACK_GREEN			2
 #define LED_BACK_RED			3
 
-void print_buf(uint8_t* p_buf)
-{
-	for (uint8_t i = 0; i < 8; i++)
-	{
-		printf("[%i]\t%i\r\n", i, p_buf[i]);
-	}
-
-}
 
 int main(int argc, char *argv [])
 {
 	uint8_t count = 0;
-	uint8_t buffer[8] = { 255, 254, 253, 252, 251, 250, 249, 248 };
+	uint8_t tick_buffer[5];
 
-	//(uint8_t*) &buffer
-	print_buf((uint8_t*)&buffer);
-
-	while (true)
+	while (-1)
 	{
-		printf("%i\r\n", count);
-		count = count++ | 0x05;
+		if (++count % (sizeof(tick_buffer) / sizeof(uint8_t)) == 0)
+		{
+			printf("[IN]\t%i\r\n", count);
+		}
+		else
+		{
+			printf("[OUT]\t%i\r\n", count);
+		}
+		
+		Sleep(250);
 	}
 	
 

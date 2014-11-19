@@ -54,11 +54,12 @@
 #include "irt_error_log.h"
 #include "irt_led.h"
 
-#define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	 // Remote control & bike power sent at 4hz.
+#define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	// Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
-#define CALIBRATION_READ_INTERVAL		APP_TIMER_TICKS(50, APP_TIMER_PRESCALER) 	 // 20HZ, every 50ms - read
+#define CALIBRATION_READ_INTERVAL		APP_TIMER_TICKS(50, APP_TIMER_PRESCALER) 	// 20HZ, every 50ms - read
 
-#define WATCHDOG_TICK_COUNT				APP_TIMER_CLOCK_FREQ * 60 * 5 				 // (NRF_WDT->CRV + 1)/32768 seconds * 60 seconds * 'n' minutes
+#define WATCHDOG_TICK_COUNT				APP_TIMER_CLOCK_FREQ * 60 * 5 				// (NRF_WDT->CRV + 1)/32768 seconds * 60 seconds * 'n' minutes
+#define WDT_RELOAD()					NRF_WDT->RR[0] = WDT_RR_RR_Reload			// Keep the device awake.
 
 #ifdef ENABLE_DEBUG_LOG
 #define SCHED_QUEUE_SIZE                32
@@ -513,19 +514,32 @@ static void ant_ctrl_available(void)
  */
 static void calibration_timeout_handler(void * p_context)
 {
+	#define TICKS	5
+	UNUSED_PARAMETER(p_context);
 	static uint8_t count = 0;
-	static uint8_t tick_buffer[5];
-	static uint16_t last_flywheel;
+	static uint8_t tick_buffer[TICKS];
+	static uint16_t last_flywheel = 0;
 	uint16_t flywheel = flywheel_ticks_get();
 
-	tick_buffer[count] = flywheel - last_flywheel;
+	if (last_flywheel > 0)
+	{
+		tick_buffer[count] = (uint8_t)(flywheel - last_flywheel);
+	}
+	else
+	{
+		tick_buffer[count] = 0;
+	}
+
 	last_flywheel = flywheel;
 
-	// Increment, every 5th message, send and rollover.
-	if (++count % ( sizeof(tick_buffer)/sizeof(uint8_t) ) == 0)
+	// Increment, every 5th tick read, send and rollover count.
+	if (++count == TICKS)
 	{
-		ant_bp_calibration_speed_tx_send(count, tick_buffer);
+		ant_bp_calibration_speed_tx_send(tick_buffer);
 		count = 0;
+
+		// Keep device awake.
+		WDT_RELOAD();
 	}
 }
 
@@ -639,7 +653,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 	// Reload the WDT if there was motion OR in BLE connection, preventing the device from going to sleep.
 	if (p_power_meas_last->instant_speed_mps > 0.0f || irt_ble_ant_state == CONNECTED)
 	{
-		NRF_WDT->RR[0] = WDT_RR_RR_Reload;
+		WDT_RELOAD();
 	}
 }
 
@@ -1103,7 +1117,7 @@ static void on_accelerometer(void)
 	uint32_t err_code;
 
 	// Reload the WDT.
-	NRF_WDT->RR[0] = WDT_RR_RR_Reload;
+	WDT_RELOAD();
 
 	// Clear the struct.
 	memset(&m_accelerometer_data, 0, sizeof(m_accelerometer_data));
