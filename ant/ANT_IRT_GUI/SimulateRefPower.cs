@@ -109,8 +109,9 @@ namespace IRT_GUI
                             if (!reader.EndOfStream)
                             {
                                 reader.ReadLine();
-                                 // Dummy first line @1hz.
+                                 // Dummy first line @1hz, 0 power
                                 wave.AppendFormat(waveFormat, 2, 1.0f);
+                                m_power.Add(0);
                             }
 
                             while (!reader.EndOfStream)
