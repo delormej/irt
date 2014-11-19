@@ -462,6 +462,7 @@ namespace IRT_GUI
                 m_eMotion.ManufacturerSpecificPageReceived += m_eMotion_ManufacturerSpecificPageReceived;
                 m_eMotion.GetSetParametersPageReceived += m_eMotion_GetSetParametersPageReceived;
                 m_eMotion.TemperatureSubPageReceived += m_eMotion_TemperatureSubPageReceived;
+                m_eMotion.CalibrationCustomParameterResponsePageReceived += m_eMotion_CalibrationCustomParameterResponsePageReceived;
 
                 m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
                 m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
@@ -495,6 +496,12 @@ namespace IRT_GUI
 
                 Application.Exit();
             }
+        }
+
+        void m_eMotion_CalibrationCustomParameterResponsePageReceived(CustomCalibrationParameterResponsePage arg1, uint arg2)
+        {
+            byte[] buffer = arg1.CalibrationDataArray.ToArray();
+            Calibration.LogCalibration(buffer);
         }
 
         private void StartReporting()
@@ -807,6 +814,12 @@ namespace IRT_GUI
 
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {
+            // if we start getting a torque page, we're back out of calibration mode.
+            if (Calibration.InCalibration)
+            {
+                Calibration.ExitCalibration();
+            }
+
             if (!double.IsInfinity(m_eMotion.AverageSpeedWheelTorque))
             {
                 // Convert to mph from km/h.

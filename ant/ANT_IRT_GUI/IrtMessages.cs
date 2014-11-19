@@ -389,4 +389,52 @@ namespace IRT_GUI.IrtMessages
         }
     }
 
+
+    // This is mostly used to Set values on the device.
+    public class CalibrationMessage : Message
+    {
+        public const byte Page = 0x01;
+
+        private byte m_subpage;
+
+        public CalibrationMessage()
+        {
+            m_payload = new byte[8];
+        }
+
+        internal CalibrationMessage(ANT_Response response)
+            : base(response)
+        { }
+
+        byte[] TickReadings { 
+            get 
+            {  
+                byte[] ticks = new byte[5];
+                for (int i = 0; i < 5; i++)
+                {
+                    ticks[i] = m_payload[i+3];
+                }
+
+                return ticks;
+            } 
+        }
+
+        byte Sequence { get { return m_payload[2]; } }
+
+        public byte[] AsBytes()
+        {
+            byte[] data = new byte[] {
+                Page,
+                m_payload[1],
+                m_payload[2],
+                m_payload[3],
+                m_payload[4],
+                m_payload[5],
+                m_payload[6],
+                m_payload[7]
+            };
+
+            return data;
+        }
+    }
 }
