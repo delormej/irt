@@ -110,16 +110,6 @@ static uint16_t last_wheel_time_calc(float wheel_revs, float avg_wheel_period, u
 	return (event_time - time_to_full_rev_2048);
 }
 
-/**@brief 	Returns the accumulated count of flywheel revolutions since the
- *					counter started.
- *
- */
-static inline uint16_t flywheel_ticks_get()
-{
-	REVS_TIMER->TASKS_CAPTURE[0] = 1;
-	return REVS_TIMER->CC[0];
-}
-
 /*****************************************************************************
 *
 * Public functions, see function descriptions in header.

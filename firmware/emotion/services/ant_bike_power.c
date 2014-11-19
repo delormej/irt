@@ -24,8 +24,8 @@
 #define EVENT_COUNT_INDEX               1u                  /**< Index of the event count field in the power-only main data page. */
 #define PEDAL_POWER_INDEX               2u                  /**< Index of the pedal power field in the power-only main data page. */
 #define INSTANT_CADENCE_INDEX           3u                  /**< Index of the instantaneous cadence field in the power-only main data page. */
-#define ACCUMMULATED_POWER_LSB_INDEX    4u                  /**< Index of the accumulated power LSB field in the power-only main data page. */
-#define ACCUMMULATED_POWER_MSB_INDEX    5u                  /**< Index of the accumulated power MSB field in the power-only main data page. */
+#define ACCUM_POWER_LSB_INDEX    		4u                  /**< Index of the accumulated power LSB field in the power-only main data page. */
+#define ACCUM_POWER_MSB_INDEX    		5u                  /**< Index of the accumulated power MSB field in the power-only main data page. */
 #define INSTANT_POWER_LSB_INDEX         6u                  /**< Index of the instantaneous power LSB field in the power-only main data page. */
 #define INSTANT_POWER_MSB_INDEX         7u                  /**< Index of the instantaneous power MSB field in the power-only main data page. */
 
@@ -42,8 +42,8 @@
 #define WHEEL_TICKS_INDEX				2u
 #define	WHEEL_PERIOD_LSB_INDEX			4u
 #define	WHEEL_PERIOD_MSB_INDEX			5u
-#define ACCUMMULATED_TORQUE_LSB_INDEX	6u
-#define ACCUMMULATED_TORQUE_MSB_INDEX	7u
+#define ACCUM_TORQUE_LSB_INDEX			6u
+#define ACCUM_TORQUE_MSB_INDEX			7u
 
 #define ANT_BP_CHANNEL_TYPE          0x10                                         /**< Channel Type TX. */
 #define ANT_BP_DEVICE_TYPE           0x0B                                         /**< Channel ID device type. */
@@ -59,12 +59,10 @@
 #define ANT_BAT_FRAC_VOLT_INDEX	 	 6
 #define ANT_BAT_DESC_INDEX	 	 	 7
 
-
 #define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48									/** Message ID used when setting resistance via an ANT BURST. */
 #define ANT_BURST_MSG_ID_SET_POSITIONS	0x59									/** Message ID used when setting servo button stop positions via an ANT BURST. */
-
-static const uint8_t 				ACK_MESSAGE_RETRIES = 3;
-static const uint8_t 				ACK_MESSAGE_RETRY_DELAY = 5; // milliseconds
+#define ACK_MESSAGE_RETRIES 		3
+#define ACK_MESSAGE_RETRY_DELAY 	5 										// milliseconds
 
 /**@brief Debug logging for module.
  *
@@ -101,49 +99,46 @@ typedef struct
 } ANTMsgWahoo240_t;
 /*****************************************************************************/
 
-static uint8_t m_power_tx_buffer[TX_BUFFER_SIZE];
-static uint8_t m_torque_tx_buffer[TX_BUFFER_SIZE];
+static uint8_t tx_buffer[TX_BUFFER_SIZE];
 static ant_ble_evt_handlers_t* mp_evt_handlers;
-
-// Shared event counter for all ANT BP messages.
-static uint8_t m_event_count;
+static uint8_t m_event_count;												// Shared event counter for all ANT BP messages.
 
 // TODO: Implement required calibration page.
 
-static __INLINE uint32_t broadcast_message_transmit(const uint8_t * p_buffer)
+static __INLINE uint32_t broadcast_message_transmit()
 {
 	uint32_t err_code;
 
-	err_code = sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+	err_code = sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 
 	if (ANT_ERROR_AS_WARN(err_code))
 	{
 		//BP_LOG("[BP]:broadcast_message_transmit WARN:%#.8x\r\n", err_code);
 		BP_LOG("[BP]:broadcast_message_transmit WARN:%#.8x\r\n\t[%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 				err_code,
-				p_buffer[0],
-				p_buffer[1],
-				p_buffer[2],
-				p_buffer[3],
-				p_buffer[4],
-				p_buffer[5],
-				p_buffer[6],
-				p_buffer[7],
-				p_buffer[8]);
+				tx_buffer[0],
+				tx_buffer[1],
+				tx_buffer[2],
+				tx_buffer[3],
+				tx_buffer[4],
+				tx_buffer[5],
+				tx_buffer[6],
+				tx_buffer[7],
+				tx_buffer[8]);
 		err_code = NRF_SUCCESS;
 	}
 	
 	return err_code;
 }
 
-static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
+static __INLINE uint32_t acknolwedge_message_transmit()
 {
 	uint32_t err_code;
 	uint8_t retries = 0;
 
 	while (retries++ < ACK_MESSAGE_RETRIES)
 	{
-		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)p_buffer);
+		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 		if (ANT_ERROR_AS_WARN(err_code))
 		{
 			BP_LOG("[BP]:acknolwedge_message_transmit retry: %i, %#.8x\r\n", retries, err_code);
@@ -171,30 +166,33 @@ static __INLINE uint32_t acknolwedge_message_transmit(const uint8_t * p_buffer)
 static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_period_2048, uint8_t wheel_ticks)
 {
 
-	// Time-synchronous model.  Increment the event count.
-	m_torque_tx_buffer[EVENT_COUNT_INDEX] = m_event_count;
+	tx_buffer[PAGE_NUMBER_INDEX]            = ANT_BP_PAGE_TORQUE_AT_WHEEL;
+	tx_buffer[EVENT_COUNT_INDEX] 			= m_event_count;				// Time-synchronous model.  Increment the event count.
+	tx_buffer[WHEEL_TICKS_INDEX] 			= wheel_ticks;
+	tx_buffer[INSTANT_CADENCE_INDEX]        = BP_PAGE_RESERVE_BYTE;
+	tx_buffer[WHEEL_PERIOD_LSB_INDEX] 		= LOW_BYTE(accum_wheel_period_2048);
+	tx_buffer[WHEEL_PERIOD_MSB_INDEX] 		= HIGH_BYTE(accum_wheel_period_2048);
+	tx_buffer[ACCUM_TORQUE_LSB_INDEX] 		= LOW_BYTE(accum_torque);
+	tx_buffer[ACCUM_TORQUE_MSB_INDEX] 		= HIGH_BYTE(accum_torque);
 
-	m_torque_tx_buffer[WHEEL_TICKS_INDEX] = wheel_ticks;
-	m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX] = LOW_BYTE(accum_wheel_period_2048);
-	m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX] = HIGH_BYTE(accum_wheel_period_2048);
-	m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX] = LOW_BYTE(accum_torque);
-	m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX] = HIGH_BYTE(accum_torque);
-
-	return broadcast_message_transmit(m_torque_tx_buffer);
+	return broadcast_message_transmit();
 }
 
 static uint32_t power_transmit(uint16_t watts)
 {	
-	static uint16_t accumulated_power                 = 0;            
-	accumulated_power                                += watts;
+	static uint16_t accumulated_power		= 0;
+	accumulated_power                       += watts;
 		
-	m_power_tx_buffer[EVENT_COUNT_INDEX]			  = m_event_count;
-	m_power_tx_buffer[ACCUMMULATED_POWER_LSB_INDEX]   = LOW_BYTE(accumulated_power);        
-	m_power_tx_buffer[ACCUMMULATED_POWER_MSB_INDEX]   = HIGH_BYTE(accumulated_power);   
-	m_power_tx_buffer[INSTANT_POWER_LSB_INDEX]        = LOW_BYTE(watts);            
-	m_power_tx_buffer[INSTANT_POWER_MSB_INDEX]        = HIGH_BYTE(watts);                
+	tx_buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_STANDARD_POWER_ONLY;
+	tx_buffer[EVENT_COUNT_INDEX]			= m_event_count;
+	tx_buffer[PEDAL_POWER_INDEX]			= BP_PAGE_RESERVE_BYTE;
+	tx_buffer[INSTANT_CADENCE_INDEX]		= BP_PAGE_RESERVE_BYTE;
+	tx_buffer[ACCUM_POWER_LSB_INDEX]		= LOW_BYTE(accumulated_power);
+	tx_buffer[ACCUM_POWER_MSB_INDEX]		= HIGH_BYTE(accumulated_power);
+	tx_buffer[INSTANT_POWER_LSB_INDEX]		= LOW_BYTE(watts);
+	tx_buffer[INSTANT_POWER_MSB_INDEX]		= HIGH_BYTE(watts);
 			
-	return broadcast_message_transmit(m_power_tx_buffer);
+	return broadcast_message_transmit();
 }
 
 // Encodes the resistance mode into the 2 most significant bits.
@@ -217,42 +215,23 @@ static uint8_t encode_resistance_level(irt_power_meas_t * p_power_meas)
 	return target_msb;
 }
 
-uint32_t ant_bp_battery_tx_send(irt_battery_status_t status)
-{
-	uint8_t buffer[TX_BUFFER_SIZE];
-
-	buffer[PAGE_NUMBER_INDEX]			= ANT_PAGE_BATTERY_STATUS;
-	buffer[1]							= 0xFF;
-	buffer[ANT_BAT_ID_INDEX]			= 0b00010001;	// bits 0:3 = Number of batteries, 4:7 = Identifier.
-	buffer[ANT_BAT_TIME_LSB_INDEX]	 	= (uint8_t)status.operating_time;
-	buffer[ANT_BAT_TIME_INDEX]	 		= (status.operating_time & 0x0000FF00) >> 8;
-	buffer[ANT_BAT_TIME_MSB_INDEX]		= (status.operating_time & 0x00FF0000) >> 16;
-	buffer[ANT_BAT_FRAC_VOLT_INDEX]		= status.fractional_volt;
-	buffer[ANT_BAT_DESC_INDEX]			= status.coarse_volt |
-											status.status << 4 |
-											status.resolution << 7;
-
-	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
-}
-
 // Transmits extra info embedded in the power measurement.
 // TODO: Need a formal message/methodology for this.
 static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
 {
-	uint8_t buffer[TX_BUFFER_SIZE];
 	uint16_t flywheel;
+	flywheel = p_power_meas->accum_flywheel_ticks;
 
-	buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_EXTRA_INFO;
-	buffer[EXTRA_INFO_SERVO_POS_LSB]	= LOW_BYTE(p_power_meas->servo_position);
-	buffer[EXTRA_INFO_SERVO_POS_MSB]	= HIGH_BYTE(p_power_meas->servo_position);
-	buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
-	buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
-	flywheel 							= p_power_meas->accum_flywheel_ticks;
-	buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]= LOW_BYTE(flywheel);
-	buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]= HIGH_BYTE(flywheel);
-	buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
+	tx_buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_EXTRA_INFO;
+	tx_buffer[EXTRA_INFO_SERVO_POS_LSB]		= LOW_BYTE(p_power_meas->servo_position);
+	tx_buffer[EXTRA_INFO_SERVO_POS_MSB]		= HIGH_BYTE(p_power_meas->servo_position);
+	tx_buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
+	tx_buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
+	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]	= LOW_BYTE(flywheel);
+	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]	= HIGH_BYTE(flywheel);
+	tx_buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
 
-	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, (uint8_t*)&buffer);
+	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 }
 
 static void handle_move_servo(ant_evt_t * p_ant_evt)
@@ -487,26 +466,6 @@ void ant_bp_tx_init(ant_ble_evt_handlers_t * evt_handlers)
     
     err_code = sd_ant_channel_period_set(ANT_BP_TX_CHANNEL, ANT_BP_MSG_PERIOD);
     APP_ERROR_CHECK(err_code);
-		
-	// Initialize power transmit buffer.
-	m_power_tx_buffer[PAGE_NUMBER_INDEX]              = ANT_BP_PAGE_STANDARD_POWER_ONLY;
-	m_power_tx_buffer[EVENT_COUNT_INDEX]              = 0;
-	m_power_tx_buffer[PEDAL_POWER_INDEX]              = BP_PAGE_RESERVE_BYTE;
-	m_power_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;
-	m_power_tx_buffer[ACCUMMULATED_POWER_LSB_INDEX]   = 0;
-	m_power_tx_buffer[ACCUMMULATED_POWER_MSB_INDEX]   = 0;
-	m_power_tx_buffer[INSTANT_POWER_LSB_INDEX]        = 0;
-	m_power_tx_buffer[INSTANT_POWER_MSB_INDEX]        = 0;
-
-	// Initialize torque transmit buffer.
-	m_torque_tx_buffer[PAGE_NUMBER_INDEX]              = ANT_BP_PAGE_TORQUE_AT_WHEEL;
-	m_torque_tx_buffer[EVENT_COUNT_INDEX]              = 0;
-	m_torque_tx_buffer[WHEEL_TICKS_INDEX]              = 0;
-	m_torque_tx_buffer[INSTANT_CADENCE_INDEX]          = BP_PAGE_RESERVE_BYTE;
-	m_torque_tx_buffer[WHEEL_PERIOD_LSB_INDEX]         = 0;
-	m_torque_tx_buffer[WHEEL_PERIOD_MSB_INDEX]   	   = 0;
-	m_torque_tx_buffer[ACCUMMULATED_TORQUE_LSB_INDEX]  = 0;
-	m_torque_tx_buffer[ACCUMMULATED_TORQUE_MSB_INDEX]  = 0;
 }
 
 void ant_bp_tx_start(void)
@@ -517,11 +476,11 @@ void ant_bp_tx_start(void)
 
 void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 {
-	const uint8_t power_page_interleave 		= POWER_PAGE_INTERLEAVE_COUNT;
-	const uint8_t product_page_interleave 		= PRODUCT_PAGE_INTERLEAVE_COUNT;
-	const uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
-	const uint8_t extra_info_page_interleave 	= EXTRA_INFO_PAGE_INTERLEAVE_COUNT;
-	const uint8_t battery_page_interleave 		= BATTERY_PAGE_INTERLEAVE_COUNT;
+	static const uint8_t power_page_interleave 		= POWER_PAGE_INTERLEAVE_COUNT;
+	static const uint8_t product_page_interleave 		= PRODUCT_PAGE_INTERLEAVE_COUNT;
+	static const uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
+	static const uint8_t extra_info_page_interleave 	= EXTRA_INFO_PAGE_INTERLEAVE_COUNT;
+	static const uint8_t battery_page_interleave 		= BATTERY_PAGE_INTERLEAVE_COUNT;
 
 	uint32_t err_code = 0;		
 
@@ -562,6 +521,22 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	}
 }
 
+uint32_t ant_bp_battery_tx_send(irt_battery_status_t status)
+{
+	tx_buffer[PAGE_NUMBER_INDEX]		= ANT_PAGE_BATTERY_STATUS;
+	tx_buffer[1]						= 0xFF;
+	tx_buffer[ANT_BAT_ID_INDEX]			= 0b00010001;	// bits 0:3 = Number of batteries, 4:7 = Identifier.
+	tx_buffer[ANT_BAT_TIME_LSB_INDEX]	= (uint8_t)status.operating_time;
+	tx_buffer[ANT_BAT_TIME_INDEX]	 	= (status.operating_time & 0x0000FF00) >> 8;
+	tx_buffer[ANT_BAT_TIME_MSB_INDEX]	= (status.operating_time & 0x00FF0000) >> 16;
+	tx_buffer[ANT_BAT_FRAC_VOLT_INDEX]	= status.fractional_volt;
+	tx_buffer[ANT_BAT_DESC_INDEX]		= status.coarse_volt |
+											status.status << 4 |
+											status.resolution << 7;
+
+	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
+}
+
 uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 {
 	// State required to be managed.
@@ -570,23 +545,35 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 	uint32_t err_code;
 
 	// TODO: should we use this struct instead? ANTMsgWahoo240_t
-	uint8_t tx_buffer[TX_BUFFER_SIZE] =
-	{
-		WF_ANT_RESPONSE_PAGE_ID,
-		mode,
-		WF_ANT_RESPONSE_FLAG,
-		++resistance_sequence,
-		LOW_BYTE(value),
-		HIGH_BYTE(value),
-		0x01, 	// Again, not sure why, but KICKR responds with this.
-		0x00
-	};
 
-	err_code = broadcast_message_transmit(tx_buffer);
+	tx_buffer[0] = 		WF_ANT_RESPONSE_PAGE_ID;
+	tx_buffer[1] = 		tx_buffer[0] = mode;
+	tx_buffer[2] = 		WF_ANT_RESPONSE_FLAG;
+	tx_buffer[3] = 		++resistance_sequence;
+	tx_buffer[4] = 		LOW_BYTE(value);
+	tx_buffer[5] = 		HIGH_BYTE(value);
+	tx_buffer[6] = 		0x01; 	// Again, not sure why, but KICKR responds with this.
+	tx_buffer[7] = 		0x00;
+
+	err_code = broadcast_message_transmit();
 	BP_LOG("[BP]:acknowledged OP:[%.2x] VAL:[%.2x][%.2x]\r\n",
 			mode, LOW_BYTE(value), HIGH_BYTE(value));
 
 	return err_code;
+}
+
+uint32_t ant_bp_calibration_speed_tx_send(uint8_t sequence, uint8_t flywheel_delta[5])
+{
+	tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
+	tx_buffer[1] = 		ANT_BP_CAL_PARAM_RESPONSE;
+	tx_buffer[2] = 		sequence;
+	tx_buffer[3] = 		flywheel_delta[0];
+	tx_buffer[4] = 		flywheel_delta[1];
+	tx_buffer[5] = 		flywheel_delta[2];
+	tx_buffer[6] = 		flywheel_delta[3];
+	tx_buffer[7] = 		flywheel_delta[4];
+
+	return broadcast_message_transmit();
 }
 
 /**@brief	Sends get/set parameters page.  This is sent in response to a
@@ -607,37 +594,24 @@ void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)
 {
 	uint32_t err_code;
 
-	uint8_t tx_buffer[TX_BUFFER_SIZE] =
-	{
-		ANT_PAGE_GETSET_PARAMETERS,
-		subpage,
-		buffer[0],
-		buffer[1],
-		buffer[2],
-		buffer[3],
-		buffer[4],
-		buffer[5]
-	};
-
-	/*BP_LOG("[BP]:Sending page 2 response [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-			tx_buffer[0],
-			tx_buffer[1],
-			tx_buffer[2],
-			tx_buffer[3],
-			tx_buffer[4],
-			tx_buffer[5],
-			tx_buffer[6],
-			tx_buffer[7]);*/
+	tx_buffer[0] = 		ANT_PAGE_GETSET_PARAMETERS;
+	tx_buffer[1] = 		subpage;
+	tx_buffer[2] = 		buffer[0];
+	tx_buffer[3] = 		buffer[1];
+	tx_buffer[4] = 		buffer[2];
+	tx_buffer[5] = 		buffer[3];
+	tx_buffer[6] = 		buffer[4];
+	tx_buffer[7] = 		buffer[5];
 
 	if (tx_type == 0x80)
 	{
 		// Send Acknowledged.
-		err_code = acknolwedge_message_transmit(tx_buffer);
+		err_code = acknolwedge_message_transmit();
 	}
 	else
 	{
 		// Send Broadcast.
-		err_code = broadcast_message_transmit(tx_buffer);
+		err_code = broadcast_message_transmit();
 	}
 
 	APP_ERROR_CHECK(err_code);
@@ -663,20 +637,17 @@ void ant_bp_page3_tx_send(
 		meas_count = 15;
 	}
 
-	uint8_t tx_buffer[TX_BUFFER_SIZE] =
-	{
-		ANT_PAGE_MEASURE_OUTPUT,
-		meas_count,
-		(uint8_t)data_type,
-		scale_factor,
-		LSB(timestamp),
-		MSB(timestamp),
-		LSB(value),
-		MSB(value)
-	};
+	tx_buffer[0] = 		ANT_PAGE_MEASURE_OUTPUT;
+	tx_buffer[1] = 		meas_count;
+	tx_buffer[2] = 		(uint8_t)data_type;
+	tx_buffer[3] = 		scale_factor;
+	tx_buffer[4] = 		LSB(timestamp);
+	tx_buffer[5] = 		MSB(timestamp);
+	tx_buffer[6] = 		LSB(value);
+	tx_buffer[7] = 		MSB(value);
 
 	// Send Broadcast.
-	err_code = broadcast_message_transmit(tx_buffer);
+	err_code = broadcast_message_transmit();
 
 	BP_LOG("[BP] Sent temperature.\r\n");
 

@@ -10,16 +10,18 @@
 #define ANT_BP_ENABLE_DFU_COMMAND		0x64
 
 // ANT Bike Power specific pages.
-#define ANT_BP_PAGE_1               	0x01   /**< Calibration message main data page. */
+#define ANT_BP_PAGE_CALIBRATION			0x01	// Calibration page
 #define ANT_BP_PAGE_STANDARD_POWER_ONLY 0x10   /**< Standard Power only main data page. */
 #define ANT_BP_PAGE_TORQUE_AT_WHEEL		0x11   /**< Power reported as torque at wheel data page, which includes speed. */
-#define ANT_BP_PAGE_EXTRA_INFO			0x24   // TODO: My custom page.  Look for better page no for this.
+#define ANT_BP_PAGE_EXTRA_INFO			0x24   // TODO: This should be a manufacturer specific page
 
 // Generic ANT pages.
 #define ANT_PAGE_GETSET_PARAMETERS		0x02
 #define ANT_PAGE_MEASURE_OUTPUT			0x03	// Measurement Output Data Page (0x03)
 #define ANT_PAGE_REQUEST_DATA			0x46
 #define ANT_PAGE_BATTERY_STATUS			0x52
+
+#define ANT_BP_CAL_PARAM_RESPONSE		0xBB
 
 
 #include "ble_ant.h"
@@ -63,5 +65,10 @@ void ant_bp_page3_tx_send(uint8_t meas_count,
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt);
 
 uint32_t ant_bp_battery_tx_send(irt_battery_status_t status);
+
+/**@brief	Sends a calibration response with 5 speed values encoded.
+ *
+ */
+uint32_t ant_bp_calibration_speed_tx_send(uint8_t sequence, uint8_t flywheel_delta[5]);
 
 #endif	// ANT_BIKE_POWER_H__

@@ -26,12 +26,29 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #define LED_BACK_GREEN			2
 #define LED_BACK_RED			3
 
+void print_buf(uint8_t* p_buf)
+{
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		printf("[%i]\t%i\r\n", i, p_buf[i]);
+	}
+
+}
 
 int main(int argc, char *argv [])
 {
-	uint32_t pins = (1UL << LED_FRONT_GREEN_PIN) | (1UL << LED_BACK_GREEN_PIN);
+	uint8_t count = 0;
+	uint8_t buffer[8] = { 255, 254, 253, 252, 251, 250, 249, 248 };
 
+	//(uint8_t*) &buffer
+	print_buf((uint8_t*)&buffer);
 
-	printf("%u\r\n", pins | 15);
+	while (true)
+	{
+		printf("%i\r\n", count);
+		count = count++ | 0x05;
+	}
+	
+
 	return 0;
 }

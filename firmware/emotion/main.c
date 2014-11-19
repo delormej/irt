@@ -67,7 +67,6 @@
 #endif // ENABLE_DEBUG_LOG
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
-
 //
 // Default profile and simulation values.
 //
@@ -93,6 +92,7 @@ static resistance_mode_t				m_resistance_mode;
 
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 static app_timer_id_t					m_sensor_read_timer_id;						// Timer used to read sensors, out of phase from the 4hz messages.
+static app_timer_id_t					m_ca_timer_id;								// Calibration timer.
 
 static user_profile_t  					m_user_profile  __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
 static rc_sim_forces_t					m_sim_forces;
@@ -500,7 +500,7 @@ static void profile_update_sched(void)
   */
 static void ant_ctrl_available(void)
 {
-	// Send remote control availability to keep it alive during calibration.
+	// Send remote control availability.
 	ant_ctrl_device_avail_tx((uint8_t) (m_ant_ctrl_remote_ser_no != 0));
 }
 
@@ -510,25 +510,25 @@ static void ant_ctrl_available(void)
 
 /**@brief Called during calibration to send frequent calibration messages.
  *
+ */
 static void calibration_timeout_handler(void * p_context)
 {
-	static uint8_t count;
-	uint8_t response[6];
-	uint32_t flywheel;
-	uint16_t seconds2048;
+	static uint8_t count = 0;
+	static uint8_t tick_buffer[5];
+	static uint16_t last_flywheel;
+	uint16_t flywheel = flywheel_ticks_get();
 
-	seconds2048 = seconds_2048_get();
-	flywheel = flywheel_ticks_get();
+	tick_buffer[count] = flywheel - last_flywheel;
+	last_flywheel = flywheel;
 
-	LOG("[MAIN]flywheel: %u\r\n", flywheel);
-
-	// 6 data bytes available.
-	memcpy(&response, &seconds2048, sizeof(uint16_t));
-	memcpy(&response[2], &flywheel, sizeof(uint32_t));
-
-	ant_bp_page2_tx_send(IRT_MSG_SUBPAGE_CA_SPEED, response, DATA_PAGE_RESPONSE_TYPE);
+	// Increment, every 5th message, send and rollover.
+	if (++count % ( sizeof(tick_buffer)/sizeof(uint8_t) ) == 0)
+	{
+		ant_bp_calibration_speed_tx_send(count, tick_buffer);
+		count = 0;
+	}
 }
-*/
+
 
 /**@brief Function for handling the ANT 4hz measurement timer timeout.
  *
@@ -665,14 +665,12 @@ static void application_timers_start(void)
 {
     uint32_t err_code;
 
-    // Start application timers
+    // Start regular application timers.
     err_code = app_timer_start(m_ant_4hz_timer_id, ANT_4HZ_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 
     err_code = app_timer_start(m_sensor_read_timer_id, SENSOR_READ_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
-
-    //LOG("[MAIN] Started 4hz timer with %i ticks.\r\n", ANT_4HZ_INTERVAL);
 }
 
 static void application_timers_stop(void)
@@ -709,14 +707,22 @@ static void timers_init(void)
 	// Initialize timer module
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, false);
 
+    // Standard ANT 4hz interval to calculate and send messages.
     err_code = app_timer_create(&m_ant_4hz_timer_id,
                                 APP_TIMER_MODE_REPEATED,
                                 ant_4hz_timeout_handler);
 	APP_ERROR_CHECK(err_code);
 
-    err_code = app_timer_create(&m_sensor_read_timer_id,
+    // Reading battery / temp sensors less frequently.
+	err_code = app_timer_create(&m_sensor_read_timer_id,
                                 APP_TIMER_MODE_REPEATED,
                                 sensor_read_timeout_handler);
+	APP_ERROR_CHECK(err_code);
+
+	// Record data much more frequently during calibration.
+	err_code = app_timer_create(&m_ca_timer_id,
+								APP_TIMER_MODE_REPEATED,
+								calibration_timeout_handler);
 	APP_ERROR_CHECK(err_code);
 }
 
@@ -854,46 +860,36 @@ static void send_temperature()
  */
 static void calibration_start(void)
 {
-	/*
 	uint32_t err_code;
 
-	// Stop existing ANT timer, start the new one.
-	application_timers_stop();
+	// Stop existing ANT timer.
+	err_code = app_timer_stop(m_ant_4hz_timer_id);
+	APP_ERROR_CHECK(err_code);
 
-    if (m_ca_timer_id == NULL)
-    {
-		err_code = app_timer_create(&m_ca_timer_id,
-									APP_TIMER_MODE_REPEATED,
-									calibration_timeout_handler);
-		APP_ERROR_CHECK(err_code);
-    }
-
-    err_code = app_timer_start(m_ca_timer_id, CALIBRATION_INTERVAL, NULL);
+	// Start the calibration timer.
+    err_code = app_timer_start(m_ca_timer_id, CALIBRATION_READ_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
-	 */
-	led_set(LED_CALIBRATION_ENTER);
 
     m_crr_adjust_mode = true;
+
+	led_set(LED_CALIBRATION_ENTER);
 }
 
 /**@brief 	Stops calibration and resumes normal activity.
  */
 static void calibration_stop(void)
 {
-	/*
 	uint32_t err_code;
 
 	// Stop the calibration timer.
 	err_code = app_timer_stop(m_ca_timer_id);
     APP_ERROR_CHECK(err_code);
-	*/
 	m_crr_adjust_mode = false;
+
 	led_set(LED_CALIBRATION_EXIT);
 
-	/*
-	// Restart the normal timer.
-	application_timers_start();
-	*/
+	// Restart the normal ANT timer.
+	err_code = app_timer_start(m_ant_4hz_timer_id, ANT_4HZ_INTERVAL, NULL);
 }
 
 /**@brief	Updates settings either temporarily or with persistence.

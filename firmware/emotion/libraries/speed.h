@@ -52,6 +52,16 @@ void speed_wheel_size_set(uint16_t wheel_size_mm);
  */
 uint32_t speed_calc(irt_power_meas_t * current, irt_power_meas_t * last);
 
+/**@brief 	Returns the accumulated count of flywheel revolutions since the
+ *					counter started.
+ *
+ */
+inline uint16_t flywheel_ticks_get()
+{
+	REVS_TIMER->TASKS_CAPTURE[0] = 1;
+	return REVS_TIMER->CC[0];
+}
+
 #ifdef SIM_SPEED
 // Declaration of
 // # of ticks to simulate in debug mode.
