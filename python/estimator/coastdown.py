@@ -28,6 +28,12 @@ def fit_power(x_new, x, y):
 	plt.plot(x_new, power_func(x_new, *pars), 'r--')
 	#print(pars)
 
+def fit_linear(x_new, x, y):
+	slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+	print("slope: %s intercept: %s" % (slope, intercept) )
+	plt.plot(x_new, x_new * slope + intercept, 'g')
+
+
 # load the csv file
 time, tick_delta = np.loadtxt(input_file_name, delimiter=',', skiprows=1,
 						dtype=[('ms', int), ('tick_delta', int)], usecols=[0, 2], unpack=True, comments='"')
@@ -43,10 +49,7 @@ plt.plot(x, y)
 x_new = np.linspace(x[0], x[-1], len(x))
 #fit_power(x_new, x, y)
 fit_poly2d(x_new, x, y)
+fit_linear(x_new, x, y)
 
-# plot straight, linear line
-xs = [min(x), max(x)]
-ys = [max(y), min(y)]
-plt.plot(xs, ys, 'g')
-
+# show the chart
 plt.show()
