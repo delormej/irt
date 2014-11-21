@@ -3,7 +3,7 @@ n = 7       # min. sequence length
 x = 0.2 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
 skip_rows = 120 # data rows skipped at the beginning
-txt_offset = 150
+txt_offset = 250
 speed_col = 3
 watts_col = 5
 servo_col = 7
@@ -43,6 +43,10 @@ def xsl(xml_filename):
     except:
         print("Unexpected error:", sys.exc_info())
 
+def bicycle_func(x, a, b):
+	x_mps = x * 0.44704
+	return a*x_mps**2+b # Force = K(V^2) + (mgCrr)
+
 def power_func(x, a, b):
 	return a*(x**b)
 
@@ -79,11 +83,18 @@ def speed_watt_median(data):
 	x_new = np.linspace(5, 40, 50)
 	plt.plot(x_new, power_func(x_new, *pars), 'r--')
 
+	# Calculate bicycle power function
+	#pars2, covar2 = spo.curve_fit(bicycle_func, x, y)
+	#plt.plot(x_new, bicycle_func(x_new, *pars2), 'b')
+	#txt_offset+=20
+	#bike_func_txt = ("F = %f(V^2)+%f" % (pars2[0], pars2[1]))
+	#plt.text(7, txt_offset, bike_func_txt)
+
 	# advance the text offset vertically
 	txt_offset+=20
 
-	func_txt = ("y = %fx^%f" % (pars[0], pars[1]))
-	plt.text(15, txt_offset, func_txt)
+	#func_txt = ("y = %fx^%f" % (pars[0], pars[1]))
+	#plt.text(7, txt_offset, func_txt)
 
 	# calculate the polynomial
 	#z = np.polyfit(x, y, 2)
@@ -107,10 +118,12 @@ def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
 	# convert slope to wheel speed in mph from flywheel mps
 	#slope = slope * (0.4/0.115) * 0.44704
 	#plt.xlim([speeds_mph.min(),speeds_mph.max()])
+	plt.xlim(5,40)
+	plt.ylim(0,400)
 	plt.scatter(speeds_mph, watts, c=color1)
 	plt.plot(speeds_mph, (speeds_mph*0.44704)*slope + intercept, color2)
 	txt_offset = txt_offset + 20
-	plt.text(15, txt_offset, "slope: %s, offset: %i" % (math.trunc(slope*1000), math.trunc(abs(intercept)*1000)))
+	plt.text(7, txt_offset, "slope: %s, offset: %i" % (math.trunc(slope*1000), math.trunc(abs(intercept)*1000)))
 
 def theil_sen(x,y, sample= "auto", n_samples = 1e7):
     """
