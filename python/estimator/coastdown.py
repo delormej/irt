@@ -9,7 +9,7 @@ input_file_name = "coastdown.csv"
 def fit_poly2d(x_new, x, y):
 	coefficients = np.polyfit(x, y, 2)
 	polynomial = np.poly1d(coefficients)
-	ys = polynomial(x)
+	ys = polynomial(x_new)
 	# y = ax^2 + bx + c
 	f = ("y = %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2]))
 	print(f)
