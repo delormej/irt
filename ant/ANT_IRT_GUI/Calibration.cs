@@ -7,45 +7,55 @@ using System.Text;
 
 namespace IRT_GUI
 {
-    public static class Calibration
+    public class TickEvent
     {
-        private static StreamWriter m_logFileWriter;
-        const string report_format = "{0:g}, {1:g}, {2:g}";
+        const string format = "{0:g}, {1:g}, {2:g}";
 
-        private static bool m_inCalibrationMode = false;
-        private static byte m_lastCount = 0;
-        private static Stopwatch m_stopwatch;
+        public long TimestampMS;
+        public byte Sequence;
+        public byte TickDelta;
 
-        public static bool InCalibration { get { return m_inCalibrationMode; } }
-
-        public static void EnterCalibration()
+        public override string ToString()
         {
-            if (!m_inCalibrationMode)
-            {
-                m_inCalibrationMode = true;
-                m_stopwatch = new Stopwatch();
-                m_stopwatch.Start();
+            return string.Format(format, 
+                TimestampMS,
+                Sequence,
+                TickDelta);
+        }
+    }
 
-                m_inCalibrationMode = true;
+    public class Calibration : IDisposable
+    {
+        private StreamWriter m_logFileWriter;
+        
 
-                // open up a stream to start logging
-                string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
-                    typeof(Calibration).Assembly.GetName().Version.ToString(3),
-                    DateTime.Now);
+        private bool m_inCalibrationMode = false;
+        private byte m_lastCount = 0;
+        private Stopwatch m_stopwatch;
+        private List<TickEvent> m_tickEvents;
 
-                m_logFileWriter = new StreamWriter(filename);
-                m_logFileWriter.AutoFlush = true;
-                m_logFileWriter.WriteLine("timestamp_ms, count, ticks");
-            }
+        public Calibration()
+        {
+            m_tickEvents = new List<TickEvent>();
+            m_stopwatch = new Stopwatch();
+
+            m_inCalibrationMode = true;
+            m_stopwatch.Start();
+
+            m_inCalibrationMode = true;
+
+            // open up a stream to start logging
+            string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
+                typeof(Calibration).Assembly.GetName().Version.ToString(3),
+                DateTime.Now);
+
+            m_logFileWriter = new StreamWriter(filename);
+            m_logFileWriter.AutoFlush = true;
+            m_logFileWriter.WriteLine("timestamp_ms, count, ticks");
         }
 
-        public static void ExitCalibration()
+        public void ExitCalibration()
         {
-            if (m_inCalibrationMode)
-            {
-                m_inCalibrationMode = false;
-            }
-
             if (m_logFileWriter != null)
             {
                 m_logFileWriter.Flush();
@@ -59,20 +69,13 @@ namespace IRT_GUI
             }
         }
 
-        public static void LogCalibration(byte[] buffer)
+        public void LogCalibration(byte[] buffer)
         {
-            if (!InCalibration || m_logFileWriter == null)
-            {
-                EnterCalibration();
-            }
-
             // Single entrance.
-            object _lock = new object();
-            lock (_lock)
+            lock (this)
             {
                 long ms = m_stopwatch.ElapsedMilliseconds;
                 
-
                 // If we already saw this message, skip it.
                 if (m_lastCount > 0 && m_lastCount == buffer[0])
                 {
@@ -87,12 +90,20 @@ namespace IRT_GUI
                     if (timestamp < 0)
                         timestamp = 0;
 
-                    m_logFileWriter.WriteLine(string.Format(report_format,
-                        timestamp, buffer[0], buffer[1 + i]));
+                    var tick = new TickEvent() 
+                        { TimestampMS = timestamp, Sequence = buffer[0], TickDelta = buffer[1 + i] };
+
+                    m_tickEvents.Add(tick);
+                    m_logFileWriter.WriteLine(tick);
                 }
 
                 m_lastCount = buffer[0];
             }
+        }
+
+        public void Dispose()
+        {
+            ExitCalibration();
         }
     }
 }

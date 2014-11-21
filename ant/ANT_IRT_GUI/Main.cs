@@ -57,6 +57,7 @@ namespace IRT_GUI
         private Timer m_reportTimer;
         private List<IReporter> m_reporters;
         private DataPoint m_dataPoint;
+        private Calibration m_calibration;
 
         // Used for calculating moving average.
         private int m_movingAvgPosition = 0;
@@ -500,8 +501,13 @@ namespace IRT_GUI
 
         void m_eMotion_CalibrationCustomParameterResponsePageReceived(CustomCalibrationParameterResponsePage arg1, uint arg2)
         {
+            if (m_calibration == null)
+            {
+                m_calibration = new Calibration();
+            }
+
             byte[] buffer = arg1.CalibrationDataArray.ToArray();
-            Calibration.LogCalibration(buffer);
+            m_calibration.LogCalibration(buffer);
         }
 
         private void StartReporting()
@@ -815,9 +821,10 @@ namespace IRT_GUI
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {
             // if we start getting a torque page, we're back out of calibration mode.
-            if (Calibration.InCalibration)
+            if (m_calibration != null)
             {
-                Calibration.ExitCalibration();
+                m_calibration.ExitCalibration();
+                m_calibration = null;
             }
 
             if (!double.IsInfinity(m_eMotion.AverageSpeedWheelTorque))
