@@ -39,7 +39,7 @@ time, tick_delta = np.loadtxt(input_file_name, delimiter=',', skiprows=1,
 						dtype=[('ms', int), ('tick_delta', int)], usecols=[0, 2], unpack=True, comments='"')
 
 # calculate new x/y to represent time in ms since 0 and speed in meters per second
-x = time - time[0]
+x = (time - time[0]) / 1000.0
 y = tick_delta * 20 * 0.1115/2
 
 # plot actual values
