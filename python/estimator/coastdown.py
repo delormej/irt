@@ -14,6 +14,7 @@ def fit_poly2d(x_new, x, y):
 	f = ("y = %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2]))
 	print(f)
 	plt.plot(x_new, ys, 'r--')
+	#plt.xlim(min(x_new), max(x_new))
 
 def power_func(x, a, b):
 	#original: return a*(x**b) 

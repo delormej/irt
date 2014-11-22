@@ -50,6 +50,16 @@ def bicycle_func(x, a, b):
 def power_func(x, a, b):
 	return a*(x**b)
 
+# fit to a 2nd degree polynomial
+def fit_poly2d(x_new, x, y):
+	coefficients = np.polyfit(x, y, 2)
+	polynomial = np.poly1d(coefficients)
+	y_new = polynomial(x_new)
+	# y_new = ax^2 + bx + c
+	f = ("poly2d: y = %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2]))
+	print(f)
+	plt.plot(x_new, y_new, 'g-')
+
 def speed_watt_median(data):
 	#data = [(22.600000000000001, 204), (25.5, 247), (16.0, 129), (16.0, 139), (15.9, 126), (16.0, 132), (16.699999999999999, 133), (16.800000000000001, 134), (23.0, 200), (23.0, 219)]
 	global txt_offset
@@ -97,8 +107,7 @@ def speed_watt_median(data):
 	#plt.text(7, txt_offset, func_txt)
 
 	# calculate the polynomial
-	#z = np.polyfit(x, y, 2)
-	#f = np.poly1d(z) # get a function for the polynomial
+	fit_poly2d(x_new, x, y)
 
 	# calculate new x / y
 	#x_new = np.linspace(x[0], x[-1], len(x))
