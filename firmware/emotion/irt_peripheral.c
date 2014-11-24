@@ -29,7 +29,7 @@
 #define PH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define DEBOUNCE_INTERVAL				APP_TIMER_TICKS(20, APP_TIMER_PRESCALER)   	// Debounce interval .
+#define DEBOUNCE_INTERVAL				APP_TIMER_TICKS(175, APP_TIMER_PRESCALER)   	// Debounce interval .
 
 static peripheral_evt_t 				*mp_on_peripheral_evt;
 static app_timer_id_t					m_debounce_timer_id;						// Timer used for debouncing button input.
@@ -44,7 +44,6 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 	//event_pins_low_to_high
 	if (event_pins_high_to_low & (1 << PIN_SHAKE))
 	{
-
 		mp_on_peripheral_evt->on_accelerometer_evt();
 	}
 #ifdef IRT_REV_2A_H
@@ -191,7 +190,7 @@ static void button_init()
 		nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
 
 		// Initialize the pin to wake the device on button push.
-		nrf_gpio_cfg_sense_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
+		// nrf_gpio_cfg_sense_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
 
 		// Initialize the debounce checking module.
 		irt_button_init(PIN_PBSW);
@@ -308,6 +307,9 @@ void peripheral_powerdown(bool accelerometer_off)
 
 	// Shut down the leds.
 	led_set(LED_POWER_OFF);
+
+	// Set the inputs that will wake-up the device again.
+	peripheral_wakeup_set();
 }
 
 /**@brief	Sets the pins to wake the device from sleep (button push and accelerometer).
