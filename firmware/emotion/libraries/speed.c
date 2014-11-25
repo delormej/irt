@@ -36,9 +36,9 @@
  * to calculate based on actual flywheel speed and not virtual road speed.
  *
  */
-#define FLYWHEEL_TICK_PER_REV		2											// 2 Flywheel ticks per revolution.
-#define FLYWHEEL_ROAD_DISTANCE				0.115f								// Virtual road distance traveled in meters per complete flywheel rev.
-#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_ROAD_DISTANCE) * FLYWHEEL_TICK_PER_REV)		// 2 ticks per rev.
+#define FLYWHEEL_TICK_PER_REV		2																// # of ticks per flywheel revolution.
+#define FLYWHEEL_ROAD_DISTANCE		0.115f															// Virtual road distance traveled in meters per complete flywheel rev.
+#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_ROAD_DISTANCE) * FLYWHEEL_TICK_PER_REV)		// # of flywheel ticks per meter
 
 static uint16_t m_wheel_size;										// Wheel diameter size in mm.
 static float m_flywheel_to_wheel_revs;								// Ratio of flywheel revolutions for 1 wheel revolution.
