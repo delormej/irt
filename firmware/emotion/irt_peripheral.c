@@ -329,9 +329,6 @@ void peripheral_powerdown(bool accelerometer_off)
 
 	// Shut down the leds.
 	led_set(LED_POWER_OFF);
-
-	// Set the inputs that will wake-up the device again.
-	peripheral_wakeup_set();
 }
 
 /**@brief	Sets the pins to wake the device from sleep (button push and accelerometer).

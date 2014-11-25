@@ -1681,7 +1681,7 @@ static uint32_t check_reset_reason()
 			// Initialize the status LEDs, which ensures they are off.
 			led_init();
 
-			// Enable interrupts that will wake the system.
+			// Enable interrupts that will wake the system since retained registers are reset on WDT reset.
 			peripheral_wakeup_set();
 
 			// Shut the system down.
@@ -1690,7 +1690,8 @@ static uint32_t check_reset_reason()
 
 		if (reason & POWER_RESETREAS_OFF_Msk)
 		{
-			// if this was because of a SENSE input, reset the DETECT.
+			// Reset was because of a SENSE input, print out the current state.
+			LOG("[MAIN] Pins: %u\r\n", NRF_GPIO->IN);
 		}
 	}
 	else
