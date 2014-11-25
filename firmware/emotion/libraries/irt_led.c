@@ -29,10 +29,10 @@
 #define BLINK_RATE_TICKS		APP_TIMER_TICKS(150, APP_TIMER_PRESCALER)	// 75ms in ticks
 
 // TODO: this module doesn't support HW_VERSION <2
-#define LED_FRONT_GREEN_PIN			PIN_LED_D
-#define LED_FRONT_RED_PIN			PIN_LED_C
-#define LED_BACK_GREEN_PIN			PIN_LED_B
-#define LED_BACK_RED_PIN			PIN_LED_A
+#define LED_FRONT_GREEN_PIN			PIN_LED_B
+#define LED_FRONT_RED_PIN			PIN_LED_A
+#define LED_BACK_GREEN_PIN			PIN_LED_D
+#define LED_BACK_RED_PIN			PIN_LED_C
 
 #define LED_PINS				(1UL << LED_FRONT_GREEN_PIN | 1UL << LED_FRONT_RED_PIN | 1UL << LED_BACK_GREEN_PIN | 1UL << LED_BACK_RED_PIN )
 #define PATTERN_LEN				4								// Working with 4 pins (2 LEDs, 2 pins each)

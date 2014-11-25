@@ -1364,8 +1364,8 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			// Requires double long push of middle to shut down.
 			if (m_crr_adjust_mode)
 			{
-				// Force a hard power down, accelerometer will not wake.
-				on_power_down(true);
+				// Stop calibration if we get a long hold while in calibration.
+				calibration_stop();
 			}
 			else
 			{
