@@ -547,7 +547,7 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 	// TODO: should we use this struct instead? ANTMsgWahoo240_t
 
 	tx_buffer[0] = 		WF_ANT_RESPONSE_PAGE_ID;
-	tx_buffer[1] = 		tx_buffer[0] = mode;
+	tx_buffer[1] = 		mode;
 	tx_buffer[2] = 		WF_ANT_RESPONSE_FLAG;
 	tx_buffer[3] = 		++resistance_sequence;
 	tx_buffer[4] = 		LOW_BYTE(value);
