@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace IRT_GUI
 {
@@ -27,7 +28,7 @@ namespace IRT_GUI
     public class Calibration : IDisposable
     {
         private StreamWriter m_logFileWriter;
-        
+        private CalibrationForm m_form;
 
         private bool m_inCalibrationMode = false;
         private byte m_lastCount = 0;
@@ -54,6 +55,23 @@ namespace IRT_GUI
             m_logFileWriter.WriteLine("timestamp_ms, count, ticks");
         }
 
+        public void ShowCalibration(short watts)
+        {
+            m_form = new CalibrationForm();
+            m_form.lblRefPower.Text = watts.ToString();
+            m_form.Show();
+        }
+
+        private void CloseForm()
+        {
+            Action a = () =>
+            {
+                m_form.Close();
+            };
+
+            m_form.BeginInvoke(a);
+        }
+
         public void ExitCalibration()
         {
             if (m_logFileWriter != null)
@@ -67,14 +85,19 @@ namespace IRT_GUI
                 m_stopwatch.Stop();
                 m_stopwatch = null;
             }
+
+            CloseForm();
         }
 
         public void LogCalibration(byte[] buffer)
         {
+            long ms = 0;
+            TickEvent tick = null;
+
             // Single entrance.
             lock (this)
             {
-                long ms = m_stopwatch.ElapsedMilliseconds;
+                ms = m_stopwatch.ElapsedMilliseconds;
                 
                 // If we already saw this message, skip it.
                 if (m_lastCount > 0 && m_lastCount == buffer[0])
@@ -90,7 +113,7 @@ namespace IRT_GUI
                     if (timestamp < 0)
                         timestamp = 0;
 
-                    var tick = new TickEvent() 
+                    tick = new TickEvent() 
                         { TimestampMS = timestamp, Sequence = buffer[0], TickDelta = buffer[1 + i] };
 
                     m_tickEvents.Add(tick);
@@ -98,6 +121,18 @@ namespace IRT_GUI
                 }
 
                 m_lastCount = buffer[0];
+            }
+
+            if (m_form != null)
+            {
+                Action a = () =>
+                {
+                    double mph = (tick.TickDelta * 20 * 0.11176 / 2) * 2.23694;
+                    m_form.lblSeconds.Text = string.Format("{0:0.0}", ms / 1000.0f);
+                    m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
+                };
+
+                m_form.BeginInvoke(a);
             }
         }
 

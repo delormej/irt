@@ -101,7 +101,6 @@ namespace IRT_GUI
             m_SystemUiUpdate = false;
         }
 
-
         public frmIrtGui()
         {
             InitializeComponent();
@@ -504,6 +503,11 @@ namespace IRT_GUI
             if (m_calibration == null)
             {
                 m_calibration = new Calibration();
+
+                ExecuteOnUI(() =>
+                {
+                    m_calibration.ShowCalibration((short)m_refPower.AveragePowerStandardTorque);
+                });
             }
 
             byte[] buffer = arg1.CalibrationDataArray.ToArray();
