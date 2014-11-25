@@ -28,7 +28,8 @@
 #define PH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define DEBOUNCE_INTERVAL				50   	// Debounce interval .
+#define SHORT_PRESS_DELAY				100   					// Debounce interval in ms.
+#define LONG_PRESS_DELAY				(2 * TICK_FREQUENCY) 	// Seconds * ticks per second.  Amount of time the button was held to determine if it's a long press.
 
 static peripheral_evt_t 				*mp_on_peripheral_evt;
 static app_gpiote_user_id_t 			mp_user_id;
@@ -68,31 +69,51 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 #endif
 }
 
-/**@brief	Called every 50ms.
- *
+/**@brief	Button debounce handler, called when the button is pressed or released.
+ * 			Detects if this was a short or long press.
  */
 static void debounce_timeout_handler(uint8_t pin_no, uint8_t button_action)
 {
-	switch (button_action)
+	// Last tick count, recorded when button was pushed.
+	static uint32_t last_ticks = 0;
+	uint32_t ticks, delta;
+
+	if (button_action == APP_BUTTON_PUSH)
 	{
-		case APP_BUTTON_PUSH:
+			// Record when the button was pushed.
+			last_ticks = NRF_RTC1->COUNTER;
 			PH_LOG("[PH] button pushed\r\n");
-			break;
+	}
+	else
+	{
+		// Button was released, determine how long it was pushed for.
+		ticks = NRF_RTC1->COUNTER;
 
-		case APP_BUTTON_RELEASE:
-			PH_LOG("[PH] button released\r\n");
-			break;
-	/*
-		case ShortPress:
-			mp_on_peripheral_evt->on_button_pbsw(false);
-			break;
+		if (ticks < last_ticks)
+		{
+			// handle rollover
+			delta = (last_ticks ^ 0xFFFFFFFF) + ticks;
+		}
+		else
+		{
+			delta = ticks - last_ticks;
+		}
 
-		case LongPress:
+		// Determine if a long press or short.
+		if (delta >= LONG_PRESS_DELAY)
+		{
+			// long press
 			mp_on_peripheral_evt->on_button_pbsw(true);
-			break;
-	 */
-		default:
-			break;
+			//PH_LOG("[PH] button released (long press): %u \r\n", delta);
+		}
+		else
+		{
+			// short press
+			mp_on_peripheral_evt->on_button_pbsw(false);
+			//PH_LOG("[PH] button released (short press): %u \r\n", delta);
+		}
+
+		last_ticks = 0;
 	}
 }
 
@@ -186,14 +207,15 @@ static void irt_gpio_init()
 	APP_ERROR_CHECK(err_code);
 }    
 
+/**@brief	Initialize debouncing of the user push button on the board.
+ *
+ */
 static void button_init()
 {
 	uint32_t err_code;
 
 	if (HW_REVISION >= 2)
 	{
-		// User push button on the board.
-		//nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
 		static app_button_cfg_t button_cfg = {
 				.pin_no = PIN_PBSW,
 				.active_state = APP_BUTTON_ACTIVE_LOW,
@@ -201,7 +223,8 @@ static void button_init()
 				.button_handler = debounce_timeout_handler
 		};
 
-		APP_BUTTON_INIT(&button_cfg, 1, DEBOUNCE_INTERVAL, true);
+		// App button module debounces the button input.
+		APP_BUTTON_INIT(&button_cfg, 1, SHORT_PRESS_DELAY, true);
 		app_button_enable();
 	}
 }

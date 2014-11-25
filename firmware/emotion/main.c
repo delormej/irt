@@ -1775,6 +1775,9 @@ int main(void)
 	// Initialize the watchdog timer.
 	wdt_init();
 
+    // Initialize the scheduler, make sure to init before timers.
+	scheduler_init();
+
 	// Initialize timers.
 	timers_init();
 
@@ -1813,9 +1816,6 @@ int main(void)
 
 	// Initializes the Bluetooth and ANT stacks.
 	ble_ant_init(&ant_ble_handlers);
-
-    // Initialize the scheduler.
-	scheduler_init();
 
 	// initialize the user profile.
 	profile_init();
