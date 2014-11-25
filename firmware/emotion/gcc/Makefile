@@ -23,6 +23,7 @@ APPLICATION_SRCS += ble_debug_assert_handler.c
 APPLICATION_SRCS += pstorage.c
 APPLICATION_SRCS += nrf_delay.c
 APPLICATION_SRCS += simple_uart.c
+APPLICATION_SRCS += app_button.c
 
 SOURCE_PATHS +=  ../libraries/
 SOURCE_PATHS +=  ../services/

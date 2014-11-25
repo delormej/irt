@@ -17,7 +17,6 @@
 #include "boards.h"
 #include "debug.h"
 #include "battery.h"
-#include "irt_button.h"
 #include "irt_led.h"
 
 /**@brief Debug logging for main module.
@@ -29,10 +28,9 @@
 #define PH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define DEBOUNCE_INTERVAL				APP_TIMER_TICKS(175, APP_TIMER_PRESCALER)   	// Debounce interval .
+#define DEBOUNCE_INTERVAL				50   	// Debounce interval .
 
 static peripheral_evt_t 				*mp_on_peripheral_evt;
-static app_timer_id_t					m_debounce_timer_id;						// Timer used for debouncing button input.
 static app_gpiote_user_id_t 			mp_user_id;
 
 /**@brief Function for handling interrupt events.
@@ -73,10 +71,18 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 /**@brief	Called every 50ms.
  *
  */
-static void debounce_timeout_handler(void * p_context)
+static void debounce_timeout_handler(uint8_t pin_no, uint8_t button_action)
 {
-	switch (irt_button_debounce())
+	switch (button_action)
 	{
+		case APP_BUTTON_PUSH:
+			PH_LOG("[PH] button pushed\r\n");
+			break;
+
+		case APP_BUTTON_RELEASE:
+			PH_LOG("[PH] button released\r\n");
+			break;
+	/*
 		case ShortPress:
 			mp_on_peripheral_evt->on_button_pbsw(false);
 			break;
@@ -84,7 +90,7 @@ static void debounce_timeout_handler(void * p_context)
 		case LongPress:
 			mp_on_peripheral_evt->on_button_pbsw(true);
 			break;
-
+	 */
 		default:
 			break;
 	}
@@ -168,7 +174,7 @@ static void irt_gpio_init()
 #endif
 			);
 
-	APP_GPIOTE_INIT(1);
+	APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
 
 	err_code = app_gpiote_user_register(&mp_user_id,
 		pins_low_to_high_mask,
@@ -187,23 +193,16 @@ static void button_init()
 	if (HW_REVISION >= 2)
 	{
 		// User push button on the board.
-		nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
+		//nrf_gpio_cfg_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL);
+		static app_button_cfg_t button_cfg = {
+				.pin_no = PIN_PBSW,
+				.active_state = APP_BUTTON_ACTIVE_LOW,
+				.pull_cfg = NRF_GPIO_PIN_NOPULL,
+				.button_handler = debounce_timeout_handler
+		};
 
-		// Initialize the pin to wake the device on button push.
-		// nrf_gpio_cfg_sense_input(PIN_PBSW, NRF_GPIO_PIN_NOPULL, GPIO_PIN_CNF_SENSE_Low);
-
-		// Initialize the debounce checking module.
-		irt_button_init(PIN_PBSW);
-
-		// Create debounce timer.
-		err_code = app_timer_create(&m_debounce_timer_id,
-									APP_TIMER_MODE_REPEATED,
-									debounce_timeout_handler);
-		APP_ERROR_CHECK(err_code);
-
-		// Start button debouncing.
-		err_code = app_timer_start(m_debounce_timer_id, DEBOUNCE_INTERVAL, NULL);
-		APP_ERROR_CHECK(err_code);
+		APP_BUTTON_INIT(&button_cfg, 1, DEBOUNCE_INTERVAL, true);
+		app_button_enable();
 	}
 }
 
