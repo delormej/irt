@@ -30,8 +30,10 @@ def power_func(x, a, b):
 # fit to a power curve
 def fit_power(x_new, x, y):
 	pars, covar = spo.curve_fit(power_func, x, y)
-	plt.plot(x_new, power_func(x_new, *pars), 'r--')
-	#print(pars)
+	plt.plot(x_new, power_func(x_new, *pars), 'y-')
+	f = ("y = %sx^%s" % (pars[0], pars[1]))
+	print(f)
+	return f
 
 def fit_linear(x_new, x, y):
 	slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
@@ -61,12 +63,13 @@ plt.xlim(xmax=x.max())
 
 # come up with even set of new x's - makes up for missing data points, etc...
 x_new = np.linspace(x[0], x[-1], len(x))
-#fit_power(x_new, x, y)
-f = fit_poly2d(x_new, x, y)
+fp = fit_power(x_new, x, y)
+f2d = fit_poly2d(x_new, x, y)
 fit_linear(x_new, x, y)
 
 # print the formula
-plt.text(x.max() * 0.05, y.max() * 0.95, f, fontsize=8)
+plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
+plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
 
 # show the chart
 plt.show()
