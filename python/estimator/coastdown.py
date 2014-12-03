@@ -3,7 +3,8 @@ from scipy import signal
 import matplotlib.pyplot as plt
 import scipy.optimize as spo, scipy.stats as stats 
 
-input_file_name = "coastdown.csv"
+#input_file_name = "coastdown.csv"
+input_file_name = "C:\\Users\\Jason\\SkyDrive\\InsideRide\\Tech\\Ride Logs\\Paul Malan\\coastdown.csv"
 
 # fit to a 2nd degree polynomial
 def fit_poly2d(x_new, x, y):
@@ -15,6 +16,9 @@ def fit_poly2d(x_new, x, y):
 	print(f)
 	plt.plot(x_new, ys, 'r--')
 	#plt.xlim(min(x_new), max(x_new))
+	
+	# return the text
+	return f
 
 def power_func(x, a, b):
 	#original: return a*(x**b) 
@@ -26,8 +30,10 @@ def power_func(x, a, b):
 # fit to a power curve
 def fit_power(x_new, x, y):
 	pars, covar = spo.curve_fit(power_func, x, y)
-	plt.plot(x_new, power_func(x_new, *pars), 'r--')
-	#print(pars)
+	plt.plot(x_new, power_func(x_new, *pars), 'y-')
+	f = ("y = %sx^%s" % (pars[0], pars[1]))
+	print(f)
+	return f
 
 def fit_linear(x_new, x, y):
 	slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
@@ -40,17 +46,30 @@ time, tick_delta = np.loadtxt(input_file_name, delimiter=',', skiprows=1,
 						dtype=[('ms', int), ('tick_delta', int)], usecols=[0, 2], unpack=True, comments='"')
 
 # calculate new x/y to represent time in ms since 0 and speed in meters per second
-x = (time - time[0]) / 1000.0	# seconds until 0
-y = tick_delta * 20 * 0.1115/2	# meters per second
+y = (time.max() - time) / 1000.0	# seconds until 0
+x = tick_delta * 20 * 0.1115/2		# meters per second
+
+# Set axis labels
+plt.xlabel('Speed (mps)')
+plt.ylabel('Coastdown Time (seconds)')
 
 # plot actual values
 plt.plot(x, y)
+plt.ylim(ymin=0)
+plt.xlim(xmax=x.max())
+
+# if I wanted to reverse the axis visualy, also need to adjust min/max for this.
+#plt.gca().invert_yaxis()
 
 # come up with even set of new x's - makes up for missing data points, etc...
 x_new = np.linspace(x[0], x[-1], len(x))
-#fit_power(x_new, x, y)
-fit_poly2d(x_new, x, y)
+fp = fit_power(x_new, x, y)
+f2d = fit_poly2d(x_new, x, y)
 fit_linear(x_new, x, y)
+
+# print the formula
+plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
+plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
 
 # show the chart
 plt.show()
