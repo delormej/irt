@@ -23,6 +23,7 @@
 #define SETTING_ANT_FEC_ENABLED			16UL			// ANT+ Fitness Equipment Control profile enabled.
 #define SETTING_ANT_EXTRA_INFO_ENABLED	32UL			// Send custom IRT EXTRA_INFO message (mostly for debugging).
 #define SETTING_ANT_BIKE_SPEED_ENABLED	64UL			// ANT+ Bike Speed enabled.
+#define SETTING_ANT_TR_PAUSE_ENABLED	128UL			// ANT+ Command via button to pause Trainer Road.
 #define SETTING_INVALID					65535UL			// Max for 16 bit settings.
 
 #define MAX_RESISTANCE_LEVEL_COUNT 		10u 			// Max number of resistance levels possible to set.
