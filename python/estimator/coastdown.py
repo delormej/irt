@@ -16,6 +16,9 @@ def fit_poly2d(x_new, x, y):
 	print(f)
 	plt.plot(x_new, ys, 'r--')
 	#plt.xlim(min(x_new), max(x_new))
+	
+	# return the text
+	return f
 
 def power_func(x, a, b):
 	#original: return a*(x**b) 
@@ -59,8 +62,11 @@ plt.xlim(xmax=x.max())
 # come up with even set of new x's - makes up for missing data points, etc...
 x_new = np.linspace(x[0], x[-1], len(x))
 #fit_power(x_new, x, y)
-fit_poly2d(x_new, x, y)
+f = fit_poly2d(x_new, x, y)
 fit_linear(x_new, x, y)
+
+# print the formula
+plt.text(x.max() * 0.05, y.max() * 0.95, f, fontsize=8)
 
 # show the chart
 plt.show()
