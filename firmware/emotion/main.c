@@ -1072,6 +1072,9 @@ static void on_resistance_max(void)
 
 static void on_button_menu(void)
 {
+	// Start / stop TR whenever the middle button is pushed.
+	ant_bp_resistance_tx_send(RESISTANCE_START_STOP_TR, 0);
+
 	// Toggle between erg mode.
 	if (m_resistance_mode == RESISTANCE_SET_STANDARD)
 	{

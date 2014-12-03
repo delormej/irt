@@ -42,7 +42,8 @@ typedef enum
 	RESISTANCE_READ_MODE      	= 0x4A,
 	RESISTANCE_SPINDOWN_RESULT	= 0x5A,
 	RESISTANCE_SET_SERVO_POS 	= 0x5B,	// A new one that I'm adding for testing.
-	RESISTANCE_SET_WEIGHT 		= 0x5C	// A new one that I'm adding for testing.
+	RESISTANCE_SET_WEIGHT 		= 0x5C,	// A new one that I'm adding for testing.
+	RESISTANCE_START_STOP_TR	= 0x65	// Indicator to Trainer Road to stop/start.
 } resistance_mode_t;	// TODO: rename this OPCODE or something similar, it's not the mode necessarily.
 
 /* This is from WAHOO FITNESS:
