@@ -101,6 +101,7 @@ typedef struct
 
 static uint8_t tx_buffer[TX_BUFFER_SIZE];
 static ant_ble_evt_handlers_t* mp_evt_handlers;
+static uint8_t m_event_count;												// Shared event counter for all ANT BP messages.
 
 // TODO: Implement required calibration page.
 
@@ -164,17 +165,25 @@ static __INLINE uint32_t acknolwedge_message_transmit()
 
 static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_period_2048, uint8_t wheel_ticks, bool stopped)
 {
-	static uint8_t event_count				= 0;							// Private event count, not to be shared with other messages.
+	static uint8_t last_event_count = 0;
+
+	/* Fix to ensure that wheel indicates stopped.  We globally increment m_event_count because
+	 * events are calculated globally (i.e. accum wheel period), but display devices do not
+	 * seem to respect a non-incrementing accum wheel period and wheel ticks to indicate stopped.
+	 */
+	if (!stopped)
+	{
+		last_event_count = m_event_count;
+	}
 
 	tx_buffer[PAGE_NUMBER_INDEX]            = ANT_BP_PAGE_TORQUE_AT_WHEEL;
-
 	/*
 	 * This is contrary to the documentation in Rev 4.0 of the spec section 8.4.1.1... but it seems the ANT simulators (new & old)
 	 * and BKOOL do not correctly interpret Time-syncronous event counts incrementing with 0 speed, OR more likely, I'm just not
 	 * interpretting the spec correctly.  However, in the Event-syncronous update model, it does work - so we don't increment this
 	 * event count if we are stopped.
 	 */
-	tx_buffer[EVENT_COUNT_INDEX] 			= stopped ? event_count : ++event_count;				// Time-synchronous model.  Increment the event count.
+	tx_buffer[EVENT_COUNT_INDEX] 			= last_event_count;
 	tx_buffer[WHEEL_TICKS_INDEX] 			= wheel_ticks;
 	tx_buffer[INSTANT_CADENCE_INDEX]        = BP_PAGE_RESERVE_BYTE;
 	tx_buffer[WHEEL_PERIOD_LSB_INDEX] 		= LOW_BYTE(accum_wheel_period_2048);
@@ -187,12 +196,11 @@ static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_peri
 
 static uint32_t power_transmit(uint16_t watts)
 {	
-	static uint8_t event_count				= 0;							// Private event count, not to be shared with other messages.
 	static uint16_t accumulated_power		= 0;
 	accumulated_power                       += watts;
 		
 	tx_buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_STANDARD_POWER_ONLY;
-	tx_buffer[EVENT_COUNT_INDEX]			= event_count++;
+	tx_buffer[EVENT_COUNT_INDEX]			= m_event_count;
 	tx_buffer[PEDAL_POWER_INDEX]			= BP_PAGE_RESERVE_BYTE;
 	tx_buffer[INSTANT_CADENCE_INDEX]		= BP_PAGE_RESERVE_BYTE;
 	tx_buffer[ACCUM_POWER_LSB_INDEX]		= LOW_BYTE(accumulated_power);
@@ -489,32 +497,31 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	static const uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
 	static const uint8_t extra_info_page_interleave 	= EXTRA_INFO_PAGE_INTERLEAVE_COUNT;
 	static const uint8_t battery_page_interleave 		= BATTERY_PAGE_INTERLEAVE_COUNT;
-	static uint8_t message_count = 0;
 
 	uint32_t err_code = 0;		
 
-	// Increment the message count.
-	message_count++;
+	// Increment event counter.
+	m_event_count++;
 
-	if (message_count % product_page_interleave == 0)
+	if (m_event_count % product_page_interleave == 0)
 	{			
 		// # Figures out which common message to submit at which time.
 		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_product_page);
 	}
-	else if (message_count % manufacturer_page_interleave == 0)
+	else if (m_event_count % manufacturer_page_interleave == 0)
 	{
 		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
 	}
-	else if (message_count % battery_page_interleave == 0)
+	else if (m_event_count % battery_page_interleave == 0)
 	{
 		ant_bp_battery_tx_send(p_power_meas->battery_status);
 	}
-	else if (message_count % extra_info_page_interleave == 0)
+	else if (m_event_count % extra_info_page_interleave == 0)
 	{
 		// Send DEBUG info.
 		extra_info_transmit(p_power_meas);
 	}
-	else if (message_count % power_page_interleave == 0)
+	else if (m_event_count % power_page_interleave == 0)
 	{
 		// # Only transmit standard power message every 5th power message.
 		err_code = power_transmit(p_power_meas->instant_power);
@@ -574,11 +581,9 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 
 uint32_t ant_bp_calibration_speed_tx_send(uint8_t* flywheel_delta)
 {
-	static uint8_t event_count = 0;							// Private event count, not to be shared with other messages.
-
 	tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
 	tx_buffer[1] = 		ANT_BP_CAL_PARAM_RESPONSE;
-	tx_buffer[2] = 		event_count++;
+	tx_buffer[2] = 		m_event_count++;
 	tx_buffer[3] = 		flywheel_delta[0];
 	tx_buffer[4] = 		flywheel_delta[1];
 	tx_buffer[5] = 		flywheel_delta[2];
