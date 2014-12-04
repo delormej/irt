@@ -336,14 +336,6 @@ void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 		speed_avg = p_power_meas_current->instant_speed_mps;
 	}
 
-	// Don't attempt to adjust if stopped or going too slow.
-	if (speed_avg < 2.0f)
-	{
-		RC_LOG("[RC] resistance_adjust: not adjusting, too slow: %.2f \r\n",
-				p_power_meas_current->instant_speed_mps);
-		return;
-	}
-
 	// If in erg or sim mode, adjust resistance accordingly.
 	switch (resistance_mode)
 	{

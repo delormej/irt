@@ -80,6 +80,8 @@
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 #define CRR_ADJUST_VALUE				1											// Amount to adjust (up/down) CRR on button command.
 #define SHUTDOWN_VOLTS					6											// Shut the device down when battery drops below 6.0v
+#define RESISTANCE_MIN_SPEED_ADJUST		3.0f	// (~6.71mph)						// Minimum speed in meters per second at which we adjust resistance.
+
 //
 // General purpose retention register states used.
 //
@@ -620,26 +622,55 @@ static void ant_4hz_timeout_handler(void * p_context)
 	err_code = speed_calc(p_power_meas_current, p_power_meas_last);
 	APP_ERROR_CHECK(err_code);
 
-	// Calculate power and get back the rolling resistance force for use in adjusting resistance.
-	err_code = power_calc(p_power_meas_current, p_power_meas_last, &rr_force);
-	APP_ERROR_CHECK(err_code);
-
-	// TODO: this should return an err_code.
-	// Transmit the power message.
-	cycling_power_send(p_power_meas_current);
-
-	// If in erg or sim mode, adjusts the resistance.
-	if (m_resistance_mode == RESISTANCE_SET_ERG || m_resistance_mode == RESISTANCE_SET_SIM)
+	// If we're moving.
+	if (p_power_meas_current->instant_speed_mps > 0.0f)
 	{
-		// Twice per second adjust resistance.
-		if (event_count % 2 == 0)
+		// Reload the WDT since there was motion, preventing the device from going to sleep.
+		WDT_RELOAD();
+
+		// Calculate power and get back the rolling resistance force for use in adjusting resistance.
+		err_code = power_calc(p_power_meas_current, p_power_meas_last, &rr_force);
+		APP_ERROR_CHECK(err_code);
+
+		// Adjust only if above a certain speed threshold.
+		if (p_power_meas_current->instant_speed_mps > RESISTANCE_MIN_SPEED_ADJUST)
 		{
-			// Use the oldest record we have to average with.
-			p_power_meas_first = irt_power_meas_fifo_first();
-			resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces,
-					m_resistance_mode, rr_force);
+			// If in erg or sim mode, adjusts the resistance.
+			if (m_resistance_mode == RESISTANCE_SET_ERG || m_resistance_mode == RESISTANCE_SET_SIM)
+			{
+				// Twice per second adjust resistance.
+				if (event_count % 2 == 0)
+				{
+					// Use the oldest record we have to average with.
+					p_power_meas_first = irt_power_meas_fifo_first();
+					resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces,
+							m_resistance_mode, rr_force);
+				}
+			}
 		}
 	}
+	else
+	{
+		//
+		// Stopped, no speed = no power.
+		//
+
+		// From the ANT spec:
+		// To indicate zero rotational velocity, do not increment the accumulated wheel period and do not increment the wheel ticks.
+		// The update event count continues incrementing to indicate that updates are occurring, but since the wheel is not rotating
+		// the wheel ticks do not increase.
+		p_power_meas_current->accum_wheel_revs = p_power_meas_last->accum_wheel_revs;
+		p_power_meas_current->accum_wheel_period = p_power_meas_last->accum_wheel_period;
+		p_power_meas_current->last_wheel_event_2048 = p_power_meas_last->last_wheel_event_2048;
+		p_power_meas_current->instant_speed_mps = 0.0f;
+
+		// Use the last torque as well since we are not calculating power.
+		p_power_meas_current->accum_torque = p_power_meas_last->accum_torque;
+		p_power_meas_current->instant_power	 = 0;
+	}
+
+	// Transmit the power messages.
+	cycling_power_send(p_power_meas_current);
 
 	// Send speed data.
 	ant_sp_tx_send(p_power_meas_current->last_wheel_event_2048 / 2, 	// Requires 1/1024 time
@@ -647,14 +678,6 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Send remote control a heartbeat.
 	ant_ctrl_available();
-
-	//LOG("[MAIN] Exit 4hz: %.2f \r\n", SECONDS_CURRENT);
-
-	// Reload the WDT if there was motion OR in BLE connection, preventing the device from going to sleep.
-	if (p_power_meas_last->instant_speed_mps > 0.0f || irt_ble_ant_state == CONNECTED)
-	{
-		WDT_RELOAD();
-	}
 }
 
 /**@brief	Timer handler for reading sensors.
