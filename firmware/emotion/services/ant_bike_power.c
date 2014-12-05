@@ -165,13 +165,15 @@ static __INLINE uint32_t acknolwedge_message_transmit()
 
 static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_period_2048, uint8_t wheel_ticks, bool stopped)
 {
+	#define STOP_COUNT_TO_FLAG	4
 	static uint8_t last_event_count = 0;
+	static uint8_t stop_flagged = 0;
 
 	/* Fix to ensure that wheel indicates stopped.  We globally increment m_event_count because
 	 * events are calculated globally (i.e. accum wheel period), but display devices do not
 	 * seem to respect a non-incrementing accum wheel period and wheel ticks to indicate stopped.
 	 */
-	if (!stopped)
+	if (stop_flagged < STOP_COUNT_TO_FLAG)
 	{
 		last_event_count = m_event_count;
 	}
@@ -190,6 +192,25 @@ static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_peri
 	tx_buffer[WHEEL_PERIOD_MSB_INDEX] 		= HIGH_BYTE(accum_wheel_period_2048);
 	tx_buffer[ACCUM_TORQUE_LSB_INDEX] 		= LOW_BYTE(accum_torque);
 	tx_buffer[ACCUM_TORQUE_MSB_INDEX] 		= HIGH_BYTE(accum_torque);
+
+	/*
+	 * After receiving a stop signal (0 speed), send at least a few messages through with
+	 * the event count incremented for some receivers who implement the logic above.
+	 * Then flag and stop incrementing event count for all others.
+	 *
+	 * NOTE that after implementing this, the SimulANT+ tool shows INFINITY for speed and
+	 * average power (Standard Torque) is NaN.  However, withtout this, it just keeps showing
+	 * the last known speed and power before we stopped updating the event count.
+	 *
+	 */
+	if (stopped && stop_flagged < STOP_COUNT_TO_FLAG)
+	{
+		stop_flagged++;
+	}
+	else if (!stopped && stop_flagged >= STOP_COUNT_TO_FLAG)
+	{
+		stop_flagged = 0;
+	}
 
 	return broadcast_message_transmit();
 }
