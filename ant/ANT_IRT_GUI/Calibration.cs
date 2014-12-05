@@ -98,7 +98,7 @@ namespace IRT_GUI
             lock (this)
             {
                 ms = m_stopwatch.ElapsedMilliseconds;
-                
+
                 // If we already saw this message, skip it.
                 if (m_lastCount > 0 && m_lastCount == buffer[0])
                 {
@@ -107,8 +107,22 @@ namespace IRT_GUI
 
                 for (int i = 0; i < buffer.Length - 1; i++)
                 {
+                    int sequence_gap;
+
+                    if (m_tickEvents.Count > 5)
+                    {
+                        // We've had more than 1 sequence show up, let's check for
+                        // packet loss.
+                        sequence_gap = buffer[0] - m_tickEvents.Last().Sequence;
+                    }
+                    else
+                    {
+                        // Only our second packet, have to assume no loss.
+                        sequence_gap = 1;
+                    }
+
                     // Each one came at 50ms intervals.
-                    long timestamp = ms - (250 - (i*50));
+                    long timestamp = ms - ( (250 * sequence_gap ) - (i*50));
 
                     if (timestamp < 0)
                         timestamp = 0;
@@ -120,14 +134,16 @@ namespace IRT_GUI
                     m_logFileWriter.WriteLine(tick);
                 }
 
+                // Byte 0 has the event count, store it.
                 m_lastCount = buffer[0];
             }
 
             if (m_form != null)
             {
+                double mph = CalculateSpeed(m_tickEvents);
+
                 Action a = () =>
                 {
-                    double mph = (tick.TickDelta * 20 * 0.11176 / 2) * 2.23694;
                     m_form.lblSeconds.Text = string.Format("{0:0.0}", ms / 1000.0f);
                     m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
                 };
@@ -139,6 +155,30 @@ namespace IRT_GUI
         public void Dispose()
         {
             ExitCalibration();
+        }
+
+        private double CalculateSpeed(List<TickEvent> events)
+        {
+            byte tickDelta;
+            long ms;
+
+            // Average 
+            if (events.Count < 16)
+                return 0.0;
+
+            var last20 = events.Skip(Math.Max(0, events.Count() - 15)).Take(15);
+            var sum = last20.Sum(e => e.TickDelta);
+
+            //tickDelta = events[events.Count - 1] TickDelta;
+            ms = last20.Last().TimestampMS - events[events.Count()-16].TimestampMS;
+
+            // double mph = (tickDelta * 20 * 0.11176 / 2) * 2.23694;
+            double distance_M = (sum / 2.0f) * 0.11176f;
+            double mps = distance_M / (ms / 1000.0f);
+
+            double mph = mps * 2.23694f;
+
+            return mph;
         }
     }
 }
