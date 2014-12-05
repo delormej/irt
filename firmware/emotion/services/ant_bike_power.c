@@ -182,7 +182,7 @@ static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_peri
 	/*
 	 * This is contrary to the documentation in Rev 4.0 of the spec section 8.4.1.1... but it seems the ANT simulators (new & old)
 	 * and BKOOL do not correctly interpret Time-syncronous event counts incrementing with 0 speed, OR more likely, I'm just not
-	 * interpretting the spec correctly.  However, in the Event-syncronous update model, it does work - so we don't increment this
+	 * interpreting the spec correctly.  However, in the Event-syncronous update model, it does work - so we don't increment this
 	 * event count if we are stopped.
 	 */
 	tx_buffer[EVENT_COUNT_INDEX] 			= last_event_count;
@@ -199,7 +199,7 @@ static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_peri
 	 * Then flag and stop incrementing event count for all others.
 	 *
 	 * NOTE that after implementing this, the SimulANT+ tool shows INFINITY for speed and
-	 * average power (Standard Torque) is NaN.  However, withtout this, it just keeps showing
+	 * average power (Standard Torque) is NaN.  However, without this, it just keeps showing
 	 * the last known speed and power before we stopped updating the event count.
 	 *
 	 */
