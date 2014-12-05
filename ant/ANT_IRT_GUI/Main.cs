@@ -977,6 +977,7 @@ namespace IRT_GUI
                     UpdateStatus("Invalid wheel size.");
                 }
 
+                m_eMotion.WheelCircumference = wheelSizeMM;
                 txtWheelSizeMm.Enabled = true;
             }
         }
