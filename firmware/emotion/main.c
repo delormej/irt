@@ -116,6 +116,7 @@ static void profile_update_sched(void);
 static void send_data_page2(ant_request_data_page_t* p_request);
 static void send_temperature();
 static void on_enable_dfu_mode();
+static void calibration_stop();
 
 
 /* TODO:	Total hack for request data page & resistance control ack, we will fix.
@@ -542,9 +543,18 @@ static void calibration_timeout_handler(void * p_context)
 
 		// Keep device awake.
 		WDT_RELOAD();
+
+		/*
+		 * Check the last sample.  If we've slowed below ~5mph, it's time to exit.
+		 * 2 ticks at sample rate of 20hz is about 5mph.
+		 */
+		if (tick_buffer[TICKS-1] < 2)
+		{
+			last_flywheel = 0;
+			calibration_stop();
+		}
 	}
 }
-
 
 /**@brief Function for handling the ANT 4hz measurement timer timeout.
  *
@@ -1388,25 +1398,14 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			break;
 
 		case ANT_CTRL_BUTTON_MIDDLE:
-			if (m_crr_adjust_mode)
-			{
-				// Exit crr mode.
-				calibration_stop();
-			}
-			else
+			if (!m_crr_adjust_mode)
 			{
 				on_button_menu();
 			}
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_MIDDLE:
-			// Requires double long push of middle to shut down.
-			if (m_crr_adjust_mode)
-			{
-				// Stop calibration if we get a long hold while in calibration.
-				calibration_stop();
-			}
-			else
+			if (!m_crr_adjust_mode)
 			{
 				// Change into crr mode.
 				calibration_start();
