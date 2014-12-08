@@ -821,6 +821,7 @@ namespace IRT_GUI
             }
         }
 
+        private byte lastTorqueEventCount = 0;
 
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {
@@ -831,7 +832,7 @@ namespace IRT_GUI
                 m_calibration = null;
             }
 
-            if (!double.IsInfinity(m_eMotion.AverageSpeedWheelTorque))
+            if (lastTorqueEventCount != arg1.WheelTorqueEventCount)
             {
                 // Convert to mph from km/h.
                 double mph = m_eMotion.AverageSpeedWheelTorque * 0.621371;
@@ -843,6 +844,8 @@ namespace IRT_GUI
                 m_dataPoint.SpeedEMotion = 0;
                 UpdateText(lblEmrMph, "00.0");
             }
+
+            lastTorqueEventCount = arg1.WheelTorqueEventCount;
         }
 
         void m_eMotion_ProductInformationPageReceived(AntPlus.Profiles.Common.ProductInformationPage arg1, uint arg2)
