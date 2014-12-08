@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AntPlus.Profiles.BikePower;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -19,18 +20,22 @@ namespace IRT_GUI
 
     public class TickEvent
     {
-        const string format = "{0:g}, {1:g}, {2:g}";
+        const string format = "{0:g}, {1:g}, {2:g}, {3:g}, {4:g}";
 
         public long TimestampMS;
         public byte Sequence;
         public byte TickDelta;
+        public ushort Watts;
+        public byte PowerEventCount;
 
         public override string ToString()
         {
             return string.Format(format, 
                 TimestampMS,
                 Sequence,
-                TickDelta);
+                TickDelta, 
+                Watts,
+                PowerEventCount);
         }
     }
 
@@ -41,6 +46,7 @@ namespace IRT_GUI
 
         private bool m_inCalibrationMode = false;
         private byte m_lastCount = 0;
+        private BikePowerDisplay m_refPower;
         private Stopwatch m_stopwatch;
         private List<TickEvent> m_tickEvents;
 
@@ -57,28 +63,31 @@ namespace IRT_GUI
             m_stopwatch.Start();
 
             m_inCalibrationMode = true;
-
-            // open up a stream to start logging
-            string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
-                typeof(Calibration).Assembly.GetName().Version.ToString(3),
-                DateTime.Now);
-
-            m_logFileWriter = new StreamWriter(filename);
-            m_logFileWriter.AutoFlush = true;
-            m_logFileWriter.WriteLine("timestamp_ms, count, ticks");
         }
 
-        public void ShowCalibration(short watts)
+        public void ShowCalibration(BikePowerDisplay refPower)
         {
             m_form = new CalibrationForm();
-            m_form.lblRefPower.Text = watts.ToString();
+            m_refPower = refPower;
             m_form.Show();
         }
 
         public void ExitCalibration()
         {
-            if (m_logFileWriter != null)
+            // open up a stream to start logging
+            string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
+                typeof(Calibration).Assembly.GetName().Version.ToString(3),
+                DateTime.Now);
+
+            using (m_logFileWriter = new StreamWriter(filename))
             {
+                m_logFileWriter.WriteLine("timestamp_ms, count, ticks, watts, pwr_events");
+
+                foreach (var tick in m_tickEvents)
+                {
+                    m_logFileWriter.WriteLine(tick);
+                }
+
                 m_logFileWriter.Flush();
                 m_logFileWriter.Close();
             }
@@ -97,11 +106,19 @@ namespace IRT_GUI
         {
             long ms = 0;
             TickEvent tick = null;
+            byte pwrEventCount = 0;
+            ushort watts = 0;
 
             // Single entrance.
             lock (this)
             {
                 ms = m_stopwatch.ElapsedMilliseconds;
+
+                if (m_refPower != null && m_refPower.StandardPowerOnly != null)
+                {
+                    watts = m_refPower.StandardPowerOnly.InstantaneousPower;
+                    pwrEventCount = m_refPower.StandardPowerOnly.EventCount;
+                }
 
                 // If we already saw this message, skip it.
                 if (m_lastCount > 0 && m_lastCount == buffer[0])
@@ -111,31 +128,20 @@ namespace IRT_GUI
 
                 for (int i = 0; i < buffer.Length - 1; i++)
                 {
-                    int sequence_gap;
-
-                    if (m_tickEvents.Count > 5)
-                    {
-                        // We've had more than 1 sequence show up, let's check for
-                        // packet loss.
-                        sequence_gap = buffer[0] - m_tickEvents.Last().Sequence;
-                    }
-                    else
-                    {
-                        // Only our second packet, have to assume no loss.
-                        sequence_gap = 1;
-                    }
-
                     // Each one came at 50ms intervals.
-                    long timestamp = ms - ( (250 * sequence_gap ) - (i*50));
+                    long timestamp = ms - ( 200 - (i*50) );
 
                     if (timestamp < 0)
                         timestamp = 0;
 
-                    tick = new TickEvent() 
-                        { TimestampMS = timestamp, Sequence = buffer[0], TickDelta = buffer[1 + i] };
+                    tick = new TickEvent() { 
+                        TimestampMS = timestamp, 
+                        Sequence = buffer[0], 
+                        TickDelta = buffer[1 + i], 
+                        Watts = watts, 
+                        PowerEventCount = pwrEventCount };
 
                     m_tickEvents.Add(tick);
-                    m_logFileWriter.WriteLine(tick);
                 }
 
                 // Byte 0 has the event count, store it.
@@ -148,7 +154,22 @@ namespace IRT_GUI
 
                 double mph = CalculateSpeed(m_tickEvents);
 
+                Action a = () =>
+                {
+                    m_form.lblSeconds.Text = string.Format("{0:0.0}", ms / 1000.0f);
+                    m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
+                };
+
+                m_form.BeginInvoke(a);
                 m_form.Update(mph, ms, 0, m_calibrationState);
+                Action a = () =>
+                {
+                    m_form.lblSeconds.Text = string.Format("{0:0.0}", ms / 1000.0f);
+                    m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
+                    m_form.lblRefPower.Text = watts.ToString();
+                };
+
+                m_form.BeginInvoke(a);
             }
         }
 
@@ -162,15 +183,15 @@ namespace IRT_GUI
             byte tickDelta;
             long ms;
 
-            // Average 
-            if (events.Count < 16)
+            // 1/2 second Average 
+            if (events.Count < 5)
                 return 0.0;
 
-            var last20 = events.Skip(Math.Max(0, events.Count() - 15)).Take(15);
+            var last20 = events.Skip(Math.Max(0, events.Count() - 5)).Take(5);
             var sum = last20.Sum(e => e.TickDelta);
 
-            //tickDelta = events[events.Count - 1] TickDelta;
-            ms = last20.Last().TimestampMS - events[events.Count()-16].TimestampMS;
+            // Take into consideration that the first data point assumes it was read after 50ms of reading.
+            ms = (last20.Last().TimestampMS - events[events.Count()-5].TimestampMS) + 50;
 
             // double mph = (tickDelta * 20 * 0.11176 / 2) * 2.23694;
             double distance_M = (sum / 2.0f) * 0.11176f;

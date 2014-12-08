@@ -126,6 +126,9 @@ namespace IRT_GUI
 
         void frmIrtGui_Load(object sender, EventArgs e)
         {
+            this.Text += " " +
+                this.GetType().Assembly.GetName().Version.ToString(3);
+
             // Admin only features.  
             txtServoOffset.Enabled = true;
             btnServoOffset.Visible = true; //  AdminEnabled;
@@ -506,7 +509,7 @@ namespace IRT_GUI
 
                 ExecuteOnUI(() =>
                 {
-                    m_calibration.ShowCalibration((short)m_refPower.AveragePowerStandardTorque);
+                    m_calibration.ShowCalibration(m_refPower);
                 });
             }
 
