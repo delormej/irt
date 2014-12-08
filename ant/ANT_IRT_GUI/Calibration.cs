@@ -8,6 +8,15 @@ using System.Windows.Forms;
 
 namespace IRT_GUI
 {
+    public enum CalibrationFormState
+    {
+        BelowSpeed,
+        Stabilizing,
+        Ready,
+        Coasting,
+        Done
+    }
+
     public class TickEvent
     {
         const string format = "{0:g}, {1:g}, {2:g}";
@@ -35,8 +44,12 @@ namespace IRT_GUI
         private Stopwatch m_stopwatch;
         private List<TickEvent> m_tickEvents;
 
+        CalibrationFormState m_calibrationState;
+
         public Calibration()
         {
+            m_calibrationState = CalibrationFormState.BelowSpeed;
+
             m_tickEvents = new List<TickEvent>();
             m_stopwatch = new Stopwatch();
 
@@ -62,16 +75,6 @@ namespace IRT_GUI
             m_form.Show();
         }
 
-        private void CloseForm()
-        {
-            Action a = () =>
-            {
-                m_form.Close();
-            };
-
-            m_form.BeginInvoke(a);
-        }
-
         public void ExitCalibration()
         {
             if (m_logFileWriter != null)
@@ -86,7 +89,8 @@ namespace IRT_GUI
                 m_stopwatch = null;
             }
 
-            CloseForm();
+            m_calibrationState = CalibrationFormState.Done;
+            m_form.Update(0, 0, 0, m_calibrationState);
         }
 
         public void LogCalibration(byte[] buffer)
@@ -140,15 +144,11 @@ namespace IRT_GUI
 
             if (m_form != null)
             {
+                bool stable = false;
+
                 double mph = CalculateSpeed(m_tickEvents);
 
-                Action a = () =>
-                {
-                    m_form.lblSeconds.Text = string.Format("{0:0.0}", ms / 1000.0f);
-                    m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
-                };
-
-                m_form.BeginInvoke(a);
+                m_form.Update(mph, ms, 0, m_calibrationState);
             }
         }
 
@@ -177,6 +177,21 @@ namespace IRT_GUI
             double mps = distance_M / (ms / 1000.0f);
 
             double mph = mps * 2.23694f;
+
+            //
+            // Determine if speed has decreased
+            //
+
+            // Calculate the state based on speed.
+            if (m_calibrationState != CalibrationFormState.Coasting &&
+                mph < 30.0f)
+            {
+                m_calibrationState = CalibrationFormState.BelowSpeed;
+            }
+            else
+            {
+                m_calibrationState = CalibrationFormState.Ready;
+            }
 
             return mph;
         }
