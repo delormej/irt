@@ -832,7 +832,8 @@ namespace IRT_GUI
                 m_calibration = null;
             }
 
-            if (lastTorqueEventCount != arg1.WheelTorqueEventCount)
+            if (lastTorqueEventCount != arg1.WheelTorqueEventCount && 
+                !double.IsInfinity(m_eMotion.AverageSpeedWheelTorque))
             {
                 // Convert to mph from km/h.
                 double mph = m_eMotion.AverageSpeedWheelTorque * 0.621371;
