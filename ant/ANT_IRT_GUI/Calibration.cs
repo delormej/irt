@@ -120,22 +120,8 @@ namespace IRT_GUI
 
                 for (int i = 0; i < buffer.Length - 1; i++)
                 {
-                    int sequence_gap;
-
-                    if (m_tickEvents.Count > 5)
-                    {
-                        // We've had more than 1 sequence show up, let's check for
-                        // packet loss.
-                        sequence_gap = buffer[0] - m_tickEvents.Last().Sequence;
-                    }
-                    else
-                    {
-                        // Only our second packet, have to assume no loss.
-                        sequence_gap = 1;
-                    }
-
                     // Each one came at 50ms intervals.
-                    long timestamp = ms - ( (250 * sequence_gap ) - (i*50));
+                    long timestamp = ms - ( 200 - (i*50) );
 
                     if (timestamp < 0)
                         timestamp = 0;
@@ -176,15 +162,15 @@ namespace IRT_GUI
             byte tickDelta;
             long ms;
 
-            // Average 
-            if (events.Count < 16)
+            // 1/2 second Average 
+            if (events.Count < 5)
                 return 0.0;
 
-            var last20 = events.Skip(Math.Max(0, events.Count() - 10)).Take(10);
+            var last20 = events.Skip(Math.Max(0, events.Count() - 5)).Take(5);
             var sum = last20.Sum(e => e.TickDelta);
 
-            //tickDelta = events[events.Count - 1] TickDelta;
-            ms = last20.Last().TimestampMS - events[events.Count()-11].TimestampMS;
+            // Take into consideration that the first data point assumes it was read after 50ms of reading.
+            ms = (last20.Last().TimestampMS - events[events.Count()-5].TimestampMS) + 50;
 
             // double mph = (tickDelta * 20 * 0.11176 / 2) * 2.23694;
             double distance_M = (sum / 2.0f) * 0.11176f;
