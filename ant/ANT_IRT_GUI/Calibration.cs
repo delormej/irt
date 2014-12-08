@@ -11,12 +11,13 @@ namespace IRT_GUI
 {
     public class TickEvent
     {
-        const string format = "{0:g}, {1:g}, {2:g}, {3:g}";
+        const string format = "{0:g}, {1:g}, {2:g}, {3:g}, {4:g}";
 
         public long TimestampMS;
         public byte Sequence;
         public byte TickDelta;
         public ushort Watts;
+        public byte PowerEventCount;
 
         public override string ToString()
         {
@@ -24,7 +25,8 @@ namespace IRT_GUI
                 TimestampMS,
                 Sequence,
                 TickDelta, 
-                Watts);
+                Watts,
+                PowerEventCount);
         }
     }
 
@@ -76,7 +78,7 @@ namespace IRT_GUI
 
             using (m_logFileWriter = new StreamWriter(filename))
             {
-                m_logFileWriter.WriteLine("timestamp_ms, count, ticks, watts");
+                m_logFileWriter.WriteLine("timestamp_ms, count, ticks, watts, pwr_events");
 
                 foreach (var tick in m_tickEvents)
                 {
@@ -100,6 +102,7 @@ namespace IRT_GUI
         {
             long ms = 0;
             TickEvent tick = null;
+            byte pwrEventCount = 0;
             ushort watts = 0;
 
             // Single entrance.
@@ -110,6 +113,7 @@ namespace IRT_GUI
                 if (m_refPower != null && m_refPower.StandardPowerOnly != null)
                 {
                     watts = m_refPower.StandardPowerOnly.InstantaneousPower;
+                    pwrEventCount = m_refPower.StandardPowerOnly.EventCount;
                 }
 
                 // If we already saw this message, skip it.
@@ -126,8 +130,12 @@ namespace IRT_GUI
                     if (timestamp < 0)
                         timestamp = 0;
 
-                    tick = new TickEvent() 
-                        { TimestampMS = timestamp, Sequence = buffer[0], TickDelta = buffer[1 + i], Watts = watts };
+                    tick = new TickEvent() { 
+                        TimestampMS = timestamp, 
+                        Sequence = buffer[0], 
+                        TickDelta = buffer[1 + i], 
+                        Watts = watts, 
+                        PowerEventCount = pwrEventCount };
 
                     m_tickEvents.Add(tick);
                     //m_logFileWriter.WriteLine(tick);
