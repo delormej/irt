@@ -509,7 +509,7 @@ namespace IRT_GUI
 
                 ExecuteOnUI(() =>
                 {
-                    m_calibration.ShowCalibration((short)m_refPower.AveragePowerStandardTorque);
+                    m_calibration.ShowCalibration(m_refPower);
                 });
             }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AntPlus.Profiles.BikePower;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -10,18 +11,20 @@ namespace IRT_GUI
 {
     public class TickEvent
     {
-        const string format = "{0:g}, {1:g}, {2:g}";
+        const string format = "{0:g}, {1:g}, {2:g}, {3:g}";
 
         public long TimestampMS;
         public byte Sequence;
         public byte TickDelta;
+        public ushort Watts;
 
         public override string ToString()
         {
             return string.Format(format, 
                 TimestampMS,
                 Sequence,
-                TickDelta);
+                TickDelta, 
+                Watts);
         }
     }
 
@@ -32,6 +35,7 @@ namespace IRT_GUI
 
         private bool m_inCalibrationMode = false;
         private byte m_lastCount = 0;
+        private BikePowerDisplay m_refPower;
         private Stopwatch m_stopwatch;
         private List<TickEvent> m_tickEvents;
 
@@ -44,21 +48,12 @@ namespace IRT_GUI
             m_stopwatch.Start();
 
             m_inCalibrationMode = true;
-
-            // open up a stream to start logging
-            string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
-                typeof(Calibration).Assembly.GetName().Version.ToString(3),
-                DateTime.Now);
-
-            m_logFileWriter = new StreamWriter(filename);
-            m_logFileWriter.AutoFlush = true;
-            m_logFileWriter.WriteLine("timestamp_ms, count, ticks");
         }
 
-        public void ShowCalibration(short watts)
+        public void ShowCalibration(BikePowerDisplay refPower)
         {
             m_form = new CalibrationForm();
-            m_form.lblRefPower.Text = watts.ToString();
+            m_refPower = refPower;
             m_form.Show();
         }
 
@@ -74,8 +69,20 @@ namespace IRT_GUI
 
         public void ExitCalibration()
         {
-            if (m_logFileWriter != null)
+            // open up a stream to start logging
+            string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
+                typeof(Calibration).Assembly.GetName().Version.ToString(3),
+                DateTime.Now);
+
+            using (m_logFileWriter = new StreamWriter(filename))
             {
+                m_logFileWriter.WriteLine("timestamp_ms, count, ticks, watts");
+
+                foreach (var tick in m_tickEvents)
+                {
+                    m_logFileWriter.WriteLine(tick);
+                }
+
                 m_logFileWriter.Flush();
                 m_logFileWriter.Close();
             }
@@ -93,11 +100,17 @@ namespace IRT_GUI
         {
             long ms = 0;
             TickEvent tick = null;
+            ushort watts = 0;
 
             // Single entrance.
             lock (this)
             {
                 ms = m_stopwatch.ElapsedMilliseconds;
+
+                if (m_refPower != null && m_refPower.StandardPowerOnly != null)
+                {
+                    watts = m_refPower.StandardPowerOnly.InstantaneousPower;
+                }
 
                 // If we already saw this message, skip it.
                 if (m_lastCount > 0 && m_lastCount == buffer[0])
@@ -128,10 +141,10 @@ namespace IRT_GUI
                         timestamp = 0;
 
                     tick = new TickEvent() 
-                        { TimestampMS = timestamp, Sequence = buffer[0], TickDelta = buffer[1 + i] };
+                        { TimestampMS = timestamp, Sequence = buffer[0], TickDelta = buffer[1 + i], Watts = watts };
 
                     m_tickEvents.Add(tick);
-                    m_logFileWriter.WriteLine(tick);
+                    //m_logFileWriter.WriteLine(tick);
                 }
 
                 // Byte 0 has the event count, store it.
@@ -146,6 +159,7 @@ namespace IRT_GUI
                 {
                     m_form.lblSeconds.Text = string.Format("{0:0.0}", ms / 1000.0f);
                     m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
+                    m_form.lblRefPower.Text = watts.ToString();
                 };
 
                 m_form.BeginInvoke(a);
