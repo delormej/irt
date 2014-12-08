@@ -180,11 +180,11 @@ namespace IRT_GUI
             if (events.Count < 16)
                 return 0.0;
 
-            var last20 = events.Skip(Math.Max(0, events.Count() - 15)).Take(15);
+            var last20 = events.Skip(Math.Max(0, events.Count() - 10)).Take(10);
             var sum = last20.Sum(e => e.TickDelta);
 
             //tickDelta = events[events.Count - 1] TickDelta;
-            ms = last20.Last().TimestampMS - events[events.Count()-16].TimestampMS;
+            ms = last20.Last().TimestampMS - events[events.Count()-11].TimestampMS;
 
             // double mph = (tickDelta * 20 * 0.11176 / 2) * 2.23694;
             double distance_M = (sum / 2.0f) * 0.11176f;
