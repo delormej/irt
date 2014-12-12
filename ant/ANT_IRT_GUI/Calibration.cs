@@ -154,22 +154,7 @@ namespace IRT_GUI
 
                 double mph = CalculateSpeed(m_tickEvents);
 
-                Action a = () =>
-                {
-                    m_form.lblSeconds.Text = string.Format("{0:0.0}", ms / 1000.0f);
-                    m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
-                };
-
-                m_form.BeginInvoke(a);
                 m_form.Update(mph, ms, 0, m_calibrationState);
-                Action a = () =>
-                {
-                    m_form.lblSeconds.Text = string.Format("{0:0.0}", ms / 1000.0f);
-                    m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
-                    m_form.lblRefPower.Text = watts.ToString();
-                };
-
-                m_form.BeginInvoke(a);
             }
         }
 
