@@ -633,9 +633,46 @@ namespace IRT_GUI
 
         private void RestoreUserProfile()
         {
-            // Use last saved values to reprogram Crr, Weight, WheelSize & ServoOffset.
-            UpdateStatus("Restoring user profile.");
+            // Restore parameters
+            UpdateStatus("Reconnected after DFU.");
+            m_enteredDFU = false;
+
+            var result = MessageBox.Show(
+                    "User profile settings are reset during firmware update.\r\n" +
+                    "Would you like to restore current user profile settings?",
+                    "Resuming from DFU",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question,
+                    MessageBoxDefaultButton.Button1);
+
+            if (result == System.Windows.Forms.DialogResult.Yes)
+            {
+                // Flag these as dirty
+                txtTotalWeight.Modified = true;
+                txtWheelSizeMm.Modified = true;
+
+                // Wrap this in a seperate thread.
+                //var t = new System.Threading.Thread(() =>
+                //{
+                    // Use last saved values to reprogram Crr, Weight, WheelSize & ServoOffset.
+                    UpdateStatus("Restoring user profile.");
+
+                    // Simulate pressing both of these buttons.
+                    btnServoOffset_Click(this, null);
+
+                    // Wait 1/2 second before pushing the next one.
+                    System.Threading.Thread.Sleep(500);
+                    btnCalibrationSet_Click(this, null);
+                    // Wait 1/2 second before pushing the next one.
+                    System.Threading.Thread.Sleep(500);
+
+                    btnSettingsSet_Click(this, null);
+                //});
+
+                //t.Start();
+            }
         }
+
 
         void m_refPower_ChannelStatusChanged(ChannelStatus status)
         {
@@ -700,18 +737,15 @@ namespace IRT_GUI
                         break;
 
                     case ChannelStatus.Tracking:
-
-                        if (m_enteredDFU)
-                        {
-                            // Restore parameters
-                            UpdateStatus("Reconnected after DFU.");
-                            m_enteredDFU = false;
-                            RestoreUserProfile();
-                        }
-
                         btnEmrSearch.Enabled = true;
                         UpdateText(btnEmrSearch, "Close");
                         txtEmrDeviceId.Enabled = false;
+
+                        if (m_enteredDFU)
+                        {
+                            RestoreUserProfile();
+                        }                        
+                        
                         break;
 
                     default:
