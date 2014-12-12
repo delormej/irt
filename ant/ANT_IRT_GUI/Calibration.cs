@@ -15,7 +15,7 @@ namespace IRT_GUI
 
         public long TimestampMS;
         public byte Sequence;
-        public byte TickDelta;
+        public ushort TickDelta;
         public ushort Watts;
         public byte PowerEventCount;
 
@@ -33,22 +33,91 @@ namespace IRT_GUI
     // Newer version of calibration.
     public class Calibration12 : Calibration
     {
+        public Calibration12()
+        {
+            m_tickEvents = new List<TickEvent>();
+        }
+
         public override void LogCalibration(byte[] buffer)
         {
-            Console.WriteLine("New calibration log: " + buffer.ToString());
+            /*
+            tx_buffer[2] = LOW_BYTE(time_2048);
+            tx_buffer[3] = HIGH_BYTE(time_2048);
+            tx_buffer[4] = LOW_BYTE(flywheel_ticks[0]);
+            tx_buffer[5] = HIGH_BYTE(flywheel_ticks[0]);
+            tx_buffer[6] = LOW_BYTE(flywheel_ticks[1]);
+            tx_buffer[7] = HIGH_BYTE(flywheel_ticks[1]);
+             */
+            ushort time = (ushort)(buffer[0] | buffer[1] << 8);
+            ushort ticks0 = (ushort)(buffer[2] | buffer[3] << 8);
+            ushort ticks1 = (ushort)(buffer[4] | buffer[5] << 8);
+            
+            if (m_form != null)
+            {
+                int delta_ticks = 0;
+                
+                // Handle rollover
+                if (ticks1 < ticks0)
+                {
+                    delta_ticks = (ticks0 ^ 0xFFF) + ticks1;
+                }
+                else
+                {
+                    delta_ticks = ticks1 - ticks0;
+                }
+
+                double distance_M = (delta_ticks / 2.0f) * 0.11176f;
+                // 125 ms (8hz)
+                double mps = distance_M / 0.125f;
+
+                double mph = mps * 2.23694f;
+
+                TickEvent te = new TickEvent();
+                for (int i = 0; i < 2; i++)
+                {
+                    if (m_refPower != null && m_refPower.StandardPowerOnly != null)
+                    {
+                        te.Watts = m_refPower.StandardPowerOnly.InstantaneousPower;
+                        te.PowerEventCount = m_refPower.StandardPowerOnly.EventCount;
+                    }
+
+                    if (i == 0)
+                    {
+                        // Time is logged on the second data point.
+                        te.TimestampMS = time - (ushort)(0.125 * 2048);
+                        te.TickDelta = ticks0;
+                    }
+                    else
+                    {
+                        te.TimestampMS = time;
+                        te.TickDelta = ticks1;
+                    }
+
+                    m_tickEvents.Add(te);
+                }
+
+                Action a = () =>
+                {
+                    m_form.lblSeconds.Text = string.Format("{0:0.0}", time / 2048.0f);
+                    m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
+                    m_form.lblRefPower.Text = te.Watts.ToString();
+                };
+
+                m_form.BeginInvoke(a);
+            }
         }
     }
 
     public class Calibration : IDisposable
     {
-        private StreamWriter m_logFileWriter;
-        private CalibrationForm m_form;
+        protected StreamWriter m_logFileWriter;
+        protected CalibrationForm m_form;
 
-        private bool m_inCalibrationMode = false;
-        private byte m_lastCount = 0;
-        private BikePowerDisplay m_refPower;
-        private Stopwatch m_stopwatch;
-        private List<TickEvent> m_tickEvents;
+        protected bool m_inCalibrationMode = false;
+        protected byte m_lastCount = 0;
+        protected BikePowerDisplay m_refPower;
+        protected Stopwatch m_stopwatch;
+        protected List<TickEvent> m_tickEvents;
 
         public Calibration()
         {
