@@ -606,10 +606,6 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 
 uint32_t ant_bp_calibration_speed_tx_send(uint16_t time_2048, uint16_t* flywheel_ticks)
 {
-	// Keep incrementing the event count so that when normal power messages resume,
-	// they factor in the time & ticks that have elapsed.
-	m_event_count++;
-
 	tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
 	tx_buffer[1] = 		ANT_BP_CAL_PARAM_RESPONSE;
 	tx_buffer[2] = 		LOW_BYTE(time_2048);
