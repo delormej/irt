@@ -604,16 +604,20 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 	return err_code;
 }
 
-uint32_t ant_bp_calibration_speed_tx_send(uint8_t* flywheel_delta)
+uint32_t ant_bp_calibration_speed_tx_send(uint16_t time_2048, uint16_t* flywheel_ticks)
 {
+	// Keep incrementing the event count so that when normal power messages resume,
+	// they factor in the time & ticks that have elapsed.
+	m_event_count++;
+
 	tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
 	tx_buffer[1] = 		ANT_BP_CAL_PARAM_RESPONSE;
-	tx_buffer[2] = 		m_event_count++;
-	tx_buffer[3] = 		flywheel_delta[0];
-	tx_buffer[4] = 		flywheel_delta[1];
-	tx_buffer[5] = 		flywheel_delta[2];
-	tx_buffer[6] = 		flywheel_delta[3];
-	tx_buffer[7] = 		flywheel_delta[4];
+	tx_buffer[2] = 		LOW_BYTE(time_2048);
+	tx_buffer[3] = 		HIGH_BYTE(time_2048);
+	tx_buffer[4] = 		LOW_BYTE(flywheel_ticks[0]);
+	tx_buffer[5] = 		HIGH_BYTE(flywheel_ticks[0]);
+	tx_buffer[6] = 		LOW_BYTE(flywheel_ticks[1]);
+	tx_buffer[7] = 		HIGH_BYTE(flywheel_ticks[1]);
 
 	return broadcast_message_transmit();
 }

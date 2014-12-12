@@ -56,7 +56,7 @@
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	// Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
-#define CALIBRATION_READ_INTERVAL		APP_TIMER_TICKS(50, APP_TIMER_PRESCALER) 	// 20HZ, every 50ms - read
+#define CALIBRATION_READ_INTERVAL		APP_TIMER_TICKS(125, APP_TIMER_PRESCALER) 	// 8HZ, every 125ms
 
 #define WATCHDOG_TICK_COUNT				APP_TIMER_CLOCK_FREQ * 60 * 5 				// (NRF_WDT->CRV + 1)/32768 seconds * 60 seconds * 'n' minutes
 #define WDT_RELOAD()					NRF_WDT->RR[0] = WDT_RR_RR_Reload			// Keep the device awake.
@@ -517,40 +517,47 @@ static void ant_ctrl_available(void)
  */
 static void calibration_timeout_handler(void * p_context)
 {
-	#define TICKS	5
+	#define MIN_SPEED_TICKS					5		// 5 ticks @8hz is ~5mph
 	UNUSED_PARAMETER(p_context);
 	static uint8_t count = 0;
-	static uint8_t tick_buffer[TICKS];
-	static uint16_t last_flywheel = 0;
-	uint16_t flywheel = flywheel_ticks_get();
+	static uint16_t accum_flywheel[2];
+	uint16_t timestamp_2048;
+	uint16_t tick_delta;
 
-	if (last_flywheel > 0)
+	// Every other time, just store the flywheel value.
+
+	if (count++ % 2 == 0)
 	{
-		tick_buffer[count] = (uint8_t)(flywheel - last_flywheel);
+		accum_flywheel[0] = flywheel_ticks_get();
 	}
 	else
 	{
-		tick_buffer[count] = 0;
-	}
+		accum_flywheel[1] = flywheel_ticks_get();
+		timestamp_2048 = seconds_2048_get();
 
-	last_flywheel = flywheel;
-
-	// Increment, every 5th tick read, send and rollover count.
-	if (++count == TICKS)
-	{
-		ant_bp_calibration_speed_tx_send(tick_buffer);
-		count = 0;
+		ant_bp_calibration_speed_tx_send(timestamp_2048, accum_flywheel);
 
 		// Keep device awake.
 		WDT_RELOAD();
 
 		/*
-		 * Check the last sample.  If we've slowed below ~5mph, it's time to exit.
-		 * 2 ticks at sample rate of 20hz is about 5mph.
+		 * Check the last sample.  If we've slowed below ~5mph, it's time to exit calibration.
 		 */
-		if (tick_buffer[TICKS-1] < 2)
+
+		// Handle rollover
+		if (accum_flywheel[1] < accum_flywheel[0])
 		{
-			last_flywheel = 0;
+			tick_delta = (accum_flywheel[0] ^ 0xFFFF) +
+					accum_flywheel[1];
+		}
+		else
+		{
+			tick_delta = accum_flywheel[1] - accum_flywheel[0];
+		}
+
+
+		if (tick_delta < MIN_SPEED_TICKS)
+		{
 			calibration_stop();
 		}
 	}
@@ -1454,6 +1461,8 @@ static void on_request_data(uint8_t* buffer)
 		case ANT_PAGE_GETSET_PARAMETERS:
 		case ANT_PAGE_MEASURE_OUTPUT:
 		case ANT_PAGE_BATTERY_STATUS:
+		case ANT_COMMON_PAGE_80:
+		case ANT_COMMON_PAGE_81:
 			queue_data_response(request);
 			LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
 					request.descriptor[0],
