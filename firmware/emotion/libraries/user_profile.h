@@ -13,6 +13,7 @@
 #define __USER_PROFILE_H__
 
 #include <stdint.h>
+#include "pstorage.h"
 
 #define PROFILE_VERSION					6u	// Current version of the profile.
 
@@ -70,7 +71,7 @@ typedef struct user_profile_s {
 } user_profile_t;
 
 /**@brief Initializes access to storage. */
-uint32_t user_profile_init(void);
+uint32_t user_profile_init(pstorage_ntf_cb_t cb);
 
 /**@brief Loads the user's profile from device persistent storage. */
 uint32_t user_profile_load(user_profile_t *p_user_profile);

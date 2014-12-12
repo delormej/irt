@@ -109,9 +109,16 @@ static uint32_t 						m_battery_start_ticks;						// __attribute__ ((section (".
 
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
+static bool								m_profile_updating;
+
 // Type declarations for profile updating.
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 static void profile_update_sched(void);
+static void profile_update_pstorage_cb_handler(pstorage_handle_t *  p_handle,
+                                  uint8_t              op_code,
+                                  uint32_t             result,
+                                  uint8_t *            p_data,
+                                  uint32_t             data_len);
 
 static void send_data_page2(ant_request_data_page_t* p_request);
 static void send_temperature();
@@ -198,8 +205,12 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 /**@brief	Handle Soft Device system events. */
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
-	// Process storage events.
-	pstorage_sys_event_handler(sys_evt);
+	if ((sys_evt == NRF_EVT_FLASH_OPERATION_SUCCESS) ||
+            (sys_evt == NRF_EVT_FLASH_OPERATION_ERROR))
+	{
+    		// Process storage events.
+		pstorage_sys_event_handler(sys_evt);
+    }
 }
 
 /**@brief	Queues up the last resistance control acknowledgment.
@@ -373,7 +384,9 @@ static void profile_init(void)
 {
 		uint32_t err_code;
 
-		err_code = user_profile_init();
+		m_profile_updating = false;
+
+		err_code = user_profile_init(profile_update_pstorage_cb_handler);
 		APP_ERROR_CHECK(err_code);
 
 		// Initialize hard coded user profile for now.
@@ -463,6 +476,37 @@ static void profile_init(void)
 				m_user_profile.ca_intercept);
 }
 
+/**@brief 	Callback function used by pstorage which reports result of trying to store
+ * 			data to flash.  Main controls event flow, so handles this even here.
+ *
+ */
+static void profile_update_pstorage_cb_handler(pstorage_handle_t * handle,
+											   uint8_t             op_code,
+											   uint32_t            result,
+											   uint8_t           * p_data,
+											   uint32_t            data_len)
+{
+	static uint8_t retry = 0;
+
+	// Regardless of success the operation is done.
+	m_profile_updating = false;
+
+    if (result != NRF_SUCCESS)
+    {
+    	LOG("[MAIN]:up_pstorage_cb_handler WARN: Error %lu\r\n", result);
+
+    	if (retry++ < 20)
+    	{
+			// Try again.
+			profile_update_sched();
+    	}
+    	else
+    	{
+    		LOG("MAIN:up_pstorage_cb_handler aborting save attempt after %i retries.\r\n", retry);
+    	}
+    }
+}
+
 /**@brief Function for handling profile update.
  *
  * @details This function will be called by the scheduler to update the profile.
@@ -475,6 +519,17 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
 	UNUSED_PARAMETER(event_size);
 
 	uint32_t err_code;
+
+	if (m_profile_updating)
+	{
+		// Throw it back on the queue until we're not currently writing.
+		profile_update_sched();
+
+		LOG("[MAIN]:profile_update write already in progress, re-queuing.\r\n");
+		return;
+	}
+
+	m_profile_updating = true;
 
 	// This method ensures the device is in a proper state in order to update
 	// the profile.
