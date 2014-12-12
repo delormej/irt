@@ -28,6 +28,8 @@ namespace IRT_GUI
         const byte RESISTANCE_SET_BIKE_TYPE	        = 0x44; // Co-efficient of rolling resistance
         const byte RESISTANCE_SET_C                 = 0x45; // Wind resistance offset.
 
+        FirmwareRev m_firmwareRev;
+
         byte m_max_resistance_levels = 9;
         ushort m_min_servo_pos = 2000;
         ushort m_max_servo_pos = 700;
@@ -507,7 +509,14 @@ namespace IRT_GUI
         {
             if (m_calibration == null)
             {
-                m_calibration = new Calibration();
+                if (m_firmwareRev != null && m_firmwareRev.Build > 11)
+                {
+                    m_calibration = new Calibration12();
+                }
+                else
+                {
+                    m_calibration = new Calibration();
+                }
 
                 ExecuteOnUI(() =>
                 {
@@ -916,8 +925,9 @@ namespace IRT_GUI
         {
             UpdateText(lblEmrSerialNo, arg1.SerialNumber.ToString("X"));
             
-            string firmwareRev = string.Format("{0}.{1}.{2}", 0, arg1.SoftwareRevision, arg1.SupplementalSoftwareRevision);
-            UpdateText(lblEmrFirmwareRev, firmwareRev);
+            m_firmwareRev = new FirmwareRev(arg1.SoftwareRevision, arg1.SupplementalSoftwareRevision);
+            
+            UpdateText(lblEmrFirmwareRev, m_firmwareRev);
         }
 
         void m_eMotion_ManufacturerIdentificationPageReceived(AntPlus.Profiles.Common.ManufacturerIdentificationPage arg1, uint arg2)

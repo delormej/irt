@@ -30,6 +30,15 @@ namespace IRT_GUI
         }
     }
 
+    // Newer version of calibration.
+    public class Calibration12 : Calibration
+    {
+        public override void LogCalibration(byte[] buffer)
+        {
+            Console.WriteLine("New calibration log: " + buffer.ToString());
+        }
+    }
+
     public class Calibration : IDisposable
     {
         private StreamWriter m_logFileWriter;
@@ -98,7 +107,7 @@ namespace IRT_GUI
             CloseForm();
         }
 
-        public void LogCalibration(byte[] buffer)
+        public virtual void LogCalibration(byte[] buffer)
         {
             long ms = 0;
             TickEvent tick = null;
