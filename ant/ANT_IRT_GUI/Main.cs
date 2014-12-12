@@ -67,6 +67,8 @@ namespace IRT_GUI
 
         private SimulateRefPower m_simRefPower = null;
 
+        private bool m_enteredDFU = false;  // Tracks whether we went into DFU or not.
+
         // Commands
         enum Command : byte
         {
@@ -629,6 +631,11 @@ namespace IRT_GUI
             return avg;
         }
 
+        private void RestoreUserProfile()
+        {
+            // Use last saved values to reprogram Crr, Weight, WheelSize & ServoOffset.
+            UpdateStatus("Restoring user profile.");
+        }
 
         void m_refPower_ChannelStatusChanged(ChannelStatus status)
         {
@@ -670,10 +677,20 @@ namespace IRT_GUI
                 switch (status)
                 {
                     case ChannelStatus.Closed:
-                        btnEmrSearch.Enabled = true;
-                        txtEmrDeviceId.Enabled = true;
-                        UpdateText(txtEmrDeviceId, 0);
-                        btnEmrSearch.Text = "Search";
+
+                        if (m_enteredDFU)
+                        {
+                            // Keep attempting to re-open the channel and restore parameters
+                            m_eMotion.ChannelParameters.DeviceNumber = m_EmrDeviceId;
+                            m_eMotion.TurnOn();
+                        }
+                        else
+                        {
+                            btnEmrSearch.Enabled = true;
+                            txtEmrDeviceId.Enabled = true;
+                            UpdateText(txtEmrDeviceId, 0);
+                            btnEmrSearch.Text = "Search";
+                        }
                         break;
 
                     case ChannelStatus.Searching:
@@ -683,6 +700,15 @@ namespace IRT_GUI
                         break;
 
                     case ChannelStatus.Tracking:
+
+                        if (m_enteredDFU)
+                        {
+                            // Restore parameters
+                            UpdateStatus("Reconnected after DFU.");
+                            m_enteredDFU = false;
+                            RestoreUserProfile();
+                        }
+
                         btnEmrSearch.Enabled = true;
                         UpdateText(btnEmrSearch, "Close");
                         txtEmrDeviceId.Enabled = false;
@@ -1192,6 +1218,10 @@ namespace IRT_GUI
             UpdateStatus("Sending DFU command, channel should disconnect.");
             // Todo: set some other kind of state / notification here.
             SendCommand(Command.SetDFUMode);
+
+            // Wait for status of channel to change, otherwise send the command again.
+
+            m_enteredDFU = true;
         }
 
         private void chkCharge_CheckedChanged(object sender, EventArgs e)
