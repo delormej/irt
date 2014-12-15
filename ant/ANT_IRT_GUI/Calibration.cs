@@ -30,9 +30,83 @@ namespace IRT_GUI
         }
     }
 
+    public enum Motion
+    {
+        Accelerating,
+        Unstable,
+        Stable,
+        Decelerating
+    }
+
+    /* Compares tick count over time to the last recorded. */
+
+    public class Stability
+    {
+        private ushort lastTicks = 0;
+        private ushort lastPeriod = 0;
+        private double lastVelocity = 0.0f;
+
+        public Motion Check(ushort ticks, ushort period, out double velocity)
+        {
+            Motion state = Motion.Unstable;
+            velocity = 0.0f;
+
+            int deltaPeriod = 0;
+            int deltaTicks = 0;
+
+            if (lastTicks > 0)
+            {
+                if (period < lastPeriod) // rollover
+                {
+                    deltaPeriod = (lastPeriod ^ 0xFFFF) + period;
+                }
+                else
+                {
+                    deltaPeriod = (period - lastPeriod);
+                }
+
+                if (ticks < lastTicks) // rollover
+                {
+                    deltaTicks = (lastTicks ^ 0xFFFF) + ticks;
+                }
+                else
+                {
+                    deltaTicks = (ticks - lastTicks);
+                }
+
+                // Period is in 1/2048 of a second.
+                velocity = deltaTicks / (deltaPeriod / 2048.0f);
+            }
+
+            if (velocity == lastVelocity)
+            {
+                state = Motion.Stable;
+            }
+            else if (velocity > lastVelocity)
+            {
+                state = Motion.Accelerating;
+            }
+            else if (velocity < lastVelocity)
+            {
+                state = Motion.Decelerating;
+            }
+
+            lastVelocity = velocity;
+            lastTicks = ticks;
+            lastPeriod = period;
+
+            return state;
+        }
+    }
+
     // Newer version of calibration.
     public class Calibration12 : Calibration
     {
+        private ushort m_startTime = 0;
+        private ushort m_startTicks = 0;
+        private byte m_stableCount = 0;
+        private Stability m_stable = new Stability();
+
         public Calibration12()
         {
             m_tickEvents = new List<TickEvent>();
@@ -51,56 +125,53 @@ namespace IRT_GUI
             ushort time = (ushort)(buffer[0] | buffer[1] << 8);
             ushort ticks0 = (ushort)(buffer[2] | buffer[3] << 8);
             ushort ticks1 = (ushort)(buffer[4] | buffer[5] << 8);
+            double velocity = 0.0f;
             
-            if (m_form != null)
+            // Grab the first tick record and compare against the last packet.
+            Motion state = m_stable.Check(ticks0, time, out velocity);
+
+            // Velocity is in ticks per second, convert into meters per second, miles per hour.
+            double mps = (velocity / 2) * 0.11176f;
+            double mph = mps * 2.23694f;
+
+            int i = 0;
+            TickEvent te = null;
+
+            while (i < 2) // do this loop 2 times
             {
-                int delta_ticks = 0;
-                
-                // Handle rollover
-                if (ticks1 < ticks0)
+                te = new TickEvent();
+
+                if (m_refPower != null && m_refPower.StandardPowerOnly != null)
                 {
-                    delta_ticks = (ticks0 ^ 0xFFF) + ticks1;
+                    te.Watts = m_refPower.StandardPowerOnly.InstantaneousPower;
+                    te.PowerEventCount = m_refPower.StandardPowerOnly.EventCount;
+                }
+
+                // Alternate between the two tick counts.
+                if (i % 2 == 0)
+                {
+                    te.TickDelta = ticks0;
+                    te.TimestampMS = time;
                 }
                 else
                 {
-                    delta_ticks = ticks1 - ticks0;
+                    te.TickDelta = ticks1;
+                    // Calculate 125ms in 1/2048s later for the 2nd read.
+                    te.TimestampMS = (ushort)(time + (0.125f * 2048));
                 }
 
-                double distance_M = (delta_ticks / 2.0f) * 0.11176f;
-                // 125 ms (8hz)
-                double mps = distance_M / 0.125f;
+                m_tickEvents.Add(te);
+                i++;
+            }
 
-                double mph = mps * 2.23694f;
-
-                TickEvent te = new TickEvent();
-                for (int i = 0; i < 2; i++)
-                {
-                    if (m_refPower != null && m_refPower.StandardPowerOnly != null)
-                    {
-                        te.Watts = m_refPower.StandardPowerOnly.InstantaneousPower;
-                        te.PowerEventCount = m_refPower.StandardPowerOnly.EventCount;
-                    }
-
-                    if (i == 0)
-                    {
-                        // Time is logged on the second data point.
-                        te.TimestampMS = time - (ushort)(0.125 * 2048);
-                        te.TickDelta = ticks0;
-                    }
-                    else
-                    {
-                        te.TimestampMS = time;
-                        te.TickDelta = ticks1;
-                    }
-
-                    m_tickEvents.Add(te);
-                }
-
+            if (m_form != null)
+            {
                 Action a = () =>
                 {
                     m_form.lblSeconds.Text = string.Format("{0:0.0}", time / 2048.0f);
                     m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
                     m_form.lblRefPower.Text = te.Watts.ToString();
+                    m_form.lblStable.Text = state.ToString();
                 };
 
                 m_form.BeginInvoke(a);
