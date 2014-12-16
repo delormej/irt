@@ -24,6 +24,17 @@ namespace IRT_GUI
                 lblSpeed.Text = string.Format("{0:0.0}", mph);
                 lblRefPower.Text = watts.ToString();
                 lblStable.Text = state.ToString();
+
+                if (state == Motion.Stable && seconds > 3.0f)
+                {
+                    lblSeconds.ForeColor = Color.Green;
+                }
+                else
+                {
+                    lblSeconds.ForeColor = SystemColors.ControlText;
+                }
+
+                lblStable.ForeColor = lblSeconds.ForeColor;
             };
 
             if (this.InvokeRequired)

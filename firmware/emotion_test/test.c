@@ -34,14 +34,19 @@ int main(int argc, char *argv [])
 
 	while (-1)
 	{
-		if (++count % (sizeof(tick_buffer) / sizeof(uint8_t)) == 0)
+		if (count++ % 2 == 0)
 		{
-			printf("[IN]\t%i\r\n", count);
+			printf("even %i\r\n", count);
 		}
-		else
-		{
-			printf("[OUT]\t%i\r\n", count);
-		}
+
+		//if (++count % (sizeof(tick_buffer) / sizeof(uint8_t)) == 0)
+		//{
+			//printf("[IN]\t%i,%i\r\n", ++count, count % 2);
+		//}
+		//else
+		//{
+		//	printf("[OUT]\t%i\r\n", count);
+		//}
 		
 		Sleep(250);
 	}
