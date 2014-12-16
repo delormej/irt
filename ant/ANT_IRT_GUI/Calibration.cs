@@ -345,6 +345,7 @@ namespace IRT_GUI
 
                 Action a = () =>
                 {
+                    m_form.lblStable.Visible = false;
                     m_form.lblSeconds.Text = string.Format("{0:0.0}", ms / 1000.0f);
                     m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
                     m_form.lblRefPower.Text = watts.ToString();
