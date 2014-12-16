@@ -32,8 +32,8 @@ namespace IRT_GUI
 
     public enum Motion
     {
+        Undetermined,
         Accelerating,
-        Unstable,
         Stable,
         Decelerating
     }
@@ -45,10 +45,21 @@ namespace IRT_GUI
         private ushort lastTicks = 0;
         private ushort lastPeriod = 0;
         private double lastVelocity = 0.0f;
+        private int threshold = 1;  // default tick threshold per period in determing stability.
+
+        public Stability()
+        {
+
+        }
+
+        public Stability(int threshold)
+        {
+            this.threshold = threshold;
+        }
 
         public Motion Check(ushort ticks, ushort period, out double velocity)
         {
-            Motion state = Motion.Unstable;
+            Motion state = Motion.Undetermined;
             velocity = 0.0f;
 
             int deltaPeriod = 0;
@@ -78,7 +89,12 @@ namespace IRT_GUI
                 velocity = deltaTicks / (deltaPeriod / 2048.0f);
             }
 
-            if (velocity == lastVelocity)
+            //
+            // Allow threshold (ticks) * 2.048 (1/2048 of a second) +/- 
+            // 
+
+            if ( lastVelocity <= (velocity + (threshold * 2.048f)) &&
+                lastVelocity >= (velocity - (threshold * 2.048f)))
             {
                 state = Motion.Stable;
             }
@@ -126,13 +142,6 @@ namespace IRT_GUI
             ushort ticks0 = (ushort)(buffer[2] | buffer[3] << 8);
             ushort ticks1 = (ushort)(buffer[4] | buffer[5] << 8);
             double velocity = 0.0f;
-            
-            // Grab the first tick record and compare against the last packet.
-            Motion state = m_stable.Check(ticks0, time, out velocity);
-
-            // Velocity is in ticks per second, convert into meters per second, miles per hour.
-            double mps = (velocity / 2) * 0.11176f;
-            double mph = mps * 2.23694f;
 
             int i = 0;
             TickEvent te = null;
@@ -164,17 +173,27 @@ namespace IRT_GUI
                 i++;
             }
 
-            if (m_form != null)
+            if (m_stableCount++ % 4 == 0)
             {
-                Action a = () =>
-                {
-                    m_form.lblSeconds.Text = string.Format("{0:0.0}", time / 2048.0f);
-                    m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
-                    m_form.lblRefPower.Text = te.Watts.ToString();
-                    m_form.lblStable.Text = state.ToString();
-                };
+                // Grab the first tick record and compare against the last packet.
+                Motion state = m_stable.Check(ticks0, time, out velocity);
 
-                m_form.BeginInvoke(a);
+                // Velocity is in ticks per second, convert into meters per second, miles per hour.
+                double mps = (velocity / 2) * 0.11176f;
+                double mph = mps * 2.23694f;
+
+                if (m_form != null)
+                {
+                    Action a = () =>
+                    {
+                        m_form.lblSeconds.Text = string.Format("{0:0.0}", time / 2048.0f);
+                        m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
+                        m_form.lblRefPower.Text = te.Watts.ToString();
+                        m_form.lblStable.Text = state.ToString();
+                    };
+
+                    m_form.BeginInvoke(a);
+                }
             }
         }
     }
