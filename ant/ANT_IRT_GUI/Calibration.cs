@@ -121,6 +121,7 @@ namespace IRT_GUI
         private ushort m_startTime = 0;
         private ushort m_startTicks = 0;
         private byte m_stableCount = 0;
+        private Motion m_lastState = Motion.Undetermined;
         private Stability m_stable = new Stability();
 
         public Calibration12()
@@ -142,6 +143,7 @@ namespace IRT_GUI
             ushort ticks0 = (ushort)(buffer[2] | buffer[3] << 8);
             ushort ticks1 = (ushort)(buffer[4] | buffer[5] << 8);
             double velocity = 0.0f;
+            double coastdownSeconds = 0.0f;
 
             int i = 0;
             TickEvent te = null;
@@ -173,7 +175,7 @@ namespace IRT_GUI
                 i++;
             }
 
-            if (m_stableCount++ % 4 == 0)
+            if (m_stableCount++ % 2 == 0)
             {
                 // Grab the first tick record and compare against the last packet.
                 Motion state = m_stable.Check(ticks0, time, out velocity);
@@ -182,11 +184,37 @@ namespace IRT_GUI
                 double mps = (velocity / 2) * 0.11176f;
                 double mph = mps * 2.23694f;
 
+                // We've started decelerating
+                if (m_lastState != Motion.Decelerating && state == Motion.Decelerating)
+                {
+                    // start recording the time.
+                    m_startTime = time;
+                }
+
+                if (state == Motion.Decelerating)
+                {
+                    // Calculate the amount of time we've been decelerating.
+                    if (time < m_startTime) // rollover
+                    {
+                        coastdownSeconds = ((m_startTime ^ 0xFFFF) + time) / 2048.0f;
+                    }  
+                    else
+                    {
+                        coastdownSeconds = (time - m_startTime) / 2048.0f;
+                    }
+                }
+                else
+                {
+                    coastdownSeconds = 0;
+                }
+
+                m_lastState = state;
+
                 if (m_form != null)
                 {
                     Action a = () =>
                     {
-                        m_form.lblSeconds.Text = string.Format("{0:0.0}", time / 2048.0f);
+                        m_form.lblSeconds.Text = string.Format("{0:0.0}", coastdownSeconds);
                         m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
                         m_form.lblRefPower.Text = te.Watts.ToString();
                         m_form.lblStable.Text = state.ToString();
