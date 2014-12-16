@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
@@ -75,4 +76,9 @@ def main(file_name):
 	# show the chart
 	plt.show()
 
-main("C:\\Users\\Jason\\SkyDrive\\InsideRide\\Tech\\Ride Logs\\Tariq\\20141206_Calibration\\coastdown.csv")
+
+if __name__ == "__main__":
+	if (len(sys.argv) > 2):
+		speed_col = int(sys.argv[2])
+	main(sys.argv[1])
+

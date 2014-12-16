@@ -347,9 +347,12 @@ def main(input_file_name):
 		graph_file(input_file_name)
 		dir = os.path.dirname(os.path.realpath(input_file_name))
 
-	if (os.path.isdir(dir)):
-		plt.savefig(os.path.join(dir, 'slope.png'))
-		plt.show()
+	#if (os.path.isdir(dir)):
+	(fig_name, ext) = os.path.splitext(input_file_name)
+
+	#plt.savefig(os.path.join(dir, 'slope.png'))
+	plt.savefig(fig_name + '.png')
+	plt.show()
 
 if __name__ == "__main__":
 	if (len(sys.argv) > 2):
