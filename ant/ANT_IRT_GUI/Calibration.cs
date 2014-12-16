@@ -184,16 +184,17 @@ namespace IRT_GUI
                 double mps = (velocity / 2) * 0.11176f;
                 double mph = mps * 2.23694f;
 
-                // We've started decelerating
-                if (m_lastState != Motion.Decelerating && state == Motion.Decelerating)
+                // We've started decelerating or we just got stable.
+                if ((m_lastState != Motion.Decelerating && state == Motion.Decelerating) ||
+                    (m_lastState != Motion.Stable && state == Motion.Stable))
                 { 
                     // start recording the time.
                     m_startTime = time;
+                    coastdownSeconds = 0;
                 }
-
-                if (state == Motion.Decelerating)
+                else coastdownSeconds = 0;if (state == Motion.Decelerating || state == Motion.Stable)
                 {
-                    // Calculate the amount of time we've been decelerating.
+                    // Calculate the amount of time we've been in this state.
                     if (time < m_startTime) // rollover
                     {
                         coastdownSeconds = ((m_startTime ^ 0xFFFF) + time) / 2048.0f;

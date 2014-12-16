@@ -123,11 +123,12 @@
             // 
             this.lblStable.AutoSize = true;
             this.lblStable.Font = new System.Drawing.Font("Microsoft Sans Serif", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStable.Location = new System.Drawing.Point(121, 13);
+            this.lblStable.Location = new System.Drawing.Point(271, 32);
             this.lblStable.Name = "lblStable";
-            this.lblStable.Size = new System.Drawing.Size(155, 46);
+            this.lblStable.Size = new System.Drawing.Size(160, 46);
             this.lblStable.TabIndex = 17;
-            this.lblStable.Text = "Stable?";
+            this.lblStable.Text = "Stability";
+            this.lblStable.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // CalibrationForm
             // 
