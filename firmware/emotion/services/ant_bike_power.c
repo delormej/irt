@@ -532,11 +532,11 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	if (message_sequence % product_page_interleave == 0)
 	{			
 		// # Figures out which common message to submit at which time.
-		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_product_page);
+		ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_product_page);
 	}
 	else if (message_sequence % manufacturer_page_interleave == 0)
 	{
-		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
+		ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
 	}
 	else if (message_sequence % battery_page_interleave == 0)
 	{

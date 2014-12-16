@@ -51,19 +51,6 @@ extern ble_state_e irt_ble_ant_state;
 		(ERR == NRF_ANT_ERROR_TRANSFER_BUSY || \
 			ERR == NRF_ANT_ERROR_TRANSFER_IN_PROGRESS)
 
-
-// MACRO for sending manufacturer and product pages.
-#define ANT_COMMON_PAGE_TRANSMIT(ANT_CHANNEL, COMMON_PAGE)					\
-    do																		\
-    {																		\
-        uint32_t ERR_CODE = sd_ant_broadcast_message_tx((ANT_CHANNEL),		\
-                                            TX_BUFFER_SIZE,					\
-                                            (uint8_t*)&(COMMON_PAGE) );		\
-        if (!(ANT_ERROR_AS_WARN(ERR_CODE)))									\
-        	APP_ERROR_CHECK(ERR_CODE);										\
-    } while (0)																\
-
-
 /**@brief Macros for identifying ANT Burst Sequence.
  */
 #define BURST_LAST_PACKET						0x04
@@ -112,5 +99,6 @@ void ble_ant_start(void);
 void ble_advertising_start(void);
 void cycling_power_send(irt_power_meas_t * p_cps_meas);
 void ble_ant_resistance_ack(uint8_t op_code, uint16_t value);
+void ant_common_page_transmit(uint8_t ant_channel, uint8_t* common_page);
 
 #endif // BLE_ANT_H__
