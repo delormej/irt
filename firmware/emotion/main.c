@@ -272,6 +272,14 @@ static bool dequeue_ant_response(void)
 				ant_bp_battery_tx_send(m_battery_status);
 				break;
 
+			case ANT_COMMON_PAGE_80:
+				ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
+				break;
+
+			case ANT_COMMON_PAGE_81:
+				ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_product_page);
+				break;
+
 			default:
 				send_data_page2(&m_request_data_pending);
 				break;
