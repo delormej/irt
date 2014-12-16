@@ -1,4 +1,5 @@
 import sys
+import os
 import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
@@ -73,10 +74,11 @@ def main(file_name):
 	plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
 	plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
 
-	# show the chart
+	# show and save the chart
+	(fig_name, ext) = os.path.splitext(file_name)
+	plt.savefig(fig_name + '.png')
 	plt.show()
-
-
+	
 if __name__ == "__main__":
 	if (len(sys.argv) > 2):
 		speed_col = int(sys.argv[2])
