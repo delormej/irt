@@ -66,6 +66,13 @@ def main(file_name):
 	y = (time.max() - time) / 1000.0	# seconds until min
 	x = tick_delta * 20 * 0.1115/2		# meters per second
 
+	# get core parameters
+	speed_on_entry = x.max()
+	speed_on_exit = x.min()
+	duration = time.max() - time[0]
+	s = ("entry_mps = %s, exit_mps = %s, duration = %ss" % (speed_on_entry, speed_on_exit, duration / 1000.0))
+	print(s)
+
 	# Set axis labels
 	plt.xlabel('Speed (mps)')
 	plt.ylabel('Coastdown Time (seconds)')
@@ -87,7 +94,7 @@ def main(file_name):
 	# print the formula
 	plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
 	plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
-
+	
 	# show and save the chart
 	(fig_name, ext) = os.path.splitext(file_name)
 	plt.savefig(fig_name + '.png')
