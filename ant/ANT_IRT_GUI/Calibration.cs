@@ -187,12 +187,17 @@ namespace IRT_GUI
                 // We've started decelerating or we just got stable.
                 if ((m_lastState != Motion.Decelerating && state == Motion.Decelerating) ||
                     (m_lastState != Motion.Stable && state == Motion.Stable))
-                { 
+                {
                     // start recording the time.
                     m_startTime = time;
                     coastdownSeconds = 0;
                 }
-                else coastdownSeconds = 0;if (state == Motion.Decelerating || state == Motion.Stable)
+                else
+                {
+                    coastdownSeconds = 0;
+                }
+                
+                if (state == Motion.Decelerating || state == Motion.Stable)
                 {
                     // Calculate the amount of time we've been in this state.
                     if (time < m_startTime) // rollover
