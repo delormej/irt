@@ -186,7 +186,7 @@ namespace IRT_GUI
 
                 // We've started decelerating
                 if (m_lastState != Motion.Decelerating && state == Motion.Decelerating)
-                {
+                { 
                     // start recording the time.
                     m_startTime = time;
                 }
