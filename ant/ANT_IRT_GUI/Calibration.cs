@@ -209,20 +209,12 @@ namespace IRT_GUI
                     coastdownSeconds = 0;
                 }
 
-                m_lastState = state;
-
                 if (m_form != null)
                 {
-                    Action a = () =>
-                    {
-                        m_form.lblSeconds.Text = string.Format("{0:0.0}", coastdownSeconds);
-                        m_form.lblSpeed.Text = string.Format("{0:0.0}", mph);
-                        m_form.lblRefPower.Text = te.Watts.ToString();
-                        m_form.lblStable.Text = state.ToString();
-                    };
-
-                    m_form.BeginInvoke(a);
+                    m_form.UpdateValues(coastdownSeconds, mph, te.Watts, state);
                 }
+
+                m_lastState = state;
             }
         }
     }
