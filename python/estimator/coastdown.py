@@ -41,12 +41,26 @@ def fit_linear(x_new, x, y):
 	print("slope: %s intercept: %s" % (slope, intercept) )
 	plt.plot(x_new, x_new * slope + intercept, 'g')
 
+
+# returns the index of the last occurence of the maximum speed
+# which is where the deceleraton begins.
+def get_max_speed_idx(x):
+	# get occurences of x
+	occurences = np.where(x == x.max())
+	return max(occurences[0])
+
 def main(file_name):
 	#
 	# load the csv file
 	#
 	time, tick_delta = np.loadtxt(file_name, delimiter=',', skiprows=1,
 							dtype=[('ms', int), ('tick_delta', int)], usecols=[0, 2], unpack=True, comments='"')
+
+	ix = get_max_speed_idx(tick_delta)
+	time = time[ix:]
+	tick_delta = tick_delta[ix:]
+
+	print(time, tick_delta)
 
 	# calculate new x/y to represent time in ms since 0 and speed in meters per second
 	y = (time.max() - time) / 1000.0	# seconds until min
