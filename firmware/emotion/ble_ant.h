@@ -25,6 +25,8 @@
 #define ANT_COMMON_PAGE_81          		0x51u   /**< Product information common data page. */
 //#define COMMON_PAGE_BATTERY_VOLTAGE 		0x52u   /**< TODO: Optional battery voltage reporting. */
 
+#define WF_ANT_RESPONSE_PAGE_ID              0xF0	// Manufacturer-Specific pages (0xF0 - 0xFF).
+
 #define BP_PAGE_RESERVE_BYTE    			0xFFu   /**< Page reserved value. */
 
 #define ANT_BUFFER_INDEX_MESG_ID        	0x01                                         /**< Index for Message ID. */

@@ -5,8 +5,6 @@ from scipy import signal
 import matplotlib.pyplot as plt
 import scipy.optimize as spo, scipy.stats as stats 
 
-#input_file_name = "coastdown.csv"
-
 # fit to a 2nd degree polynomial
 def fit_poly2d(x_new, x, y):
 	coefficients = np.polyfit(x, y, 2)
@@ -49,22 +47,38 @@ def get_max_speed_idx(x):
 	occurences = np.where(x == x.max())
 	return max(occurences[0])
 
+def get_min_speed_idx(x):
+	# get the index of the first occurence of 1 tick delta
+	ix = np.where(x == 1)[0][0]
+	if (ix > 0):
+		return ix
+	else:
+		# return the last element
+		return len(x)
+
 def main(file_name):
 	#
 	# load the csv file
 	#
-	time, tick_delta = np.loadtxt(file_name, delimiter=',', skiprows=1,
+	time, tick_delta = np.loadtxt(file_name, delimiter=',', skiprows=2,
 							dtype=[('ms', int), ('tick_delta', int)], usecols=[0, 2], unpack=True, comments='"')
 
-	ix = get_max_speed_idx(tick_delta)
-	time = time[ix:]
-	tick_delta = tick_delta[ix:]
-
-	print(time, tick_delta)
+	# get the max
+	ix_max = get_max_speed_idx(tick_delta)
+	ix_min = get_min_speed_idx(tick_delta)
+	time = time[ix_max:ix_min]
+	tick_delta = tick_delta[ix_max:ix_min]
 
 	# calculate new x/y to represent time in ms since 0 and speed in meters per second
 	y = (time.max() - time) / 1000.0	# seconds until min
 	x = tick_delta * 20 * 0.1115/2		# meters per second
+
+	# get core parameters
+	speed_on_entry = x.max()
+	speed_on_exit = x.min()
+	duration = time.max() - time[0]
+	results = ("entry_mps = %s, exit_mps = %s, duration = %ss" % (speed_on_entry, speed_on_exit, duration / 1000.0))
+	print(results)
 
 	# Set axis labels
 	plt.xlabel('Speed (mps)')
@@ -73,7 +87,7 @@ def main(file_name):
 	# plot actual values
 	plt.plot(x, y)
 	plt.ylim(ymin=0)
-	plt.xlim(xmax=x.max())
+	plt.xlim(xmin=0, xmax=x.max())
 
 	# if I wanted to reverse the axis visualy, also need to adjust min/max for this.
 	#plt.gca().invert_yaxis()
@@ -87,6 +101,7 @@ def main(file_name):
 	# print the formula
 	plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
 	plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
+	plt.text(x.max() * 0.05, y.max() * 0.85, results, fontsize=8)
 
 	# show and save the chart
 	(fig_name, ext) = os.path.splitext(file_name)
