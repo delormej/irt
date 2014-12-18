@@ -30,23 +30,11 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 int main(int argc, char *argv [])
 {
 	uint8_t count = 0;
-	uint8_t tick_buffer[5];
 
 	while (-1)
 	{
-		if (count++ % 2 == 0)
-		{
-			printf("even %i\r\n", count);
-		}
-
-		//if (++count % (sizeof(tick_buffer) / sizeof(uint8_t)) == 0)
-		//{
-			//printf("[IN]\t%i,%i\r\n", ++count, count % 2);
-		//}
-		//else
-		//{
-		//	printf("[OUT]\t%i\r\n", count);
-		//}
+		count = ++count & 3u;
+		printf("count: %u\r\n", count);
 		
 		Sleep(250);
 	}

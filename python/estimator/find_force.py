@@ -52,7 +52,7 @@ def fit_bike_science(x_new, x, y):
 	x1 = x * 0.44704
 	x_new1 = x_new * 0.44704
 
-	pars, covar = spo.curve_fit(bike_science_func, x1, y, p0 = [0, 0.005])
+	pars, covar = spo.curve_fit(bike_science_func, x1, y, p0 = [0.3, 0.005])
 	print('bike', pars)
 	plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+')
 

@@ -78,8 +78,7 @@
 		Trainer Road specific, from Wahoo Fitness
 
  ******************************************************************************/
-// Manufacturer-Specific pages (0xF0 - 0xFF).
-#define WF_ANT_RESPONSE_PAGE_ID              0xF0
+
 
 //
 #define WF_ANT_RESPONSE_FLAG                 0x80
