@@ -1477,6 +1477,7 @@ namespace IRT_GUI
                     m_requestingSettings = true;
 
                     List<SubPages> parameters = new List<SubPages>();
+                    parameters.Add(SubPages.Product);
                     parameters.Add(SubPages.TotalWeight);
                     parameters.Add(SubPages.WheelSize);
                     parameters.Add(SubPages.Settings);
@@ -1510,9 +1511,9 @@ namespace IRT_GUI
         {
             RequestDataMessage message = new RequestDataMessage();
 
-            if (subPage == SubPages.Battery)
+            if (subPage == SubPages.Battery || subPage == SubPages.Product || subPage == SubPages.Manufacturer)
             {
-                message.RequestedPage = (byte)SubPages.Battery;
+                message.RequestedPage = (byte)subPage;
             }
             else
             {
