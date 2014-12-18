@@ -894,7 +894,7 @@ static void send_data_page2(ant_request_data_page_t* p_request)
 			break;
 
 		default:
-			LOG("[MAIN] Unrecognized page request. \r\n");
+			LOG("[MAIN] Unrecognized subpage: %i. \r\n", subpage);
 			return;
 	}
 

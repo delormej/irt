@@ -37,6 +37,7 @@ void bp_queue_resistance_ack(uint8_t op_code, uint16_t value)
 	resistance_ack.descriptor[0] = op_code;
 	resistance_ack.reserved[0] = LSB(value);
 	resistance_ack.reserved[1] = MSB(value);
+	resistance_ack.tx_response = 0x80; // acknowledge
 
 	bp_queue_data_response(resistance_ack);
 }
