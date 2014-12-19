@@ -20,21 +20,8 @@
 
 static pstorage_handle_t m_user_profile_storage;  	// Internal pointer to persistent storage.
 
-static void up_pstorage_cb_handler(pstorage_handle_t * handle,
-                                   uint8_t             op_code,
-                                   uint32_t            result,
-                                   uint8_t           * p_data,
-                                   uint32_t            data_len)
-{
-    if (result != NRF_SUCCESS)
-    {
-    	UP_LOG("[UP]:up_pstorage_cb_handler WARN: Error %lu\r\n", result);
-    }
-}
-
-
 /**@brief Initializes access to storage. */
-uint32_t user_profile_init(void)
+uint32_t user_profile_init(pstorage_ntf_cb_t cb)
 {
     uint32_t err_code;
     pstorage_module_param_t param;
@@ -49,7 +36,7 @@ uint32_t user_profile_init(void)
 	// We're smaller than the min block size, so use that.
 	param.block_size  = sizeof (user_profile_t);
     param.block_count = 1u;
-    param.cb          = up_pstorage_cb_handler;
+    param.cb          = cb;
 
     err_code = pstorage_register(&param, &m_user_profile_storage);
     if (err_code != NRF_SUCCESS)
@@ -97,14 +84,15 @@ uint32_t user_profile_store(user_profile_t *p_user_profile)
                                sizeof (user_profile_t),
                                USER_PROFILE_OFFSET);
 
-    UP_LOG("[UP]:user_profile_store {version: %i, weight:%i, wheel:%i, settings:%i, slope:%i, intercept:%i, servo_offset:%i}\r\n",
+    UP_LOG("[UP]:user_profile_store {version: %i, weight:%i, wheel:%i, settings:%i, slope:%i, intercept:%i, servo_offset:%i, addr:%lu}\r\n",
     		p_user_profile->version,
     		p_user_profile->total_weight_kg,
     		p_user_profile->wheel_size_mm,
     		p_user_profile->settings,
     		p_user_profile->ca_slope,
     		p_user_profile->ca_intercept,
-    		p_user_profile->servo_offset);
+    		p_user_profile->servo_offset,
+    		p_user_profile);
 
 	return err_code;
 }

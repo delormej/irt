@@ -78,8 +78,7 @@
 		Trainer Road specific, from Wahoo Fitness
 
  ******************************************************************************/
-// Manufacturer-Specific pages (0xF0 - 0xFF).
-#define WF_ANT_RESPONSE_PAGE_ID              0xF0
+
 
 //
 #define WF_ANT_RESPONSE_FLAG                 0x80
@@ -163,54 +162,16 @@ static __INLINE uint32_t acknolwedge_message_transmit()
 	return err_code;
 }
 
-static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_period_2048, uint8_t wheel_ticks, bool stopped)
+static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_period_2048, uint8_t wheel_ticks)
 {
-	#define STOP_COUNT_TO_FLAG	4
-	static uint8_t last_event_count = 0;
-	static uint8_t stop_flagged = 0;
-
-	/* Fix to ensure that wheel indicates stopped.  We globally increment m_event_count because
-	 * events are calculated globally (i.e. accum wheel period), but display devices do not
-	 * seem to respect a non-incrementing accum wheel period and wheel ticks to indicate stopped.
-	 */
-	if (stop_flagged < STOP_COUNT_TO_FLAG)
-	{
-		last_event_count = m_event_count;
-	}
-
 	tx_buffer[PAGE_NUMBER_INDEX]            = ANT_BP_PAGE_TORQUE_AT_WHEEL;
-	/*
-	 * This is contrary to the documentation in Rev 4.0 of the spec section 8.4.1.1... but it seems the ANT simulators (new & old)
-	 * and BKOOL do not correctly interpret Time-syncronous event counts incrementing with 0 speed, OR more likely, I'm just not
-	 * interpreting the spec correctly.  However, in the Event-syncronous update model, it does work - so we don't increment this
-	 * event count if we are stopped.
-	 */
-	tx_buffer[EVENT_COUNT_INDEX] 			= last_event_count;
+	tx_buffer[EVENT_COUNT_INDEX] 			= m_event_count;
 	tx_buffer[WHEEL_TICKS_INDEX] 			= wheel_ticks;
 	tx_buffer[INSTANT_CADENCE_INDEX]        = BP_PAGE_RESERVE_BYTE;
 	tx_buffer[WHEEL_PERIOD_LSB_INDEX] 		= LOW_BYTE(accum_wheel_period_2048);
 	tx_buffer[WHEEL_PERIOD_MSB_INDEX] 		= HIGH_BYTE(accum_wheel_period_2048);
 	tx_buffer[ACCUM_TORQUE_LSB_INDEX] 		= LOW_BYTE(accum_torque);
 	tx_buffer[ACCUM_TORQUE_MSB_INDEX] 		= HIGH_BYTE(accum_torque);
-
-	/*
-	 * After receiving a stop signal (0 speed), send at least a few messages through with
-	 * the event count incremented for some receivers who implement the logic above.
-	 * Then flag and stop incrementing event count for all others.
-	 *
-	 * NOTE that after implementing this, the SimulANT+ tool shows INFINITY for speed and
-	 * average power (Standard Torque) is NaN.  However, without this, it just keeps showing
-	 * the last known speed and power before we stopped updating the event count.
-	 *
-	 */
-	if (stopped && stop_flagged < STOP_COUNT_TO_FLAG)
-	{
-		stop_flagged++;
-	}
-	else if (!stopped && stop_flagged >= STOP_COUNT_TO_FLAG)
-	{
-		stop_flagged = 0;
-	}
 
 	return broadcast_message_transmit();
 }
@@ -518,31 +479,74 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	static const uint8_t manufacturer_page_interleave 	= MANUFACTURER_PAGE_INTERLEAVE_COUNT;
 	static const uint8_t extra_info_page_interleave 	= EXTRA_INFO_PAGE_INTERLEAVE_COUNT;
 	static const uint8_t battery_page_interleave 		= BATTERY_PAGE_INTERLEAVE_COUNT;
+	static uint8_t message_sequence = 0;
 
 	uint32_t err_code = 0;		
 
-	// Increment event counter.
-	m_event_count++;
+	/* Fix to ensure that wheel indicates stopped.  We globally increment m_event_count because
+	 * events are calculated globally (i.e. accum wheel period), but display devices do not
+	 * seem to respect a non-incrementing accum wheel period and wheel ticks to indicate stopped.
+	 *
+	 * This is contrary to the documentation in Rev 4.0 of the spec section 8.4.1.1... but it seems the ANT simulators (new & old)
+	 * and BKOOL do not correctly interpret Time-syncronous event counts incrementing with 0 speed, OR more likely, I'm just not
+	 * interpreting the spec correctly.  However, in the Event-syncronous update model, it does work - so we don't increment this
+	 * event count if we are stopped.
+	 *
+	 *
+	 */
+	#define STOP_COUNT_TO_FLAG	4
+	static uint8_t stop_flagged = 0;
 
-	if (m_event_count % product_page_interleave == 0)
+	bool stopped = (p_power_meas->instant_speed_mps == 0.0f);
+
+	if (stop_flagged < STOP_COUNT_TO_FLAG)
+	{
+		m_event_count++;
+	}
+
+	/*
+	 * After receiving a stop signal (0 speed), send at least a few messages through with
+	 * the event count incremented for some receivers who implement the logic above.
+	 * Then flag and stop incrementing event count for all others.
+	 *
+	 * NOTE that after implementing this, the SimulANT+ tool shows INFINITY for speed and
+	 * average power (Standard Torque) is NaN.  However, without this, it just keeps showing
+	 * the last known speed and power before we stopped updating the event count.
+	 *
+	 */
+	if (stopped && stop_flagged < STOP_COUNT_TO_FLAG)
+	{
+		stop_flagged++;
+	}
+	else if (!stopped && stop_flagged >= STOP_COUNT_TO_FLAG)
+	{
+		stop_flagged = 0;
+	}
+
+	// Increment the message sequence tracker.
+	message_sequence++;
+
+	//m_event_count++;
+
+	if (message_sequence % product_page_interleave == 0)
 	{			
 		// # Figures out which common message to submit at which time.
-		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_product_page);
+		ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_product_page);
 	}
-	else if (m_event_count % manufacturer_page_interleave == 0)
+	else if (message_sequence % manufacturer_page_interleave == 0)
 	{
-		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
+		ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
 	}
-	else if (m_event_count % battery_page_interleave == 0)
+	else if (message_sequence % battery_page_interleave == 0)
 	{
 		ant_bp_battery_tx_send(p_power_meas->battery_status);
 	}
-	else if (m_event_count % extra_info_page_interleave == 0)
+	else if (message_sequence % extra_info_page_interleave == 0)
 	{
 		// Send DEBUG info.
 		extra_info_transmit(p_power_meas);
 	}
-	else if (m_event_count % power_page_interleave == 0)
+	else if (message_sequence % power_page_interleave == 0)
 	{
 		// # Only transmit standard power message every 5th power message.
 		err_code = power_transmit(p_power_meas->instant_power);
@@ -553,8 +557,7 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 		// # Default broadcast message is torque.
 		err_code = torque_transmit(p_power_meas->accum_torque,
 			p_power_meas->accum_wheel_period,
-			(uint8_t) p_power_meas->accum_wheel_revs,
-			(p_power_meas->instant_speed_mps == 0.0f));
+			(uint8_t) p_power_meas->accum_wheel_revs);
 		APP_ERROR_CHECK(err_code);
 	}
 }
@@ -600,16 +603,16 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 	return err_code;
 }
 
-uint32_t ant_bp_calibration_speed_tx_send(uint8_t* flywheel_delta)
+uint32_t ant_bp_calibration_speed_tx_send(uint16_t time_2048, uint16_t* flywheel_ticks)
 {
 	tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
 	tx_buffer[1] = 		ANT_BP_CAL_PARAM_RESPONSE;
-	tx_buffer[2] = 		m_event_count++;
-	tx_buffer[3] = 		flywheel_delta[0];
-	tx_buffer[4] = 		flywheel_delta[1];
-	tx_buffer[5] = 		flywheel_delta[2];
-	tx_buffer[6] = 		flywheel_delta[3];
-	tx_buffer[7] = 		flywheel_delta[4];
+	tx_buffer[2] = 		LOW_BYTE(time_2048);
+	tx_buffer[3] = 		HIGH_BYTE(time_2048);
+	tx_buffer[4] = 		LOW_BYTE(flywheel_ticks[0]);
+	tx_buffer[5] = 		HIGH_BYTE(flywheel_ticks[0]);
+	tx_buffer[6] = 		LOW_BYTE(flywheel_ticks[1]);
+	tx_buffer[7] = 		HIGH_BYTE(flywheel_ticks[1]);
 
 	return broadcast_message_transmit();
 }

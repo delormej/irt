@@ -53,10 +53,11 @@
 #include "battery.h"
 #include "irt_error_log.h"
 #include "irt_led.h"
+#include "bp_response_queue.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	// Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
-#define CALIBRATION_READ_INTERVAL		APP_TIMER_TICKS(50, APP_TIMER_PRESCALER) 	// 20HZ, every 50ms - read
+#define CALIBRATION_READ_INTERVAL		APP_TIMER_TICKS(125, APP_TIMER_PRESCALER) 	// 8HZ, every 125ms
 
 #define WATCHDOG_TICK_COUNT				APP_TIMER_CLOCK_FREQ * 60 * 5 				// (NRF_WDT->CRV + 1)/32768 seconds * 60 seconds * 'n' minutes
 #define WDT_RELOAD()					NRF_WDT->RR[0] = WDT_RR_RR_Reload			// Keep the device awake.
@@ -109,27 +110,21 @@ static uint32_t 						m_battery_start_ticks;						// __attribute__ ((section (".
 
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
 
+static bool								m_profile_updating;
+
 // Type declarations for profile updating.
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 static void profile_update_sched(void);
+static void profile_update_pstorage_cb_handler(pstorage_handle_t *  p_handle,
+                                  uint8_t              op_code,
+                                  uint32_t             result,
+                                  uint8_t *            p_data,
+                                  uint32_t             data_len);
 
 static void send_data_page2(ant_request_data_page_t* p_request);
 static void send_temperature();
 static void on_enable_dfu_mode();
 static void calibration_stop();
-
-
-/* TODO:	Total hack for request data page & resistance control ack, we will fix.
- *		 	Simple logic right now.  If there is a pending request data page, send
- *		 	up to 2 of these messages as priority (based on requested tx count).
- *		 	If there is a pending resistance acknowledgment, send that as second
- *		 	priority.  Otherwise, resume normal power message.
- *		 	Ensure that at least once per second we are sending an actual power
- *		 	message.
- */
-static uint8_t							m_resistance_ack_pending[3] = {0};		// byte 0: operation, byte 1:2: value
-static ant_request_data_page_t			m_request_data_pending;
-#define ANT_RESPONSE_LIMIT				3										// Only send max 3 sequential response messages before interleaving real power message.
 
 /**@brief Debug logging for main module.
  *
@@ -198,32 +193,12 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 /**@brief	Handle Soft Device system events. */
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
-	// Process storage events.
-	pstorage_sys_event_handler(sys_evt);
-}
-
-/**@brief	Queues up the last resistance control acknowledgment.
- *
- */
-static void queue_resistance_ack(uint8_t op_code, uint16_t value)
-{
-	m_resistance_ack_pending[0] = op_code;
-	m_resistance_ack_pending[1] = LSB(value);
-	m_resistance_ack_pending[2] = MSB(value);
-
-	LOG("[MAIN] Queued resistance ack for [%.2x][%.2x]:\r\n",
-			m_resistance_ack_pending[1],
-			m_resistance_ack_pending[2]);
-}
-
-static void queue_data_response(ant_request_data_page_t request)
-{
-	m_request_data_pending = request;
-}
-
-static void queue_data_response_clear()
-{
-	memset(&m_request_data_pending, 0, sizeof(ant_request_data_page_t));
+	if ((sys_evt == NRF_EVT_FLASH_OPERATION_SUCCESS) ||
+            (sys_evt == NRF_EVT_FLASH_OPERATION_ERROR))
+	{
+    		// Process storage events.
+		pstorage_sys_event_handler(sys_evt);
+    }
 }
 
 /**@brief	Dispatches ANT messages in response to requests such as Request Data Page and
@@ -234,22 +209,18 @@ static void queue_data_response_clear()
  */
 static bool dequeue_ant_response(void)
 {
-	// Static response count so that no more than ANT_RESPONSE_LIMIT are sent sequentially
-	// as not to starve the normal power messages.
-	static uint8_t response_count = 0;
+	ant_request_data_page_t request;
 
-	if (response_count >= ANT_RESPONSE_LIMIT)
+	if (!bp_dequeue_ant_response(&request))
 	{
-		// Reset sequential response count and return.
-		response_count = 0;
+		// Nothing to dequeue.
 		return false;
 	}
 
 	// Prioritize data response messages first.
-	if (m_request_data_pending.data_page == ANT_PAGE_REQUEST_DATA)
+	if (request.data_page == ANT_PAGE_REQUEST_DATA)
 	{
-
-		switch (m_request_data_pending.tx_page)
+		switch (request.tx_page)
 		{
 			case ANT_PAGE_MEASURE_OUTPUT:
 				// TODO: This is the only measurement being sent right now, but we'll have more
@@ -261,39 +232,31 @@ static bool dequeue_ant_response(void)
 				ant_bp_battery_tx_send(m_battery_status);
 				break;
 
-			default:
-				send_data_page2(&m_request_data_pending);
+			case ANT_COMMON_PAGE_80:
+				ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
 				break;
-		}
-		// byte 1 of the buffer contains the flag for either acknowledged (0x80) or a value
-		// indicating how many times to send the message.
-		if (m_request_data_pending.tx_response == 0x80 || (m_request_data_pending.tx_response & 0x7F) <= 1)
-		{
-			// Clear the buffer.
-			queue_data_response_clear();
-		}
-		else
-		{
-			// Decrement the count, we'll need to send again.
-			m_request_data_pending.tx_response--;
+
+			case ANT_COMMON_PAGE_81:
+				ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_product_page);
+				break;
+
+			default:
+				send_data_page2(&request);
+				break;
 		}
 
 	}
-	else if (m_resistance_ack_pending[0] != 0)
+	else if (request.data_page == WF_ANT_RESPONSE_PAGE_ID)
 	{
-		uint16_t* value;
-		value = (uint16_t*)&m_resistance_ack_pending[1];
-
-		ble_ant_resistance_ack(m_resistance_ack_pending[0], *value);
-		// Clear the buffer.
-		memset(&m_resistance_ack_pending, 0, sizeof(m_resistance_ack_pending));
+		ble_ant_resistance_ack(request.descriptor[0],
+				(request.reserved[0] | request.reserved[1] << 8)  );
 	}
 	else
 	{
+		LOG("[MAIN] dequeue_ant_response -- undefined page request %i.\r\n", request.data_page);
 		return false;
 	}
 
-	response_count++;
 	return true;
 }
 
@@ -373,7 +336,9 @@ static void profile_init(void)
 {
 		uint32_t err_code;
 
-		err_code = user_profile_init();
+		m_profile_updating = false;
+
+		err_code = user_profile_init(profile_update_pstorage_cb_handler);
 		APP_ERROR_CHECK(err_code);
 
 		// Initialize hard coded user profile for now.
@@ -463,6 +428,37 @@ static void profile_init(void)
 				m_user_profile.ca_intercept);
 }
 
+/**@brief 	Callback function used by pstorage which reports result of trying to store
+ * 			data to flash.  Main controls event flow, so handles this even here.
+ *
+ */
+static void profile_update_pstorage_cb_handler(pstorage_handle_t * handle,
+											   uint8_t             op_code,
+											   uint32_t            result,
+											   uint8_t           * p_data,
+											   uint32_t            data_len)
+{
+	static uint8_t retry = 0;
+
+	// Regardless of success the operation is done.
+	m_profile_updating = false;
+
+    if (result != NRF_SUCCESS)
+    {
+    	LOG("[MAIN]:up_pstorage_cb_handler WARN: Error %lu\r\n", result);
+
+    	if (retry++ < 20)
+    	{
+			// Try again.
+			profile_update_sched();
+    	}
+    	else
+    	{
+    		LOG("MAIN:up_pstorage_cb_handler aborting save attempt after %i retries.\r\n", retry);
+    	}
+    }
+}
+
 /**@brief Function for handling profile update.
  *
  * @details This function will be called by the scheduler to update the profile.
@@ -475,6 +471,17 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
 	UNUSED_PARAMETER(event_size);
 
 	uint32_t err_code;
+
+	if (m_profile_updating)
+	{
+		// Throw it back on the queue until we're not currently writing.
+		profile_update_sched();
+
+		LOG("[MAIN]:profile_update write already in progress, re-queuing.\r\n");
+		return;
+	}
+
+	m_profile_updating = true;
 
 	// This method ensures the device is in a proper state in order to update
 	// the profile.
@@ -517,40 +524,47 @@ static void ant_ctrl_available(void)
  */
 static void calibration_timeout_handler(void * p_context)
 {
-	#define TICKS	5
+	#define MIN_SPEED_TICKS					5		// 5 ticks @8hz is ~5mph
 	UNUSED_PARAMETER(p_context);
 	static uint8_t count = 0;
-	static uint8_t tick_buffer[TICKS];
-	static uint16_t last_flywheel = 0;
-	uint16_t flywheel = flywheel_ticks_get();
+	static uint16_t accum_flywheel[2];
+	uint16_t timestamp_2048;
+	uint16_t tick_delta;
 
-	if (last_flywheel > 0)
+	// Every other time, just store the flywheel value.
+
+	if (count++ % 2 == 0)
 	{
-		tick_buffer[count] = (uint8_t)(flywheel - last_flywheel);
+		accum_flywheel[0] = flywheel_ticks_get();
 	}
 	else
 	{
-		tick_buffer[count] = 0;
-	}
+		accum_flywheel[1] = flywheel_ticks_get();
+		timestamp_2048 = seconds_2048_get();
 
-	last_flywheel = flywheel;
-
-	// Increment, every 5th tick read, send and rollover count.
-	if (++count == TICKS)
-	{
-		ant_bp_calibration_speed_tx_send(tick_buffer);
-		count = 0;
+		ant_bp_calibration_speed_tx_send(timestamp_2048, accum_flywheel);
 
 		// Keep device awake.
 		WDT_RELOAD();
 
 		/*
-		 * Check the last sample.  If we've slowed below ~5mph, it's time to exit.
-		 * 2 ticks at sample rate of 20hz is about 5mph.
+		 * Check the last sample.  If we've slowed below ~5mph, it's time to exit calibration.
 		 */
-		if (tick_buffer[TICKS-1] < 2)
+
+		// Handle rollover
+		if (accum_flywheel[1] < accum_flywheel[0])
 		{
-			last_flywheel = 0;
+			tick_delta = (accum_flywheel[0] ^ 0xFFFF) +
+					accum_flywheel[1];
+		}
+		else
+		{
+			tick_delta = accum_flywheel[1] - accum_flywheel[0];
+		}
+
+
+		if (tick_delta < MIN_SPEED_TICKS)
+		{
 			calibration_stop();
 		}
 	}
@@ -880,7 +894,7 @@ static void send_data_page2(ant_request_data_page_t* p_request)
 			break;
 
 		default:
-			LOG("[MAIN] Unrecognized page request. \r\n");
+			LOG("[MAIN] Unrecognized subpage: %i. \r\n", subpage);
 			return;
 	}
 
@@ -996,7 +1010,7 @@ static void crr_adjust(int8_t value)
 		// Wire value of intercept is sent in 1/1000, i.e. 57236 == 57.236
 		m_user_profile.ca_intercept += (value * 1000);
 		power_init(&m_user_profile, DEFAULT_CRR);
-		queue_data_response(request);
+		bp_queue_data_response(request);
 	}
 }
 
@@ -1025,7 +1039,7 @@ static void on_resistance_off(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = 0;
 	resistance_level_set(m_resistance_level);
-	queue_resistance_ack(m_resistance_mode, m_resistance_level);
+	bp_queue_resistance_ack(m_resistance_mode, m_resistance_level);
 
 	// Quick blink for feedback.
 	led_set(LED_MODE_STANDARD);
@@ -1040,7 +1054,7 @@ static void on_resistance_dec(void)
 			if (m_resistance_level > 0)
 			{
 				resistance_level_set(--m_resistance_level);
-				queue_resistance_ack(m_resistance_mode, m_resistance_level);
+				bp_queue_resistance_ack(m_resistance_mode, m_resistance_level);
 				led_set(LED_BUTTON_DOWN);
 			}
 			else
@@ -1055,7 +1069,7 @@ static void on_resistance_dec(void)
 			{
 				// Decrement by n watts;
 				m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
-				queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+				bp_queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 				led_set(LED_BUTTON_DOWN);
 			}
 			else
@@ -1078,7 +1092,7 @@ static void on_resistance_inc(void)
 			if (m_resistance_level < (RESISTANCE_LEVELS-1))
 			{
 				resistance_level_set(++m_resistance_level);
-				queue_resistance_ack(m_resistance_mode, m_resistance_level);
+				bp_queue_resistance_ack(m_resistance_mode, m_resistance_level);
 				led_set(LED_BUTTON_UP);
 			}
 			else
@@ -1091,7 +1105,7 @@ static void on_resistance_inc(void)
 		case RESISTANCE_SET_ERG:
 			// Increment by x watts;
 			m_sim_forces.erg_watts += ERG_ADJUST_LEVEL;
-			queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+			bp_queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 
 			led_set(LED_BUTTON_UP);
 			break;
@@ -1106,7 +1120,7 @@ static void on_resistance_max(void)
 	m_resistance_mode = RESISTANCE_SET_STANDARD;
 	m_resistance_level = RESISTANCE_LEVELS-1;
 	resistance_level_set(m_resistance_level);
-	queue_resistance_ack(m_resistance_mode, m_resistance_level);
+	bp_queue_resistance_ack(m_resistance_mode, m_resistance_level);
 
 	// Quick blink for feedback.
 	led_set(LED_BUTTON_UP);
@@ -1118,7 +1132,7 @@ static void on_button_menu(void)
 	// Start / stop TR whenever the middle button is pushed.
 	if ( SETTING_IS_SET(m_user_profile.settings, SETTING_ANT_TR_PAUSE_ENABLED) )
 	{
-		ant_bp_resistance_tx_send(RESISTANCE_START_STOP_TR, 0);
+		bp_queue_resistance_ack(RESISTANCE_START_STOP_TR, 0);
 	}
 
 	// Toggle between erg mode.
@@ -1129,7 +1143,7 @@ static void on_button_menu(void)
 		{
 			m_sim_forces.erg_watts = DEFAULT_ERG_WATTS;
 		}
-		queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		bp_queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
 
 		// Quick blink for feedback.
 		led_set(LED_MODE_ERG);
@@ -1330,7 +1344,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	}
 
 	// Send acknowledgment.
-	queue_resistance_ack(rc_evt.operation, (int16_t)*rc_evt.pBuffer);
+	bp_queue_resistance_ack(rc_evt.operation, (int16_t)*rc_evt.pBuffer);
 }
 
 // Invoked when a button is pushed on the remote control.
@@ -1454,7 +1468,9 @@ static void on_request_data(uint8_t* buffer)
 		case ANT_PAGE_GETSET_PARAMETERS:
 		case ANT_PAGE_MEASURE_OUTPUT:
 		case ANT_PAGE_BATTERY_STATUS:
-			queue_data_response(request);
+		case ANT_COMMON_PAGE_80:
+		case ANT_COMMON_PAGE_81:
+			bp_queue_data_response(request);
 			LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
 					request.descriptor[0],
 					request.tx_response);

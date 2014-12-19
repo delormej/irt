@@ -224,12 +224,12 @@ void ant_ctrl_device_avail_tx(uint8_t notifications)
 	if (event_count % product_page_interleave == 0)
 	{
 		// # Figures out which common message to submit at which time.
-		ANT_COMMON_PAGE_TRANSMIT(m_channel_id, ant_product_page);
+		ant_common_page_transmit(m_channel_id, ant_product_page);
 		event_count++;		// Always increment event counter.
 	}
 	else if (event_count % manufacturer_page_interleave == 0)
 	{
-		ANT_COMMON_PAGE_TRANSMIT(m_channel_id, ant_manufacturer_page);
+		ant_common_page_transmit(m_channel_id, ant_manufacturer_page);
 		event_count++;		// Always increment event counter.
 	}
 }

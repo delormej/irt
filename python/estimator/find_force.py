@@ -43,6 +43,19 @@ def xsl(xml_filename):
     except:
         print("Unexpected error:", sys.exc_info())
 
+def bike_science_func(v, k, Crr):
+	m = 72.57
+	return  ( k*(v**2) + (m * 9.81 * Crr) ) * v
+
+def fit_bike_science(x_new, x, y):
+	# convert x to meters per second from mph
+	x1 = x * 0.44704
+	x_new1 = x_new * 0.44704
+
+	pars, covar = spo.curve_fit(bike_science_func, x1, y, p0 = [0.3, 0.005])
+	print('bike', pars)
+	plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+')
+
 def bicycle_func(x, a, b):
 	x_mps = x * 0.44704
 	return a*x_mps**2+b # Force = K(V^2) + (mgCrr)
@@ -108,6 +121,8 @@ def speed_watt_median(data):
 
 	# calculate the polynomial
 	fit_poly2d(x_new, x, y)
+
+	fit_bike_science(x_new, x, y)
 
 	# calculate new x / y
 	#x_new = np.linspace(x[0], x[-1], len(x))
@@ -347,9 +362,12 @@ def main(input_file_name):
 		graph_file(input_file_name)
 		dir = os.path.dirname(os.path.realpath(input_file_name))
 
-	if (os.path.isdir(dir)):
-		plt.savefig(os.path.join(dir, 'slope.png'))
-		plt.show()
+	#if (os.path.isdir(dir)):
+	(fig_name, ext) = os.path.splitext(input_file_name)
+
+	#plt.savefig(os.path.join(dir, 'slope.png'))
+	plt.savefig(fig_name + '.png')
+	plt.show()
 
 if __name__ == "__main__":
 	if (len(sys.argv) > 2):

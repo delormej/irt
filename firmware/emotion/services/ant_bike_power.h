@@ -66,9 +66,9 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt);
 
 uint32_t ant_bp_battery_tx_send(irt_battery_status_t status);
 
-/**@brief	Sends a calibration response with 5 speed values encoded.
+/**@brief	Sends a calibration response.
  *
  */
-uint32_t ant_bp_calibration_speed_tx_send(uint8_t* flywheel_delta);
+uint32_t ant_bp_calibration_speed_tx_send(uint16_t time_2048, uint16_t* flywheel_ticks);
 
 #endif	// ANT_BIKE_POWER_H__

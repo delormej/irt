@@ -1,10 +1,9 @@
+import sys
+import os
 import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
 import scipy.optimize as spo, scipy.stats as stats 
-
-#input_file_name = "coastdown.csv"
-input_file_name = "C:\\Users\\Jason\\SkyDrive\\InsideRide\\Tech\\Ride Logs\\Paul Malan\\coastdown.csv"
 
 # fit to a 2nd degree polynomial
 def fit_poly2d(x_new, x, y):
@@ -41,35 +40,106 @@ def fit_linear(x_new, x, y):
 	plt.plot(x_new, x_new * slope + intercept, 'g')
 
 
-# load the csv file
-time, tick_delta = np.loadtxt(input_file_name, delimiter=',', skiprows=1,
-						dtype=[('ms', int), ('tick_delta', int)], usecols=[0, 2], unpack=True, comments='"')
+# returns the index of the last occurence of the maximum speed
+# which is where the deceleraton begins.
+def get_max_speed_idx(x):
+	# get occurences of x
+	occurences = np.where(x == x.max())
+	return max(occurences[0])
 
-# calculate new x/y to represent time in ms since 0 and speed in meters per second
-y = (time.max() - time) / 1000.0	# seconds until 0
-x = tick_delta * 20 * 0.1115/2		# meters per second
+def get_min_speed_idx(x):
+	# get the index of the first occurence of 1 tick delta
+	ix = np.where(x == 1)[0]
+	if (ix > 0):
+		return ix
+	else:
+		# return the last element
+		return len(x)
 
-# Set axis labels
-plt.xlabel('Speed (mps)')
-plt.ylabel('Coastdown Time (seconds)')
+def main(file_name):
+	#
+	# load the csv file
+	#
+	time, tick_delta = np.loadtxt(file_name, delimiter=',', skiprows=2,
+							dtype=[('ms', int), ('tick_delta', int)], usecols=[0, 2], unpack=True, comments='"')
 
-# plot actual values
-plt.plot(x, y)
-plt.ylim(ymin=0)
-plt.xlim(xmax=x.max())
+	# todo: add logic here to determine if you're using older than 1.4.3 that you use the old logic.
 
-# if I wanted to reverse the axis visualy, also need to adjust min/max for this.
-#plt.gca().invert_yaxis()
+	mps = np.empty(len(tick_delta))
+	seconds = np.empty(len(time))
+	mps[0] = 0;
+	seconds[0] = 0;
 
-# come up with even set of new x's - makes up for missing data points, etc...
-x_new = np.linspace(x[0], x[-1], len(x))
-fp = fit_power(x_new, x, y)
-f2d = fit_poly2d(x_new, x, y)
-fit_linear(x_new, x, y)
+	for idx, val in enumerate(tick_delta):
+		if (idx > 0):
+			if (val < tick_delta[idx-1]):
+				dt = val + (tick_delta[idx-1] ^ 0xFFFF)
+			else:
+				dt = val-tick_delta[idx-1]
 
-# print the formula
-plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
-plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
+			if (time[idx] < time[idx-1]):
+				ds = time[idx] + (time[idx-1] ^ 0xFFFF)
+			else:
+				ds = time[idx]-time[idx-1]
 
-# show the chart
-plt.show()
+			seconds[idx] = (ds/2048) + seconds[idx-1]
+			mps[idx] = (dt * 0.1115/2) / (ds/2048)
+
+	#for idx, val in enumerate(mps):
+	#	print(seconds[idx], mps[idx])
+
+	# get the max
+	#ix_max = get_max_speed_idx(tick_delta)
+	#ix_min = get_min_speed_idx(tick_delta)
+	#time = time[ix_max:ix_min]
+	#tick_delta = tick_delta[ix_max:ix_min]
+
+	ix_max = get_max_speed_idx(mps)
+	ix_min = get_min_speed_idx(mps)
+	seconds = seconds[ix_max:ix_min]
+	mps = mps[ix_max:ix_min]
+
+	# calculate new x/y to represent time in ms since 0 and speed in meters per second
+	y = (seconds.max() - seconds)	# seconds until min
+	x = mps #tick_delta * 20 * 0.1115/2		# meters per second
+
+	# get core parameters
+	speed_on_entry = x.max()
+	speed_on_exit = x.min()
+	duration = seconds.max() - seconds[0]
+	results = ("entry_mps = %s, exit_mps = %s, duration = %ss" % (speed_on_entry, speed_on_exit, duration))
+	print(results)
+
+	# Set axis labels
+	plt.xlabel('Speed (mps)')
+	plt.ylabel('Coastdown Time (seconds)')
+
+	# plot actual values
+	plt.plot(x, y)
+	plt.ylim(ymin=0)
+	plt.xlim(xmin=0, xmax=x.max())
+
+	# if I wanted to reverse the axis visualy, also need to adjust min/max for this.
+	#plt.gca().invert_yaxis()
+
+	# come up with even set of new x's - makes up for missing data points, etc...
+	x_new = np.linspace(x[0], x[-1], len(x))
+	fp = fit_power(x_new, x, y)
+	f2d = fit_poly2d(x_new, x, y)
+	fit_linear(x_new, x, y)
+
+	# print the formula
+	plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
+	plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
+	plt.text(x.max() * 0.05, y.max() * 0.85, results, fontsize=8)
+
+	# show and save the chart
+	(fig_name, ext) = os.path.splitext(file_name)
+	plt.savefig(fig_name + '.png')
+	plt.show()
+	
+if __name__ == "__main__":
+	if (len(sys.argv) > 2):
+		speed_col = int(sys.argv[2])
+	main(sys.argv[1])
+
