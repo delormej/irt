@@ -78,8 +78,7 @@
 		Trainer Road specific, from Wahoo Fitness
 
  ******************************************************************************/
-// Manufacturer-Specific pages (0xF0 - 0xFF).
-#define WF_ANT_RESPONSE_PAGE_ID              0xF0
+
 
 //
 #define WF_ANT_RESPONSE_FLAG                 0x80
@@ -532,11 +531,11 @@ void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
 	if (message_sequence % product_page_interleave == 0)
 	{			
 		// # Figures out which common message to submit at which time.
-		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_product_page);
+		ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_product_page);
 	}
 	else if (message_sequence % manufacturer_page_interleave == 0)
 	{
-		ANT_COMMON_PAGE_TRANSMIT(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
+		ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
 	}
 	else if (message_sequence % battery_page_interleave == 0)
 	{
@@ -604,16 +603,16 @@ uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 	return err_code;
 }
 
-uint32_t ant_bp_calibration_speed_tx_send(uint8_t* flywheel_delta)
+uint32_t ant_bp_calibration_speed_tx_send(uint16_t time_2048, uint16_t* flywheel_ticks)
 {
 	tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
 	tx_buffer[1] = 		ANT_BP_CAL_PARAM_RESPONSE;
-	tx_buffer[2] = 		m_event_count++;
-	tx_buffer[3] = 		flywheel_delta[0];
-	tx_buffer[4] = 		flywheel_delta[1];
-	tx_buffer[5] = 		flywheel_delta[2];
-	tx_buffer[6] = 		flywheel_delta[3];
-	tx_buffer[7] = 		flywheel_delta[4];
+	tx_buffer[2] = 		LOW_BYTE(time_2048);
+	tx_buffer[3] = 		HIGH_BYTE(time_2048);
+	tx_buffer[4] = 		LOW_BYTE(flywheel_ticks[0]);
+	tx_buffer[5] = 		HIGH_BYTE(flywheel_ticks[0]);
+	tx_buffer[6] = 		LOW_BYTE(flywheel_ticks[1]);
+	tx_buffer[7] = 		HIGH_BYTE(flywheel_ticks[1]);
 
 	return broadcast_message_transmit();
 }

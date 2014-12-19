@@ -28,6 +28,8 @@ namespace IRT_GUI
         const byte RESISTANCE_SET_BIKE_TYPE	        = 0x44; // Co-efficient of rolling resistance
         const byte RESISTANCE_SET_C                 = 0x45; // Wind resistance offset.
 
+        FirmwareRev m_firmwareRev;
+
         byte m_max_resistance_levels = 9;
         ushort m_min_servo_pos = 2000;
         ushort m_max_servo_pos = 700;
@@ -66,6 +68,8 @@ namespace IRT_GUI
         private List<double> m_SpeedList;
 
         private SimulateRefPower m_simRefPower = null;
+
+        private bool m_enteredDFU = false;  // Tracks whether we went into DFU or not.
 
         // Commands
         enum Command : byte
@@ -505,7 +509,14 @@ namespace IRT_GUI
         {
             if (m_calibration == null)
             {
-                m_calibration = new Calibration();
+                if (m_firmwareRev != null && m_firmwareRev.Build > 11)
+                {
+                    m_calibration = new Calibration12();
+                }
+                else
+                {
+                    m_calibration = new Calibration();
+                }
 
                 ExecuteOnUI(() =>
                 {
@@ -629,6 +640,48 @@ namespace IRT_GUI
             return avg;
         }
 
+        private void RestoreUserProfile()
+        {
+            // Restore parameters
+            UpdateStatus("Reconnected after DFU.");
+            m_enteredDFU = false;
+
+            var result = MessageBox.Show(
+                    "User profile settings are reset during firmware update.\r\n" +
+                    "Would you like to restore current user profile settings?",
+                    "Resuming from DFU",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question,
+                    MessageBoxDefaultButton.Button1);
+
+            if (result == System.Windows.Forms.DialogResult.Yes)
+            {
+                // Flag these as dirty
+                txtTotalWeight.Modified = true;
+                txtWheelSizeMm.Modified = true;
+
+                // Wrap this in a seperate thread.
+                //var t = new System.Threading.Thread(() =>
+                //{
+                    // Use last saved values to reprogram Crr, Weight, WheelSize & ServoOffset.
+                    UpdateStatus("Restoring user profile.");
+
+                    // Simulate pressing both of these buttons.
+                    btnServoOffset_Click(this, null);
+
+                    // Wait 1/2 second before pushing the next one.
+                    System.Threading.Thread.Sleep(500);
+                    btnCalibrationSet_Click(this, null);
+                    // Wait 1/2 second before pushing the next one.
+                    System.Threading.Thread.Sleep(500);
+
+                    btnSettingsSet_Click(this, null);
+                //});
+
+                //t.Start();
+            }
+        }
+
 
         void m_refPower_ChannelStatusChanged(ChannelStatus status)
         {
@@ -670,10 +723,20 @@ namespace IRT_GUI
                 switch (status)
                 {
                     case ChannelStatus.Closed:
-                        btnEmrSearch.Enabled = true;
-                        txtEmrDeviceId.Enabled = true;
-                        UpdateText(txtEmrDeviceId, 0);
-                        btnEmrSearch.Text = "Search";
+
+                        if (m_enteredDFU)
+                        {
+                            // Keep attempting to re-open the channel and restore parameters
+                            m_eMotion.ChannelParameters.DeviceNumber = m_EmrDeviceId;
+                            m_eMotion.TurnOn();
+                        }
+                        else
+                        {
+                            btnEmrSearch.Enabled = true;
+                            txtEmrDeviceId.Enabled = true;
+                            UpdateText(txtEmrDeviceId, 0);
+                            btnEmrSearch.Text = "Search";
+                        }
                         break;
 
                     case ChannelStatus.Searching:
@@ -686,6 +749,12 @@ namespace IRT_GUI
                         btnEmrSearch.Enabled = true;
                         UpdateText(btnEmrSearch, "Close");
                         txtEmrDeviceId.Enabled = false;
+
+                        if (m_enteredDFU)
+                        {
+                            RestoreUserProfile();
+                        }                        
+                        
                         break;
 
                     default:
@@ -856,8 +925,9 @@ namespace IRT_GUI
         {
             UpdateText(lblEmrSerialNo, arg1.SerialNumber.ToString("X"));
             
-            string firmwareRev = string.Format("{0}.{1}.{2}", 0, arg1.SoftwareRevision, arg1.SupplementalSoftwareRevision);
-            UpdateText(lblEmrFirmwareRev, firmwareRev);
+            m_firmwareRev = new FirmwareRev(arg1.SoftwareRevision, arg1.SupplementalSoftwareRevision);
+            
+            UpdateText(lblEmrFirmwareRev, m_firmwareRev);
         }
 
         void m_eMotion_ManufacturerIdentificationPageReceived(AntPlus.Profiles.Common.ManufacturerIdentificationPage arg1, uint arg2)
@@ -1192,6 +1262,10 @@ namespace IRT_GUI
             UpdateStatus("Sending DFU command, channel should disconnect.");
             // Todo: set some other kind of state / notification here.
             SendCommand(Command.SetDFUMode);
+
+            // Wait for status of channel to change, otherwise send the command again.
+
+            m_enteredDFU = true;
         }
 
         private void chkCharge_CheckedChanged(object sender, EventArgs e)
@@ -1403,6 +1477,7 @@ namespace IRT_GUI
                     m_requestingSettings = true;
 
                     List<SubPages> parameters = new List<SubPages>();
+                    parameters.Add(SubPages.Product);
                     parameters.Add(SubPages.TotalWeight);
                     parameters.Add(SubPages.WheelSize);
                     parameters.Add(SubPages.Settings);
@@ -1436,9 +1511,9 @@ namespace IRT_GUI
         {
             RequestDataMessage message = new RequestDataMessage();
 
-            if (subPage == SubPages.Battery)
+            if (subPage == SubPages.Battery || subPage == SubPages.Product || subPage == SubPages.Manufacturer)
             {
-                message.RequestedPage = (byte)SubPages.Battery;
+                message.RequestedPage = (byte)subPage;
             }
             else
             {

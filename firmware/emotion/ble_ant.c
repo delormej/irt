@@ -545,6 +545,18 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas)
 	}
 }
 
+//
+// Sends manufacturer and product pages.
+//
+void ant_common_page_transmit(uint8_t ant_channel, uint8_t* common_page)
+{
+	uint32_t err_code = sd_ant_broadcast_message_tx(ant_channel,
+										TX_BUFFER_SIZE,
+										common_page );
+	if (!(ANT_ERROR_AS_WARN(err_code)))
+		APP_ERROR_CHECK(err_code);
+}
+
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 {
 	// Initialize the product page.

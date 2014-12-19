@@ -11,61 +11,45 @@ namespace IRT_GUI
 {
     public partial class CalibrationForm : Form
     {
-
         public CalibrationForm()
         {
             InitializeComponent();
         }
 
-        public void Update(double mph, double ms, int watts, CalibrationFormState state)
+        public void UpdateValues(double seconds, double mph, ushort watts, Motion state)
         {
-            string instructions = "";
-
-            switch (state)
-            {
-                case CalibrationFormState.BelowSpeed:
-                    instructions = "Increase your speed...";
-                    break;
-                case CalibrationFormState.Stabilizing:
-                    instructions = "Stablize your speed...";
-                    break;
-                case CalibrationFormState.Ready:
-                    instructions = "Stop pedaling and coast...";
-                    break;
-                case CalibrationFormState.Coasting:
-                    instructions = "Coasting...";
-                    break;
-                case CalibrationFormState.Done:
-                    instructions = "Data Captured!";
-                    Exit();
-                    break;
-                default:
-                    instructions = "";
-                    break;
-            }
-
             Action a = () =>
             {
-                lblSeconds.Text = string.Format("{0:0.0}", ms / 1000.0f);
+                lblSeconds.Text = string.Format("{0:0.0}", seconds);
                 lblSpeed.Text = string.Format("{0:0.0}", mph);
-                lblInstructions.Text = instructions;
+                lblRefPower.Text = watts.ToString();
+                lblStable.Text = state.ToString();
+
+                if (state == Motion.Stable && seconds > 3.0f)
+                {
+                    lblSeconds.ForeColor = Color.Green;
+                }
+                else
+                {
+                    lblSeconds.ForeColor = SystemColors.ControlText;
+                }
+
+                lblStable.ForeColor = lblSeconds.ForeColor;
             };
 
-            this.BeginInvoke(a);
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(a);
+            }
+            else
+            {
+                a.Invoke();
+            }
         }
-
-        
 
         private void btnExit_Click(object sender, EventArgs e)
         {
             this.Close();
         }
-
-        public void Exit()
-        {
-            System.Threading.Thread.Sleep(1000);
-            this.Close();
-        }
-
     }
 }

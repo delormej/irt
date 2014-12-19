@@ -198,6 +198,10 @@ namespace IRT_GUI.IrtMessages
         Sleep = 27,          // Sets the device to go to sleep.
         SpeedDebug = 28,
         Features = 29,
+
+        // These are not actually subpages, they are pages in of themselves.
+        Manufacturer = 0x50,
+        Product = 0x51,
         Battery = 0x52
 
         // Should we send commands this way, i.e.:
