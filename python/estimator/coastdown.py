@@ -49,7 +49,7 @@ def get_max_speed_idx(x):
 
 def get_min_speed_idx(x):
 	# get the index of the first occurence of 1 tick delta
-	ix = np.where(x == 1)[0][0]
+	ix = np.where(x == 1)[0]
 	if (ix > 0):
 		return ix
 	else:
@@ -63,21 +63,51 @@ def main(file_name):
 	time, tick_delta = np.loadtxt(file_name, delimiter=',', skiprows=2,
 							dtype=[('ms', int), ('tick_delta', int)], usecols=[0, 2], unpack=True, comments='"')
 
+	# todo: add logic here to determine if you're using older than 1.4.3 that you use the old logic.
+
+	mps = np.empty(len(tick_delta))
+	seconds = np.empty(len(time))
+	mps[0] = 0;
+	seconds[0] = 0;
+
+	for idx, val in enumerate(tick_delta):
+		if (idx > 0):
+			if (val < tick_delta[idx-1]):
+				dt = val + (tick_delta[idx-1] ^ 0xFFFF)
+			else:
+				dt = val-tick_delta[idx-1]
+
+			if (time[idx] < time[idx-1]):
+				ds = time[idx] + (time[idx-1] ^ 0xFFFF)
+			else:
+				ds = time[idx]-time[idx-1]
+
+			seconds[idx] = (ds/2048) + seconds[idx-1]
+			mps[idx] = (dt * 0.1115/2) / (ds/2048)
+
+	#for idx, val in enumerate(mps):
+	#	print(seconds[idx], mps[idx])
+
 	# get the max
-	ix_max = get_max_speed_idx(tick_delta)
-	ix_min = get_min_speed_idx(tick_delta)
-	time = time[ix_max:ix_min]
-	tick_delta = tick_delta[ix_max:ix_min]
+	#ix_max = get_max_speed_idx(tick_delta)
+	#ix_min = get_min_speed_idx(tick_delta)
+	#time = time[ix_max:ix_min]
+	#tick_delta = tick_delta[ix_max:ix_min]
+
+	ix_max = get_max_speed_idx(mps)
+	ix_min = get_min_speed_idx(mps)
+	seconds = seconds[ix_max:ix_min]
+	mps = mps[ix_max:ix_min]
 
 	# calculate new x/y to represent time in ms since 0 and speed in meters per second
-	y = (time.max() - time) / 1000.0	# seconds until min
-	x = tick_delta * 20 * 0.1115/2		# meters per second
+	y = (seconds.max() - seconds)	# seconds until min
+	x = mps #tick_delta * 20 * 0.1115/2		# meters per second
 
 	# get core parameters
 	speed_on_entry = x.max()
 	speed_on_exit = x.min()
-	duration = time.max() - time[0]
-	results = ("entry_mps = %s, exit_mps = %s, duration = %ss" % (speed_on_entry, speed_on_exit, duration / 1000.0))
+	duration = seconds.max() - seconds[0]
+	results = ("entry_mps = %s, exit_mps = %s, duration = %ss" % (speed_on_entry, speed_on_exit, duration))
 	print(results)
 
 	# Set axis labels
