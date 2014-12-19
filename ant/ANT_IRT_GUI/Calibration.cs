@@ -11,13 +11,14 @@ namespace IRT_GUI
 {
     public class TickEvent
     {
-        const string format = "{0:g}, {1:g}, {2:g}, {3:g}, {4:g}";
+        const string format = "{0:g}, {1:g}, {2:g}, {3:g}, {4:g}, {5:g}";
 
         public long TimestampMS;
         public byte Sequence;
         public ushort TickDelta;
         public ushort Watts;
         public byte PowerEventCount;
+        public ushort AccumulatedPower;
 
         public override string ToString()
         {
@@ -26,7 +27,8 @@ namespace IRT_GUI
                 Sequence,
                 TickDelta, 
                 Watts,
-                PowerEventCount);
+                PowerEventCount,
+                AccumulatedPower);
         }
     }
 
@@ -156,6 +158,7 @@ namespace IRT_GUI
                 {
                     te.Watts = m_refPower.StandardPowerOnly.InstantaneousPower;
                     te.PowerEventCount = m_refPower.StandardPowerOnly.EventCount;
+                    te.AccumulatedPower = m_refPower.StandardPowerOnly.AccumulatedPower;
                 }
 
                 // Alternate between the two tick counts.
@@ -272,7 +275,7 @@ namespace IRT_GUI
 
             using (m_logFileWriter = new StreamWriter(filename))
             {
-                m_logFileWriter.WriteLine("timestamp_ms, count, ticks, watts, pwr_events");
+                m_logFileWriter.WriteLine("timestamp_ms, count, ticks, watts, pwr_events, accum_pwr");
 
                 foreach (var tick in m_tickEvents)
                 {
