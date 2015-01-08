@@ -43,9 +43,30 @@ def fit_linear(x_new, x, y):
 # returns the index of the last occurence of the maximum speed
 # which is where the deceleraton begins.
 def get_max_speed_idx(x):
-	# get occurences of x
+	# get the last occurence of max speed
 	occurences = np.where(x == x.max())
+	
+	#
+	# BEGIN -- trying to find where deceleration starts, but this doesn't work.
+	#
+	# from the max speed, iterate through the array to ensure speed is always going down
+	print("max: %s" % (max(occurences[0])))
+	ix = max(occurences[0])
+
+	# initial starting position of the maximum speed
+	max_pos = ix
+
+	for i in range(ix+1, len(x)):
+		print(i, x[i])
+		if (x[i] > x[i-1]):
+			max_pos = i
+	#return max_pos
+	#
+	# END --
+	#
+
 	return max(occurences[0])
+	
 
 def get_min_speed_idx(x):
 	# get the index of the first occurence of 1 tick delta
@@ -70,6 +91,8 @@ def main(file_name):
 	mps[0] = 0;
 	seconds[0] = 0;
 
+	# dt = delta ticks
+	# ds = delta seconds
 	for idx, val in enumerate(tick_delta):
 		if (idx > 0):
 			if (val < tick_delta[idx-1]):
@@ -85,19 +108,15 @@ def main(file_name):
 			seconds[idx] = (ds/2048) + seconds[idx-1]
 			mps[idx] = (dt * 0.1115/2) / (ds/2048)
 
-	#for idx, val in enumerate(mps):
-	#	print(seconds[idx], mps[idx])
-
-	# get the max
-	#ix_max = get_max_speed_idx(tick_delta)
-	#ix_min = get_min_speed_idx(tick_delta)
-	#time = time[ix_max:ix_min]
-	#tick_delta = tick_delta[ix_max:ix_min]
-
+	# get the max & min speeds
 	ix_max = get_max_speed_idx(mps)
 	ix_min = get_min_speed_idx(mps)
+
+	# slice to build a new array between min & max
 	seconds = seconds[ix_max:ix_min]
 	mps = mps[ix_max:ix_min]
+
+	print("Max speed was at ix: %s, min was at ix: %s" % ( time[ix_max-1], time[ix_min-1] ))
 
 	# calculate new x/y to represent time in ms since 0 and speed in meters per second
 	y = (seconds.max() - seconds)	# seconds until min
