@@ -97,6 +97,7 @@ def get_avg_watts(power, decel_idx):
 			start_idx = decel_idx-idx
 			break
 	
+	# return 0 if we didn't find a time 3 seconds back, likely not enough data
 	if (start_idx == 0):
 		return 0
 
