@@ -50,14 +50,14 @@ def get_max_speed_idx(x):
 	# BEGIN -- trying to find where deceleration starts, but this doesn't work.
 	#
 	# from the max speed, iterate through the array to ensure speed is always going down
-	print("max: %s" % (max(occurences[0])))
+	#print("max: %s" % (max(occurences[0])))
 	ix = max(occurences[0])
 
 	# initial starting position of the maximum speed
 	max_pos = ix
 
 	for i in range(ix+1, len(x)):
-		print(i, x[i])
+		#print(i, x[i])
 		if (x[i] > x[i-1]):
 			max_pos = i
 	#return max_pos
@@ -66,7 +66,6 @@ def get_max_speed_idx(x):
 	#
 
 	return max(occurences[0])
-	
 
 def get_min_speed_idx(x):
 	# get the index of the first occurence of 1 tick delta
@@ -77,12 +76,48 @@ def get_min_speed_idx(x):
 		# return the last element
 		return len(x)
 
+def get_avg_watts(power, decel_idx):
+	#
+	# Looks back 3 seconds and gets the average power from the deceleration point.
+	# power:	 nparray of (time, events, accumumulated power)
+	# decel_idx: index of where data starts to decelerate  
+	#
+	
+	# get the power event and accum_power of deceleration point
+	end_pwr_time = power[decel_idx, 0]
+	end_pwr_event = power[decel_idx, 1]
+	end_pwr = power[decel_idx, 2]
+
+	# go back 3 seconds
+	start_pwr_time = end_pwr_time - (2048 * 3) # 1/2048's of a second
+	start_idx = 0
+
+	for idx in range(0, decel_idx):
+		if (power[decel_idx-idx, 0] <= start_pwr_time):
+			start_idx = decel_idx-idx
+			break
+	
+	if (start_idx == 0):
+		return 0
+
+	# determine the count of power events
+	events = end_pwr_event - power[start_idx, 1]
+
+	# get the total accum power between the events
+	accum_power = end_pwr - power[start_idx, 2]
+
+	# calculate the average
+	avg_power = accum_power / events
+	
+	return avg_power
+
 def main(file_name):
 	#
 	# load the csv file
 	#
-	time, tick_delta = np.loadtxt(file_name, delimiter=',', skiprows=2,
-							dtype=[('ms', int), ('tick_delta', int)], usecols=[0, 2], unpack=True, comments='"')
+	time, tick_delta, events_pwr, accum_pwr = np.loadtxt(file_name, delimiter=',', skiprows=2,
+							dtype=[('ms', int), ('tick_delta', int), ('events', int), ('accum_pwr', int)], 
+							usecols=[0, 2, 4, 5], unpack=True, comments='"')
 
 	# todo: add logic here to determine if you're using older than 1.4.3 that you use the old logic.
 
@@ -111,6 +146,12 @@ def main(file_name):
 	# get the max & min speeds
 	ix_max = get_max_speed_idx(mps)
 	ix_min = get_min_speed_idx(mps)
+
+	# calculate the average power at point of deceleration
+	power = np.column_stack((time, events_pwr, accum_pwr))
+	avg_power = get_avg_watts(power, ix_max)
+	avg_power_text = "Average watts on entry: %s" % (avg_power)
+	print(avg_power_text)
 
 	# slice to build a new array between min & max
 	seconds = seconds[ix_max:ix_min]
@@ -151,6 +192,7 @@ def main(file_name):
 	plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
 	plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
 	plt.text(x.max() * 0.05, y.max() * 0.85, results, fontsize=8)
+	plt.text(x.max() * 0.05, y.max() * 0.80, avg_power_text, fontsize=8)
 
 	# show and save the chart
 	(fig_name, ext) = os.path.splitext(file_name)
