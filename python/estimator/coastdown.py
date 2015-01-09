@@ -30,7 +30,13 @@ def get_inertia_mass(entry_speed, exit_speed, time, avg_power):
 
 	return m
 
-def fit_bike_power(mass, coeff):
+# fit speed:power by drag & rolling resistance
+# returns K (drag), rr (rolling resistance)
+def fit_bike_power_by_drag_rr(mps, power):
+	pars, covar = spo.curve_fit(drag_rr_func, mps, power)
+	return pars[0], pars[1]
+
+def fit_bike_power_by_decel(mass, coeff):
 	#
 	# Fits the speed to bike power curve based on the coastdown.
 	# mass: intertia mass, exit_speed: last speed recorded at time 0
@@ -248,17 +254,14 @@ def main(file_name):
 	mass = get_inertia_mass(speed_on_entry, speed_on_exit, duration, avg_power)
 
 	# smooth out deceleration and get back a curve of speed (mps) to power (watts)
-	x_pwr, y_pwr = fit_bike_power(mass, coeff)
+	x_pwr, y_pwr = fit_bike_power_by_decel(mass, coeff)
 
-	# plot speed to power
-	plt.plot(x_pwr, y_pwr, 'bo')
+	# plot speed to power based on deceleration
+	plt.plot(x_pwr * 2.23694, y_pwr, 'bo')
 	
-	#print(drag_rr_func(9.366, 0.687515, 3.295688))
-
-	# fit speed:power to drag & rolling resistance model
-	pars, covar = spo.curve_fit(drag_rr_func, x_pwr, y_pwr)
-	plt.plot(x_pwr, drag_rr_func(x_pwr, *pars), 'r-')	
-	
+	# plot speed to power based on drag and rolling resistance
+	K, rr = fit_bike_power_by_drag_rr(x_pwr, y_pwr)
+	plt.plot(x_pwr * 2.23694, drag_rr_func(x_pwr, K, rr), 'r-')	
 	plt.show()
 
 	# print the formula
