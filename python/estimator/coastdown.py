@@ -7,6 +7,21 @@ import matplotlib.pyplot as plt
 import scipy.optimize as spo, scipy.stats as stats 
 
 
+def contact_patch():
+	# 'Using this method: http://bikeblather.blogspot.com/2013/02/tire-crr-testing-on-rollers-math.html
+	wheel_diameter_cm = 210.7 / math.pi
+	drum_diameter_cm = 26 / math.pi
+	patch = ((1/(1+ (wheel_diameter_cm/drum_diameter_cm)))**0.7)
+	
+	return patch
+
+# used to fit curve by drag (K) an rolling resistance (rr) variables
+# to return power in watts given speed (v) in mps
+def drag_rr_func(v, K, rr):
+	p = K * v**2 + ((v * rr) / contact_patch())
+
+	return p
+
 # F = ma, returns the inertia mass
 def get_inertia_mass(entry_speed, exit_speed, time, avg_power):
 	a = (entry_speed - exit_speed) / time
@@ -42,15 +57,6 @@ def fit_bike_power(mass, coeff):
 
 	# power for a given speed
 	pwr = mass * decel * x
-
-	"""
-	for idx in range(1, len(y)-1):
-		# for each point, calculate decceleration
-		decel = (x[idx] - min(x)) / (y[idx] - min(y))
-		force = mass * decel
-		power = force * x[idx]
-		print(x[idx] ,y[idx], power)
-	"""
 	
 	return x, pwr
 	
@@ -246,6 +252,13 @@ def main(file_name):
 
 	# plot speed to power
 	plt.plot(x_pwr, y_pwr, 'bo')
+	
+	#print(drag_rr_func(9.366, 0.687515, 3.295688))
+
+	# fit speed:power to drag & rolling resistance model
+	pars, covar = spo.curve_fit(drag_rr_func, x_pwr, y_pwr)
+	plt.plot(x_pwr, drag_rr_func(x_pwr, *pars), 'r-')	
+	
 	plt.show()
 
 	# print the formula
