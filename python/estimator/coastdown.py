@@ -284,6 +284,7 @@ def main(file_name):
 	#plt.xlim(xmax=x.max())
 
 	fdrag = "K: %s rr: %s" % (K, rr)
+	print(fdrag)
 
 	plt.text(10, y_pwr.max() * 0.90, fdrag, fontsize=8, color='r')
 	# turns grid lines on.
