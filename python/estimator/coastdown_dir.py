@@ -333,7 +333,9 @@ def compare_files(dir):
 			print("skipping")
 
 	# do a linear comparison
-	linear_y = x * 24.593 - 35.521
+	#linear_y = x * 24.593 - 35.521 # jason
+	#linear_y = x * 26.893 - 45.234 # john collins
+	linear_y = x * 22.785 - 30.907 # paul malan
 	plt.plot(x*2.23694, linear_y, 'y--')
 
 	plt.show()
