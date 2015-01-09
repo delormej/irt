@@ -286,6 +286,8 @@ def main(file_name):
 	fdrag = "K: %s rr: %s" % (K, rr)
 
 	plt.text(10, y_pwr.max() * 0.90, fdrag, fontsize=8, color='r')
+	# turns grid lines on.
+	#plt.grid(b=True, which='major', color='b', linestyle='-')
 
 	# show and save the chart
 	(fig_name, ext) = os.path.splitext(file_name)
