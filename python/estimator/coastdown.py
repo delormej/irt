@@ -22,6 +22,7 @@ def fit_bike_power(mass, coeff):
 	# coeff: coefficients a,b,c used for polynomial of speed to coastdown duration
 	#			where y = ax^2 + bx + c
 	#
+	# returns: x: speed (mps), y: power (watts)
 
 	# speed in mps
 	x = np.linspace(5 * 0.44704, 35 * 0.44704)
@@ -29,8 +30,15 @@ def fit_bike_power(mass, coeff):
 	# duration in seconds to coastdown from the speed
 	y = (coeff[0] * (x**2)) + (coeff[1] * x) + coeff[2]
 
+	min_x = min(x)
+	min_y = min(y)
+
+	# first element contains 0 value, so skip
+	x = x[1:]
+	y = y[1:]
+
 	# deceleration rate for a given speed
-	decel = (x - min(x)) / (y - min(y))
+	decel = (x - min_x) / (y - min_y)
 
 	# power for a given speed
 	pwr = mass * decel * x
@@ -43,11 +51,9 @@ def fit_bike_power(mass, coeff):
 		power = force * x[idx]
 		print(x[idx] ,y[idx], power)
 	"""
-	print (x[1:], pwr[1:])
-
-	plt.plot(x[1:], pwr[1:], 'bo')
-	plt.show()
-
+	
+	return x, pwr
+	
 # fit to a 2nd degree polynomial
 def fit_poly2d(x_new, x, y):
 	coefficients = np.polyfit(x, y, 2)
@@ -232,8 +238,15 @@ def main(file_name):
 	f2d, coeff = fit_poly2d(x_new, x, y)
 	fit_linear(x_new, x, y)
 
+	# get the mass in F=ma
 	mass = get_inertia_mass(speed_on_entry, speed_on_exit, duration, avg_power)
-	fit_bike_power(mass, coeff)
+
+	# smooth out deceleration and get back a curve of speed (mps) to power (watts)
+	x_pwr, y_pwr = fit_bike_power(mass, coeff)
+
+	# plot speed to power
+	plt.plot(x_pwr, y_pwr, 'bo')
+	plt.show()
 
 	# print the formula
 	#plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
