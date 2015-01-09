@@ -1,5 +1,6 @@
 import sys
 import os
+import math
 import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt
@@ -14,25 +15,38 @@ def get_inertia_mass(entry_speed, exit_speed, time, avg_power):
 
 	return m
 
-def fit_bike_power(mass, x, y):
+def fit_bike_power(mass, coeff):
 	#
 	# Fits the speed to bike power curve based on the coastdown.
 	# mass: intertia mass, exit_speed: last speed recorded at time 0
-	# x: speed (mps), y: time (seconds) to exit speed
+	# coeff: coefficients a,b,c used for polynomial of speed to coastdown duration
+	#			where y = ax^2 + bx + c
 	#
 
-	# create a new 1-d array for deceleration
-	# x_decel = np.empty(len(y))
+	# speed in mps
+	x = np.linspace(5 * 0.44704, 35 * 0.44704)
 
+	# duration in seconds to coastdown from the speed
+	y = (coeff[0] * (x**2)) + (coeff[1] * x) + coeff[2]
+
+	# deceleration rate for a given speed
+	decel = (x - min(x)) / (y - min(y))
+
+	# power for a given speed
+	pwr = mass * decel * x
+
+	"""
 	for idx in range(1, len(y)-1):
 		# for each point, calculate decceleration
 		decel = (x[idx] - min(x)) / (y[idx] - min(y))
 		force = mass * decel
 		power = force * x[idx]
 		print(x[idx] ,y[idx], power)
+	"""
+	print (x[1:], pwr[1:])
 
-	# Create a smooth x axis from 5 to 35 mph
-	#x_pwr = np.linspace(5, 35)
+	plt.plot(x[1:], pwr[1:], 'bo')
+	plt.show()
 
 # fit to a 2nd degree polynomial
 def fit_poly2d(x_new, x, y):
@@ -42,11 +56,11 @@ def fit_poly2d(x_new, x, y):
 	# y = ax^2 + bx + c
 	f = ("y = %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2]))
 	print(f)
-	plt.plot(x_new, ys, 'r--')
+#	plt.plot(x_new, ys, 'r--')
 	#plt.xlim(min(x_new), max(x_new))
 	
 	# return the text
-	return f
+	return f, coefficients
 
 def power_func(x, a, b):
 	#original: return a*(x**b) 
@@ -66,7 +80,7 @@ def fit_power(x_new, x, y):
 def fit_linear(x_new, x, y):
 	slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 	print("slope: %s intercept: %s" % (slope, intercept) )
-	plt.plot(x_new, x_new * slope + intercept, 'g')
+#	plt.plot(x_new, x_new * slope + intercept, 'g')
 
 
 # returns the index of the last occurence of the maximum speed
@@ -201,13 +215,13 @@ def main(file_name):
 	print(results)
 
 	# Set axis labels
-	plt.xlabel('Speed (mps)')
-	plt.ylabel('Coastdown Time (seconds)')
+#	plt.xlabel('Speed (mps)')
+#	plt.ylabel('Coastdown Time (seconds)')
 
 	# plot actual values
-	plt.plot(x, y)
-	plt.ylim(ymin=0)
-	plt.xlim(xmin=0, xmax=x.max())
+#	plt.plot(x, y)
+#	plt.ylim(ymin=0)
+#	plt.xlim(xmin=0, xmax=x.max())
 
 	# if I wanted to reverse the axis visualy, also need to adjust min/max for this.
 	#plt.gca().invert_yaxis()
@@ -215,22 +229,22 @@ def main(file_name):
 	# come up with even set of new x's - makes up for missing data points, etc...
 	x_new = np.linspace(x[0], x[-1], len(x))
 	#fp = fit_power(x_new, x, y)
-	f2d = fit_poly2d(x_new, x, y)
+	f2d, coeff = fit_poly2d(x_new, x, y)
 	fit_linear(x_new, x, y)
 
 	mass = get_inertia_mass(speed_on_entry, speed_on_exit, duration, avg_power)
-	fit_bike_power(mass, x, y)
+	fit_bike_power(mass, coeff)
 
 	# print the formula
 	#plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
-	plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
-	plt.text(x.max() * 0.05, y.max() * 0.85, results, fontsize=8)
-	plt.text(x.max() * 0.05, y.max() * 0.80, avg_power_text, fontsize=8)
+#	plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
+#	plt.text(x.max() * 0.05, y.max() * 0.85, results, fontsize=8)
+#	plt.text(x.max() * 0.05, y.max() * 0.80, avg_power_text, fontsize=8)
 
 	# show and save the chart
 	(fig_name, ext) = os.path.splitext(file_name)
-	plt.savefig(fig_name + '.png')
-	plt.show()
+#	plt.savefig(fig_name + '.png')
+#	plt.show()
 	
 if __name__ == "__main__":
 	if (len(sys.argv) > 2):
