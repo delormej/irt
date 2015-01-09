@@ -78,7 +78,7 @@ def fit_poly2d(x_new, x, y):
 	#plt.xlim(min(x_new), max(x_new))
 	
 	# return the text
-	return f, coefficients
+	return f, coefficients, ys
 
 def power_func(x, a, b):
 	#original: return a*(x**b) 
@@ -95,10 +95,12 @@ def fit_power(x_new, x, y):
 	print(f)
 	return f
 
+# fits linear slope/intercept and returns new x, y
 def fit_linear(x_new, x, y):
 	slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 	print("slope: %s intercept: %s" % (slope, intercept) )
 #	plt.plot(x_new, x_new * slope + intercept, 'g')
+	return x_new, x_new * slope + intercept
 
 
 # returns the index of the last occurence of the maximum speed
@@ -232,14 +234,17 @@ def main(file_name):
 	results = ("entry_mps = %s, exit_mps = %s, duration = %ss" % (speed_on_entry, speed_on_exit, duration))
 	print(results)
 
+	# first subplot
+	plt.subplot(2, 1, 1)
+
 	# Set axis labels
-#	plt.xlabel('Speed (mps)')
-#	plt.ylabel('Coastdown Time (seconds)')
+	plt.xlabel('Speed (mps)')
+	plt.ylabel('Coastdown Time (seconds)')
 
 	# plot actual values
-#	plt.plot(x, y)
-#	plt.ylim(ymin=0)
-#	plt.xlim(xmin=0, xmax=x.max())
+	plt.plot(x, y)
+	plt.ylim(ymin=0)
+	plt.xlim(xmin=0, xmax=x.max())
 
 	# if I wanted to reverse the axis visualy, also need to adjust min/max for this.
 	#plt.gca().invert_yaxis()
@@ -247,14 +252,26 @@ def main(file_name):
 	# come up with even set of new x's - makes up for missing data points, etc...
 	x_new = np.linspace(x[0], x[-1], len(x))
 	#fp = fit_power(x_new, x, y)
-	f2d, coeff = fit_poly2d(x_new, x, y)
-	fit_linear(x_new, x, y)
+	f2d, coeff, y_new = fit_poly2d(x_new, x, y)
+	plt.plot(x_new, y_new, 'r--')
 
+	x_lin, y_lin = fit_linear(x_new, x, y)
+	plt.plot(x_lin, y_lin, 'g')
+
+	# print the formula
+	#plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
+	plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
+	plt.text(x.max() * 0.05, y.max() * 0.85, results, fontsize=8)
+	plt.text(x.max() * 0.05, y.max() * 0.80, avg_power_text, fontsize=8)
+	
 	# get the mass in F=ma
 	mass = get_inertia_mass(speed_on_entry, speed_on_exit, duration, avg_power)
 
 	# smooth out deceleration and get back a curve of speed (mps) to power (watts)
 	x_pwr, y_pwr = fit_bike_power_by_decel(mass, coeff)
+
+	# 2nd subplot
+	plt.subplot(2, 1, 2)
 
 	# plot speed to power based on deceleration
 	plt.plot(x_pwr * 2.23694, y_pwr, 'bo')
@@ -262,18 +279,18 @@ def main(file_name):
 	# plot speed to power based on drag and rolling resistance
 	K, rr = fit_bike_power_by_drag_rr(x_pwr, y_pwr)
 	plt.plot(x_pwr * 2.23694, drag_rr_func(x_pwr, K, rr), 'r-')	
-	plt.show()
+	plt.ylabel('Power (watts)')
+	plt.xlabel('Speed (mph)')
+	#plt.xlim(xmax=x.max())
 
-	# print the formula
-	#plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
-#	plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
-#	plt.text(x.max() * 0.05, y.max() * 0.85, results, fontsize=8)
-#	plt.text(x.max() * 0.05, y.max() * 0.80, avg_power_text, fontsize=8)
+	fdrag = "K: %s rr: %s" % (K, rr)
+
+	plt.text(10, y_pwr.max() * 0.90, fdrag, fontsize=8, color='r')
 
 	# show and save the chart
 	(fig_name, ext) = os.path.splitext(file_name)
 #	plt.savefig(fig_name + '.png')
-#	plt.show()
+	plt.show()
 	
 if __name__ == "__main__":
 	if (len(sys.argv) > 2):
