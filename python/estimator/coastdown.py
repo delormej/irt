@@ -291,7 +291,7 @@ def main(file_name):
 
 	# show and save the chart
 	(fig_name, ext) = os.path.splitext(file_name)
-#	plt.savefig(fig_name + '.png')
+	plt.savefig(fig_name + '.png')
 	plt.show()
 	
 if __name__ == "__main__":
