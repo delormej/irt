@@ -14,20 +14,25 @@ def get_inertia_mass(entry_speed, exit_speed, time, avg_power):
 
 	return m
 
-def fit_bike_power(coastdown_coeff, mass):
+def fit_bike_power(mass, x, y):
 	#
 	# Fits the speed to bike power curve based on the coastdown.
+	# mass: intertia mass, exit_speed: last speed recorded at time 0
+	# x: speed (mps), y: time (seconds) to exit speed
 	#
 
+	# create a new 1-d array for deceleration
+	# x_decel = np.empty(len(y))
+
+	for idx in range(1, len(y)-1):
+		# for each point, calculate decceleration
+		decel = (x[idx] - min(x)) / (y[idx] - min(y))
+		force = mass * decel
+		power = force * x[idx]
+		print(x[idx] ,y[idx], power)
+
 	# Create a smooth x axis from 5 to 35 mph
-	x_pwr = np.linspace(5, 35)
-
-	# F = ma for a given speed
-	# power = f * v
-
-	# determine the rate of decceleration for a given speed
-
-	y_pwr =  x_pwr * 
+	#x_pwr = np.linspace(5, 35)
 
 # fit to a 2nd degree polynomial
 def fit_poly2d(x_new, x, y):
@@ -213,8 +218,11 @@ def main(file_name):
 	f2d = fit_poly2d(x_new, x, y)
 	fit_linear(x_new, x, y)
 
+	mass = get_inertia_mass(speed_on_entry, speed_on_exit, duration, avg_power)
+	fit_bike_power(mass, x, y)
+
 	# print the formula
-	plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
+	#plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
 	plt.text(x.max() * 0.05, y.max() * 0.90, f2d, fontsize=8, color='r')
 	plt.text(x.max() * 0.05, y.max() * 0.85, results, fontsize=8)
 	plt.text(x.max() * 0.05, y.max() * 0.80, avg_power_text, fontsize=8)
