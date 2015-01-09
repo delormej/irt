@@ -5,6 +5,30 @@ from scipy import signal
 import matplotlib.pyplot as plt
 import scipy.optimize as spo, scipy.stats as stats 
 
+
+# F = ma, returns the inertia mass
+def get_inertia_mass(entry_speed, exit_speed, time, avg_power):
+	a = (entry_speed - exit_speed) / time
+	f = avg_power / entry_speed
+	m = f / a
+
+	return m
+
+def fit_bike_power(coastdown_coeff, mass):
+	#
+	# Fits the speed to bike power curve based on the coastdown.
+	#
+
+	# Create a smooth x axis from 5 to 35 mph
+	x_pwr = np.linspace(5, 35)
+
+	# F = ma for a given speed
+	# power = f * v
+
+	# determine the rate of decceleration for a given speed
+
+	y_pwr =  x_pwr * 
+
 # fit to a 2nd degree polynomial
 def fit_poly2d(x_new, x, y):
 	coefficients = np.polyfit(x, y, 2)
@@ -185,7 +209,7 @@ def main(file_name):
 
 	# come up with even set of new x's - makes up for missing data points, etc...
 	x_new = np.linspace(x[0], x[-1], len(x))
-	fp = fit_power(x_new, x, y)
+	#fp = fit_power(x_new, x, y)
 	f2d = fit_poly2d(x_new, x, y)
 	fit_linear(x_new, x, y)
 
