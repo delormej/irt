@@ -17,19 +17,21 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <float.h>
 #include <windows.h>
 
-static float float_from_buffer(uint32_t* p_buffer)
+static float float_from_buffer(uint8_t* p_buffer)
 {
 	// Signed int contains the fraction, starting at byte 2.
 	// IEEE754 binary32 format for float.
 	// Sign 1 bit, exponent (8 bits), fraction (23 bits)
 	// 0 00000000 00000000000000000000000
 
-	bool sign = (*p_buffer) >> 31;
+	uint32_t* p_buf = (uint32_t*) p_buffer;
+
+	bool sign = (*p_buf) >> 31;
 
 	// mask out 23 least significant bits for the fraction value.
-	int32_t value = ((*p_buffer) & 0xFFFFFF); // | (sign << 31);
+	int32_t value = ((*p_buf) & 0xFFFFFF); // | (sign << 31);
 	// mask out most significant bits 2 - 8
-	uint8_t exponent = ((*p_buffer) & 0x7F000000) >> 24;
+	uint8_t exponent = ((*p_buf) & 0x7F000000) >> 24;
 
 	float fraction = value / pow(2, exponent);
 
@@ -49,7 +51,7 @@ int main(int argc, char *argv [])
 	//int32_t value = -5767294;
 	uint32_t value = ((1 << 31) | 5767294 | 385875968); /* 23 << 31 bits*/
 	printf("Original = %i\r\n", value);
-	float_from_buffer(&value);
+	float_from_buffer((uint8_t*)&value);
 
 	return 0;
 }
