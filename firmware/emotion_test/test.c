@@ -40,10 +40,10 @@ static float float_from_buffer(uint8_t* p_buffer)
 		fraction *= -1;
 	}
 
-	printf("val:%i, exp:%i, sign:%i, fraction:%.7f\r\n", 
+	printf("val:%i, exp:%i, sign:%i, fraction:%.7f\r\n",
 		value, exponent, sign, fraction);
 
-	return 0.0f;
+	return fraction;
 }
 
 int main(int argc, char *argv [])
@@ -52,14 +52,16 @@ int main(int argc, char *argv [])
 	buffer[0] = 0xF1; // Message ID
 	buffer[1] = 0xFF; // Placeholder
 
-	//int32_t value = -5767294;
+	// Manufacture an IEEE754 value representation.
+	// Create a signed value (negative), with exponent 23 and raw value.
 	uint32_t value = ((1 << 31) | 5767294 | 385875968); /* 23 << 31 bits*/
 	printf("Original = %i\r\n", value);
-	//float_from_buffer((uint8_t*)&value);
 
 	memcpy(&buffer[2], &value, sizeof(uint32_t));
 
-	float_from_buffer(buffer);
+	float result = float_from_buffer(buffer);
+
+	printf("result:%.7f\r\n", result);
 
 	return 0;
 }
