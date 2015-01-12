@@ -17,6 +17,37 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <float.h>
 #include <windows.h>
 
+static void float_to_buffer(float value, uint8_t* p_buffer)
+{
+	uint8_t i = 0;
+	float fractional;
+	float intpart;
+
+	//fractional = modf(value, &intpart);
+	//fractional = fractional * 2;
+
+	uint32_t exponent;
+
+	for (i = 0; i < 24; i++) // max bits to use are 23
+	{
+		exponent = pow(2, i);
+		fractional = modff(value * exponent, &intpart);
+		
+		// Keep going until fraction is 0 or we used all the bits.
+		if (fractional == 0)
+			break;
+	}
+
+	printf("exponent is: %i\r\n", i);
+
+	/*
+		modf stores the integer part in *integer-part, and returns the 
+		fractional part. For example, modf (2.5, &intpart) returns 0.5 and 
+		stores 2.0 into intpart.*/
+	
+
+}
+
 static float float_from_buffer(uint8_t* p_buffer)
 {
 	// Signed int contains the fraction, starting at byte 2.
@@ -49,12 +80,15 @@ static float float_from_buffer(uint8_t* p_buffer)
 int main(int argc, char *argv [])
 {
 	uint8_t buffer[8];
+	uint8_t buffer2[8]; // for reverse calc.
+
 	buffer[0] = 0xF1; // Message ID
 	buffer[1] = 0xFF; // Placeholder
 
 	// Manufacture an IEEE754 value representation.
 	// Create a signed value (negative), with exponent 23 and raw value.
-	uint32_t value = ((1 << 31) | 5767294 | 385875968); /* 23 << 31 bits*/
+	//uint32_t value = ((1 << 31) | 5767294 | 385875968); /* 23 << 31 bits*/
+	uint32_t value = (1 << 31) | 108 | (5 << 24);	// -3.375
 	printf("Original = %i\r\n", value);
 
 	memcpy(&buffer[2], &value, sizeof(uint32_t));
@@ -62,6 +96,8 @@ int main(int argc, char *argv [])
 	float result = float_from_buffer(buffer);
 
 	printf("result:%.7f\r\n", result);
+
+	float_to_buffer(result, buffer2);
 
 	return 0;
 }
