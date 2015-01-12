@@ -24,7 +24,7 @@ static float float_from_buffer(uint8_t* p_buffer)
 	// Sign 1 bit, exponent (8 bits), fraction (23 bits)
 	// 0 00000000 00000000000000000000000
 
-	uint32_t* p_buf = (uint32_t*) p_buffer;
+	uint32_t* p_buf = (uint32_t*) &p_buffer[2];
 
 	bool sign = (*p_buf) >> 31;
 
@@ -48,10 +48,18 @@ static float float_from_buffer(uint8_t* p_buffer)
 
 int main(int argc, char *argv [])
 {
+	uint8_t buffer[8];
+	buffer[0] = 0xF1; // Message ID
+	buffer[1] = 0xFF; // Placeholder
+
 	//int32_t value = -5767294;
 	uint32_t value = ((1 << 31) | 5767294 | 385875968); /* 23 << 31 bits*/
 	printf("Original = %i\r\n", value);
-	float_from_buffer((uint8_t*)&value);
+	//float_from_buffer((uint8_t*)&value);
+
+	memcpy(&buffer[2], &value, sizeof(uint32_t));
+
+	float_from_buffer(buffer);
 
 	return 0;
 }
