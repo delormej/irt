@@ -20,14 +20,22 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 static void float_to_buffer(float value, uint8_t* p_buffer)
 {
 	uint8_t i = 0;
+	bool sign;
 	float fractional;
 	float intpart;
-
-	//fractional = modf(value, &intpart);
-	//fractional = fractional * 2;
-
+	uint32_t binvalue;
 	uint32_t exponent;
 
+	//sign = *((uint32_t*)&value) >> 31;
+	sign = value < 0.0f;
+
+	// Strip the sign if it's negative.
+	if (sign)
+	{
+		value = value *-1;
+	}
+
+	// Determine the exponent size required.
 	for (i = 0; i < 24; i++) // max bits to use are 23
 	{
 		exponent = pow(2, i);
@@ -38,14 +46,17 @@ static void float_to_buffer(float value, uint8_t* p_buffer)
 			break;
 	}
 
-	printf("exponent is: %i\r\n", i);
+	binvalue = (sign << 31) | (i << 24) | (int32_t) intpart;
+
+	memcpy(&p_buffer[2], &binvalue, sizeof(uint32_t));
+
+	printf("f2b::sign is: %i, exponent is: %i, binvalue: %i, intpart:%i\r\n", 
+		sign, i, binvalue, (int32_t)intpart);
 
 	/*
 		modf stores the integer part in *integer-part, and returns the 
 		fractional part. For example, modf (2.5, &intpart) returns 0.5 and 
 		stores 2.0 into intpart.*/
-	
-
 }
 
 static float float_from_buffer(uint8_t* p_buffer)
@@ -98,6 +109,10 @@ int main(int argc, char *argv [])
 	printf("result:%.7f\r\n", result);
 
 	float_to_buffer(result, buffer2);
+
+	result = float_from_buffer(buffer2);
+
+	printf("result:%.7f\r\n", result);
 
 	return 0;
 }
