@@ -48,7 +48,7 @@ static void float_to_buffer(float value, uint8_t* p_buffer)
 			break;
 	}
 
-	binvalue = (sign << 31) | (i << 23) | (int32_t) intpart;
+	binvalue = (sign << 31) | (127+i << 23) | (int32_t) intpart;
 
 	memcpy(&p_buffer[2], &binvalue, sizeof(uint32_t));
 
@@ -77,7 +77,7 @@ static float float_from_buffer(uint8_t* p_buffer)
 	// mask out 23 least significant bits for the fraction value.
 	uint32_t value = ((*p_buf) & 0x7FFFFF); // | (sign << 31);
 	// mask out bits for the exponent and shift into an 8 bit int
-	uint8_t exponent = *p_buf >> 23;
+	uint8_t exponent = (*p_buf >> 23)-127;
 
 	float fraction = value / pow(2, exponent);
 
@@ -110,7 +110,8 @@ int main(int argc, char *argv [])
 	// Manufacture an IEEE754 value representation.
 	// Create a signed value (negative), with exponent 23 and raw value.
 	//uint32_t value = ((1 << 31) | 5767294 | 385875968); /* 23 << 31 bits*/
-	uint32_t value = (1 << 31) | 108 | (5 << 23);	// -3.375
+	// exponent has a 127 offset, you must subtract 127 from the value to get the exponent.
+	uint32_t value = (1 << 31) | 108 | (5+127 << 23);	// -3.375
 	printf("Original = %i\r\n", value);
 
 	memcpy(&buffer[2], &value, sizeof(uint32_t));
