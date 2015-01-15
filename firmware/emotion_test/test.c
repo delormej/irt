@@ -111,7 +111,9 @@ int main(int argc, char *argv [])
 	// Create a signed value (negative), with exponent 23 and raw value.
 	//uint32_t value = ((1 << 31) | 5767294 | 385875968); /* 23 << 31 bits*/
 	// exponent has a 127 offset, you must subtract 127 from the value to get the exponent.
-	uint32_t value = (1 << 31) | 108 | (5+127 << 23);	// -3.375
+	//uint32_t value = (1 << 31) | 108 | (5+127 << 23);	// -3.375
+	
+	uint32_t value = ((1 << 31) | 5767294 | (23+127 << 23)); /* 23 << 31 bits*/
 	printf("Original = %i\r\n", value);
 
 	memcpy(&buffer[2], &value, sizeof(uint32_t));
