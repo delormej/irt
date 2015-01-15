@@ -27,9 +27,9 @@ def get_inertia_mass(entry_speed, exit_speed, time, avg_power):
 	a = (entry_speed - exit_speed) / time
 	f = avg_power / entry_speed
 	
-	# If you need to hard code:
-	#a = ((18.3 * 0.44704) - exit_speed) / 4.28356
-	#f = 146 / (18.3 * 0.44704)
+	# If you need to hard code, uncomment and fill in these values:
+	#a = ((18.3 * 0.44704) - exit_speed) / 4.28356 # this is the time to decelerate from that speed
+	#f = 146 / (18.3 * 0.44704) # watts / mps
 	
 	m = f / a
 
@@ -296,6 +296,10 @@ def main(file_name):
 	x_pwr_lin = x_pwr
 	y_pwr_lin = x_pwr * pwr_slope + pwr_intercept
 	plt.plot(x_pwr_lin * 2.23694, y_pwr_lin, 'g--')
+
+	# uncomment to compare another linear equation:
+	#plt.plot(x_pwr_lin * 2.23694, x_pwr_lin * 20.707 - 19.976 , 'm--')
+
 	flin = "Slope: %i, Offset: %i" % (round(pwr_slope * 1000, 0), round(pwr_intercept * -1000,0))
 	fdrag = "K: %s rr: %s" % (K, rr)
 	print(fdrag)
