@@ -34,15 +34,17 @@ static void float_to_buffer(float value, uint8_t* p_buffer)
 	{
 		value = value *-1;
 	}
-
+	
 	// Determine the exponent size required.
 	for (i = 0; i < 24; i++) // max bits to use are 23
 	{
 		exponent = pow(2, i);
-		fractional = modff(value * exponent, &intpart);
 		
+		// Just get the fractional portion of a number
+		fractional = modff(value*exponent, &intpart);
+
 		// Keep going until fraction is 0 or we used all the bits.
-		if (fractional == 0)
+		if (fractional == 0.0f)
 			break;
 	}
 
@@ -102,6 +104,8 @@ int main(int argc, char *argv [])
 	uint32_t x = 0x8280006C;
 	uint8_t y = x >> 23;
 	printf("y==%u\r\n", y); */
+
+	printf("x==%.7f\r\n", fmod((1.0 * 1.0), 1.0));
 
 	// Manufacture an IEEE754 value representation.
 	// Create a signed value (negative), with exponent 23 and raw value.
