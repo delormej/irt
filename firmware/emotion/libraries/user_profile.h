@@ -13,6 +13,7 @@
 #define __USER_PROFILE_H__
 
 #include <stdint.h>
+#include <float.h>
 #include "pstorage.h"
 
 #define PROFILE_VERSION					6u	// Current version of the profile.
@@ -44,6 +45,8 @@
 #define SETTING_VALUE(SETTING) \
 	(SETTING & 0x7FFF)
 
+#define MAG_CALIBRATION_LEN				6				// 5th order polynomial which the magnet calibration is fit to.
+
 /**@brief	Servo positions available.
  */
 typedef struct servo_positions_s
@@ -67,7 +70,10 @@ typedef struct user_profile_s {
 	uint16_t	ca_reserved;				// Placeholder for another calibration value if necessary.
 	int16_t		servo_offset;				// Calibration offset for servo position.
 	servo_positions_t servo_positions;		// Servo positions (size should be 21 bytes)
-	uint8_t		reserved_2[7]; // (sizeof(servo_positions_t)+2) % 16];					// For block size alignment -- 16 bit alignment
+	float		ca_drag;					// Calibration co-efficient of drag which produces the "curve" from a coastdown.
+	float		ca_rr;						// Co-efficient of rolling resistance.
+	float		ca_magnet[MAG_CALIBRATION_LEN];	// 5th order polynomial for magnet calibration.
+	//uint8_t		reserved_2[7]; // (sizeof(servo_positions_t)+2) % 16];					// For block size alignment -- 16 bit alignment
 } user_profile_t;
 
 /**@brief Initializes access to storage. */

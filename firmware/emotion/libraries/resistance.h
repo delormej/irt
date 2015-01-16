@@ -10,6 +10,7 @@
 #define __RESISTANCE_H__
 
 #include <stdint.h>
+#include <float.h>
 #include "irt_common.h"
 #include "user_profile.h"
 

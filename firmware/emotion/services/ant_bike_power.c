@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "stdio.h"
+#include <stddef.h>
 #include "string.h"
 #include "app_util.h"
 #include "ant_bike_power.h"
@@ -12,6 +13,7 @@
 #include "ant_error.h"
 #include "app_error.h"
 #include "nordic_common.h"
+#include "user_profile.h"
 #include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
@@ -61,6 +63,7 @@
 
 #define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48									/** Message ID used when setting resistance via an ANT BURST. */
 #define ANT_BURST_MSG_ID_SET_POSITIONS	0x59									/** Message ID used when setting servo button stop positions via an ANT BURST. */
+#define ANT_BURST_MSG_ID_SET_MAGNET_CA	0x60									/** Message ID used when setting magnet calibration via an ANT BURST. */
 #define ACK_MESSAGE_RETRIES 		3
 #define ACK_MESSAGE_RETRY_DELAY 	5 										// milliseconds
 
@@ -102,7 +105,46 @@ static uint8_t tx_buffer[TX_BUFFER_SIZE];
 static ant_ble_evt_handlers_t* mp_evt_handlers;
 static uint8_t m_event_count;												// Shared event counter for all ANT BP messages.
 
-// TODO: Implement required calibration page.
+
+/**@brief	Parses a float from a byte stream with scale factor.
+ * 			This uses the standard IEEE 754 specification for binary32.
+ *
+ * 			NOTE: ANT doc section 15.3 for details on Scale Factor which
+ * 			is also supported by this same method, although the scale
+ * 			factor is sent in a different byte per the ANT spec, this
+ * 			supports each individual value have it's own exponent as per
+ * 			IEEE 754.
+ */
+static float float_from_buffer(uint8_t* p_buffer)
+{
+	// Signed int contains the fraction, starting at byte 2.
+	// IEEE754 binary32 format for float.
+	// Sign 1 bit, exponent (8 bits), fraction (23 bits)
+	// 0 00000000 00000000000000000000000
+	uint32_t* p_encoded = (uint32_t*) &p_buffer[2];
+
+	bool sign = (*p_encoded) >> 31;
+
+	// mask out 23 bits for the fractional value.
+	uint32_t fraction = ((*p_encoded) & 0x7FFFFF);
+
+	// mask out the exponent and shift into an 8 bit int
+	// exponent is transmitted with binary offset of 127
+	uint8_t exponent = (*p_encoded >> 23)-127;
+
+	// calculate the float value.
+	float value = fraction / pow(2, exponent);
+
+	if (sign)
+	{
+		value *= -1;
+	}
+
+	BP_LOG("[BP] float_from_buffer val:%i, exp:%i, sign:%i, fraction:%.7f\r\n",
+			fraction, exponent, sign, value);
+
+	return value;
+}
 
 static __INLINE uint32_t broadcast_message_transmit()
 {
@@ -263,14 +305,36 @@ static void process_servo_positions(servo_positions_t* p_pos, const uint8_t* p_b
 	}
 }
 
+/**@brief	Handles the burst packets that contain WAHOO resistance control
+ * 			operations.
+ *
+ */
+static void handle_burst_set_resistance(const uint8_t* p_buffer, uint8_t sequence)
+{
+	static rc_evt_t	resistance_evt; // resistance message
+
+	if (BURST_SEQ_FIRST_PACKET(sequence))
+	{
+		// Only uses first & last message, ignores the middle message.
+		memset(&resistance_evt, 0, sizeof(rc_evt_t));
+		resistance_evt.operation = (resistance_mode_t) p_buffer[4];
+	}
+	else if (BURST_SEQ_LAST_PACKET(sequence))
+	{
+		// Value for the operation exists in this message sequence.
+		resistance_evt.pBuffer = &p_buffer[3];
+		mp_evt_handlers->on_set_resistance(resistance_evt);
+	}
+}
+
 /**@brief	Handles the burst packets that contain the servo positions.
  *
  */
-static void handle_burst_set_positions(const uint8_t* p_buffer)
+static void handle_burst_set_positions(const uint8_t* p_buffer, uint8_t sequence)
 {
 	static servo_positions_t positions;
 
-	if (BURST_SEQ_FIRST_PACKET(p_buffer[2]))
+	if (BURST_SEQ_FIRST_PACKET(sequence))
 	{
 		// Initialize the struct, and the count.
 		memset(&positions, 0, sizeof(servo_positions_t));
@@ -279,7 +343,7 @@ static void handle_burst_set_positions(const uint8_t* p_buffer)
 		// This message will contain the first 3 positions.
 		process_servo_positions(&positions, &p_buffer[5], 0, 3);
 	}
-	else if (BURST_SEQ_LAST_PACKET(p_buffer[2]))
+	else if (BURST_SEQ_LAST_PACKET(sequence))
 	{
 		// Process last sequence.
 		process_servo_positions(&positions, &p_buffer[3], 7, 3);
@@ -294,6 +358,49 @@ static void handle_burst_set_positions(const uint8_t* p_buffer)
 	}
 }
 
+/**@brief	Handles the burst packets that contain magnet calibration.
+ *
+ */
+static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
+{
+	/*
+	 * 3 messages,
+	 * message 1: first two bytes contain message ID and magnet ID
+	 * 				bytes [2-5] contain binary32 float
+	 * message 2 & 3: contains two binary32 float values
+	 */
+
+	// 5 points of 5th order polynomial.
+	static float points[MAG_CALIBRATION_LEN];
+
+	if (BURST_SEQ_FIRST_PACKET(sequence))
+	{
+		// Initialize the struct, and the count.
+		memset(points, 0, sizeof(uint32_t)*MAG_CALIBRATION_LEN);
+
+		// Decode the first point.
+		points[0] = float_from_buffer(&p_buffer[2]);
+	}
+	else if (BURST_SEQ_LAST_PACKET(sequence))
+	{
+		// Decode last point.
+		points[4] = float_from_buffer(&p_buffer[0]);
+
+		// Notify & report out that we're done here.
+		if (mp_evt_handlers->on_set_magnet_calibration != NULL)
+		{
+			mp_evt_handlers->on_set_magnet_calibration(points, MAG_CALIBRATION_LEN);
+		}
+	}
+	else // 2nd message
+	{
+		// Just process positions.
+		points[1] = float_from_buffer(&p_buffer[0]);
+		points[2] = float_from_buffer(&p_buffer[4]);
+	}
+}
+
+
 /**@brief	Manages the state of a burst sequence which has 3 messages
  *			and starts with a byte that represent the type of message.
  */
@@ -302,59 +409,39 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 	static bool in_burst = false;
 	static uint8_t message_id = 0;
 
-	// TODO: for some reason, I can't seem to break these out into separate functions.
-	static rc_evt_t	resistance_evt; // resistance message
+	// Determine the burst sequence.
+	uint8_t sequence = BURST_SEQ_NUM(p_ant_evt->evt_buffer[2]);
 
-	if (BURST_SEQ_FIRST_PACKET(p_ant_evt->evt_buffer[2]))
+	if (BURST_SEQ_FIRST_PACKET(sequence))
 	{
 		// Flag that we'll be receiving multiple messages.
 		in_burst = true;
 		message_id = p_ant_evt->evt_buffer[3];
-
-		switch (message_id)
-		{
-			case ANT_BURST_MSG_ID_SET_RESISTANCE:
-				memset(&resistance_evt, 0, sizeof(rc_evt_t));
-				resistance_evt.operation = (resistance_mode_t) p_ant_evt->evt_buffer[4];
-				break;
-
-			case ANT_BURST_MSG_ID_SET_POSITIONS:
-				handle_burst_set_positions(p_ant_evt->evt_buffer);
-				break;
-
-			default:
-				BP_LOG("[BP] handle_burst WARN: unrecognized message_id: %i\r\n", message_id);
-				break;
-		}
 	}
-	else if (BURST_SEQ_LAST_PACKET(p_ant_evt->evt_buffer[2]) && in_burst)
+	else if (in_burst && BURST_SEQ_LAST_PACKET(sequence))
 	{
 		// Reset state.
 		in_burst = false;
-
-		switch (message_id)
-		{
-			case ANT_BURST_MSG_ID_SET_RESISTANCE:
-				// Value for the operation exists in this message sequence.
-				resistance_evt.pBuffer = &(p_ant_evt->evt_buffer[3]);
-				mp_evt_handlers->on_set_resistance(resistance_evt);
-				break;
-
-			case ANT_BURST_MSG_ID_SET_POSITIONS:
-				handle_burst_set_positions(p_ant_evt->evt_buffer);
-				break;
-
-			default:
-				BP_LOG("[BP] handle_burst WARN: unrecognized message_id: %i\r\n", message_id);
-				break;
-		}
 	}
-	else
+
+	// delegate to individual burst message handler.
+	switch (message_id)
 	{
-		if (message_id == ANT_BURST_MSG_ID_SET_POSITIONS)
-		{
-			handle_burst_set_positions(p_ant_evt->evt_buffer);
-		}
+		case ANT_BURST_MSG_ID_SET_RESISTANCE:
+			handle_burst_set_resistance(p_ant_evt->evt_buffer, sequence);
+			break;
+
+		case ANT_BURST_MSG_ID_SET_POSITIONS:
+			handle_burst_set_positions(p_ant_evt->evt_buffer, sequence);
+			break;
+
+		case ANT_BURST_MSG_ID_SET_MAGNET_CA:
+			handle_burst_magnet_calibration(p_ant_evt->evt_buffer, sequence);
+			break;
+
+		default:
+			BP_LOG("[BP] handle_burst WARN: unrecognized message_id: %i\r\n", message_id);
+			break;
 	}
 
 	/*BP_LOG("[BP]:handle_burst [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",

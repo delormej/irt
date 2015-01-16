@@ -57,9 +57,9 @@ extern ble_state_e irt_ble_ant_state;
  */
 #define BURST_LAST_PACKET						0x04
 #define BURST_SEQ_NUM(CHANNEL_BYTE) 			(CHANNEL_BYTE >> 5)
-#define BURST_SEQ_FIRST_PACKET(CHANNEL_BYTE) 	(BURST_SEQ_NUM(CHANNEL_BYTE) == 0x0)
-#define BURST_SEQ_LAST_PACKET(CHANNEL_BYTE) \
-	(BURST_SEQ_NUM(CHANNEL_BYTE) & BURST_LAST_PACKET) == BURST_LAST_PACKET
+#define BURST_SEQ_FIRST_PACKET(SEQ_NUM) 		(SEQ_NUM == 0x0)
+#define BURST_SEQ_LAST_PACKET(SEQ_NUM) \
+	(SEQ_NUM & BURST_LAST_PACKET) == BURST_LAST_PACKET
 
 typedef void(*ant_bp_evt_dfu_enable)(void);
 
@@ -78,6 +78,7 @@ typedef struct ant_ble_evt_handlers_s {
 	void (*on_request_data)(uint8_t* buffer);		// Device receives page (0x46) requesting data page.
 	void (*on_set_parameter)(uint8_t* buffer);		// Device receives page (0x02) with values to set.
 	void (*on_set_servo_positions)(servo_positions_t* positions); // Received command to set servo positions.
+	void (*on_set_magnet_calibration)(float* p_points, uint8_t length); // Received command to set servo magnet calibration.
 } ant_ble_evt_handlers_t;
 
 /**@brief	Represents Common Data Page 70.
