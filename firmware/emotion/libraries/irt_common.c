@@ -6,8 +6,11 @@
  *
  */
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <float.h>
+#include <math.h>
 #include "irt_common.h"
 #include "nrf_error.h"
 #include "nrf_soc.h"
@@ -24,6 +27,45 @@
 static irt_power_meas_t* 	mp_buf_power_meas;
 static uint8_t				m_buf_size;
 static uint8_t				m_fifo_index;
+
+/**@brief	Parses a float from a byte stream with scale factor.
+ * 			This uses the standard IEEE 754 specification for binary32.
+ *
+ * 			NOTE: ANT doc section 15.3 for details on Scale Factor which
+ * 			is also supported by this same method, although the scale
+ * 			factor is sent in a different byte per the ANT spec, this
+ * 			supports each individual value have it's own exponent as per
+ * 			IEEE 754.
+ */
+float float_from_buffer(uint32_t* p_encoded)
+{
+	// Signed int contains the fraction, starting at byte 2.
+	// IEEE754 binary32 format for float.
+	// Sign 1 bit, exponent (8 bits), fraction (23 bits)
+	// 0 00000000 00000000000000000000000
+	bool sign = *p_encoded >> 31;
+
+	// mask out 23 bits for the fractional value.
+	uint32_t fraction = *p_encoded & 0x7FFFFF;
+
+	// mask out the exponent and shift into an 8 bit int
+	// exponent is transmitted with binary offset of 127
+	uint8_t exponent = (*p_encoded >> 23)-127;
+
+	// calculate the float value.
+	float value = fraction / pow(2, exponent);
+
+	if (sign)
+	{
+		value *= -1;
+	}
+
+	CN_LOG("[CN] float_from_buffer encoded:%u, exp:%i, sign:%i, fraction:%i, value:%.7f\r\n",
+			*p_encoded, exponent, sign, fraction, value);
+
+	return value;
+}
+
 
 uint32_t irt_power_meas_fifo_init(uint8_t size)
 {

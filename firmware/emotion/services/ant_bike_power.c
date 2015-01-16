@@ -105,47 +105,6 @@ static uint8_t tx_buffer[TX_BUFFER_SIZE];
 static ant_ble_evt_handlers_t* mp_evt_handlers;
 static uint8_t m_event_count;												// Shared event counter for all ANT BP messages.
 
-
-/**@brief	Parses a float from a byte stream with scale factor.
- * 			This uses the standard IEEE 754 specification for binary32.
- *
- * 			NOTE: ANT doc section 15.3 for details on Scale Factor which
- * 			is also supported by this same method, although the scale
- * 			factor is sent in a different byte per the ANT spec, this
- * 			supports each individual value have it's own exponent as per
- * 			IEEE 754.
- */
-static float float_from_buffer(uint8_t* p_buffer)
-{
-	// Signed int contains the fraction, starting at byte 2.
-	// IEEE754 binary32 format for float.
-	// Sign 1 bit, exponent (8 bits), fraction (23 bits)
-	// 0 00000000 00000000000000000000000
-	uint32_t* p_encoded = (uint32_t*) &p_buffer[2];
-
-	bool sign = (*p_encoded) >> 31;
-
-	// mask out 23 bits for the fractional value.
-	uint32_t fraction = ((*p_encoded) & 0x7FFFFF);
-
-	// mask out the exponent and shift into an 8 bit int
-	// exponent is transmitted with binary offset of 127
-	uint8_t exponent = (*p_encoded >> 23)-127;
-
-	// calculate the float value.
-	float value = fraction / pow(2, exponent);
-
-	if (sign)
-	{
-		value *= -1;
-	}
-
-	BP_LOG("[BP] float_from_buffer val:%i, exp:%i, sign:%i, fraction:%.7f\r\n",
-			fraction, exponent, sign, value);
-
-	return value;
-}
-
 static __INLINE uint32_t broadcast_message_transmit()
 {
 	uint32_t err_code;
