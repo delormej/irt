@@ -67,29 +67,29 @@ static float float_from_buffer(uint8_t* p_buffer)
 	// IEEE754 binary32 format for float.
 	// Sign 1 bit, exponent (8 bits), fraction (23 bits)
 	// 0 00000000 00000000000000000000000
+	uint32_t* p_encoded = (uint32_t*) &p_buffer[2];
 
-	uint32_t* p_buf = (uint32_t*) &p_buffer[2];
+	bool sign = (*p_encoded) >> 31;
 
-	printf("got: %i\r\n", *p_buf);
+	// mask out 23 bits for the fractional value.
+	uint32_t fraction = ((*p_encoded) & 0x7FFFFF);
 
-	bool sign = (*p_buf) >> 31;
+	// mask out the exponent and shift into an 8 bit int
+	// exponent is transmitted with binary offset of 127
+	uint8_t exponent = (*p_encoded >> 23) - 127;
 
-	// mask out 23 least significant bits for the fraction value.
-	uint32_t value = ((*p_buf) & 0x7FFFFF); // | (sign << 31);
-	// mask out bits for the exponent and shift into an 8 bit int
-	uint8_t exponent = (*p_buf >> 23)-127;
-
-	float fraction = value / pow(2, exponent);
+	// calculate the float value.
+	float value = fraction / pow(2, exponent);
 
 	if (sign)
 	{
-		fraction *= -1;
+		value *= -1;
 	}
 
-	printf("val:%i, exp:%i, sign:%i, fraction:%.7f\r\n",
-		value, exponent, sign, fraction);
+	printf("[BP] float_from_buffer val:%i, exp:%i, sign:%i, fraction:%.7f\r\n",
+		fraction, exponent, sign, value);
 
-	return fraction;
+	return value;
 }
 
 int main(int argc, char *argv [])
