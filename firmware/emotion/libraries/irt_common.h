@@ -98,6 +98,8 @@ static bool __inline__ irt_feature_is_available(uint16_t feature)
 #define IRT_MSG_SUBPAGE_SLEEP				27u					// When set puts the device in lower power mode.
 #define IRT_MSG_SUBPAGE_DEBUG_SPEED			28u					// # of ticks to emulate at 4hz for debugging simulated speed.
 #define IRT_MSG_SUBPAGE_FEATURES			29u					// Configured features.
+#define IRT_MSG_SUBPAGE_DRAG				30u					// Co-efficient of drag factor for calibration.
+#define IRT_MSG_SUBPAGE_RR					31u					// Co-efficient of rolling resistance for calibration.
 
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 
@@ -197,6 +199,8 @@ irt_power_meas_t* 	irt_power_meas_fifo_next();
 irt_power_meas_t* 	irt_power_meas_fifo_first();
 irt_power_meas_t* 	irt_power_meas_fifo_last();
 
+/**@brief	Parses a float from a byte stream with scale factor.*/
+float float_from_buffer(uint32_t* p_encoded);
 
 /**@brief Stores features value on flash. */
 uint32_t features_store(uint32_t* value);

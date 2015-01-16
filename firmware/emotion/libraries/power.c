@@ -28,6 +28,8 @@ static float m_rr_force;
 static float m_ca_slope;			// calibration parameters
 static float m_ca_intercept;
 //static bool  m_use_big_mag;
+static user_profile_t* mp_profile;
+
 
 /* Calculates angular velocity based on wheel ticks and time.
 static float angular_vel_calc(uint8_t wheel_ticks, uint16_t period_2048)
@@ -178,6 +180,8 @@ void power_init(user_profile_t* p_profile, uint16_t default_crr)
 	//m_use_big_mag = FEATURE_AVAILABLE(FEATURE_BIG_MAG);
 	//PW_LOG("[PW] Use small mag?: %i\r\n", m_use_big_mag);
 
+	mp_profile = p_profile;
+
 	if (p_profile->ca_slope != 0xFFFF)
 	{
 		m_ca_slope = (p_profile->ca_slope / 1000.0f);
@@ -208,7 +212,19 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last, flo
 
 	servo = servo_force(p_current->servo_position);
 
-	if (m_ca_slope != 0xFFFF)
+	if (!isnan(mp_profile->ca_drag) && !isnan(mp_profile->ca_rr))
+	{
+		//PW_LOG("[PW] power_calc: We have ca_drag %.7f, ca_rr: %.7f\r\n",
+		//		mp_profile->ca_drag, mp_profile->ca_rr);
+		/*
+		 * Power equation = (K * v^2) + (v * rr)
+		 */
+		magoff_watts = (mp_profile->ca_drag * pow(p_current->instant_speed_mps, 2)) +
+				p_current->instant_speed_mps * mp_profile->ca_rr;
+
+		*p_rr_force = (magoff_watts / p_current->instant_speed_mps);
+	}
+	else if (m_ca_slope != 0xFFFF)
 	{
 		// return a calibrated value.
 

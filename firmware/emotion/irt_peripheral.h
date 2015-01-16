@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "battery.h"
 
 #define APP_TIMER_PRESCALER         0   /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_MAX_TIMERS        6   /**< Maximum number of simultaneously created timers. */
@@ -23,8 +24,8 @@ typedef struct peripheral_evt_s
 	void (*on_button_pbsw)(bool long_press);
 	void (*on_accelerometer_evt)(void);
 	void (*on_power_plug)(bool plugged_in);
-	void (*on_battery_result)(uint16_t);
-	void (*on_charge_status)(irt_charger_status_t);
+	void (*on_battery_result)(uint16_t battery_level);
+	void (*on_charge_status)(irt_charger_status_t status);
 } peripheral_evt_t;
 
 /**@brief	Sets the pins to wake the device from sleep.
