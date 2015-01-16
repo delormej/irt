@@ -322,17 +322,19 @@ namespace IRT_GUI
                 for (int i = 0; i < buffer.Length - 1; i++)
                 {
                     // Each one came at 50ms intervals.
-                    long timestamp = ms - ( 200 - (i*50) );
+                    long timestamp = ms - (200 - (i * 50));
 
                     if (timestamp < 0)
                         timestamp = 0;
 
-                    tick = new TickEvent() { 
-                        TimestampMS = timestamp, 
-                        Sequence = buffer[0], 
-                        TickDelta = buffer[1 + i], 
-                        Watts = watts, 
-                        PowerEventCount = pwrEventCount };
+                    tick = new TickEvent()
+                    {
+                        TimestampMS = timestamp,
+                        Sequence = buffer[0],
+                        TickDelta = buffer[1 + i],
+                        Watts = watts,
+                        PowerEventCount = pwrEventCount
+                    };
 
                     m_tickEvents.Add(tick);
                     //m_logFileWriter.WriteLine(tick);
@@ -376,7 +378,7 @@ namespace IRT_GUI
             var sum = last20.Sum(e => e.TickDelta);
 
             // Take into consideration that the first data point assumes it was read after 50ms of reading.
-            ms = (last20.Last().TimestampMS - events[events.Count()-5].TimestampMS) + 50;
+            ms = (last20.Last().TimestampMS - events[events.Count() - 5].TimestampMS) + 50;
 
             // double mph = (tickDelta * 20 * 0.11176 / 2) * 2.23694;
             double distance_M = (sum / 2.0f) * 0.11176f;
@@ -386,5 +388,50 @@ namespace IRT_GUI
 
             return mph;
         }
+
+        public static int EncodeFloat(float value)
+        {
+            int i = 0;
+            bool sign;
+            float fractional;
+            float intpart;
+            int binvalue;
+            int exponent;
+
+            //sign = *((uint32_t*)&value) >> 31;
+            sign = value < 0.0f;
+
+            // Strip the sign if it's negative.
+            if (sign)
+            {
+                value = value * -1;
+            }
+
+            // Determine the exponent size required.
+            for (i = 0; i < 24; i++) // max bits to use are 23
+            {
+                exponent = (int)Math.Pow(2, i);
+
+                // Just get the fractional portion of a number
+                fractional = modff(value * exponent, &intpart);
+
+                // Keep going until fraction is 0 or we used all the bits.
+                if (fractional == 0.0f)
+                    break;
+            }
+
+            binvalue = (sign << 31) | (127 + i << 23) | (int32_t)intpart;
+
+            memcpy(&p_buffer[2], &binvalue, sizeof(uint32_t));
+
+            printf("f2b::sign is: %i, exponent is: %i, binvalue: %i, intpart:%i\r\n",
+                sign, i, binvalue, (int32_t)intpart);
+
+            /*
+                modf stores the integer part in *integer-part, and returns the 
+                fractional part. For example, modf (2.5, &intpart) returns 0.5 and 
+                stores 2.0 into intpart.*/
+        }
+
     }
 }

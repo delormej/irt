@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "float.h"
+#include <float.h>
 #include "nordic_common.h"
 #include "nrf51.h"
 #include "softdevice_handler.h"
@@ -894,11 +894,11 @@ static void on_get_parameter(ant_request_data_page_t* p_request)
 			break;
 
 		case IRT_MSG_SUBPAGE_DRAG:
-			float_to_buffer(m_user_profile.ca_drag, &response);
+			float_to_buffer(m_user_profile.ca_drag, &response[0]);
 			break;
 
 		case IRT_MSG_SUBPAGE_RR:
-			float_to_buffer(m_user_profile.ca_rr, &response);
+			float_to_buffer(m_user_profile.ca_rr, &response[0]);
 			break;
 
 		default:
@@ -1521,6 +1521,11 @@ static void on_set_parameter(uint8_t* buffer)
 					sizeof(uint16_t));
 			LOG("[MAIN] Updated slope:%i intercept:%i \r\n",
 					m_user_profile.ca_slope, m_user_profile.ca_intercept);
+
+			// Remove drag & rr values as they will conflict.
+			m_user_profile.ca_drag = NAN;
+			m_user_profile.ca_rr = NAN;
+
 			// Reinitialize power.
 			power_init(&m_user_profile, DEFAULT_CRR);
 
@@ -1540,6 +1545,13 @@ static void on_set_parameter(uint8_t* buffer)
 			memcpy(&buffer_copy, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
 			m_user_profile.ca_rr = float_from_buffer( &buffer_copy );
 			LOG("[MAIN] on_set_parameter ca_rr:%.7f\r\n", m_user_profile.ca_rr);
+
+			if (!isnan(m_user_profile.ca_drag))
+			{
+				// If we've received both params, schedule a profile update.
+				profile_update_sched();
+			}
+
 			break;
 
 		case IRT_MSG_SUBPAGE_SERVO_OFFSET:

@@ -6,6 +6,7 @@
 *
 ********************************************************************************/
 
+#include <float.h>
 #include "power.h"
 #include "nrf_error.h"
 #include "app_error.h"
