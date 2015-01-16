@@ -66,6 +66,43 @@ float float_from_buffer(uint32_t* p_encoded)
 	return value;
 }
 
+/**@brief	Encodes a float as binary32 into a uint8_t* buffer for sending. */
+void float_to_buffer(float value, uint8_t* p_buffer)
+{
+	uint8_t i = 0;
+	bool sign;
+	float fractional;
+	float intpart;
+	uint32_t binvalue;
+	uint32_t exponent;
+
+	//sign = *((uint32_t*)&value) >> 31;
+	sign = value < 0.0f;
+
+	// Strip the sign if it's negative.
+	if (sign)
+	{
+		value = value *-1;
+	}
+
+	// Determine the exponent size required.
+	for (i = 0; i < 24; i++) // max bits to use are 23
+	{
+		exponent = pow(2, i);
+
+		// Just get the fractional portion of a number
+		fractional = modff(value * exponent, &intpart);
+
+		// Keep going until fraction is 0 or we used all the bits.
+		if (fractional == 0.0f)
+			break;
+	}
+
+	// Exponent is binary offset by 127.
+	binvalue = (sign << 31) | (127+i << 23) | (int32_t) intpart;
+
+	memcpy(p_buffer, &binvalue, sizeof(uint32_t));
+}
 
 uint32_t irt_power_meas_fifo_init(uint8_t size)
 {

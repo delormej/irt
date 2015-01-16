@@ -121,7 +121,7 @@ static void profile_update_pstorage_cb_handler(pstorage_handle_t *  p_handle,
                                   uint8_t *            p_data,
                                   uint32_t             data_len);
 
-static void send_data_page2(ant_request_data_page_t* p_request);
+static void on_get_parameter(ant_request_data_page_t* p_request);
 static void send_temperature();
 static void on_enable_dfu_mode();
 static void calibration_stop();
@@ -241,7 +241,7 @@ static bool dequeue_ant_response(void)
 				break;
 
 			default:
-				send_data_page2(&request);
+				on_get_parameter(&request);
 				break;
 		}
 
@@ -845,7 +845,7 @@ static void error_to_response(uint8_t* p_response)
 
 /**@brief	Sends data page 2 response.
  */
-static void send_data_page2(ant_request_data_page_t* p_request)
+static void on_get_parameter(ant_request_data_page_t* p_request)
 {
 	uint8_t subpage;
 	uint8_t response[6];
@@ -891,6 +891,14 @@ static void send_data_page2(ant_request_data_page_t* p_request)
 		case IRT_MSG_SUBPAGE_SERVO_POS:
 			// Start index is stored in descriptor[1]
 			servo_pos_to_response(p_request, response);
+			break;
+
+		case IRT_MSG_SUBPAGE_DRAG:
+			float_to_buffer(m_user_profile.ca_drag, &response);
+			break;
+
+		case IRT_MSG_SUBPAGE_RR:
+			float_to_buffer(m_user_profile.ca_rr, &response);
 			break;
 
 		default:
