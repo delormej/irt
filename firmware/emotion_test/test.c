@@ -61,14 +61,12 @@ static void float_to_buffer(float value, uint8_t* p_buffer)
 		stores 2.0 into intpart.*/
 }
 
-static float float_from_buffer(uint8_t* p_buffer)
-{
+static float float_from_buffer(uint32_t* p_encoded)
+{ 
 	// Signed int contains the fraction, starting at byte 2.
 	// IEEE754 binary32 format for float.
 	// Sign 1 bit, exponent (8 bits), fraction (23 bits)
 	// 0 00000000 00000000000000000000000
-	uint32_t* p_encoded = (uint32_t*) &p_buffer[2];
-
 	bool sign = (*p_encoded) >> 31;
 
 	// mask out 23 bits for the fractional value.
@@ -94,26 +92,18 @@ static float float_from_buffer(uint8_t* p_buffer)
 
 int main(int argc, char *argv [])
 {
+	/*
 	uint8_t buffer[8];
 	uint8_t buffer2[8]; // for reverse calc.
 
 	buffer[0] = 0xF1; // Message ID
 	buffer[1] = 0xFF; // Placeholder
 
-	/*int32_t x = -2105540500;
-	uint32_t x = 0x8280006C;
-	uint8_t y = x >> 23;
-	printf("y==%u\r\n", y); */
 
 	printf("x==%.7f\r\n", fmod((1.0 * 1.0), 1.0));
 
-	// Manufacture an IEEE754 value representation.
-	// Create a signed value (negative), with exponent 23 and raw value.
-	//uint32_t value = ((1 << 31) | 5767294 | 385875968); /* 23 << 31 bits*/
-	// exponent has a 127 offset, you must subtract 127 from the value to get the exponent.
-	//uint32_t value = (1 << 31) | 108 | (5+127 << 23);	// -3.375
 	
-	uint32_t value = ((1 << 31) | 5767294 | (23+127 << 23)); /* 23 << 31 bits*/
+	uint32_t value = ((1 << 31) | 5767294 | (23+127 << 23)); 
 	printf("Original = %i\r\n", value);
 
 	memcpy(&buffer[2], &value, sizeof(uint32_t));
@@ -125,8 +115,25 @@ int main(int argc, char *argv [])
 	float_to_buffer(result, buffer2);
 
 	result = float_from_buffer(buffer2);
-
+	
 	printf("result:%.7f\r\n", result);
+	*/
+	float f;
+	uint32_t value;
+	//printf("Enter float: ");
+	//scanf("%f", &f);
+	//f = 8.2319200f;
+	//printf("thanks, will process: %4.7f\r\n", f);
+	
+	//uint32_t value = 1335400207u;
+
+	//float_to_buffer(f, &f_buf);
+	//float fr = float_from_buffer(&value);
+	f = 15.19211f;
+	float_to_buffer(f, &value);
+
+	//printf("done, original: %.7f, result is: %.7f, %u\r\n", f, fr, f_buf);
+	printf("result is: %.7f, %u\r\n", f, value);
 
 	return 0;
 }
