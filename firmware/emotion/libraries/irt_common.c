@@ -76,7 +76,6 @@ void float_to_buffer(float value, uint8_t* p_buffer)
 	uint32_t binvalue;
 	uint32_t exponent;
 
-	//sign = *((uint32_t*)&value) >> 31;
 	sign = value < 0.0f;
 
 	// Strip the sign if it's negative.
