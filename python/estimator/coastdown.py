@@ -26,6 +26,11 @@ def drag_rr_func(v, K, rr):
 def get_inertia_mass(entry_speed, exit_speed, time, avg_power):
 	a = (entry_speed - exit_speed) / time
 	f = avg_power / entry_speed
+	
+	# If you need to hard code, uncomment and fill in these values:
+	#a = ((18.3 * 0.44704) - exit_speed) / 4.28356 # this is the time to decelerate from that speed
+	#f = 146 / (18.3 * 0.44704) # watts / mps
+	
 	m = f / a
 
 	return m
@@ -100,7 +105,8 @@ def fit_linear(x_new, x, y):
 	slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
 	print("slope: %s intercept: %s" % (slope, intercept) )
 #	plt.plot(x_new, x_new * slope + intercept, 'g')
-	return x_new, x_new * slope + intercept
+	#return x_new, x_new * slope + intercept
+	return slope, intercept
 
 
 # returns the index of the last occurence of the maximum speed
@@ -255,7 +261,9 @@ def main(file_name):
 	f2d, coeff, y_new = fit_poly2d(x_new, x, y)
 	plt.plot(x_new, y_new, 'r--')
 
-	x_lin, y_lin = fit_linear(x_new, x, y)
+	slope, intercept = fit_linear(x_new, x, y) 
+	x_lin = x_new
+	y_lin = x_new * slope + intercept
 	plt.plot(x_lin, y_lin, 'g')
 
 	# print the formula
@@ -283,10 +291,22 @@ def main(file_name):
 	plt.xlabel('Speed (mph)')
 	#plt.xlim(xmax=x.max())
 
+	# fit a linear equation to the power curve
+	pwr_slope, pwr_intercept = fit_linear(x_pwr, x_pwr, y_pwr)
+	x_pwr_lin = x_pwr
+	y_pwr_lin = x_pwr * pwr_slope + pwr_intercept
+	plt.plot(x_pwr_lin * 2.23694, y_pwr_lin, 'g--')
+
+	# uncomment to compare another linear equation:
+	#plt.plot(x_pwr_lin * 2.23694, x_pwr_lin * 20.707 - 19.976 , 'm--')
+
+	flin = "Slope: %i, Offset: %i" % (round(pwr_slope * 1000, 0), round(pwr_intercept * -1000,0))
 	fdrag = "K: %s rr: %s" % (K, rr)
 	print(fdrag)
 
 	plt.text(10, y_pwr.max() * 0.90, fdrag, fontsize=8, color='r')
+	plt.text(10, y_pwr.max() * 0.85, flin, fontsize=8, color='g')
+
 	# turns grid lines on.
 	#plt.grid(b=True, which='major', color='b', linestyle='-')
 
