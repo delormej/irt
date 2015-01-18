@@ -1637,7 +1637,7 @@ static void on_set_servo_positions(servo_positions_t* positions)
  * 			sent in length.
  *
  */
-static void on_set_magnet_calibration(float* p_points, uint8_t length)
+static void on_set_magnet_calibration(float* p_points, uint8_t calibration_type, uint8_t length)
 {
 	if (length != MAG_CALIBRATION_LEN)
 	{
@@ -1651,8 +1651,16 @@ static void on_set_magnet_calibration(float* p_points, uint8_t length)
 			p_points[0], p_points[1], p_points[2], p_points[3], p_points[4],
 			p_points[5]);
 
-	// Store in the user profile.
-	memcpy(&m_user_profile.ca_magnet, p_points, sizeof(float)*length);
+	if (calibration_type == MAG_CALIBRATION_FORCE2POS)
+	{
+		// Store in the user profile.
+		memcpy(&m_user_profile.ca_magnet_force, p_points, sizeof(float)*length);
+	}
+	else if (calibration_type == MAG_CALIBRATION_POS2FORCE)
+	{
+		// Store in the user profile.
+		memcpy(&m_user_profile.ca_magnet_pos, p_points, sizeof(float)*length);
+	}
 
 	//profile_update_sched();
 }

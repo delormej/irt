@@ -359,7 +359,9 @@ static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
 		// Notify & report out that we're done here.
 		if (mp_evt_handlers->on_set_magnet_calibration != NULL)
 		{
-			mp_evt_handlers->on_set_magnet_calibration(factors, MAG_CALIBRATION_LEN);
+			mp_evt_handlers->on_set_magnet_calibration(factors,
+					calibration_type,
+					MAG_CALIBRATION_LEN);
 		}
 	}
 	else
