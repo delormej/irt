@@ -323,10 +323,12 @@ static void handle_burst_set_positions(const uint8_t* p_buffer, uint8_t sequence
 static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
 {
 	/*
-	 * 3 messages,
-	 * message 1: first two bytes contain message ID and magnet ID
-	 * 				bytes [2-5] contain binary32 float
-	 * message 2 & 3: contains two binary32 float values
+	 * 6 factor values
+	 *
+	 * message 1: 	first two bytes contain message ID and calibration type
+	 * 					bytes [2-5] contain binary32 float
+	 * message 2-3: contains two binary32 float values
+	 * message 4: 	byte 0: contains final value
 	 */
 
 	// factors of 5th order polynomial.
