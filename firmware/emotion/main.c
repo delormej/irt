@@ -1647,7 +1647,7 @@ static void on_set_magnet_calibration(float* p_points, uint8_t calibration_type,
 		APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
 	}
 
-	LOG("[MAIN] on_set_magnet_calibration: %.7f, %.7f, %.7f, %.7f, %.7f, %.7f\r\n",
+	LOG("[MAIN] on_set_magnet_calibration: %.14f, %.14f, %.7f, %.7f, %.7f, %.7f\r\n",
 			p_points[0], p_points[1], p_points[2], p_points[3], p_points[4],
 			p_points[5]);
 

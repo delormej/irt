@@ -112,6 +112,10 @@ int main(int argc, char *argv [])
 	//f = 8.2319200f;
 	//printf("thanks, will process: %4.7f\r\n", f);
 	
+	f = 0.0000000000012401f;
+	printf("%.7f, %.14f\r\n", f, f);
+
+
 	//uint32_t value = 1335400207u;
 
 	//float_to_buffer(f, &f_buf);

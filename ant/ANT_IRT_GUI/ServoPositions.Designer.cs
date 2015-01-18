@@ -50,6 +50,7 @@
             this.btnMagnetCalibrationSet = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.btnMagnetCalibrationLoadDefaults = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgResistancePositions)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numResistancePositions)).BeginInit();
             this.tabControl1.SuspendLayout();
@@ -220,6 +221,7 @@
             // 
             // tabCalibration
             // 
+            this.tabCalibration.Controls.Add(this.btnMagnetCalibrationLoadDefaults);
             this.tabCalibration.Controls.Add(this.dgvPos2Force);
             this.tabCalibration.Controls.Add(this.dgvForce2Pos);
             this.tabCalibration.Controls.Add(this.label6);
@@ -311,7 +313,7 @@
             // 
             this.btnMagnetCalibrationSet.Location = new System.Drawing.Point(49, 399);
             this.btnMagnetCalibrationSet.Name = "btnMagnetCalibrationSet";
-            this.btnMagnetCalibrationSet.Size = new System.Drawing.Size(75, 35);
+            this.btnMagnetCalibrationSet.Size = new System.Drawing.Size(104, 35);
             this.btnMagnetCalibrationSet.TabIndex = 4;
             this.btnMagnetCalibrationSet.Text = "Set";
             this.btnMagnetCalibrationSet.UseVisualStyleBackColor = true;
@@ -336,6 +338,16 @@
             this.label4.Size = new System.Drawing.Size(145, 20);
             this.label4.TabIndex = 2;
             this.label4.Text = "Force to Position";
+            // 
+            // btnMagnetCalibrationLoadDefaults
+            // 
+            this.btnMagnetCalibrationLoadDefaults.Location = new System.Drawing.Point(49, 342);
+            this.btnMagnetCalibrationLoadDefaults.Name = "btnMagnetCalibrationLoadDefaults";
+            this.btnMagnetCalibrationLoadDefaults.Size = new System.Drawing.Size(104, 35);
+            this.btnMagnetCalibrationLoadDefaults.TabIndex = 8;
+            this.btnMagnetCalibrationLoadDefaults.Text = "Default";
+            this.btnMagnetCalibrationLoadDefaults.UseVisualStyleBackColor = true;
+            this.btnMagnetCalibrationLoadDefaults.Click += new System.EventHandler(this.btnMagnetCalibrationLoadDefaults_Click);
             // 
             // ServoPositions
             // 
@@ -388,5 +400,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridView dgvPos2Force;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private System.Windows.Forms.Button btnMagnetCalibrationLoadDefaults;
     }
 }

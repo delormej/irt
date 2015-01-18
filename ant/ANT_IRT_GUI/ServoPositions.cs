@@ -199,6 +199,31 @@ namespace IRT_GUI
             MagnetCalibrationSet(MagnetCalibrationType.Force2Position);
             MagnetCalibrationSet(MagnetCalibrationType.Position2Force);
         }
+
+        private void btnMagnetCalibrationLoadDefaults_Click(object sender, EventArgs e)
+        {
+            float[] force2Servo = {
+                -0.00000000000033469583f,
+				+0.00000000202071048200f,
+				-0.00000466916875500000f,
+				+0.00513145135800000000f,
+				-2.691480529f,
+				+562.4577135f };
+
+            float[] servo2Force = {
+					-0.0000000000012401f,
+					+0.0000000067486647f,
+					-0.0000141629606351f,
+					+0.0142639827784839f,
+					-6.92836459712442f,
+					+1351.463567618f };
+
+            for (int i = 0; i < 6; i++)
+            {
+                dgvPos2Force.Rows[i].Cells[0].Value = servo2Force[i];
+                dgvForce2Pos.Rows[i].Cells[0].Value = force2Servo[i];
+            }
+        }
     }
 
     public delegate void MagnetCalibrationEventHandler(object sender, MagnetCalibrationEventArgs e);
