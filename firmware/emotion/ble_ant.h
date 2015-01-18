@@ -53,9 +53,9 @@ extern ble_state_e irt_ble_ant_state;
 		(ERR == NRF_ANT_ERROR_TRANSFER_BUSY || \
 			ERR == NRF_ANT_ERROR_TRANSFER_IN_PROGRESS)
 
-/**@brief Macros for identifying ANT Burst Sequence.
+/**@brief Macros for identifying ANT Burst Sequence in upper 3 bits of channel byte.
  */
-#define BURST_LAST_PACKET						0x04
+#define BURST_LAST_PACKET						0x04				// 0b100 Flags last packet.
 #define BURST_SEQ_NUM(CHANNEL_BYTE) 			(CHANNEL_BYTE >> 5)
 #define BURST_SEQ_FIRST_PACKET(SEQ_NUM) 		(SEQ_NUM == 0x0)
 #define BURST_SEQ_LAST_PACKET(SEQ_NUM) \

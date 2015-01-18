@@ -329,33 +329,49 @@ static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
 	 * message 2 & 3: contains two binary32 float values
 	 */
 
-	// 5 points of 5th order polynomial.
-	static float points[MAG_CALIBRATION_LEN];
+	// factors of 5th order polynomial.
+	static float factors[MAG_CALIBRATION_LEN];
+
+	// Type of calibration Force to Position or Position to Force.
+	//static uint8_t calibration_type = 0;
+
+	// Running count of which factor we're on.
+	static uint8_t factor_index = 0;
 
 	if (BURST_SEQ_FIRST_PACKET(sequence))
 	{
+		//calibration_type = p_buffer[1];
+		factor_index = 0;
+
 		// Initialize the struct, and the count.
-		memset(points, 0, sizeof(uint32_t)*MAG_CALIBRATION_LEN);
+		memset(factors, 0, sizeof(uint32_t)*MAG_CALIBRATION_LEN);
 
 		// Decode the first point.
-		memcpy(&points[0], &p_buffer[2], sizeof(uint32_t));
+		memcpy(&factors[factor_index++], &p_buffer[2], sizeof(uint32_t));
 	}
 	else if (BURST_SEQ_LAST_PACKET(sequence))
 	{
 		// Decode last point.
-		memcpy(&points[4], &p_buffer[0], sizeof(uint32_t));
+		memcpy(&factors[factor_index], &p_buffer[0], sizeof(uint32_t));
 
 		// Notify & report out that we're done here.
 		if (mp_evt_handlers->on_set_magnet_calibration != NULL)
 		{
-			mp_evt_handlers->on_set_magnet_calibration(points, MAG_CALIBRATION_LEN);
+			mp_evt_handlers->on_set_magnet_calibration(factors, MAG_CALIBRATION_LEN);
 		}
 	}
-	else // 2nd message
+	else
 	{
-		// Just process positions.
-		memcpy(&points[1], &p_buffer[0], sizeof(uint32_t));
-		memcpy(&points[2], &p_buffer[4], sizeof(uint32_t));
+		if (factor_index+1 < MAG_CALIBRATION_LEN)
+		{
+			// Just process positions.
+			memcpy(&factors[factor_index++], &p_buffer[0], sizeof(uint32_t));
+			memcpy(&factors[factor_index++], &p_buffer[4], sizeof(uint32_t));
+		}
+		else
+		{
+			BP_LOG("[BP] handle_burst_magnet_calibration ERROR: Too many factors received.\r\n");
+		}
 	}
 }
 
@@ -371,6 +387,7 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 	// Determine the burst sequence.
 	uint8_t sequence = BURST_SEQ_NUM(p_ant_evt->evt_buffer[2]);
 
+	// First packet should always contain the identifying message Id.
 	if (BURST_SEQ_FIRST_PACKET(sequence))
 	{
 		// Flag that we'll be receiving multiple messages.
