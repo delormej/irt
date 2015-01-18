@@ -200,12 +200,6 @@ irt_power_meas_t* 	irt_power_meas_fifo_next();
 irt_power_meas_t* 	irt_power_meas_fifo_first();
 irt_power_meas_t* 	irt_power_meas_fifo_last();
 
-/**@brief	Parses a float from a byte stream with scale factor.*/
-float float_from_buffer(uint32_t* p_encoded);
-
-/**@brief	Encodes a float as binary32 into a uint8_t* buffer for sending. */
-void float_to_buffer(float value, uint8_t* p_buffer);
-
 /**@brief Stores features value on flash. */
 uint32_t features_store(uint32_t* value);
 

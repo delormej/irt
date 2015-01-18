@@ -395,6 +395,16 @@ namespace IRT_GUI
                     UpdateText(lblFeatures, features);
                     break;
 
+                case SubPages.Drag:
+                    UpdateStatus("Received Drag parameter.");
+                    UpdateText(txtDrag, BitConverter.ToSingle(buffer, 2));
+                    break;
+
+                case SubPages.RR:
+                    UpdateStatus("Received RR parameter.");
+                    UpdateText(txtRR, BitConverter.ToSingle(buffer, 2));
+                    break;
+
                 case SubPages.ServoPositions:
                     UpdateStatus("Received servo positions message. Max positions: " +
                         buffer[2]);
@@ -402,7 +412,9 @@ namespace IRT_GUI
 
                     goto default;
                 default:
-                    UpdateStatus(string.Format("Received Parameters page: {0} - [{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", m.SubPage,
+                    UpdateStatus(string.Format("Received Parameters page: {0} - " +
+                        "[{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", 
+                        m.SubPage,
                         buffer[2],
                         buffer[3],
                         buffer[4],
@@ -978,10 +990,14 @@ namespace IRT_GUI
 
         private bool SetParameter(byte subpage, UInt32 value)
         {
-            UpdateStatus(string.Format("Sending {0} parameter.", (SubPages)subpage));
-
             GetSetMessage message = new GetSetMessage(subpage);
             message.SetPayLoad(value);
+            return SetParameter(message);
+        }
+
+        private bool SetParameter(GetSetMessage message)
+        {
+            UpdateStatus(string.Format("Sending {0} parameter.", message.SubPage));
             var result = m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT);
             return (result == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
         }
@@ -2075,6 +2091,43 @@ namespace IRT_GUI
             {
                 m_simRefPower.Stop(true);
             }
+        }
+
+        private void btnCalibration2Set_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                float drag = float.Parse(txtDrag.Text);
+                float rr = float.Parse(txtRR.Text);
+                byte[] drag_buffer = BitConverter.GetBytes(drag);
+                byte[] rr_buffer = BitConverter.GetBytes(rr);
+
+                GetSetMessage dragMessage = new GetSetMessage(SubPages.Drag);
+                dragMessage.SetPayLoad(drag_buffer);
+                
+                if (!SetParameter(dragMessage))
+                {
+                    throw new Exception("Failed to set drag, please retry.");
+                }
+
+                GetSetMessage rrMessage = new GetSetMessage(SubPages.RR);
+                rrMessage.SetPayLoad(rr_buffer);
+
+                if (!SetParameter(rrMessage))
+                {
+                    throw new Exception("Failed to set rr, please retry.");
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatus("Error trying to set calibration: " + ex.Message);
+            }
+        }
+
+        private void btnCalibration2Get_Click(object sender, EventArgs e)
+        {
+            RequestDeviceParameter(SubPages.Drag);
+            RequestDeviceParameter(SubPages.RR);
         }
     }
 }

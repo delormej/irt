@@ -894,11 +894,11 @@ static void on_get_parameter(ant_request_data_page_t* p_request)
 			break;
 
 		case IRT_MSG_SUBPAGE_DRAG:
-			float_to_buffer(m_user_profile.ca_drag, &response[0]);
+			memcpy(&response, &m_user_profile.ca_drag, sizeof(uint32_t));
 			break;
 
 		case IRT_MSG_SUBPAGE_RR:
-			float_to_buffer(m_user_profile.ca_rr, &response[0]);
+			memcpy(&response, &m_user_profile.ca_rr, sizeof(uint32_t));
 			break;
 
 		default:
@@ -1494,8 +1494,6 @@ static void on_request_data(uint8_t* buffer)
  */
 static void on_set_parameter(uint8_t* buffer)
 {
-	uint32_t buffer_copy;	// I don't know why I need this, but it doesn't work without.
-
 	LOG("[MAIN]:set param message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 			buffer[0],
 			buffer[1],
@@ -1535,15 +1533,13 @@ static void on_set_parameter(uint8_t* buffer)
 
 		case IRT_MSG_SUBPAGE_DRAG:
 			// Update co-efficient of drag from calibration.
-			memcpy(&buffer_copy, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
-			m_user_profile.ca_drag = float_from_buffer( &buffer_copy );
+			memcpy(&m_user_profile.ca_drag, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
 			LOG("[MAIN] on_set_parameter ca_drag:%.7f\r\n", m_user_profile.ca_drag);
 			break;
 
 		case IRT_MSG_SUBPAGE_RR:
 			// Update co-efficient of rolling resistance from calibration.
-			memcpy(&buffer_copy, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
-			m_user_profile.ca_rr = float_from_buffer( &buffer_copy );
+			memcpy(&m_user_profile.ca_rr, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
 			LOG("[MAIN] on_set_parameter ca_rr:%.7f\r\n", m_user_profile.ca_rr);
 
 			if (!isnan(m_user_profile.ca_drag))

@@ -388,50 +388,5 @@ namespace IRT_GUI
 
             return mph;
         }
-
-        public static int EncodeFloat(float value)
-        {
-            int i = 0;
-            bool sign;
-            float fractional;
-            float intpart;
-            int binvalue;
-            int exponent;
-
-            //sign = *((uint32_t*)&value) >> 31;
-            sign = value < 0.0f;
-
-            // Strip the sign if it's negative.
-            if (sign)
-            {
-                value = value * -1;
-            }
-
-            // Determine the exponent size required.
-            for (i = 0; i < 24; i++) // max bits to use are 23
-            {
-                exponent = (int)Math.Pow(2, i);
-
-                // Just get the fractional portion of a number
-                fractional = modff(value * exponent, &intpart);
-
-                // Keep going until fraction is 0 or we used all the bits.
-                if (fractional == 0.0f)
-                    break;
-            }
-
-            binvalue = (sign << 31) | (127 + i << 23) | (int32_t)intpart;
-
-            memcpy(&p_buffer[2], &binvalue, sizeof(uint32_t));
-
-            printf("f2b::sign is: %i, exponent is: %i, binvalue: %i, intpart:%i\r\n",
-                sign, i, binvalue, (int32_t)intpart);
-
-            /*
-                modf stores the integer part in *integer-part, and returns the 
-                fractional part. For example, modf (2.5, &intpart) returns 0.5 and 
-                stores 2.0 into intpart.*/
-        }
-
     }
 }

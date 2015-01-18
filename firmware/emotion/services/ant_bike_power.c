@@ -338,12 +338,12 @@ static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
 		memset(points, 0, sizeof(uint32_t)*MAG_CALIBRATION_LEN);
 
 		// Decode the first point.
-		points[0] = float_from_buffer(&p_buffer[2]);
+		memcpy(&points[0], &p_buffer[2], sizeof(uint32_t));
 	}
 	else if (BURST_SEQ_LAST_PACKET(sequence))
 	{
 		// Decode last point.
-		points[4] = float_from_buffer(&p_buffer[0]);
+		memcpy(&points[4], &p_buffer[0], sizeof(uint32_t));
 
 		// Notify & report out that we're done here.
 		if (mp_evt_handlers->on_set_magnet_calibration != NULL)
@@ -354,8 +354,8 @@ static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
 	else // 2nd message
 	{
 		// Just process positions.
-		points[1] = float_from_buffer(&p_buffer[0]);
-		points[2] = float_from_buffer(&p_buffer[4]);
+		memcpy(&points[1], &p_buffer[0], sizeof(uint32_t));
+		memcpy(&points[2], &p_buffer[4], sizeof(uint32_t));
 	}
 }
 

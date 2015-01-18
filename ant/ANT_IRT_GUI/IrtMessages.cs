@@ -198,6 +198,8 @@ namespace IRT_GUI.IrtMessages
         Sleep = 27,          // Sets the device to go to sleep.
         SpeedDebug = 28,
         Features = 29,
+        Drag = 30,          // Co-efficient of drag for calibration.
+        RR = 31,            // Co-efficient of rolling resistance for calibration.
 
         // These are not actually subpages, they are pages in of themselves.
         Manufacturer = 0x50,
@@ -374,6 +376,14 @@ namespace IRT_GUI.IrtMessages
             m_payload[4] = (byte)((payload & 0x00FF0000) >> 16);
             m_payload[3] = (byte)((payload & 0x0000FF00) >> 8);
             m_payload[2] = (byte)payload;
+        }
+
+        public void SetPayLoad(byte[] payload)
+        {
+            m_payload[5] = payload[3];
+            m_payload[4] = payload[2];
+            m_payload[3] = payload[1];
+            m_payload[2] = payload[0];
         }
 
         public byte[] AsBytes()

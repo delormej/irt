@@ -29,18 +29,18 @@ float float_from_buffer(uint32_t* p_encoded)
 	uint32_t fraction = *p_encoded & 0x7FFFFF;
 
 	// mask out the exponent and shift into an 8 bit int
-	// exponent is transmitted with binary offset of 127
-	uint8_t exponent = (*p_encoded >> 23) - 127;
+	uint8_t exponent = (*p_encoded & 0x7F800000 >> 23);
 
+	// exponent is transmitted with binary offset of 127
 	// calculate the float value.
-	float value = fraction / pow(2, exponent);
+	float value = fraction / pow(2, exponent - 127);
 
 	if (sign)
 	{
 		value *= -1;
 	}
 
-	printf("[CN] float_from_buffer encoded:%u, exp:%i, sign:%i, fraction:%i, value:%.7f\r\n",
+	printf("ffb= encoded:%u, exp:%i, sign:%i, fraction:%i, value:%.7f\r\n",
 		*p_encoded, exponent, sign, fraction, value);
 
 	return value;
@@ -52,9 +52,7 @@ void float_to_buffer(float value, uint8_t* p_buffer)
 	uint8_t exp = 0;
 	bool sign;
 	float fractional;
-	float intpart;
-	uint32_t binvalue;
-	uint32_t exponent;
+	uint32_t encoded;
 
 	sign = value < 0.0f;
 
@@ -64,25 +62,18 @@ void float_to_buffer(float value, uint8_t* p_buffer)
 		value = value *-1;
 	}
 
-	// Determine the exponent size required.
-	for (exp = 0; exp < 24; exp++) // max bits to use are 23
-	{
-		exponent = pow(2, exp);
-
-		// Just get the fractional portion of a number
-		fractional = modff(value * exponent, &intpart);
-
-		// Keep going until fraction is 0 or we used all the bits.
-		if (fractional == 0.0f)
-			break;
-	}
+	while (modff(value * pow(2, exp), &fractional) > 0.0f || exp >= 23)
+		exp++;
 
 	// Exponent is binary offset by 127.
 	exp += 127;
 
-	binvalue = (sign << 31) | (exp << 15) | (int32_t) intpart;
+	encoded = (uint32_t) fractional; // | (exp << 23); // | sign << 31;
 
-	memcpy(p_buffer, &binvalue, sizeof(uint32_t));
+	printf("f2b= encoded:%u, exp:%u, sign:%i, fraction:%u\r\n",
+		encoded, exp, sign, (uint32_t) fractional);
+
+	memcpy(p_buffer, &encoded, sizeof(uint32_t));
 }
 
 
@@ -128,18 +119,17 @@ int main(int argc, char *argv [])
 	f = 17.53709547f;
 	//f = 15.19211f;
 
-	float_to_buffer(f, &value);
+	float_to_buffer(f, (uint8_t*)&value);
 	f2 = float_from_buffer(&value);
 	
 	//printf("done, original: %.7f, result is: %.7f, %u\r\n", f, fr, f_buf);
-	printf("result is: %.7f, %u, inverse:%.7f\r\n", f, value, f2);
+	printf("result= original:%.7f, encoded:%u, inverse:%.7f\r\n", f, value, f2);
 
-	uint8_t exp = 23 + 127;
+	uint32_t encoded_f = *((uint32_t*) &f);
+	float decoded_f = *((float*) &encoded_f);
 
-	// 150 == 0000 0000 x000 0000 0000 0000 1001 0110
-	// 10010110
-	printf("test: %u, %u\r\n", exp, exp << 15);
-
+	printf("original: %.7f, encoded: %u, reversed: %.7f\r\n",
+		f, encoded_f, decoded_f);
 
 	return 0;
 }
