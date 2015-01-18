@@ -1654,7 +1654,7 @@ static void on_set_magnet_calibration(float* p_points, uint8_t length)
 	// Store in the user profile.
 	memcpy(&m_user_profile.ca_magnet, p_points, sizeof(float)*length);
 
-	profile_update_sched();
+	//profile_update_sched();
 }
 
 /**@brief	Called when a charge status has been indicated.

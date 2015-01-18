@@ -335,26 +335,26 @@ static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
 	static float factors[MAG_CALIBRATION_LEN];
 
 	// Type of calibration Force to Position or Position to Force.
-	//static uint8_t calibration_type = 0;
+	static uint8_t calibration_type = 0;
 
 	// Running count of which factor we're on.
 	static uint8_t factor_index = 0;
 
 	if (BURST_SEQ_FIRST_PACKET(sequence))
 	{
-		//calibration_type = p_buffer[1];
+		calibration_type = p_buffer[4];
 		factor_index = 0;
 
 		// Initialize the struct, and the count.
-		memset(factors, 0, sizeof(uint32_t)*MAG_CALIBRATION_LEN);
+		memset(factors, 0, sizeof(float)*MAG_CALIBRATION_LEN);
 
 		// Decode the first point.
-		memcpy(&factors[factor_index++], &p_buffer[2], sizeof(uint32_t));
+		memcpy(&factors[factor_index++], &p_buffer[5], sizeof(float));
 	}
 	else if (BURST_SEQ_LAST_PACKET(sequence))
 	{
 		// Decode last point.
-		memcpy(&factors[factor_index], &p_buffer[0], sizeof(uint32_t));
+		memcpy(&factors[factor_index], &p_buffer[2], sizeof(float));
 
 		// Notify & report out that we're done here.
 		if (mp_evt_handlers->on_set_magnet_calibration != NULL)
@@ -367,8 +367,8 @@ static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
 		if (factor_index+1 < MAG_CALIBRATION_LEN)
 		{
 			// Just process positions.
-			memcpy(&factors[factor_index++], &p_buffer[0], sizeof(uint32_t));
-			memcpy(&factors[factor_index++], &p_buffer[4], sizeof(uint32_t));
+			memcpy(&factors[factor_index++], &p_buffer[2], sizeof(float));
+			memcpy(&factors[factor_index++], &p_buffer[6], sizeof(float));
 		}
 		else
 		{
@@ -422,7 +422,7 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 			break;
 	}
 
-	/*BP_LOG("[BP]:handle_burst [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+	BP_LOG("[BP]:handle_burst [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 			p_ant_evt->evt_buffer[0],
 			p_ant_evt->evt_buffer[1],
 			p_ant_evt->evt_buffer[2],
@@ -431,7 +431,7 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 			p_ant_evt->evt_buffer[5],
 			p_ant_evt->evt_buffer[6],
 			p_ant_evt->evt_buffer[7],
-			p_ant_evt->evt_buffer[8]);*/
+			p_ant_evt->evt_buffer[8]);
 }
 
 /**@brief	Handles WAHOO API specific commands.
