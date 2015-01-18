@@ -45,7 +45,9 @@
 #define SETTING_VALUE(SETTING) \
 	(SETTING & 0x7FFF)
 
-#define MAG_CALIBRATION_LEN				6				// 5th order polynomial which the magnet calibration is fit to.
+#define MAG_CALIBRATION_LEN				6				// Elements in a 5th order polynomial which the magnet calibration is fit to.
+#define MAG_CALIBRATION_FORCE2POS		0				// Polynomial for force to position calc.
+#define MAG_CALIBRATION_POS2FORCE		1				// Polynmoinal for position to force calc.
 
 /**@brief	Servo positions available.
  */

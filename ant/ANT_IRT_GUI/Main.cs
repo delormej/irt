@@ -20,8 +20,10 @@ namespace IRT_GUI
 {
     public partial class frmIrtGui : Form
     {
+        const byte ANT_BURST_MSG_ID_SET_MAGNET_CA   = 0x60;
         const byte ANT_BURST_MSG_ID_SET_POSITIONS   = 0x59;
         const byte ANT_BURST_MSG_ID_SET_RESISTANCE  = 0x48;
+        
         const byte RESISTANCE_SET_SLOPE		        = 0x46;
 	    const byte RESISTANCE_SET_WIND			    = 0x47;
         const byte RESISTANCE_SET_WHEEL_CR          = 0x48;
@@ -1867,6 +1869,8 @@ namespace IRT_GUI
             try
             {
                 ServoPositions pos = new ServoPositions(m_min_servo_pos, m_max_servo_pos, AdminEnabled);
+                pos.SetMagnetCalibration += OnSetMagnetCalibration;
+
                 if (m_positions != null)
                 {
                     pos.Positions.Clear();
@@ -1896,6 +1900,61 @@ namespace IRT_GUI
             {
                 UpdateStatus("Error occurred in setting servo positions: " + ex.Message);
             }
+        }
+
+        // Handles setting servo magnet calibration polynomial for both the Force to Position
+        // calculation and the Position to Force calculation.
+        void OnSetMagnetCalibration(object sender, MagnetCalibrationEventArgs e)
+        {
+            // 6 float elements.
+            const byte FACTOR_COUNT = 6;
+            const byte BUFFER_SIZE = 8 * 4; // 4 messages @ 8 bytes per mesage 
+
+            byte index = 0;
+
+            // Byte0 = 0x60 // MessageId
+            // Byte1 = CalibrationType (Force2Pos or Pos2Force)
+            // Byte2
+
+            byte[] buffer = new byte[BUFFER_SIZE];
+            buffer[index++] = ANT_BURST_MSG_ID_SET_MAGNET_CA;
+            buffer[index++] = (byte)e.CalibrationType;
+
+            // First factor
+            Array.Copy(BitConverter.GetBytes(e.Factors[0]), 0,
+                buffer, index, sizeof(float));
+
+            // offset into the next 8 byte packet.
+            index = 7;
+
+            // Process factors 2,3,4,5,6
+            for (int i = 1; i < FACTOR_COUNT; i++)
+            {
+                // Subsequence factors
+                Array.Copy(BitConverter.GetBytes(e.Factors[i]), 0,
+                    buffer, index, sizeof(float));
+                index += sizeof(float);
+            }
+
+            // Dispatch burst over ANT.
+            if (SendBurstData(buffer))
+            {
+                UpdateStatus("Sent servo calibration.");
+            }
+            else
+            {
+                UpdateStatus("Failed to send servo calibration.");
+            }
+
+            /* Test method, works.
+            float firstVal = BitConverter.ToSingle(buffer, 2);
+            UpdateStatus(firstVal.ToString());
+            for (int j = 0; j < 5; j++)
+            {
+                float val = BitConverter.ToSingle(buffer, 7+(j*4));
+                UpdateStatus(val.ToString());
+            }*/
+
         }
 
         void OnSetPositions(object sender, EventArgs e)
