@@ -160,25 +160,44 @@ namespace IRT_GUI
             this.Close();
         }
 
-        private void btnForce2PosSave_Click(object sender, EventArgs e)
+        private void MagnetCalibrationSet(MagnetCalibrationType type)
         {
+            DataGridView dgv = null;
+
+            switch (type)
+            {
+                case MagnetCalibrationType.Force2Position:
+                    dgv = dgvForce2Pos;
+                    break;
+                case MagnetCalibrationType.Position2Force:
+                    dgv = dgvPos2Force;
+                    break;
+            }
+
             try
             {
-                var values = dgvForce2Pos.Rows.Cast<DataGridViewRow>()
+                var values = dgv.Rows.Cast<DataGridViewRow>()
                     .Select(row => float.Parse(row.Cells[0].Value.ToString()));
 
                 if (SetMagnetCalibration != null)
                 {
-                    SetMagnetCalibration(this, new MagnetCalibrationEventArgs(
-                        MagnetCalibrationType.Force2Position,
-                        values.ToArray()));
+                    SetMagnetCalibration(this, 
+                        new MagnetCalibrationEventArgs(type,
+                            values.ToArray()));
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Invalid value:" + ex.Message, "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }    
+            }
+        }
+
+        private void btnMagnetCalibrationSet_Click(object sender, EventArgs e)
+        {
+            // Set both.
+            MagnetCalibrationSet(MagnetCalibrationType.Force2Position);
+            MagnetCalibrationSet(MagnetCalibrationType.Position2Force);
         }
     }
 

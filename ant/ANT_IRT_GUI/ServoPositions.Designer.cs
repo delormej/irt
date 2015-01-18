@@ -42,22 +42,21 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPositions = new System.Windows.Forms.TabPage();
             this.tabCalibration = new System.Windows.Forms.TabPage();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.btnForce2PosSave = new System.Windows.Forms.Button();
-            this.btnPos2ForceSave = new System.Windows.Forms.Button();
-            this.label6 = new System.Windows.Forms.Label();
-            this.dgvForce2Pos = new System.Windows.Forms.DataGridView();
-            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dgvPos2Force = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgvForce2Pos = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.label6 = new System.Windows.Forms.Label();
+            this.btnMagnetCalibrationSet = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgResistancePositions)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numResistancePositions)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPositions.SuspendLayout();
             this.tabCalibration.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvForce2Pos)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvPos2Force)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvForce2Pos)).BeginInit();
             this.SuspendLayout();
             // 
             // dgResistancePositions
@@ -214,7 +213,7 @@
             this.tabPositions.Location = new System.Drawing.Point(4, 29);
             this.tabPositions.Name = "tabPositions";
             this.tabPositions.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPositions.Size = new System.Drawing.Size(600, 474);
+            this.tabPositions.Size = new System.Drawing.Size(600, 457);
             this.tabPositions.TabIndex = 0;
             this.tabPositions.Text = "Positions";
             this.tabPositions.UseVisualStyleBackColor = true;
@@ -224,8 +223,7 @@
             this.tabCalibration.Controls.Add(this.dgvPos2Force);
             this.tabCalibration.Controls.Add(this.dgvForce2Pos);
             this.tabCalibration.Controls.Add(this.label6);
-            this.tabCalibration.Controls.Add(this.btnPos2ForceSave);
-            this.tabCalibration.Controls.Add(this.btnForce2PosSave);
+            this.tabCalibration.Controls.Add(this.btnMagnetCalibrationSet);
             this.tabCalibration.Controls.Add(this.label5);
             this.tabCalibration.Controls.Add(this.label4);
             this.tabCalibration.Location = new System.Drawing.Point(4, 29);
@@ -235,86 +233,6 @@
             this.tabCalibration.TabIndex = 1;
             this.tabCalibration.Text = "Calibration";
             this.tabCalibration.UseVisualStyleBackColor = true;
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(45, 73);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(145, 20);
-            this.label4.TabIndex = 2;
-            this.label4.Text = "Force to Position";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(268, 73);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(145, 20);
-            this.label5.TabIndex = 3;
-            this.label5.Text = "Position to Force";
-            // 
-            // btnForce2PosSave
-            // 
-            this.btnForce2PosSave.Location = new System.Drawing.Point(49, 399);
-            this.btnForce2PosSave.Name = "btnForce2PosSave";
-            this.btnForce2PosSave.Size = new System.Drawing.Size(75, 35);
-            this.btnForce2PosSave.TabIndex = 4;
-            this.btnForce2PosSave.Text = "Save";
-            this.btnForce2PosSave.UseVisualStyleBackColor = true;
-            this.btnForce2PosSave.Click += new System.EventHandler(this.btnForce2PosSave_Click);
-            // 
-            // btnPos2ForceSave
-            // 
-            this.btnPos2ForceSave.Location = new System.Drawing.Point(281, 399);
-            this.btnPos2ForceSave.Name = "btnPos2ForceSave";
-            this.btnPos2ForceSave.Size = new System.Drawing.Size(75, 35);
-            this.btnPos2ForceSave.TabIndex = 5;
-            this.btnPos2ForceSave.Text = "Save";
-            this.btnPos2ForceSave.UseVisualStyleBackColor = true;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(45, 28);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(213, 20);
-            this.label6.TabIndex = 6;
-            this.label6.Text = "5th Order Polynomial Factors";
-            // 
-            // dgvForce2Pos
-            // 
-            this.dgvForce2Pos.AllowUserToAddRows = false;
-            this.dgvForce2Pos.AllowUserToDeleteRows = false;
-            this.dgvForce2Pos.AllowUserToResizeColumns = false;
-            this.dgvForce2Pos.AllowUserToResizeRows = false;
-            this.dgvForce2Pos.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvForce2Pos.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
-            this.dgvForce2Pos.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            this.dgvForce2Pos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvForce2Pos.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.dataGridViewTextBoxColumn2});
-            this.dgvForce2Pos.Location = new System.Drawing.Point(49, 96);
-            this.dgvForce2Pos.Name = "dgvForce2Pos";
-            this.dgvForce2Pos.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
-            this.dgvForce2Pos.RowHeadersVisible = false;
-            this.dgvForce2Pos.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dgvForce2Pos.RowTemplate.Height = 18;
-            this.dgvForce2Pos.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvForce2Pos.ScrollBars = System.Windows.Forms.ScrollBars.None;
-            this.dgvForce2Pos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dgvForce2Pos.Size = new System.Drawing.Size(177, 211);
-            this.dgvForce2Pos.TabIndex = 0;
-            // 
-            // dataGridViewTextBoxColumn2
-            // 
-            this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewTextBoxColumn2.HeaderText = "Factor";
-            this.dataGridViewTextBoxColumn2.MaxInputLength = 10;
-            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
-            this.dataGridViewTextBoxColumn2.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             // 
             // dgvPos2Force
             // 
@@ -348,6 +266,77 @@
             this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
             this.dataGridViewTextBoxColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             // 
+            // dgvForce2Pos
+            // 
+            this.dgvForce2Pos.AllowUserToAddRows = false;
+            this.dgvForce2Pos.AllowUserToDeleteRows = false;
+            this.dgvForce2Pos.AllowUserToResizeColumns = false;
+            this.dgvForce2Pos.AllowUserToResizeRows = false;
+            this.dgvForce2Pos.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvForce2Pos.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
+            this.dgvForce2Pos.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            this.dgvForce2Pos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvForce2Pos.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dataGridViewTextBoxColumn2});
+            this.dgvForce2Pos.Location = new System.Drawing.Point(49, 96);
+            this.dgvForce2Pos.Name = "dgvForce2Pos";
+            this.dgvForce2Pos.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
+            this.dgvForce2Pos.RowHeadersVisible = false;
+            this.dgvForce2Pos.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            this.dgvForce2Pos.RowTemplate.Height = 18;
+            this.dgvForce2Pos.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvForce2Pos.ScrollBars = System.Windows.Forms.ScrollBars.None;
+            this.dgvForce2Pos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dgvForce2Pos.Size = new System.Drawing.Size(177, 211);
+            this.dgvForce2Pos.TabIndex = 0;
+            // 
+            // dataGridViewTextBoxColumn2
+            // 
+            this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn2.HeaderText = "Factor";
+            this.dataGridViewTextBoxColumn2.MaxInputLength = 10;
+            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            this.dataGridViewTextBoxColumn2.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(45, 28);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(213, 20);
+            this.label6.TabIndex = 6;
+            this.label6.Text = "5th Order Polynomial Factors";
+            // 
+            // btnMagnetCalibrationSet
+            // 
+            this.btnMagnetCalibrationSet.Location = new System.Drawing.Point(49, 399);
+            this.btnMagnetCalibrationSet.Name = "btnMagnetCalibrationSet";
+            this.btnMagnetCalibrationSet.Size = new System.Drawing.Size(75, 35);
+            this.btnMagnetCalibrationSet.TabIndex = 4;
+            this.btnMagnetCalibrationSet.Text = "Set";
+            this.btnMagnetCalibrationSet.UseVisualStyleBackColor = true;
+            this.btnMagnetCalibrationSet.Click += new System.EventHandler(this.btnMagnetCalibrationSet_Click);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Location = new System.Drawing.Point(268, 73);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(145, 20);
+            this.label5.TabIndex = 3;
+            this.label5.Text = "Position to Force";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label4.Location = new System.Drawing.Point(45, 73);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(145, 20);
+            this.label4.TabIndex = 2;
+            this.label4.Text = "Force to Position";
+            // 
             // ServoPositions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -369,8 +358,8 @@
             this.tabPositions.PerformLayout();
             this.tabCalibration.ResumeLayout(false);
             this.tabCalibration.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvForce2Pos)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvPos2Force)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvForce2Pos)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -391,8 +380,7 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPositions;
         private System.Windows.Forms.TabPage tabCalibration;
-        private System.Windows.Forms.Button btnPos2ForceSave;
-        private System.Windows.Forms.Button btnForce2PosSave;
+        private System.Windows.Forms.Button btnMagnetCalibrationSet;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label6;
