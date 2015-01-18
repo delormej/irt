@@ -9,26 +9,6 @@ using System.Windows.Forms;
 
 namespace IRT_GUI
 {
-    public enum MagnetCalibrationType : byte
-    {
-        Force2Position = 0,
-        Position2Force = 1
-    }
-
-    public class MagnetCalibrationEventArgs : EventArgs
-    {
-        public float[] Factors;
-        public MagnetCalibrationType CalibrationType;
-
-        public MagnetCalibrationEventArgs(MagnetCalibrationType calibrationType, float[] factors)
-        {
-            this.CalibrationType = calibrationType;
-            this.Factors = factors;
-        }
-    }
-
-    public delegate void MagnetCalibrationEventHandler(object sender, MagnetCalibrationEventArgs e);
-
     public partial class ServoPositions : Form
     {
         ushort min = 0, max = 0;
@@ -201,4 +181,25 @@ namespace IRT_GUI
             }    
         }
     }
+
+    public delegate void MagnetCalibrationEventHandler(object sender, MagnetCalibrationEventArgs e);
+
+    public enum MagnetCalibrationType : byte
+    {
+        Force2Position = 0,
+        Position2Force = 1
+    }
+
+    public class MagnetCalibrationEventArgs : EventArgs
+    {
+        public float[] Factors;
+        public MagnetCalibrationType CalibrationType;
+
+        public MagnetCalibrationEventArgs(MagnetCalibrationType calibrationType, float[] factors)
+        {
+            this.CalibrationType = calibrationType;
+            this.Factors = factors;
+        }
+    }
+
 }
