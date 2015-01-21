@@ -562,6 +562,27 @@ namespace IRT_GUI
                 r.Report(m_dataPoint);
             
             UpdateMovingAverage();
+            UpdateWatchClock();
+        }
+
+        private int m_watchClockms = 0;
+
+        // Increments the watch clock if the bicycle is moving.
+        private void UpdateWatchClock()
+        {
+            const string clockFormat = @"h\:mm\:ss";
+
+            if (m_dataPoint.SpeedEmotionAvg > 0.0f)
+            {
+                m_watchClockms += m_reportTimer.Interval;
+            }
+            else
+            {
+                m_watchClockms = 0;
+            }
+
+            TimeSpan ts = TimeSpan.FromMilliseconds(m_watchClockms);
+            UpdateText(lblWatchClock, ts.ToString(clockFormat));
         }
 
         private void UpdateMovingAverage()
