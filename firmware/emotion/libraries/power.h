@@ -21,12 +21,6 @@
  */
 uint32_t power_calc(irt_power_meas_t* current, irt_power_meas_t* last, float* p_rr_force);
 
-
-/**@brief	Calculates the required servo position given force needed.
- *
- */
-uint16_t power_servo_pos_calc(float force_needed);
-
 /**@brief	Initializes power module with a profile pointer that contains things like
  * 			the total rider weight, calibration details, etc...
  * 			Takes a default co-efficient for rolling resistance (i.e. 0.03).

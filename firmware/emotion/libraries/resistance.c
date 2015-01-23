@@ -11,7 +11,7 @@
 
 #include "irt_peripheral.h"
 #include "app_error.h"
-#include "power.h"
+#include "magnet.h"
 #include "resistance.h"
 #include "nrf_pwm.h"
 #include "math.h"
@@ -43,14 +43,14 @@
 static uint16_t	m_servo_pos;		// State of current servo position.
 static user_profile_t* mp_user_profile;
 
-/**@brief	Sets the servo by specifying magnet force required.
+/**@brief	Sets the servo by specifying magnet watts required.
  */
-static uint16_t position_set_by_force(float mag_force)
+static uint16_t position_set_by_watts(float mag_watts, float speed_mps)
 {
 	uint16_t servo_pos;
 
 	// Determine the required servo position for desired watts.
-	servo_pos = power_servo_pos_calc(mag_force);
+	servo_pos = magnet_position_from_watts(mag_watts, speed_mps);
 
 	// Move the servo.
 	return resistance_position_set(servo_pos);
@@ -241,7 +241,7 @@ uint16_t resistance_pct_set(float percent)
  */
 static uint16_t resistance_erg_set(int16_t target_watts, float speed_mps, float rr_force)
 {
-	float mag_force;
+	float mag_watts;
 
 	//
 	// Calculate the required incremental magnet force required (if any).
@@ -251,9 +251,9 @@ static uint16_t resistance_erg_set(int16_t target_watts, float speed_mps, float 
 	// TODO: We could get smarter here and deal with 'erg-ing out' or if the user
 	// stops pedaling deal with them starting back up.
 	//
-	mag_force = ( (((float)target_watts) / speed_mps) - rr_force );
+	mag_watts = ( (float)target_watts - (speed_mps * rr_force ));
 
-	return position_set_by_force(mag_force);
+	return magnet_position_from_watts(mag_watts, speed_mps);
 }
 
 /**@brief	Puts the trainer in simulation mode.
@@ -267,7 +267,7 @@ static uint16_t resistance_erg_set(int16_t target_watts, float speed_mps, float 
  */
 static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_forces, float rr_force)
 {
-	float mag_force;
+	float mag_watts;
 
 	// sim is going to calculate the estimated watts required at grade + wind for
 	// the current speed and rider total weight.  It will then hand this off to
@@ -290,10 +290,10 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
 							p_sim_forces->grade;
 
 	// Determine the additional force required from the magnet if necessary.
-	mag_force = ( (wind + rolling + gravitational) - rr_force );
+	mag_watts = ( (wind + rolling + gravitational) - rr_force ) * speed_mps;
 
-	// If we have some wildly large force number returned, log what caused it.
-	if (mag_force > 500.0f)
+	/* If we have some wildly large force number returned, log what caused it.
+	if (mag_watts > 1500.0f)
 	{
 		RC_LOG("[RC]:resistance_sim_set mag_force seems to high: %.2f\r\n", mag_force);
 		RC_LOG("[RC]:rr_force: %.2f\r\n", rr_force);
@@ -301,16 +301,16 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
 		RC_LOG("[RC]:gravitational: %.2f\r\n", gravitational);
 		RC_LOG("[RC]:rolling: %.2f\r\n", rolling);
 		RC_LOG("[RC]:wind_speed: %.2f\r\n", p_sim_forces->wind_speed_mps);
-	}
+	}*/
 
 	// No support for negative force.
-	if (mag_force < 0.0f)
+	if (mag_watts < 0.0f)
 	{
-		mag_force = 0.0f;
+		mag_watts = 0.0f;
 	}
 
 	// Move the servo to the required position.
-	return position_set_by_force(mag_force);
+	return position_set_by_watts(mag_watts, speed_mps);
 }
 
 /**@brief	Adjusts the magnetic resistance accordingly for erg & sim modes.

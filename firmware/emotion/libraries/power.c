@@ -15,6 +15,7 @@
 #include "math.h"
 #include "irt_common.h"
 #include "nrf_delay.h"
+#include "magnet.h"
 
 /**@brief Debug logging for module.
  *
@@ -62,114 +63,6 @@ static uint16_t power_torque_calc(int16_t watts, uint16_t period_seconds_2048)
 	return torque;
 }
 
-/**@brief	Helper function to calculate x = y * slope + intercept.
-
-static float inline slope_calc(float y, float slope, float intercept)
-{
-	float x;
-	 x = y * slope + intercept;
-
-	return x;
-}*/
-
-/**@brief	Calculates the force applied by the servo at a given position.
- */
-static float servo_force(uint16_t servo_pos)
-{
-	float force = 0.0f;
-
-	if (servo_pos >= MIN_RESISTANCE_LEVEL)
-	{
-		// Magnet OFF no force being applied.
-		force = 0.0f;
-	}
-	else if (servo_pos < MAX_RESISTANCE_LEVEL)
-	{
-		APP_ERROR_HANDLER(NRF_ERROR_INVALID_PARAM);
-	}
-	else
-	{
-		/*if (!m_use_big_mag)
-		{
-			force = (
-					-0.00000000000033469583 * pow(servo_pos,5)
-					+0.00000000202071048200 * pow(servo_pos,4)
-					-0.00000466916875500000 * pow(servo_pos,3)
-					+0.00513145135800000000 * pow(servo_pos,2)
-					-2.691480529 * servo_pos
-					+562.4577135);
-		}
-		else // BIG_MAG
-		{*/
-		force = (
-					-0.0000000000012401 * pow(servo_pos,5)
-					+0.0000000067486647 * pow(servo_pos,4)
-					-0.0000141629606351 * pow(servo_pos,3)
-					+0.0142639827784839 * pow(servo_pos,2)
-					-6.92836459712442 * servo_pos
-					+1351.463567618);
-		//}
-	}
-
-	// Force unsigned float - 0.0 is minimum.
-	if (force < 0.0f)
-	{
-		force = 0.0f;
-	}
-
-	return force;
-}
-
-/**@brief	Calculates the required servo position given force needed.
- */
-uint16_t power_servo_pos_calc(float force)
-{
-	float value;
-	uint16_t servo_pos;
-
-	/*if (!m_use_big_mag)
-	{
-		value = (
-				0.001461686  * pow(force,5)
-				-0.076119976 * pow(force,4)
-				+1.210189005 * pow(force,3)
-				-5.221468861 * pow(force,2)
-				-37.59134617 * force
-				+1526.614724);
-	}
-	else // BIG_MAG
-	{*/
-		value = (
-				-0.0000940913669469  * pow(force,5)
-				+ 0.0108240213514885 * pow(force,4)
-				-0.46173964201648 	 * pow(force,3)
-				+8.9640144624266 	 * pow(force,2)
-				-87.5217493343533 	 * force
-				+1558.47782198543);
-	//}
-
-	if (value > MIN_RESISTANCE_LEVEL)
-	{
-		// Value is greater than the minimum resistance level, i.e. 2000.
-		servo_pos = MIN_RESISTANCE_LEVEL;
-	}
-	else if (value < MAX_RESISTANCE_LEVEL)
-	{
-		// Value is less than the minimum resistance level, i.e. 1000.
-		servo_pos = MAX_RESISTANCE_LEVEL;
-	}
-	else
-	{
-		// Resistance is in range, so cast float to integer.
-		servo_pos = (uint16_t)value;
-	}
-
-	//PW_LOG("[PW] power_servo_pos_calc force:%.2f == servo_pos:%i\r\n",
-	//		force, servo_pos);
-
-	return servo_pos;
-}
-
 /**@brief	Initializes power module with a profile pointer that contains things like
  * 			the total rider weight, calibration details, etc...
  * 			Takes a default co-efficient for rolling resistance (i.e. 0.03).
@@ -208,10 +101,8 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last, flo
 {
 	uint16_t torque;
 	uint16_t period_diff;
-	float servo;
+	float mag_watts;
 	float magoff_watts;
-
-	servo = servo_force(p_current->servo_position);
 
 	if (!isnan(mp_profile->ca_drag) && !isnan(mp_profile->ca_rr))
 	{
@@ -248,8 +139,12 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last, flo
 		*p_rr_force = m_rr_force;
 	}
 
+	// Calculate watts added by magnet.
+	mag_watts = magnet_watts_from_position(p_current->servo_position,
+			p_current->instant_speed_mps);
+
 	// Calculate power.
-	p_current->instant_power = ( *p_rr_force + servo ) * p_current->instant_speed_mps;
+	p_current->instant_power = ( *p_rr_force * p_current->instant_speed_mps ) + mag_watts;
 
 	//PW_LOG("[PW] rr: %.2f, servo: %.2f, watts: %i\r\n", *p_rr_force, servo, p_current->instant_power);
 
