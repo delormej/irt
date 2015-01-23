@@ -290,6 +290,12 @@ namespace IRT_GUI
             m_data.ResistanceMode = m.Mode;
              */
 
+            if (m_dataPoint.ResistanceMode != message.Mode || 
+                m_dataPoint.TargetLevel != message.Level)
+            {
+                ResetWatchClock();
+            }
+            
             m_dataPoint.ServoPosition = message.ServoPosition;
             m_dataPoint.TargetLevel = message.Level;
             m_dataPoint.Temperature = message.Temperature;
@@ -580,11 +586,16 @@ namespace IRT_GUI
             }
             else
             {
-                m_watchClockms = 0;
+                ResetWatchClock();
             }
 
             TimeSpan ts = TimeSpan.FromMilliseconds(m_watchClockms);
             UpdateText(lblWatchClock, ts.ToString(clockFormat));
+        }
+
+        private void ResetWatchClock()
+        {
+            m_watchClockms = 0;
         }
 
         private void UpdateMovingAverage()
