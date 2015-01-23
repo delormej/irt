@@ -19,7 +19,7 @@
 
 #define MIN_THRESHOLD_MOVE	2		// Minimum threshold for a servo move.
 #define MIN_SERVO_RANGE		699		// Defined spec for servo is between 2ms and 1ms, but we have a little legacy where we were setting to 699 - this should be eliminated.
-#define MAX_SERVO_RANGE		2000
+#define MAX_SERVO_RANGE		2500
 
 #define ACTUAL_SERVO_POS(POS)	POS + mp_user_profile->servo_offset
 
@@ -92,10 +92,12 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 	{
 		servo_pos = RESISTANCE_LEVEL[RESISTANCE_LEVELS-1];
 	}
+#ifdef RESISTANCE_CHECK_MAX
 	else if (servo_pos > RESISTANCE_LEVEL[0])
 	{
 		servo_pos = RESISTANCE_LEVEL[0];
 	}
+#endif
 
 	if ( (m_servo_pos != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
 	{
