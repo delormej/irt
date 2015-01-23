@@ -1630,41 +1630,6 @@ static void on_set_servo_positions(servo_positions_t* positions)
 	profile_update_sched();
 }
 
-/**@brief	Called when a command is received to set magnet calibration
- * 			based on 5th order polynomial.
- *
- * 			Throws and error if value other than MAG_CALIBRATION_LEN is
- * 			sent in length.
- *
- */
-static void on_set_magnet_calibration(float* p_points, uint8_t calibration_type, uint8_t length)
-{
-	if (length != MAG_CALIBRATION_LEN)
-	{
-		LOG("[MAIN] on_set_magnet_calibration: ERROR expected %i order polynomial.\r\n",
-				MAG_CALIBRATION_LEN);
-
-		APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
-	}
-
-	LOG("[MAIN] on_set_magnet_calibration: %.14f, %.14f, %.7f, %.7f, %.7f, %.7f\r\n",
-			p_points[0], p_points[1], p_points[2], p_points[3], p_points[4],
-			p_points[5]);
-
-	if (calibration_type == MAG_CALIBRATION_FORCE2POS)
-	{
-		// Store in the user profile.
-		memcpy(&m_user_profile.ca_magnet_force, p_points, sizeof(float)*length);
-	}
-	else if (calibration_type == MAG_CALIBRATION_POS2FORCE)
-	{
-		// Store in the user profile.
-		memcpy(&m_user_profile.ca_magnet_pos, p_points, sizeof(float)*length);
-	}
-
-	//profile_update_sched();
-}
-
 /**@brief	Called when a charge status has been indicated.
  *
  */
@@ -1929,8 +1894,7 @@ int main(void)
 		on_enable_dfu_mode,
 		on_request_data,
 		on_set_parameter,
-		on_set_servo_positions,
-		on_set_magnet_calibration
+		on_set_servo_positions
 	};
 
 	// Initialize and enable the softdevice.

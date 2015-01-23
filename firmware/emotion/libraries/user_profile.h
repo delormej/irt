@@ -45,10 +45,6 @@
 #define SETTING_VALUE(SETTING) \
 	(SETTING & 0x7FFF)
 
-#define MAG_CALIBRATION_LEN				6				// Elements in a 5th order polynomial which the magnet calibration is fit to.
-#define MAG_CALIBRATION_FORCE2POS		0				// Polynomial for force to position calc.
-#define MAG_CALIBRATION_POS2FORCE		1				// Polynmoinal for position to force calc.
-
 /**@brief	Servo positions available.
  */
 typedef struct servo_positions_s
@@ -74,8 +70,6 @@ typedef struct user_profile_s {
 	servo_positions_t servo_positions;		// Servo positions (size should be 21 bytes)
 	float		ca_drag;					// Calibration co-efficient of drag which produces the "curve" from a coastdown.
 	float		ca_rr;						// Co-efficient of rolling resistance.
-	float		ca_magnet_force[MAG_CALIBRATION_LEN];	// 5th order polynomial for magnet calibration.
-	float		ca_magnet_pos[MAG_CALIBRATION_LEN];	// 5th order polynomial for magnet calibration.
 	//uint8_t		reserved_2[7]; // (sizeof(servo_positions_t)+2) % 16];					// For block size alignment -- 16 bit alignment
 } user_profile_t;
 
