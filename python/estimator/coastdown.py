@@ -301,7 +301,7 @@ def main(file_name):
 	#plt.plot(x_pwr_lin * 2.23694, x_pwr_lin * 20.707 - 19.976 , 'm--')
 
 	flin = "Slope: %i, Offset: %i" % (round(pwr_slope * 1000, 0), round(pwr_intercept * -1000,0))
-	fdrag = "K: %s rr: %s" % (K, rr)
+	fdrag = "K: %s rr: %s" % (K, (rr/contact_patch()) )
 	print(fdrag)
 
 	plt.text(10, y_pwr.max() * 0.90, fdrag, fontsize=8, color='r')
