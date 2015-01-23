@@ -201,6 +201,8 @@ namespace IRT_GUI
             items.Add("Weight", txtTotalWeight);
             items.Add("WheelSize", txtWheelSizeMm);
             items.Add("RefPwrManuf", lblRefPwrManuf);
+            items.Add("Drag", txtDrag);
+            items.Add("RR", txtRR);
 
             // items.Add("Settings", lblFeatures);
             string message = "\"{0}\",\"{1}\"\n";
@@ -1525,6 +1527,8 @@ namespace IRT_GUI
                     parameters.Add(SubPages.Features);
                     parameters.Add(SubPages.Crr);
                     parameters.Add(SubPages.ServoPositions);
+                    parameters.Add(SubPages.Drag);
+                    parameters.Add(SubPages.RR);
 
                     var t = new System.Threading.Thread(() =>
                     {
