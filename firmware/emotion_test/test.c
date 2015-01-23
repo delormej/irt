@@ -17,123 +17,135 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <float.h>
 #include <windows.h>
 
-float float_from_buffer(uint32_t* p_encoded)
+#define BASE_SPEED_MPS		6.7056f
+#define MAX_POSITION		1400	// temporary
+#define MIN_POSITION		800
+#define MAX_RECURSION		MAX_POSITION - MIN_POSITION
+#define START_SKIP			100
+
+/*
+**@brief Returns the slope of speed (mps):power for a given servo position.
+*
+*/
+float speed_slope_from_position(uint16_t position)
 {
-	// Signed int contains the fraction, starting at byte 2.
-	// IEEE754 binary32 format for float.
-	// Sign 1 bit, exponent (8 bits), fraction (23 bits)
-	// 0 00000000 00000000000000000000000
-	bool sign = *p_encoded >> 31;
+	float slope;
 
-	// mask out 23 bits for the fractional value.
-	uint32_t fraction = *p_encoded & 0x7FFFFF;
+	slope = (
+		6.151574806f * powf(10, -7)
+		* powf(position, 3)
+		- 2.049592878f * powf(10, -3)
+		* powf(position, 2)
+		+ 2.13907033f * position - 658.5540447f);
 
-	// mask out the exponent and shift into an 8 bit int
-	uint8_t exponent = (*p_encoded & 0x7F800000 >> 23);
-
-	// exponent is transmitted with binary offset of 127
-	// calculate the float value.
-	float value = fraction / pow(2, exponent - 127);
-
-	if (sign)
-	{
-		value *= -1;
-	}
-
-	printf("ffb= encoded:%u, exp:%i, sign:%i, fraction:%i, value:%.7f\r\n",
-		*p_encoded, exponent, sign, fraction, value);
-
-	return value;
+	return slope;
 }
 
-/**@brief	Encodes a float as binary32 into a uint8_t* buffer for sending. */
-void float_to_buffer(float value, uint8_t* p_buffer)
+/*
+**@brief Returns the watts for a given position at base speed (6.7056 mps).
+*
+*/
+uint16_t watts_from_position_base(uint16_t position)
 {
-	uint8_t exp = 0;
-	bool sign;
-	float fractional;
-	uint32_t encoded;
+	uint16_t base_watts;
 
-	sign = value < 0.0f;
+	// Step 1. Solve for watts @ base speed (6.7056 mps).
+	base_watts = (
+		2.333333333f * powf(10, -6) * powf(position, 3)
+		- 0.0078375f * powf(position, 2)
+		+ 8.044166667f * position - 2277);
 
-	// Strip the sign if it's negative.
-	if (sign)
-	{
-		value = value *-1;
-	}
-
-	while (modff(value * pow(2, exp), &fractional) > 0.0f || exp >= 23)
-		exp++;
-
-	// Exponent is binary offset by 127.
-	exp += 127;
-
-	encoded = (uint32_t) fractional; // | (exp << 23); // | sign << 31;
-
-	printf("f2b= encoded:%u, exp:%u, sign:%i, fraction:%u\r\n",
-		encoded, exp, sign, (uint32_t) fractional);
-
-	memcpy(p_buffer, &encoded, sizeof(uint32_t));
+	return base_watts;
 }
 
+/*
+**@brief Returns the watts for a given position & speed.
+*
+*/
+float watts_from_position(uint16_t position, float speed_mps)
+{
+	float result;
+	uint16_t base_watts;
+	float slope;
+
+	base_watts = watts_from_position_base(position);
+	slope = speed_slope_from_position(position);
+
+	result = (speed_mps - BASE_SPEED_MPS) * slope + base_watts;
+
+	// Cast to get only the integer portion.
+	return result;
+}
+
+
+static uint16_t position_from_watts_recursive(uint16_t target, float speed_mps, uint16_t start, uint16_t skip)
+{
+	static uint16_t count = 0;
+	uint16_t position = 0;
+	float watts;
+
+	printf("skip is: %i, start is: %i\r\n", skip, start);
+
+	// Keep track of runaway recursion.
+	if (skip == START_SKIP)
+	{
+		count = 0;
+	}
+	position = start;
+
+	do
+	{
+		if (count++ > MAX_RECURSION)
+		{
+			return MAX_POSITION;
+		}
+		watts = watts_from_position(position, speed_mps);
+
+	} while (watts <= target &&
+		(position -= skip) > MIN_POSITION); // match within a watt
+
+	if (watts > target + 1.0f && skip > 1)
+	{
+		// Recursively try to get closer.
+		return position_from_watts_recursive(target, speed_mps, position + skip, (uint16_t) skip / 10);
+	}
+
+	if (position > MAX_POSITION)
+	{
+		position = MAX_POSITION;
+	}
+	else if (position < MIN_POSITION)
+	{
+		position = MIN_POSITION;
+	}
+
+	printf("position_from_watts iterations: %i\r\n", count);
+
+	return position;
+}
+
+/*
+ **@brief Solves for the servo position given desired target mag only watts.
+ *
+ */
+uint16_t position_from_watts(uint16_t target, float speed_mps)
+{
+	return position_from_watts_recursive(target, speed_mps, MAX_POSITION, START_SKIP);
+}
 
 int main(int argc, char *argv [])
 {
-	/*
-	uint8_t buffer[8];
-	uint8_t buffer2[8]; // for reverse calc.
+	uint16_t input;
+	uint16_t position;
+	uint16_t watts;
 
-	buffer[0] = 0xF1; // Message ID
-	buffer[1] = 0xFF; // Placeholder
+	printf("Enter watt target: ");
+	scanf("%i", &input);
 
+	position = position_from_watts(input, 17.6f * 0.44704f);
+	watts = (uint16_t) watts_from_position(position, 17.6f * 0.44704f);
 
-	printf("x==%.7f\r\n", fmod((1.0 * 1.0), 1.0));
-
+	printf("Position: %i, Watts: %i\r\n", position, watts);
 	
-	uint32_t value = ((1 << 31) | 5767294 | (23+127 << 23)); 
-	printf("Original = %i\r\n", value);
-
-	memcpy(&buffer[2], &value, sizeof(uint32_t));
-
-	float result = float_from_buffer(buffer);
-
-	printf("result:%.7f\r\n", result);
-
-	float_to_buffer(result, buffer2);
-
-	result = float_from_buffer(buffer2);
-	
-	printf("result:%.7f\r\n", result);
-	*/
-	float f,f2;
-	uint32_t value;
-	//printf("Enter float: ");
-	//scanf("%f", &f);
-	//f = 8.2319200f;
-	//printf("thanks, will process: %4.7f\r\n", f);
-	
-	f = 0.0000000000012401f;
-	printf("%.7f, %.14f\r\n", f, f);
-
-
-	//uint32_t value = 1335400207u;
-
-	//float_to_buffer(f, &f_buf);
-	//float fr = float_from_buffer(&value);
-	f = 17.53709547f;
-	//f = 15.19211f;
-
-	float_to_buffer(f, (uint8_t*)&value);
-	f2 = float_from_buffer(&value);
-	
-	//printf("done, original: %.7f, result is: %.7f, %u\r\n", f, fr, f_buf);
-	printf("result= original:%.7f, encoded:%u, inverse:%.7f\r\n", f, value, f2);
-
-	uint32_t encoded_f = *((uint32_t*) &f);
-	float decoded_f = *((float*) &encoded_f);
-
-	printf("original: %.7f, encoded: %u, reversed: %.7f\r\n",
-		f, encoded_f, decoded_f);
-
 	return 0;
 }
