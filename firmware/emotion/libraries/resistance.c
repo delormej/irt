@@ -50,7 +50,7 @@ static uint16_t position_set_by_watts(float mag_watts, float speed_mps)
 	uint16_t servo_pos;
 
 	// Determine the required servo position for desired watts.
-	servo_pos = magnet_position_from_watts(mag_watts, speed_mps);
+	servo_pos = magnet_position(speed_mps, mag_watts);
 
 	// Move the servo.
 	return resistance_position_set(servo_pos);

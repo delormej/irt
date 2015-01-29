@@ -140,8 +140,7 @@ uint32_t power_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last, flo
 	}
 
 	// Calculate watts added by magnet.
-	mag_watts = magnet_watts_from_position(p_current->servo_position,
-			p_current->instant_speed_mps);
+	mag_watts = magnet_watts(p_current->instant_speed_mps, p_current->servo_position);
 
 	// Calculate power.
 	p_current->instant_power = ( *p_rr_force * p_current->instant_speed_mps ) + mag_watts;

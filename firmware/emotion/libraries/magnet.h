@@ -12,16 +12,14 @@
 #include <stdint.h>
 #include <float.h>
 
-/*
-**@brief Returns the watts for a given position & speed.
-*
-*/
-float magnet_watts_from_position(uint16_t position, float speed_mps);
+/**@brief	Calculates watts added by the magnet for a given speed at magnet
+ *			position.
+ */
+float magnet_watts(float speed_mps, uint16_t position);
 
-/*
- **@brief Solves for the servo position given desired target mag only watts.
+/**@brief	Calculates magnet position for a given speed and watt target.
  *
  */
-uint16_t magnet_position_from_watts(uint16_t watts, float speed_mps);
+uint16_t magnet_position(float speed_mps, float mag_watts);
 
 #endif /* MAGNET_H_ */

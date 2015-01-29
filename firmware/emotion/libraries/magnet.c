@@ -12,13 +12,6 @@
 #include "math.h"
 #include "debug.h"
 
-#define BASE_SPEED_MPS		6.7056f
-#define MAX_POSITION		1464	// temporary
-#define MIN_POSITION		800
-#define MAX_RECURSION		MAX_POSITION - MIN_POSITION
-#define START_SKIP			100
-#define MAX_WATTS			2000	// arbitrary maximum watts for bounds checking
-
 /**@brief Debug logging for module.
  *
  */
@@ -28,132 +21,135 @@
 #define MAG_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-/*
-**@brief Returns the slope of speed (mps):power for a given servo position.
-*
-*/
-static float speed_slope_from_position(uint16_t position)
+#define COEFF_COUNT			4				// Cubic poynomial has 4 coefficients.
+#define MAX_POSITION		1464
+#define MIN_POSITION		800
+
+/**@brief	Calculates the coefficient values for a cubic polynomial
+ *			that plots a power curve for the magnet at a given speed.
+ *
+ *@note		Uses linear interpolation to calculate each coefficient
+ *			value based on known curves for 15 mph & 25 mph.
+ */
+static void curve_coeff(float speed_mps, float *coeff)
 {
-	float slope;
+	static const float SPEED1 =	15.0 * 0.44704;	// Convert to meters per second
+	static const float SPEED2 = 25.0 * 0.44704;	// Convert to meters per second
 
-	if (position >= MAX_POSITION)
+	// 15 mph (6.7056 mps)
+	static const float COEFF_1 [] = {
+		0.00000233333,
+		-0.0078375,
+		8.044166667,
+		-2277 };
+
+	// 25 mph (11.176 mph)
+	static const float COEFF_2 [] = {
+		0.00000508333,
+		-0.017,
+		17.60666667,
+		-5221 };
+
+	for (uint8_t ix = 0; ix < COEFF_COUNT; ix++)
 	{
-		return 0.0f;
+		coeff[ix] = COEFF_1[ix] +
+			((speed_mps - SPEED1) / (SPEED2 - SPEED1)) *
+			(COEFF_2[ix] - COEFF_1[ix]);
 	}
-
-	slope = (
-		-2.032933219f * powf(10, -12) * powf(position, 5)
-		+ 1.066543186 * powf(10, -8) * powf(position, 4)
-		- 2.14085667 * powf(10, -5) * powf(position, 3)
-		+ 2.031246676 * powf(10, -2) * powf(position, 2)
-		- 9.039501598 * position + 1555.297882f);
-
-	return slope;
 }
 
-/*
-**@brief Returns the watts for a given position at base speed (6.7056 mps).
-*
-*/
-static uint16_t watts_from_position_base(uint16_t position)
+/**@brief	Calculates watts added by the magnet for a given speed at magnet
+ *			position.
+ */
+float magnet_watts(float speed_mps, uint16_t position)
 {
-	uint16_t base_watts;
-
-	// Step 1. Solve for watts @ base speed (6.7056 mps).
-	if (position >= MAX_POSITION)
-	{
-		return 0;
-	}
-
-	base_watts = (
-		1.381313131f * powf(10, -6) * powf(position, 3)
-		- 4.520887446f * powf(10, -3) * powf(position, 2)
-		+ 4.257886003f * position - 870.2186148f);
-
-	return base_watts;
-}
-
-/*
-**@brief Recursively solves for the position based on watt target.
-*
-*/
-static uint16_t position_from_watts_recursive(uint16_t target, float speed_mps, uint16_t start, uint16_t skip)
-{
-	static uint16_t count = 0;
-	uint16_t position = 0;
+	float coeff[COEFF_COUNT];
 	float watts;
 
-	// Keep track of runaway recursion.
-	if (skip == START_SKIP)
-	{
-		count = 0;
-	}
-	position = start;
+	curve_coeff(speed_mps, coeff);
 
-	do
-	{
-		if (count++ > MAX_RECURSION)
-		{
-			return MAX_POSITION;
-		}
-		watts = magnet_watts_from_position(position, speed_mps);
+	watts =
+		coeff[0] * pow(position, 3) +
+		coeff[1] * pow(position, 2) +
+		coeff[2] * position +
+		coeff[3];
 
-	} while (watts <= target &&
-		(position -= skip) > MIN_POSITION); // match within a watt
-
-	if (watts > target + 1.0f && skip > 1)
-	{
-		// Recursively try to get closer.
-		return position_from_watts_recursive(target, speed_mps, position + skip, (uint16_t) skip / 10);
-	}
-
-	if (position > MAX_POSITION)
-	{
-		position = MAX_POSITION;
-	}
-	else if (position < MIN_POSITION)
-	{
-		position = MIN_POSITION;
-	}
-
-	MAG_LOG("[MAG] position_from_watts iterations: %i\r\n", count);
-
-	return position;
+	return watts;
 }
 
-/*
-**@brief Returns the watts for a given position & speed.
-*
-*/
-float magnet_watts_from_position(uint16_t position, float speed_mps)
-{
-	float result;
-	uint16_t base_watts;
-	float slope;
-
-	base_watts = watts_from_position_base(position);
-	slope = speed_slope_from_position(position);
-
-	result = (speed_mps - BASE_SPEED_MPS) * slope + base_watts;
-
-	if (result < 0.0f)
-	{
-		result = 0.0f;
-	}
-	else if (result > MAX_WATTS)
-	{
-		result = MAX_WATTS;
-	}
-
-	// Cast to get only the integer portion.
-	return result;
-}
-
-/*
- **@brief Solves for the servo position given desired target mag only watts.
+/**@brief	Calculates magnet position for a given speed and watt target.
  *
  */
-uint16_t magnet_position_from_watts(uint16_t watts, float speed_mps)
+uint16_t magnet_position(float speed_mps, float mag_watts)
 {
-	return position_from_watts_recursive(watts, speed_mps, MAX_POSITION, START_SKIP);
+	float coeff[COEFF_COUNT];
+
+	// A set of math-intensive formula friendly names.
+	#define a	coeff[0]
+	#define b	coeff[1]
+	#define c	coeff[2]
+	#define d	coeff[3]
+
+	float f, g, h, r, m, m2, n, n2, theta, rc;
+	float /*x1, x2,*/ x2a, x2b, x2c, x2d, x3;
+	int8_t k;
+
+	// Interpolate to calculate the coefficients of the position:pwoercurve.
+	curve_coeff(speed_mps, coeff);
+
+	// To solve for a specific watt target, subtract from coefficient d.
+	d = d - mag_watts;
+
+	//<!--EVALUATING THE 'f'TERM-->
+	f = (((3 * c) / a) - (((b*b) / (a*a)))) / 3;
+
+	//<!--EVALUATING THE 'g'TERM-->
+	g = ((2 * ((b*b*b) / (a*a*a)) - (9 * b*c / (a*a)) + ((27 * (d / a))))) / 27;
+
+	//<!--EVALUATING THE 'h'TERM-->
+	h = (((g*g) / 4) + ((f*f*f) / 27));
+
+	/* Original code adopted from javascript website, need to refactor, but it
+	 * works.  Code could solve for 3 solutions (x1, x2, x3) given a cubic
+	 * polynomial, however we only need to solve for the last form (x3).
+	 */
+	if (h > 0)
+	{
+		m = (-(g / 2) + (sqrt(h)));
+
+		//<!--K is used because math.pow cannot compute negative cube roots-->
+		k = 1;
+		if (m < 0) k = -1; else k = 1;
+		m2 = pow((m*k), (1.0 / 3.0));
+		m2 = m2*k;
+		k = 1;
+		n = (-(g / 2) - (sqrt(h)));
+		if (n < 0) k = -1; else k = 1;
+		n2 = (pow((n*k), (1.0 / 3.0)));
+		n2 = n2*k;
+		//<!-- - (S + U) / 2 - (b / 3a) + i*(S - U)*(3) ^ .5-->
+		x3 = (-1 * (m2 + n2) / 2 - (b / (3 * a)));
+	}
+	else
+	{
+		//<!-- - (S + U) / 2 - (b / 3a) - i*(S - U)*(3) ^ .5-->
+
+		r = ((sqrt((g*g / 4) - h)));
+		k = 1;
+		if (r < 0) k = -1;
+		//<!--rc is the cube root of 'r' -->
+		rc = pow((r*k), (1.0 / 3.0))*k;
+		k = 1;
+		theta = acos((-g / (2 * r)));
+		//x1 = (2 * (rc*cos(theta / 3)) - (b / (3 * a)));
+		x2a = rc*-1;
+		x2b = cos(theta / 3);
+		x2c = sqrt(3)*(sin(theta / 3));
+		x2d = (b / 3 * a)*-1;
+		//x2 = (x2a*(x2b + x2c)) - (b / (3 * a));
+		x3 = (x2a*(x2b - x2c)) - (b / (3 * a));
+	}
+
+	return (uint16_t)x3;
 }
+
