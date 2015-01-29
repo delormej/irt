@@ -52,18 +52,33 @@ static void curve_coeff(float speed_mps, double *coeff)
 	}
 }
 
+/**@brief	Calculates watts added by the magnet for a given speed at magnet
+ *			position.
+ */
+float magnet_watts(float speed_mps, uint16_t position)
+{
+	double coeff[COEFF_COUNT];
+	float watts;
+
+	curve_coeff(speed_mps, coeff);
+
+	watts = 
+		coeff[0] * pow(position, 3) +
+		coeff[1] * pow(position, 2) +
+		coeff[2] * position +
+		coeff[3];
+
+	return watts;
+}
+
 /**@brief	Calculates magnet position for a given speed and watt target.
  *
  */
 uint16_t magnet_position(float speed_mps, float mag_watts)
 {
-	//double a = 0.00000282833;
-	//double b = -0.00948675;
-	//double c = 9.765416668;
-	//double d = -2806.92;
-
 	double coeff[COEFF_COUNT];
 
+	// Interpolate to calculate the coefficients of the position:pwoercurve.
 	curve_coeff(speed_mps, coeff);
 
 	double a = coeff[0];
@@ -71,12 +86,12 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	double c = coeff[2];
 	double d = coeff[3];
 
+	// To solve for a specific watt target, subtract from coefficient d.
 	d = d - mag_watts;
 
 	double f, g, h, r, m, m2, n, n2, theta, rc;
-	double x1, x2, x2a, x2b, x2c, x2d, x3;
-	int sign, k;
-	double dans;
+	double /*x1, x2,*/ x2a, x2b, x2c, x2d, x3;
+	int8_t k;
 
 	//<!--EVALUATING THE 'f'TERM-->
 	f = (((3 * c) / a) - (((b*b) / (a*a)))) / 3;
@@ -102,10 +117,10 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 		n2 = (pow((n*k), (1.0 / 3.0)));
 		n2 = n2*k;
 		k = 1;
-		x1 = ((m2 + n2) - (b / (3 * a)));
+		//x1 = ((m2 + n2) - (b / (3 * a)));
 
 		//<!--((S + U) - (b / (3 * a)))-->
-		x2 = (-1 * (m2 + n2) / 2 - (b / (3 * a))); // +" + i* " + ((m2 - n2) / 2)*Math.pow(3, .5));
+		//x2 = (-1 * (m2 + n2) / 2 - (b / (3 * a))); // +" + i* " + ((m2 - n2) / 2)*Math.pow(3, .5));
 		//<!-- - (S + U) / 2 - (b / 3a) + i*(S - U)*(3) ^ .5-->
 		x3 = (-1 * (m2 + n2) / 2 - (b / (3 * a))); // +" - i* " + ((m2 - n2) / 2)*Math.pow(3, .5));
 	}
@@ -121,25 +136,17 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 		rc = pow((r*k), (1.0 / 3.0))*k;
 		k = 1;
 		theta = acos((-g / (2 * r)));
-		x1 = (2 * (rc*cos(theta / 3)) - (b / (3 * a)));
+		//x1 = (2 * (rc*cos(theta / 3)) - (b / (3 * a)));
 		x2a = rc*-1;
 		x2b = cos(theta / 3);
 		x2c = sqrt(3)*(sin(theta / 3));
 		x2d = (b / 3 * a)*-1;
-		x2 = (x2a*(x2b + x2c)) - (b / (3 * a));
+		//x2 = (x2a*(x2b + x2c)) - (b / (3 * a));
 		x3 = (x2a*(x2b - x2c)) - (b / (3 * a));
 
-		x1 = x1*1E+14; x1 = round(x1); x1 = (x1 / 1E+14);
-		x2 = x2*1E+14; x2 = round(x2); x2 = (x2 / 1E+14);
+		//x1 = x1*1E+14; x1 = round(x1); x1 = (x1 / 1E+14);
+		//x2 = x2*1E+14; x2 = round(x2); x2 = (x2 / 1E+14);
 		//x3 = x3*1E+14; x3 = round(x3); x3 = (x3 / 1E+14);
-	}
-
-	if ((f + g + h) == 0)
-	{
-		if (d<0) { sign = -1; }; if (d >= 0) { sign = 1; }
-		if (sign>0){ dans = pow((d / a), (1.0 / 3.0)); dans = dans*-1; }
-		if (sign < 0){ d = d*-1; dans = pow((d / a), (1.0 / 3.0)); }
-		x1 = dans; x2 = dans; x3 = dans;
 	}
 
 	return (uint16_t)x3;
@@ -148,17 +155,22 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 int main(int argc, char *argv [])
 {
 	uint16_t position;
-	float speed_mps, mag_watts;
+	float speed_mps, mag_watts, mag_watts_verify;
 
 	// Print header.
-	printf("speed_mph, position, watts\r");
+	printf("speed_mph, position, watts, watts_verify\r");
 
-	for (speed_mps = 5.0f * 0.44704; speed_mps < 45.0 * 0.44704; speed_mps += 5.0f * 0.44704)
+	//printf("\r\nSTARTING\r\n");
+
+	for (speed_mps = 2.0f * 0.44704; speed_mps < 46.0 * 0.44704; speed_mps += 2.0f * 0.44704)
 	{
-		for (mag_watts = 0.0f; mag_watts < 800.0f; mag_watts += 1.0f)
+		for (mag_watts = 0.0f; mag_watts < 1200.0f; mag_watts += 1.0f)
 		{
 			position = magnet_position(speed_mps, mag_watts);
-			printf("%.1f, %i, %.1f\r", speed_mps * 2.23694f, position, mag_watts);
+			mag_watts_verify = magnet_watts(speed_mps, position);
+
+			printf("%.1f, %i, %.1f, %.1f\r", 
+				speed_mps * 2.23694f, position, mag_watts, mag_watts_verify);
 		}
 	}
 		

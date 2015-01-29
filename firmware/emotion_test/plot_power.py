@@ -33,7 +33,9 @@ def main(file_name):
 	plt.xlabel('Position')
 	plt.ylabel('Watts')
 	plt.legend(labels, loc='upper right')
-	plt.axhline(y=0, color='black')
+	plt.axhline(y=0, color='grey')
+	plt.axvline(x=1400, color='grey')
+	plt.axvline(x=800, color='grey')
 	plt.show()
 
 if __name__ == "__main__":
