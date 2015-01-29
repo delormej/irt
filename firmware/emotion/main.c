@@ -662,8 +662,8 @@ static void ant_4hz_timeout_handler(void * p_context)
 			// If in erg or sim mode, adjusts the resistance.
 			if (m_resistance_mode == RESISTANCE_SET_ERG || m_resistance_mode == RESISTANCE_SET_SIM)
 			{
-				// Twice per second adjust resistance.
-				if (event_count % 2 == 0)
+				// Once per second adjust resistance.
+				if (event_count % 4 == 0)
 				{
 					// Use the oldest record we have to average with.
 					p_power_meas_first = irt_power_meas_fifo_first();
