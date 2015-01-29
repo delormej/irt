@@ -17,167 +17,102 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <float.h>
 #include <windows.h>
 
-#define BASE_SPEED_MPS		6.7056f
-#define MAX_POSITION		1464	// temporary
-#define MIN_POSITION		800
-#define MAX_RECURSION		MAX_POSITION - MIN_POSITION
-#define START_SKIP			100
-#define MAX_WATTS			2000	// arbitrary maximum watts for bounds checking
 
-/*
-**@brief Returns the slope of speed (mps):power for a given servo position.
-*
-*/
-float speed_slope_from_position(uint16_t position)
+double calculate(float watt_target)
 {
-	float slope;
+	double a = 0.00000282833;
+	double b = -0.00948675;
+	double c = 9.765416668;
+	double d = -2806.92;
 
-	if (position >= MAX_POSITION)
+	d = d - watt_target;
+
+	double f, g, h, r, m, m2, n, n2, theta, rc;
+	double x1, x2, x2a, x2b, x2c, x2d, x3;
+	int sign, k;
+	double dans;
+
+	//<!--EVALUATING THE 'f'TERM-->
+	f = (((3 * c) / a) - (((b*b) / (a*a)))) / 3;
+
+	//<!--EVALUATING THE 'g'TERM-->
+	g = ((2 * ((b*b*b) / (a*a*a)) - (9 * b*c / (a*a)) + ((27 * (d / a))))) / 27;
+
+	//<!--EVALUATING THE 'h'TERM-->
+	h = (((g*g) / 4) + ((f*f*f) / 27));
+
+	if (h > 0)
 	{
-		return 0.0f;
+		m = (-(g / 2) + (sqrt(h)));
+
+		//<!--K is used because math.pow cannot compute negative cube roots-->
+		k = 1;
+		if (m < 0) k = -1; else k = 1;
+		m2 = pow((m*k), (1.0 / 3.0));
+		m2 = m2*k;
+		k = 1;
+		n = (-(g / 2) - (sqrt(h)));
+		if (n < 0) k = -1; else k = 1;
+		n2 = (pow((n*k), (1.0 / 3.0)));
+		n2 = n2*k;
+		k = 1;
+		x1 = ((m2 + n2) - (b / (3 * a)));
+
+		//<!--((S + U) - (b / (3 * a)))-->
+		x2 = (-1 * (m2 + n2) / 2 - (b / (3 * a))); // +" + i* " + ((m2 - n2) / 2)*Math.pow(3, .5));
+		//<!-- - (S + U) / 2 - (b / 3a) + i*(S - U)*(3) ^ .5-->
+		x3 = (-1 * (m2 + n2) / 2 - (b / (3 * a))); // +" - i* " + ((m2 - n2) / 2)*Math.pow(3, .5));
 	}
 
-	slope = (
-		-2.032933219f * powf(10, -12) * powf(position, 5)
-		+ 1.066543186 * powf(10, -8) * powf(position, 4)
-		- 2.14085667 * powf(10, -5) * powf(position, 3)
-		+ 2.031246676 * powf(10, -2) * powf(position, 2)
-		- 9.039501598 * position + 1555.297882f);
+	//<!-- - (S + U) / 2 - (b / 3a) - i*(S - U)*(3) ^ .5-->
 
-	return slope;
-}
-
-/*
-**@brief Returns the watts for a given position at base speed (6.7056 mps).
-*
-*/
-uint16_t watts_from_position_base(uint16_t position)
-{
-	uint16_t base_watts;
-
-	// Step 1. Solve for watts @ base speed (6.7056 mps).
-	if (position >= MAX_POSITION)
+	if (h <= 0)
 	{
-		return 0;
+		printf("here\r\n");
+
+		r = ((sqrt((g*g / 4) - h)));
+		k = 1;
+		if (r < 0) k = -1;
+		//<!--rc is the cube root of 'r' -->
+		rc = pow((r*k), (1.0 / 3.0))*k;
+		k = 1;
+		theta = acos((-g / (2 * r)));
+		x1 = (2 * (rc*cos(theta / 3)) - (b / (3 * a)));
+		x2a = rc*-1;
+		x2b = cos(theta / 3);
+		x2c = sqrt(3)*(sin(theta / 3));
+		x2d = (b / 3 * a)*-1;
+		x2 = (x2a*(x2b + x2c)) - (b / (3 * a));
+		x3 = (x2a*(x2b - x2c)) - (b / (3 * a));
+
+		x1 = x1*1E+14; x1 = round(x1); x1 = (x1 / 1E+14);
+		x2 = x2*1E+14; x2 = round(x2); x2 = (x2 / 1E+14);
+		//x3 = x3*1E+14; x3 = round(x3); x3 = (x3 / 1E+14);
 	}
 
-	base_watts = (
-		1.381313131f * powf(10, -6) * powf(position, 3)
-		- 4.520887446f * powf(10, -3) * powf(position, 2)
-		+ 4.257886003f * position - 870.2186148f);
-
-	return base_watts;
-}
-
-/*
-**@brief Returns the watts for a given position & speed.
-*
-*/
-float watts_from_position(uint16_t position, float speed_mps)
-{
-	float result;
-	uint16_t base_watts;
-	float slope;
-
-	base_watts = watts_from_position_base(position);
-	slope = speed_slope_from_position(position);
-
-	result = (speed_mps - BASE_SPEED_MPS) * slope + base_watts;
-
-	if (result < 0.0f)
+	if ((f + g + h) == 0)
 	{
-		result = 0.0f;
-	}
-	else if (result > MAX_WATTS)
-	{
-		result = MAX_WATTS;
+		if (d<0) { sign = -1; }; if (d >= 0) { sign = 1; }
+		if (sign>0){ dans = pow((d / a), (1.0 / 3.0)); dans = dans*-1; }
+		if (sign < 0){ d = d*-1; dans = pow((d / a), (1.0 / 3.0)); }
+		x1 = dans; x2 = dans; x3 = dans;
 	}
 
-	// Cast to get only the integer portion.
-	return result;
-}
-
-
-static uint16_t position_from_watts_recursive(uint16_t target, float speed_mps, uint16_t start, uint16_t skip)
-{
-	static uint16_t count = 0;
-	uint16_t position = 0;
-	float watts;
-
-	// Keep track of runaway recursion.
-	if (skip == START_SKIP)
-	{
-		count = 0;
-	}
-	position = start;
-
-	do
-	{
-		if (count++ > MAX_RECURSION)
-		{
-			return MAX_POSITION;
-		}
-		watts = watts_from_position(position, speed_mps);
-
-	} while (watts <= target &&
-		(position -= skip) > MIN_POSITION); // match within a watt
-
-	if (watts > target + 1.0f && skip > 1)
-	{
-		// Recursively try to get closer.
-		return position_from_watts_recursive(target, speed_mps, position + skip, (uint16_t) skip / 10);
-	}
-
-	if (position > MAX_POSITION)
-	{
-		position = MAX_POSITION;
-	}
-	else if (position < MIN_POSITION)
-	{
-		position = MIN_POSITION;
-	}
-
-	printf("position_from_watts iterations: %i\r\n", count);
-
-	return position;
-}
-
-/*
- **@brief Solves for the servo position given desired target mag only watts.
- *
- */
-uint16_t position_from_watts(uint16_t target, float speed_mps)
-{
-	return position_from_watts_recursive(target, speed_mps, MAX_POSITION, START_SKIP);
+	printf("x1 = %.12f", x1);
+	printf("x2 = %.12f", x2);
+	printf("x3 = %.12f", x3);
 }
 
 int main(int argc, char *argv [])
 {
-	uint16_t input;
-	uint16_t position;
-	uint16_t watts;
-	float speed;
-
-	for (int i = 1800; i > 800; i--)
-	{
-		printf("position: %i, watts: %.1f\r\n", 
-			i, watts_from_position(i, 5.0f));
-	}
-
-	return;
+	double x;
+	float input;
 
 	printf("Enter watt target: ");
-	scanf("%i", &input);
-
-	printf("Enter speed (mph): ");
-	scanf("%f", &speed);
-
-	speed = speed * 0.44704f;
-
-	position = position_from_watts(input, speed);
-	watts = (uint16_t) watts_from_position(position, speed);
-
-	printf("Position: %i, Watts: %i for speed: %.4f mps\r\n", position, watts, speed);
+	scanf("%f", &input);
+	
+	calculate(input);
+	//printf("%.12f\r\n", x);
 	
 	return 0;
 }
