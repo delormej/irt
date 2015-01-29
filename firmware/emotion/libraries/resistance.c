@@ -253,7 +253,7 @@ static uint16_t resistance_erg_set(int16_t target_watts, float speed_mps, float 
 	//
 	mag_watts = ( (float)target_watts - (speed_mps * rr_force ));
 
-	return magnet_position_from_watts(mag_watts, speed_mps);
+	return position_set_by_watts(mag_watts, speed_mps);
 }
 
 /**@brief	Puts the trainer in simulation mode.
