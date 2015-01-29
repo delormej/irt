@@ -17,15 +17,61 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <float.h>
 #include <windows.h>
 
+#define COEFF_COUNT		4				// Cubic poynomial has 4 coefficients.
 
-double calculate(float watt_target)
+/**@brief	Calculates the coefficient values for a cubic polynomial
+ *			that plots a power curve for the magnet at a given speed.
+ *
+ *@note		Uses linear interpolation to calculate each coefficient
+ *			value based on known curves for 15 mph & 25 mph.
+ */
+static void curve_coeff(float speed_mps, double *coeff)
 {
-	double a = 0.00000282833;
-	double b = -0.00948675;
-	double c = 9.765416668;
-	double d = -2806.92;
+	static const float SPEED1 =	15.0 * 0.44704;	// Convert to meters per second
+	static const float SPEED2 = 25.0 * 0.44704;	// Convert to meters per second
 
-	d = d - watt_target;
+	// 15 mph (6.7056 mps)
+	static const double COEFF_1 [] = {
+		0.00000233333,
+		-0.0078375,
+		8.044166667,
+		-2277 };
+
+	// 25 mph (11.176 mph)
+	static const double COEFF_2 [] = {
+		0.00000508333,
+		-0.017,
+		17.60666667,
+		-5221 };
+
+	for (uint8_t ix = 0; ix < COEFF_COUNT; ix++)
+	{
+		coeff[ix] = COEFF_1[ix] + 
+			((speed_mps - SPEED1) / (SPEED2 - SPEED1)) *
+			(COEFF_2[ix] - COEFF_1[ix]);
+	}
+}
+
+/**@brief	Calculates magnet position for a given speed and watt target.
+ *
+ */
+uint16_t magnet_position(float speed_mps, float mag_watts)
+{
+	//double a = 0.00000282833;
+	//double b = -0.00948675;
+	//double c = 9.765416668;
+	//double d = -2806.92;
+
+	double coeff[COEFF_COUNT];
+
+	curve_coeff(speed_mps, coeff);
+
+	double a = coeff[0];
+	double b = coeff[1];
+	double c = coeff[2];
+	double d = coeff[3];
+
+	d = d - mag_watts;
 
 	double f, g, h, r, m, m2, n, n2, theta, rc;
 	double x1, x2, x2a, x2b, x2c, x2d, x3;
@@ -68,8 +114,6 @@ double calculate(float watt_target)
 
 	if (h <= 0)
 	{
-		printf("here\r\n");
-
 		r = ((sqrt((g*g / 4) - h)));
 		k = 1;
 		if (r < 0) k = -1;
@@ -98,21 +142,27 @@ double calculate(float watt_target)
 		x1 = dans; x2 = dans; x3 = dans;
 	}
 
-	printf("x1 = %.12f", x1);
-	printf("x2 = %.12f", x2);
-	printf("x3 = %.12f", x3);
+	return (uint16_t)x3;
 }
 
 int main(int argc, char *argv [])
 {
-	double x;
-	float input;
+	uint16_t position;
+	float speed_mps, mag_watts;
 
-	printf("Enter watt target: ");
-	scanf("%f", &input);
-	
-	calculate(input);
-	//printf("%.12f\r\n", x);
-	
+	// Print header.
+	printf("speed_mph, position, watts\r");
+
+	for (speed_mps = 5.0f * 0.44704; speed_mps < 45.0 * 0.44704; speed_mps += 5.0f * 0.44704)
+	{
+		for (mag_watts = 0.0f; mag_watts < 800.0f; mag_watts += 1.0f)
+		{
+			position = magnet_position(speed_mps, mag_watts);
+			printf("%.1f, %i, %.1f\r", speed_mps * 2.23694f, position, mag_watts);
+		}
+	}
+		
+	/*for (position = 2000; position > 600; position += 100) */
+
 	return 0;
 }
