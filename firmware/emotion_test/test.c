@@ -25,20 +25,20 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
  *@note		Uses linear interpolation to calculate each coefficient
  *			value based on known curves for 15 mph & 25 mph.
  */
-static void curve_coeff(float speed_mps, double *coeff)
+static void curve_coeff(float speed_mps, float *coeff)
 {
 	static const float SPEED1 =	15.0 * 0.44704;	// Convert to meters per second
 	static const float SPEED2 = 25.0 * 0.44704;	// Convert to meters per second
 
 	// 15 mph (6.7056 mps)
-	static const double COEFF_1 [] = {
+	static const float COEFF_1 [] = {
 		0.00000233333,
 		-0.0078375,
 		8.044166667,
 		-2277 };
 
 	// 25 mph (11.176 mph)
-	static const double COEFF_2 [] = {
+	static const float COEFF_2 [] = {
 		0.00000508333,
 		-0.017,
 		17.60666667,
@@ -57,7 +57,7 @@ static void curve_coeff(float speed_mps, double *coeff)
  */
 float magnet_watts(float speed_mps, uint16_t position)
 {
-	double coeff[COEFF_COUNT];
+	float coeff[COEFF_COUNT];
 	float watts;
 
 	curve_coeff(speed_mps, coeff);
@@ -76,7 +76,7 @@ float magnet_watts(float speed_mps, uint16_t position)
  */
 uint16_t magnet_position(float speed_mps, float mag_watts)
 {
-	double coeff[COEFF_COUNT];
+	float coeff[COEFF_COUNT];
 
 	// A set of math-intensive formula friendly names.
 	#define a	coeff[0]
@@ -84,8 +84,8 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	#define c	coeff[2]
 	#define d	coeff[3]
 
-	double f, g, h, r, m, m2, n, n2, theta, rc;
-	double /*x1, x2,*/ x2a, x2b, x2c, x2d, x3;
+	float f, g, h, r, m, m2, n, n2, theta, rc;
+	float /*x1, x2,*/ x2a, x2b, x2c, x2d, x3;
 	int8_t k;
 
 	// Interpolate to calculate the coefficients of the position:pwoercurve.
