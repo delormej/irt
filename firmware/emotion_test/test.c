@@ -78,20 +78,21 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 {
 	double coeff[COEFF_COUNT];
 
-	// Interpolate to calculate the coefficients of the position:pwoercurve.
-	curve_coeff(speed_mps, coeff);
-
-	double a = coeff[0];
-	double b = coeff[1];
-	double c = coeff[2];
-	double d = coeff[3];
-
-	// To solve for a specific watt target, subtract from coefficient d.
-	d = d - mag_watts;
+	// A set of math-intensive formula friendly names.
+	#define a	coeff[0]
+	#define b	coeff[1]
+	#define c	coeff[2]
+	#define d	coeff[3]
 
 	double f, g, h, r, m, m2, n, n2, theta, rc;
 	double /*x1, x2,*/ x2a, x2b, x2c, x2d, x3;
 	int8_t k;
+
+	// Interpolate to calculate the coefficients of the position:pwoercurve.
+	curve_coeff(speed_mps, coeff);
+
+	// To solve for a specific watt target, subtract from coefficient d.
+	d = d - mag_watts;
 
 	//<!--EVALUATING THE 'f'TERM-->
 	f = (((3 * c) / a) - (((b*b) / (a*a)))) / 3;
@@ -102,6 +103,10 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	//<!--EVALUATING THE 'h'TERM-->
 	h = (((g*g) / 4) + ((f*f*f) / 27));
 
+	/* Original code adopted from javascript website, need to refactor, but it 
+	 * works.  Code could solve for 3 solutions (x1, x2, x3) given a cubic 
+	 * polynomial, however we only need to solve for the last form (x3).
+	 */
 	if (h > 0)
 	{
 		m = (-(g / 2) + (sqrt(h)));
@@ -116,19 +121,13 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 		if (n < 0) k = -1; else k = 1;
 		n2 = (pow((n*k), (1.0 / 3.0)));
 		n2 = n2*k;
-		k = 1;
-		//x1 = ((m2 + n2) - (b / (3 * a)));
-
-		//<!--((S + U) - (b / (3 * a)))-->
-		//x2 = (-1 * (m2 + n2) / 2 - (b / (3 * a))); // +" + i* " + ((m2 - n2) / 2)*Math.pow(3, .5));
 		//<!-- - (S + U) / 2 - (b / 3a) + i*(S - U)*(3) ^ .5-->
-		x3 = (-1 * (m2 + n2) / 2 - (b / (3 * a))); // +" - i* " + ((m2 - n2) / 2)*Math.pow(3, .5));
-	}
-
-	//<!-- - (S + U) / 2 - (b / 3a) - i*(S - U)*(3) ^ .5-->
-
-	if (h <= 0)
+		x3 = (-1 * (m2 + n2) / 2 - (b / (3 * a))); 
+	} 
+	else
 	{
+		//<!-- - (S + U) / 2 - (b / 3a) - i*(S - U)*(3) ^ .5-->
+
 		r = ((sqrt((g*g / 4) - h)));
 		k = 1;
 		if (r < 0) k = -1;
@@ -143,10 +142,6 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 		x2d = (b / 3 * a)*-1;
 		//x2 = (x2a*(x2b + x2c)) - (b / (3 * a));
 		x3 = (x2a*(x2b - x2c)) - (b / (3 * a));
-
-		//x1 = x1*1E+14; x1 = round(x1); x1 = (x1 / 1E+14);
-		//x2 = x2*1E+14; x2 = round(x2); x2 = (x2 / 1E+14);
-		//x3 = x3*1E+14; x3 = round(x3); x3 = (x3 / 1E+14);
 	}
 
 	return (uint16_t)x3;
