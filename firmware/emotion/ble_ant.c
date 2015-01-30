@@ -30,10 +30,13 @@
 #include "ant_bike_power.h"
 #include "ant_bike_speed.h"
 #include "ble_dis.h"
-#include "ble_nus.h"
 #include "ble_cps.h"
 #include "ble_gap.h"
 #include "debug.h"
+
+#if defined(BLE_NUS_ENABLED)
+#include "ble_nus.h"
+#endif
 
 #define APP_ADV_INTERVAL                40                                           /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      180                                          // BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED /**< The advertising timeout in units of seconds. */
