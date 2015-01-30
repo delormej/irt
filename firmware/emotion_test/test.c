@@ -31,19 +31,19 @@ static void curve_coeff(float speed_mps, float *coeff)
 	static const float SPEED2 = 25.0 * 0.44704;	// Convert to meters per second
 
 	// 15 mph (6.7056 mps)
-	static const float COEFF_1 [] = {
-		0.00000233333,
-		-0.0078375,
-		8.044166667,
-		-2277 };
-
+	static const float COEFF_1[] =  { 0.00000127584, -0.00424935897, 4.06025446775, -838.0638694638 }; /*{
+	0.00000233333,
+	-0.0078375,
+	8.044166667,
+	-2277 };*/	
+	
 	// 25 mph (11.176 mph)
-	static const float COEFF_2 [] = {
-		0.00000508333,
-		-0.017,
-		17.60666667,
-		-5221 };
-
+	static const float COEFF_2[] = { 0.000002624903, -0.008925233100, 8.907428127428, -2139.951981351815 }; /* {
+	0.00000508333,
+	-0.017,
+	17.60666667,
+	-5221 }; */
+	
 	for (uint8_t ix = 0; ix < COEFF_COUNT; ix++)
 	{
 		coeff[ix] = COEFF_1[ix] + 
@@ -152,14 +152,19 @@ int main(int argc, char *argv [])
 	uint16_t position;
 	float speed_mps, mag_watts, mag_watts_verify;
 
+	// Uncomment to attach debugger.
+	//getchar();
+
 	// Print header.
 	printf("speed_mph, position, watts, watts_verify\r");
 
 	//printf("\r\nSTARTING\r\n");
 
-	for (speed_mps = 2.0f * 0.44704; speed_mps < 46.0 * 0.44704; speed_mps += 2.0f * 0.44704)
+	// Below 7.1mph, it bombs! Need to figure out why.
+	for (speed_mps = (7.1f * 0.44704); speed_mps < (46.0 * 0.44704); 
+		speed_mps += (2.0f * 0.44704))
 	{
-		for (mag_watts = 0.0f; mag_watts < 1200.0f; mag_watts += 1.0f)
+		for (mag_watts = 0.0f; mag_watts < 800.0f; mag_watts += 1.0f)
 		{
 			position = magnet_position(speed_mps, mag_watts);
 			mag_watts_verify = magnet_watts(speed_mps, position);

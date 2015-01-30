@@ -36,6 +36,8 @@ def main(file_name):
 	plt.axhline(y=0, color='grey')
 	plt.axvline(x=1400, color='grey')
 	plt.axvline(x=800, color='grey')
+	plt.xlim(700, 1800)
+
 	plt.show()
 
 if __name__ == "__main__":
