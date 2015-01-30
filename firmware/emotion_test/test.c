@@ -76,6 +76,7 @@ float magnet_watts(float speed_mps, uint16_t position)
  */
 uint16_t magnet_position(float speed_mps, float mag_watts)
 {
+
 	float coeff[COEFF_COUNT];
 
 	// A set of math-intensive formula friendly names.
@@ -85,7 +86,7 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	#define d	coeff[3]
 
 	float f, g, h, r, m, m2, n, n2, theta, rc;
-	float /*x1, x2,*/ x2a, x2b, x2c, x2d, x3;
+	float x2a, x2b, x2c, x2d, x3;
 	int8_t k;
 
 	// Interpolate to calculate the coefficients of the position:pwoercurve.
@@ -109,6 +110,9 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	 */
 	if (h > 0)
 	{
+		// This path is not used.
+		return 0;
+		/*
 		m = (-(g / 2) + (sqrt(h)));
 
 		//<!--K is used because math.pow cannot compute negative cube roots-->
@@ -123,6 +127,7 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 		n2 = n2*k;
 		//<!-- - (S + U) / 2 - (b / 3a) + i*(S - U)*(3) ^ .5-->
 		x3 = (-1 * (m2 + n2) / 2 - (b / (3 * a))); 
+		*/
 	} 
 	else
 	{
