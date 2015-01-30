@@ -37,7 +37,7 @@ def main(file_name):
 	plt.axvline(x=1400, color='grey')
 	plt.axvline(x=800, color='grey')
 	plt.xlim(700, 1800)
-	plt.ylim(-10, 1200)
+	plt.ylim(-10, 1000)
 
 	plt.show()
 
