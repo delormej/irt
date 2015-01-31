@@ -43,7 +43,7 @@ void temperature_init()
 						true);
 
 	// Test it out:
-	float temp = temperature_read();
+	temperature_read();
 }
 
 void temperature_shutdown()
