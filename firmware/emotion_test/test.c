@@ -17,7 +17,9 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <float.h>
 #include <windows.h>
 
-#define COEFF_COUNT		4				// Cubic poynomial has 4 coefficients.
+#define COEFF_COUNT		4u				// Cubic poynomial has 4 coefficients.
+#define MAX_POSITION	1500u			// After this position, no more resistance is applied.
+#define MIN_SPEED		7.1f
 
 /**@brief	Calculates the coefficient values for a cubic polynomial
  *			that plots a power curve for the magnet at a given speed.
@@ -31,18 +33,18 @@ static void curve_coeff(float speed_mps, float *coeff)
 	static const float SPEED2 = 25.0 * 0.44704;	// Convert to meters per second
 
 	// 15 mph (6.7056 mps)
-	static const float COEFF_1[] =  { 0.00000127584, -0.00424935897, 4.06025446775, -838.0638694638 }; /*{
-	0.00000233333,
-	-0.0078375,
-	8.044166667,
-	-2277 };*/	
+	static const float COEFF_1[] =  { 
+		0.00000127584, 
+		-0.00424935897, 
+		4.06025446775, 
+		-838.0638694638 }; 
 	
 	// 25 mph (11.176 mph)
-	static const float COEFF_2[] = { 0.000002624903, -0.008925233100, 8.907428127428, -2139.951981351815 }; /* {
-	0.00000508333,
-	-0.017,
-	17.60666667,
-	-5221 }; */
+	static const float COEFF_2[] = { 
+		0.000002624903, 
+		-0.008925233100, 
+		8.907428127428, 
+		-2139.951981351815 }; 
 	
 	for (uint8_t ix = 0; ix < COEFF_COUNT; ix++)
 	{
@@ -60,6 +62,15 @@ float magnet_watts(float speed_mps, uint16_t position)
 	float coeff[COEFF_COUNT];
 	float watts;
 
+	/* 
+	 * After max servo position the curve turns upwards.
+	 * Below 7 mps, the method fails, so we don't adjust below this speed for now.
+	 */
+	if (position > MAX_POSITION || speed_mps < MIN_SPEED)
+	{
+		return 0.0f;
+	}
+	
 	curve_coeff(speed_mps, coeff);
 
 	watts = 
@@ -76,7 +87,6 @@ float magnet_watts(float speed_mps, uint16_t position)
  */
 uint16_t magnet_position(float speed_mps, float mag_watts)
 {
-
 	float coeff[COEFF_COUNT];
 
 	// A set of math-intensive formula friendly names.
@@ -154,8 +164,10 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 
 int main(int argc, char *argv [])
 {
-	uint16_t position;
+	uint16_t position, new_position;
 	float speed_mps, mag_watts, mag_watts_verify;
+
+	mag_watts_verify = 0.0f;
 
 	// Uncomment to attach debugger.
 	//getchar();
@@ -169,11 +181,18 @@ int main(int argc, char *argv [])
 	for (speed_mps = (7.1f * 0.44704); speed_mps < (46.0 * 0.44704); 
 		speed_mps += (2.0f * 0.44704))
 	{
+		for (position = 2000; position > 700; position -= 5)
+		{
+			mag_watts = magnet_watts(speed_mps, position);
+			new_position = magnet_position(speed_mps, mag_watts);
+			mag_watts_verify = magnet_watts(speed_mps, new_position);
+
+		/*
 		for (mag_watts = 0.0f; mag_watts < 800.0f; mag_watts += 1.0f)
 		{
 			position = magnet_position(speed_mps, mag_watts);
 			mag_watts_verify = magnet_watts(speed_mps, position);
-
+		*/
 			printf("%.1f, %i, %.1f, %.1f\r", 
 				speed_mps * 2.23694f, position, mag_watts, mag_watts_verify);
 		}
