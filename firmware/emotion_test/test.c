@@ -17,9 +17,11 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <float.h>
 #include <windows.h>
 
-#define COEFF_COUNT		4u				// Cubic poynomial has 4 coefficients.
-#define MAX_POSITION	1500u			// After this position, no more resistance is applied.
-#define MIN_SPEED		7.1f
+#define COEFF_COUNT				4u				// Cubic poynomial has 4 coefficients.
+#define POSITION_MAX_RESISTANCE	700u			// Position for maximum resistance.
+#define POSITION_MIN_RESISTANCE	1500u			// After this position, no more resistance is applied.
+#define POSITION_HOME			2000u			// Home position for the magnet.
+#define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
 
 /**@brief	Calculates the coefficient values for a cubic polynomial
  *			that plots a power curve for the magnet at a given speed.
@@ -66,11 +68,13 @@ float magnet_watts(float speed_mps, uint16_t position)
 	 * After max servo position the curve turns upwards.
 	 * Below 7 mps, the method fails, so we don't adjust below this speed for now.
 	 */
-	if (position > MAX_POSITION || speed_mps < MIN_SPEED)
+	if (position > POSITION_MIN_RESISTANCE || 
+		speed_mps < MIN_SPEED_MPS)
 	{
 		return 0.0f;
 	}
 	
+	// Determine the curve for the speed.
 	curve_coeff(speed_mps, coeff);
 
 	watts = 
@@ -95,9 +99,15 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	#define c	coeff[2]
 	#define d	coeff[3]
 
-	float f, g, h, r, m, m2, n, n2, theta, rc;
-	float x2a, x2b, x2c, x2d, x3;
+	float f, g, h, r, /*m, m2, n, n2,*/ theta, rc;
+	float x2a, x2b, x2c, /*x2d,*/ x3;
 	int8_t k;
+
+	// Send the magnet to the home position if no mag watts required.
+	if (mag_watts <= 0)
+	{
+		return POSITION_HOME;
+	}
 
 	// Interpolate to calculate the coefficients of the position:pwoercurve.
 	curve_coeff(speed_mps, coeff);
@@ -114,35 +124,13 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	//<!--EVALUATING THE 'h'TERM-->
 	h = (((g*g) / 4) + ((f*f*f) / 27));
 
-	/* Original code adopted from javascript website, need to refactor, but it 
-	 * works.  Code could solve for 3 solutions (x1, x2, x3) given a cubic 
-	 * polynomial, however we only need to solve for the last form (x3).
-	 */
-	if (h > 0)
-	{
-		// This path is not used.
-		return 0;
-		/*
-		m = (-(g / 2) + (sqrt(h)));
-
-		//<!--K is used because math.pow cannot compute negative cube roots-->
-		k = 1;
-		if (m < 0) k = -1; else k = 1;
-		m2 = pow((m*k), (1.0 / 3.0));
-		m2 = m2*k;
-		k = 1;
-		n = (-(g / 2) - (sqrt(h)));
-		if (n < 0) k = -1; else k = 1;
-		n2 = (pow((n*k), (1.0 / 3.0)));
-		n2 = n2*k;
-		//<!-- - (S + U) / 2 - (b / 3a) + i*(S - U)*(3) ^ .5-->
-		x3 = (-1 * (m2 + n2) / 2 - (b / (3 * a))); 
-		*/
-	} 
-	else
+	/* Original code adopted from javascript website, need to refactor, but it
+	* works.  Code could solve for 3 solutions (x1, x2, x3) given a cubic
+	* polynomial, however we only need to solve for the last form (x3).
+	*/
+	if (h <= 0)
 	{
 		//<!-- - (S + U) / 2 - (b / 3a) - i*(S - U)*(3) ^ .5-->
-
 		r = ((sqrt((g*g / 4) - h)));
 		k = 1;
 		if (r < 0) k = -1;
@@ -150,16 +138,17 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 		rc = pow((r*k), (1.0 / 3.0))*k;
 		k = 1;
 		theta = acos((-g / (2 * r)));
-		//x1 = (2 * (rc*cos(theta / 3)) - (b / (3 * a)));
 		x2a = rc*-1;
 		x2b = cos(theta / 3);
 		x2c = sqrt(3)*(sin(theta / 3));
-		x2d = (b / 3 * a)*-1;
-		//x2 = (x2a*(x2b + x2c)) - (b / (3 * a));
 		x3 = (x2a*(x2b - x2c)) - (b / (3 * a));
 	}
+	else
+	{
+		return 0u;
+	}
 
-	return (uint16_t)x3;
+	return (uint16_t) x3;
 }
 
 int main(int argc, char *argv [])
@@ -168,6 +157,11 @@ int main(int argc, char *argv [])
 	float speed_mps, mag_watts, mag_watts_verify;
 
 	mag_watts_verify = 0.0f;
+
+	//position = magnet_position(24.5f * 0.44704f, 212 - 235);
+
+	//printf("Positon: %u\r\n", position);
+	//return 0;
 
 	// Uncomment to attach debugger.
 	//getchar();

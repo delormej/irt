@@ -21,9 +21,11 @@
 #define MAG_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define COEFF_COUNT			4				// Cubic poynomial has 4 coefficients.
-#define MAX_POSITION		1464
-#define MIN_POSITION		800
+#define COEFF_COUNT				4u				// Cubic poynomial has 4 coefficients.
+//#define POSITION_MAX_RESISTANCE	700u			// Position for maximum resistance.
+#define POSITION_MIN_RESISTANCE	1500u			// After this position, no more resistance is applied.
+#define POSITION_HOME			2000u			// Home position for the magnet.
+#define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
 
 /**@brief	Calculates the coefficient values for a cubic polynomial
  *			that plots a power curve for the magnet at a given speed.
@@ -37,18 +39,18 @@ static void curve_coeff(float speed_mps, float *coeff)
 	static const float SPEED2 = 25.0 * 0.44704;	// Convert to meters per second
 
 	// 15 mph (6.7056 mps)
-	static const float COEFF_1 [] = {
-		0.00000233333,
-		-0.0078375,
-		8.044166667,
-		-2277 };
+	static const float COEFF_1[] =  {
+		0.00000127584,
+		-0.00424935897,
+		4.06025446775,
+		-838.0638694638 };
 
 	// 25 mph (11.176 mph)
-	static const float COEFF_2 [] = {
-		0.00000508333,
-		-0.017,
-		17.60666667,
-		-5221 };
+	static const float COEFF_2[] = {
+		0.000002624903,
+		-0.008925233100,
+		8.907428127428,
+		-2139.951981351815 };
 
 	for (uint8_t ix = 0; ix < COEFF_COUNT; ix++)
 	{
@@ -66,6 +68,17 @@ float magnet_watts(float speed_mps, uint16_t position)
 	float coeff[COEFF_COUNT];
 	float watts;
 
+	/*
+	 * After max servo position the curve turns upwards.
+	 * Below 7 mps, the method fails, so we don't adjust below this speed for now.
+	 */
+	if (position > POSITION_MIN_RESISTANCE ||
+		speed_mps < MIN_SPEED_MPS)
+	{
+		return 0.0f;
+	}
+
+	// Determine the curve for the speed.
 	curve_coeff(speed_mps, coeff);
 
 	watts =
@@ -90,9 +103,15 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	#define c	coeff[2]
 	#define d	coeff[3]
 
-	float f, g, h, r, m, m2, n, n2, theta, rc;
-	float /*x1, x2,*/ x2a, x2b, x2c, x2d, x3;
+	float f, g, h, r, theta, rc;
+	float x2a, x2b, x2c, x3;
 	int8_t k;
+
+	// Send the magnet to the home position if no mag watts required.
+	if (mag_watts <= 0)
+	{
+		return POSITION_HOME;
+	}
 
 	// Interpolate to calculate the coefficients of the position:pwoercurve.
 	curve_coeff(speed_mps, coeff);
@@ -110,30 +129,12 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	h = (((g*g) / 4) + ((f*f*f) / 27));
 
 	/* Original code adopted from javascript website, need to refactor, but it
-	 * works.  Code could solve for 3 solutions (x1, x2, x3) given a cubic
-	 * polynomial, however we only need to solve for the last form (x3).
-	 */
-	if (h > 0)
-	{
-		m = (-(g / 2) + (sqrt(h)));
-
-		//<!--K is used because math.pow cannot compute negative cube roots-->
-		k = 1;
-		if (m < 0) k = -1; else k = 1;
-		m2 = pow((m*k), (1.0 / 3.0));
-		m2 = m2*k;
-		k = 1;
-		n = (-(g / 2) - (sqrt(h)));
-		if (n < 0) k = -1; else k = 1;
-		n2 = (pow((n*k), (1.0 / 3.0)));
-		n2 = n2*k;
-		//<!-- - (S + U) / 2 - (b / 3a) + i*(S - U)*(3) ^ .5-->
-		x3 = (-1 * (m2 + n2) / 2 - (b / (3 * a)));
-	}
-	else
+	* works.  Code could solve for 3 solutions (x1, x2, x3) given a cubic
+	* polynomial, however we only need to solve for the last form (x3).
+	*/
+	if (h <= 0)
 	{
 		//<!-- - (S + U) / 2 - (b / 3a) - i*(S - U)*(3) ^ .5-->
-
 		r = ((sqrt((g*g / 4) - h)));
 		k = 1;
 		if (r < 0) k = -1;
@@ -141,15 +142,15 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 		rc = pow((r*k), (1.0 / 3.0))*k;
 		k = 1;
 		theta = acos((-g / (2 * r)));
-		//x1 = (2 * (rc*cos(theta / 3)) - (b / (3 * a)));
 		x2a = rc*-1;
 		x2b = cos(theta / 3);
 		x2c = sqrt(3)*(sin(theta / 3));
-		x2d = (b / 3 * a)*-1;
-		//x2 = (x2a*(x2b + x2c)) - (b / (3 * a));
 		x3 = (x2a*(x2b - x2c)) - (b / (3 * a));
 	}
+	else
+	{
+		return 0u;
+	}
 
-	return (uint16_t)x3;
+	return (uint16_t) x3;
 }
-
