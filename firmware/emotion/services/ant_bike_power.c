@@ -64,8 +64,6 @@
 #define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48									/** Message ID used when setting resistance via an ANT BURST. */
 #define ANT_BURST_MSG_ID_SET_POSITIONS	0x59									/** Message ID used when setting servo button stop positions via an ANT BURST. */
 //#define ANT_BURST_MSG_ID_SET_MAGNET_CA	0x60									/** Message ID used when setting magnet calibration via an ANT BURST. */
-#define ACK_MESSAGE_RETRIES 		3
-#define ACK_MESSAGE_RETRY_DELAY 	5 										// milliseconds
 
 /**@brief Debug logging for module.
  *
@@ -105,7 +103,7 @@ static uint8_t tx_buffer[TX_BUFFER_SIZE];
 static ant_ble_evt_handlers_t* mp_evt_handlers;
 static uint8_t m_event_count;												// Shared event counter for all ANT BP messages.
 
-static __INLINE uint32_t broadcast_message_transmit()
+static uint32_t broadcast_message_transmit()
 {
 	uint32_t err_code;
 
@@ -113,47 +111,18 @@ static __INLINE uint32_t broadcast_message_transmit()
 
 	if (ANT_ERROR_AS_WARN(err_code))
 	{
-		//BP_LOG("[BP]:broadcast_message_transmit WARN:%#.8x\r\n", err_code);
-		BP_LOG("[BP]:broadcast_message_transmit WARN:%#.8x\r\n\t[%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-				err_code,
-				tx_buffer[0],
-				tx_buffer[1],
-				tx_buffer[2],
-				tx_buffer[3],
-				tx_buffer[4],
-				tx_buffer[5],
-				tx_buffer[6],
-				tx_buffer[7],
-				tx_buffer[8]);
+		BP_LOG("[BP]:broadcast_message_transmit WARN:%#.8x\r\n", err_code);
 		err_code = NRF_SUCCESS;
 	}
 	
 	return err_code;
 }
 
-static __INLINE uint32_t acknolwedge_message_transmit()
+static uint32_t acknolwedge_message_transmit()
 {
 	uint32_t err_code;
-	uint8_t retries = 0;
 
-	while (retries++ < ACK_MESSAGE_RETRIES)
-	{
-		err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
-		if (ANT_ERROR_AS_WARN(err_code))
-		{
-			BP_LOG("[BP]:acknolwedge_message_transmit retry: %i, %#.8x\r\n", retries, err_code);
-
-			// Sleep and try again.
-			nrf_delay_ms(ACK_MESSAGE_RETRY_DELAY);
-			continue;
-		}
-		else
-		{
-			// No need to retry, either success or hard fail.
-			break;
-		}
-	}
-
+	err_code = sd_ant_acknowledge_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 	if (ANT_ERROR_AS_WARN(err_code))
 	{
 		BP_LOG("[BP]:acknolwedge_message_transmit WARN: %#.8x\r\n", err_code);
