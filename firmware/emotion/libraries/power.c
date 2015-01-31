@@ -14,7 +14,6 @@
 #include "debug.h"
 #include "math.h"
 #include "irt_common.h"
-#include "nrf_delay.h"
 #include "magnet.h"
 
 /**@brief Debug logging for module.

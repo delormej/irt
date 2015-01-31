@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "irt_peripheral.h"
-#include "nrf_delay.h"
 #include "nordic_common.h"
 #include "app_util.h"
 #include "app_gpiote.h"
@@ -212,8 +211,6 @@ static void irt_gpio_init()
  */
 static void button_init()
 {
-	uint32_t err_code;
-
 	if (HW_REVISION >= 2)
 	{
 		static app_button_cfg_t button_cfg = {
@@ -381,7 +378,6 @@ void peripheral_wakeup_set()
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 {
-	uint32_t err_code;
 	mp_on_peripheral_evt = p_on_peripheral_evt;
 	
 	led_init();
