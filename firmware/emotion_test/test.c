@@ -158,6 +158,8 @@ int main(int argc, char *argv [])
 
 	mag_watts_verify = 0.0f;
 
+	float speeds [] = { 15, 16, 22, 25 };
+
 	//position = magnet_position(24.5f * 0.44704f, 212 - 235);
 
 	//printf("Positon: %u\r\n", position);
@@ -171,10 +173,13 @@ int main(int argc, char *argv [])
 
 	//printf("\r\nSTARTING\r\n");
 
-	// Below 7.1mph, it bombs! Need to figure out why.
+	/* Below 7.1mph, it bombs! Need to figure out why.
 	for (speed_mps = (7.1f * 0.44704); speed_mps < (46.0 * 0.44704); 
-		speed_mps += (2.0f * 0.44704))
+		speed_mps += (2.0f * 0.44704)) */
+	for (int i = 0; i < 5; i++)
 	{
+		speed_mps = speeds[i] * 0.44704f;
+
 		for (position = 2000; position > 700; position -= 5)
 		{
 			mag_watts = magnet_watts(speed_mps, position);

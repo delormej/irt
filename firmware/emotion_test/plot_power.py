@@ -30,6 +30,29 @@ def main(file_name):
 			last_speed = val
 			last_idx = idx
 	
+	# Plot against actual data.
+	x = [1600, 1500, 1400, 1300, 1200, 1100, 1000, 900, 800, 700]
+	y15 = [0, 6, 21, 60, 116, 180, 248, 309, 349, 355]
+	y25 = [4, 15, 48, 116, 218, 345, 484, 561, 619, 619]
+	
+	x22 = [1500, 1400, 1300]
+	y22 = [11, 36, 92]
+
+	y16 = [None, 5, 20, 60, None, None, None, None, None, None]
+
+	plt.plot(x, y15, linestyle='None', marker='o')
+	labels.append(r'y = %i' % (15))
+	
+	plt.plot(x, y16, linestyle='None', marker='o')
+	labels.append(r'y = %i' % (16))
+	
+	plt.plot(x22, y22, linestyle='None', marker='o')
+	labels.append(r'y = %i' % (22))
+
+	plt.plot(x, y25, linestyle='None', marker='o')
+	labels.append(r'y = %i' % (25))
+
+
 	plt.xlabel('Position')
 	plt.ylabel('Watts')
 	plt.legend(labels, loc='upper right')
@@ -38,6 +61,9 @@ def main(file_name):
 	plt.axvline(x=800, color='grey')
 	plt.xlim(700, 1800)
 	plt.ylim(-10, 1000)
+
+
+
 
 	plt.show()
 
