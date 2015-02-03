@@ -707,6 +707,8 @@ namespace IRT_GUI
                 // Flag these as dirty
                 txtTotalWeight.Modified = true;
                 txtWheelSizeMm.Modified = true;
+                txtDrag.Modified = true;
+                txtRR.Modified = true;
 
                 // Wrap this in a seperate thread.
                 //var t = new System.Threading.Thread(() =>
@@ -721,6 +723,9 @@ namespace IRT_GUI
                     System.Threading.Thread.Sleep(500);
                     btnCalibrationSet_Click(this, null);
                     // Wait 1/2 second before pushing the next one.
+                    System.Threading.Thread.Sleep(500);
+
+                    btnCalibration2Set_Click(this, null);
                     System.Threading.Thread.Sleep(500);
 
                     btnSettingsSet_Click(this, null);
@@ -1530,6 +1535,8 @@ namespace IRT_GUI
 
                     List<SubPages> parameters = new List<SubPages>();
                     parameters.Add(SubPages.Product);
+                    parameters.Add(SubPages.Drag);
+                    parameters.Add(SubPages.RR);
                     parameters.Add(SubPages.TotalWeight);
                     parameters.Add(SubPages.WheelSize);
                     parameters.Add(SubPages.Settings);
@@ -1538,8 +1545,6 @@ namespace IRT_GUI
                     parameters.Add(SubPages.Features);
                     parameters.Add(SubPages.Crr);
                     parameters.Add(SubPages.ServoPositions);
-                    parameters.Add(SubPages.Drag);
-                    parameters.Add(SubPages.RR);
 
                     var t = new System.Threading.Thread(() =>
                     {
