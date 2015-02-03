@@ -23,6 +23,10 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #define POSITION_HOME			2000u			// Home position for the magnet.
 #define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
 
+#ifndef M_PI
+#    define M_PI 3.14159265358979323846
+#endif
+
 /**@brief	Calculates the coefficient values for a cubic polynomial
  *			that plots a power curve for the magnet at a given speed.
  *
@@ -84,6 +88,36 @@ float magnet_watts(float speed_mps, uint16_t position)
 		coeff[3];
 
 	return watts;
+}
+
+float j_acos(float x)
+{
+	return (-0.69813170079773212f * x * x - 0.87266462599716477f) * x + 1.5707963267948966f;
+}
+
+float j_sin(float x)
+{
+	const float B = 4 / M_PI;
+	const float C = -4 / (M_PI*M_PI);
+	const float P = 0.225;
+
+	float y = B * x + C * x * abs(x);
+
+	y = P * (y * abs(y) - y) + y;
+
+	return y;
+}
+
+float j_cos(float x)
+{
+	x += M_PI / 2;
+
+	if (x > M_PI)   // Original x > M_PI/2
+	{
+		x -= 2 * M_PI;   // Wrap: cos(x) = cos(x - 2 M_PI)
+	}
+
+	return j_sin(x);
 }
 
 /**@brief	Calculates magnet position for a given speed and watt target.
