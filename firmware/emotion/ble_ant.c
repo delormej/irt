@@ -77,6 +77,8 @@ ble_state_e irt_ble_ant_state = DISCONNECTED;
 #define BA_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
+#if defined(BLE_ENABLED)	// Bluetooth enabled?
+
 #if defined(BLE_NUS_ENABLED)
 static ble_nus_t m_nus;				// BLE UART service for debugging purposes.
 
@@ -113,6 +115,7 @@ do														\
 	}													\
 } while(0)
 
+#endif // BLE_ENABLED
 /**@brief Assert macro callback function.
  *
  * @details This function will be called in case of an assert in the SoftDevice.
@@ -128,6 +131,7 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name) {
 	app_error_handler(DEAD_BEEF, line_num, p_file_name);
 }
 
+#if defined(BLE_ENABLED)
 /**@brief	Checks to see if the error is a BLE_ERROR_GATTS_SYS_ATTR_MISSING,
  * 			if so respond to resolve.
  */
@@ -291,15 +295,19 @@ static void ble_cps_service_init() {
 	err_code = ble_cps_init(&m_cps, &cps_init);
 	APP_ERROR_CHECK(err_code);
 }
+#endif // BLE_ENABLED
 
 /**@brief Initialize services that will be used by the application.
  *
  * @details Initialize the Heart Rate and Device Information services.
  */
 static void services_init() {
+
+#if defined(BLE_ENABLED)
 	ble_dis_service_init();		// Discovery Service
 	ble_nus_service_init();		// Debug Info Service (BLE_UART)
 	ble_cps_service_init();		// Cycling Power Service
+#endif
 
 	// Initialize ANT bike power channel.
 	ant_bp_tx_init(mp_ant_ble_evt_handlers);
@@ -312,6 +320,7 @@ static void services_init() {
 	ant_sp_tx_init();
 }
 
+#if defined(BLE_ENABLED)
 /**@brief Connection Parameters Module handler.
  *
  * @details This function will be called for all events in the Connection Parameters Module which
@@ -388,6 +397,7 @@ static void conn_params_init(void) {
 	err_code = ble_conn_params_init(&cp_init);
 	APP_ERROR_CHECK(err_code);
 }
+#endif // BLE_ENABLED
 
 /**@brief Application's TOP LEVEL Stack ANT event handler.
  *
@@ -408,6 +418,7 @@ static void on_ant_evt(ant_evt_t * p_ant_evt) {
 	}
 }
 
+#if defined(BLE_ENABLED)
 /**@brief Application's Stack BLE event handler.
  *
  * @param[in]   p_ble_evt   Bluetooth stack event.
@@ -490,6 +501,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 #endif		
 	on_ble_evt(p_ble_evt);
 }
+#endif // BLE_ENABLED
 
 /**@brief BLE + ANT stack initialization.
  *
@@ -497,9 +509,13 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
  */
 static void ble_ant_stack_init(void)
 {
+	uint32_t err_code;
+
+#if defined(BLE_ENABLED)
 	// Subscribe for BLE events.
-	uint32_t err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
+	err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
 	APP_ERROR_CHECK(err_code);
+#endif //BLE_ENABLED
 
 	// Subscribe for ANT events.
 	err_code = softdevice_ant_evt_handler_set(on_ant_evt);
@@ -515,12 +531,13 @@ void ble_ant_resistance_ack(uint8_t op_code, uint16_t value)
 	err_code = ant_bp_resistance_tx_send(op_code, value);
 	APP_ERROR_CHECK(err_code);
 
+#if defined(BLE_ENABLED)
 	if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
 	{
 		err_code = ble_cps_resistance_indicate(&m_cps, op_code, value);
 		BLE_ERROR_CHECK(err_code);
 	}
-
+#endif // BLE_ENABLED
 	BA_LOG("[BA]:ble_ant_resistance_ack op:%i value:%i\r\n", op_code, value);
 }
 
@@ -536,6 +553,7 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas)
 	// Always send ANT+ message.
 	ant_bp_tx_send(p_cps_meas);
 
+#if defined(BLE_ENABLED)
 	// Only send BLE power every 4 messages (1hz vs. ANT is 4hz)
 	if (++event_count % 4 == 0)
 	{
@@ -546,6 +564,7 @@ void cycling_power_send(irt_power_meas_t * p_cps_meas)
 			BLE_ERROR_CHECK(err_code);
 		}
 	}
+#endif //BLE_ENABLED
 }
 
 //
@@ -585,16 +604,23 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 	// Initialize S310 SoftDevice
 	ble_ant_stack_init();
 
+#if defined(BLE_ENABLED)
 	// Initialize Bluetooth stack parameters
 	gap_params_init();
+#endif // BLE_ENABLED
+
 	services_init();
+
+#if defined(BLE_ENABLED)
 	advertising_init();
 	conn_params_init();
+#endif
 }
 
 /**@brief Start advertising.
  */
 void ble_advertising_start(void) {
+#if defined(BLE_ENABLED)
 	uint32_t err_code;
 	ble_gap_adv_params_t adv_params;// Parameters to be passed to the stack when starting advertising. */
 
@@ -612,11 +638,14 @@ void ble_advertising_start(void) {
 
 	irt_ble_ant_state = ADVERTISING;
 	mp_ant_ble_evt_handlers->on_ble_advertising();
+#endif // BLE_ENABLED
 }
 
 void ble_ant_start() {
 	// Start execution
+#if defined(BLE_ENABLED)
 	ble_advertising_start();
+#endif // BLE_ENABLED
 
 	// Open the ANT channel for transmitting power.
 	ant_bp_tx_start();
