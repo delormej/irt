@@ -39,6 +39,9 @@ namespace IntervalParser
             var list = new List<Entry>();
 
             // read input file into array
+            /* csv file format:
+             * duration,watts,comments
+             */
             using (StreamReader reader = File.OpenText(filename))
             {
                 while (!reader.EndOfStream)
@@ -122,6 +125,11 @@ namespace IntervalParser
             Console.Write("Parsed interval file {0} and output file {1}.",
                 inputFilename,
                 outputFilename);
+        }
+
+        public static void Main()
+        {
+            Parse(null, null);
         }
     }
 }

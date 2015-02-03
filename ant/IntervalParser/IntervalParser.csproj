@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{C0C89786-3095-4911-8338-44D9F7D221DF}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <OutputType>WinExe</OutputType>
     <RootNamespace>IntervalParser</RootNamespace>
     <AssemblyName>IntervalParser</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
