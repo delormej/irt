@@ -16,6 +16,7 @@
 
 #define RESISTANCE_LEVELS 		resistance_level_count() 	// Number of resistance levels available.
 #define ERG_ADJUST_LEVEL		2U							// Watts to adjust increment /decrement
+#define ERG_ADJUST_MIN			50U							// Erg doesn't go below this watt level.
 
 #define MIN_RESISTANCE_LEVEL	resistance_position_min()	// Minimum by which there is no longer resistance.
 #define MAX_RESISTANCE_LEVEL	resistance_position_max()	// Maximum resistance.

@@ -1073,7 +1073,7 @@ static void on_resistance_dec(void)
 			break;
 
 		case RESISTANCE_SET_ERG:
-			if (m_sim_forces.erg_watts > 50u)
+			if (m_sim_forces.erg_watts > ERG_ADJUST_MIN)
 			{
 				// Decrement by n watts;
 				m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
@@ -1123,12 +1123,53 @@ static void on_resistance_inc(void)
 	}
 }
 
+static void on_resistance_min(void)
+{
+	switch (m_resistance_mode)
+	{
+		case RESISTANCE_SET_STANDARD:
+			// Turn off resistance
+			on_resistance_off();
+			break;
+
+		case RESISTANCE_SET_ERG:
+			// Decrement by large watts (x watts * 10)
+			if (m_sim_forces.erg_watts > ERG_ADJUST_MIN)
+			{
+				m_sim_forces.erg_watts -= (ERG_ADJUST_LEVEL*10);
+				bp_queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+				led_set(LED_BUTTON_DOWN);
+			}
+			else
+			{
+				led_set(LED_MIN_MAX);
+			}
+			break;
+
+		default:
+			break;
+	}
+}
+
 static void on_resistance_max(void)
 {
-	m_resistance_mode = RESISTANCE_SET_STANDARD;
-	m_resistance_level = RESISTANCE_LEVELS-1;
-	resistance_level_set(m_resistance_level);
-	bp_queue_resistance_ack(m_resistance_mode, m_resistance_level);
+	switch (m_resistance_mode)
+	{
+		case RESISTANCE_SET_STANDARD:
+			m_resistance_level = RESISTANCE_LEVELS-1;
+			resistance_level_set(m_resistance_level);
+			bp_queue_resistance_ack(m_resistance_mode, m_resistance_level);
+			break;
+
+		case RESISTANCE_SET_ERG:
+			// Increment by large watts (x watts * 10)
+			m_sim_forces.erg_watts += ERG_ADJUST_LEVEL*10;
+			bp_queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+			break;
+
+		default:
+			break;
+	}
 
 	// Quick blink for feedback.
 	led_set(LED_BUTTON_UP);
@@ -1415,8 +1456,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_DOWN:
-			// Turn off resistance
-			on_resistance_off();
+			on_resistance_min();
 			break;
 
 		case ANT_CTRL_BUTTON_MIDDLE:
