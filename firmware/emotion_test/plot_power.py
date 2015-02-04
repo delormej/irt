@@ -62,9 +62,6 @@ def main(file_name):
 	plt.xlim(700, 1800)
 	plt.ylim(-10, 1000)
 
-
-
-
 	plt.show()
 
 if __name__ == "__main__":
