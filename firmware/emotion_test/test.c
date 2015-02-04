@@ -4,8 +4,8 @@
 (2) build with debug symbols.
 cl test.c /ZI 
 
+cl test.c ../emotion/libraries/math/acosf.c ../emotion/libraries/math/sqrtf.c ../emotion/libraries/math/cosf.c ../emotion/libraries/math/sinf.c ../emotion/libraries/math/fabsf.c ../emotion/libraries/math/rem_pio2f.c /I ../emotion/libraries/math
 
-cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emotion\libraries\nrf_pwm.c /ZI /I..\emotion\libraries\
 */
 
 #include <stdio.h>
@@ -13,9 +13,10 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <math.h>
+//#include <math.h>
+#include "math_private.h"
 #include <float.h>
-#include <windows.h>
+//#include <windows.h>
 
 #define COEFF_COUNT				4u				// Cubic poynomial has 4 coefficients.
 #define POSITION_MAX_RESISTANCE	700u			// Position for maximum resistance.
@@ -23,9 +24,6 @@ cl test.c ..\emotion\libraries\power.c ..\emotion\libraries\resistance.c ..\emot
 #define POSITION_HOME			2000u			// Home position for the magnet.
 #define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
 
-#ifndef M_PI
-#    define M_PI 3.14159265358979323846
-#endif
 
 /**@brief	Calculates the coefficient values for a cubic polynomial
  *			that plots a power curve for the magnet at a given speed.
@@ -90,35 +88,6 @@ float magnet_watts(float speed_mps, uint16_t position)
 	return watts;
 }
 
-float j_acos(float x)
-{
-	return (-0.69813170079773212f * x * x - 0.87266462599716477f) * x + 1.5707963267948966f;
-}
-
-float j_sin(float x)
-{
-	const float B = 4 / M_PI;
-	const float C = -4 / (M_PI*M_PI);
-	const float P = 0.225;
-
-	float y = B * x + C * x * abs(x);
-
-	y = P * (y * abs(y) - y) + y;
-
-	return y;
-}
-
-float j_cos(float x)
-{
-	x += M_PI / 2;
-
-	if (x > M_PI)   // Original x > M_PI/2
-	{
-		x -= 2 * M_PI;   // Wrap: cos(x) = cos(x - 2 M_PI)
-	}
-
-	return j_sin(x);
-}
 
 /**@brief	Calculates magnet position for a given speed and watt target.
  *
@@ -165,16 +134,16 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	if (h <= 0)
 	{
 		//<!-- - (S + U) / 2 - (b / 3a) - i*(S - U)*(3) ^ .5-->
-		r = ((sqrt((g*g / 4) - h)));
+		r = ((j_sqrtf((g*g / 4) - h)));
 		k = 1;
 		if (r < 0) k = -1;
 		//<!--rc is the cube root of 'r' -->
 		rc = pow((r*k), (1.0 / 3.0))*k;
 		k = 1;
-		theta = acos((-g / (2 * r)));
+		theta = j_acosf((-g / (2 * r)));
 		x2a = rc*-1;
-		x2b = cos(theta / 3);
-		x2c = sqrt(3)*(sin(theta / 3));
+		x2b = j_cosf(theta / 3);
+		x2c = j_sqrtf(3)*(j_sinf(theta / 3));
 		x3 = (x2a*(x2b - x2c)) - (b / (3 * a));
 	}
 	else

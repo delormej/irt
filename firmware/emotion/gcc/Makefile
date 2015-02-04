@@ -7,7 +7,8 @@
 
 # List all source files the application uses.
 APPLICATION_SRCS = $(notdir $(wildcard ../*.c))  
-APPLICATION_SRCS += $(notdir $(wildcard ../**/*.c))  
+APPLICATION_SRCS += $(notdir $(wildcard ../**/*.c))
+APPLICATION_SRCS += $(notdir $(wildcard ../**/**/*.c))    
 
 ############################################
 # SDK libraries used.
@@ -27,7 +28,9 @@ APPLICATION_SRCS += app_button.c
 
 SOURCE_PATHS +=  ../libraries/
 SOURCE_PATHS +=  ../services/
+SOURCE_PATHS += ../libraries/math/
 LIBRARY_PATHS += ../libraries/
+LIBRARY_PATHS += ../libraries/math/
 LIBRARY_PATHS += ../services/
 DEPLOY_PATH = '../../../../../Google Drive/Firmware/'
 DEPLOY_PATH2 = '../../../../../SkyDrive/InsideRide/Builds/'
@@ -78,7 +81,7 @@ GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
 ############################################
 SW_REVISION_MAJ := 0
 SW_REVISION_MIN := 9
-SW_REVISION_BLD := 15
+SW_REVISION_BLD := 16
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)

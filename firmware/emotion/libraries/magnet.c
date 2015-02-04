@@ -10,6 +10,7 @@
 #include <float.h>
 #include "magnet.h"
 #include "math.h"
+#include "math_private.h"
 #include "debug.h"
 
 /**@brief Debug logging for module.
@@ -135,16 +136,16 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	if (h <= 0)
 	{
 		//<!-- - (S + U) / 2 - (b / 3a) - i*(S - U)*(3) ^ .5-->
-		r = ((sqrt((g*g / 4) - h)));
+		r = ((j_sqrtf((g*g / 4) - h)));
 		k = 1;
 		if (r < 0) k = -1;
 		//<!--rc is the cube root of 'r' -->
 		rc = pow((r*k), (1.0 / 3.0))*k;
 		k = 1;
-		theta = acos((-g / (2 * r)));
+		theta = j_acosf((-g / (2 * r)));
 		x2a = rc*-1;
-		x2b = cos(theta / 3);
-		x2c = sqrt(3)*(sin(theta / 3));
+		x2b = j_cosf(theta / 3);
+		x2c = j_sqrtf(3)*(j_sinf(theta / 3));
 		x3 = (x2a*(x2b - x2c)) - (b / (3 * a));
 	}
 	else

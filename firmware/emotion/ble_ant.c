@@ -34,6 +34,11 @@
 #include "ble_gap.h"
 #include "debug.h"
 
+/* Gives the option to compile without BLE, which saves a huge amount of
+ * program space (7+kb).
+ */
+#define BLE_ENABLED
+
 #if defined(BLE_NUS_ENABLED)
 #include "ble_nus.h"
 #endif
