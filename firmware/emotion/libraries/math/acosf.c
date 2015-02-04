@@ -1,16 +1,8 @@
-/* e_acosf.c -- float version of e_acos.c.
- * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
- */
-
-/*
- * ====================================================
- * Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+/* Hacked and copied from:
+ *  https://sourceware.org/git/?p=glibc.git;a=tree;f=sysdeps/ieee754/flt-32;hb=4ffffbd272264f083f35783ed81339304025f855
  *
- * Developed at SunPro, a Sun Microsystems, Inc. business.
- * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice
- * is preserved.
- * ====================================================
+ * Temporary solution in order to save space since using the real trig functions bloats the code way too much
+ * to be used.
  */
 
 #include "math_private.h"

@@ -1,9 +1,9 @@
-
-/* __ieee754_rem_pio2f(x,y)
-*
-* return the remainder of x rem pi/2 in y[0]+y[1]
-* use __kernel_rem_pio2f()
-*/
+/* Hacked and copied from:
+ *  https://sourceware.org/git/?p=glibc.git;a=tree;f=sysdeps/ieee754/flt-32;hb=4ffffbd272264f083f35783ed81339304025f855
+ *
+ * Temporary solution in order to save space since using the real trig functions bloats the code way too much
+ * to be used.
+ */
 
 #include "math_private.h"
 

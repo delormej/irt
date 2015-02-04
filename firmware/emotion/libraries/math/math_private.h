@@ -1,3 +1,9 @@
+/* Hacked and copied from:
+ *  https://sourceware.org/git/?p=glibc.git;a=tree;f=sysdeps/ieee754/flt-32;hb=4ffffbd272264f083f35783ed81339304025f855
+ *
+ * Temporary solution in order to save space since using the real trig functions bloats the code way too much
+ * to be used.
+ */
 
 #ifndef _MATH_PRIVATE_H_
 #define	_MATH_PRIVATE_H_
@@ -6,20 +12,6 @@
 
 #include <stdint.h>
 #include <float.h>
-
-/*
- * The original fdlibm code used statements like:
- *	n0 = ((*(int*)&one)>>29)^1;		* index of high word *
- *	ix0 = *(n0+(int*)&x);			* high word of x *
- *	ix1 = *((1-n0)+(int*)&x);		* low word of x *
- * to dig two 32 bit words out of the 64 bit IEEE floating point
- * value.  That is non-ANSI, and, moreover, the gcc instruction
- * scheduler gets it wrong.  We instead use the following macros.
- * Unlike the original code, we determine the endianness at compile
- * time, not at run time; I don't see much benefit to selecting
- * endianness at run time.
- */
-
 
 /*
  * A union which permits us to convert between a float and a 32 bit
