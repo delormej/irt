@@ -51,7 +51,7 @@
 #include "debug.h"
 #include "boards.h"
 #include "battery.h"
-#include "irt_error_log.h"
+//#include "irt_error_log.h"
 #include "irt_led.h"
 #include "bp_response_queue.h"
 
@@ -154,7 +154,7 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	led_set(LED_ERROR);
 
 	// Fetch the stack and save the error.
-	irt_error_save(error_code, line_num, p_file_name);
+	//irt_error_save(error_code, line_num, p_file_name);
 
     // Indicate error state in General Purpose Register.
 	sd_power_gpregret_set(IRT_GPREG_ERROR);
@@ -164,10 +164,10 @@ void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p
 	__disable_irq();
 
 #if defined(ENABLE_DEBUG_ASSERT)
-	irt_error_log_data_t* p_error = irt_error_last();
+	//irt_error_log_data_t* p_error = irt_error_last();
 
-	LOG("[MAIN]:app_error_handler {HALTED ON ERROR: %#.8x}: %s:%lu\r\nCOUNT = %i\r\n",
-			error_code, p_file_name, line_num, p_error->failure);
+	LOG("[MAIN]:app_error_handler {HALTED ON ERROR: %#.8x}: %s:%lu\r\n", //COUNT = %i\r\n",
+			error_code, p_file_name, line_num /*, p_error->failure*/);
 
 	#if defined(PIN_EN_SERVO_PWR)
 	// Kill power to the servo in case it's in flight.
@@ -832,7 +832,7 @@ static void servo_pos_to_response(ant_request_data_page_t* p_request, uint8_t* p
 }
 
 /**@brief	Copies the last error to a response structure.
- */
+ *
 static void error_to_response(uint8_t* p_response)
 {
 	irt_error_log_data_t* p_err;
@@ -841,7 +841,7 @@ static void error_to_response(uint8_t* p_response)
 	memcpy(p_response, &(p_err->failure), sizeof(uint16_t));
 	memcpy(&(p_response[2]), &(p_err->line_number), sizeof(uint16_t));
 	memcpy(&(p_response[4]), &(p_err->err_code), sizeof(uint8_t));
-}
+}*/
 
 /**@brief	Sends data page 2 response.
  */
@@ -872,9 +872,9 @@ static void on_get_parameter(ant_request_data_page_t* p_request)
 			memcpy(&response, &m_user_profile.wheel_size_mm, sizeof(uint16_t));
 			break;
 
-		case IRT_MSG_SUBPAGE_GET_ERROR:
+		/*case IRT_MSG_SUBPAGE_GET_ERROR:
 			error_to_response(response);
-			break;
+			break; */
 
 		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
 			memcpy(&response, &m_user_profile.servo_offset, sizeof(int16_t));
@@ -1782,7 +1782,7 @@ static void config_dcpower()
     // This shows now appreciable difference, see https://devzone.nordicsemi.com/question/5980/dcdc-and-softdevice/
     //err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_MODE_AUTOMATIC);
 	//err_code = sd_power_dcdc_mode_set(NRF_POWER_DCDC_MODE_OFF);
-    APP_ERROR_CHECK(err_code);
+    //APP_ERROR_CHECK(err_code);
 }
 
 
@@ -1791,7 +1791,7 @@ static void config_dcpower()
 static uint32_t check_reset_reason()
 {
 	uint32_t reason, gpreg;
-	irt_error_log_data_t* p_error;
+	//irt_error_log_data_t* p_error;
 
 	// Read the reset reason
 	reason = NRF_POWER->RESETREAS;
@@ -1832,14 +1832,14 @@ static uint32_t check_reset_reason()
 	if (gpreg == IRT_GPREG_ERROR)
 	{
 		// Log the occurrence.
-		p_error = irt_error_last();
+		//p_error = irt_error_last();
 
 		LOG("[MAIN]:check_reset_reason Resetting from previous error.\r\n");
-		LOG("\t{COUNT: %i, ERROR: %#.8x}: %s:%lu\r\n",
+		/*LOG("\t{COUNT: %i, ERROR: %#.8x}: %s:%lu\r\n",
 				p_error->failure,
 				p_error->err_code,
 				p_error->message,
-				p_error->line_number);
+				p_error->line_number); */
 
 		// Now clear the register.
 		NRF_POWER->GPREGRET = 0;
@@ -1847,7 +1847,7 @@ static uint32_t check_reset_reason()
 	else
 	{
 		// Initialize the error structure.
-		irt_error_init();
+		//irt_error_init();
 	}
 
 	return reason;
