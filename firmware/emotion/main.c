@@ -267,12 +267,12 @@ static bool dequeue_ant_response(void)
 
 /**@brief Parses the wheel params message from the KICKR.  It then advises the
  * 		  speed module and updates the user profile.  */
-static void set_wheel_params(uint8_t *pBuffer)
+static void set_wheel_params(uint16_t value)
 {
 	uint16_t wheel_size;
 	
 	// Comes as 20700 for example, we'll round to nearest mm.
-	wheel_size = uint16_decode(pBuffer) / 10;
+	wheel_size = value / 10;
 
 	if (m_user_profile.wheel_size_mm != wheel_size && wheel_size > 1800)
 	{
@@ -1314,9 +1314,12 @@ static void on_ble_uart(uint8_t * data, uint16_t length)
  */
 static void on_set_resistance(rc_evt_t rc_evt)
 {
+	uint16_t value = 0;
+
+	value =  uint16_decode(rc_evt.pBuffer);
+
 	LOG("[MAIN]:on_set_resistance {OP:%#.2x,VAL:%i}\r\n",
-			(uint8_t)rc_evt.operation,
-			uint16_decode(rc_evt.pBuffer));
+			(uint8_t)rc_evt.operation, value);
 	// 
 	// Parse the messages and set state or resistance as appropriate.
 	//
@@ -1324,7 +1327,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	{
 		case RESISTANCE_SET_STANDARD:
 			m_resistance_mode = RESISTANCE_SET_STANDARD;
-			m_resistance_level = rc_evt.pBuffer[0];
+			m_resistance_level = value;
 			resistance_level_set(m_resistance_level);
 			break;
 			
@@ -1334,14 +1337,14 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			m_resistance_mode = RESISTANCE_SET_PERCENT;
 			
 			// Parse the buffer for percentage.
-			float percent = wahoo_resistance_pct_decode(rc_evt.pBuffer);
+			float percent = wahoo_resistance_pct_decode(value);
 			resistance_pct_set(percent);
 			break;
 
 		case RESISTANCE_SET_ERG:
 			// Assign target watt level.
 			m_resistance_mode = RESISTANCE_SET_ERG;
-			m_sim_forces.erg_watts = uint16_decode(rc_evt.pBuffer);
+			m_sim_forces.erg_watts = value;
 			break;
 
 		// This message never seems to come via the apps?
@@ -1353,20 +1356,18 @@ static void on_set_resistance(rc_evt_t rc_evt)
 		case RESISTANCE_SET_SLOPE:
 			m_resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the slope.
-			m_sim_forces.grade = wahoo_sim_grade_decode(rc_evt.pBuffer);
+			m_sim_forces.grade = wahoo_sim_grade_decode(value);
 			break;
 			
 		case RESISTANCE_SET_WIND:
 			m_resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the wind speed.
-			m_sim_forces.wind_speed_mps = wahoo_sim_wind_decode(rc_evt.pBuffer);
-			LOG("[MAIN]:on_set_resistance: set wind_speed_mps %i\r\n",
-					(uint16_t)(m_sim_forces.wind_speed_mps * 1000));
+			m_sim_forces.wind_speed_mps = wahoo_sim_wind_decode(value);
 			break;
 			
 		case RESISTANCE_SET_WHEEL_CR:
 			//  Parse wheel size and update accordingly.
-			set_wheel_params(rc_evt.pBuffer);
+			set_wheel_params(value);
 			break;
 			
 		case RESISTANCE_SET_BIKE_TYPE:
@@ -1381,7 +1382,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 
 		case RESISTANCE_SET_SERVO_POS:
 			// Move the servo to a specific position.
-			resistance_position_set(uint16_decode(rc_evt.pBuffer));
+			resistance_position_set(value);
 			break;
 
 		case RESISTANCE_SET_WEIGHT:
@@ -1394,7 +1395,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	}
 
 	// Send acknowledgment.
-	bp_queue_resistance_ack(rc_evt.operation, uint16_decode(rc_evt.pBuffer));
+	bp_queue_resistance_ack(rc_evt.operation, value);
 }
 
 // Invoked when a button is pushed on the remote control.
