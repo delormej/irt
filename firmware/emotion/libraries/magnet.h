@@ -12,6 +12,31 @@
 #include <stdint.h>
 #include <float.h>
 
+/*
+ * These MIN & MAX positions represent the limits of the math that has been
+ * calculated for resistance based on position.  The values are USER position
+ * values as opposed to ACTUAL servo position values, which are different
+ * MIN & MAX.
+ *
+ * ACTUAL servo position is user value + servo offset, i.e.
+ * 	800 (user) + 351 (offset) = 1,151 (actual)
+ * Technically we can drive the servo to as much as 1,000 in actual value, but
+ * power flattens out and starts to decline in this range, so we restrict to
+ * about 1,100 since most servo offsets are > 300.
+ *
+ * Based on early modeling the math has always been based on a system of
+ * servo positions roughly 699 (max resistance) - 2,107 (min resistance).
+ * For the latest models we're constraining that further to 800 - 2,000.
+ *
+ * NOTE: in some testing, there may be a small amount of actual resistance between
+ * the min level we've modeled and the OFF position.
+ */
+#define MAGNET_POSITION_OFF						2000		// This is where we park the servo, well out of range.
+#define MAGNET_POSITION_MIN_RESISTANCE			1500		// Above this position, we don't calculate any watts.
+#define MAGNET_POSITION_MAX_RESISTANCE			800
+
+#define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
+
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
  *			position.
  */

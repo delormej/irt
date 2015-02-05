@@ -18,9 +18,6 @@
 #define ERG_ADJUST_LEVEL		2U							// Watts to adjust increment /decrement
 #define ERG_ADJUST_MIN			50U							// Erg doesn't go below this watt level.
 
-#define MIN_RESISTANCE_LEVEL	resistance_position_min()	// Minimum by which there is no longer resistance.
-#define MAX_RESISTANCE_LEVEL	resistance_position_max()	// Maximum resistance.
-
 /**@brief Bike types, used for predefined resistance coefficients. */
 typedef enum
 {
@@ -104,14 +101,6 @@ uint16_t resistance_position_get(void);
  *
  */
 uint16_t resistance_position_set(uint16_t position);
-
-/**@brief		Gets the minimum (magnet off) resistance position.
- */
-uint16_t resistance_position_min(void);
-
-/**@brief 		Gets the maximum resistance position.
- */
-uint16_t resistance_position_max(void);
 
 /**@brief		Validates the values of positions are in range.
  *

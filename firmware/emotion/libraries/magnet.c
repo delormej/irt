@@ -23,10 +23,6 @@
 #endif // ENABLE_DEBUG_LOG
 
 #define COEFF_COUNT				4u				// Cubic poynomial has 4 coefficients.
-//#define POSITION_MAX_RESISTANCE	700u			// Position for maximum resistance.
-#define POSITION_MIN_RESISTANCE	1500u			// After this position, no more resistance is applied.
-#define POSITION_HOME			2000u			// Home position for the magnet.
-#define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
 
 /**@brief	Calculates the coefficient values for a cubic polynomial
  *			that plots a power curve for the magnet at a given speed.
@@ -62,7 +58,7 @@ static void curve_coeff(float speed_mps, float *coeff)
 }
 
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
- *			position.
+ *			position.  This is the user mag position, not actual position.
  */
 float magnet_watts(float speed_mps, uint16_t position)
 {
@@ -73,10 +69,14 @@ float magnet_watts(float speed_mps, uint16_t position)
 	 * After max servo position the curve turns upwards.
 	 * Below 7 mps, the method fails, so we don't adjust below this speed for now.
 	 */
-	if (position > POSITION_MIN_RESISTANCE ||
+	if (position > MAGNET_POSITION_MIN_RESISTANCE ||
 		speed_mps < MIN_SPEED_MPS)
 	{
 		return 0.0f;
+	}
+	else if (position < MAGNET_POSITION_MAX_RESISTANCE)
+	{
+		position = MAGNET_POSITION_MAX_RESISTANCE;
 	}
 
 	// Determine the curve for the speed.
@@ -111,7 +111,7 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	// Send the magnet to the home position if no mag watts required.
 	if (mag_watts <= 0)
 	{
-		return POSITION_HOME;
+		return MAGNET_POSITION_MIN_RESISTANCE;
 	}
 
 	// Interpolate to calculate the coefficients of the position:pwoercurve.

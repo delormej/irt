@@ -18,8 +18,6 @@
 #include "debug.h"
 
 #define MIN_THRESHOLD_MOVE	2		// Minimum threshold for a servo move.
-#define MIN_SERVO_RANGE		699		// Defined spec for servo is between 2ms and 1ms, but we have a little legacy where we were setting to 699 - this should be eliminated.
-#define MAX_SERVO_RANGE		2000
 
 #define ACTUAL_SERVO_POS(POS)	POS + mp_user_profile->servo_offset
 
@@ -84,18 +82,6 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 	uint32_t err_code;
 	// Actual servo position after calibration.
 	uint16_t actual_servo_pos;
-	//
-	// Ensure we don't move the servo beyond it's min and max.
-	// NOTE: min/max are reversed on the servo; max is around 699, off is 2107
-	//
-	if (servo_pos < RESISTANCE_LEVEL[RESISTANCE_LEVELS-1])
-	{
-		servo_pos = RESISTANCE_LEVEL[RESISTANCE_LEVELS-1];
-	}
-	else if (servo_pos > RESISTANCE_LEVEL[0])
-	{
-		servo_pos = RESISTANCE_LEVEL[0];
-	}
 
 	if ( (m_servo_pos != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
 	{
@@ -115,40 +101,37 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 		 * Adjusted offset for the 2,000 - 1,000 range is -301, but since testing was done at -50,
 		 * the new baseline offset is 351 for a servo that is factory calibrated to 1,451.
 		*/
-		actual_servo_pos = ACTUAL_SERVO_POS(servo_pos);
-
-		// Using offset, guard to acceptable range of 2000-1000
-		if (actual_servo_pos > MAX_SERVO_RANGE)
+		if (servo_pos < MAGNET_POSITION_MAX_RESISTANCE)
 		{
-			actual_servo_pos = MAX_SERVO_RANGE;
+			// Adjust to the maximum resistance position.
+			actual_servo_pos = ACTUAL_SERVO_POS(MAGNET_POSITION_MAX_RESISTANCE);
+			m_servo_pos = MAGNET_POSITION_MAX_RESISTANCE;
 		}
-		else if (actual_servo_pos < MIN_SERVO_RANGE)
+		else
 		{
-			actual_servo_pos = MIN_SERVO_RANGE;
+			// Adjust to the actual position based on servo offset.
+			actual_servo_pos = ACTUAL_SERVO_POS(servo_pos);
+
+			if (actual_servo_pos >= MAGNET_POSITION_OFF)
+			{
+				// Adjust to the minimum resistance position.
+				actual_servo_pos = MAGNET_POSITION_OFF;
+				m_servo_pos = MAGNET_POSITION_OFF;
+			}
+			else
+			{
+				// Save module state for next adjustment.
+				m_servo_pos = servo_pos;
+			}
 		}
 
 		err_code = pwm_set_servo(actual_servo_pos);
 		APP_ERROR_CHECK(err_code);
 
-		m_servo_pos = servo_pos;
 		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
 	}
 
 	return m_servo_pos;
-}
-
-/**@brief		Gets the minimum (magnet off) resistance position.
- */
-uint16_t resistance_position_min(void)
-{
-	return RESISTANCE_LEVEL[0];
-}
-
-/**@brief 		Gets the maximum resistance position.
- */
-uint16_t resistance_position_max(void)
-{
-	return RESISTANCE_LEVEL[RESISTANCE_LEVELS-1];
 }
 
 /**@brief		Validates the values of positions are in range.
@@ -168,13 +151,13 @@ bool resistance_positions_validate(servo_positions_t* positions)
 	do
 	{
 		// If it's the home position 2,000 it's valid.
-		if (positions->positions[index] == MAX_SERVO_RANGE)
+		if (positions->positions[index] == MAGNET_POSITION_OFF)
 			continue;
 
-		value = ACTUAL_SERVO_POS(positions->positions[index]);
-		if (value > MAX_SERVO_RANGE || value < MIN_SERVO_RANGE)
+		if (positions->positions[index] > MAGNET_POSITION_OFF ||
+				positions->positions[index] < MAGNET_POSITION_MAX_RESISTANCE)
 		{
-			RC_LOG("[RC] resistance_positions_validate adjusted value invalid: %i\r\n", value);
+			RC_LOG("[RC] resistance_positions_validate Servo position value invalid: %i\r\n", value);
 			return false;
 		}
 	} while (++index < positions->count);
@@ -219,18 +202,18 @@ uint16_t resistance_pct_set(float percent)
 
 	if (percent == 0.0f)
 	{
-		position = RESISTANCE_LEVEL[0];
+		position = MAGNET_POSITION_OFF;
 	}
 	else if (percent > 99.9f)
 	{
-		position = RESISTANCE_LEVEL[RESISTANCE_LEVELS-1];
+		position = MAGNET_POSITION_MAX_RESISTANCE;
 	}
 	else
 	{
 		// Calculate the difference between easiest and hardest positions.
-		position = (uint16_t) (MIN_RESISTANCE_LEVEL -(
-							(MIN_RESISTANCE_LEVEL-RESISTANCE_LEVEL[RESISTANCE_LEVELS-1]) *
-							percent));
+		position = (uint16_t) (  MAGNET_POSITION_MIN_RESISTANCE -
+				( (MAGNET_POSITION_MIN_RESISTANCE - MAGNET_POSITION_MAX_RESISTANCE) *
+						percent )  );
 	}
 
 	return resistance_position_set(position);
