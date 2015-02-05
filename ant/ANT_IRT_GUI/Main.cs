@@ -304,15 +304,29 @@ namespace IRT_GUI
 
             UpdateText(lblFlywheel, message.FlyweelRevs);
 
-            UpdateResistanceDisplay(message.ServoPosition, 
-                (ResistanceMode)message.Mode, message.Level);
+            UpdateResistanceDisplay((ResistanceMode)message.Mode, message.Level,
+                message.ServoPosition);
         }
 
-        private void UpdateResistanceDisplay(ushort servoPosition, ResistanceMode mode, ushort level)
+        private void UpdateResistancePercentage(ushort level)
+        {
+            if (level > 0)
+            {
+                float percent = DecodeResistancePercent(level);
+
+                UpdateText(txtResistancePercent, percent);
+                trackBarResistancePct.Value = (int)percent;
+            }
+        }
+
+        private void UpdateResistanceDisplay(ResistanceMode mode, ushort level, ushort servoPosition = 0)
         {
             if (!m_PauseServoUpdate)
             {
-                UpdateText(txtServoPos, servoPosition);
+                if (servoPosition != 0)
+                {
+                    UpdateText(txtServoPos, servoPosition);
+                }
 
                 ExecuteOnUI(() =>
                 {
@@ -320,6 +334,7 @@ namespace IRT_GUI
                     {
                         case ResistanceMode.Percent:
                             cmbResistanceMode.SelectedIndex = 0;
+                            UpdateResistancePercentage(level);
                             break;
                         case ResistanceMode.Standard:
                             cmbResistanceMode.SelectedIndex = 1;
@@ -852,12 +867,14 @@ namespace IRT_GUI
         void m_eMotion_ManufacturerSpecificPageReceived(ManufacturerSpecificPage arg1, uint arg2)
         {
             // wahoo resistance ack pages come through here.
-            if (arg1.RawContent[0] == 240)
+            if (arg1.RawContent[0] == ResistanceMessage.Page)
             {
-                byte mode = arg1.RawContent[1];
+                ResistanceMode mode = (ResistanceMode)arg1.RawContent[1];
+                ushort level = Message.BigEndian(arg1.RawContent[4], arg1.RawContent[5]);
 
-                ushort value = Message.BigEndian(arg1.RawContent[4], arg1.RawContent[5]);
-                System.Diagnostics.Debug.Print("Mode: {0}, Value: {1}", mode, value);
+                System.Diagnostics.Debug.Print("Mode: {0}, Value: {1}", mode, level);
+
+                UpdateResistanceDisplay(mode, level);
             }
         }
 
@@ -1160,6 +1177,14 @@ namespace IRT_GUI
         private bool SetResistanceStandard(ushort level)
         {
             return SendBurst((byte)ResistanceMode.Standard, level);
+        }
+
+        private float DecodeResistancePercent(int value)
+        {
+            float percent = ((16383.0f - value) / 16383.0f) * 100.0f;
+
+            // Round to a single decimal.
+            return (float)Math.Round(percent, 1);
         }
 
         private bool SetResistancePercent(float value)
