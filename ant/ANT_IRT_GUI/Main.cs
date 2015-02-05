@@ -304,32 +304,38 @@ namespace IRT_GUI
 
             UpdateText(lblFlywheel, message.FlyweelRevs);
 
+            UpdateResistanceDisplay(message.ServoPosition, 
+                (ResistanceMode)message.Mode, message.Level);
+        }
+
+        private void UpdateResistanceDisplay(ushort servoPosition, ResistanceMode mode, ushort level)
+        {
             if (!m_PauseServoUpdate)
             {
-                UpdateText(txtServoPos, message.ServoPosition);
+                UpdateText(txtServoPos, servoPosition);
 
                 ExecuteOnUI(() =>
+                {
+                    switch (mode)
                     {
-                        switch ((ResistanceMode)message.Mode)
-                        {
-                            case ResistanceMode.Percent:
-                                cmbResistanceMode.SelectedIndex = 0;
-                                break;
-                            case ResistanceMode.Standard:
-                                cmbResistanceMode.SelectedIndex = 1;
-                                UpdateText(lblResistanceStdLevel, message.Level);
-                                break;
-                            case ResistanceMode.Erg:
-                                cmbResistanceMode.SelectedIndex = 2;
-                                UpdateText(txtResistanceErgWatts, message.Level);
-                                break;
-                            case ResistanceMode.Sim:
-                                cmbResistanceMode.SelectedIndex = 3;
-                                break;
-                            default:
-                                break;
-                        }
-                    });
+                        case ResistanceMode.Percent:
+                            cmbResistanceMode.SelectedIndex = 0;
+                            break;
+                        case ResistanceMode.Standard:
+                            cmbResistanceMode.SelectedIndex = 1;
+                            UpdateText(lblResistanceStdLevel, level);
+                            break;
+                        case ResistanceMode.Erg:
+                            cmbResistanceMode.SelectedIndex = 2;
+                            UpdateText(txtResistanceErgWatts, level);
+                            break;
+                        case ResistanceMode.Sim:
+                            cmbResistanceMode.SelectedIndex = 3;
+                            break;
+                        default:
+                            break;
+                    }
+                });
             }
         }
 
@@ -846,6 +852,13 @@ namespace IRT_GUI
         void m_eMotion_ManufacturerSpecificPageReceived(ManufacturerSpecificPage arg1, uint arg2)
         {
             // wahoo resistance ack pages come through here.
+            if (arg1.RawContent[0] == 240)
+            {
+                byte mode = arg1.RawContent[1];
+
+                ushort value = Message.BigEndian(arg1.RawContent[4], arg1.RawContent[5]);
+                System.Diagnostics.Debug.Print("Mode: {0}, Value: {1}", mode, value);
+            }
         }
 
         void m_eMotion_SensorFound(ushort arg1, byte arg2)

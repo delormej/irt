@@ -32,6 +32,7 @@
 #include "softdevice_handler.h"
 #include "nrf_error.h"
 #include "app_scheduler.h"
+#include "app_util.h"
 #include "pstorage.h"
 #include "irt_common.h"
 #include "irt_peripheral.h"
@@ -1393,7 +1394,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	}
 
 	// Send acknowledgment.
-	bp_queue_resistance_ack(rc_evt.operation, (int16_t)*rc_evt.pBuffer);
+	bp_queue_resistance_ack(rc_evt.operation, uint16_decode(rc_evt.pBuffer));
 }
 
 // Invoked when a button is pushed on the remote control.
