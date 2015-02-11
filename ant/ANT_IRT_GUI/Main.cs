@@ -319,6 +319,28 @@ namespace IRT_GUI
             }
         }
 
+        /* Functions to decode simulation responses from WAHOO */
+        private void UpdateCrr(ushort value)
+        {
+
+        }
+
+        private void UpdateWind(ushort value)
+        {
+            value ^= 1 << 15;
+            float wind = (value / 1000.0f) * 100.0f;
+
+            UpdateText(txtSimWind, Math.Round(wind, 1));
+        }
+
+        private void UpdateSlope(ushort value)
+        {
+            value ^= 1 << 15;
+            float grade = (value / 32768.0f) * 100.0f;
+
+            UpdateText(txtSimSlope, Math.Round(grade, 1));
+        }
+
         private void UpdateResistanceDisplay(ResistanceMode mode, ushort level, ushort servoPosition = 0)
         {
             if (!m_PauseServoUpdate)
@@ -347,7 +369,17 @@ namespace IRT_GUI
                         case ResistanceMode.Sim:
                             cmbResistanceMode.SelectedIndex = 3;
                             break;
+                        case ResistanceMode.SimSetBikeType:
+                            UpdateCrr(level);
+                            break;
+                        case ResistanceMode.SimSetSlope:
+                            UpdateSlope(level);
+                            break;
+                        case ResistanceMode.SimSetWind:
+                            UpdateWind(level);
+                            break;
                         default:
+                            System.Diagnostics.Debug.WriteLine("Unrecognized mode.");
                             break;
                     }
                 });
@@ -872,7 +904,7 @@ namespace IRT_GUI
                 ResistanceMode mode = (ResistanceMode)arg1.RawContent[1];
                 ushort level = Message.BigEndian(arg1.RawContent[4], arg1.RawContent[5]);
 
-                System.Diagnostics.Debug.Print("Mode: {0}, Value: {1}", mode, level);
+                System.Diagnostics.Debug.Print("Mode: 0x{0:X}, Value: {1}", mode, level);
 
                 UpdateResistanceDisplay(mode, level);
             }

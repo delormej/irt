@@ -279,7 +279,18 @@ namespace IRT_GUI.IrtMessages
         Percent = 0x40,
         Standard = 0x41,
         Erg = 0x42,
-        Sim = 0x43             
+        Sim = 0x43,
+        SimSetBikeType = 0x44,
+        SimSetC = 0x45,
+        SimSetSlope = 0x46,
+        SimSetWind = 0x47,
+        SimSetWheel = 0x48,
+        InitSpinDown = 0x49,
+        ReadMode = 0x4A,
+        SpindownResult = 0x5A,
+        SetServo = 0x5B,	
+        SetWeight = 0x5C,	
+        StartStopTrainerRoad = 0x65	
     }
 
     // Any time you want to Get a parameter from the device, you issue a Request Data page.

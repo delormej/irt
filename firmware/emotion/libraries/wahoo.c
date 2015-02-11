@@ -23,14 +23,24 @@
 
 float wahoo_decode_crr(uint8_t *p_buffer)
 {
-	WH_LOG("[WH]:wahoo_decode_crr [%.2x][%.2x]\r\n", p_buffer[0], p_buffer[1]);
-	return DECODE_FLOAT(p_buffer, 10000.0f);
+	float value;
+
+	value = DECODE_FLOAT(p_buffer, 10000.0f);
+	WH_LOG("[WH]:wahoo_decode_crr [%.2x][%.2x]: %.4f\r\n",
+			p_buffer[0], p_buffer[1], value);
+
+	return value;
 }
 
 float wahoo_decode_c(uint8_t *p_buffer)
 {
-	WH_LOG("[WH]:wahoo_decode_c [%.2x][%.2x]\r\n", p_buffer[0], p_buffer[1]);
-	return DECODE_FLOAT(p_buffer, 1000.0f);
+	float value;
+
+	value = DECODE_FLOAT(p_buffer, 1000.0f);
+	WH_LOG("[WH]:wahoo_decode_c [%.2x][%.2x]: %.4f\r\n",
+			p_buffer[0], p_buffer[1], value);
+
+	return value;
 }
 
 /**@brief Parses the resistance percentage out of the KICKR command.
@@ -55,14 +65,14 @@ float wahoo_resistance_pct_decode(uint16_t value)
  * @note	This is the headwind in meters per second. A negative headwind
  *			represents a tailwind. The range for WindSpeed is -30.0:30.0.
  */
-float wahoo_sim_wind_decode(uint16_t value)
+float wahoo_sim_wind_decode(int16_t value)
 {
 	// For some reason the value seems to come across the wire backwards?
 	// FLIP the sign bit (negative == positive, and vice versa).
 	value ^= 1 << 15u;
 
 	WH_LOG("[WH]:wahoo_sim_wind_decode: set wind_speed_mps %i\r\n",
-			(uint16_t)(value / 1000.0f));
+			(int16_t)(value / 1000.0f));
 
 	// Set the right scale.
 	return value / 1000.0f;
@@ -74,7 +84,7 @@ float wahoo_sim_wind_decode(uint16_t value)
  * 			represents a percentage of 45 degrees up/downhill.
  *
  */
-float wahoo_sim_grade_decode(uint16_t value)
+float wahoo_sim_grade_decode(int16_t value)
 {
 	float grade;
 
