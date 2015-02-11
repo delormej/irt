@@ -32,7 +32,7 @@ typedef enum
 	RESISTANCE_SET_STANDARD		= 0x41,
 	RESISTANCE_SET_ERG			= 0x42,
 	RESISTANCE_SET_SIM			= 0x43, // Weight should come accross in this message?
-	RESISTANCE_SET_BIKE_TYPE	= 0x44, // Co-efficient of rolling resistance
+	RESISTANCE_SET_CRR			= 0x44, // Co-efficient of rolling resistance
 	RESISTANCE_SET_C			= 0x45, // Wind resistance offset.
 	RESISTANCE_SET_SLOPE		= 0x46,
 	RESISTANCE_SET_WIND			= 0x47,

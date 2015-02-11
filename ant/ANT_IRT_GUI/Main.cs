@@ -342,10 +342,10 @@ namespace IRT_GUI
 
         private void UpdateWind(ushort value)
         {
-            value ^= 1 << 15;
-            float wind = (value / 1000.0f) * 100.0f;
+            float wind = (value - 32768) / 1000.0f;
 
             UpdateText(txtSimWind, Math.Round(wind, 1));
+            System.Diagnostics.Debug.WriteLine("Set wind speed to: {0}", wind);
         }
 
         private void UpdateSlope(ushort value)
@@ -1946,19 +1946,8 @@ namespace IRT_GUI
                         return;
                     }
 
-                    if (wind < 0.0f)
-                    {
-                        // Make the wind speed positive.
-                        wind *= -1;
-                    }
-                    else
-                    {
-                        // Set the high order bit to indicate positive.
-                        value = 32768;
-                    }
-
-                    value |= (ushort)(wind * 1000);
-
+                    value = (ushort)((wind * 1000) + 32768);
+                    
                     SendBurst(RESISTANCE_SET_WIND, value);
                 }
                 else

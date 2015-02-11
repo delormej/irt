@@ -65,17 +65,18 @@ float wahoo_resistance_pct_decode(uint16_t value)
  * @note	This is the headwind in meters per second. A negative headwind
  *			represents a tailwind. The range for WindSpeed is -30.0:30.0.
  */
-float wahoo_sim_wind_decode(int16_t value)
+float wahoo_sim_wind_decode(uint16_t value)
 {
-	// For some reason the value seems to come across the wire backwards?
-	// FLIP the sign bit (negative == positive, and vice versa).
-	value ^= 1 << 15u;
+	float wind_mps;
 
-	WH_LOG("[WH]:wahoo_sim_wind_decode: set wind_speed_mps %i\r\n",
-			(int16_t)(value / 1000.0f));
+	// NOTE: The WAHOO app as of 1.4.2.3 displays MPH, but the setting is really KMH
+	wind_mps = ((value - 32768) / 1000.0f);
+
+	WH_LOG("[WH]:wahoo_sim_wind_decode: set wind_speed_mps %.2f\r\n",
+			wind_mps);
 
 	// Set the right scale.
-	return value / 1000.0f;
+	return wind_mps;
 }
 
 
