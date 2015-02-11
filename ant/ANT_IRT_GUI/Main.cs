@@ -350,8 +350,10 @@ namespace IRT_GUI
 
         private void UpdateSlope(ushort value)
         {
-            value ^= 1 << 15;
-            float grade = (value / 32768.0f) * 100.0f;
+            short svalue;
+            // Flip the sign bit, since it's in reverse.
+            svalue = (short)(value ^ 1 << 15);
+            float grade = (svalue / 32768.0f) * 100.0f;
 
             UpdateText(txtSimSlope, Math.Round(grade, 1));
         }
