@@ -67,6 +67,8 @@
             this.txtRefPwrDeviceId = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label33 = new System.Windows.Forms.Label();
+            this.lblWatchClock = new System.Windows.Forms.Label();
             this.btnPauseSimRefPower = new System.Windows.Forms.Button();
             this.progressSimRefPower = new System.Windows.Forms.ProgressBar();
             this.btnSimRefPower = new System.Windows.Forms.Button();
@@ -89,6 +91,15 @@
             this.btnCalibrationSet = new System.Windows.Forms.Button();
             this.btnCalibrationGet = new System.Windows.Forms.Button();
             this.groupBoxResistance = new System.Windows.Forms.GroupBox();
+            this.pnlResistanceSim = new System.Windows.Forms.Panel();
+            this.txtSimC = new System.Windows.Forms.TextBox();
+            this.label34 = new System.Windows.Forms.Label();
+            this.txtSimWind = new System.Windows.Forms.TextBox();
+            this.label25 = new System.Windows.Forms.Label();
+            this.txtSimCrr = new System.Windows.Forms.TextBox();
+            this.label24 = new System.Windows.Forms.Label();
+            this.txtSimSlope = new System.Windows.Forms.TextBox();
+            this.label23 = new System.Windows.Forms.Label();
             this.btnSetResistancePositions = new System.Windows.Forms.Button();
             this.pnlResistanceStd = new System.Windows.Forms.Panel();
             this.lblResistanceStdLevel = new System.Windows.Forms.Label();
@@ -101,13 +112,6 @@
             this.pnlErg = new System.Windows.Forms.Panel();
             this.txtResistanceErgWatts = new System.Windows.Forms.TextBox();
             this.label20 = new System.Windows.Forms.Label();
-            this.pnlResistanceSim = new System.Windows.Forms.Panel();
-            this.txtSimWind = new System.Windows.Forms.TextBox();
-            this.label25 = new System.Windows.Forms.Label();
-            this.txtSimCrr = new System.Windows.Forms.TextBox();
-            this.label24 = new System.Windows.Forms.Label();
-            this.txtSimSlope = new System.Windows.Forms.TextBox();
-            this.label23 = new System.Windows.Forms.Label();
             this.btnResistanceSet = new System.Windows.Forms.Button();
             this.txtServoPos = new System.Windows.Forms.TextBox();
             this.cmbResistanceMode = new System.Windows.Forms.ComboBox();
@@ -136,18 +140,16 @@
             this.txtRR = new System.Windows.Forms.TextBox();
             this.txtDrag = new System.Windows.Forms.TextBox();
             this.label32 = new System.Windows.Forms.Label();
-            this.lblWatchClock = new System.Windows.Forms.Label();
-            this.label33 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
             this.groupBox3.SuspendLayout();
             this.groupBoxResistance.SuspendLayout();
+            this.pnlResistanceSim.SuspendLayout();
             this.pnlResistanceStd.SuspendLayout();
             this.pnlResistancePercent.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarResistancePct)).BeginInit();
             this.pnlErg.SuspendLayout();
-            this.pnlResistanceSim.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox4.SuspendLayout();
             this.statusStrip.SuspendLayout();
@@ -564,6 +566,26 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Power Meter";
             // 
+            // label33
+            // 
+            this.label33.AutoSize = true;
+            this.label33.Location = new System.Drawing.Point(108, 239);
+            this.label33.Name = "label33";
+            this.label33.Size = new System.Drawing.Size(33, 13);
+            this.label33.TabIndex = 38;
+            this.label33.Text = "Timer";
+            // 
+            // lblWatchClock
+            // 
+            this.lblWatchClock.AutoSize = true;
+            this.lblWatchClock.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblWatchClock.Location = new System.Drawing.Point(115, 210);
+            this.lblWatchClock.Name = "lblWatchClock";
+            this.lblWatchClock.Size = new System.Drawing.Size(90, 29);
+            this.lblWatchClock.TabIndex = 37;
+            this.lblWatchClock.Text = "0:00:00";
+            this.lblWatchClock.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // btnPauseSimRefPower
             // 
             this.btnPauseSimRefPower.Location = new System.Drawing.Point(76, 127);
@@ -779,17 +801,100 @@
             this.groupBoxResistance.Controls.Add(this.pnlResistanceStd);
             this.groupBoxResistance.Controls.Add(this.pnlResistancePercent);
             this.groupBoxResistance.Controls.Add(this.pnlErg);
-            this.groupBoxResistance.Controls.Add(this.pnlResistanceSim);
             this.groupBoxResistance.Controls.Add(this.btnResistanceSet);
             this.groupBoxResistance.Controls.Add(this.txtServoPos);
             this.groupBoxResistance.Controls.Add(this.cmbResistanceMode);
             this.groupBoxResistance.Controls.Add(this.label22);
+            this.groupBoxResistance.Controls.Add(this.pnlResistanceSim);
             this.groupBoxResistance.Location = new System.Drawing.Point(14, 358);
             this.groupBoxResistance.Name = "groupBoxResistance";
             this.groupBoxResistance.Size = new System.Drawing.Size(327, 117);
             this.groupBoxResistance.TabIndex = 19;
             this.groupBoxResistance.TabStop = false;
             this.groupBoxResistance.Text = "Resistance";
+            // 
+            // pnlResistanceSim
+            // 
+            this.pnlResistanceSim.Controls.Add(this.txtSimC);
+            this.pnlResistanceSim.Controls.Add(this.label34);
+            this.pnlResistanceSim.Controls.Add(this.txtSimWind);
+            this.pnlResistanceSim.Controls.Add(this.label25);
+            this.pnlResistanceSim.Controls.Add(this.txtSimCrr);
+            this.pnlResistanceSim.Controls.Add(this.label24);
+            this.pnlResistanceSim.Controls.Add(this.txtSimSlope);
+            this.pnlResistanceSim.Controls.Add(this.label23);
+            this.pnlResistanceSim.Location = new System.Drawing.Point(147, 21);
+            this.pnlResistanceSim.Name = "pnlResistanceSim";
+            this.pnlResistanceSim.Size = new System.Drawing.Size(164, 91);
+            this.pnlResistanceSim.TabIndex = 23;
+            // 
+            // txtSimC
+            // 
+            this.txtSimC.Location = new System.Drawing.Point(89, 5);
+            this.txtSimC.Name = "txtSimC";
+            this.txtSimC.Size = new System.Drawing.Size(63, 20);
+            this.txtSimC.TabIndex = 30;
+            this.txtSimC.Leave += new System.EventHandler(this.txtSimC_Leave);
+            // 
+            // label34
+            // 
+            this.label34.AutoSize = true;
+            this.label34.Location = new System.Drawing.Point(6, 8);
+            this.label34.Name = "label34";
+            this.label34.Size = new System.Drawing.Size(14, 13);
+            this.label34.TabIndex = 27;
+            this.label34.Text = "C";
+            // 
+            // txtSimWind
+            // 
+            this.txtSimWind.Location = new System.Drawing.Point(89, 68);
+            this.txtSimWind.Name = "txtSimWind";
+            this.txtSimWind.Size = new System.Drawing.Size(63, 20);
+            this.txtSimWind.TabIndex = 33;
+            this.txtSimWind.Leave += new System.EventHandler(this.txtSimWind_Leave);
+            // 
+            // label25
+            // 
+            this.label25.AutoSize = true;
+            this.label25.Location = new System.Drawing.Point(6, 71);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(60, 13);
+            this.label25.TabIndex = 25;
+            this.label25.Text = "Wind (mps)";
+            // 
+            // txtSimCrr
+            // 
+            this.txtSimCrr.Location = new System.Drawing.Point(89, 47);
+            this.txtSimCrr.Name = "txtSimCrr";
+            this.txtSimCrr.Size = new System.Drawing.Size(63, 20);
+            this.txtSimCrr.TabIndex = 32;
+            this.txtSimCrr.Leave += new System.EventHandler(this.txtSimCrr_Leave);
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(6, 50);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(20, 13);
+            this.label24.TabIndex = 23;
+            this.label24.Text = "Crr";
+            // 
+            // txtSimSlope
+            // 
+            this.txtSimSlope.Location = new System.Drawing.Point(89, 26);
+            this.txtSimSlope.Name = "txtSimSlope";
+            this.txtSimSlope.Size = new System.Drawing.Size(63, 20);
+            this.txtSimSlope.TabIndex = 31;
+            this.txtSimSlope.Leave += new System.EventHandler(this.txtSimSlope_Leave);
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(6, 29);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(45, 13);
+            this.label23.TabIndex = 21;
+            this.label23.Text = "Slope %";
             // 
             // btnSetResistancePositions
             // 
@@ -911,70 +1016,6 @@
             this.label20.Size = new System.Drawing.Size(69, 13);
             this.label20.TabIndex = 21;
             this.label20.Text = "Target Watts";
-            // 
-            // pnlResistanceSim
-            // 
-            this.pnlResistanceSim.Controls.Add(this.txtSimWind);
-            this.pnlResistanceSim.Controls.Add(this.label25);
-            this.pnlResistanceSim.Controls.Add(this.txtSimCrr);
-            this.pnlResistanceSim.Controls.Add(this.label24);
-            this.pnlResistanceSim.Controls.Add(this.txtSimSlope);
-            this.pnlResistanceSim.Controls.Add(this.label23);
-            this.pnlResistanceSim.Location = new System.Drawing.Point(147, 21);
-            this.pnlResistanceSim.Name = "pnlResistanceSim";
-            this.pnlResistanceSim.Size = new System.Drawing.Size(164, 91);
-            this.pnlResistanceSim.TabIndex = 23;
-            // 
-            // txtSimWind
-            // 
-            this.txtSimWind.Location = new System.Drawing.Point(89, 55);
-            this.txtSimWind.Name = "txtSimWind";
-            this.txtSimWind.Size = new System.Drawing.Size(63, 20);
-            this.txtSimWind.TabIndex = 26;
-            this.txtSimWind.Leave += new System.EventHandler(this.txtSimWind_Leave);
-            // 
-            // label25
-            // 
-            this.label25.AutoSize = true;
-            this.label25.Location = new System.Drawing.Point(6, 58);
-            this.label25.Name = "label25";
-            this.label25.Size = new System.Drawing.Size(60, 13);
-            this.label25.TabIndex = 25;
-            this.label25.Text = "Wind (mps)";
-            // 
-            // txtSimCrr
-            // 
-            this.txtSimCrr.Location = new System.Drawing.Point(89, 32);
-            this.txtSimCrr.Name = "txtSimCrr";
-            this.txtSimCrr.Size = new System.Drawing.Size(63, 20);
-            this.txtSimCrr.TabIndex = 24;
-            this.txtSimCrr.Leave += new System.EventHandler(this.txtSimCrr_Leave);
-            // 
-            // label24
-            // 
-            this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(6, 35);
-            this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(20, 13);
-            this.label24.TabIndex = 23;
-            this.label24.Text = "Crr";
-            // 
-            // txtSimSlope
-            // 
-            this.txtSimSlope.Location = new System.Drawing.Point(89, 9);
-            this.txtSimSlope.Name = "txtSimSlope";
-            this.txtSimSlope.Size = new System.Drawing.Size(63, 20);
-            this.txtSimSlope.TabIndex = 22;
-            this.txtSimSlope.Leave += new System.EventHandler(this.txtSimSlope_Leave);
-            // 
-            // label23
-            // 
-            this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(6, 12);
-            this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(45, 13);
-            this.label23.TabIndex = 21;
-            this.label23.Text = "Slope %";
             // 
             // btnResistanceSet
             // 
@@ -1136,7 +1177,7 @@
             this.cmbParamGet.CausesValidation = false;
             this.cmbParamGet.FormattingEnabled = true;
             this.cmbParamGet.Location = new System.Drawing.Point(5, 18);
-            this.cmbParamGet.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.cmbParamGet.Margin = new System.Windows.Forms.Padding(2);
             this.cmbParamGet.Name = "cmbParamGet";
             this.cmbParamGet.Size = new System.Drawing.Size(82, 21);
             this.cmbParamGet.TabIndex = 10;
@@ -1261,26 +1302,6 @@
             this.label32.TabIndex = 16;
             this.label32.Text = "RR";
             // 
-            // lblWatchClock
-            // 
-            this.lblWatchClock.AutoSize = true;
-            this.lblWatchClock.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblWatchClock.Location = new System.Drawing.Point(115, 210);
-            this.lblWatchClock.Name = "lblWatchClock";
-            this.lblWatchClock.Size = new System.Drawing.Size(90, 29);
-            this.lblWatchClock.TabIndex = 37;
-            this.lblWatchClock.Text = "0:00:00";
-            this.lblWatchClock.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // label33
-            // 
-            this.label33.AutoSize = true;
-            this.label33.Location = new System.Drawing.Point(108, 239);
-            this.label33.Name = "label33";
-            this.label33.Size = new System.Drawing.Size(33, 13);
-            this.label33.TabIndex = 38;
-            this.label33.Text = "Timer";
-            // 
             // frmIrtGui
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1311,6 +1332,8 @@
             this.groupBox3.PerformLayout();
             this.groupBoxResistance.ResumeLayout(false);
             this.groupBoxResistance.PerformLayout();
+            this.pnlResistanceSim.ResumeLayout(false);
+            this.pnlResistanceSim.PerformLayout();
             this.pnlResistanceStd.ResumeLayout(false);
             this.pnlResistanceStd.PerformLayout();
             this.pnlResistancePercent.ResumeLayout(false);
@@ -1318,8 +1341,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.trackBarResistancePct)).EndInit();
             this.pnlErg.ResumeLayout(false);
             this.pnlErg.PerformLayout();
-            this.pnlResistanceSim.ResumeLayout(false);
-            this.pnlResistanceSim.PerformLayout();
             this.groupBox6.ResumeLayout(false);
             this.groupBox6.PerformLayout();
             this.groupBox4.ResumeLayout(false);
@@ -1444,6 +1465,8 @@
         private System.Windows.Forms.Label label32;
         private System.Windows.Forms.Label label33;
         private System.Windows.Forms.Label lblWatchClock;
+        private System.Windows.Forms.TextBox txtSimC;
+        private System.Windows.Forms.Label label34;
     }
 }
 

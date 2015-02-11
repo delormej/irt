@@ -280,7 +280,7 @@ namespace IRT_GUI.IrtMessages
         Standard = 0x41,
         Erg = 0x42,
         Sim = 0x43,
-        SimSetBikeType = 0x44,
+        SimSetCrr = 0x44,
         SimSetC = 0x45,
         SimSetSlope = 0x46,
         SimSetWind = 0x47,

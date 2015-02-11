@@ -145,8 +145,16 @@ namespace IRT_GUI
             chkLstSettings.Items.Clear();
             chkLstSettings.Items.AddRange(Enum.GetNames(typeof(Settings)));
 
+            // Setup the resistance modes.
             cmbResistanceMode.Items.Clear();
-            cmbResistanceMode.Items.AddRange(Enum.GetNames(typeof(ResistanceMode)));
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+                ResistanceMode.Standard));
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+                ResistanceMode.Percent));
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+                ResistanceMode.Erg));
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+                ResistanceMode.Sim));
 
             cmbParamGet.Items.Clear();
             cmbParamGet.Items.AddRange(Enum.GetNames(typeof(SubPages)));
@@ -322,7 +330,14 @@ namespace IRT_GUI
         /* Functions to decode simulation responses from WAHOO */
         private void UpdateCrr(ushort value)
         {
+            float crr = value / 10000.0f;
+            UpdateText(txtSimCrr, crr);
+        }
 
+        private void UpdateC(ushort value)
+        {
+            float c = value / 1000.0f;
+            UpdateText(txtSimC, c);
         }
 
         private void UpdateWind(ushort value)
@@ -354,13 +369,13 @@ namespace IRT_GUI
                 {
                     switch (mode)
                     {
-                        case ResistanceMode.Percent:
-                            cmbResistanceMode.SelectedIndex = 0;
-                            UpdateResistancePercentage(level);
-                            break;
                         case ResistanceMode.Standard:
-                            cmbResistanceMode.SelectedIndex = 1;
+                            cmbResistanceMode.SelectedIndex = 0;
                             UpdateText(lblResistanceStdLevel, level);
+                            break;
+                        case ResistanceMode.Percent:
+                            cmbResistanceMode.SelectedIndex = 1;
+                            UpdateResistancePercentage(level);
                             break;
                         case ResistanceMode.Erg:
                             cmbResistanceMode.SelectedIndex = 2;
@@ -369,7 +384,7 @@ namespace IRT_GUI
                         case ResistanceMode.Sim:
                             cmbResistanceMode.SelectedIndex = 3;
                             break;
-                        case ResistanceMode.SimSetBikeType:
+                        case ResistanceMode.SimSetCrr:
                             UpdateCrr(level);
                             break;
                         case ResistanceMode.SimSetSlope:
@@ -377,6 +392,9 @@ namespace IRT_GUI
                             break;
                         case ResistanceMode.SimSetWind:
                             UpdateWind(level);
+                            break;
+                        case ResistanceMode.SimSetC:
+                            UpdateC(level);
                             break;
                         default:
                             System.Diagnostics.Debug.WriteLine("Unrecognized mode.");
@@ -1837,6 +1855,25 @@ namespace IRT_GUI
             }
 
             m_PauseServoUpdate = false;
+        }
+
+        private void txtSimC_Leave(object sender, EventArgs e)
+        {
+            if (txtSimC.Modified)
+            {
+                float c = 0.0f;
+                if (float.TryParse(txtSimC.Text, out c))
+                {
+                    ushort value = (ushort)(c * 1000);
+
+                    SendBurst(RESISTANCE_SET_C, value);
+                }
+                else
+                {
+                    UpdateStatus("Invalid bike type (C).");
+                    return;
+                }
+            }
         }
 
         private void txtSimSlope_Leave(object sender, EventArgs e)
