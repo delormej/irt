@@ -145,8 +145,16 @@ namespace IRT_GUI
             chkLstSettings.Items.Clear();
             chkLstSettings.Items.AddRange(Enum.GetNames(typeof(Settings)));
 
+            // Setup the resistance modes.
             cmbResistanceMode.Items.Clear();
-            cmbResistanceMode.Items.AddRange(Enum.GetNames(typeof(ResistanceMode)));
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+                ResistanceMode.Standard));
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+                ResistanceMode.Percent));
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+                ResistanceMode.Erg));
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+                ResistanceMode.Sim));
 
             cmbParamGet.Items.Clear();
             cmbParamGet.Items.AddRange(Enum.GetNames(typeof(SubPages)));
@@ -319,6 +327,37 @@ namespace IRT_GUI
             }
         }
 
+        /* Functions to decode simulation responses from WAHOO */
+        private void UpdateCrr(ushort value)
+        {
+            float crr = value / 10000.0f;
+            UpdateText(txtSimCrr, crr);
+        }
+
+        private void UpdateC(ushort value)
+        {
+            float c = value / 1000.0f;
+            UpdateText(txtSimC, c);
+        }
+
+        private void UpdateWind(ushort value)
+        {
+            float wind = (value - 32768) / 1000.0f;
+
+            UpdateText(txtSimWind, Math.Round(wind, 1));
+            System.Diagnostics.Debug.WriteLine("Set wind speed to: {0}", wind);
+        }
+
+        private void UpdateSlope(ushort value)
+        {
+            short svalue;
+            // Flip the sign bit, since it's in reverse.
+            svalue = (short)(value ^ 1 << 15);
+            float grade = (svalue / 32768.0f) * 100.0f;
+
+            UpdateText(txtSimSlope, Math.Round(grade, 1));
+        }
+
         private void UpdateResistanceDisplay(ResistanceMode mode, ushort level, ushort servoPosition = 0)
         {
             if (!m_PauseServoUpdate)
@@ -332,13 +371,13 @@ namespace IRT_GUI
                 {
                     switch (mode)
                     {
-                        case ResistanceMode.Percent:
-                            cmbResistanceMode.SelectedIndex = 0;
-                            UpdateResistancePercentage(level);
-                            break;
                         case ResistanceMode.Standard:
-                            cmbResistanceMode.SelectedIndex = 1;
+                            cmbResistanceMode.SelectedIndex = 0;
                             UpdateText(lblResistanceStdLevel, level);
+                            break;
+                        case ResistanceMode.Percent:
+                            cmbResistanceMode.SelectedIndex = 1;
+                            UpdateResistancePercentage(level);
                             break;
                         case ResistanceMode.Erg:
                             cmbResistanceMode.SelectedIndex = 2;
@@ -347,7 +386,20 @@ namespace IRT_GUI
                         case ResistanceMode.Sim:
                             cmbResistanceMode.SelectedIndex = 3;
                             break;
+                        case ResistanceMode.SimSetCrr:
+                            UpdateCrr(level);
+                            break;
+                        case ResistanceMode.SimSetSlope:
+                            UpdateSlope(level);
+                            break;
+                        case ResistanceMode.SimSetWind:
+                            UpdateWind(level);
+                            break;
+                        case ResistanceMode.SimSetC:
+                            UpdateC(level);
+                            break;
                         default:
+                            System.Diagnostics.Debug.WriteLine("Unrecognized mode.");
                             break;
                     }
                 });
@@ -872,7 +924,7 @@ namespace IRT_GUI
                 ResistanceMode mode = (ResistanceMode)arg1.RawContent[1];
                 ushort level = Message.BigEndian(arg1.RawContent[4], arg1.RawContent[5]);
 
-                System.Diagnostics.Debug.Print("Mode: {0}, Value: {1}", mode, level);
+                System.Diagnostics.Debug.Print("Mode: 0x{0:X}, Value: {1}", mode, level);
 
                 UpdateResistanceDisplay(mode, level);
             }
@@ -1807,6 +1859,25 @@ namespace IRT_GUI
             m_PauseServoUpdate = false;
         }
 
+        private void txtSimC_Leave(object sender, EventArgs e)
+        {
+            if (txtSimC.Modified)
+            {
+                float c = 0.0f;
+                if (float.TryParse(txtSimC.Text, out c))
+                {
+                    ushort value = (ushort)(c * 1000);
+
+                    SendBurst(RESISTANCE_SET_C, value);
+                }
+                else
+                {
+                    UpdateStatus("Invalid bike type (C).");
+                    return;
+                }
+            }
+        }
+
         private void txtSimSlope_Leave(object sender, EventArgs e)
         {
             if (txtSimSlope.Modified)
@@ -1877,19 +1948,8 @@ namespace IRT_GUI
                         return;
                     }
 
-                    if (wind < 0.0f)
-                    {
-                        // Make the wind speed positive.
-                        wind *= -1;
-                    }
-                    else
-                    {
-                        // Set the high order bit to indicate positive.
-                        value = 32768;
-                    }
-
-                    value |= (ushort)(wind * 1000);
-
+                    value = (ushort)((wind * 1000) + 32768);
+                    
                     SendBurst(RESISTANCE_SET_WIND, value);
                 }
                 else
