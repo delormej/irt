@@ -1,0 +1,122 @@
+DEVICE := NRF51
+TOOLCHAIN_PREFIX ?= arm-none-eabi
+
+AS = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-as
+CC = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-gcc
+LD = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-gcc
+OBJCOPY = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-objcopy
+OBJDUMP = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-objdump
+SIZE = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-size
+GDB = $(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)-gdb
+
+START_CODE ?= gcc_startup_nrf51.s
+SYSTEM_FILE ?= system_nrf51.c
+
+CMSIS_INCLUDE_PATH += $(TEMPLATE_PATH)
+
+####################################################################
+# SDK Include Paths
+####################################################################
+INCLUDE_PATHS += $(TEMPLATE_PATH)
+INCLUDE_PATHS += $(SDK_PATH)toolchain
+INCLUDE_PATHS += $(SDK_PATH)toolchain/gcc
+INCLUDE_PATHS += $(SDK_PATH)libraries/util
+
+C_SOURCE_PATHS += $(TEMPLATE_PATH)
+C_SOURCE_PATHS += $(SDK_PATH)toolchain
+C_SOURCE_PATHS += $(sort $(dir $(wildcard $(SDK_PATH)**/**/)))
+
+ifeq ($(USE_SOFTDEVICE), s110)
+    USE_BLE = 1
+endif
+
+ifeq ($(USE_SOFTDEVICE), s120)
+    USE_BLE = 1
+endif
+
+ifeq ($(USE_SOFTDEVICE), s210)
+    USE_ANT = 1
+endif
+
+ifeq ($(USE_SOFTDEVICE), s310)
+    USE_BLE = 1
+    USE_ANT = 1
+    INCLUDE_PATHS += $(SDK_PATH)softdevice/s310/headers/
+	INCLUDE_PATHS += $(SDK_PATH)softdevice/common/softdevice_handler/   
+	C_SOURCE_PATHS += $(SDK_PATH)softdevice/common/softdevice_handler/
+	CFLAGS += -DSOFTDEVICE_PRESENT
+endif
+
+ifdef USE_BLE
+    CFLAGS += -DBLE_STACK_SUPPORT_REQD
+endif
+
+ifdef USE_ANT
+    CFLAGS += -DANT_STACK_SUPPORT_REQD
+endif
+
+ifndef USE_SOFTDEVICE
+    USE_SOFTDEVICE = blank
+endif
+
+LINKER_SCRIPT ?= gcc_nrf51_$(USE_SOFTDEVICE)_$(DEVICE_VARIANT).ld
+OUTPUT_NAME = $(PROJECT_NAME)
+
+LIBRARY_INCLUDES = $(addprefix -I,$(INCLUDE_PATHS))
+CMSIS_INCLUDE = $(addprefix -I,$(CMSIS_INCLUDE_PATH))
+
+VPATH = $(C_SOURCE_PATHS)
+
+OUTPUT_PATH = _build/
+
+# Recommended compiler optimizations with newlib-nano (https://plus.google.com/+AndreyYurovsky/posts/XUr9VBPFDn7)
+CFLAGS += -Os -flto -ffunction-sections -fdata-sections -fno-builtin
+LDFLAGS += --specs=nano.specs -lc -lnosys
+LDFLAGS += -Wl,--gc-sections
+
+CPUFLAGS = -mthumb -mcpu=cortex-m0 -march=armv6-m
+CFLAGS += -std=gnu99 -c $(CPUFLAGS) -Wall -D$(DEVICE) -D$(BOARD) -D$(DEVICE) $(CMSIS_INCLUDE) $(LIBRARY_INCLUDES) -MD
+LDFLAGS += $(CPUFLAGS) -L $(TEMPLATE_PATH) -T $(LINKER_SCRIPT) -Wl,-Map=$(OUTPUT_PATH)$(OUTPUT_NAME).Map 
+
+HEX = $(OUTPUT_PATH)$(OUTPUT_NAME).hex
+ELF = $(OUTPUT_PATH)$(OUTPUT_NAME).elf
+BIN = $(OUTPUT_PATH)$(OUTPUT_NAME).bin
+
+SRCS = $(SYSTEM_FILE) $(notdir $(C_SOURCE_FILES))
+OBJS = $(addprefix $(OUTPUT_PATH), $(SRCS:.c=.o)) $(addprefix $(LIBS_PATH),$(APPLICATION_LIBS))
+DEPS = $(addprefix $(OUTPUT_PATH), $(SRCS:.c=.d))
+SRCS_AS = $(START_CODE)
+OBJS_AS = $(addprefix $(OUTPUT_PATH), $(SRCS_AS:.s=.os))
+
+JLINK_OPTIONS = -device $(TARGET_DEVICE) -if swd -speed 1000 
+
+all: $(OBJS) $(OBJS_AS) $(HEX)
+
+rebuild: clean all
+
+ifeq ($(OS),Windows_NT)
+include $(TEMPLATE_PATH)Makefile.windows
+else
+include $(TEMPLATE_PATH)Makefile.posix
+endif
+
+$(HEX): $(OBJS) $(OBJS_AS)
+	$(LD) $(LDFLAGS) $(OBJS_AS) $(OBJS) -o $(ELF) -lm
+	$(OBJCOPY) -Oihex $(ELF) $(HEX)
+	$(OBJCOPY) -Obinary $(ELF) $(BIN)
+	$(SIZE) $(ELF)
+
+size: $(ELF)
+	$(SIZE) $(ELF)
+
+$(OUTPUT_PATH)%.o: %.c 
+	$(MAKE_BUILD_FOLDER)
+	$(CC) $(LDFLAGS) $(CFLAGS) $< -o $@
+
+$(OUTPUT_PATH)%.os: %.s
+	$(MAKE_BUILD_FOLDER)
+	$(AS) $< -o $@
+
+-include $(DEPS)
+
+.PHONY: all clean rebuild size
