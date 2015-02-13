@@ -103,6 +103,9 @@ CFLAGS += -DUSE_BATTERY_CHARGER					# If this device is enabled to control batte
 												# the power regulator.   
 #CFLAGS += -DSMALL_MAG							# Small magnet
 
+# Add linker flag to link to the math library.
+LDFLAGS += -lm
+
 ############################################
 # Concat name used for project and binary 
 # based on build variants.

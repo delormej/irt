@@ -75,7 +75,7 @@ LDFLAGS += --specs=nano.specs -lc -lnosys
 LDFLAGS += -Wl,--gc-sections
 
 CPUFLAGS = -mthumb -mcpu=cortex-m0 -march=armv6-m
-CFLAGS += -std=gnu99 -c $(CPUFLAGS) -Wall -D$(DEVICE) -D$(BOARD) -D$(DEVICE) $(CMSIS_INCLUDE) $(LIBRARY_INCLUDES) -MD
+CFLAGS += -std=gnu99 -c $(CPUFLAGS) -Wall -D$(DEVICE) -D$(BOARD) $(CMSIS_INCLUDE) $(LIBRARY_INCLUDES) -MD
 LDFLAGS += $(CPUFLAGS) -L $(TEMPLATE_PATH) -T $(LINKER_SCRIPT) -Wl,-Map=$(OUTPUT_PATH)$(OUTPUT_NAME).Map 
 
 HEX = $(OUTPUT_PATH)$(OUTPUT_NAME).hex
@@ -101,7 +101,7 @@ include $(TEMPLATE_PATH)Makefile.posix
 endif
 
 $(HEX): $(OBJS) $(OBJS_AS)
-	$(LD) $(LDFLAGS) $(OBJS_AS) $(OBJS) -o $(ELF) -lm
+	$(LD) $(OBJS_AS) $(OBJS) -o $(ELF) $(LDFLAGS) 
 	$(OBJCOPY) -Oihex $(ELF) $(HEX)
 	$(OBJCOPY) -Obinary $(ELF) $(BIN)
 	$(SIZE) $(ELF)
