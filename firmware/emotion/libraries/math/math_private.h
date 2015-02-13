@@ -5,8 +5,8 @@
  * to be used.
  */
 
-#ifndef _MATH_PRIVATE_H_
-#define	_MATH_PRIVATE_H_
+#ifndef _J_MATH_PRIVATE_H_
+#define	_J_MATH_PRIVATE_H_
 
 #define u_int32_t uint32_t
 
@@ -53,6 +53,5 @@ float j_sqrtf(float x);
 float j_sinf(float x);
 float j_cosf(float x);
 float j_fabsf(float x);
-float j_powf(float x, float y);
 
-#endif /* !_MATH_PRIVATE_H_ */
+#endif /* !_J_MATH_PRIVATE_H_ */

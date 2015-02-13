@@ -7,6 +7,7 @@
 #include "ble_ant.h"
 #include "nrf_error.h"
 #include "irt_common.h"
+#include "app_error.h"
 #include "debug.h"
 
 #define MSG_PAGE_CHANGE			4u

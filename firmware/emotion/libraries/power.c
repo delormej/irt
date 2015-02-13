@@ -7,12 +7,12 @@
 ********************************************************************************/
 
 #include <float.h>
+#include <math.h>
 #include "power.h"
 #include "nrf_error.h"
 #include "app_error.h"
 #include "resistance.h"
 #include "debug.h"
-#include "math.h"
 #include "irt_common.h"
 #include "magnet.h"
 

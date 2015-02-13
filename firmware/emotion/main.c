@@ -33,6 +33,7 @@
 #include "nrf_error.h"
 #include "app_scheduler.h"
 #include "app_util.h"
+#include "app_util_platform.h"
 #include "pstorage.h"
 #include "irt_common.h"
 #include "irt_peripheral.h"

@@ -25,7 +25,6 @@
 #include "ble_srv_common.h"
 #include "ble_advdata.h"
 #include "ble_conn_params.h"
-#include "ble_sensorsim.h"
 #include "irt_peripheral.h"
 #include "ant_bike_power.h"
 #include "ant_bike_speed.h"
@@ -41,6 +40,10 @@
 
 #if defined(BLE_NUS_ENABLED)
 #include "ble_nus.h"
+#endif
+
+#if defined(S310_V2)
+#define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                            /**< Whether or not to include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device */
 #endif
 
 #define APP_ADV_INTERVAL                40                                           /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
@@ -515,6 +518,16 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 static void ble_ant_stack_init(void)
 {
 	uint32_t err_code;
+
+#if defined(S310_V2)
+    // Initialize BLE stack
+    ble_enable_params_t ble_enable_params;
+    memset(&ble_enable_params, 0, sizeof(ble_enable_params));
+    ble_enable_params.gatts_enable_params.service_changed = IS_SRVC_CHANGED_CHARACT_PRESENT;
+    err_code = sd_ble_enable(&ble_enable_params);
+    APP_ERROR_CHECK(err_code);
+#endif
+
 
 #if defined(BLE_ENABLED)
 	// Subscribe for BLE events.

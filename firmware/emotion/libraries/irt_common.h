@@ -13,6 +13,7 @@ All rights reserved.
 #include <float.h>
 #include "boards.h"
 #include "nrf_error.h"
+#include "nrf51.h"
 #include "pstorage_platform.h"
 
 //

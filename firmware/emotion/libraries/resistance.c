@@ -14,7 +14,7 @@
 #include "magnet.h"
 #include "resistance.h"
 #include "nrf_pwm.h"
-#include "math.h"
+#include <math.h>
 #include "debug.h"
 
 #define MIN_THRESHOLD_MOVE	2		// Minimum threshold for a servo move.

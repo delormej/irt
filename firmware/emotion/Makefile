@@ -5,61 +5,68 @@
 #
 ###############################################################################
 
+SDK_PATH = ../nrf51sdk_7.2/
+TEMPLATE_PATH = $(SDK_PATH)toolchain/gcc/
+
 # List all source files the application uses.
-APPLICATION_SRCS = $(notdir $(wildcard ../*.c))  
-APPLICATION_SRCS += $(notdir $(wildcard ../**/*.c))
-APPLICATION_SRCS += $(notdir $(wildcard ../**/**/*.c))    
+C_SOURCE_FILES = $(notdir $(wildcard ./*.c))  
+C_SOURCE_FILES += $(notdir $(wildcard ./**/*.c))
+C_SOURCE_FILES += $(notdir $(wildcard ./**/**/*.c))    
 
 ############################################
 # SDK libraries used.
 ############################################
-APPLICATION_SRCS += softdevice_handler.c
-APPLICATION_SRCS += ble_advdata.c
-APPLICATION_SRCS += ble_srv_common.c
-APPLICATION_SRCS += ble_dis.c
-APPLICATION_SRCS += app_timer.c
-APPLICATION_SRCS += app_scheduler.c
-APPLICATION_SRCS += ble_conn_params.c
-APPLICATION_SRCS += ble_debug_assert_handler.c
-APPLICATION_SRCS += pstorage.c
-APPLICATION_SRCS += nrf_delay.c
-APPLICATION_SRCS += simple_uart.c
-APPLICATION_SRCS += app_button.c
+C_SOURCE_FILES += softdevice_handler.c
+C_SOURCE_FILES += ble_advdata.c
+C_SOURCE_FILES += ble_srv_common.c
+C_SOURCE_FILES += ble_dis.c
+C_SOURCE_FILES += app_timer.c
+C_SOURCE_FILES += app_scheduler.c
+C_SOURCE_FILES += ble_conn_params.c
+C_SOURCE_FILES += ble_debug_assert_handler.c
+C_SOURCE_FILES += pstorage.c
+C_SOURCE_FILES += nrf_delay.c
+C_SOURCE_FILES += simple_uart.c
+C_SOURCE_FILES += app_button.c
 
-SOURCE_PATHS +=  ../libraries/
-SOURCE_PATHS +=  ../services/
-SOURCE_PATHS += ../libraries/math/
-LIBRARY_PATHS += ../libraries/
-LIBRARY_PATHS += ../libraries/math/
-LIBRARY_PATHS += ../services/
-DEPLOY_PATH = '../../../../../Google Drive/Firmware/'
-DEPLOY_PATH2 = '../../../../../SkyDrive/InsideRide/Builds/'
+C_SOURCE_PATHS +=  ./libraries/
+C_SOURCE_PATHS +=  ./services/
+C_SOURCE_PATHS += ./libraries/math/
+C_SOURCE_PATHS += $(SDK_PATH)ble/ble_services/ble_dis/
 
-DEVICE = NRF51
+INCLUDE_PATHS +=  .
+INCLUDE_PATHS +=  ./libraries/
+INCLUDE_PATHS +=  ./libraries/math/
+INCLUDE_PATHS +=  ./services/
+
+INCLUDE_PATHS += $(SDK_PATH)softdevice/common/softdevice_handler/
+INCLUDE_PATHS += $(SDK_PATH)drivers_nrf/simple_uart/
+INCLUDE_PATHS += $(SDK_PATH)drivers_nrf/hal/
+INCLUDE_PATHS += $(SDK_PATH)drivers_nrf/pstorage/
+INCLUDE_PATHS += $(SDK_PATH)drivers_nrf/pstorage/config/
+INCLUDE_PATHS += $(SDK_PATH)drivers_nrf/twi_master/
+INCLUDE_PATHS += $(SDK_PATH)drivers_nrf/ble_flash/
+INCLUDE_PATHS += $(SDK_PATH)libraries/timer/
+INCLUDE_PATHS += $(SDK_PATH)libraries/scheduler/
+INCLUDE_PATHS += $(SDK_PATH)libraries/gpiote
+INCLUDE_PATHS += $(SDK_PATH)libraries/button/
+INCLUDE_PATHS += $(SDK_PATH)ble/common/
+INCLUDE_PATHS += $(SDK_PATH)ble/ble_services/ble_dis/
+INCLUDE_PATHS += $(SDK_PATH)ble/ble_services/ble_cscs/
+INCLUDE_PATHS += $(SDK_PATH)ble/ble_error_log/
+
+DEPLOY_PATH = './../../../../Google Drive/Firmware/'
+DEPLOY_PATH2 = './../../../../SkyDrive/InsideRide/Builds/'
+
+DEVICE_VARIANT = xxAA
+USE_SOFTDEVICE = s310
+SOFTDEVICE = $(SDK_PATH)/s310_nrf51422_2.0.1_softdevice.hex
+
 BOARD = BOARD_IRT_V2_REV_A1
 #BOARD = BOARD_IRT_V2_REV_A
 #BOARD = BOARD_IRT_REV_A
 #debug : BOARD = BOARD_DYN_BAT_N548
 #SEGGER_SERIAL =	# not used, we only have 1 segger attached 
-TARGET_DEVICE = nRF51422_xxAA
-USE_SOFTDEVICE = s310
-SDK_PATH = ../../nrf51_sdk/
-TEMPLATE_PATH = ../../gcc/
-
-CFLAGS += -D$(BOARD)							# Define board version being used.
-
-############################################
-# Compiler optimizations.
-############################################
-# Enable optimizing for file size.
-#CFLAGS = -Os
-#LDFLAGS += --specs=nano.specs
-#
-# Recommended compiler optimizations with newlib-nano (https://plus.google.com/+AndreyYurovsky/posts/XUr9VBPFDn7)
-#
-CFLAGS = -Os -flto -ffunction-sections -fdata-sections -fno-builtin
-LDFLAGS += --specs=nano.specs -lc -lnosys
-LDFLAGS += -Wl,--gc-sections
 
 ############################################
 # For debugging purposes
@@ -74,14 +81,12 @@ debug : CFLAGS += -Wno-format					# Disable warnings on printf formating
 debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 #debug : CFLAGS += -DSETTINGS=2					# Sets the device so the accelerometer doesn't turn off
 
-GDB_PORT_NUMBER = 2331							# Debugging port used by GDB.
-
 ############################################
 # Define the Software Revision.
 ############################################
-SW_REVISION_MAJ := 0
-SW_REVISION_MIN := 9
-SW_REVISION_BLD := 17
+SW_REVISION_MAJ := 1
+SW_REVISION_MIN := 0
+SW_REVISION_BLD := 0
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -114,7 +119,7 @@ endif
 
 PROJECT_NAME := $(PROJECT_NAME)_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)
 
-include $(TEMPLATE_PATH)Makefile
+include $(TEMPLATE_PATH)Makefile.common
 
 debug: all 
 
@@ -126,7 +131,7 @@ deploy:
 # Flashes both the bootloader & app.
 ############################################
 flash-all: 
-	$(NRFJPROG) --program $(HEX) ../../bootloader/gcc/_build/bootloader.hex --verify --reset
+	$(NRFJPROG) --program $(HEX) ./../bootloader/gcc/_build/bootloader.hex --verify --reset
 
 name:
 	@echo $(PROJECT_NAME)

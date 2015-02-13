@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "app_util.h"
+#include "app_util_platform.h"
 #include "nrf_error.h"
 #include "nrf_gpio.h"
 

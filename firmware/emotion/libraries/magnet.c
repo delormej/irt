@@ -8,8 +8,8 @@
 
 #include <stdint.h>
 #include <float.h>
+#include <math.h>
 #include "magnet.h"
-#include "math.h"
 #include "math_private.h"
 #include "debug.h"
 
