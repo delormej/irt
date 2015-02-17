@@ -53,8 +53,8 @@
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                                       /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
 #warning "Must assigned LED PINS"
-#define BOOTLOADER_BUTTON               0                                            /**< Button used to enter SW update mode. */
-#define UPDATE_IN_PROGRESS_LED          0                                               /**< Led used to indicate that DFU is active. */
+#define BOOTLOADER_BUTTON               22                                            /**< Button used to enter SW update mode. */
+#define UPDATE_IN_PROGRESS_LED          13                                               /**< Led used to indicate that DFU is active. */
 
 #define APP_TIMER_PRESCALER             0                                                       /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_MAX_TIMERS            3                                                       /**< Maximum number of simultaneously created timers. */

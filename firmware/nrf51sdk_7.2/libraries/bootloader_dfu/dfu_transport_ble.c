@@ -41,8 +41,8 @@
 #define DFU_REV_MINOR                        0x05                                                    /** DFU Minor revision number to be exposed. */
 #define DFU_REVISION                         ((DFU_REV_MAJOR << 8) | DFU_REV_MINOR)                  /** DFU Revision number to be exposed. Combined of major and minor versions. */
 #warning "Must assigned proper LED pins"
-#define ADVERTISING_LED_PIN_NO               0                                               /**< Is on when device is advertising. */
-#define CONNECTED_LED_PIN_NO                 0                                               /**< Is on when device has connected. */
+#define ADVERTISING_LED_PIN_NO               12                                               /**< Is on when device is advertising. */
+#define CONNECTED_LED_PIN_NO                 18                                               /**< Is on when device has connected. */
 
 #define DEVICE_NAME                          "DfuTarg"                                               /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                    "NordicSemiconductor"                                   /**< Manufacturer. Will be passed to Device Information Service. */
