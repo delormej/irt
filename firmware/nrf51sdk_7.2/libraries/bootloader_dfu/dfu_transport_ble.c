@@ -15,7 +15,7 @@
 #include "dfu_types.h"
 #include <stddef.h>
 #include <string.h>
-#include "boards.h"
+//#include "boards.h"
 #include "nrf51.h"
 #include "nrf_sdm.h"
 #include "nrf_gpio.h"
@@ -40,8 +40,9 @@
 #define DFU_REV_MAJOR                        0x00                                                    /** DFU Major revision number to be exposed. */
 #define DFU_REV_MINOR                        0x05                                                    /** DFU Minor revision number to be exposed. */
 #define DFU_REVISION                         ((DFU_REV_MAJOR << 8) | DFU_REV_MINOR)                  /** DFU Revision number to be exposed. Combined of major and minor versions. */
-#define ADVERTISING_LED_PIN_NO               BSP_LED_0                                               /**< Is on when device is advertising. */
-#define CONNECTED_LED_PIN_NO                 BSP_LED_1                                               /**< Is on when device has connected. */
+#warning "Must assigned proper LED pins"
+#define ADVERTISING_LED_PIN_NO               0                                               /**< Is on when device is advertising. */
+#define CONNECTED_LED_PIN_NO                 0                                               /**< Is on when device has connected. */
 
 #define DEVICE_NAME                          "DfuTarg"                                               /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                    "NordicSemiconductor"                                   /**< Manufacturer. Will be passed to Device Information Service. */
