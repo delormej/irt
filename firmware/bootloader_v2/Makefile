@@ -74,6 +74,7 @@ DEPLOY_PATH = './../../../../Google Drive/Firmware/'
 DEPLOY_PATH2 = './../../../../SkyDrive/InsideRide/Builds/'
 
 DEVICE_VARIANT = xxAA
+TARGET_DEVICE = nRF51422_xxAA
 USE_SOFTDEVICE = s310
 SOFTDEVICE = $(SDK_PATH)/s310_nrf51422_2.0.1_softdevice.hex
 
