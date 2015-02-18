@@ -77,6 +77,9 @@ DEVICE_VARIANT = xxAA
 USE_SOFTDEVICE = s310
 SOFTDEVICE = $(SDK_PATH)/s310_nrf51422_2.0.1_softdevice.hex
 
+# Use a different linker script because the FLASH location and bootloader settings are defined here.
+LINKER_SCRIPT ?= gcc_s310_xxaa_bootloader.ld
+
 BOARD = BOARD_IRT_V2_REV_A1
 
 ############################################
