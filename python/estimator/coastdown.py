@@ -284,12 +284,17 @@ def main(file_name):
 	# plot speed to power based on deceleration
 	plt.plot(x_pwr * 2.23694, y_pwr, 'bo')
 	
-	# plot speed to power based on drag and rolling resistance
-	K, rr = fit_bike_power_by_drag_rr(x_pwr, y_pwr)
-	plt.plot(x_pwr * 2.23694, drag_rr_func(x_pwr, K, rr), 'r-')	
-	plt.ylabel('Power (watts)')
-	plt.xlabel('Speed (mph)')
-	#plt.xlim(xmax=x.max())
+	try:
+	    # plot speed to power based on drag and rolling resistance
+	    K, rr = fit_bike_power_by_drag_rr(x_pwr, y_pwr)
+	    plt.plot(x_pwr * 2.23694, drag_rr_func(x_pwr, K, rr), 'r-')	
+	    plt.ylabel('Power (watts)')
+	    plt.xlabel('Speed (mph)')
+	    #plt.xlim(xmax=x.max())
+	except:
+	    print("Error calculating rr & drag.")
+	    K = 0
+	    rr = 0
 
 	# fit a linear equation to the power curve
 	pwr_slope, pwr_intercept = fit_linear(x_pwr, x_pwr, y_pwr)
