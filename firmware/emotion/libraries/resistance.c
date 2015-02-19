@@ -83,50 +83,49 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 	// Actual servo position after calibration.
 	uint16_t actual_servo_pos;
 
-	if ( (m_servo_pos != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
+	/*
+	 * NOTE: SERVO OFFSET LOGIC
+	 *
+	 * Only record offset position internally, don't expose beyond the module
+	 * as certain servo positions have bearing on position.
+	 *
+	 * Goal is to use the range 2,000 - 1,000 as per servo specs.  Instead of
+	 * the original 2,107 - 699 range which our power curve testing was done against.
+	 *
+	 * Factory Baseline is where Jennifer's jig is set.  This used to be "position 2" or 1150.
+	 * Initial power curve testing was based on a servo that would consider position 2 as 1100
+	 * (had -50 offset).
+	 *
+	 * Adjusted offset for the 2,000 - 1,000 range is -301, but since testing was done at -50,
+	 * the new baseline offset is 351 for a servo that is factory calibrated to 1,451.
+	*/
+	if ((servo_pos + mp_user_profile->servo_offset) > MAGNET_POSITION_OFF)
 	{
-		/*
-		 * NOTE: SERVO OFFSET LOGIC
-		 *
-		 * Only record offset position internally, don't expose beyond the module
-		 * as certain servo positions have bearing on position.
-		 *
-		 * Goal is to use the range 2,000 - 1,000 as per servo specs.  Instead of
-		 * the original 2,107 - 699 range which our power curve testing was done against.
-		 *
-		 * Factory Baseline is where Jennifer's jig is set.  This used to be "position 2" or 1150.
-		 * Initial power curve testing was based on a servo that would consider position 2 as 1100
-		 * (had -50 offset).
-		 *
-		 * Adjusted offset for the 2,000 - 1,000 range is -301, but since testing was done at -50,
-		 * the new baseline offset is 351 for a servo that is factory calibrated to 1,451.
-		*/
+		// Don't go beyond max magnet position, even after adjusting for servo offset.
+		servo_pos = MAGNET_POSITION_OFF;
+		actual_servo_pos = MAGNET_POSITION_OFF;
+	}
+	else
+	{
 		if (servo_pos < MAGNET_POSITION_MAX_RESISTANCE)
 		{
 			// Adjust to the maximum resistance position.
-			actual_servo_pos = ACTUAL_SERVO_POS(MAGNET_POSITION_MAX_RESISTANCE);
-			m_servo_pos = MAGNET_POSITION_MAX_RESISTANCE;
-		}
-		else
-		{
-			// Adjust to the actual position based on servo offset.
-			actual_servo_pos = ACTUAL_SERVO_POS(servo_pos);
-
-			if (actual_servo_pos >= MAGNET_POSITION_OFF)
-			{
-				// Adjust to the minimum resistance position.
-				actual_servo_pos = MAGNET_POSITION_OFF;
-				m_servo_pos = MAGNET_POSITION_OFF;
-			}
-			else
-			{
-				// Save module state for next adjustment.
-				m_servo_pos = servo_pos;
-			}
+			servo_pos = MAGNET_POSITION_MAX_RESISTANCE;
 		}
 
+		// Adjust to the actual position based on servo offset.
+		actual_servo_pos = ACTUAL_SERVO_POS(servo_pos);
+	}
+
+	// Check if we actually need to move.
+	if ( (m_servo_pos != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
+	{
+		// Issue a command to move the servo.
 		err_code = pwm_set_servo(actual_servo_pos);
 		APP_ERROR_CHECK(err_code);
+
+		// Save module state for next adjustment.
+		m_servo_pos = servo_pos;
 
 		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
 	}

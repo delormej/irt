@@ -1371,7 +1371,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			set_wheel_params(value);
 			break;
 			
-		case RESISTANCE_SET_BIKE_TYPE:
+		case RESISTANCE_SET_CRR:
 			m_resistance_mode = RESISTANCE_SET_SIM;
 			m_sim_forces.crr = wahoo_decode_crr(rc_evt.pBuffer);
 			break;
