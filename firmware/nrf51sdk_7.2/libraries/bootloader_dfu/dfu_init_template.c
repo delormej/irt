@@ -56,6 +56,8 @@ static uint8_t m_extended_packet_length;                            //< Length o
 
 uint32_t dfu_init_prevalidate(uint8_t * p_init_data, uint32_t init_data_len)
 {
+	return NRF_SUCCESS;
+
     uint32_t i = 0;
     
     // In order to support signing or encryption then any init packet decryption function / library
@@ -129,7 +131,9 @@ uint32_t dfu_init_prevalidate(uint8_t * p_init_data, uint32_t init_data_len)
 
 uint32_t dfu_init_postvalidate(uint8_t * p_image, uint32_t image_len)
 {
-    uint16_t image_crc;
+	return NRF_SUCCESS;
+	/*
+	uint16_t image_crc;
     uint16_t received_crc;
     
     // In order to support hashing (and signing) then the (decrypted) hash should be fetched and
@@ -149,5 +153,6 @@ uint32_t dfu_init_postvalidate(uint8_t * p_image, uint32_t image_len)
     }
 
     return NRF_SUCCESS;
+	*/
 }
 
