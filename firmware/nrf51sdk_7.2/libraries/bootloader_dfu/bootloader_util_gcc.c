@@ -23,12 +23,11 @@ const bootloader_settings_t const * const mp_bootloader_settings = (bootloader_s
 
 static inline void StartApplication(uint32_t start_addr)
 {
-	asm volatile(" LDR   R0, =0x20000          \n\t" // Assign app code address
-		" LDR   R2, [R0]              \n\t" // Get App MSP
-		" MSR   MSP, R2               \n\t" // Set the main stack pointer to the applications MSP
-		" LDR   R3, [R0, #0x00000004] \n\t" // Get application reset vector address
-		" BX    R3                    \n\t" // No return - stack code is now activated only through SVC and plain interrupts
-		" .ALIGN                      ");
+    __asm volatile("LDR   R2, [R0]\t\n"
+          "MSR   MSP, R2\t\n"
+          "LDR   R3, [R0, #0x00000004]\t\n"
+          "BX    R3\t\n"
+          ".ALIGN\t\n");
 }
 
 
