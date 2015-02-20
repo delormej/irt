@@ -36,7 +36,6 @@ C_SOURCE_FILES += hci_mem_pool.c
 C_SOURCE_FILES += nrf_assert.c
 C_SOURCE_FILES += softdevice_handler.c
 
-#C_SOURCE_PATHS += $(SDK_PATH)toolchain/
 C_SOURCE_PATHS += $(SDK_PATH)ble/common/
 C_SOURCE_PATHS += $(SDK_PATH)ble/ble_services/ble_dfu/
 C_SOURCE_PATHS += $(SDK_PATH)libraries/bootloader_dfu/
@@ -51,15 +50,12 @@ C_SOURCE_PATHS += $(SDK_PATH)softdevice/common/softdevice_handler/
 C_SOURCE_PATHS += $(SDK_PATH)ble/ble_services/ble_dis/
 
 INCLUDE_PATHS +=  ./include
-#INCLUDE_PATHS +=  $(SDK_PATH)toolchain
-#INCLUDE_PATHS +=  $(SDK_PATH)toolchain/gcc
 INCLUDE_PATHS +=  $(SDK_PATH)libraries/crc16
 INCLUDE_PATHS +=  $(SDK_PATH)libraries/bootloader_dfu/ble_transport
 INCLUDE_PATHS +=  $(SDK_PATH)ble/ble_services/ble_dfu
 INCLUDE_PATHS +=  $(SDK_PATH)libraries/hci
 INCLUDE_PATHS +=  $(SDK_PATH)libraries/hci/config
 INCLUDE_PATHS +=  $(SDK_PATH)bsp
-#INCLUDE_PATHS +=  $(SDK_PATH)softdevice/s310/headers
 INCLUDE_PATHS +=  $(SDK_PATH)ble/common
 INCLUDE_PATHS +=  $(SDK_PATH)libraries/bootloader_dfu
 INCLUDE_PATHS +=  $(SDK_PATH)libraries/timer

@@ -16,8 +16,6 @@
 #include "bootloader_types.h"
 #include "dfu_types.h"
 
-#if __GNUC__ && __ARM_EABI__
-
 __attribute__ ((section(".bootloaderSettings"))) uint8_t m_boot_settings[1024] ;
 __attribute__ ((section(".uicrBootStartAddress"))) uint32_t m_uicr_bootloader_start_address = BOOTLOADER_REGION_START;
 const bootloader_settings_t const * const mp_bootloader_settings = (bootloader_settings_t *) &m_boot_settings[0];   /**< Read only pointer to bootloader settings in flash. */
@@ -32,7 +30,6 @@ static inline void StartApplication(uint32_t start_addr)
 		" BX    R3                    \n\t" // No return - stack code is now activated only through SVC and plain interrupts
 		" .ALIGN                      ");
 }
-#endif
 
 
 void bootloader_util_app_start(uint32_t start_addr)
