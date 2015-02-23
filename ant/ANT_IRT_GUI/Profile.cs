@@ -14,7 +14,7 @@ namespace IRT_GUI
         public FirmwareRev(byte SoftwareRevision, byte SupplementalSoftwareRevision)
         {
             //arg1.SoftwareRevision, arg1.SupplementalSoftwareRevision
-            Major = (byte)(SoftwareRevision & 0xF0);
+            Major = (byte)(SoftwareRevision >> 4);
             Minor = (byte)(SoftwareRevision & 0x0F);
             Build = SupplementalSoftwareRevision;
         }

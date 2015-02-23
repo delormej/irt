@@ -590,7 +590,7 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 	ant_product_page[0] = ANT_COMMON_PAGE_81;
 	ant_product_page[1] = BP_PAGE_RESERVE_BYTE;
 	ant_product_page[2] = SW_REVISION_BLD;
-	ant_product_page[3] = SW_REVISION_MAJ | SW_REVISION_MIN;
+	ant_product_page[3] = (SW_REVISION_MAJ << 4) | SW_REVISION_MIN;
 	memcpy((uint8_t*)&(ant_product_page[4]), (uint32_t*)&(SERIAL_NUMBER), sizeof(uint32_t));
 
 	// Initialize the manufacturer's page.
