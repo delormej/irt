@@ -22,7 +22,9 @@
 #define MAG_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define COEFF_COUNT				4u				// Cubic poynomial has 4 coefficients.
+#define COEFF_COUNT							4u				// Cubic poynomial has 4 coefficients.
+#define MAGNET_POSITION_MODEL_MIN			1500u			// Represents the minimum position the 3r order polynomial supports.
+															// The position between MAGNET_POSITION_MIN_RESISTANCE and this is linear.
 
 /**@brief	Calculates the coefficient values for a cubic polynomial
  *			that plots a power curve for the magnet at a given speed.
@@ -32,22 +34,22 @@
  */
 static void curve_coeff(float speed_mps, float *coeff)
 {
-	static const float SPEED1 =	15.0 * 0.44704;	// Convert to meters per second
-	static const float SPEED2 = 25.0 * 0.44704;	// Convert to meters per second
+	static const float SPEED1 =	10.0 * 0.44704;	// Convert to meters per second
+	static const float SPEED2 = 19.0 * 0.44704;	// Convert to meters per second
 
-	// 15 mph (6.7056 mps)
+	// Low speed
 	static const float COEFF_1[] =  {
-		0.00000127584,
-		-0.00424935897,
-		4.06025446775,
-		-838.0638694638 };
+		7.77778E-07,
+		-0.002557143,
+		2.425555556,
+		-504.3809524 };
 
-	// 25 mph (11.176 mph)
+	// High speed
 	static const float COEFF_2[] = {
-		0.000002624903,
-		-0.008925233100,
-		8.907428127428,
-		-2139.951981351815 };
+		2.22484E-06,
+		-0.007714151,
+		8.151996852,
+		-2371.584904 };
 
 	for (uint8_t ix = 0; ix < COEFF_COUNT; ix++)
 	{
@@ -57,6 +59,49 @@ static void curve_coeff(float speed_mps, float *coeff)
 	}
 }
 
+/**@brief	Calculates the bottom linear portion of watts returned between
+ * 			the lowest spot the model calcuates and where we have known 0
+ * 			watt values returned for a given speed.
+ */
+static float watts_linear(float watts, uint16_t position)
+{
+	/* Adjust to a simple linear formula between the minimum watts returned by the model
+			 * position and the position where we know it is 0.  */
+	float linear_watts;
+
+	linear_watts = (
+				(float)(MAGNET_POSITION_MIN_RESISTANCE - position) /
+				(float)(MAGNET_POSITION_MIN_RESISTANCE - MAGNET_POSITION_MODEL_MIN)
+			) * watts;
+
+	MAG_LOG("pos: %i, watts_linear: %.2f from min: %.2f\r\n", position,
+			linear_watts, watts);
+
+	return linear_watts;
+}
+
+/*@brief 	The model only goes so low.  For higher speeds at the model min
+ * 			there may be less watts obtainable in between the model min and
+ * 			where we know 0 occurs.
+ *
+ * 			Returns 0 if the value is in range.
+ */
+static uint16_t position_linear(float speed_mps, float mag_watts)
+{
+	uint16_t position = 0;
+	float min_watts = magnet_watts(speed_mps, MAGNET_POSITION_MODEL_MIN);
+
+	// Check if we're asking for less than the model can support.
+	if (mag_watts < min_watts)
+	{
+		position = ( ((min_watts - mag_watts) / min_watts) *
+				(MAGNET_POSITION_MIN_RESISTANCE - MAGNET_POSITION_MODEL_MIN) ) +
+				MAGNET_POSITION_MODEL_MIN;
+	}
+
+	return position;
+}
+
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
  *			position.  This is the user mag position, not actual position.
  */
@@ -64,12 +109,13 @@ float magnet_watts(float speed_mps, uint16_t position)
 {
 	float coeff[COEFF_COUNT];
 	float watts;
+	uint16_t linear_position = 0;
 
 	/*
 	 * After max servo position the curve turns upwards.
 	 * Below 7 mps, the method fails, so we don't adjust below this speed for now.
 	 */
-	if (position > MAGNET_POSITION_MIN_RESISTANCE ||
+	if (position >= MAGNET_POSITION_MIN_RESISTANCE ||
 		speed_mps < MIN_SPEED_MPS)
 	{
 		return 0.0f;
@@ -77,6 +123,16 @@ float magnet_watts(float speed_mps, uint16_t position)
 	else if (position < MAGNET_POSITION_MAX_RESISTANCE)
 	{
 		position = MAGNET_POSITION_MAX_RESISTANCE;
+	}
+	else if (position > MAGNET_POSITION_MODEL_MIN &&
+			position < MAGNET_POSITION_MIN_RESISTANCE)
+	{
+		/* Between where the model stops and 0 watts is very little at low speed
+		 * but could be ~10-15 watts at higher speeds.  Use a linear model to
+		 * determine watts in this zone.
+		 */
+		linear_position = position;
+		position = MAGNET_POSITION_MODEL_MIN;
 	}
 
 	// Determine the curve for the speed.
@@ -87,6 +143,12 @@ float magnet_watts(float speed_mps, uint16_t position)
 		coeff[1] * pow(position, 2) +
 		coeff[2] * position +
 		coeff[3];
+
+	if (linear_position > 0)
+	{
+		// We're at the bottom range, so use linear equation.
+		return watts_linear(watts, linear_position);
+	}
 
 	return watts;
 }
@@ -112,6 +174,16 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	if (mag_watts <= 0)
 	{
 		return MAGNET_POSITION_MIN_RESISTANCE;
+	}
+	else if (mag_watts < WATTS_MODEL_MIN)
+	{
+		// Check and see if we need to solve linearly.
+		x3 = position_linear(speed_mps, mag_watts);
+
+		if (x3 != 0)
+		{
+			return x3;
+		}
 	}
 
 	// Interpolate to calculate the coefficients of the position:pwoercurve.
