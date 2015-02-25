@@ -932,6 +932,7 @@ static void calibration_start(void)
 {
 	uint32_t err_code;
 
+	/*
 	if (m_resistance_mode != RESISTANCE_SET_STANDARD || m_resistance_level != 0)
 	{
 		// Force standard level 0 resistance.  TODO: this should really be better encapsulated.
@@ -939,7 +940,7 @@ static void calibration_start(void)
 		m_resistance_level = 0;
 		m_resistance_mode = RESISTANCE_SET_STANDARD;
 		resistance_level_set(m_resistance_level);
-	}
+	}*/
 
 	// Stop existing ANT timer.
 	err_code = app_timer_stop(m_ant_4hz_timer_id);
