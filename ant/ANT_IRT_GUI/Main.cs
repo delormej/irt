@@ -878,6 +878,8 @@ namespace IRT_GUI
 
                         if (m_enteredDFU)
                         {
+                            // Try to grab the new firmware rev right away.
+                            RequestDeviceParameter(SubPages.Product);
                             RestoreUserProfile();
                         }                        
                         
