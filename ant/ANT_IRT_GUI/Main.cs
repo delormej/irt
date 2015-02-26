@@ -1666,6 +1666,11 @@ namespace IRT_GUI
             {
                 message.RequestedPage = (byte)subPage;
             }
+            else if(subPage == SubPages.Temp)
+            {
+                message.RequestedPage = (byte)SubPages.MeasurementOuput;
+                
+            }
             else
             {
                 message.RequestedPage = (byte)GetSetMessage.Page;

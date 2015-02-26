@@ -181,6 +181,8 @@ namespace IRT_GUI.IrtMessages
     public enum SubPages
     {
         CrankParameters = 0x01,
+        MeasurementOuput = 0x03,
+
         // Custom defined parameters - starting at 16u
         Crr = 16,
         Settings = 17,
