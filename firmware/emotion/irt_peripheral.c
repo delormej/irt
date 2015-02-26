@@ -226,23 +226,6 @@ static void button_init()
 	}
 }
 
-/**@brief 	Returns the count of 1/2048th seconds (2048 per second) since the
- *			the counter started.
- *
- * @note	This value rolls over at 32 seconds.
- */
-uint16_t seconds_2048_get()
-{
-	// Get current tick count.
-	uint32_t ticks = NRF_RTC1->COUNTER;
-
-	// Based on frequence of ticks, calculate 1/2048 seconds.
-	// freq (hz) = times per second.
-	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (TICK_FREQUENCY / 2048));
-
-	return seconds_2048;
-}
-
 /**@brief	Turn J7-6 power off/on.
  */
 void peripheral_aux_pwr_set(bool disable)

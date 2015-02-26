@@ -8,7 +8,7 @@
 #define APP_TIMER_PRESCALER         0   /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_MAX_TIMERS        6   /**< Maximum number of simultaneously created timers. */
 #define APP_TIMER_OP_QUEUE_SIZE     6   /**< Size of timer operation queues. */
-#define APP_GPIOTE_MAX_USERS        2	/**< Maximum number of users of the GPIOTE handler. */
+#define APP_GPIOTE_MAX_USERS        3	/**< Maximum number of users of the GPIOTE handler. */
 
 // Number of ticks per second.
 // RTC1 is based on a 32.768khz crystal, or in other words it oscillates
@@ -48,10 +48,5 @@ void peripheral_low_power_set(void);
 /**@brief	Turn J7-6 power on/off.
  */
 void peripheral_aux_pwr_set(bool turn_on);
-
-/**@brief Get the current time in 1/2048s.
- *
- */
-uint16_t seconds_2048_get(void);
 
 #endif // IRT_PERIPHERAL_H__

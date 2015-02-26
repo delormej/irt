@@ -8,10 +8,12 @@
 
 #include <string.h>
 #include <math.h>
+#include "nordic_common.h"
 #include "speed.h"
 #include "nrf_sdm.h"
 #include "app_error.h"
 #include "app_util.h"
+#include "app_gpiote.h"
 #include "debug.h"
 
 /**@brief Debug logging for resistance control module.
@@ -40,55 +42,61 @@
 #define FLYWHEEL_ROAD_DISTANCE		0.115f															// Virtual road distance traveled in meters per complete flywheel rev.
 #define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_ROAD_DISTANCE) * FLYWHEEL_TICK_PER_REV)		// # of flywheel ticks per meter
 
-static uint16_t m_wheel_size;										// Wheel diameter size in mm.
-static float m_flywheel_to_wheel_revs;								// Ratio of flywheel revolutions for 1 wheel revolution.
+static uint16_t 					m_flywheel_ticks = 0;											// Accumulated count of flywheel ticks.
+static uint16_t						m_last_event_2048 = 0;
+static uint16_t 					m_wheel_size;													// Wheel diameter size in mm.
+static float 						m_flywheel_to_wheel_revs;										// Ratio of flywheel revolutions for 1 wheel revolution.
 
-#ifdef SIM_SPEED
-// # of ticks to simulate in debug mode.
-uint8_t  speed_debug_ticks;
-#endif
+static app_gpiote_user_id_t 		mp_user_id;
 
+
+/**@brief 	Returns the count of 1/2048th seconds (2048 per second) since the
+ *			the counter started.
+ *
+ * @note	This value rolls over at 32 seconds.
+ */
+static uint16_t timestamp_get()
+{
+	// Get current tick count.
+	uint32_t ticks = NRF_RTC1->COUNTER;
+
+	// Based on frequence of ticks, calculate 1/2048 seconds.
+	// freq (hz) = times per second.
+	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (TICK_FREQUENCY / 2048));
+
+	return seconds_2048;
+}
+
+/**@brief	Invoked each time there is a tick of the flywheel.  This records the last tick
+ * 			time and a running count of the number of ticks.
+ *
+ */
+static void on_flywheel_tick(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
+{
+	UNUSED_PARAMETER(event_pins_low_to_high);
+	UNUSED_PARAMETER(event_pins_high_to_low);
+
+	m_last_event_2048 = timestamp_get();
+	m_flywheel_ticks++;
+}
 
 /**@brief	Configure GPIO input from flywheel revolution pin and create an 
  *				event on achannel. 
  */
 static void revs_init_gpiote(uint32_t pin_flywheel_rev)
 {
+	uint32_t err_code;
+
 	nrf_gpio_cfg_input(pin_flywheel_rev, NRF_GPIO_PIN_NOPULL);
 	
-	nrf_gpiote_event_config(REVS_CHANNEL_TASK_TOGGLE, 
-			pin_flywheel_rev,
-			NRF_GPIOTE_POLARITY_TOGGLE);
-}
-
-/**@brief		Enable PPI channel 3, combined with previous settings.
- *
- */
-static void revs_init_ppi()
-{
-	uint32_t err_code; 
-	
-	// Using hardcoded channel 3.
-	err_code = sd_ppi_channel_assign(3, 
-			&NRF_GPIOTE->EVENTS_IN[REVS_CHANNEL_TASK_TOGGLE],
-			&REVS_TIMER->TASKS_COUNT);
+	err_code = app_gpiote_user_register(&mp_user_id,
+		1UL << pin_flywheel_rev,
+		1UL << pin_flywheel_rev,
+		on_flywheel_tick);
 	APP_ERROR_CHECK(err_code);
 
-	err_code = sd_ppi_channel_enable_set(PPI_CHEN_CH3_Enabled << PPI_CHEN_CH3_Pos);
+	err_code = app_gpiote_user_enable(mp_user_id);
 	APP_ERROR_CHECK(err_code);
-}
-
-/**@brief		Initializes the counter which tracks the # of flywheel revolutions.
- *
- */
-static void revs_init_timer()
-{
-	REVS_TIMER->TASKS_STOP 	= 1;
-	REVS_TIMER->PRESCALER 	= 0;
-	REVS_TIMER->MODE		= TIMER_MODE_MODE_Counter;
-	REVS_TIMER->BITMODE   	= TIMER_BITMODE_BITMODE_16Bit << TIMER_BITMODE_BITMODE_Pos;
-	REVS_TIMER->TASKS_CLEAR = 1;
-	REVS_TIMER->TASKS_START = 1;
 }
 
 /**@brief		Calculates how long it would have taken since the last complete 
@@ -136,8 +144,8 @@ void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
 	speed_wheel_size_set(wheel_size_mm);
 	
 	revs_init_gpiote(pin_flywheel_rev);
-	revs_init_ppi();
-	revs_init_timer();
+
+	SP_LOG("[SP] Initialized speed.\r\n");
 }
 
 /**@brief	Calculates and records current speed measurement relative to last measurement
@@ -153,14 +161,8 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 	uint16_t avg_wheel_period;
 	uint16_t event_period;
 
-#ifdef SIM_SPEED
-	// DEBUG ONLY, simulate ~16mph.
-	p_current->accum_flywheel_ticks = speed_debug_ticks + (p_last->accum_flywheel_ticks);
-	//SP_LOG("[SP] accum_flywheel_ticks %lu \r\n", p_current->accum_flywheel_ticks);
-#else
 	// Get the flywheel ticks.
 	p_current->accum_flywheel_ticks = flywheel_ticks_get();
-#endif
 
 	// Ticks in the event period.
 	if (p_current->accum_flywheel_ticks < p_last->accum_flywheel_ticks)
@@ -221,4 +223,18 @@ uint32_t speed_calc(irt_power_meas_t * p_current, irt_power_meas_t * p_last)
 	return IRT_SUCCESS;
 }
 
+/**@brief 	Returns the accumulated count of flywheel ticks (2x revolutions).
+ *
+ */
+uint16_t flywheel_ticks_get()
+{
+	return m_flywheel_ticks;
+}
 
+/**@brief 	Returns the last tick event time in 1/2048's of a second.
+ *
+ */
+uint16_t seconds_2048_get(void)
+{
+	return m_last_event_2048;
+}
