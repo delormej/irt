@@ -44,7 +44,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CurveFit.cs" />
+    <Compile Include="Coastdown.cs" />
+    <Compile Include="CoastdownData.cs" />
+    <Compile Include="DecelerationFit.cs" />
+    <Compile Include="PowerFit.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
