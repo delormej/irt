@@ -49,6 +49,7 @@
 #include "softdevice_handler.h"
 #include "pstorage_platform.h"
 #include "nrf_mbr.h"
+#include "nrf_delay.h"
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                                       /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
@@ -88,8 +89,17 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
  */
 static void leds_init(void)
 {
-    nrf_gpio_cfg_output(UPDATE_IN_PROGRESS_LED);
-    nrf_gpio_pin_set(UPDATE_IN_PROGRESS_LED);
+#warning "Set actual LED pins."
+    nrf_gpio_cfg_output(12);
+	nrf_gpio_cfg_output(13);
+	nrf_gpio_cfg_output(18);
+	nrf_gpio_cfg_output(19);
+
+	// turn off all leds
+    nrf_gpio_pin_set(12);
+	nrf_gpio_pin_set(13);
+	nrf_gpio_pin_set(18);
+	nrf_gpio_pin_set(19);
 }
 
 
@@ -178,7 +188,7 @@ int main(void)
 {
     uint32_t err_code;
     bool     dfu_start = false;
-    bool     app_reset = (NRF_POWER->GPREGRET == BOOTLOADER_DFU_START);
+	bool     app_reset = (NRF_POWER->GPREGRET == 1); // BOOTLOADER_DFU_START);
 
     if (app_reset)
     {
@@ -200,38 +210,58 @@ int main(void)
 
     if (bootloader_dfu_sd_in_progress())
     {
-        nrf_gpio_pin_clear(UPDATE_IN_PROGRESS_LED);
+        //nrf_gpio_pin_clear(UPDATE_IN_PROGRESS_LED);
+		
+		nrf_gpio_pin_clear(13); // front green led
 
         err_code = bootloader_dfu_sd_update_continue();
         APP_ERROR_CHECK(err_code);
 
-        ble_stack_init(!app_reset);
+        //ble_stack_init(!app_reset);
+		ble_stack_init(true);
         scheduler_init();
 
         err_code = bootloader_dfu_sd_update_finalize();
         APP_ERROR_CHECK(err_code);
 
-        nrf_gpio_pin_set(UPDATE_IN_PROGRESS_LED);
+        //nrf_gpio_pin_set(UPDATE_IN_PROGRESS_LED);
     }
     else
     {
+		nrf_gpio_pin_clear(19); // back green led
+
         // If stack is present then continue initialization of bootloader.
-        ble_stack_init(!app_reset);
+        //ble_stack_init(!app_reset);
+		ble_stack_init(true);
+		nrf_gpio_pin_set(19); // back green led
         scheduler_init();
+
+		// 2 back red blinks
+		nrf_gpio_pin_clear(18);
+		nrf_delay_ms(500);
+		nrf_gpio_pin_set(18);
+		nrf_delay_ms(500);
+		nrf_gpio_pin_clear(18);
+		nrf_delay_ms(500);
+		nrf_gpio_pin_set(18);
     }
 
     dfu_start  = app_reset;
     //dfu_start |= ((nrf_gpio_pin_read(BOOTLOADER_BUTTON) == 0) ? true: false);
     
+	if (dfu_start)
+		nrf_gpio_pin_clear(19); // green on.
+
     if (dfu_start || (!bootloader_app_is_valid(DFU_BANK_0_REGION_START)))
     {
-        nrf_gpio_pin_clear(UPDATE_IN_PROGRESS_LED);
+        //nrf_gpio_pin_clear(UPDATE_IN_PROGRESS_LED);
+		
 
         // Initiate an update of the firmware.
         err_code = bootloader_dfu_start();
         APP_ERROR_CHECK(err_code);
 
-        nrf_gpio_pin_set(UPDATE_IN_PROGRESS_LED);
+        //nrf_gpio_pin_set(UPDATE_IN_PROGRESS_LED);
     }
 
     if (bootloader_app_is_valid(DFU_BANK_0_REGION_START) && !bootloader_dfu_sd_in_progress())
