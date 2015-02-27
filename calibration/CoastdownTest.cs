@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Calibration
 {
-    class Program
+    class CoastdownTest
     {
         static void Main(string[] args)
         {
