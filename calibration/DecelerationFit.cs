@@ -13,6 +13,7 @@ namespace Calibration
     {
         alglib.barycentricinterpolant m_interpolant;
         double[] m_speedMps, m_coastdownSeconds;  // x, y coordinates.
+        double[] m_coeff;
 
         public DecelerationFit(double[] speedMps, double[] coastdownSeconds)
         {
@@ -27,7 +28,16 @@ namespace Calibration
         /// <returns></returns>
         public double Rate(double speed_mps)
         {
-            return alglib.barycentriccalc(m_interpolant, speed_mps);
+            // Get the amount of time it takes to coast down from this speed.
+            double dTime = alglib.barycentriccalc(m_interpolant, speed_mps);
+
+            // Get the change in speed.
+            double dSpeed = speed_mps - m_speedMps.Last();
+
+            // Get the rate of change.
+            double acceleration = dSpeed / dTime;
+
+            return acceleration;
         }
 
 
@@ -39,13 +49,12 @@ namespace Calibration
         {
             // internal implementation of curve fitting.
             int info = 0;
-            double[] coeff;
 
             alglib.polynomialfitreport report;
 
             alglib.polynomialfit(m_speedMps, m_coastdownSeconds, m_speedMps.Length,
                 3, out info, out m_interpolant, out report);
-            alglib.polynomialbar2pow(m_interpolant, out coeff);
+            alglib.polynomialbar2pow(m_interpolant, out m_coeff);
 
             if (info != 1)
             {

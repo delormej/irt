@@ -84,7 +84,6 @@ namespace Calibration
         static double fit_drag_rr(double v, double K, double rr)
         {
             double p = K * Math.Pow(v, 2) + ((v * rr)); // / contact_patch());
-            // p = Kv^2 + rrv + c
 
             return p;
         }

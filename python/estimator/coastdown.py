@@ -219,7 +219,7 @@ def main(file_name):
 	# slice to build a new array between min & max
 	seconds = seconds[ix_max:ix_min]
 	mps = mps[ix_max:ix_min]
-	print("MPS", mps)
+	
 	print("Max speed was at ix: %s, min was at ix: %s" % ( time[ix_max*4-1], time[ix_min*4-1] ))
 
 	# calculate new x/y to represent time in ms since 0 and speed in meters per second
@@ -267,6 +267,7 @@ def main(file_name):
 	
 	# get the mass in F=ma
 	mass = get_inertia_mass(speed_on_entry, speed_on_exit, duration, avg_power)
+	print("mass", mass)
 
 	# smooth out deceleration and get back a curve of speed (mps) to power (watts)
 	x_pwr, y_pwr = fit_bike_power_by_decel(mass, coeff)
