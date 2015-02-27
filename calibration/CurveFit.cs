@@ -46,12 +46,13 @@ namespace Calibration
         {
             // internal implementation of curve fitting.
             int info = 0;
+            double[] coeff;
 
             alglib.polynomialfitreport report;
 
             alglib.polynomialfit(m_speedMps, m_coastdownSeconds, m_speedMps.Length, 
                 3, out info, out m_interpolant, out report);
-            //alglib.polynomialbar2pow(p, out coeff);
+            alglib.polynomialbar2pow(m_interpolant, out coeff);
 
             if (info != 1)
             {
@@ -146,7 +147,12 @@ namespace Calibration
             SpeedMps = new double[len];
             CoastdownSeconds = new double[len];
             Array.Copy(speed, max, SpeedMps, 0, len);
-            Array.Copy(seconds, max, CoastdownSeconds, 0, len);
+            
+            // Invert the timestamp seconds to record seconds to min speed.
+            for (int i = 0; i < len; i++)
+            {
+                CoastdownSeconds[i] = seconds[len - 1] - seconds[i];
+            }
         }
 
         /// <summary>
