@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 
 
-namespace Calibration
+namespace IRT.Calibration
 {
     /// <summary>
     /// Handles the filtering and process of the data files.
@@ -41,26 +41,33 @@ namespace Calibration
         /// </summary>
         public void Calculate(double stableSpeed, double stableWatts)
         {
-            // Process values to build speed/time arrays.
-            CoastdownData data = new CoastdownData(m_timestamps.ToArray(), 
-                m_flywheel_ticks.ToArray());
-            data.Evaluate();
-
-            // Calculate the deceleration.
-            m_decelFit = new DecelerationFit(data.SpeedMps, data.CoastdownSeconds);
-            m_decelFit.Fit();
-            m_powerFit = new PowerFit(m_decelFit, stableSpeed, stableWatts);
-            m_powerFit.Fit();
-
-            if (Drag < 0.0)
+            try
             {
-                throw new CoastdownException(
-                    "Drag should not be negative, likely entry speed is wrong.");
-            }
-            else if (RollingResistance < 10)
+                // Process values to build speed/time arrays.
+                CoastdownData data = new CoastdownData(m_timestamps.ToArray(),
+                    m_flywheel_ticks.ToArray());
+                data.Evaluate();
+
+                // Calculate the deceleration.
+                m_decelFit = new DecelerationFit(data.SpeedMps, data.CoastdownSeconds);
+                m_decelFit.Fit();
+                m_powerFit = new PowerFit(m_decelFit, stableSpeed, stableWatts);
+                m_powerFit.Fit();
+
+                if (Drag < 0.0)
+                {
+                    throw new CoastdownException(
+                        "Drag should not be negative, likely entry speed is wrong.");
+                }
+                else if (RollingResistance < 10)
+                {
+                    //throw new CoastdownException(
+                    // "Rolling Resistance seems incorrect, it should be greater.");
+                }
+            } 
+            catch (Exception e)
             {
-                //throw new CoastdownException(
-                   // "Rolling Resistance seems incorrect, it should be greater.");
+                System.Diagnostics.Debug.WriteLine("Error occurred: " + e.Message);
             }
         }
 

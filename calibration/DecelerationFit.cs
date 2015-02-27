@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Calibration
+namespace IRT.Calibration
 {
     /// <summary>
     /// Calculates rate of deceleration for a given speed.

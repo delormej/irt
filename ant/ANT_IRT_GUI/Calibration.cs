@@ -1,4 +1,5 @@
 ﻿using AntPlus.Profiles.BikePower;
+using IRT.Calibration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -129,6 +130,7 @@ namespace IRT_GUI
         public Calibration12()
         {
             m_tickEvents = new List<TickEvent>();
+            m_coastdown = new Coastdown();
         }
 
         public override void LogCalibration(byte[] buffer)
@@ -174,6 +176,8 @@ namespace IRT_GUI
                     te.TimestampMS = (ushort)(time + (0.125f * 2048));
                 }
 
+                m_coastdown.Add((int)te.TimestampMS, (int)te.TickDelta);
+
                 m_tickEvents.Add(te);
                 i++;
             }
@@ -217,6 +221,12 @@ namespace IRT_GUI
                     coastdownSeconds = 0;
                 }
 
+                if (state == Motion.Stable && coastdownSeconds > 10)
+                {
+                    m_stableWatts = te.Watts;
+                    m_stableSpeedMps = mps;
+                }
+
                 if (m_form != null)
                 {
                     m_form.UpdateValues(coastdownSeconds, mph, te.Watts, state);
@@ -238,6 +248,10 @@ namespace IRT_GUI
         protected Stopwatch m_stopwatch;
         protected List<TickEvent> m_tickEvents;
 
+        protected Coastdown m_coastdown;
+        protected double m_stableWatts;
+        protected double m_stableSpeedMps;
+
         public Calibration()
         {
             m_tickEvents = new List<TickEvent>();
@@ -247,6 +261,8 @@ namespace IRT_GUI
             m_stopwatch.Start();
 
             m_inCalibrationMode = true;
+
+            m_coastdown = new Coastdown();
         }
 
         public void ShowCalibration(BikePowerDisplay refPower)
@@ -261,6 +277,10 @@ namespace IRT_GUI
             Action a = () =>
             {
                 m_form.Close();
+                m_coastdown.Calculate(m_stableSpeedMps, m_stableWatts);
+                string values = string.Format("Drag: {0}, Rolling Resistance: {1}",
+                    m_coastdown.Drag, m_coastdown.RollingResistance);
+                System.Diagnostics.Debug.WriteLine(values);
             };
 
             m_form.BeginInvoke(a);
