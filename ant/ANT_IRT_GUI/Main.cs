@@ -562,6 +562,7 @@ namespace IRT_GUI
                 m_eMotion.TemperatureSubPageReceived += m_eMotion_TemperatureSubPageReceived;
                 m_eMotion.CalibrationCustomParameterResponsePageReceived += m_eMotion_CalibrationCustomParameterResponsePageReceived;
                 m_eMotion.GeneralCalibrationResponseSuccessReceived += m_eMotion_GeneralCalibrationResponseSuccessReceived;
+                m_eMotion.MeasurementOutputPageReceived += m_eMotion_MeasurementOutputPageReceived;
 
                 m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
                 m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
@@ -594,6 +595,16 @@ namespace IRT_GUI
                     MessageBoxIcon.Error);
 
                 Application.Exit();
+            }
+        }
+
+        void m_eMotion_MeasurementOutputPageReceived(MeasurementOutputPage arg1, uint arg2)
+        {
+            if (arg1.DataType == BikePower.MeasurementDataType.Temperature)
+            {
+                double temp = arg1.MeasurementValue / 1024.0;
+
+                UpdateStatus(string.Format("Recieved temperature: {0}", temp));
             }
         }
 
