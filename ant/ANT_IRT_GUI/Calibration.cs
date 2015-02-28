@@ -310,11 +310,16 @@ namespace IRT_GUI
 
             CloseForm();
 
-            m_coastdown.Calculate(m_stableSpeedMps, m_stableWatts);
-            string values = string.Format("Drag: {0}, Rolling Resistance: {1}",
-                m_coastdown.Drag, m_coastdown.RollingResistance);
-            System.Diagnostics.Debug.WriteLine(values);
-
+            if (m_coastdown.Calculate(m_stableSpeedMps, m_stableWatts))
+            {
+                string values = string.Format("Drag: {0}, Rolling Resistance: {1}",
+                    m_coastdown.Drag, m_coastdown.RollingResistance);
+                System.Diagnostics.Debug.WriteLine(values);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Calibration failed.");
+            }
         }
 
         public virtual void LogCalibration(byte[] buffer)

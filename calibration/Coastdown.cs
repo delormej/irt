@@ -39,7 +39,8 @@ namespace IRT.Calibration
         /// Parses the coast down x,y values and generates coefficients of Drag 
         /// and Rolling Resistance based on stable speed and watts.
         /// </summary>
-        public void Calculate(double stableSpeed, double stableWatts)
+        /// <returns>true/false if it succeeded.</returns>
+        public bool Calculate(double stableSpeed, double stableWatts)
         {
             try
             {
@@ -68,7 +69,10 @@ namespace IRT.Calibration
             catch (Exception e)
             {
                 System.Diagnostics.Debug.WriteLine("Error occurred: " + e.Message);
+                return false;
             }
+
+            return true;
         }
 
         /// <summary>
