@@ -277,10 +277,6 @@ namespace IRT_GUI
             Action a = () =>
             {
                 m_form.Close();
-                m_coastdown.Calculate(m_stableSpeedMps, m_stableWatts);
-                string values = string.Format("Drag: {0}, Rolling Resistance: {1}",
-                    m_coastdown.Drag, m_coastdown.RollingResistance);
-                System.Diagnostics.Debug.WriteLine(values);
             };
 
             m_form.BeginInvoke(a);
@@ -313,6 +309,12 @@ namespace IRT_GUI
             }
 
             CloseForm();
+
+            m_coastdown.Calculate(m_stableSpeedMps, m_stableWatts);
+            string values = string.Format("Drag: {0}, Rolling Resistance: {1}",
+                m_coastdown.Drag, m_coastdown.RollingResistance);
+            System.Diagnostics.Debug.WriteLine(values);
+
         }
 
         public virtual void LogCalibration(byte[] buffer)
@@ -382,7 +384,7 @@ namespace IRT_GUI
 
         public void Dispose()
         {
-            ExitCalibration();
+            //ExitCalibration();
         }
 
         private double CalculateSpeed(List<TickEvent> events)
