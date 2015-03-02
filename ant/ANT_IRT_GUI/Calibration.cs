@@ -226,6 +226,7 @@ namespace IRT_GUI
                 {
                     m_stableWatts = te.Watts;
                     m_stableSpeedMps = mps;
+                    m_form.Step2();
                 }
 
                 if (m_form != null)
@@ -333,8 +334,9 @@ namespace IRT_GUI
 
         private void CalculateCoastdown()
         {
-            m_stableSpeedMps = 15.0 * 0.44704;
-            m_stableWatts = 147;
+            // DEBUG VALUES.
+            //m_stableSpeedMps = 15.0 * 0.44704;
+            //m_stableWatts = 147;
 
             try 
             {

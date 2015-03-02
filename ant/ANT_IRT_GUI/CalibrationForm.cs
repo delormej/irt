@@ -47,6 +47,15 @@ namespace IRT_GUI
             }
         }
 
+        /// <summary>
+        /// Initiate step 2 which is to coastdown.
+        /// </summary>
+        public void Step2()
+        {
+            lblStep1.ForeColor = SystemColors.InactiveCaption;
+            lblStep2.ForeColor = SystemColors.ActiveCaption;
+        }
+
         private void btnExit_Click(object sender, EventArgs e)
         {
             this.Close();
