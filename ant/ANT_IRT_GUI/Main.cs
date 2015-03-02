@@ -204,8 +204,6 @@ namespace IRT_GUI
             items.Add("BattOpTime", lblEmrBattTime);
             items.Add("ServoOffset", txtServoOffset);
             items.Add("Features", lblFeatures);
-            items.Add("CrrSlope", txtSlope);
-            items.Add("CrrOffset", txtOffset);
             items.Add("Weight", txtTotalWeight);
             items.Add("WheelSize", txtWheelSizeMm);
             items.Add("RefPwrManuf", lblRefPwrManuf);
@@ -427,8 +425,6 @@ namespace IRT_GUI
                         intercept = 0;
 
                     UpdateStatus("Received CRR parameter.");
-                    UpdateText(txtSlope, slope);
-                    UpdateText(txtOffset, intercept);
                     
                     break;
 
@@ -565,6 +561,8 @@ namespace IRT_GUI
                 m_eMotion.GetSetParametersPageReceived += m_eMotion_GetSetParametersPageReceived;
                 m_eMotion.TemperatureSubPageReceived += m_eMotion_TemperatureSubPageReceived;
                 m_eMotion.CalibrationCustomParameterResponsePageReceived += m_eMotion_CalibrationCustomParameterResponsePageReceived;
+                m_eMotion.GeneralCalibrationResponseSuccessReceived += m_eMotion_GeneralCalibrationResponseSuccessReceived;
+                m_eMotion.MeasurementOutputPageReceived += m_eMotion_MeasurementOutputPageReceived;
 
                 m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
                 m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
@@ -597,6 +595,25 @@ namespace IRT_GUI
                     MessageBoxIcon.Error);
 
                 Application.Exit();
+            }
+        }
+
+        void m_eMotion_MeasurementOutputPageReceived(MeasurementOutputPage arg1, uint arg2)
+        {
+            if (arg1.DataType == BikePower.MeasurementDataType.Temperature)
+            {
+                double temp = arg1.MeasurementValue / 1024.0;
+
+                UpdateStatus(string.Format("Recieved temperature: {0}", temp));
+            }
+        }
+
+        void m_eMotion_GeneralCalibrationResponseSuccessReceived(GeneralCalibrationResponseSuccessPage arg1, uint arg2)
+        {
+            if (m_calibration != null)
+            {
+                m_calibration.ExitCalibration();
+                m_calibration = null;
             }
         }
 
@@ -792,9 +809,6 @@ namespace IRT_GUI
                     // Simulate pressing both of these buttons.
                     btnServoOffset_Click(this, null);
 
-                    // Wait 1/2 second before pushing the next one.
-                    System.Threading.Thread.Sleep(500);
-                    btnCalibrationSet_Click(this, null);
                     // Wait 1/2 second before pushing the next one.
                     System.Threading.Thread.Sleep(500);
 
@@ -1599,8 +1613,6 @@ namespace IRT_GUI
 
             UpdateText(txtWheelSizeMm, "");
             UpdateText(txtTotalWeight, "");
-            UpdateText(txtSlope, "");
-            UpdateText(txtOffset, "");
             UpdateText(txtServoOffset, 0);
 
         }
@@ -1727,36 +1739,6 @@ namespace IRT_GUI
                 txtLog.AppendText(text + '\n');
                 lblStatus.Text = text;
             });
-        }
-
-        private void btnCalibrationGet_Click(object sender, EventArgs e)
-        {
-            RequestDeviceParameter(SubPages.Crr);
-        }
-
-        private void btnCalibrationSet_Click(object sender, EventArgs e)
-        {
-            // Bounds check.
-            ushort slope = 0, offset = 0;
-
-            ushort.TryParse(txtSlope.Text, out slope);
-            ushort.TryParse(txtOffset.Text, out offset);
-
-            if (slope == 0 || offset == 0)
-            {
-                UpdateStatus("ERROR: Slope/offset must be > 0.");
-                return;
-            }
-
-            UInt32 value = (UInt32)(slope | (offset << 16));
-            if (SetParameter((byte)SubPages.Crr, value))
-            {
-                UpdateStatus("Updated slope/offset.");
-            }
-            else
-            {
-                UpdateStatus("Failed to update slope/offset.");
-            }
         }
 
         private void chkLstSettings_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -2333,6 +2315,20 @@ namespace IRT_GUI
         {
             RequestDeviceParameter(SubPages.Drag);
             RequestDeviceParameter(SubPages.RR);
+        }
+
+        private void btnStartCalibration_Click(object sender, EventArgs e)
+        {
+            RequestCalibrationMessage message = new RequestCalibrationMessage();
+
+            UpdateStatus("Requesting calibration.");
+            bool result = RetryCommand(ANT_RETRY_REQUESTS, ANT_RETRY_DELAY, () =>
+            { return m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT); });
+
+            if (!result)
+            {
+                UpdateStatus(String.Format("Unable to request calibraiton, return result: {1}.", result));
+            }
         }
     }
 }

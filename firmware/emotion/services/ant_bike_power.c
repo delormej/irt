@@ -363,7 +363,6 @@ static void handle_wahoo_page(ant_evt_t * p_ant_evt)
 	}
 }
 
-// TODO: need to implement calibration requests as well.
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 {
 	// Only interested in BURST events right now for processing resistance control.
@@ -371,9 +370,9 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 	{
 		handle_burst(p_ant_evt);
 	}
-	// TODO: remove these hard coded array position values and create defines.
 	else if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] == MESG_ACKNOWLEDGED_DATA_ID)
 	{
+		// TODO: remove these hard coded array position values and create defines.
 		switch (p_ant_evt->evt_buffer[3])  // Switch on the page number.
 		{
 			case WF_ANT_RESPONSE_PAGE_ID:
@@ -388,6 +387,11 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 			case ANT_PAGE_REQUEST_DATA:
 				BP_LOG("[BP]:ANT Data Request Page.\r\n");
 				mp_evt_handlers->on_request_data(&(p_ant_evt->evt_buffer[3]));
+				break;
+
+			case ANT_BP_PAGE_CALIBRATION:
+				BP_LOG("[BP]:ANT Request Calibration.\r\n");
+				mp_evt_handlers->on_request_calibration();
 				break;
 
 			default:
@@ -664,3 +668,19 @@ void ant_bp_page3_tx_send(
 	APP_ERROR_CHECK(err_code);
 }
 
+/**@brief	Sends a message indicating calibration is complete.
+ *
+ */
+uint32_t ant_bp_calibration_complete(bool success, int16_t calibration_data)
+{
+	tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
+	tx_buffer[1] = 		success ? ANT_BP_CAL_SUCCESS_RESPONSE : ANT_BP_CAL_FAIL_RESPONSE;
+	tx_buffer[2] = 		0xFF;
+	tx_buffer[3] = 		0xFF;
+	tx_buffer[4] = 		0xFF;
+	tx_buffer[5] = 		0xFF;
+	tx_buffer[6] = 		LOW_BYTE(calibration_data);
+	tx_buffer[7] = 		HIGH_BYTE(calibration_data);
+
+	return acknolwedge_message_transmit();
+}

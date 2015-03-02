@@ -970,6 +970,9 @@ static void calibration_stop(void)
 
 	// Restart the normal ANT timer.
 	err_code = app_timer_start(m_ant_4hz_timer_id, ANT_4HZ_INTERVAL, NULL);
+
+	// Send a message indicating completion.
+	ant_bp_calibration_complete(true, 0);
 }
 
 /**@brief	Updates settings either temporarily or with persistence.
@@ -1755,6 +1758,14 @@ static void on_battery_result(uint16_t battery_level)
 	}
 }
 
+/**@brief	When the display requests calibration to begin.
+ *
+ */
+static void on_request_calibration()
+{
+	calibration_start();
+}
+
 /**@brief	Configures chip power options.
  *
  * @note	Note this must happen after softdevice is enabled.
@@ -1937,7 +1948,8 @@ int main(void)
 		on_enable_dfu_mode,
 		on_request_data,
 		on_set_parameter,
-		on_set_servo_positions
+		on_set_servo_positions,
+		on_request_calibration
 	};
 
 	// Initialize and enable the softdevice.

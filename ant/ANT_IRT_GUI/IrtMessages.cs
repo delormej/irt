@@ -416,6 +416,13 @@ namespace IRT_GUI.IrtMessages
         }
     }
 
+    public class RequestCalibrationMessage : CalibrationMessage
+    {
+        public RequestCalibrationMessage()
+        {
+            m_payload[1] = 0xAA; // ID of Request calibration.
+        }
+    }
 
     // This is mostly used to Set values on the device.
     public class CalibrationMessage : Message
@@ -424,7 +431,7 @@ namespace IRT_GUI.IrtMessages
 
         private byte m_subpage;
 
-        public CalibrationMessage()
+        public CalibrationMessage ()
         {
             m_payload = new byte[8];
         }
