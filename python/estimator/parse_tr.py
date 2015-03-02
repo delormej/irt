@@ -80,7 +80,7 @@ def main(file_name):
 	#ax2.stackplot(minutes, target_watts)
 	ax3.plot(minutes, target_watts, linestyle='--', linewidth='2', color='g', zorder=100)
 	#labels.append(r'y = %s' % ('Target'))
-	ax3.set_ylim(100, 350)
+	ax3.set_ylim(100, 425)
 
 	plt.show()
 
