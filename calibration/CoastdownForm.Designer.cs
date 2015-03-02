@@ -28,6 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.lblInstructions = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.lblDrag = new System.Windows.Forms.Label();
@@ -35,6 +38,8 @@
             this.label4 = new System.Windows.Forms.Label();
             this.btnApply = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.chartCoastdown = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            ((System.ComponentModel.ISupportInitialize)(this.chartCoastdown)).BeginInit();
             this.SuspendLayout();
             // 
             // lblInstructions
@@ -106,13 +111,30 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
+            // chartCoastdown
+            // 
+            chartArea1.Name = "ChartArea1";
+            this.chartCoastdown.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chartCoastdown.Legends.Add(legend1);
+            this.chartCoastdown.Location = new System.Drawing.Point(15, 166);
+            this.chartCoastdown.Name = "chartCoastdown";
+            series1.ChartArea = "ChartArea1";
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            this.chartCoastdown.Series.Add(series1);
+            this.chartCoastdown.Size = new System.Drawing.Size(489, 300);
+            this.chartCoastdown.TabIndex = 7;
+            this.chartCoastdown.Text = "chart1";
+            // 
             // CoastdownForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(284, 261);
+            this.ClientSize = new System.Drawing.Size(516, 478);
             this.ControlBox = false;
+            this.Controls.Add(this.chartCoastdown);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnApply);
             this.Controls.Add(this.lblRR);
@@ -123,6 +145,7 @@
             this.MaximizeBox = false;
             this.Name = "CoastdownForm";
             this.Text = "Coastdown";
+            ((System.ComponentModel.ISupportInitialize)(this.chartCoastdown)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -137,5 +160,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button btnApply;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chartCoastdown;
     }
 }

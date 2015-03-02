@@ -22,17 +22,26 @@ namespace IRT.Calibration
 
         public void Evaluate()
         {
-            double[] seconds = new double[m_timestamp.Length / 4];
-            double[] speed = new double[m_flywheel.Length / 4];
+            int records = m_timestamp.Length / 4;
+
+            if (m_timestamp.Length % 4 != 0)
+            {
+                // If there was a remainder, add 1.
+                records += 1;
+            }
+
+            double[] seconds = new double[records];
+            double[] speed = new double[records];
 
             int ix = 0;
+
             for (int idx = 0; idx < m_flywheel.Length; idx++)
             {
                 int val = m_flywheel[idx];
                 int dt, ds;
 
-                // Evaluate every 4th record.
-                if (idx > 0 && idx % 4 == 0 || idx == m_flywheel.Length-1)
+                // Evaluate every 4th record AND the last record.
+                if (idx > 0 && idx % 4 == 0 || idx == m_flywheel.Length - 1)
                 {
                     if (val < m_flywheel[idx - 4])
                         dt = val + (m_flywheel[idx - 4] ^ 0xFFFF);
@@ -55,7 +64,7 @@ namespace IRT.Calibration
                      */
                     speed[ix++] = (dt * 0.1115 / 2.0) / (ds / 2048.0);
                 }
-            }
+            }      
 
             int max = FindDecelerationIndex(speed);
             int min = FindMinSpeedIndex(speed);
