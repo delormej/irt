@@ -127,13 +127,14 @@
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.btnStartCalibration = new System.Windows.Forms.Button();
             this.btnCalibration2Set = new System.Windows.Forms.Button();
             this.btnCalibration2Get = new System.Windows.Forms.Button();
             this.label30 = new System.Windows.Forms.Label();
             this.txtRR = new System.Windows.Forms.TextBox();
             this.txtDrag = new System.Windows.Forms.TextBox();
             this.label32 = new System.Windows.Forms.Label();
-            this.btnStartCalibration = new System.Windows.Forms.Button();
+            this.btnViewCalibration = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
@@ -1262,6 +1263,7 @@
             // 
             // groupBox5
             // 
+            this.groupBox5.Controls.Add(this.btnViewCalibration);
             this.groupBox5.Controls.Add(this.btnStartCalibration);
             this.groupBox5.Controls.Add(this.btnCalibration2Set);
             this.groupBox5.Controls.Add(this.btnCalibration2Get);
@@ -1277,6 +1279,17 @@
             this.groupBox5.TabIndex = 27;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Calibration (Curve)";
+            // 
+            // btnStartCalibration
+            // 
+            this.btnStartCalibration.Location = new System.Drawing.Point(24, 157);
+            this.btnStartCalibration.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnStartCalibration.Name = "btnStartCalibration";
+            this.btnStartCalibration.Size = new System.Drawing.Size(178, 35);
+            this.btnStartCalibration.TabIndex = 27;
+            this.btnStartCalibration.Text = "Start";
+            this.btnStartCalibration.UseVisualStyleBackColor = true;
+            this.btnStartCalibration.Click += new System.EventHandler(this.btnStartCalibration_Click);
             // 
             // btnCalibration2Set
             // 
@@ -1336,16 +1349,16 @@
             this.label32.TabIndex = 16;
             this.label32.Text = "RR";
             // 
-            // btnStartCalibration
+            // btnViewCalibration
             // 
-            this.btnStartCalibration.Location = new System.Drawing.Point(24, 157);
-            this.btnStartCalibration.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnStartCalibration.Name = "btnStartCalibration";
-            this.btnStartCalibration.Size = new System.Drawing.Size(178, 35);
-            this.btnStartCalibration.TabIndex = 27;
-            this.btnStartCalibration.Text = "Start";
-            this.btnStartCalibration.UseVisualStyleBackColor = true;
-            this.btnStartCalibration.Click += new System.EventHandler(this.btnStartCalibration_Click);
+            this.btnViewCalibration.Location = new System.Drawing.Point(24, 207);
+            this.btnViewCalibration.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnViewCalibration.Name = "btnViewCalibration";
+            this.btnViewCalibration.Size = new System.Drawing.Size(178, 35);
+            this.btnViewCalibration.TabIndex = 28;
+            this.btnViewCalibration.Text = "View";
+            this.btnViewCalibration.UseVisualStyleBackColor = true;
+            this.btnViewCalibration.Click += new System.EventHandler(this.btnViewCalibration_Click);
             // 
             // frmIrtGui
             // 
@@ -1504,6 +1517,7 @@
         private System.Windows.Forms.TextBox txtSimC;
         private System.Windows.Forms.Label label34;
         private System.Windows.Forms.Button btnStartCalibration;
+        private System.Windows.Forms.Button btnViewCalibration;
     }
 }
 

@@ -2330,5 +2330,10 @@ namespace IRT_GUI
                 UpdateStatus(String.Format("Unable to request calibraiton, return result: {1}.", result));
             }
         }
+
+        private void btnViewCalibration_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
