@@ -53,7 +53,7 @@ namespace IRT_GUI
         public void Step2()
         {
             lblStep1.ForeColor = SystemColors.InactiveCaption;
-            lblStep2.ForeColor = SystemColors.ActiveCaption;
+            lblStep2.ForeColor = SystemColors.ControlText;
         }
 
         private void btnExit_Click(object sender, EventArgs e)
