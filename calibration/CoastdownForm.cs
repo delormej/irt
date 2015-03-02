@@ -29,6 +29,7 @@ namespace IRTCalibration
             m_coastdown = coastdown;
             this.lblDrag.Text = coastdown.Drag.ToString();
             this.lblRR.Text = coastdown.RollingResistance.ToString();
+            
             DrawChart();
             StartTimer();
         }
