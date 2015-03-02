@@ -15,6 +15,12 @@ namespace IRTCalibration
     {
         public event Action<int> Apply;
         private Coastdown m_coastdown;
+        private Timer m_timer;
+        private int m_secondsUntilApply;
+
+        private readonly string instructions =
+            "In {0} second(s) calibration parameters will be applied.\r\n" +
+            "Close this dialog or begin another coastdown to interrupt.";
 
         public CoastdownForm(Coastdown coastdown)
         {
@@ -24,9 +30,20 @@ namespace IRTCalibration
             this.lblDrag.Text = coastdown.Drag.ToString();
             this.lblRR.Text = coastdown.RollingResistance.ToString();
             DrawChart();
+            StartTimer();
         }
 
         private void btnApply_Click(object sender, EventArgs e)
+        {
+            OnApply();
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void OnApply()
         {
             if (Apply != null)
             {
@@ -36,9 +53,27 @@ namespace IRTCalibration
             this.Close();
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
+        private void StartTimer()
         {
-            this.Close();
+            m_timer = new Timer();
+
+            m_secondsUntilApply = 15;
+            m_timer.Interval = 1000;
+            m_timer.Tick += m_timer_Tick;
+            m_timer.Start();
+        }
+
+        void m_timer_Tick(object sender, EventArgs e)
+        {
+            if (m_secondsUntilApply > 0)
+            {
+                lblInstructions.Text =
+                    string.Format(instructions, m_secondsUntilApply--);
+            }
+            else
+            {
+                OnApply();
+            }
         }
 
         private void DrawChart()

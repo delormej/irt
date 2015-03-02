@@ -336,8 +336,9 @@ namespace IRT_GUI
             m_stableSpeedMps = 15.0 * 0.44704;
             m_stableWatts = 147;
 
-            if (m_coastdown.Calculate(m_stableSpeedMps, m_stableWatts))
+            try 
             {
+                m_coastdown.Calculate(m_stableSpeedMps, m_stableWatts);
                 string values = string.Format("Drag: {0}, Rolling Resistance: {1}",
                     m_coastdown.Drag, m_coastdown.RollingResistance);
                 System.Diagnostics.Debug.WriteLine(values);
@@ -347,7 +348,7 @@ namespace IRT_GUI
                 m_coastdownForm.Show();
 
             }
-            else
+            catch (Exception e)
             {
                 MessageBox.Show("Calibration failed.");
             }
