@@ -13,6 +13,7 @@ namespace IRT.Calibration
     public class Coastdown
     {
         private List<int> m_timestamps, m_flywheel_ticks;
+        private CoastdownData m_coastdownData;
 
         // Fit objects.
         private DecelerationFit m_decelFit;
@@ -23,6 +24,11 @@ namespace IRT.Calibration
             m_timestamps = new List<int>();
             m_flywheel_ticks = new List<int>();
         }
+
+        /// <summary>
+        /// Raw coastdown data point.
+        /// </summary>
+        public CoastdownData Data { get { return m_coastdownData; } }
 
         /// <summary>
         /// Add a coast down tick event.
@@ -40,19 +46,20 @@ namespace IRT.Calibration
         /// and Rolling Resistance based on stable speed and watts.
         /// </summary>
         /// <returns>true/false if it succeeded.</returns>
-        public bool Calculate(double stableSpeed, double stableWatts)
+        public bool Calculate(double stableSpeedMps, double stableWatts)
         {
             try
             {
                 // Process values to build speed/time arrays.
-                CoastdownData data = new CoastdownData(m_timestamps.ToArray(),
+                m_coastdownData = new CoastdownData(m_timestamps.ToArray(),
                     m_flywheel_ticks.ToArray());
-                data.Evaluate();
+                m_coastdownData.Evaluate();
 
                 // Calculate the deceleration.
-                m_decelFit = new DecelerationFit(data.SpeedMps, data.CoastdownSeconds);
+                m_decelFit = new DecelerationFit(m_coastdownData.SpeedMps, 
+                    m_coastdownData.CoastdownSeconds);
                 m_decelFit.Fit();
-                m_powerFit = new PowerFit(m_decelFit, stableSpeed, stableWatts);
+                m_powerFit = new PowerFit(m_decelFit, stableSpeedMps, stableWatts);
                 m_powerFit.Fit();
 
                 if (Drag < 0.0)

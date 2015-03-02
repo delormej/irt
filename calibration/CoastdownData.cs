@@ -7,7 +7,7 @@ namespace IRT.Calibration
     /// <summary>
     /// Filters and processes raw data into usable speed/coastdown seconds.
     /// </summary>
-    internal class CoastdownData
+    public class CoastdownData
     {
         private int[] m_timestamp, m_flywheel;
 
@@ -32,7 +32,7 @@ namespace IRT.Calibration
                 int dt, ds;
 
                 // Evaluate every 4th record.
-                if (idx > 0 && idx % 4 == 0)
+                if (idx > 0 && idx % 4 == 0 || idx == m_flywheel.Length-1)
                 {
                     if (val < m_flywheel[idx - 4])
                         dt = val + (m_flywheel[idx - 4] ^ 0xFFFF);

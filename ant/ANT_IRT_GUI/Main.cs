@@ -624,6 +624,7 @@ namespace IRT_GUI
                 if (m_firmwareRev != null && m_firmwareRev.Build > 11)
                 {
                     m_calibration = new Calibration12();
+                    m_calibration.CoastdownCalibrationApply += m_calibration_CoastdownCalibrationApply;
                 }
                 else
                 {
@@ -2333,7 +2334,20 @@ namespace IRT_GUI
 
         private void btnViewCalibration_Click(object sender, EventArgs e)
         {
+            m_calibration = new Calibration();
+            m_calibration.CoastdownCalibrationApply += m_calibration_CoastdownCalibrationApply;
+            m_calibration.LoadCalibration();
+        }
 
+        void m_calibration_CoastdownCalibrationApply(IRT.Calibration.Coastdown coastdown)
+        {
+            ExecuteOnUI(() =>
+            {
+                this.txtDrag.Text = coastdown.Drag.ToString();
+                this.txtRR.Text = coastdown.RollingResistance.ToString();
+
+                this.btnCalibration2Set_Click(this, null);
+            });
         }
     }
 }

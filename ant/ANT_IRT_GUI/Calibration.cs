@@ -1,5 +1,6 @@
 ﻿using AntPlus.Profiles.BikePower;
 using IRT.Calibration;
+using IRTCalibration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -252,6 +253,8 @@ namespace IRT_GUI
         protected double m_stableWatts;
         protected double m_stableSpeedMps;
 
+        public event Action<Coastdown> CoastdownCalibrationApply;
+
         public Calibration()
         {
             m_tickEvents = new List<TickEvent>();
@@ -270,6 +273,22 @@ namespace IRT_GUI
             m_form = new CalibrationForm();
             m_refPower = refPower;
             m_form.Show();
+        }
+
+        public void LoadCalibration()
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            //dlg.InitialDirectory = m_lastPath;
+            dlg.Filter = "Ride Logs (*.csv)|*.csv|All files (*.*)|*.*";
+            dlg.FilterIndex = 1;
+            dlg.RestoreDirectory = false;
+            dlg.CheckFileExists = true;
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                m_coastdown = Coastdown.FromFile(dlg.FileName);
+                CalculateCoastdown();
+            }
         }
 
         private void CloseForm()
@@ -309,16 +328,36 @@ namespace IRT_GUI
             }
 
             CloseForm();
+            CalculateCoastdown();
+        }
+
+        private void CalculateCoastdown()
+        {
+            m_stableSpeedMps = 15.0 * 0.44704;
+            m_stableWatts = 147;
 
             if (m_coastdown.Calculate(m_stableSpeedMps, m_stableWatts))
             {
                 string values = string.Format("Drag: {0}, Rolling Resistance: {1}",
                     m_coastdown.Drag, m_coastdown.RollingResistance);
                 System.Diagnostics.Debug.WriteLine(values);
+
+                CoastdownForm m_coastdownForm = new CoastdownForm(m_coastdown);
+                m_coastdownForm.Apply += m_coastdownForm_Apply;
+                m_coastdownForm.Show();
+
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("Calibration failed.");
+                MessageBox.Show("Calibration failed.");
+            }
+        }
+
+        void m_coastdownForm_Apply(int obj)
+        {
+            if (CoastdownCalibrationApply != null)
+            {
+                CoastdownCalibrationApply(m_coastdown);
             }
         }
 

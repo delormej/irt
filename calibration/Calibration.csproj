@@ -41,6 +41,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -50,6 +52,12 @@
   <ItemGroup>
     <Compile Include="Coastdown.cs" />
     <Compile Include="CoastdownData.cs" />
+    <Compile Include="CoastdownForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CoastdownForm.Designer.cs">
+      <DependentUpon>CoastdownForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="DecelerationFit.cs" />
     <Compile Include="PowerFit.cs" />
     <Compile Include="CoastdownTest.cs" />
@@ -57,6 +65,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="CoastdownForm.resx">
+      <DependentUpon>CoastdownForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
