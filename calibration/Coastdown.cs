@@ -93,6 +93,16 @@ namespace IRT.Calibration
         public double RollingResistance { get { return m_powerFit.RollingResistance; } }
 
         /// <summary>
+        /// Returns the time it takes to coastdown in seconds from a given speed.
+        /// </summary>
+        /// <param name="speedMps"></param>
+        /// <returns></returns>
+        public double CoastdownTime(double speedMps)
+        {
+            return m_decelFit.Seconds(speedMps);
+        }
+
+        /// <summary>
         /// Calculate the rate of deceleration for a given speed.
         /// </summary>
         /// <param name="speed_mps"></param>

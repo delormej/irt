@@ -20,17 +20,28 @@ namespace IRT.Calibration
         }
 
         /// <summary>
+        /// Returns the calclation of seconds to coastdown to minimum speed from
+        /// a given speed in meters per second.
+        /// </summary>
+        /// <param name="speed_mps"></param>
+        /// <returns></returns>
+        public double Seconds(double speedMps)
+        {
+            // Get the amount of time it takes to coast down from this speed.
+            return alglib.barycentriccalc(m_interpolant, speedMps);
+        }
+
+        /// <summary>
         /// Returns the rate of deceleration in meters per second for a given speed.
         /// </summary>
         /// <param name="speed_mps"></param>
         /// <returns></returns>
-        public double Rate(double speed_mps)
+        public double Rate(double speedMps)
         {
-            // Get the amount of time it takes to coast down from this speed.
-            double dTime = alglib.barycentriccalc(m_interpolant, speed_mps);
+            double dTime = Seconds(speedMps);
 
             // Get the change in speed.
-            double dSpeed = speed_mps - m_speedMps.Last();
+            double dSpeed = speedMps - m_speedMps.Last();
 
             // Get the rate of change.
             double acceleration = dSpeed / dTime;
