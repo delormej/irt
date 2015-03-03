@@ -4,49 +4,33 @@ using AntPlus.Profiles.BikePower;
 
 namespace IRT.Calibration
 {
-    public enum Stage
-    {
-        Ready = 0,
-        Stable,
-        Accelerating,
-        SpeedThresholdReached,
-        Coasting,
-        Processing,
-        Finished,
-        Failed
-    }
-
     /// <summary>
     /// Orchestrates and manages the state of the calibration workflow end to end.
     /// </summary>
     public class Controller
     {
         BikePowerDisplay m_emotionPower, m_refPower;
-        Speed m_speed;
-        AveragePower m_power;
         Model m_model;
+        Coastdown m_coastdown;
 
-        // Stability is considered after 15 seconds consitent.
-        const double StableThresholdSeconds = 15;
-        
-        // Amount speed can vary and still be considered stable.
-        const double StableThresholdSpeedMps = 0.11176f;
-
-        // Minimum of 25mph to reach peak speed.
-        const double MinAccelerationSpeedMps = 25.0f * 0.44704; 
+        // Forms
+        CoastdownForm m_coastdownForm;
+        CalibrationForm m_calibrationForm;
 
         public event Action<Coastdown> SetCalibrationValues;
 
         /// <summary>
-        /// Must be created on the UI Thread.
+        /// Creates the controller, should be created on the UI Thread.
         /// </summary>
         /// <param name="emotionPower"></param>
         /// <param name="refPower"></param>
         public Controller(BikePowerDisplay emotionPower, BikePowerDisplay refPower)
         {
-            m_speed = new Speed(StableThresholdSpeedMps);
-            m_power = new AveragePower();
             m_model = new Model();
+            m_coastdown = new Coastdown();
+
+            m_calibrationForm = new CalibrationForm(m_model);
+            m_coastdownForm = new CoastdownForm(m_coastdown);
 
             // Listeners for ANT+ events.
             m_emotionPower = emotionPower;
@@ -66,13 +50,13 @@ namespace IRT.Calibration
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
-            m_model.Watts = m_power.AddEvent(arg1.EventCount, arg1.AccumulatedPower);
+            m_model.AddPowerEvent(arg1.EventCount, arg1.AccumulatedPower);
         }
 
         void m_emotionPower_GeneralCalibrationResponseFailPageReceived(
             GeneralCalibrationResponseFailPage arg1, uint arg2)
         {
-            OnFail();
+            OnFail("General calibration fail, please retry.");
         }
 
         void m_emotionPower_GeneralCalibrationResponseSuccessReceived(
@@ -85,27 +69,22 @@ namespace IRT.Calibration
             else
             {
                 // Raise an event that we ended prematurely.
-                OnFail();
+                OnFail("Premature exit, please retry.");
             }
         }
 
         void m_emotionPower_CalibrationCustomParameterResponsePageReceived(
             CustomCalibrationParameterResponsePage arg1, uint arg2)
         {
-            byte[] buffer = arg1.CalibrationDataArray.ToArray();
-            double speed, seconds;
-            Motion stability;
-            m_speed.AddEvent(buffer, out speed, out seconds, out stability);
-            m_model.SpeedMps = speed;
-            m_model.Seconds = seconds;
-            m_model.Motion = stability;
+            m_model.AddSpeedEvent(arg1.CalibrationDataArray.ToArray());
+            m_coastdown.Add(m_model.Timestamp2048, m_model.Ticks);
 
             // 
             // Determine stage and process state transitions.
             //
             if (m_model.Stage == Stage.Ready && 
-                stability == Motion.Stable &&
-                seconds >= StableThresholdSeconds)
+                m_model.Motion == Motion.Stable &&
+                m_model.Seconds >= Settings.StableThresholdSeconds)
             {
                 OnStable();
             }
@@ -115,7 +94,7 @@ namespace IRT.Calibration
                 OnAccelerating();
             }
             else if (m_model.Stage == Stage.Accelerating &&
-                m_model.SpeedMps > MinAccelerationSpeedMps)
+                m_model.SpeedMps > Settings.MinAccelerationSpeedMps)
             {
                 OnSpeedThresholdReached();
             }
@@ -127,15 +106,9 @@ namespace IRT.Calibration
         }
 
         /*
-         * State transitions.
+         * Manage state transitions.
+         * 
          */
-
-        private void OnFail()
-        {
-            // TODO: Raise an event here indicating we failed.
-
-            m_model.Stage = Stage.Failed;
-        }
 
         private void OnStable()
         {
@@ -167,12 +140,34 @@ namespace IRT.Calibration
             m_model.Stage = Stage.Processing;
             
             // Kick off processing.
-            
-            // Transition state to finished if success.
-            if (true) 
-                m_model.Stage = Stage.Finished;
-            else
-                OnFail();
+            try
+            {
+                m_coastdown.Calculate(m_model.SpeedMps, m_model.Watts);
+
+                OnFinished();
+            }
+            catch (Exception e)
+            {
+                OnFail(e.Message);
+            }
+        }
+
+        private void OnFinished()
+        {
+            m_model.Stage = Stage.Finished;
+
+            if (SetCalibrationValues != null)
+            {
+                // Kick off a timer, countdown from n seconds and then invoke.
+                //SetCalibrationValues(m_coastdown);
+            }
+        }
+
+        private void OnFail(string message)
+        {
+            // TODO: Raise an event here indicating we failed.
+
+            m_model.Stage = Stage.Failed;
         }
 
         /// <summary>

@@ -7,12 +7,15 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace IRT_GUI
+namespace IRT.Calibration
 {
     public partial class CalibrationForm : Form
     {
-        public CalibrationForm()
+        private Model m_model;
+
+        public CalibrationForm(Model model)
         {
+            model = m_model;
             InitializeComponent();
         }
 

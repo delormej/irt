@@ -23,7 +23,7 @@ namespace IRT.Calibration
             this.StabilityThresholdMps = ThresholdMps;
         }
 
-        public void AddEvent(byte[] buffer, out double speed, out double seconds, out Motion stability)
+        public void AddEvent(byte[] buffer, Model model)
         {
             // Event offset skip, every 4th event.
             int SkipOffset = 4; 
@@ -40,30 +40,30 @@ namespace IRT.Calibration
             else
             {
                 // Need to accumulate a couple of events first.
-                speed = 0;
-                seconds = 0;
-                stability = Motion.Undetermined;
+                model.SpeedMps = 0;
+                model.Seconds = 0;
+                model.Motion = Motion.Undetermined;
 
                 return;
             }
 
             // Grab the latest event.
-            ushort currentTicks = m_ticks[m_ticks.Count - 1].Ticks;
-            ushort currentTimestamp = m_ticks[m_ticks.Count - 1].Timestamp;
+            model.Ticks = m_ticks[m_ticks.Count - 1].Ticks;
+            model.Timestamp2048 = m_ticks[m_ticks.Count - 1].Timestamp;
 
             int dt, ds; // delta ticks, delta seconds
 
-            if (currentTicks < lastTicks)
-                dt = currentTicks + (lastTicks ^ 0xFFFF);
+            if (model.Ticks < lastTicks)
+                dt = model.Ticks + (lastTicks ^ 0xFFFF);
             else
-                dt = currentTicks - lastTicks;
+                dt = model.Ticks - lastTicks;
 
             if (lastTimestamp > 0)
             {
-                if (currentTimestamp < lastTimestamp)
-                    ds = currentTimestamp + (lastTimestamp ^ 0xFFFF);
+                if (model.Timestamp2048 < lastTimestamp)
+                    ds = model.Timestamp2048 + (lastTimestamp ^ 0xFFFF);
                 else
-                    ds = currentTimestamp - lastTimestamp;
+                    ds = model.Timestamp2048 - lastTimestamp;
             }
             else
             {
@@ -74,9 +74,9 @@ namespace IRT.Calibration
                 * bike.  Two ticks are recorded for each revolution.
                 * Time is sent in 1/2048 of a second.
                 */
-            seconds = (ds / 2048.0);
-            speed = (dt * 0.1115 / 2.0) / seconds;
-            stability = Stability(speed);
+            model.Seconds = (ds / 2048.0);
+            model.SpeedMps = (dt * 0.1115 / 2.0) / model.Seconds;
+            model.Motion = Stability(model.SpeedMps);
         }
 
         private void AddEventFromBuffer(byte[] buffer)

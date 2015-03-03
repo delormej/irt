@@ -62,12 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Calibration.cs" />
-    <Compile Include="CalibrationForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CalibrationForm.Designer.cs">
-      <DependentUpon>CalibrationForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="GraphForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -93,9 +87,6 @@
       <DependentUpon>ServoPositions.cs</DependentUpon>
     </Compile>
     <Compile Include="SimulateRefPower.cs" />
-    <EmbeddedResource Include="CalibrationForm.resx">
-      <DependentUpon>CalibrationForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="GraphForm.resx">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </EmbeddedResource>

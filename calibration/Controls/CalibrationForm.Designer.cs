@@ -1,4 +1,4 @@
-﻿namespace IRT_GUI
+﻿namespace IRT.Calibration
 {
     partial class CalibrationForm
     {

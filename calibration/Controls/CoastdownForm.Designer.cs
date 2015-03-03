@@ -1,4 +1,4 @@
-﻿namespace IRTCalibration
+﻿namespace IRT.Calibration
 {
     partial class CoastdownForm
     {
