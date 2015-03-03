@@ -9,7 +9,7 @@ namespace IRT.Calibration
     class Speed
     {
         private double m_lastSpeed = 0;
-        private double m_stableStartSeconds;
+        private ushort m_stableTimestamp;
         
         // 1/2 mile per hour in meters per second +/-.
         readonly double StabilityThresholdMps = 0; 
@@ -61,17 +61,7 @@ namespace IRT.Calibration
             else
                 dt = tickEvent.Ticks - lastTicks;
 
-            if (lastTimestamp > 0)
-            {
-                if (tickEvent.Timestamp < lastTimestamp)
-                    ds = tickEvent.Timestamp + (lastTimestamp ^ 0xFFFF);
-                else
-                    ds = tickEvent.Timestamp - lastTimestamp;
-            }
-            else
-            {
-                ds = 0;
-            }
+            ds = DeltaTimestamp(lastTimestamp, tickEvent.Timestamp);
 
             /* Each flywheel revolution equals 0.1115 meters travelled by the 
                 * bike.  Two ticks are recorded for each revolution.
@@ -85,23 +75,39 @@ namespace IRT.Calibration
             // Track a transition into stablity.
             if (motion == Motion.Stable)
             {
-                if (model.Motion != Motion.Stable)
+                if (model.Motion != Motion.Stable) // wasn't stable before.
                 {
-                    m_stableStartSeconds = seconds;
-                    model.StableSeconds = 0;
+                    m_stableTimestamp = tickEvent.Timestamp;
+                    model.StableSeconds = 0; // Reset
                 }
                 else 
                 {
-                    model.StableSeconds = seconds - m_stableStartSeconds;
+                    model.StableSeconds = 
+                        DeltaTimestamp(m_stableTimestamp, tickEvent.Timestamp) / 2048.0;
                     model.StableSpeedMps = model.SpeedMps;
                 }
             }
-            else
-            {
-                model.StableSeconds = 0;
-            }
 
             model.Motion = motion;
+        }
+
+        private int DeltaTimestamp(ushort lastTimestamp, ushort currentTimestamp)
+        {
+            int ds = 0;
+
+            if (lastTimestamp > 0)
+            {
+                if (currentTimestamp < lastTimestamp)
+                    ds = currentTimestamp + (lastTimestamp ^ 0xFFFF);
+                else
+                    ds = currentTimestamp - lastTimestamp;
+            }
+            else
+            {
+                ds = 0;
+            }
+
+            return ds;
         }
 
         private Motion Stability(double currentSpeed)

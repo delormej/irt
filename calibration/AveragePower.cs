@@ -21,7 +21,7 @@ namespace IRT.Calibration
             TickEvent powerEvent = events.Last();
 
             // Event count is actually only 1 byte on the wire, handle rollover.
-            if (eventCount < powerEvent.PowerEventCount)
+            if (eventCount != -1 && eventCount < powerEvent.PowerEventCount)
             {
                 powerEvent.PowerEventCount += eventCount;
             }
@@ -42,17 +42,20 @@ namespace IRT.Calibration
             if (events.Count > 2)
             {
                 // Search for a record 'n' indexes ago to average from, starting here:
-                int index = events.Count - 2;
+                int index = events.Count-1;
                 TickEvent currentEvent = events.Last();
 
                 // Keep going backwards until we hit an instable flag ('-1') or the end.
-                while (index > 0 && events[index].PowerEventCount != -1)
+                while (events[index-1].PowerEventCount != -1)
                     index--;
 
-                // Returns as much of an average as data as we have
-                // until we get to 15 seconds.
-                watts = (events[index].AccumulatedPower - currentEvent.AccumulatedPower) /
-                    events[index].PowerEventCount - currentEvent.PowerEventCount;
+                if (currentEvent.PowerEventCount > events[index].PowerEventCount)
+                {
+                    // Returns as much of an average as data as we have
+                    // until we get to 15 seconds.
+                    watts = (currentEvent.AccumulatedPower - events[index].AccumulatedPower) /
+                        (currentEvent.PowerEventCount - events[index].PowerEventCount);
+                }
             }
 
             return watts;

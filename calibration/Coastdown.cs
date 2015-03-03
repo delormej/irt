@@ -117,7 +117,8 @@ namespace IRT.Calibration
                 while (!reader.EndOfStream)
                 {
                     TickEvent tickEvent;
-                    ParseLine(reader.ReadLine(), out tickEvent);
+                    TickEvent.ParseLine(reader.ReadLine(), out tickEvent);
+
                     model.AddSpeedEvent(tickEvent);
                     model.AddPowerEvent(tickEvent.PowerEventCount, tickEvent.AccumulatedPower);
                 }
@@ -127,41 +128,6 @@ namespace IRT.Calibration
 
             return coastdown;
         }
-
-        /// <summary>
-        /// Parses a line from the csv file.
-        /// </summary>
-        /// <param name="line"></param>
-        /// <param name="tickEvent"></param>
-        private static void ParseLine(string line, out TickEvent tickEvent)
-        {
-            /* 
-             * Fields in this order:
-             * 
-                Timestamp,
-                0, // was sequence, but no longer used
-                Ticks,
-                0,  // was watts, but no longer used
-                PowerEventCount,
-                AccumulatedPower
-             */
-            
-            string[] column = line.Split(',');
-            tickEvent = new TickEvent();
-
-            if (!ushort.TryParse(column[0], out tickEvent.Timestamp))
-            {
-                throw new FormatException("CSV not properly formatted.");
-            }
-
-            if (!ushort.TryParse(column[2], out tickEvent.Ticks))
-            {
-                throw new FormatException("CSV not properly formatted.");
-            }
-            
-            int.TryParse(column[4], out tickEvent.PowerEventCount);
-            ushort.TryParse(column[5], out tickEvent.AccumulatedPower);
-        }    
     }
 
     public class CoastdownException : Exception

@@ -54,7 +54,7 @@ namespace IRT.Calibration
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
-            m_model.AddPowerEvent(arg1.EventCount, arg1.AccumulatedPower);
+            OnPowerEvent(arg1.EventCount, arg1.AccumulatedPower);
         }
 
         void m_emotionPower_GeneralCalibrationResponseFailPageReceived(
@@ -85,7 +85,7 @@ namespace IRT.Calibration
             
             for (int i = 0; i < 2; i++)
             {
-                OnEvent(events[i]);
+                OnCalibrationEvent(events[i]);
             }
 
         }
@@ -94,7 +94,7 @@ namespace IRT.Calibration
         /// Add tick events to the model which recalculates state.
         /// </summary>
         /// <param name="tickEvent"></param>
-        public void OnEvent(TickEvent tickEvent)
+        internal void OnCalibrationEvent(TickEvent tickEvent)
         {
             m_model.AddSpeedEvent(tickEvent);
 
@@ -105,7 +105,7 @@ namespace IRT.Calibration
             {
                 OnStarted();
             }
-            else if (m_model.Stage == Stage.Ready &&
+            else if (m_model.Stage == Stage.Started &&
                 m_model.Motion == Motion.Stable &&
                 m_model.StableSeconds >= Settings.StableThresholdSeconds)
             {
@@ -116,8 +116,9 @@ namespace IRT.Calibration
             {
                 OnAccelerating();
             }
-            else if (m_model.Stage == Stage.Accelerating &&
-                m_model.SpeedMps > Settings.MinAccelerationSpeedMps)
+            else if (m_model.Stage != Globals.Stage.SpeedThresholdReached &&
+                m_model.Stage >= Stage.Stable &&
+                m_model.SpeedMps >= Settings.MinAccelerationSpeedMps)
             {
                 OnSpeedThresholdReached();
             }
@@ -126,6 +127,11 @@ namespace IRT.Calibration
             {
                 OnCoasting();
             }
+        }
+
+        internal void OnPowerEvent(int eventCount, ushort accumPower)
+        {
+            m_model.AddPowerEvent(eventCount, accumPower);
         }
 
         /*

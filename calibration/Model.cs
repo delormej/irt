@@ -49,7 +49,7 @@ namespace IRT.Calibration
         public void AddPowerEvent(int eventCount, ushort accumPower)
         {
             // Only record watts if stable.
-            if (Stage == Stage.Stable)
+            if (this.Motion == Globals.Motion.Stable)
             {
                 StableWatts = AveragePower.AddEvent(eventCount, accumPower, m_tickEvents);
             }
