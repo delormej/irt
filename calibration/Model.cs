@@ -61,6 +61,11 @@ namespace IRT.Calibration
             {
                 Watts = AveragePower.AddEvent(eventCount, accumPower, m_ticks);
             }
+            else
+            {
+                // Add unstable flag.
+                AveragePower.AddEvent(-1, 0, m_ticks);
+            }
         }
     }
 }
