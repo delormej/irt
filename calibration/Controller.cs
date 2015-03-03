@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using AntPlus.Profiles.BikePower;
+using System.IO;
 
 namespace IRT.Calibration
 {
@@ -28,10 +29,7 @@ namespace IRT.Calibration
         {
             m_model = new Model();
             m_coastdown = new Coastdown();
-
-            m_calibrationForm = new CalibrationForm(m_model);
-            m_coastdownForm = new CoastdownForm(m_coastdown);
-
+           
             // Listeners for ANT+ events.
             m_emotionPower = emotionPower;
             m_refPower = refPower;
@@ -46,6 +44,8 @@ namespace IRT.Calibration
 
             // Register standard power messages from the external power meter.
             m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
+
+            OnReady();
         }
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
@@ -84,7 +84,7 @@ namespace IRT.Calibration
             //
             if (m_model.Stage == Stage.Ready && 
                 m_model.Motion == Motion.Stable &&
-                m_model.Seconds >= Settings.StableThresholdSeconds)
+                m_model.StableSeconds >= Settings.StableThresholdSeconds)
             {
                 OnStable();
             }
@@ -110,19 +110,26 @@ namespace IRT.Calibration
          * 
          */
 
+        private void OnReady()
+        {
+            m_calibrationForm = new CalibrationForm(m_model);
+            m_calibrationForm.Show();
+        }
+
         private void OnStable()
         {
             // Called when we've reached stable speed for threshold time.
             m_model.Stage = Stage.Stable;
 
-            // Grab the stable speed and power.
-
+            // Indicate to user it's time to accelerate to threshold speed.
         }
 
         private void OnAccelerating()
         {
             // Called when we end the acceleration stage.
             m_model.Stage = Stage.Accelerating;
+
+            // Stop recording power events.
         }
 
         private void OnSpeedThresholdReached()
@@ -143,7 +150,6 @@ namespace IRT.Calibration
             try
             {
                 m_coastdown.Calculate(m_model.SpeedMps, m_model.Watts);
-
                 OnFinished();
             }
             catch (Exception e)
@@ -155,6 +161,28 @@ namespace IRT.Calibration
         private void OnFinished()
         {
             m_model.Stage = Stage.Finished;
+
+            //
+            // Process this on the UI thread.
+            //
+            Action a = () => 
+            { 
+                // Close calibration form.
+                m_calibrationForm.Close();
+
+                // Open form to show results.
+                m_coastdownForm = new CoastdownForm(m_coastdown);
+                m_coastdownForm.Show();
+            };
+
+            if (m_calibrationForm.InvokeRequired)
+            {
+                m_calibrationForm.BeginInvoke(a);
+            }
+            else
+            {
+                m_calibrationForm.Invoke(a);
+            }
 
             if (SetCalibrationValues != null)
             {
@@ -176,6 +204,29 @@ namespace IRT.Calibration
         public void Cancel()
         {
             
+        }
+
+        private void WriteLog()
+        {
+            StreamWriter log;
+
+            // open up a stream to start logging
+            string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
+                this.GetType().Assembly.GetName().Version.ToString(3),
+                DateTime.Now);
+
+            using (log = new StreamWriter(filename))
+            {
+                log.WriteLine("timestamp_ms, count, ticks, watts, pwr_events, accum_pwr");
+
+                foreach (var tick in m_model.Events)
+                {
+                    log.WriteLine(tick);
+                }
+
+                log.Flush();
+                log.Close();
+            }
         }
     }
 }

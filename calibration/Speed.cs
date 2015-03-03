@@ -7,15 +7,16 @@ namespace IRT.Calibration
 {
     class Speed
     {
-        private List<CalibrationEvent> m_ticks;
+        private List<TickEvent> m_ticks;
         private double m_lastSpeed = 0;
+        private double m_stableStartSeconds;
         
         // 1/2 mile per hour in meters per second +/-.
         readonly double StabilityThresholdMps = 0; 
 
         public Speed()
         {
-            m_ticks = new List<CalibrationEvent>();
+            m_ticks = new List<TickEvent>();
         }
 
         public Speed(double ThresholdMps) : base()
@@ -23,10 +24,16 @@ namespace IRT.Calibration
             this.StabilityThresholdMps = ThresholdMps;
         }
 
+        /// <summary>
+        /// List of sequential tick events recorded.
+        /// </summary>
+        public List<TickEvent> Ticks { get { return m_ticks; } }
+
         public void AddEvent(byte[] buffer, Model model)
         {
             // Event offset skip, every 4th event.
-            int SkipOffset = 4; 
+            int SkipOffset = 4;
+            int currentIndex = m_ticks.Count;
 
             AddEventFromBuffer(buffer);
             
@@ -34,22 +41,22 @@ namespace IRT.Calibration
 
             if (m_ticks.Count > SkipOffset)
             {
-                lastTicks = m_ticks[m_ticks.Count - SkipOffset].Ticks;
-                lastTimestamp = m_ticks[m_ticks.Count - SkipOffset].Timestamp;
+                lastTicks = m_ticks[currentIndex - SkipOffset].Ticks;
+                lastTimestamp = m_ticks[currentIndex - SkipOffset].Timestamp;
             }
             else
             {
                 // Need to accumulate a couple of events first.
                 model.SpeedMps = 0;
-                model.Seconds = 0;
+                model.StableSeconds = 0;
                 model.Motion = Motion.Undetermined;
 
                 return;
             }
 
             // Grab the latest event.
-            model.Ticks = m_ticks[m_ticks.Count - 1].Ticks;
-            model.Timestamp2048 = m_ticks[m_ticks.Count - 1].Timestamp;
+            model.Ticks = m_ticks[currentIndex - 1].Ticks;
+            model.Timestamp2048 = m_ticks[currentIndex - 1].Timestamp;
 
             int dt, ds; // delta ticks, delta seconds
 
@@ -74,9 +81,30 @@ namespace IRT.Calibration
                 * bike.  Two ticks are recorded for each revolution.
                 * Time is sent in 1/2048 of a second.
                 */
-            model.Seconds = (ds / 2048.0);
-            model.SpeedMps = (dt * 0.1115 / 2.0) / model.Seconds;
-            model.Motion = Stability(model.SpeedMps);
+            double seconds = (ds / 2048.0);
+            model.SpeedMps = (dt * 0.1115 / 2.0) / seconds;
+            
+            Motion motion = Stability(model.SpeedMps); 
+            
+            // Track a transition into stablity.
+            if (motion == Motion.Stable)
+            {
+                if (model.Motion != Motion.Stable)
+                {
+                    m_stableStartSeconds = seconds;
+                    model.StableSeconds = 0;
+                }
+                else 
+                {
+                    model.StableSeconds = seconds - m_stableStartSeconds;
+                }
+            }
+            else
+            {
+                model.StableSeconds = 0;
+            }
+
+            model.Motion = motion;
         }
 
         private void AddEventFromBuffer(byte[] buffer)
@@ -105,13 +133,13 @@ namespace IRT.Calibration
                 // Alternate between the two tick counts.
                 if (i % 2 == 0)
                 {
-                    m_ticks.Add(new CalibrationEvent(ticks0, time0));
+                    m_ticks.Add(new TickEvent(ticks0, time0));
                 }
                 else
                 {
                     // Calculate 125ms in 1/2048s later for the 2nd read.
                     ushort time1 = (ushort)(time0 + (0.125f * 2048));
-                    m_ticks.Add(new CalibrationEvent(ticks1, time1));
+                    m_ticks.Add(new TickEvent(ticks1, time1));
                 }
                 i++;
             }
@@ -148,17 +176,5 @@ namespace IRT.Calibration
             m_lastSpeed = currentSpeed;
             return state;
         }
-    }
-
-    internal class CalibrationEvent
-    {
-        public CalibrationEvent(ushort timestamp, ushort ticks)
-        {
-            this.Timestamp = timestamp;
-            this.Ticks = ticks;
-        }
-
-        public ushort Timestamp;
-        public ushort Ticks;
     }
 }

@@ -4,6 +4,7 @@ using AntPlus.Profiles.BikePower;
 using AntPlus.Profiles.Common;
 using AntPlus.Profiles.Components;
 using AntPlus.Types;
+using IRT.Calibration;
 using IRT_GUI.IrtMessages;
 using System;
 using System.Collections.Generic;
@@ -2345,9 +2346,20 @@ namespace IRT_GUI
 
         private void btnLoadCalibration_Click(object sender, EventArgs e)
         {
-            m_calibration = new Calibration();
-            m_calibration.CoastdownCalibrationApply += m_calibration_CoastdownCalibrationApply;
-            m_calibration.LoadCalibration();
+           
+            OpenFileDialog dlg = new OpenFileDialog();
+            //dlg.InitialDirectory = m_lastPath;
+            dlg.Filter = "Ride Logs (*.csv)|*.csv|All files (*.*)|*.*";
+            dlg.FilterIndex = 1;
+            dlg.RestoreDirectory = false;
+            dlg.CheckFileExists = true;
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                Coastdown coastdown = Coastdown.FromFile(dlg.FileName);
+                CoastdownForm form = new CoastdownForm(coastdown);
+                form.Show();
+            }
         }
 
 

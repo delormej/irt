@@ -64,6 +64,7 @@
     <Compile Include="Controls\CalibrationForm.Designer.cs">
       <DependentUpon>CalibrationForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Global.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="AveragePower.cs" />
     <Compile Include="Speed.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="PowerFit.cs" />
     <Compile Include="CoastdownTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TickEvent.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

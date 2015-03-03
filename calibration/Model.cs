@@ -37,7 +37,7 @@ namespace IRT.Calibration
             set {  }
         }
 
-        public double Seconds
+        public double StableSeconds
         {
             get { return 0; }
             set { }
@@ -47,6 +47,8 @@ namespace IRT.Calibration
 
         public Motion Motion { get; set; }
 
+        public List<TickEvent> Events { get { return m_speed.Ticks; } }
+
         public void AddSpeedEvent(byte[] buffer)
         {
             m_speed.AddEvent(buffer, this);
@@ -54,41 +56,14 @@ namespace IRT.Calibration
 
         public void AddPowerEvent(ushort eventCount, ushort accumPower)
         {
-            Watts = m_power.AddEvent(eventCount, accumPower);
+            // Always keep track of events.
+            double watts = m_power.AddEvent(eventCount, accumPower);
+
+            // Only publish watts if stable.
+            if (Stage == Calibration.Stage.Stable)
+            {
+                Watts = watts;
+            }
         }
-    }
-    public enum Motion
-    {
-        Undetermined,
-        Accelerating,
-        Stable,
-        Decelerating
-    }
-
-    public enum Stage
-    {
-        Ready = 0,
-        Stable,
-        Accelerating,
-        SpeedThresholdReached,
-        Coasting,
-        Processing,
-        Finished,
-        Failed
-    }
-
-    /// <summary>
-    /// Configuration settings, can't be changed right now.
-    /// </summary>
-    public class Settings
-    {
-        // Stability is considered after 15 seconds consitent.
-        public const double StableThresholdSeconds = 15;
-
-        // Amount speed can vary and still be considered stable.
-        public const double StableThresholdSpeedMps = 0.11176f;
-
-        // Minimum of 25mph to reach peak speed.
-        public const double MinAccelerationSpeedMps = 25.0f * 0.44704;
     }
 }
