@@ -15,7 +15,7 @@ namespace IRT.Calibration
 
         public ushort Timestamp;
         public ushort Ticks;
-        public ushort PowerEventCount;
+        public int PowerEventCount;
         public ushort AccumulatedPower;
 
         public override string ToString()

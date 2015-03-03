@@ -12,14 +12,14 @@ namespace IRT.Calibration
     public class Model : INotifyPropertyChanged
     {
         private Speed m_speed;
-        private AveragePower m_power;
+        private List<TickEvent> m_ticks;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public Model()
         {
             m_speed = new Speed(Settings.StableThresholdSpeedMps);
-            m_power = new AveragePower();
+            m_ticks = new List<TickEvent>();
         }
 
         public ushort Ticks;
@@ -47,7 +47,7 @@ namespace IRT.Calibration
 
         public Motion Motion { get; set; }
 
-        public List<TickEvent> Events { get { return m_speed.Ticks; } }
+        public List<TickEvent> Events { get { return m_ticks; } }
 
         public void AddSpeedEvent(byte[] buffer)
         {
@@ -56,13 +56,10 @@ namespace IRT.Calibration
 
         public void AddPowerEvent(ushort eventCount, ushort accumPower)
         {
-            // Always keep track of events.
-            double watts = m_power.AddEvent(eventCount, accumPower);
-
-            // Only publish watts if stable.
+            // Only record watts if stable.
             if (Stage == Calibration.Stage.Stable)
             {
-                Watts = watts;
+                Watts = AveragePower.AddEvent(eventCount, accumPower, m_ticks);
             }
         }
     }

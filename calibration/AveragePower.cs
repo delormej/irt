@@ -5,49 +5,50 @@ using System.Text;
 
 namespace IRT.Calibration
 {
-    public class AveragePower
+    /// <summary>
+    /// Encapsulates average power calculation from power meter events.
+    /// </summary>
+    public static class AveragePower
     {
-        // Average roughly every 15 seconds, we should get an event per second.
-        private int EventSkipOffset = 15;
-
-        private List<PowerEvent> accumulatedWatts; 
-
-        public AveragePower()
-        {
-            accumulatedWatts = new List<PowerEvent>();
-        }
-
         /// <summary>
         /// Decodes and records a power event.
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="watts"></param>
-        public double AddEvent(ushort eventCount, ushort accumWatts)
+        public static double AddEvent(int eventCount, ushort accumWatts, List<TickEvent> events)
         {
-            accumulatedWatts.Add(new PowerEvent(eventCount, accumWatts));
+            // Append power event to the last tick record.
+            TickEvent powerEvent = events.Last();
 
-            // Search for a record 'n' indexes ago to average from.
-            int index = accumulatedWatts.Count - 2;
-            
-            while (index-- > 0 && (accumulatedWatts[index].Index <
-                    eventCount - EventSkipOffset));
+            // Event count is actually only 1 byte on the wire, handle rollover.
+            if (eventCount < powerEvent.PowerEventCount)
+            {
+                powerEvent.PowerEventCount += eventCount;
+            }
+            else
+            {
+                powerEvent.PowerEventCount = eventCount;
+            }
+             
+            powerEvent.AccumulatedPower = accumWatts;
+
+            return CalculateAverage(events);
+        }
+
+        public static double CalculateAverage(List<TickEvent> events)
+        {
+            // Search for a record 'n' indexes ago to average from, starting here:
+            int index = events.Count - 2;
+            TickEvent currentEvent = events.Last();
+
+            // Keep going backwards until we hit an instable flag ('-1') or the end.
+            while (index > 0 && events[index].PowerEventCount != -1) 
+                index--;
 
             // Returns as much of an average as data as we have
             // until we get to 15 seconds.
-            return (accumulatedWatts[index].AccumPower - accumWatts) /
-                accumulatedWatts[index].Index - eventCount;
+            return (events[index].AccumulatedPower - currentEvent.AccumulatedPower) /
+                events[index].PowerEventCount - currentEvent.PowerEventCount;
         }
-    }
-
-    internal class PowerEvent
-    {
-        public PowerEvent(ushort index, ushort accumPower)
-        {
-            this.Index = index;
-            this.AccumPower = accumPower;
-        }
-
-        public ushort Index;
-        public ushort AccumPower;
     }
 }

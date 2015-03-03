@@ -7,7 +7,6 @@ namespace IRT.Calibration
 {
     class Speed
     {
-        private List<TickEvent> m_ticks;
         private double m_lastSpeed = 0;
         private double m_stableStartSeconds;
         
@@ -16,7 +15,6 @@ namespace IRT.Calibration
 
         public Speed()
         {
-            m_ticks = new List<TickEvent>();
         }
 
         public Speed(double ThresholdMps) : base()
@@ -24,25 +22,20 @@ namespace IRT.Calibration
             this.StabilityThresholdMps = ThresholdMps;
         }
 
-        /// <summary>
-        /// List of sequential tick events recorded.
-        /// </summary>
-        public List<TickEvent> Ticks { get { return m_ticks; } }
-
         public void AddEvent(byte[] buffer, Model model)
         {
             // Event offset skip, every 4th event.
             int SkipOffset = 4;
-            int currentIndex = m_ticks.Count;
+            int currentIndex = model.Events.Count;
 
-            AddEventFromBuffer(buffer);
+            AddEventFromBuffer(buffer, model);
             
             ushort lastTicks = 0, lastTimestamp = 0;
 
-            if (m_ticks.Count > SkipOffset)
+            if (currentIndex > SkipOffset)
             {
-                lastTicks = m_ticks[currentIndex - SkipOffset].Ticks;
-                lastTimestamp = m_ticks[currentIndex - SkipOffset].Timestamp;
+                lastTicks = model.Events[currentIndex - SkipOffset].Ticks;
+                lastTimestamp = model.Events[currentIndex - SkipOffset].Timestamp;
             }
             else
             {
@@ -55,8 +48,8 @@ namespace IRT.Calibration
             }
 
             // Grab the latest event.
-            model.Ticks = m_ticks[currentIndex - 1].Ticks;
-            model.Timestamp2048 = m_ticks[currentIndex - 1].Timestamp;
+            model.Ticks = model.Events[currentIndex - 1].Ticks;
+            model.Timestamp2048 = model.Events[currentIndex - 1].Timestamp;
 
             int dt, ds; // delta ticks, delta seconds
 
@@ -107,7 +100,7 @@ namespace IRT.Calibration
             model.Motion = motion;
         }
 
-        private void AddEventFromBuffer(byte[] buffer)
+        private void AddEventFromBuffer(byte[] buffer, Model model)
         {
             /*
                 tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
@@ -133,13 +126,13 @@ namespace IRT.Calibration
                 // Alternate between the two tick counts.
                 if (i % 2 == 0)
                 {
-                    m_ticks.Add(new TickEvent(ticks0, time0));
+                    model.Events.Add(new TickEvent(ticks0, time0));
                 }
                 else
                 {
                     // Calculate 125ms in 1/2048s later for the 2nd read.
                     ushort time1 = (ushort)(time0 + (0.125f * 2048));
-                    m_ticks.Add(new TickEvent(ticks1, time1));
+                    model.Events.Add(new TickEvent(ticks1, time1));
                 }
                 i++;
             }
