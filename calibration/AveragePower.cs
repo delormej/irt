@@ -17,6 +17,9 @@ namespace IRT.Calibration
         /// <param name="watts"></param>
         public static void AddEvent(int eventCount, ushort accumWatts, List<TickEvent> events)
         {
+            if (events.Count == 0)
+                return;
+
             // Append power event to the last tick record.
             TickEvent powerEvent = events.Last();
 

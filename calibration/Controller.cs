@@ -20,6 +20,7 @@ namespace IRT.Calibration
         CalibrationForm m_calibrationForm;
 
         public event Action<Coastdown> SetCalibrationValues;
+        public event Action<Globals.Stage> StageChanged;
 
         public Controller()
         {
@@ -32,7 +33,7 @@ namespace IRT.Calibration
         /// </summary>
         /// <param name="emotionPower"></param>
         /// <param name="refPower"></param>
-        public Controller(BikePowerDisplay emotionPower, BikePowerDisplay refPower) : base()
+        public Controller(BikePowerDisplay emotionPower, BikePowerDisplay refPower) : this()
         {
             // Listeners for ANT+ events.
             m_emotionPower = emotionPower;
@@ -50,7 +51,43 @@ namespace IRT.Calibration
             m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
         }
 
-        public Stage Stage { get { return m_model.Stage; } }
+        public Stage Stage 
+        { 
+            get { return m_model.Stage; }
+            private set
+            {
+                m_model.Stage = value;
+                if (StageChanged != null)
+                {   
+                    StageChanged(value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Displays the main calibration form during coast down.
+        /// </summary>
+        public void DisplayCalibrationProgress()
+        {
+            m_calibrationForm = new CalibrationForm(m_model);
+            m_calibrationForm.Show();
+        }
+
+        /// <summary>
+        /// Closes the main calibration form if open and displays the calibration results.
+        /// </summary>
+        public void DisplayCalibrationResults()
+        {
+            if (m_calibrationForm != null && !m_calibrationForm.IsDisposed)
+            {
+                // Close calibration form.
+                m_calibrationForm.Close();
+            }
+
+            // Open form to show results.
+            m_coastdownForm = new CoastdownForm(m_coastdown);
+            m_coastdownForm.Show();
+        }
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
@@ -94,7 +131,7 @@ namespace IRT.Calibration
         /// Add tick events to the model which recalculates state.
         /// </summary>
         /// <param name="tickEvent"></param>
-        internal void OnCalibrationEvent(TickEvent tickEvent)
+        private void OnCalibrationEvent(TickEvent tickEvent)
         {
             m_model.AddSpeedEvent(tickEvent);
 
@@ -129,10 +166,12 @@ namespace IRT.Calibration
             }
         }
 
-        internal void OnPowerEvent(int eventCount, ushort accumPower)
+        private void OnPowerEvent(int eventCount, ushort accumPower)
         {
             m_model.AddPowerEvent(eventCount, accumPower);
         }
+
+
 
         /*
          * Manage state transitions.
@@ -141,16 +180,13 @@ namespace IRT.Calibration
 
         private void OnStarted()
         {
-            m_calibrationForm = new CalibrationForm(m_model);
-            m_calibrationForm.Show();
-
-            m_model.Stage = Stage.Started;
+            this.Stage = Stage.Started;
         }
 
         private void OnStable()
         {
             // Called when we've reached stable speed for threshold time.
-            m_model.Stage = Stage.Stable;
+            this.Stage = Stage.Stable;
 
             // Indicate to user it's time to accelerate to threshold speed.
         }
@@ -158,24 +194,24 @@ namespace IRT.Calibration
         private void OnAccelerating()
         {
             // Called when we end the acceleration stage.
-            m_model.Stage = Stage.Accelerating;
+            this.Stage = Stage.Accelerating;
 
             // Stop recording power events.
         }
 
         private void OnSpeedThresholdReached()
         {
-            m_model.Stage = Stage.SpeedThresholdReached;
+            this.Stage = Stage.SpeedThresholdReached;
         }
 
         private void OnCoasting()
         {
-            m_model.Stage = Stage.Coasting;
+            this.Stage = Stage.Coasting;
         }
 
         private void OnProcessing()
         {
-            m_model.Stage = Stage.Processing;
+            this.Stage = Stage.Processing;
             
             // Kick off processing.
             try
@@ -191,29 +227,7 @@ namespace IRT.Calibration
 
         private void OnFinished()
         {
-            m_model.Stage = Stage.Finished;
-
-            //
-            // Process this on the UI thread.
-            //
-            Action a = () => 
-            { 
-                // Close calibration form.
-                m_calibrationForm.Close();
-
-                // Open form to show results.
-                m_coastdownForm = new CoastdownForm(m_coastdown);
-                m_coastdownForm.Show();
-            };
-
-            if (m_calibrationForm.InvokeRequired)
-            {
-                m_calibrationForm.BeginInvoke(a);
-            }
-            else
-            {
-                m_calibrationForm.Invoke(a);
-            }
+            this.Stage = Stage.Finished;
 
             if (SetCalibrationValues != null)
             {
@@ -226,7 +240,7 @@ namespace IRT.Calibration
         {
             // TODO: Raise an event here indicating we failed.
 
-            m_model.Stage = Stage.Failed;
+            this.Stage = Stage.Failed;
         }
 
         /// <summary>
@@ -234,7 +248,23 @@ namespace IRT.Calibration
         /// </summary>
         public void Cancel()
         {
-            
+            if (m_calibrationForm != null && !m_calibrationForm.IsDisposed)
+            {
+                // Execute on the UI thread.
+                Action a = () =>
+                {
+                    m_calibrationForm.Close();
+                };
+
+                if (m_calibrationForm.InvokeRequired)
+                {
+                    m_calibrationForm.BeginInvoke(a);
+                }
+                else
+                {
+                    m_calibrationForm.Invoke(a);
+                }
+            }
         }
 
         private void WriteLog()

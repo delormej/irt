@@ -171,8 +171,31 @@ namespace IRT_GUI
             // Create calibration object, which will listen for calibration events 
             // and react accordingly.
             m_calibration = new Controller(m_eMotion, m_refPower);
-
+            m_calibration.StageChanged += m_calibration_StageChanged;
+            
             StartReporting();
+        }
+
+        void m_calibration_StageChanged(IRT.Calibration.Globals.Stage stage)
+        {
+            UpdateStatus(stage.ToString());
+
+            ExecuteOnUI(() =>
+            {
+                switch (stage)
+                {
+                    case IRT.Calibration.Globals.Stage.Started:
+                        m_calibration.DisplayCalibrationProgress();
+                        break;
+
+                    case IRT.Calibration.Globals.Stage.Finished:
+                        m_calibration.DisplayCalibrationResults();
+                        break;
+
+                    default:
+                        break;
+                }
+            });
         }
 
         void frmIrtGui_FormClosed(object sender, FormClosedEventArgs e)
