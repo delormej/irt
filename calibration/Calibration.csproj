@@ -63,10 +63,10 @@
     <Compile Include="Speed.cs" />
     <Compile Include="Coastdown.cs" />
     <Compile Include="CoastdownData.cs" />
-    <Compile Include="CoastdownForm.cs">
+    <Compile Include="Controls\CoastdownForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="CoastdownForm.Designer.cs">
+    <Compile Include="Controls\CoastdownForm.Designer.cs">
       <DependentUpon>CoastdownForm.cs</DependentUpon>
     </Compile>
     <Compile Include="DecelerationFit.cs" />
@@ -78,7 +78,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="CoastdownForm.resx">
+    <EmbeddedResource Include="Controls\CoastdownForm.resx">
       <DependentUpon>CoastdownForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
