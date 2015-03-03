@@ -49,7 +49,7 @@ namespace IRT_GUI
         private ushort lastTicks = 0;
         private ushort lastPeriod = 0;
         private double lastVelocity = 0.0f;
-        private int threshold = 1;  // default tick threshold per period in determing stability.
+        private int threshold = 4;  // default tick threshold per period in determing stability.
 
         public Stability()
         {
@@ -183,7 +183,8 @@ namespace IRT_GUI
                 i++;
             }
 
-            if (m_stableCount++ % 2 == 0)
+            // Check stability every 4 reads.
+            if (m_stableCount++ % 4 == 0)
             {
                 // Grab the first tick record and compare against the last packet.
                 Motion state = m_stable.Check(ticks0, time, out velocity);
@@ -229,6 +230,11 @@ namespace IRT_GUI
                     m_form.Step2();
                 }
 
+                if (m_stableWatts > 0 && mph > 20)
+                {
+                    m_form.Step3();
+                }
+
                 if (m_form != null)
                 {
                     m_form.UpdateValues(coastdownSeconds, mph, te.Watts, state);
@@ -253,8 +259,11 @@ namespace IRT_GUI
         protected Coastdown m_coastdown;
         protected double m_stableWatts;
         protected double m_stableSpeedMps;
+        protected bool m_busy = false;
 
         public event Action<Coastdown> CoastdownCalibrationApply;
+        public event Action<Coastdown> CoastdownComplete;
+        
 
         public Calibration()
         {
@@ -278,6 +287,8 @@ namespace IRT_GUI
 
         public void LoadCalibration()
         {
+            m_busy = true;
+
             OpenFileDialog dlg = new OpenFileDialog();
             //dlg.InitialDirectory = m_lastPath;
             dlg.Filter = "Ride Logs (*.csv)|*.csv|All files (*.*)|*.*";
@@ -290,7 +301,14 @@ namespace IRT_GUI
                 m_coastdown = Coastdown.FromFile(dlg.FileName);
                 CalculateCoastdown();
             }
+
+            m_busy = false;
         }
+
+        /// <summary>
+        /// Indicates if calibration is in process of calculating.
+        /// </summary>
+        public bool Busy { get { return m_busy; } }
 
         private void CloseForm()
         {
@@ -299,44 +317,69 @@ namespace IRT_GUI
                 m_form.Close();
             };
 
-            m_form.BeginInvoke(a);
+            if (m_form != null)
+            {
+                try
+                { 
+                    m_form.BeginInvoke(a);
+                }
+                catch (Exception e)
+                {
+                    System.Diagnostics.Debug.WriteLine(e.Message);
+                }
+            }
         }
 
         public void ExitCalibration()
         {
-            // open up a stream to start logging
-            string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
-                typeof(Calibration).Assembly.GetName().Version.ToString(3),
-                DateTime.Now);
+            m_busy = true;
 
-            using (m_logFileWriter = new StreamWriter(filename))
+            lock (this)
             {
-                m_logFileWriter.WriteLine("timestamp_ms, count, ticks, watts, pwr_events, accum_pwr");
+                // open up a stream to start logging
+                string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
+                    typeof(Calibration).Assembly.GetName().Version.ToString(3),
+                    DateTime.Now);
 
-                foreach (var tick in m_tickEvents)
+                using (m_logFileWriter = new StreamWriter(filename))
                 {
-                    m_logFileWriter.WriteLine(tick);
+                    m_logFileWriter.WriteLine("timestamp_ms, count, ticks, watts, pwr_events, accum_pwr");
+
+                    foreach (var tick in m_tickEvents)
+                    {
+                        m_logFileWriter.WriteLine(tick);
+                    }
+
+                    m_logFileWriter.Flush();
+                    m_logFileWriter.Close();
                 }
 
-                m_logFileWriter.Flush();
-                m_logFileWriter.Close();
+                if (m_stopwatch != null)
+                {
+                    m_stopwatch.Stop();
+                    m_stopwatch = null;
+                }
+
+                CloseForm();
+
+                m_busy = false;
             }
 
-            if (m_stopwatch != null)
+            if (CoastdownComplete != null)
             {
-                m_stopwatch.Stop();
-                m_stopwatch = null;
+                CoastdownComplete(m_coastdown);
             }
-
-            CloseForm();
-            CalculateCoastdown();
         }
 
-        private void CalculateCoastdown()
+        public void CalculateCoastdown()
         {
             // DEBUG VALUES.
-            //m_stableSpeedMps = 15.0 * 0.44704;
-            //m_stableWatts = 147;
+            if (m_stableSpeedMps == 0 && m_stableWatts == 0)
+            {
+                m_stableSpeedMps = 15.0 * 0.44704;
+                m_stableWatts = 147;
+                MessageBox.Show("DEBUG ONLY using default speed/watts.");
+            }
 
             try 
             {
@@ -345,10 +388,11 @@ namespace IRT_GUI
                     m_coastdown.Drag, m_coastdown.RollingResistance);
                 System.Diagnostics.Debug.WriteLine(values);
 
+                
+
                 CoastdownForm m_coastdownForm = new CoastdownForm(m_coastdown);
                 m_coastdownForm.Apply += m_coastdownForm_Apply;
                 m_coastdownForm.Show();
-
             }
             catch (Exception e)
             {

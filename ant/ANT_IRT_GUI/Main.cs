@@ -610,10 +610,9 @@ namespace IRT_GUI
 
         void m_eMotion_GeneralCalibrationResponseSuccessReceived(GeneralCalibrationResponseSuccessPage arg1, uint arg2)
         {
-            if (m_calibration != null)
+            if (m_calibration != null && !m_calibration.Busy)
             {
                 m_calibration.ExitCalibration();
-                m_calibration = null;
             }
         }
 
@@ -621,10 +620,14 @@ namespace IRT_GUI
         {
             if (m_calibration == null)
             {
+                // Ensure we're on level 0, standard resistance (no mag).
+                SetResistanceStandard(0);
+
                 if (m_firmwareRev != null && m_firmwareRev.Build > 11)
                 {
                     m_calibration = new Calibration12();
                     m_calibration.CoastdownCalibrationApply += m_calibration_CoastdownCalibrationApply;
+                    m_calibration.CoastdownComplete += m_calibration_CoastdownComplete;
                 }
                 else
                 {
@@ -639,6 +642,15 @@ namespace IRT_GUI
 
             byte[] buffer = arg1.CalibrationDataArray.ToArray();
             m_calibration.LogCalibration(buffer);
+        }
+
+        void m_calibration_CoastdownComplete(IRT.Calibration.Coastdown obj)
+        {
+            ExecuteOnUI(() =>
+            {
+                    m_calibration.CalculateCoastdown();     
+                m_calibration = null;
+            });
         }
 
         private void StartReporting()
@@ -1050,10 +1062,9 @@ namespace IRT_GUI
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {
             // if we start getting a torque page, we're back out of calibration mode.
-            if (m_calibration != null)
+            if (m_calibration != null && !m_calibration.Busy)
             {
                 m_calibration.ExitCalibration();
-                m_calibration = null;
             }
 
             if (lastTorqueEventCount != arg1.WheelTorqueEventCount && 
@@ -2332,12 +2343,13 @@ namespace IRT_GUI
             }
         }
 
-        private void btnViewCalibration_Click(object sender, EventArgs e)
+        private void btnLoadCalibration_Click(object sender, EventArgs e)
         {
             m_calibration = new Calibration();
             m_calibration.CoastdownCalibrationApply += m_calibration_CoastdownCalibrationApply;
             m_calibration.LoadCalibration();
         }
+
 
         void m_calibration_CoastdownCalibrationApply(IRT.Calibration.Coastdown coastdown)
         {

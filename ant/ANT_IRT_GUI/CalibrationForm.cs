@@ -48,12 +48,25 @@ namespace IRT_GUI
         }
 
         /// <summary>
-        /// Initiate step 2 which is to coastdown.
+        /// Initiate step 2 which is to speed up.
         /// </summary>
         public void Step2()
         {
             lblStep1.ForeColor = SystemColors.InactiveCaption;
+            lblStep3.ForeColor = SystemColors.InactiveCaption;
+
             lblStep2.ForeColor = SystemColors.ControlText;
+        }
+
+        /// <summary>
+        /// Initiate step 3 which is to coast down.
+        /// </summary>
+        public void Step3()
+        {
+            lblStep1.ForeColor = SystemColors.InactiveCaption;
+            lblStep2.ForeColor = SystemColors.InactiveCaption;
+
+            lblStep3.ForeColor = SystemColors.ControlText;
         }
 
         private void btnExit_Click(object sender, EventArgs e)

@@ -7,7 +7,7 @@
     <ProjectGuid>{CBCAC49E-7428-4218-B68F-C148E2742E35}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>IRTCalibration</RootNamespace>
+    <RootNamespace>IRT.Calibration</RootNamespace>
     <AssemblyName>Calibration</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -39,6 +39,12 @@
     <Reference Include="alglibnet2">
       <HintPath>lib\alglibnet2.dll</HintPath>
     </Reference>
+    <Reference Include="ANT+ProfileLib">
+      <HintPath>..\ant\ANT_IRT_GUI\ANT+ProfileLib.dll</HintPath>
+    </Reference>
+    <Reference Include="ANT_NET">
+      <HintPath>..\ant\ANT_IRT_GUI\ANT_NET.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -51,6 +57,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CalibrationController.cs" />
+    <Compile Include="CalibrationModel.cs" />
+    <Compile Include="CalibrationPower.cs" />
+    <Compile Include="CalibrationSpeed.cs" />
     <Compile Include="Coastdown.cs" />
     <Compile Include="CoastdownData.cs" />
     <Compile Include="CoastdownForm.cs">

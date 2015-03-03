@@ -37,15 +37,17 @@
             this.label2 = new System.Windows.Forms.Label();
             this.lblStable = new System.Windows.Forms.Label();
             this.lblStep1 = new System.Windows.Forms.Label();
+            this.lblStep3 = new System.Windows.Forms.Label();
             this.lblStep2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnExit
             // 
             this.btnExit.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnExit.Location = new System.Drawing.Point(208, 310);
+            this.btnExit.Location = new System.Drawing.Point(312, 477);
+            this.btnExit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnExit.Name = "btnExit";
-            this.btnExit.Size = new System.Drawing.Size(75, 23);
+            this.btnExit.Size = new System.Drawing.Size(112, 35);
             this.btnExit.TabIndex = 0;
             this.btnExit.Text = "Exit";
             this.btnExit.UseVisualStyleBackColor = true;
@@ -56,9 +58,10 @@
             // 
             this.lblSpeed.AutoSize = true;
             this.lblSpeed.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSpeed.Location = new System.Drawing.Point(246, 64);
+            this.lblSpeed.Location = new System.Drawing.Point(369, 98);
+            this.lblSpeed.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblSpeed.Name = "lblSpeed";
-            this.lblSpeed.Size = new System.Drawing.Size(91, 55);
+            this.lblSpeed.Size = new System.Drawing.Size(135, 82);
             this.lblSpeed.TabIndex = 1;
             this.lblSpeed.Text = "0.0";
             // 
@@ -67,9 +70,10 @@
             this.lblRefPower.AutoSize = true;
             this.lblRefPower.Enabled = false;
             this.lblRefPower.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblRefPower.Location = new System.Drawing.Point(382, 64);
+            this.lblRefPower.Location = new System.Drawing.Point(573, 98);
+            this.lblRefPower.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblRefPower.Name = "lblRefPower";
-            this.lblRefPower.Size = new System.Drawing.Size(51, 55);
+            this.lblRefPower.Size = new System.Drawing.Size(75, 82);
             this.lblRefPower.TabIndex = 2;
             this.lblRefPower.Text = "0";
             // 
@@ -77,9 +81,10 @@
             // 
             this.lblSeconds.AutoSize = true;
             this.lblSeconds.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblSeconds.Location = new System.Drawing.Point(110, 64);
+            this.lblSeconds.Location = new System.Drawing.Point(165, 98);
+            this.lblSeconds.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblSeconds.Name = "lblSeconds";
-            this.lblSeconds.Size = new System.Drawing.Size(91, 55);
+            this.lblSeconds.Size = new System.Drawing.Size(135, 82);
             this.lblSeconds.TabIndex = 3;
             this.lblSeconds.Text = "0.0";
             // 
@@ -87,9 +92,10 @@
             // 
             this.label18.AutoSize = true;
             this.label18.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label18.Location = new System.Drawing.Point(253, 51);
+            this.label18.Location = new System.Drawing.Point(380, 78);
+            this.label18.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(34, 13);
+            this.label18.Size = new System.Drawing.Size(50, 20);
             this.label18.TabIndex = 14;
             this.label18.Text = "MPH";
             // 
@@ -98,9 +104,10 @@
             this.label1.AutoSize = true;
             this.label1.Enabled = false;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(389, 51);
+            this.label1.Location = new System.Drawing.Point(584, 78);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(40, 13);
+            this.label1.Size = new System.Drawing.Size(58, 20);
             this.label1.TabIndex = 15;
             this.label1.Text = "Watts";
             // 
@@ -108,9 +115,10 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(117, 51);
+            this.label2.Location = new System.Drawing.Point(176, 78);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(56, 13);
+            this.label2.Size = new System.Drawing.Size(81, 20);
             this.label2.TabIndex = 16;
             this.label2.Text = "Seconds";
             // 
@@ -118,10 +126,9 @@
             // 
             this.lblStable.AutoSize = true;
             this.lblStable.Font = new System.Drawing.Font("Microsoft Sans Serif", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStable.Location = new System.Drawing.Point(227, 9);
-            this.lblStable.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblStable.Location = new System.Drawing.Point(340, 14);
             this.lblStable.Name = "lblStable";
-            this.lblStable.Size = new System.Drawing.Size(110, 31);
+            this.lblStable.Size = new System.Drawing.Size(160, 46);
             this.lblStable.TabIndex = 17;
             this.lblStable.Text = "Stability";
             this.lblStable.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -130,35 +137,46 @@
             // 
             this.lblStep1.AutoSize = true;
             this.lblStep1.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblStep1.Location = new System.Drawing.Point(11, 139);
-            this.lblStep1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblStep1.Location = new System.Drawing.Point(16, 214);
             this.lblStep1.Name = "lblStep1";
-            this.lblStep1.Size = new System.Drawing.Size(509, 24);
+            this.lblStep1.Size = new System.Drawing.Size(770, 32);
             this.lblStep1.TabIndex = 18;
             this.lblStep1.Text = "Step 1: Ride STEADY at a comfortable pace for 30 seconds.";
             this.lblStep1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // lblStep3
+            // 
+            this.lblStep3.AutoSize = true;
+            this.lblStep3.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblStep3.ForeColor = System.Drawing.SystemColors.InactiveCaption;
+            this.lblStep3.Location = new System.Drawing.Point(16, 312);
+            this.lblStep3.Name = "lblStep3";
+            this.lblStep3.Size = new System.Drawing.Size(651, 32);
+            this.lblStep3.TabIndex = 19;
+            this.lblStep3.Text = "Step 3: STOP pedaling and coast down to < 5mph.";
+            this.lblStep3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lblStep2
             // 
             this.lblStep2.AutoSize = true;
             this.lblStep2.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblStep2.ForeColor = System.Drawing.SystemColors.InactiveCaption;
-            this.lblStep2.Location = new System.Drawing.Point(11, 174);
-            this.lblStep2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblStep2.Location = new System.Drawing.Point(16, 263);
             this.lblStep2.Name = "lblStep2";
-            this.lblStep2.Size = new System.Drawing.Size(434, 24);
-            this.lblStep2.TabIndex = 19;
-            this.lblStep2.Text = "Step 2: STOP pedaling and coast down to < 5mph.";
+            this.lblStep2.Size = new System.Drawing.Size(389, 32);
+            this.lblStep2.TabIndex = 20;
+            this.lblStep2.Text = "Step 2: Speed up to > 25 mph";
             this.lblStep2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // CalibrationForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnExit;
-            this.ClientSize = new System.Drawing.Size(542, 231);
+            this.ClientSize = new System.Drawing.Size(813, 378);
             this.ControlBox = false;
             this.Controls.Add(this.lblStep2);
+            this.Controls.Add(this.lblStep3);
             this.Controls.Add(this.lblStep1);
             this.Controls.Add(this.lblStable);
             this.Controls.Add(this.label2);
@@ -168,6 +186,7 @@
             this.Controls.Add(this.lblRefPower);
             this.Controls.Add(this.lblSpeed);
             this.Controls.Add(this.btnExit);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "CalibrationForm";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
@@ -189,6 +208,7 @@
         public System.Windows.Forms.Label lblSeconds;
         public System.Windows.Forms.Label lblStable;
         public System.Windows.Forms.Label lblStep1;
+        public System.Windows.Forms.Label lblStep3;
         public System.Windows.Forms.Label lblStep2;
     }
 }
