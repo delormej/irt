@@ -2344,9 +2344,17 @@ namespace IRT_GUI
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                Coastdown coastdown = Coastdown.FromFile(dlg.FileName);
-                CoastdownForm form = new CoastdownForm(coastdown);
-                form.Show();
+                try
+                {
+                    Coastdown coastdown = Coastdown.FromFile(dlg.FileName);
+                    CoastdownForm form = new CoastdownForm(coastdown);
+                    form.Show();
+                }
+                catch (Exception ex)
+                {
+                    UpdateStatus("Error attempting to parse calibration file.\r\n" + 
+                        ex.Message);
+                }
             }
         }
 

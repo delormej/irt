@@ -117,15 +117,7 @@ namespace IRT.Calibration
         void m_emotionPower_GeneralCalibrationResponseSuccessReceived(
             GeneralCalibrationResponseSuccessPage arg1, uint arg2)
         {
-            if (m_model.Stage == Stage.Coasting)
-            {
-                OnProcessing();
-            }
-            else
-            {
-                // Raise an event that we ended prematurely.
-                OnFail("Premature exit, please retry.");
-            }
+            OnProcessing();
         }
 
         void m_emotionPower_CalibrationCustomParameterResponsePageReceived(

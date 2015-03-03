@@ -50,7 +50,8 @@ namespace IRT.Calibration
                 while (index > 0 && events[index - 1].PowerEventCount != -1)
                     index--;
 
-                if (currentEvent.PowerEventCount > events[index].PowerEventCount)
+                if (events[index].PowerEventCount > 0 && 
+                    currentEvent.PowerEventCount > events[index].PowerEventCount)
                 {
                     // Returns as much of an average as data as we have
                     // until we get to 15 seconds.
