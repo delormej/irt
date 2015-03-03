@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using IRT.Calibration.Globals;
 
 namespace IRT.Calibration
 {
@@ -22,20 +23,26 @@ namespace IRT.Calibration
             this.StabilityThresholdMps = ThresholdMps;
         }
 
-        public void AddEvent(byte[] buffer, Model model)
+        /// <summary>
+        /// Calcualtes latest state based on tick events.
+        /// </summary>
+        /// <param name="tickEvent"></param>
+        /// <param name="model"></param>
+        public void Calculate(Model model)
         {
+            TickEvent[] events = model.Events;
+            TickEvent tickEvent = events.Last();
+
             // Event offset skip, every 4th event.
             int SkipOffset = 4;
-            int currentIndex = model.Events.Count;
-
-            AddEventFromBuffer(buffer, model);
+            int currentIndex = events.Length;
             
             ushort lastTicks = 0, lastTimestamp = 0;
 
             if (currentIndex > SkipOffset)
             {
-                lastTicks = model.Events[currentIndex - SkipOffset].Ticks;
-                lastTimestamp = model.Events[currentIndex - SkipOffset].Timestamp;
+                lastTicks = events[currentIndex - SkipOffset].Ticks;
+                lastTimestamp = events[currentIndex - SkipOffset].Timestamp;
             }
             else
             {
@@ -47,23 +54,19 @@ namespace IRT.Calibration
                 return;
             }
 
-            // Grab the latest event.
-            model.Ticks = model.Events[currentIndex - 1].Ticks;
-            model.Timestamp2048 = model.Events[currentIndex - 1].Timestamp;
-
             int dt, ds; // delta ticks, delta seconds
 
-            if (model.Ticks < lastTicks)
-                dt = model.Ticks + (lastTicks ^ 0xFFFF);
+            if (tickEvent.Ticks < lastTicks)
+                dt = tickEvent.Ticks + (lastTicks ^ 0xFFFF);
             else
-                dt = model.Ticks - lastTicks;
+                dt = tickEvent.Ticks - lastTicks;
 
             if (lastTimestamp > 0)
             {
-                if (model.Timestamp2048 < lastTimestamp)
-                    ds = model.Timestamp2048 + (lastTimestamp ^ 0xFFFF);
+                if (tickEvent.Timestamp < lastTimestamp)
+                    ds = tickEvent.Timestamp + (lastTimestamp ^ 0xFFFF);
                 else
-                    ds = model.Timestamp2048 - lastTimestamp;
+                    ds = tickEvent.Timestamp - lastTimestamp;
             }
             else
             {
@@ -90,6 +93,7 @@ namespace IRT.Calibration
                 else 
                 {
                     model.StableSeconds = seconds - m_stableStartSeconds;
+                    model.StableSpeedMps = model.SpeedMps;
                 }
             }
             else
@@ -98,44 +102,6 @@ namespace IRT.Calibration
             }
 
             model.Motion = motion;
-        }
-
-        private void AddEventFromBuffer(byte[] buffer, Model model)
-        {
-            /*
-                tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
-                tx_buffer[1] = 		ANT_BP_CAL_PARAM_RESPONSE;
-                tx_buffer[2] = 		LOW_BYTE(time_2048);
-                tx_buffer[3] = 		HIGH_BYTE(time_2048);
-                tx_buffer[4] = 		LOW_BYTE(flywheel_ticks[0]);
-                tx_buffer[5] = 		HIGH_BYTE(flywheel_ticks[0]);
-                tx_buffer[6] = 		LOW_BYTE(flywheel_ticks[1]);
-                tx_buffer[7] = 		HIGH_BYTE(flywheel_ticks[1]);
-            */
-            ushort time0 = (ushort)(buffer[0] | buffer[1] << 8);
-            ushort ticks0 = (ushort)(buffer[2] | buffer[3] << 8);
-            ushort ticks1 = (ushort)(buffer[4] | buffer[5] << 8);
-
-            int i = 0;
-
-            //
-            // 2 events are embedded in each buffer message.
-            //
-            while (i < 2) // do this loop 2 times
-            {
-                // Alternate between the two tick counts.
-                if (i % 2 == 0)
-                {
-                    model.Events.Add(new TickEvent(ticks0, time0));
-                }
-                else
-                {
-                    // Calculate 125ms in 1/2048s later for the 2nd read.
-                    ushort time1 = (ushort)(time0 + (0.125f * 2048));
-                    model.Events.Add(new TickEvent(ticks1, time1));
-                }
-                i++;
-            }
         }
 
         private Motion Stability(double currentSpeed)

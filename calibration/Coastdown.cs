@@ -12,7 +12,6 @@ namespace IRT.Calibration
     /// </summary>
     public class Coastdown
     {
-        private List<int> m_timestamps, m_flywheel_ticks;
         private CoastdownData m_coastdownData;
 
         // Fit objects.
@@ -21,8 +20,6 @@ namespace IRT.Calibration
 
         public Coastdown()
         {
-            m_timestamps = new List<int>();
-            m_flywheel_ticks = new List<int>();
         }
 
         /// <summary>
@@ -31,33 +28,21 @@ namespace IRT.Calibration
         public CoastdownData Data { get { return m_coastdownData; } }
 
         /// <summary>
-        /// Add a coast down tick event.
-        /// </summary>
-        /// <param name="timestamp_2048"></param>
-        /// <param name="flywheel_ticks"></param>
-        public void Add(int timestamp_2048, int flywheel_ticks)
-        {
-            m_timestamps.Add(timestamp_2048);
-            m_flywheel_ticks.Add(flywheel_ticks);
-        }
-
-        /// <summary>
         /// Parses the coast down x,y values and generates coefficients of Drag 
         /// and Rolling Resistance based on stable speed and watts.
         /// </summary>
         /// <returns>true/false if it succeeded.</returns>
-        public void Calculate(double stableSpeedMps, double stableWatts)
+        public void Calculate(Model model)
         {
             // Process values to build speed/time arrays.
-            m_coastdownData = new CoastdownData(m_timestamps.ToArray(),
-                m_flywheel_ticks.ToArray());
+            m_coastdownData = new CoastdownData(model.Events);
             m_coastdownData.Evaluate();
 
             // Calculate the deceleration.
             m_decelFit = new DecelerationFit(m_coastdownData.SpeedMps,
                 m_coastdownData.CoastdownSeconds);
             m_decelFit.Fit();
-            m_powerFit = new PowerFit(m_decelFit, stableSpeedMps, stableWatts);
+            m_powerFit = new PowerFit(m_decelFit, model.StableSpeedMps, model.StableWatts);
             m_powerFit.Fit();
 
             /*
@@ -121,8 +106,8 @@ namespace IRT.Calibration
         /// <returns></returns>
         public static Coastdown FromFile(string filename)
         {
-            int timestamp, ticks;
             Coastdown coastdown = new Coastdown();
+            Model model = new Model();
 
             using (StreamReader reader = File.OpenText(filename))
             {
@@ -131,11 +116,15 @@ namespace IRT.Calibration
 
                 while (!reader.EndOfStream)
                 {
-                    ParseLine(reader.ReadLine(), out timestamp, out ticks);
-                    coastdown.Add(timestamp, ticks);
+                    TickEvent tickEvent;
+                    ParseLine(reader.ReadLine(), out tickEvent);
+                    model.AddSpeedEvent(tickEvent);
+                    model.AddPowerEvent(tickEvent.PowerEventCount, tickEvent.AccumulatedPower);
                 }
             }
-            
+
+            coastdown.Calculate(model);
+
             return coastdown;
         }
 
@@ -143,21 +132,35 @@ namespace IRT.Calibration
         /// Parses a line from the csv file.
         /// </summary>
         /// <param name="line"></param>
-        /// <param name="timestamp"></param>
-        /// <param name="ticks"></param>
-        private static void ParseLine(string line, out int timestamp, out int ticks)
+        /// <param name="tickEvent"></param>
+        private static void ParseLine(string line, out TickEvent tickEvent)
         {
-            string[] column = line.Split(',');
+            /* 
+             * Fields in this order:
+             * 
+                Timestamp,
+                0, // was sequence, but no longer used
+                Ticks,
+                0,  // was watts, but no longer used
+                PowerEventCount,
+                AccumulatedPower
+             */
             
-            if (!int.TryParse(column[0], out timestamp))
+            string[] column = line.Split(',');
+            tickEvent = new TickEvent();
+
+            if (!ushort.TryParse(column[0], out tickEvent.Timestamp))
             {
                 throw new FormatException("CSV not properly formatted.");
             }
 
-            if (!int.TryParse(column[2], out ticks))
+            if (!ushort.TryParse(column[2], out tickEvent.Ticks))
             {
                 throw new FormatException("CSV not properly formatted.");
             }
+            
+            int.TryParse(column[4], out tickEvent.PowerEventCount);
+            ushort.TryParse(column[5], out tickEvent.AccumulatedPower);
         }    
     }
 

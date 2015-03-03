@@ -17,9 +17,25 @@ namespace IRT.Calibration
             m_flywheel = flywheel_ticks;
         }
 
+        public CoastdownData(TickEvent[] tickEvents)
+        {
+            m_timestamp = new int[tickEvents.Length];
+            m_flywheel = new int[tickEvents.Length];
+
+            for (int i = 0; i < tickEvents.Length; i++)
+            {
+                m_timestamp[i] = tickEvents[i].Timestamp;
+                m_flywheel[i] = tickEvents[i].Ticks;
+            }
+        }
+
         public double[] SpeedMps;
         public double[] CoastdownSeconds;
 
+        /// <summary>
+        /// Filters and processes raw coastdown records into only the records that
+        /// represent the deceleration phase.
+        /// </summary>
         public void Evaluate()
         {
             int records = m_timestamp.Length / 4;

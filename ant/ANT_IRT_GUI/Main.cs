@@ -62,7 +62,7 @@ namespace IRT_GUI
         private Timer m_reportTimer;
         private List<IReporter> m_reporters;
         private DataPoint m_dataPoint;
-        private Calibration m_calibration;
+        private Controller m_calibration;
 
         // Used for calculating moving average.
         private int m_movingAvgPosition = 0;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using IRT.Calibration.Globals;
 
 namespace IRT.Calibration
 {
@@ -12,59 +13,50 @@ namespace IRT.Calibration
     public class Model : INotifyPropertyChanged
     {
         private Speed m_speed;
-        private List<TickEvent> m_ticks;
+        private List<TickEvent> m_tickEvents;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public Model()
         {
             m_speed = new Speed(Settings.StableThresholdSpeedMps);
-            m_ticks = new List<TickEvent>();
+            m_tickEvents = new List<TickEvent>();
         }
 
-        public ushort Ticks;
-        public ushort Timestamp2048;
+        public double StableWatts;
 
-        public double Watts
-        {
-            get { return 0; }
-            set {  }
-        }
+        public double StableSeconds;
 
-        public double SpeedMps
-        {
-            get { return 0; }
-            set {  }
-        }
+        public double StableSpeedMps;
 
-        public double StableSeconds
-        {
-            get { return 0; }
-            set { }
-        }
+        public double SpeedMps;
 
         public Stage Stage;
 
         public Motion Motion { get; set; }
 
-        public List<TickEvent> Events { get { return m_ticks; } }
+        public TickEvent[] Events { get { return m_tickEvents.ToArray(); } }
 
-        public void AddSpeedEvent(byte[] buffer)
+        public void AddSpeedEvent(TickEvent tickEvent)
         {
-            m_speed.AddEvent(buffer, this);
+            // Add the event.
+            m_tickEvents.Add(tickEvent);
+            
+            // Calculate and update state.
+            m_speed.Calculate(this);
         }
 
-        public void AddPowerEvent(ushort eventCount, ushort accumPower)
+        public void AddPowerEvent(int eventCount, ushort accumPower)
         {
             // Only record watts if stable.
-            if (Stage == Calibration.Stage.Stable)
+            if (Stage == Stage.Stable)
             {
-                Watts = AveragePower.AddEvent(eventCount, accumPower, m_ticks);
+                StableWatts = AveragePower.AddEvent(eventCount, accumPower, m_tickEvents);
             }
             else
             {
                 // Add unstable flag.
-                AveragePower.AddEvent(-1, 0, m_ticks);
+                AveragePower.AddEvent(-1, 0, m_tickEvents);
             }
         }
     }

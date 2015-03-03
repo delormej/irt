@@ -2,6 +2,7 @@
 using System.Linq;
 using AntPlus.Profiles.BikePower;
 using System.IO;
+using IRT.Calibration.Globals;
 
 namespace IRT.Calibration
 {
@@ -20,16 +21,19 @@ namespace IRT.Calibration
 
         public event Action<Coastdown> SetCalibrationValues;
 
+        public Controller()
+        {
+            m_model = new Model();
+            m_coastdown = new Coastdown();
+        }
+
         /// <summary>
         /// Creates the controller, should be created on the UI Thread.
         /// </summary>
         /// <param name="emotionPower"></param>
         /// <param name="refPower"></param>
-        public Controller(BikePowerDisplay emotionPower, BikePowerDisplay refPower)
+        public Controller(BikePowerDisplay emotionPower, BikePowerDisplay refPower) : base()
         {
-            m_model = new Model();
-            m_coastdown = new Coastdown();
-           
             // Listeners for ANT+ events.
             m_emotionPower = emotionPower;
             m_refPower = refPower;
@@ -76,19 +80,34 @@ namespace IRT.Calibration
         void m_emotionPower_CalibrationCustomParameterResponsePageReceived(
             CustomCalibrationParameterResponsePage arg1, uint arg2)
         {
-            m_model.AddSpeedEvent(arg1.CalibrationDataArray.ToArray());
-            m_coastdown.Add(m_model.Timestamp2048, m_model.Ticks);
+            // Generates 2 events from the buffer.
+            TickEvent[] events = TickEvent.FromBuffer(arg1.CalibrationDataArray.ToArray());
+            
+            for (int i = 0; i < 2; i++)
+            {
+                OnEvent(events[i]);
+            }
+
+        }
+
+        /// <summary>
+        /// Add tick events to the model which recalculates state.
+        /// </summary>
+        /// <param name="tickEvent"></param>
+        public void OnEvent(TickEvent tickEvent)
+        {
+            m_model.AddSpeedEvent(tickEvent);
 
             // 
             // Determine stage and process state transitions.
             //
-            if (m_model.Stage == Stage.Ready && 
+            if (m_model.Stage == Stage.Ready &&
                 m_model.Motion == Motion.Stable &&
                 m_model.StableSeconds >= Settings.StableThresholdSeconds)
             {
                 OnStable();
             }
-            else if (m_model.Stage == Stage.Stable && 
+            else if (m_model.Stage == Stage.Stable &&
                 m_model.Motion == Motion.Accelerating)
             {
                 OnAccelerating();
@@ -149,7 +168,7 @@ namespace IRT.Calibration
             // Kick off processing.
             try
             {
-                m_coastdown.Calculate(m_model.SpeedMps, m_model.Watts);
+                m_coastdown.Calculate(m_model);
                 OnFinished();
             }
             catch (Exception e)

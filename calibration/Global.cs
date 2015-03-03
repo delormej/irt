@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace IRT.Calibration
+namespace IRT.Calibration.Globals
 {
     public enum Motion
     {

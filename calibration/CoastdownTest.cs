@@ -7,6 +7,7 @@ namespace IRT.Calibration
     {
         static void Main(string[] args)
         {
+            /*
             Coastdown coastdown = Coastdown.FromFile(
                 "C:\\temp\\coastdown\\calib_1.4.5_20150108-164127-3.csv");
                 
@@ -30,6 +31,7 @@ namespace IRT.Calibration
             }
            
             Console.ReadKey();
+             */
         }
     }
 }
