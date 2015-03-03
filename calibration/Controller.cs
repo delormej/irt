@@ -48,9 +48,9 @@ namespace IRT.Calibration
 
             // Register standard power messages from the external power meter.
             m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
-
-            OnReady();
         }
+
+        public Stage Stage { get { return m_model.Stage; } }
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
@@ -101,7 +101,11 @@ namespace IRT.Calibration
             // 
             // Determine stage and process state transitions.
             //
-            if (m_model.Stage == Stage.Ready &&
+            if(m_model.Stage == Stage.Ready)
+            {
+                OnStarted();
+            }
+            else if (m_model.Stage == Stage.Ready &&
                 m_model.Motion == Motion.Stable &&
                 m_model.StableSeconds >= Settings.StableThresholdSeconds)
             {
@@ -129,10 +133,12 @@ namespace IRT.Calibration
          * 
          */
 
-        private void OnReady()
+        private void OnStarted()
         {
             m_calibrationForm = new CalibrationForm(m_model);
             m_calibrationForm.Show();
+
+            m_model.Stage = Stage.Started;
         }
 
         private void OnStable()

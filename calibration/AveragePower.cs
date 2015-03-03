@@ -37,18 +37,25 @@ namespace IRT.Calibration
 
         public static double CalculateAverage(List<TickEvent> events)
         {
-            // Search for a record 'n' indexes ago to average from, starting here:
-            int index = events.Count - 2;
-            TickEvent currentEvent = events.Last();
+            double watts = 0;
 
-            // Keep going backwards until we hit an instable flag ('-1') or the end.
-            while (index > 0 && events[index].PowerEventCount != -1) 
-                index--;
+            if (events.Count > 2)
+            {
+                // Search for a record 'n' indexes ago to average from, starting here:
+                int index = events.Count - 2;
+                TickEvent currentEvent = events.Last();
 
-            // Returns as much of an average as data as we have
-            // until we get to 15 seconds.
-            return (events[index].AccumulatedPower - currentEvent.AccumulatedPower) /
-                events[index].PowerEventCount - currentEvent.PowerEventCount;
+                // Keep going backwards until we hit an instable flag ('-1') or the end.
+                while (index > 0 && events[index].PowerEventCount != -1)
+                    index--;
+
+                // Returns as much of an average as data as we have
+                // until we get to 15 seconds.
+                watts = (events[index].AccumulatedPower - currentEvent.AccumulatedPower) /
+                    events[index].PowerEventCount - currentEvent.PowerEventCount;
+            }
+
+            return watts;
         }
     }
 }

@@ -167,6 +167,11 @@ namespace IRT_GUI
 
             // Configure and start listening on ANT+.
             StartANT();
+
+            // Create calibration object, which will listen for calibration events 
+            // and react accordingly.
+            m_calibration = new Controller(m_eMotion, m_refPower);
+
             StartReporting();
         }
 
@@ -561,8 +566,6 @@ namespace IRT_GUI
                 m_eMotion.ManufacturerSpecificPageReceived += m_eMotion_ManufacturerSpecificPageReceived;
                 m_eMotion.GetSetParametersPageReceived += m_eMotion_GetSetParametersPageReceived;
                 m_eMotion.TemperatureSubPageReceived += m_eMotion_TemperatureSubPageReceived;
-                m_eMotion.CalibrationCustomParameterResponsePageReceived += m_eMotion_CalibrationCustomParameterResponsePageReceived;
-                m_eMotion.GeneralCalibrationResponseSuccessReceived += m_eMotion_GeneralCalibrationResponseSuccessReceived;
                 m_eMotion.MeasurementOutputPageReceived += m_eMotion_MeasurementOutputPageReceived;
 
                 m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
@@ -607,51 +610,6 @@ namespace IRT_GUI
 
                 UpdateStatus(string.Format("Recieved temperature: {0}", temp));
             }
-        }
-
-        void m_eMotion_GeneralCalibrationResponseSuccessReceived(GeneralCalibrationResponseSuccessPage arg1, uint arg2)
-        {
-            if (m_calibration != null && !m_calibration.Busy)
-            {
-                m_calibration.ExitCalibration();
-            }
-        }
-
-        void m_eMotion_CalibrationCustomParameterResponsePageReceived(CustomCalibrationParameterResponsePage arg1, uint arg2)
-        {
-            if (m_calibration == null)
-            {
-                // Ensure we're on level 0, standard resistance (no mag).
-                SetResistanceStandard(0);
-
-                if (m_firmwareRev != null && m_firmwareRev.Build > 11)
-                {
-                    m_calibration = new Calibration12();
-                    m_calibration.CoastdownCalibrationApply += m_calibration_CoastdownCalibrationApply;
-                    m_calibration.CoastdownComplete += m_calibration_CoastdownComplete;
-                }
-                else
-                {
-                    m_calibration = new Calibration();
-                }
-
-                ExecuteOnUI(() =>
-                {
-                    m_calibration.ShowCalibration(m_refPower);
-                });
-            }
-
-            byte[] buffer = arg1.CalibrationDataArray.ToArray();
-            m_calibration.LogCalibration(buffer);
-        }
-
-        void m_calibration_CoastdownComplete(IRT.Calibration.Coastdown obj)
-        {
-            ExecuteOnUI(() =>
-            {
-                    m_calibration.CalculateCoastdown();     
-                m_calibration = null;
-            });
         }
 
         private void StartReporting()
@@ -1063,9 +1021,10 @@ namespace IRT_GUI
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {
             // if we start getting a torque page, we're back out of calibration mode.
-            if (m_calibration != null && !m_calibration.Busy)
+            if (m_calibration != null && 
+                m_calibration.Stage != IRT.Calibration.Globals.Stage.Finished)
             {
-                m_calibration.ExitCalibration();
+                m_calibration.Cancel();
             }
 
             if (lastTorqueEventCount != arg1.WheelTorqueEventCount && 
@@ -2361,7 +2320,6 @@ namespace IRT_GUI
                 form.Show();
             }
         }
-
 
         void m_calibration_CoastdownCalibrationApply(IRT.Calibration.Coastdown coastdown)
         {

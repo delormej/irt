@@ -16,6 +16,7 @@ namespace IRT.Calibration.Globals
     public enum Stage
     {
         Ready = 0,
+        Started,
         Stable,
         Accelerating,
         SpeedThresholdReached,
