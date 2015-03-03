@@ -51,7 +51,7 @@ namespace IRT.Calibration
             // Only record watts if stable.
             if (this.Motion == Globals.Motion.Stable)
             {
-                StableWatts = AveragePower.AddEvent(eventCount, accumPower, m_tickEvents);
+                AveragePower.AddEvent(eventCount, accumPower, m_tickEvents);
             }
             else
             {

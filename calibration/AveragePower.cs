@@ -15,7 +15,7 @@ namespace IRT.Calibration
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="watts"></param>
-        public static double AddEvent(int eventCount, ushort accumWatts, List<TickEvent> events)
+        public static void AddEvent(int eventCount, ushort accumWatts, List<TickEvent> events)
         {
             // Append power event to the last tick record.
             TickEvent powerEvent = events.Last();
@@ -31,18 +31,16 @@ namespace IRT.Calibration
             }
              
             powerEvent.AccumulatedPower = accumWatts;
-
-            return CalculateAverage(events);
         }
 
-        public static double CalculateAverage(List<TickEvent> events)
+        public static double CalculateAverage(TickEvent[] events)
         {
             double watts = 0;
 
-            if (events.Count > 2)
+            if (events.Length > 2)
             {
                 // Search for a record 'n' indexes ago to average from, starting here:
-                int index = events.Count-1;
+                int index = events.Length - 1;
                 TickEvent currentEvent = events.Last();
 
                 // Keep going backwards until we hit an instable flag ('-1') or the end.

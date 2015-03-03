@@ -78,13 +78,19 @@ namespace IRT.Calibration
                 if (model.Motion != Motion.Stable) // wasn't stable before.
                 {
                     m_stableTimestamp = tickEvent.Timestamp;
-                    model.StableSeconds = 0; // Reset
                 }
                 else 
                 {
-                    model.StableSeconds = 
+                    double stableSeconds = 
                         DeltaTimestamp(m_stableTimestamp, tickEvent.Timestamp) / 2048.0;
-                    model.StableSpeedMps = model.SpeedMps;
+
+                    // Take the most stable.
+                    if (stableSeconds > model.StableSeconds)
+                    {
+                        model.StableSeconds = stableSeconds;
+                        model.StableSpeedMps = model.SpeedMps;
+                        model.StableWatts = AveragePower.CalculateAverage(model.Events);
+                    }
                 }
             }
 
