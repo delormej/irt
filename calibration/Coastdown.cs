@@ -35,7 +35,7 @@ namespace IRT.Calibration
         public void Calculate(Model model)
         {
             // Process values to build speed/time arrays.
-            m_coastdownData = new CoastdownData(model.Events);
+            m_coastdownData = new CoastdownData(model.Events.ToArray());
             m_coastdownData.Evaluate();
 
             // Calculate the deceleration.

@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -179,6 +180,11 @@ namespace IRT_GUI
         void m_calibration_StageChanged(IRT.Calibration.Globals.Stage stage)
         {
             UpdateStatus(stage.ToString());
+
+            if (stage == IRT.Calibration.Globals.Stage.Processing)
+            {
+                WriteCalibrationLog();
+            }
 
             ExecuteOnUI(() =>
             {
@@ -2322,7 +2328,7 @@ namespace IRT_GUI
 
             if (!result)
             {
-                UpdateStatus(String.Format("Unable to request calibraiton, return result: {1}.", result));
+                UpdateStatus(String.Format("Unable to request calibraiton, return result: {0}.", result));
             }
         }
 
@@ -2354,5 +2360,29 @@ namespace IRT_GUI
                 this.btnCalibration2Set_Click(this, null);
             });
         }
+
+        private void WriteCalibrationLog()
+        {
+            StreamWriter log;
+
+            // open up a stream to start logging
+            string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
+                System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3),
+                DateTime.Now);
+
+            using (log = new StreamWriter(filename))
+            {
+                log.WriteLine("timestamp_ms, count, ticks, watts, pwr_events, accum_pwr");
+
+                foreach (var tick in m_calibration.Model.Events)
+                {
+                    log.WriteLine(tick);
+                }
+
+                log.Flush();
+                log.Close();
+            }
+        }
+       
     }
 }

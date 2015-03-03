@@ -35,7 +35,7 @@ namespace IRT.Calibration.Globals
         public const double StableThresholdSeconds = 15;
 
         // Amount speed can vary and still be considered stable.
-        public const double StableThresholdSpeedMps = 0.11176f;
+        public const double StableThresholdSpeedMps = 0.44704; // 0.11176f;
 
         // Minimum of 25mph to reach peak speed.
         public const double MinAccelerationSpeedMps = 25.0f * 0.44704;

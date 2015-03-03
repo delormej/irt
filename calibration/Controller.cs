@@ -24,8 +24,7 @@ namespace IRT.Calibration
 
         public Controller()
         {
-            m_model = new Model();
-            m_coastdown = new Coastdown();
+            Initialize();
         }
 
         /// <summary>
@@ -39,16 +38,22 @@ namespace IRT.Calibration
             m_emotionPower = emotionPower;
             m_refPower = refPower;
 
-            // Register calibration events from the emotion rollers.
-            m_emotionPower.CalibrationCustomParameterResponsePageReceived += 
-                m_emotionPower_CalibrationCustomParameterResponsePageReceived;
-            m_emotionPower.GeneralCalibrationResponseSuccessReceived += 
-                m_emotionPower_GeneralCalibrationResponseSuccessReceived;
-            m_emotionPower.GeneralCalibrationResponseFailPageReceived += 
-                m_emotionPower_GeneralCalibrationResponseFailPageReceived;
+            if (m_emotionPower != null)
+            {
+                // Register calibration events from the emotion rollers.
+                m_emotionPower.CalibrationCustomParameterResponsePageReceived +=
+                    m_emotionPower_CalibrationCustomParameterResponsePageReceived;
+                m_emotionPower.GeneralCalibrationResponseSuccessReceived +=
+                    m_emotionPower_GeneralCalibrationResponseSuccessReceived;
+                m_emotionPower.GeneralCalibrationResponseFailPageReceived +=
+                    m_emotionPower_GeneralCalibrationResponseFailPageReceived;
+            }
 
-            // Register standard power messages from the external power meter.
-            m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
+            if (m_refPower != null)
+            {
+                // Register standard power messages from the external power meter.
+                m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
+            }
         }
 
         public Stage Stage 
@@ -63,6 +68,8 @@ namespace IRT.Calibration
                 }
             }
         }
+
+        public Model Model { get { return m_model; } }
 
         /// <summary>
         /// Displays the main calibration form during coast down.
@@ -87,6 +94,13 @@ namespace IRT.Calibration
             // Open form to show results.
             m_coastdownForm = new CoastdownForm(m_coastdown);
             m_coastdownForm.Show();
+        }
+
+        private void Initialize()
+        {
+            m_model = new Model();
+            m_model.Stage = Stage.Ready;
+            m_coastdown = new Coastdown();
         }
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
@@ -135,6 +149,14 @@ namespace IRT.Calibration
         {
             m_model.AddSpeedEvent(tickEvent);
 
+            if (m_calibrationForm != null && !m_calibrationForm.IsDisposed)
+            {
+                m_calibrationForm.UpdateValues(m_model.StableSeconds,
+                    m_model.SpeedMps * 2.23694,
+                    (ushort)m_model.StableWatts,
+                    m_model.Motion);
+            }
+
             // 
             // Determine stage and process state transitions.
             //
@@ -153,8 +175,7 @@ namespace IRT.Calibration
             {
                 OnAccelerating();
             }
-            else if (m_model.Stage != Globals.Stage.SpeedThresholdReached &&
-                m_model.Stage >= Stage.Stable &&
+            else if (m_model.Stage == Stage.Accelerating &&
                 m_model.SpeedMps >= Settings.MinAccelerationSpeedMps)
             {
                 OnSpeedThresholdReached();
@@ -238,9 +259,10 @@ namespace IRT.Calibration
 
         private void OnFail(string message)
         {
-            // TODO: Raise an event here indicating we failed.
-
             this.Stage = Stage.Failed;
+
+            // reset
+            Initialize();
         }
 
         /// <summary>
@@ -264,29 +286,6 @@ namespace IRT.Calibration
                 {
                     m_calibrationForm.Invoke(a);
                 }
-            }
-        }
-
-        private void WriteLog()
-        {
-            StreamWriter log;
-
-            // open up a stream to start logging
-            string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
-                this.GetType().Assembly.GetName().Version.ToString(3),
-                DateTime.Now);
-
-            using (log = new StreamWriter(filename))
-            {
-                log.WriteLine("timestamp_ms, count, ticks, watts, pwr_events, accum_pwr");
-
-                foreach (var tick in m_model.Events)
-                {
-                    log.WriteLine(tick);
-                }
-
-                log.Flush();
-                log.Close();
             }
         }
     }

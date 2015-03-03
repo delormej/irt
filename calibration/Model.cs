@@ -35,7 +35,7 @@ namespace IRT.Calibration
 
         public Motion Motion { get; set; }
 
-        public TickEvent[] Events { get { return m_tickEvents.ToArray(); } }
+        public List<TickEvent> Events { get { return m_tickEvents; } }
 
         public void AddSpeedEvent(TickEvent tickEvent)
         {

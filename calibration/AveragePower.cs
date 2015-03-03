@@ -36,18 +36,18 @@ namespace IRT.Calibration
             powerEvent.AccumulatedPower = accumWatts;
         }
 
-        public static double CalculateAverage(TickEvent[] events)
+        public static double CalculateAverage(List<TickEvent> events)
         {
             double watts = 0;
 
-            if (events.Length > 2)
+            if (events.Count > 2)
             {
                 // Search for a record 'n' indexes ago to average from, starting here:
-                int index = events.Length - 1;
+                int index = events.Count - 1;
                 TickEvent currentEvent = events.Last();
 
                 // Keep going backwards until we hit an instable flag ('-1') or the end.
-                while (events[index-1].PowerEventCount != -1)
+                while (index > 0 && events[index - 1].PowerEventCount != -1)
                     index--;
 
                 if (currentEvent.PowerEventCount > events[index].PowerEventCount)

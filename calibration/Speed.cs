@@ -30,12 +30,12 @@ namespace IRT.Calibration
         /// <param name="model"></param>
         public void Calculate(Model model)
         {
-            TickEvent[] events = model.Events;
+            List<TickEvent> events = model.Events;
             TickEvent tickEvent = events.Last();
 
             // Event offset skip, every 4th event.
             int SkipOffset = 4;
-            int currentIndex = events.Length;
+            int currentIndex = events.Count;
             
             ushort lastTicks = 0, lastTimestamp = 0;
 

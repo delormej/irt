@@ -66,13 +66,13 @@ namespace IRT.Calibration
                 // Alternate between the two tick counts.
                 if (i % 2 == 0)
                 {
-                    ticks[0] = new TickEvent(ticks0, time0);
+                    ticks[0] = new TickEvent(time0, ticks0);
                 }
                 else
                 {
                     // Calculate 125ms in 1/2048s later for the 2nd read.
                     ushort time1 = (ushort)(time0 + (0.125f * 2048));
-                    ticks[1] = new TickEvent(ticks1, time1);
+                    ticks[1] = new TickEvent(time1, ticks1);
                 }
                 i++;
             }
