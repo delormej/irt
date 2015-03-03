@@ -57,10 +57,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CalibrationController.cs" />
-    <Compile Include="CalibrationModel.cs" />
-    <Compile Include="CalibrationPower.cs" />
-    <Compile Include="CalibrationSpeed.cs" />
+    <Compile Include="Controller.cs" />
+    <Compile Include="Model.cs" />
+    <Compile Include="AveragePower.cs" />
+    <Compile Include="Speed.cs" />
     <Compile Include="Coastdown.cs" />
     <Compile Include="CoastdownData.cs" />
     <Compile Include="CoastdownForm.cs">
