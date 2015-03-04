@@ -44,12 +44,6 @@ namespace IRT.Calibration
             // Ensure only one thread at a time gets here.
             lock (this)
             {
-                // Add the event.
-                m_tickEvents.Add(tickEvent);
-
-                // Calculate and update state.
-                m_speed.Calculate(this);
-
                 // Only record watts if stable.
                 if (this.Motion == Globals.Motion.Stable)
                 {
@@ -66,6 +60,12 @@ namespace IRT.Calibration
                     tickEvent.PowerEventCount = -1;
                     tickEvent.AccumulatedPower = 0;
                 }
+
+                // Add the event.
+                m_tickEvents.Add(tickEvent);
+
+                // Calculate and update state.
+                m_speed.Calculate(this);
             }
         }
 
