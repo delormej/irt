@@ -50,6 +50,10 @@ namespace IRT.Calibration
                 while (index > 0 && events[index - 1].PowerEventCount != -1)
                     index--;
 
+                // now go forward until we reach the first non-zero.
+                while (index < events.Count-1 && events[index].AccumulatedPower == 0) 
+                    index++;
+
                 if (events[index].PowerEventCount > 0 && 
                     currentEvent.PowerEventCount > events[index].PowerEventCount)
                 {
