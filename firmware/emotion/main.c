@@ -567,6 +567,7 @@ static void calibration_timeout_handler(void * p_context)
 		if (tick_delta < MIN_SPEED_TICKS)
 		{
 			calibration_stop();
+			LOG("[MAIN] calibration_timeout_handler: min speed reached.\r\n");
 		}
 	}
 }
@@ -966,13 +967,13 @@ static void calibration_stop(void)
     APP_ERROR_CHECK(err_code);
 	m_crr_adjust_mode = false;
 
+	// Send a message indicating completion.
+	ant_bp_calibration_complete(true, 0);
+
 	led_set(LED_CALIBRATION_EXIT);
 
 	// Restart the normal ANT timer.
 	err_code = app_timer_start(m_ant_4hz_timer_id, ANT_4HZ_INTERVAL, NULL);
-
-	// Send a message indicating completion.
-	ant_bp_calibration_complete(true, 0);
 }
 
 /**@brief	Updates settings either temporarily or with persistence.
@@ -1522,6 +1523,8 @@ static void on_request_data(uint8_t* buffer)
 		case ANT_PAGE_GETSET_PARAMETERS:
 		case ANT_PAGE_MEASURE_OUTPUT:
 		case ANT_PAGE_BATTERY_STATUS:
+			LOG("[MAIN] Request to get battery reading\r\n");
+			battery_read_start();
 		case ANT_COMMON_PAGE_80:
 		case ANT_COMMON_PAGE_81:
 			bp_queue_data_response(request);
