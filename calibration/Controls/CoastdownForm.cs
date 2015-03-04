@@ -18,9 +18,9 @@ namespace IRT.Calibration
         private Timer m_timer;
         private int m_secondsUntilApply;
 
-        private readonly string instructions =
+        private readonly string instructions = ""; /*
             "In {0} second(s) calibration parameters will be applied.\r\n" +
-            "Close this dialog or begin another coastdown to interrupt.";
+            "Close this dialog or begin another coastdown to interrupt."; */
 
         public CoastdownForm(Coastdown coastdown)
         {
@@ -31,7 +31,7 @@ namespace IRT.Calibration
             this.lblRR.Text = coastdown.RollingResistance.ToString();
             
             DrawChart();
-            StartTimer();
+            //StartTimer();
         }
 
         private void btnApply_Click(object sender, EventArgs e)

@@ -14,6 +14,8 @@ namespace IRT.Calibration
     {
         private Speed m_speed;
         private List<TickEvent> m_tickEvents;
+        private int lastPowerEventCount;
+        private ushort lastAccumPower;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -39,24 +41,41 @@ namespace IRT.Calibration
 
         public void AddSpeedEvent(TickEvent tickEvent)
         {
-            // Add the event.
-            m_tickEvents.Add(tickEvent);
-            
-            // Calculate and update state.
-            m_speed.Calculate(this);
+            // Ensure only one thread at a time gets here.
+            lock (this)
+            {
+                // Add the event.
+                m_tickEvents.Add(tickEvent);
+
+                // Calculate and update state.
+                m_speed.Calculate(this);
+
+                // Only record watts if stable.
+                if (this.Motion == Globals.Motion.Stable)
+                {
+                    // Only if the event has not been populated already.
+                    if (tickEvent.PowerEventCount == 0 && lastPowerEventCount > 0)
+                    {
+                        tickEvent.PowerEventCount = lastPowerEventCount;
+                        tickEvent.AccumulatedPower = lastAccumPower;
+                    }
+                }
+                else
+                {
+                    // Add unstable flag.
+                    tickEvent.PowerEventCount = -1;
+                    tickEvent.AccumulatedPower = 0;
+                }
+            }
         }
 
         public void AddPowerEvent(int eventCount, ushort accumPower)
         {
-            // Only record watts if stable.
-            if (this.Motion == Globals.Motion.Stable)
+            // Keep track of last event
+            lock (this)
             {
-                AveragePower.AddEvent(eventCount, accumPower, m_tickEvents);
-            }
-            else
-            {
-                // Add unstable flag.
-                AveragePower.AddEvent(-1, 0, m_tickEvents);
+                lastPowerEventCount = eventCount;
+                lastAccumPower = accumPower;
             }
         }
     }

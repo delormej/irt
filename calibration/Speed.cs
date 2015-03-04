@@ -90,6 +90,11 @@ namespace IRT.Calibration
                         model.StableSeconds = stableSeconds;
                         model.StableSpeedMps = model.SpeedMps;
                         model.StableWatts = AveragePower.CalculateAverage(model.Events);
+
+                        System.Diagnostics.Debug.WriteLine("Stability: {0} seconds, {1} mps, {2} watts",
+                            model.StableSeconds,
+                            model.StableSpeedMps,
+                            model.StableWatts);
                     }
                 }
             }

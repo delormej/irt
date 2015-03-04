@@ -117,7 +117,7 @@ namespace IRT.Calibration
         void m_emotionPower_GeneralCalibrationResponseSuccessReceived(
             GeneralCalibrationResponseSuccessPage arg1, uint arg2)
         {
-            OnProcessing();
+            OnCoastdownComplete();
         }
 
         void m_emotionPower_CalibrationCustomParameterResponsePageReceived(
@@ -222,9 +222,9 @@ namespace IRT.Calibration
             this.Stage = Stage.Coasting;
         }
 
-        private void OnProcessing()
+        private void OnCoastdownComplete()
         {
-            this.Stage = Stage.Processing;
+            this.Stage = Stage.CoastdownComplete;
             
             // Kick off processing.
             try

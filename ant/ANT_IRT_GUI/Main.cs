@@ -181,7 +181,7 @@ namespace IRT_GUI
         {
             UpdateStatus(stage.ToString());
 
-            if (stage == IRT.Calibration.Globals.Stage.Processing)
+            if (stage == IRT.Calibration.Globals.Stage.CoastdownComplete)
             {
                 WriteCalibrationLog();
             }
