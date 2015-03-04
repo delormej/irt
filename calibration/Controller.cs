@@ -83,16 +83,13 @@ namespace IRT.Calibration
         /// <summary>
         /// Closes the main calibration form if open and displays the calibration results.
         /// </summary>
-        public void DisplayCalibrationResults()
+        public void DisplayCalibrationResults(Action<Coastdown> onApply)
         {
-            if (m_calibrationForm != null && !m_calibrationForm.IsDisposed)
-            {
-                // Close calibration form.
-                m_calibrationForm.Close();
-            }
+            CloseCalibrationForm();
 
             // Open form to show results.
             m_coastdownForm = new CoastdownForm(m_coastdown, m_model);
+            m_coastdownForm.Apply += onApply;
             m_coastdownForm.Show();
         }
 
@@ -102,13 +99,7 @@ namespace IRT.Calibration
             m_coastdown = new Coastdown();
             m_model.Stage = Stage.Ready;
 
-            if (m_calibrationForm != null && 
-                !m_calibrationForm.IsDisposed)
-            {
-                m_calibrationForm.Close();
-            }
-
-            m_calibrationForm = null;
+            CloseCalibrationForm();
         }
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
@@ -248,16 +239,8 @@ namespace IRT.Calibration
 
         private void OnFinished()
         {
+            // Set the stage to notify.
             this.Stage = Stage.Finished;
-
-            // Reset state.
-            Initialize();
-
-            if (SetCalibrationValues != null)
-            {
-                // Kick off a timer, countdown from n seconds and then invoke.
-                //SetCalibrationValues(m_coastdown);
-            }
         }
 
         private void OnFail(string message)
@@ -273,12 +256,36 @@ namespace IRT.Calibration
         /// </summary>
         public void Cancel()
         {
+            // Execute on the UI thread.
+            CloseCalibrationForm();
+        
+            // Reset state.
+            Initialize();
+        }
+
+        /// <summary>
+        /// When calibration is finished, reset state.
+        /// </summary>
+        public void Reset()
+        {
+            // Reset state.
+            Initialize();
+        }
+
+        private void CloseCalibrationForm()
+        {
             if (m_calibrationForm != null && !m_calibrationForm.IsDisposed)
             {
-                // Execute on the UI thread.
                 Action a = () =>
                 {
-                    m_calibrationForm.Close();
+                    try
+                    {
+                        m_calibrationForm.Close();
+                    }
+                    finally
+                    {
+                        m_calibrationForm = null;
+                    }
                 };
 
                 if (m_calibrationForm.InvokeRequired)

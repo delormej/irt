@@ -25,16 +25,34 @@ namespace IRT.Calibration
             m_tickEvents = new List<TickEvent>();
         }
 
-        public double StableWatts;
-
+        /// <summary>
+        /// Length of time in second that the speed was stable.
+        /// </summary>
         public double StableSeconds;
 
+        /// <summary>
+        /// Last stable value of speed recorded.
+        /// </summary>
         public double StableSpeedMps;
 
+        /// <summary>
+        /// At stable speed, these were the stable watts.
+        /// </summary>
+        public double StableWatts;
+
+        /// <summary>
+        /// Current speed in meters per second.
+        /// </summary>
         public double SpeedMps;
 
+        /// <summary>
+        /// Stage of calibration.
+        /// </summary>
         public Stage Stage;
 
+        /// <summary>
+        /// Dynamically calculated indication of accelerating/decelerating/stable for each speed tick.
+        /// </summary>
         public Motion Motion { get; set; }
 
         public List<TickEvent> Events { get { return m_tickEvents; } }
