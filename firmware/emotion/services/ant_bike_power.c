@@ -673,6 +673,8 @@ void ant_bp_page3_tx_send(
  */
 uint32_t ant_bp_calibration_complete(bool success, int16_t calibration_data)
 {
+	BP_LOG("[BP] ant_bp_calibration_complete.\r\n");
+
 	tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
 	tx_buffer[1] = 		success ? ANT_BP_CAL_SUCCESS_RESPONSE : ANT_BP_CAL_FAIL_RESPONSE;
 	tx_buffer[2] = 		0xFF;
