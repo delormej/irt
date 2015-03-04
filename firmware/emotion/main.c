@@ -1522,15 +1522,18 @@ static void on_request_data(uint8_t* buffer)
 		// Request is for get/set parameters or measurement output.
 		case ANT_PAGE_GETSET_PARAMETERS:
 		case ANT_PAGE_MEASURE_OUTPUT:
-		case ANT_PAGE_BATTERY_STATUS:
-			LOG("[MAIN] Request to get battery reading\r\n");
-			battery_read_start();
 		case ANT_COMMON_PAGE_80:
 		case ANT_COMMON_PAGE_81:
 			bp_queue_data_response(request);
 			LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
 					request.descriptor[0],
 					request.tx_response);
+			break;
+
+		case ANT_PAGE_BATTERY_STATUS:
+			LOG("[MAIN] Request to get battery reading\r\n");
+			battery_read_start();
+			bp_queue_data_response(request);
 			break;
 
 		default:
@@ -1707,9 +1710,8 @@ static void on_charge_status(irt_charger_status_t status)
  */
 static void on_battery_result(uint16_t battery_level)
 {
-	LOG("[MAIN] on_battery_result %i, ticks: %i, seconds: %i \r\n", battery_level,
-			m_battery_start_ticks,
-			ROUNDED_DIV(NRF_RTC1->COUNTER, TICK_FREQUENCY) );
+	LOG("[MAIN] on_battery_result %i, ticks: %i \r\n",
+			battery_level, m_battery_start_ticks);
 
 	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
 
