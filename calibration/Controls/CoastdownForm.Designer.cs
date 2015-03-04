@@ -51,7 +51,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(221, 9);
+            this.label2.Location = new System.Drawing.Point(273, 10);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(34, 13);
             this.label2.TabIndex = 1;
@@ -60,7 +60,7 @@
             // lblDrag
             // 
             this.lblDrag.AutoSize = true;
-            this.lblDrag.Location = new System.Drawing.Point(370, 9);
+            this.lblDrag.Location = new System.Drawing.Point(422, 10);
             this.lblDrag.Name = "lblDrag";
             this.lblDrag.Size = new System.Drawing.Size(13, 13);
             this.lblDrag.TabIndex = 2;
@@ -69,7 +69,7 @@
             // lblRR
             // 
             this.lblRR.AutoSize = true;
-            this.lblRR.Location = new System.Drawing.Point(370, 33);
+            this.lblRR.Location = new System.Drawing.Point(422, 34);
             this.lblRR.Name = "lblRR";
             this.lblRR.Size = new System.Drawing.Size(13, 13);
             this.lblRR.TabIndex = 4;
@@ -79,7 +79,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(221, 33);
+            this.label4.Location = new System.Drawing.Point(273, 34);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(113, 13);
             this.label4.TabIndex = 3;
@@ -87,7 +87,7 @@
             // 
             // btnApply
             // 
-            this.btnApply.Location = new System.Drawing.Point(224, 67);
+            this.btnApply.Location = new System.Drawing.Point(276, 68);
             this.btnApply.Name = "btnApply";
             this.btnApply.Size = new System.Drawing.Size(75, 23);
             this.btnApply.TabIndex = 5;
@@ -98,7 +98,7 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(305, 67);
+            this.btnCancel.Location = new System.Drawing.Point(357, 68);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 6;

@@ -99,8 +99,16 @@ namespace IRT.Calibration
         private void Initialize()
         {
             m_model = new Model();
-            m_model.Stage = Stage.Ready;
             m_coastdown = new Coastdown();
+            m_model.Stage = Stage.Ready;
+
+            if (m_calibrationForm != null && 
+                !m_calibrationForm.IsDisposed)
+            {
+                m_calibrationForm.Close();
+            }
+
+            m_calibrationForm = null;
         }
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
@@ -242,6 +250,9 @@ namespace IRT.Calibration
         {
             this.Stage = Stage.Finished;
 
+            // Reset state.
+            Initialize();
+
             if (SetCalibrationValues != null)
             {
                 // Kick off a timer, countdown from n seconds and then invoke.
@@ -253,7 +264,7 @@ namespace IRT.Calibration
         {
             this.Stage = Stage.Failed;
 
-            // reset
+            // Reset state.
             Initialize();
         }
 
