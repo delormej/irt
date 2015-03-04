@@ -92,7 +92,7 @@ namespace IRT.Calibration
             }
 
             // Open form to show results.
-            m_coastdownForm = new CoastdownForm(m_coastdown);
+            m_coastdownForm = new CoastdownForm(m_coastdown, m_model);
             m_coastdownForm.Show();
         }
 

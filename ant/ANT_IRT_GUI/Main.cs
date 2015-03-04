@@ -2346,8 +2346,9 @@ namespace IRT_GUI
             {
                 try
                 {
-                    Coastdown coastdown = Coastdown.FromFile(dlg.FileName);
-                    CoastdownForm form = new CoastdownForm(coastdown);
+                    Model model = null;
+                    Coastdown coastdown = Coastdown.FromFile(dlg.FileName, out model);
+                    CoastdownForm form = new CoastdownForm(coastdown, model);
                     form.Show();
                 }
                 catch (Exception ex)

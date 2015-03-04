@@ -15,6 +15,7 @@ namespace IRT.Calibration
     {
         public event Action<int> Apply;
         private Coastdown m_coastdown;
+        private Model m_model;
         private Timer m_timer;
         private int m_secondsUntilApply;
 
@@ -22,13 +23,18 @@ namespace IRT.Calibration
             "In {0} second(s) calibration parameters will be applied.\r\n" +
             "Close this dialog or begin another coastdown to interrupt."; */
 
-        public CoastdownForm(Coastdown coastdown)
+        public CoastdownForm(Coastdown coastdown, Model model)
         {
             InitializeComponent();
 
             m_coastdown = coastdown;
+            m_model = model;
+
             this.lblDrag.Text = coastdown.Drag.ToString();
             this.lblRR.Text = coastdown.RollingResistance.ToString();
+            this.lblStableSeconds.Text = m_model.StableSeconds.ToString();
+            this.lblStableSpeed.Text = String.Format("{0:0.0} mph", m_model.StableSpeedMps * 2.23694);
+            this.lblStableWatts.Text = m_model.StableWatts.ToString();
             
             DrawChart();
             //StartTimer();
@@ -68,8 +74,8 @@ namespace IRT.Calibration
         {
             if (m_secondsUntilApply > 0)
             {
-                lblInstructions.Text =
-                    string.Format(instructions, m_secondsUntilApply--);
+                /*lblInstructions.Text =
+                    string.Format(instructions, m_secondsUntilApply--);*/
             }
             else
             {

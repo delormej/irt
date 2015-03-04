@@ -104,10 +104,10 @@ namespace IRT.Calibration
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public static Coastdown FromFile(string filename)
+        public static Coastdown FromFile(string filename, out Model model)
         {
             Coastdown coastdown = new Coastdown();
-            Model model = new Model();
+            model = new Model();
 
             using (StreamReader reader = File.OpenText(filename))
             {
