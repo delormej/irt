@@ -10,14 +10,14 @@ namespace IRT.Calibration
     /// <summary>
     /// Represents the current state of acceleration.
     /// </summary>
-    public class Model : INotifyPropertyChanged
+    public class Model /* : INotifyPropertyChanged */
     {
         private Speed m_speed;
         private List<TickEvent> m_tickEvents;
         private int lastPowerEventCount;
         private ushort lastAccumPower;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        //public event PropertyChangedEventHandler PropertyChanged;
 
         public Model()
         {
