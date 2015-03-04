@@ -49,24 +49,6 @@ static float 						m_flywheel_to_wheel_revs;										// Ratio of flywheel revol
 
 static app_gpiote_user_id_t 		mp_user_id;
 
-
-/**@brief 	Returns the count of 1/2048th seconds (2048 per second) since the
- *			the counter started.
- *
- * @note	This value rolls over at 32 seconds.
- */
-static uint16_t timestamp_get()
-{
-	// Get current tick count.
-	uint32_t ticks = NRF_RTC1->COUNTER;
-
-	// Based on frequence of ticks, calculate 1/2048 seconds.
-	// freq (hz) = times per second.
-	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (TICK_FREQUENCY / 2048));
-
-	return seconds_2048;
-}
-
 /**@brief	Invoked each time there is a tick of the flywheel.  This records the last tick
  * 			time and a running count of the number of ticks.
  *

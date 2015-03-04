@@ -49,4 +49,11 @@ void peripheral_low_power_set(void);
  */
 void peripheral_aux_pwr_set(bool turn_on);
 
+/**@brief 	Returns the count of 1/2048th seconds (2048 per second) since the
+ *			the counter started.
+ *
+ * @note	This value rolls over at 32 seconds.
+ */
+uint16_t timestamp_get(void);
+
 #endif // IRT_PERIPHERAL_H__

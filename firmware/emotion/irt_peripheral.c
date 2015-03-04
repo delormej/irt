@@ -359,6 +359,23 @@ void peripheral_wakeup_set()
 	}
 }
 
+/**@brief 	Returns the count of 1/2048th seconds (2048 per second) since the
+ *			the counter started.
+ *
+ * @note	This value rolls over at 32 seconds.
+ */
+uint16_t timestamp_get()
+{
+	// Get current tick count.
+	uint32_t ticks = NRF_RTC1->COUNTER;
+
+	// Based on frequence of ticks, calculate 1/2048 seconds.
+	// freq (hz) = times per second.
+	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (TICK_FREQUENCY / 2048));
+
+	return seconds_2048;
+}
+
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 {
 	mp_on_peripheral_evt = p_on_peripheral_evt;
