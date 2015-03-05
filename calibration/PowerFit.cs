@@ -10,10 +10,9 @@ namespace IRT.Calibration
         private DecelerationFit m_decelFit;
         private double m_inertia;
 
-        public PowerFit(DecelerationFit decelFit, double stableSpeedMps, double stableWatts)
+        public PowerFit(DecelerationFit decelFit)
         {
             m_decelFit = decelFit;
-            m_inertia = MomentOfInteria(stableSpeedMps, stableWatts);
         }
 
         public double Drag { get { return m_coeff[0]; } }
@@ -44,17 +43,21 @@ namespace IRT.Calibration
             return f / a;
         }
 
-        public void Fit()
+        public void Fit(double stableSpeedMps, double stableWatts)
         {
             int info;
             double[,] speed;
             double[] watts;
 
+            m_inertia = MomentOfInteria(stableSpeedMps, stableWatts);
+
+            // Generate power : speed data.
             GeneratePowerData(out speed, out watts);
 
             alglib.lsfitstate state;
             alglib.lsfitreport report;
             alglib.lsfitcreatef(speed, watts, m_coeff, 0.0001, out state);
+            alglib.lsfitsetbc(state, new double[] { 0.0, 0.0 }, new double[] { 1.0, 50.0 });
             alglib.lsfitfit(state, fit_func, null, null);
             alglib.lsfitresults(state, out info, out m_coeff, out report);
         }
@@ -70,10 +73,20 @@ namespace IRT.Calibration
             {
                 double v = i * 0.44704;
                 double a = m_decelFit.Rate(v);
-                double f = m_inertia * a;
 
-                speed[ix, 0] = v;
-                watts[ix] = f * v;
+                if (a == 0)
+                {
+                    // If we got 0 for acceleration, 0 both out.
+                    speed[ix, 0] = 0;
+                    watts[ix] = 0;
+                }
+                else
+                {
+                    double f = m_inertia * a;
+
+                    speed[ix, 0] = v;
+                    watts[ix] = f * v;
+                }
 
                 ix++;
             }

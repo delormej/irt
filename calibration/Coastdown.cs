@@ -39,11 +39,12 @@ namespace IRT.Calibration
             m_coastdownData.Evaluate();
 
             // Calculate the deceleration.
-            m_decelFit = new DecelerationFit(m_coastdownData.SpeedMps,
-                m_coastdownData.CoastdownSeconds);
-            m_decelFit.Fit();
-            m_powerFit = new PowerFit(m_decelFit, model.StableSpeedMps, model.StableWatts);
-            m_powerFit.Fit();
+            m_decelFit = new DecelerationFit();
+            m_decelFit.Fit(m_coastdownData.SpeedMps,m_coastdownData.CoastdownSeconds);
+            
+            // Calculate the power fit.
+            m_powerFit = new PowerFit(m_decelFit);
+            m_powerFit.Fit(model.StableSpeedMps, model.StableWatts);
 
             /*
             if (Drag < 0.0)
