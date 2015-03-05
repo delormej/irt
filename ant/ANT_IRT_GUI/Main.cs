@@ -195,7 +195,8 @@ namespace IRT_GUI
                         break;
 
                     case IRT.Calibration.Globals.Stage.Finished:
-                        m_calibration.DisplayCalibrationResults();
+                        m_calibration.DisplayCalibrationResults(m_calibration_CoastdownCalibrationApply);
+                        m_calibration.Reset();
                         break;
 
                     default:
@@ -1051,7 +1052,8 @@ namespace IRT_GUI
         {
             // if we start getting a torque page, we're back out of calibration mode.
             if (m_calibration != null && 
-                m_calibration.Stage != IRT.Calibration.Globals.Stage.Finished)
+                m_calibration.Stage != IRT.Calibration.Globals.Stage.Finished &&
+                m_calibration.Stage != IRT.Calibration.Globals.Stage.Ready)
             {
                 m_calibration.Cancel();
             }
@@ -2349,6 +2351,7 @@ namespace IRT_GUI
                     Model model = null;
                     Coastdown coastdown = Coastdown.FromFile(dlg.FileName, out model);
                     CoastdownForm form = new CoastdownForm(coastdown, model);
+                    form.Apply += m_calibration_CoastdownCalibrationApply;
                     form.Show();
                 }
                 catch (Exception ex)

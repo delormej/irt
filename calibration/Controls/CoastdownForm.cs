@@ -13,7 +13,7 @@ namespace IRT.Calibration
 {
     public partial class CoastdownForm : Form
     {
-        public event Action<int> Apply;
+        public event Action<Coastdown> Apply;
         private Coastdown m_coastdown;
         private Model m_model;
         private Timer m_timer;
@@ -54,7 +54,7 @@ namespace IRT.Calibration
         {
             if (Apply != null)
             {
-                Apply(0);
+                Apply(m_coastdown);
             }
 
             this.Close();
