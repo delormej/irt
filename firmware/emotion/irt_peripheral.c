@@ -17,6 +17,7 @@
 #include "debug.h"
 #include "battery.h"
 #include "irt_led.h"
+#include "app_scheduler.h"
 
 /**@brief Debug logging for main module.
  *
@@ -33,16 +34,28 @@
 static peripheral_evt_t 				*mp_on_peripheral_evt;
 static app_gpiote_user_id_t 			mp_user_id;
 
+/**@brief	Callback used by the app scheduler to move processing of accelerometer
+ * 			events off of the interrupt handler.
+ */
+static void accelerometer_handler(void)
+{
+	mp_on_peripheral_evt->on_accelerometer_evt();
+}
+
 /**@brief Function for handling interrupt events.
  *
  * @param[in]   pin_no   The pin number of the button pressed.
  */
 static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
 {
+	uint32_t err_code;
+
 	//event_pins_low_to_high
 	if (event_pins_high_to_low & (1 << PIN_SHAKE))
 	{
-		mp_on_peripheral_evt->on_accelerometer_evt();
+        // Move processing off the interrupt handler.
+        err_code = app_sched_event_put(NULL, 0, accelerometer_handler);
+        APP_ERROR_CHECK(err_code);
 	}
 #ifdef IRT_REV_2A_H
 	else if (event_pins_low_to_high & (1 << PIN_PG_N))
