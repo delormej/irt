@@ -8,7 +8,6 @@ namespace IRT.Calibration
     {
         private double[] m_coeff = { 0.0, 0.0 };
         private DecelerationFit m_decelFit;
-        private double m_inertia;
 
         public PowerFit(DecelerationFit decelFit)
         {
@@ -30,7 +29,7 @@ namespace IRT.Calibration
         /// <param name="speed_mps"></param>
         /// <param name="watts"></param>
         /// <returns></returns>
-        private double MomentOfInteria(double speedMps, double watts)
+        public double CalculateInteria(double speedMps, double watts)
         {
             // Where P = F*v, F=ma
 
@@ -45,14 +44,18 @@ namespace IRT.Calibration
 
         public void Fit(double stableSpeedMps, double stableWatts)
         {
+            double intertia = CalculateInteria(stableSpeedMps, stableWatts);
+            Fit(intertia);
+        }
+
+        public void Fit(double inertia)
+        {
             int info;
             double[,] speed;
             double[] watts;
 
-            m_inertia = MomentOfInteria(stableSpeedMps, stableWatts);
-
             // Generate power : speed data.
-            GeneratePowerData(out speed, out watts);
+            GeneratePowerData(inertia, out speed, out watts);
 
             alglib.lsfitstate state;
             alglib.lsfitreport report;
@@ -62,7 +65,7 @@ namespace IRT.Calibration
             alglib.lsfitresults(state, out info, out m_coeff, out report);
         }
 
-        private void GeneratePowerData(out double[,] speed, out double[] watts)
+        private void GeneratePowerData(double intertia, out double[,] speed, out double[] watts)
         {
             speed = new double[30, 1];
             watts = new double[30];
@@ -82,7 +85,7 @@ namespace IRT.Calibration
                 }
                 else
                 {
-                    double f = m_inertia * a;
+                    double f = intertia * a;
 
                     speed[ix, 0] = v;
                     watts[ix] = f * v;
