@@ -663,6 +663,16 @@ namespace IRT_GUI
             
             UpdateMovingAverage();
             UpdateWatchClock();
+
+            // Enable calibration start button when over 5 mph.
+            if (m_dataPoint.SpeedEMotionMph > 5.0)
+            {
+                btnStartCalibration.Enabled = true;
+            }
+            else
+            {
+                btnStartCalibration.Enabled = false;
+            }
         }
 
         private int m_watchClockms = 0;
@@ -1063,12 +1073,12 @@ namespace IRT_GUI
             {
                 // Convert to mph from km/h.
                 double mph = m_eMotion.AverageSpeedWheelTorque * 0.621371;
-                m_dataPoint.SpeedEMotion = (float)mph;
+                m_dataPoint.SpeedEMotionMph = (float)mph;
                 UpdateText(lblEmrMph, mph.ToString("00.0"));
             }
             else
             {
-                m_dataPoint.SpeedEMotion = 0;
+                m_dataPoint.SpeedEMotionMph = 0;
                 UpdateText(lblEmrMph, "00.0");
             }
 

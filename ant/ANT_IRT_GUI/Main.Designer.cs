@@ -1293,6 +1293,7 @@
             // 
             // btnStartCalibration
             // 
+            this.btnStartCalibration.Enabled = false;
             this.btnStartCalibration.Location = new System.Drawing.Point(24, 157);
             this.btnStartCalibration.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnStartCalibration.Name = "btnStartCalibration";

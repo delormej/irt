@@ -14,7 +14,7 @@ namespace IRT_GUI.IrtMessages
 
         public DateTime Timestamp;
         public float SpeedReference;
-        public float SpeedEMotion;
+        public float SpeedEMotionMph;
         public float SpeedMPSEMotion;
         public short PowerReference;
         public short PowerEMotion;
