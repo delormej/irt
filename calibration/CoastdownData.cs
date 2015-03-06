@@ -9,24 +9,9 @@ namespace IRT.Calibration
     /// </summary>
     public class CoastdownData
     {
-        private int[] m_timestamp, m_flywheel;
-
-        public CoastdownData(int[] timestamp_2048, int[] flywheel_ticks)
+        public CoastdownData()
         {
-            m_timestamp = timestamp_2048;
-            m_flywheel = flywheel_ticks;
-        }
 
-        public CoastdownData(TickEvent[] tickEvents)
-        {
-            m_timestamp = new int[tickEvents.Length];
-            m_flywheel = new int[tickEvents.Length];
-
-            for (int i = 0; i < tickEvents.Length; i++)
-            {
-                m_timestamp[i] = tickEvents[i].Timestamp;
-                m_flywheel[i] = tickEvents[i].Ticks;
-            }
         }
 
         public double[] SpeedMps;
@@ -36,11 +21,23 @@ namespace IRT.Calibration
         /// Filters and processes raw coastdown records into only the records that
         /// represent the deceleration phase.
         /// </summary>
-        public void Evaluate()
+        public void Evaluate(TickEvent[] tickEvents)
         {
-            int records = m_timestamp.Length / 4;
+            int[] timestamp, flywheel;
 
-            if (m_timestamp.Length % 4 != 0)
+            // Create timestamp / flywheel records from tickEvents.
+            timestamp = new int[tickEvents.Length];
+            flywheel = new int[tickEvents.Length];
+
+            for (int i = 0; i < tickEvents.Length; i++)
+            {
+                timestamp[i] = tickEvents[i].Timestamp;
+                flywheel[i] = tickEvents[i].Ticks;
+            }
+            
+            int records = timestamp.Length / 4;
+
+            if (timestamp.Length % 4 != 0)
             {
                 // If there was a remainder, add 1.
                 records += 1;
@@ -51,23 +48,23 @@ namespace IRT.Calibration
 
             int ix = 0;
 
-            for (int idx = 0; idx < m_flywheel.Length; idx++)
+            for (int idx = 0; idx < flywheel.Length; idx++)
             {
-                int val = m_flywheel[idx];
+                int val = flywheel[idx];
                 int dt, ds;
 
                 // Evaluate every 4th record AND the last record.
-                if (idx > 0 && idx % 4 == 0 || idx == m_flywheel.Length - 1)
+                if (idx > 0 && idx % 4 == 0 || idx == flywheel.Length - 1)
                 {
-                    if (val < m_flywheel[idx - 4])
-                        dt = val + (m_flywheel[idx - 4] ^ 0xFFFF);
+                    if (val < flywheel[idx - 4])
+                        dt = val + (flywheel[idx - 4] ^ 0xFFFF);
                     else
-                        dt = val - m_flywheel[idx - 4];
+                        dt = val - flywheel[idx - 4];
 
-                    if (m_timestamp[idx] < m_timestamp[idx - 4])
-                        ds = m_timestamp[idx] + (m_timestamp[idx - 4] ^ 0xFFFF);
+                    if (timestamp[idx] < timestamp[idx - 4])
+                        ds = timestamp[idx] + (timestamp[idx - 4] ^ 0xFFFF);
                     else
-                        ds = m_timestamp[idx] - m_timestamp[idx - 4];
+                        ds = timestamp[idx] - timestamp[idx - 4];
 
                     if (ix > 0)
                         seconds[ix] = (ds / 2048.0) + seconds[ix - 1];
