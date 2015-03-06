@@ -57,7 +57,7 @@ namespace IRT.Calibration
             alglib.lsfitstate state;
             alglib.lsfitreport report;
             alglib.lsfitcreatef(speed, watts, m_coeff, 0.0001, out state);
-            alglib.lsfitsetbc(state, new double[] { 0.0, 0.0 }, new double[] { 1.0, 50.0 });
+            alglib.lsfitsetbc(state, new double[] { 0.0, 0.0 }, new double[] { 5.0, 50.0 });
             alglib.lsfitfit(state, fit_func, null, null);
             alglib.lsfitresults(state, out info, out m_coeff, out report);
         }
