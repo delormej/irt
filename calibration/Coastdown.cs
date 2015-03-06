@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.IO;
-
 
 namespace IRT.Calibration
 {
@@ -98,36 +96,6 @@ namespace IRT.Calibration
         public double Watts(double speedMps)
         {
             return m_powerFit.Watts(speedMps);
-        }
-
-        /// <summary>
-        /// Creates an instance of the class by parsing a coastdown file.
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public static Coastdown FromFile(string filename, out Model model)
-        {
-            Coastdown coastdown = new Coastdown();
-            model = new Model();
-
-            using (StreamReader reader = File.OpenText(filename))
-            {
-                // Advance through header.
-                reader.ReadLine();
-
-                while (!reader.EndOfStream)
-                {
-                    TickEvent tickEvent;
-                    TickEvent.ParseLine(reader.ReadLine(), out tickEvent);
-
-                    model.AddSpeedEvent(tickEvent);
-                    model.AddPowerEvent(tickEvent.PowerEventCount, tickEvent.AccumulatedPower);
-                }
-            }
-
-            coastdown.Calculate(model);
-
-            return coastdown;
         }
     }
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using AntPlus.Profiles.BikePower;
-using System.IO;
 using IRT.Calibration.Globals;
 
 namespace IRT.Calibration

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using IRT.Calibration.Globals;
+using System.IO;
 
 namespace IRT.Calibration
 {
@@ -95,6 +96,33 @@ namespace IRT.Calibration
                 lastPowerEventCount = eventCount;
                 lastAccumPower = accumPower;
             }
+        }
+
+        /// <summary>
+        /// Creates an instance of the class by parsing a coastdown file.
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static Model FromFile(string filename)
+        {
+            Model model = new Model();
+
+            using (StreamReader reader = File.OpenText(filename))
+            {
+                // Advance through header.
+                reader.ReadLine();
+
+                while (!reader.EndOfStream)
+                {
+                    TickEvent tickEvent;
+                    TickEvent.ParseLine(reader.ReadLine(), out tickEvent);
+
+                    model.AddSpeedEvent(tickEvent);
+                    model.AddPowerEvent(tickEvent.PowerEventCount, tickEvent.AccumulatedPower);
+                }
+            }
+
+            return model;
         }
     }
 }

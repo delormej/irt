@@ -2358,8 +2358,10 @@ namespace IRT_GUI
             {
                 try
                 {
-                    Model model = null;
-                    Coastdown coastdown = Coastdown.FromFile(dlg.FileName, out model);
+                    Model model = Model.FromFile(dlg.FileName);
+                    Coastdown coastdown = new Coastdown();
+                    coastdown.Calculate(model);
+
                     CoastdownForm form = new CoastdownForm(coastdown, model);
                     form.Apply += m_calibration_CoastdownCalibrationApply;
                     form.Show();
