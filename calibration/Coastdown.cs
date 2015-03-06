@@ -21,7 +21,8 @@ namespace IRT.Calibration
         }
 
         /// <summary>
-        /// Raw coastdown data point.
+        /// Raw coastdown data points, filtered for just the deceleration phase
+        /// from max to min speed.
         /// </summary>
         public CoastdownData Data { get { return m_coastdownData; } }
 
