@@ -63,7 +63,7 @@ def main(file_name):
 	ax1.plot(minutes, ma_speed)
 
 	ax2.plot(minutes, servo_pos, color='r')
-	ax2.set_ylim(800, 1500)
+	ax2.set_ylim(800, 1700)
 
 	ax3.plot(minutes, power_watts, 'r')
 	#labels.append(r'y = %s' % ('Actual'))
