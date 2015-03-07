@@ -6,13 +6,17 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using IRT.Calibration.Globals;
 
-namespace IRT_GUI
+namespace IRT.Calibration
 {
     public partial class CalibrationForm : Form
     {
-        public CalibrationForm()
+        private Model m_model;
+
+        public CalibrationForm(Model model)
         {
+            model = m_model;
             InitializeComponent();
         }
 
@@ -45,6 +49,28 @@ namespace IRT_GUI
             {
                 a.Invoke();
             }
+        }
+
+        /// <summary>
+        /// Initiate step 2 which is to speed up.
+        /// </summary>
+        public void Step2()
+        {
+            lblStep1.ForeColor = SystemColors.InactiveCaption;
+            lblStep3.ForeColor = SystemColors.InactiveCaption;
+
+            lblStep2.ForeColor = SystemColors.ControlText;
+        }
+
+        /// <summary>
+        /// Initiate step 3 which is to coast down.
+        /// </summary>
+        public void Step3()
+        {
+            lblStep1.ForeColor = SystemColors.InactiveCaption;
+            lblStep2.ForeColor = SystemColors.InactiveCaption;
+
+            lblStep3.ForeColor = SystemColors.ControlText;
         }
 
         private void btnExit_Click(object sender, EventArgs e)

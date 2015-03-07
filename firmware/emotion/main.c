@@ -567,6 +567,7 @@ static void calibration_timeout_handler(void * p_context)
 		if (tick_delta < MIN_SPEED_TICKS)
 		{
 			calibration_stop();
+			LOG("[MAIN] calibration_timeout_handler: min speed reached.\r\n");
 		}
 	}
 }
@@ -965,6 +966,9 @@ static void calibration_stop(void)
 	err_code = app_timer_stop(m_ca_timer_id);
     APP_ERROR_CHECK(err_code);
 	m_crr_adjust_mode = false;
+
+	// Send a message indicating completion.
+	ant_bp_calibration_complete(true, 0);
 
 	led_set(LED_CALIBRATION_EXIT);
 
@@ -1518,13 +1522,18 @@ static void on_request_data(uint8_t* buffer)
 		// Request is for get/set parameters or measurement output.
 		case ANT_PAGE_GETSET_PARAMETERS:
 		case ANT_PAGE_MEASURE_OUTPUT:
-		case ANT_PAGE_BATTERY_STATUS:
 		case ANT_COMMON_PAGE_80:
 		case ANT_COMMON_PAGE_81:
 			bp_queue_data_response(request);
 			LOG("[MAIN] Request to get data page (subpage): %#x, type:%i\r\n",
 					request.descriptor[0],
 					request.tx_response);
+			break;
+
+		case ANT_PAGE_BATTERY_STATUS:
+			LOG("[MAIN] Request to get battery reading\r\n");
+			battery_read_start();
+			bp_queue_data_response(request);
 			break;
 
 		default:
@@ -1701,9 +1710,8 @@ static void on_charge_status(irt_charger_status_t status)
  */
 static void on_battery_result(uint16_t battery_level)
 {
-	LOG("[MAIN] on_battery_result %i, ticks: %i, seconds: %i \r\n", battery_level,
-			m_battery_start_ticks,
-			ROUNDED_DIV(NRF_RTC1->COUNTER, TICK_FREQUENCY) );
+	LOG("[MAIN] on_battery_result %i, ticks: %i \r\n",
+			battery_level, m_battery_start_ticks);
 
 	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
 
@@ -1753,6 +1761,14 @@ static void on_battery_result(uint16_t battery_level)
 				break;
 		}
 	}
+}
+
+/**@brief	When the display requests calibration to begin.
+ *
+ */
+static void on_request_calibration()
+{
+	calibration_start();
 }
 
 /**@brief	Configures chip power options.
@@ -1937,7 +1953,8 @@ int main(void)
 		on_enable_dfu_mode,
 		on_request_data,
 		on_set_parameter,
-		on_set_servo_positions
+		on_set_servo_positions,
+		on_request_calibration
 	};
 
 	// Initialize and enable the softdevice.

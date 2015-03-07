@@ -22,8 +22,11 @@
 #define ANT_PAGE_BATTERY_STATUS			0x52
 
 #define ANT_BP_CAL_PARAM_RESPONSE		0xBB
+#define ANT_BP_CAL_SUCCESS_RESPONSE		0xAC
+#define ANT_BP_CAL_FAIL_RESPONSE		0xAF
 
-
+#include <stdbool.h>
+#include <stdint.h>
 #include "ble_ant.h"
 #include "ant_stack_handler_types.h"
 
@@ -70,5 +73,10 @@ uint32_t ant_bp_battery_tx_send(irt_battery_status_t status);
  *
  */
 uint32_t ant_bp_calibration_speed_tx_send(uint16_t time_2048, uint16_t* flywheel_ticks);
+
+/**@brief	Sends a message indicating calibration is complete.
+ *
+ */
+uint32_t ant_bp_calibration_complete(bool success, int16_t calibration_data);
 
 #endif	// ANT_BIKE_POWER_H__

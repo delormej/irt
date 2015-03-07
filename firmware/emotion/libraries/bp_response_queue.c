@@ -48,11 +48,11 @@ void bp_queue_resistance_ack(uint8_t op_code, uint16_t value)
  */
 void bp_queue_data_response(ant_request_data_page_t request)
 {
-	// Increment the counter, resets at 3 back to 0.
-	m_queue_idx = (m_queue_idx+1 & 3u);
+	// Limit index to the size of the queue (0,1,2,3) allowing the queue to overflow.
+	m_request_data_pending[m_queue_idx & (ANT_RESPONSE_LIMIT-1u)] = request;
 
-	// index of 0 means no data, hold up to 3 values (1,2,3, offset index -1 into the array).
-	m_request_data_pending[m_queue_idx-1] = request;
+	// Advance the queue.
+	m_queue_idx++;
 }
 
 /**@brief	Last in, first out queue.  Returns false if nothing to dequeue.
@@ -71,7 +71,7 @@ bool bp_dequeue_ant_response(ant_request_data_page_t* p_request)
 	}
 	else
 	{
-		ix = m_queue_idx-1;
+		ix = (m_queue_idx -1) % (ANT_RESPONSE_LIMIT-1u);
 
 		// byte 1 of the buffer contains the flag for either acknowledged (0x80) or a value
 		// indicating how many times to send the message.

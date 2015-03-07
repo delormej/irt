@@ -4,12 +4,14 @@ using AntPlus.Profiles.BikePower;
 using AntPlus.Profiles.Common;
 using AntPlus.Profiles.Components;
 using AntPlus.Types;
+using IRT.Calibration;
 using IRT_GUI.IrtMessages;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -61,7 +63,7 @@ namespace IRT_GUI
         private Timer m_reportTimer;
         private List<IReporter> m_reporters;
         private DataPoint m_dataPoint;
-        private Calibration m_calibration;
+        private Controller m_calibration;
 
         // Used for calculating moving average.
         private int m_movingAvgPosition = 0;
@@ -166,7 +168,41 @@ namespace IRT_GUI
 
             // Configure and start listening on ANT+.
             StartANT();
+
+            // Create calibration object, which will listen for calibration events 
+            // and react accordingly.
+            m_calibration = new Controller(m_eMotion, m_refPower);
+            m_calibration.StageChanged += m_calibration_StageChanged;
+            
             StartReporting();
+        }
+
+        void m_calibration_StageChanged(IRT.Calibration.Globals.Stage stage)
+        {
+            UpdateStatus(stage.ToString());
+
+            if (stage == IRT.Calibration.Globals.Stage.CoastdownComplete)
+            {
+                WriteCalibrationLog();
+            }
+
+            ExecuteOnUI(() =>
+            {
+                switch (stage)
+                {
+                    case IRT.Calibration.Globals.Stage.Started:
+                        m_calibration.DisplayCalibrationProgress();
+                        break;
+
+                    case IRT.Calibration.Globals.Stage.Finished:
+                        m_calibration.DisplayCalibrationResults(m_calibration_CoastdownCalibrationApply);
+                        m_calibration.Reset();
+                        break;
+
+                    default:
+                        break;
+                }
+            });
         }
 
         void frmIrtGui_FormClosed(object sender, FormClosedEventArgs e)
@@ -204,8 +240,6 @@ namespace IRT_GUI
             items.Add("BattOpTime", lblEmrBattTime);
             items.Add("ServoOffset", txtServoOffset);
             items.Add("Features", lblFeatures);
-            items.Add("CrrSlope", txtSlope);
-            items.Add("CrrOffset", txtOffset);
             items.Add("Weight", txtTotalWeight);
             items.Add("WheelSize", txtWheelSizeMm);
             items.Add("RefPwrManuf", lblRefPwrManuf);
@@ -427,8 +461,6 @@ namespace IRT_GUI
                         intercept = 0;
 
                     UpdateStatus("Received CRR parameter.");
-                    UpdateText(txtSlope, slope);
-                    UpdateText(txtOffset, intercept);
                     
                     break;
 
@@ -564,7 +596,7 @@ namespace IRT_GUI
                 m_eMotion.ManufacturerSpecificPageReceived += m_eMotion_ManufacturerSpecificPageReceived;
                 m_eMotion.GetSetParametersPageReceived += m_eMotion_GetSetParametersPageReceived;
                 m_eMotion.TemperatureSubPageReceived += m_eMotion_TemperatureSubPageReceived;
-                m_eMotion.CalibrationCustomParameterResponsePageReceived += m_eMotion_CalibrationCustomParameterResponsePageReceived;
+                m_eMotion.MeasurementOutputPageReceived += m_eMotion_MeasurementOutputPageReceived;
 
                 m_eMotion.StandardWheelTorquePageReceived += m_eMotion_StandardWheelTorquePageReceived;
                 m_eMotion.StandardPowerOnlyPageReceived += m_eMotion_StandardPowerOnlyPageReceived;
@@ -600,27 +632,14 @@ namespace IRT_GUI
             }
         }
 
-        void m_eMotion_CalibrationCustomParameterResponsePageReceived(CustomCalibrationParameterResponsePage arg1, uint arg2)
+        void m_eMotion_MeasurementOutputPageReceived(MeasurementOutputPage arg1, uint arg2)
         {
-            if (m_calibration == null)
+            if (arg1.DataType == BikePower.MeasurementDataType.Temperature)
             {
-                if (m_firmwareRev != null && m_firmwareRev.Build > 11)
-                {
-                    m_calibration = new Calibration12();
-                }
-                else
-                {
-                    m_calibration = new Calibration();
-                }
+                double temp = arg1.MeasurementValue / 1024.0;
 
-                ExecuteOnUI(() =>
-                {
-                    m_calibration.ShowCalibration(m_refPower);
-                });
+                UpdateStatus(string.Format("Recieved temperature: {0}", temp));
             }
-
-            byte[] buffer = arg1.CalibrationDataArray.ToArray();
-            m_calibration.LogCalibration(buffer);
         }
 
         private void StartReporting()
@@ -792,9 +811,6 @@ namespace IRT_GUI
                     // Simulate pressing both of these buttons.
                     btnServoOffset_Click(this, null);
 
-                    // Wait 1/2 second before pushing the next one.
-                    System.Threading.Thread.Sleep(500);
-                    btnCalibrationSet_Click(this, null);
                     // Wait 1/2 second before pushing the next one.
                     System.Threading.Thread.Sleep(500);
 
@@ -1035,10 +1051,11 @@ namespace IRT_GUI
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {
             // if we start getting a torque page, we're back out of calibration mode.
-            if (m_calibration != null)
+            if (m_calibration != null && 
+                m_calibration.Stage != IRT.Calibration.Globals.Stage.Finished &&
+                m_calibration.Stage != IRT.Calibration.Globals.Stage.Ready)
             {
-                m_calibration.ExitCalibration();
-                m_calibration = null;
+                m_calibration.Cancel();
             }
 
             if (lastTorqueEventCount != arg1.WheelTorqueEventCount && 
@@ -1599,8 +1616,6 @@ namespace IRT_GUI
 
             UpdateText(txtWheelSizeMm, "");
             UpdateText(txtTotalWeight, "");
-            UpdateText(txtSlope, "");
-            UpdateText(txtOffset, "");
             UpdateText(txtServoOffset, 0);
 
         }
@@ -1666,6 +1681,11 @@ namespace IRT_GUI
             {
                 message.RequestedPage = (byte)subPage;
             }
+            else if(subPage == SubPages.Temp)
+            {
+                message.RequestedPage = (byte)SubPages.MeasurementOuput;
+                
+            }
             else
             {
                 message.RequestedPage = (byte)GetSetMessage.Page;
@@ -1722,36 +1742,6 @@ namespace IRT_GUI
                 txtLog.AppendText(text + '\n');
                 lblStatus.Text = text;
             });
-        }
-
-        private void btnCalibrationGet_Click(object sender, EventArgs e)
-        {
-            RequestDeviceParameter(SubPages.Crr);
-        }
-
-        private void btnCalibrationSet_Click(object sender, EventArgs e)
-        {
-            // Bounds check.
-            ushort slope = 0, offset = 0;
-
-            ushort.TryParse(txtSlope.Text, out slope);
-            ushort.TryParse(txtOffset.Text, out offset);
-
-            if (slope == 0 || offset == 0)
-            {
-                UpdateStatus("ERROR: Slope/offset must be > 0.");
-                return;
-            }
-
-            UInt32 value = (UInt32)(slope | (offset << 16));
-            if (SetParameter((byte)SubPages.Crr, value))
-            {
-                UpdateStatus("Updated slope/offset.");
-            }
-            else
-            {
-                UpdateStatus("Failed to update slope/offset.");
-            }
         }
 
         private void chkLstSettings_ItemCheck(object sender, ItemCheckEventArgs e)
@@ -2329,5 +2319,82 @@ namespace IRT_GUI
             RequestDeviceParameter(SubPages.Drag);
             RequestDeviceParameter(SubPages.RR);
         }
+
+        private void btnStartCalibration_Click(object sender, EventArgs e)
+        {
+            RequestCalibrationMessage message = new RequestCalibrationMessage();
+
+            UpdateStatus("Requesting calibration.");
+            bool result = RetryCommand(ANT_RETRY_REQUESTS, ANT_RETRY_DELAY, () =>
+            { return m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT); });
+
+            if (!result)
+            {
+                UpdateStatus(String.Format("Unable to request calibraiton, return result: {0}.", result));
+            }
+        }
+
+        private void btnLoadCalibration_Click(object sender, EventArgs e)
+        {
+           
+            OpenFileDialog dlg = new OpenFileDialog();
+            //dlg.InitialDirectory = m_lastPath;
+            dlg.Filter = "Ride Logs (*.csv)|*.csv|All files (*.*)|*.*";
+            dlg.FilterIndex = 1;
+            dlg.RestoreDirectory = false;
+            dlg.CheckFileExists = true;
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    Model model = null;
+                    Coastdown coastdown = Coastdown.FromFile(dlg.FileName, out model);
+                    CoastdownForm form = new CoastdownForm(coastdown, model);
+                    form.Apply += m_calibration_CoastdownCalibrationApply;
+                    form.Show();
+                }
+                catch (Exception ex)
+                {
+                    UpdateStatus("Error attempting to parse calibration file.\r\n" + 
+                        ex.Message);
+                }
+            }
+        }
+
+        void m_calibration_CoastdownCalibrationApply(IRT.Calibration.Coastdown coastdown)
+        {
+            ExecuteOnUI(() =>
+            {
+                this.txtDrag.Text = coastdown.Drag.ToString();
+                this.txtRR.Text = coastdown.RollingResistance.ToString();
+
+                this.btnCalibration2Set_Click(this, null);
+            });
+        }
+
+        private void WriteCalibrationLog()
+        {
+            StreamWriter log;
+
+            // open up a stream to start logging
+            string filename = string.Format("calib_{0}_{1:yyyyMMdd-HHmmss-F}.csv",
+                System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3),
+                DateTime.Now);
+
+            using (log = new StreamWriter(filename))
+            {
+                log.WriteLine("timestamp_ms, count, ticks, watts, pwr_events, accum_pwr");
+
+                foreach (var tick in m_calibration.Model.Events)
+                {
+                    log.WriteLine(tick);
+                }
+
+                log.Flush();
+                log.Close();
+            }
+        }
+       
     }
 }

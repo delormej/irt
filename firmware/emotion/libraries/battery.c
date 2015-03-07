@@ -15,6 +15,7 @@
 #include "softdevice_handler.h"
 #include "app_util.h"
 #include "nrf_delay.h"
+#include "app_scheduler.h"
 #include "debug.h"
 
 #define ADC_REF_VOLTAGE_IN_MILLIVOLTS        1200                           /**< Reference voltage (in milli volts) used by ADC while doing conversion. */
@@ -49,6 +50,27 @@ static on_battery_result_t m_on_battery_result;		// Callback to invoke after rea
 static uint8_t m_pin_battery_read;					// Separate pin used for enabling voltage read on Analog Input 2.
 static uint8_t m_pin_charge_stop;					// Pin used to tell the charger to stop.
 
+/**@brief	Callback used by the app scheduler to move processing of ADC results off
+ * 			the interrupt handler.
+ */
+static void battery_result_handler(void *p_event_data, uint16_t event_size)
+{
+	uint16_t batt_lvl_in_milli_volts;
+	uint32_t adc_result;
+
+	adc_result = *((uint32_t*)p_event_data);
+
+    batt_lvl_in_milli_volts = ADC_RESULT_IN_MILLI_VOLTS(adc_result);
+    //percentage_batt_lvl     = battery_level_in_percent(batt_lvl_in_milli_volts);
+
+    BY_LOG("[BY] Battery result: ADC %i, %imV \r\n", adc_result, batt_lvl_in_milli_volts);
+
+	if (m_on_battery_result != NULL)
+	{
+		m_on_battery_result(batt_lvl_in_milli_volts);
+	}
+}
+
 /**@brief Function for handling the ADC interrupt.
  * @details  This function will fetch the conversion result from the ADC, convert the value into
  *           percentage and send it to peer.
@@ -57,9 +79,8 @@ void ADC_IRQHandler(void)
 {
     if (NRF_ADC->EVENTS_END != 0)
     {
-        uint32_t	adc_result;
-        uint16_t    batt_lvl_in_milli_volts;
-        //uint8_t     percentage_batt_lvl;
+    	uint32_t 	err_code;
+    	uint32_t	adc_result;
 
         NRF_ADC->EVENTS_END     = 0;
         adc_result              = NRF_ADC->RESULT;
@@ -72,15 +93,9 @@ void ADC_IRQHandler(void)
         nrf_gpio_pin_clear(m_pin_battery_read);
 #endif // USE_BATTERY_READ_PIN
 
-        batt_lvl_in_milli_volts = ADC_RESULT_IN_MILLI_VOLTS(adc_result);
-        //percentage_batt_lvl     = battery_level_in_percent(batt_lvl_in_milli_volts);
-
-        BY_LOG("[BY] Battery result: ADC %i, %imV \r\n", adc_result, batt_lvl_in_milli_volts);
-
-		if (m_on_battery_result != NULL)
-		{
-			m_on_battery_result(batt_lvl_in_milli_volts);
-		}
+        // Move processing off the interrupt handler.
+        err_code = app_sched_event_put(&adc_result, sizeof(uint32_t), battery_result_handler);
+        APP_ERROR_CHECK(err_code);
     }
 }
 

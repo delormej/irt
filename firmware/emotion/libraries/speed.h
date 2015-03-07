@@ -25,9 +25,6 @@
 #ifndef __REVOLUTIONS_H__
 #define __REVOLUTIONS_H__
 
-#define REVS_TIMER 					NRF_TIMER1
-#define REVS_CHANNEL_TASK_TOGGLE	2
-
 #include <stdbool.h>
 #include <stdint.h>
 #include "nrf.h"
@@ -52,20 +49,14 @@ void speed_wheel_size_set(uint16_t wheel_size_mm);
  */
 uint32_t speed_calc(irt_power_meas_t * current, irt_power_meas_t * last);
 
-/**@brief 	Returns the accumulated count of flywheel revolutions since the
- *					counter started.
+/**@brief 	Returns the accumulated count of flywheel ticks (2x revolutions).
  *
  */
-inline uint16_t flywheel_ticks_get()
-{
-	REVS_TIMER->TASKS_CAPTURE[0] = 1;
-	return REVS_TIMER->CC[0];
-}
+uint16_t flywheel_ticks_get();
 
-#ifdef SIM_SPEED
-// Declaration of
-// # of ticks to simulate in debug mode.
-extern uint8_t  speed_debug_ticks;
-#endif
+/**@brief 	Returns the last tick event time in 1/2048's of a second.
+ *
+ */
+uint16_t seconds_2048_get(void);
 
 #endif
