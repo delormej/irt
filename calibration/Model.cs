@@ -42,6 +42,11 @@ namespace IRT.Calibration
         public double StableWatts;
 
         /// <summary>
+        /// Holds a calculated value for moment of intertia or "m" in F=ma.
+        /// </summary>
+        public double Inertia;
+
+        /// <summary>
         /// Current speed in meters per second.
         /// </summary>
         public double SpeedMps;

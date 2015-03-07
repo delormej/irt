@@ -9,13 +9,14 @@ namespace IRT.Calibration
     /// </summary>
     public class CoastdownData
     {
+        private List<double> m_speedMps, m_coastdownSeconds;
+
         public CoastdownData()
-        {
+        {}
 
-        }
+        public double[] SpeedMps { get {  return m_speedMps.ToArray(); } }
 
-        public double[] SpeedMps;
-        public double[] CoastdownSeconds;
+        public double[] CoastdownSeconds { get { return m_coastdownSeconds.ToArray();  } }
 
         /// <summary>
         /// Filters and processes raw coastdown records into only the records that
@@ -79,18 +80,23 @@ namespace IRT.Calibration
                 }
             }      
 
-            int max = FindDecelerationIndex(speed);
-            int min = FindMinSpeedIndex(speed);
-            int len = min - max;
+            int maxSpeedIdx = FindDecelerationIndex(speed);
+            int minSpeedIdx = FindMinSpeedIndex(speed);
+            //int len = minSpeedIdx - maxSpeedIdx;
 
-            SpeedMps = new double[len];
-            CoastdownSeconds = new double[len];
-            Array.Copy(speed, max, SpeedMps, 0, len);
-
-            // Invert the timestamp seconds to record seconds to min speed.
-            for (int i = 0; i < len; i++)
+            // Copy to the array.
+            if (m_speedMps == null)
             {
-                CoastdownSeconds[i] = seconds[len - 1] - seconds[i];
+                m_speedMps = new List<double>();
+                m_coastdownSeconds = new List<double>();
+            }
+
+            //Array.Copy(speed, maxSpeedIdx, SpeedMps, 0, len);
+            for (int j = maxSpeedIdx; j <= minSpeedIdx; j++)
+            {
+                m_speedMps.Add(speed[j]);
+                // Invert the timestamp seconds to record seconds to min speed.
+                m_coastdownSeconds.Add(seconds[minSpeedIdx] - seconds[j]);
             }
         }
 
@@ -120,7 +126,7 @@ namespace IRT.Calibration
             // Get the first occurrence of 1 tick delta.
             // Array.IndexOf<double>(speeds, 1.0);
 
-            return speeds.Length;
+            return speeds.Length-1;
         }
     }
 }

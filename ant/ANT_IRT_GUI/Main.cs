@@ -2353,14 +2353,37 @@ namespace IRT_GUI
             dlg.FilterIndex = 1;
             dlg.RestoreDirectory = false;
             dlg.CheckFileExists = true;
+            dlg.Multiselect = true;
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    Model model = Model.FromFile(dlg.FileName);
+                    Model model;
                     Coastdown coastdown = new Coastdown();
-                    coastdown.Calculate(model);
+
+                    if (dlg.FileNames.Length > 1)
+                    {
+                        List<Model> models = new List<Model>();
+
+                        foreach (string file in dlg.FileNames)
+                        {
+                            models.Add(Model.FromFile(file));
+                        }
+
+                        // Calculate based on multiple files.
+                        model = coastdown.Calculate(models.ToArray());
+                        
+                        // For display purposes, use the lsat stable speed and watts.
+                        model.StableSeconds = models.Last().StableSeconds;
+                        model.StableSpeedMps = models.Last().StableSpeedMps;
+                        model.StableWatts = models.Last().StableWatts;
+                    }
+                    else
+                    {
+                        model = Model.FromFile(dlg.FileName);
+                        coastdown.Calculate(model);
+                    }
 
                     CoastdownForm form = new CoastdownForm(coastdown, model);
                     form.Apply += m_calibration_CoastdownCalibrationApply;

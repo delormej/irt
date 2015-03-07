@@ -27,6 +27,35 @@ namespace IRT.Calibration
         public CoastdownData Data { get { return m_coastdownData; } }
 
         /// <summary>
+        /// Calculates based on multiple runs of coastdown.
+        /// </summary>
+        /// <param name="models"></param>
+        public Model Calculate(Model[] models)
+        {
+            m_coastdownData = new CoastdownData();
+
+            foreach (Model m in models)
+            {
+                // Aggregate all valid coast down data points.
+                m_coastdownData.Evaluate(m.Events.ToArray());
+                Fit(m);
+            }
+
+            Model aggregateModel = new Model();
+            
+            // Calculate average inertia for new model.
+            aggregateModel.Inertia = models.Average(m => m.Inertia);
+
+            //aggregateModel.StableSpeedMps = models.Average(m => m.StableSpeedMps);
+            //aggregateModel.StableWatts = models.Average(m => m.StableWatts);
+            aggregateModel.StableSeconds = models.Max(m => m.StableSeconds);
+
+            Fit(aggregateModel);
+
+            return aggregateModel;
+        }
+
+        /// <summary>
         /// Parses the coast down x,y values and generates coefficients of Drag 
         /// and Rolling Resistance based on stable speed and watts.
         /// </summary>
@@ -37,14 +66,7 @@ namespace IRT.Calibration
             m_coastdownData = new CoastdownData();
             m_coastdownData.Evaluate(model.Events.ToArray());
 
-            // Calculate the deceleration.
-            m_decelFit = new DecelerationFit();
-            m_decelFit.Fit(m_coastdownData.SpeedMps,m_coastdownData.CoastdownSeconds);
-            
-            // Calculate the power fit.
-            m_powerFit = new PowerFit(m_decelFit);
-            m_powerFit.Fit(model.StableSpeedMps, model.StableWatts);
-
+            Fit(model);
             /*
             if (Drag < 0.0)
             {
@@ -97,6 +119,26 @@ namespace IRT.Calibration
         public double Watts(double speedMps)
         {
             return m_powerFit.Watts(speedMps);
+        }
+
+        /// <summary>
+        /// Performs the deceleration and power fits.
+        /// </summary>
+        /// <param name="model"></param>
+        private void Fit(Model model)
+        {
+            // Calculate the deceleration.
+            m_decelFit = new DecelerationFit();
+            m_decelFit.Fit(m_coastdownData.SpeedMps, m_coastdownData.CoastdownSeconds);
+
+            // Calculate the power fit.
+            m_powerFit = new PowerFit(m_decelFit);
+
+            if (model.Inertia == 0)
+            {
+                model.Inertia = m_powerFit.CalculateInteria(model.StableSpeedMps, model.StableWatts);
+            }
+            m_powerFit.Fit(model.Inertia);
         }
     }
 
