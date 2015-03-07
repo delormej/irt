@@ -124,14 +124,9 @@ namespace IRT.Calibration
         void m_emotionPower_CalibrationCustomParameterResponsePageReceived(
             CustomCalibrationParameterResponsePage arg1, uint arg2)
         {
-            // Generates 2 events from the buffer.
-            TickEvent[] events = TickEvent.FromBuffer(arg1.CalibrationDataArray.ToArray());
-            
-            for (int i = 0; i < 2; i++)
-            {
-                OnCalibrationEvent(events[i]);
-            }
-
+            // Generate tick event from the buffer.
+            TickEvent tickEvent = TickEvent.FromBuffer(arg1.CalibrationDataArray.ToArray());
+            OnCalibrationEvent(tickEvent);
         }
 
         /// <summary>

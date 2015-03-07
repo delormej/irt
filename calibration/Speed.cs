@@ -34,7 +34,7 @@ namespace IRT.Calibration
             TickEvent tickEvent = events.Last();
 
             // Event offset skip, every 4th event.
-            int SkipOffset = 4;
+            int SkipOffset = 2;
             int currentIndex = events.Count;
             
             ushort lastTicks = 0, lastTimestamp = 0;
