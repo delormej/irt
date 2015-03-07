@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "simple_uart.h"
+#include "irt_peripheral.h"
 #include "boards.h"
 
 struct __FILE { int handle; /* Add whatever you need here */ };
@@ -22,6 +23,14 @@ void debug_init(void)
 
 int _write(int fd, char * str, int len)
 {
+	char str_timestamp[6];
+	// Insert Timestamp
+	if (str[0] == '[')
+	{
+		sprintf(str_timestamp, "%5i:", timestamp_get());
+		simple_uart_putstring(str_timestamp);
+	}
+
     for (int i = 0; i < len; i++)
     {
         simple_uart_put(str[i]);

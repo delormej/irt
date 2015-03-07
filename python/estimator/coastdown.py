@@ -29,7 +29,8 @@ def get_inertia_mass(entry_speed, exit_speed, time, avg_power):
 	
 	# If you need to hard code, uncomment and fill in these values:
 	#a = ((18.3 * 0.44704) - exit_speed) / 4.28356 # this is the time to decelerate from that speed
-	#f = 146 / (18.3 * 0.44704) # watts / mps
+	#a = 1.516073732
+	#f = 134 / (15 * 0.44704) # watts / mps
 	
 	m = f / a
 
@@ -112,29 +113,16 @@ def fit_linear(x_new, x, y):
 # returns the index of the last occurence of the maximum speed
 # which is where the deceleraton begins.
 def get_max_speed_idx(x):
-	# get the last occurence of max speed
-	occurences = np.where(x == x.max())
-	
-	#
-	# BEGIN -- trying to find where deceleration starts, but this doesn't work.
-	#
-	# from the max speed, iterate through the array to ensure speed is always going down
-	#print("max: %s" % (max(occurences[0])))
-	ix = max(occurences[0])
+    # Speed is in reverse order, start at the end and iterate backwards until it stops accelerating.
+    for ix in range(len(x)-1, 0, -1):
+        if (x[ix] >= (x[ix-1])):
+            print("max speed", x[ix])
+            # return the item before this index to ensure clean data. 
+            return ix + 1
 
-	# initial starting position of the maximum speed
-	max_pos = ix
-
-	for i in range(ix+1, len(x)):
-		#print(i, x[i])
-		if (x[i] > x[i-1]):
-			max_pos = i
-	#return max_pos
-	#
-	# END --
-	#
-
-	return max(occurences[0])
+    # if we made it here we're in trouble
+    print("Didn't find a deceleration point.")
+    return 0
 
 def get_min_speed_idx(x):
 	# get the index of the first occurence of 1 tick delta
@@ -191,27 +179,32 @@ def main(file_name):
 
 	# todo: add logic here to determine if you're using older than 1.4.3 that you use the old logic.
 
-	mps = np.empty(len(tick_delta))
-	seconds = np.empty(len(time))
+	mps = np.empty(len(tick_delta)/4)
+	seconds = np.empty(len(time)/4)
 	mps[0] = 0;
 	seconds[0] = 0;
 
 	# dt = delta ticks
 	# ds = delta seconds
+	ix = 0
 	for idx, val in enumerate(tick_delta):
-		if (idx > 0):
-			if (val < tick_delta[idx-1]):
-				dt = val + (tick_delta[idx-1] ^ 0xFFFF)
+		if (idx > 0 and idx % 4 == 0):
+			if (val < tick_delta[idx-4]):
+				dt = val + (tick_delta[idx-4] ^ 0xFFFF)
 			else:
-				dt = val-tick_delta[idx-1]
+				dt = val-tick_delta[idx-4]
 
-			if (time[idx] < time[idx-1]):
-				ds = time[idx] + (time[idx-1] ^ 0xFFFF)
+			if (time[idx] < time[idx-4]):
+				ds = time[idx] + (time[idx-4] ^ 0xFFFF)
 			else:
-				ds = time[idx]-time[idx-1]
+				ds = time[idx]-time[idx-4]
 
-			seconds[idx] = (ds/2048) + seconds[idx-1]
-			mps[idx] = (dt * 0.1115/2) / (ds/2048)
+			if (ix > 0):
+			    seconds[ix] = (ds/2048) + seconds[ix-1]
+			else:
+			    seconds[ix] = (ds/2048)
+			mps[ix] = (dt * 0.1115/2) / (ds/2048)
+			ix = ix +1
 
 	# get the max & min speeds
 	ix_max = get_max_speed_idx(mps)
@@ -226,8 +219,8 @@ def main(file_name):
 	# slice to build a new array between min & max
 	seconds = seconds[ix_max:ix_min]
 	mps = mps[ix_max:ix_min]
-
-	print("Max speed was at ix: %s, min was at ix: %s" % ( time[ix_max-1], time[ix_min-1] ))
+	
+	print("Max speed was at ix: %s, min was at ix: %s" % ( time[ix_max*4-1], time[ix_min*4-1] ))
 
 	# calculate new x/y to represent time in ms since 0 and speed in meters per second
 	y = (seconds.max() - seconds)	# seconds until min
@@ -248,7 +241,7 @@ def main(file_name):
 	plt.ylabel('Coastdown Time (seconds)')
 
 	# plot actual values
-	plt.plot(x, y)
+	plt.plot(x, y, 'bo')
 	plt.ylim(ymin=0)
 	plt.xlim(xmin=0, xmax=x.max())
 
@@ -274,6 +267,7 @@ def main(file_name):
 	
 	# get the mass in F=ma
 	mass = get_inertia_mass(speed_on_entry, speed_on_exit, duration, avg_power)
+	print("mass", mass)
 
 	# smooth out deceleration and get back a curve of speed (mps) to power (watts)
 	x_pwr, y_pwr = fit_bike_power_by_decel(mass, coeff)

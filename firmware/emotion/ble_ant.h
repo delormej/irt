@@ -78,6 +78,7 @@ typedef struct ant_ble_evt_handlers_s {
 	void (*on_request_data)(uint8_t* buffer);		// Device receives page (0x46) requesting data page.
 	void (*on_set_parameter)(uint8_t* buffer);		// Device receives page (0x02) with values to set.
 	void (*on_set_servo_positions)(servo_positions_t* positions); // Received command to set servo positions.
+	void (*on_request_calibration)(void);			// Display requests calibration to begin.
 } ant_ble_evt_handlers_t;
 
 /**@brief	Represents Common Data Page 70.

@@ -86,9 +86,15 @@ debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 ############################################
 # Define the Software Revision.
 ############################################
+<<<<<<< HEAD:firmware/emotion/Makefile
 SW_REVISION_MAJ := 1
 SW_REVISION_MIN := 0
 SW_REVISION_BLD := 1
+=======
+SW_REVISION_MAJ := 0
+SW_REVISION_MIN := 9
+SW_REVISION_BLD := 23
+>>>>>>> master:firmware/emotion/gcc/Makefile
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)

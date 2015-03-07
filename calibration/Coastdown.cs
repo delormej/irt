@@ -1,0 +1,141 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.IO;
+
+
+namespace IRT.Calibration
+{
+    /// <summary>
+    /// Handles the filtering and process of the data files.
+    /// Front end interface to the end results.
+    /// </summary>
+    public class Coastdown
+    {
+        private CoastdownData m_coastdownData;
+
+        // Fit objects.
+        private DecelerationFit m_decelFit;
+        private PowerFit m_powerFit;
+
+        public Coastdown()
+        {
+        }
+
+        /// <summary>
+        /// Raw coastdown data point.
+        /// </summary>
+        public CoastdownData Data { get { return m_coastdownData; } }
+
+        /// <summary>
+        /// Parses the coast down x,y values and generates coefficients of Drag 
+        /// and Rolling Resistance based on stable speed and watts.
+        /// </summary>
+        /// <returns>true/false if it succeeded.</returns>
+        public void Calculate(Model model)
+        {
+            // Process values to build speed/time arrays.
+            m_coastdownData = new CoastdownData(model.Events.ToArray());
+            m_coastdownData.Evaluate();
+
+            // Calculate the deceleration.
+            m_decelFit = new DecelerationFit();
+            m_decelFit.Fit(m_coastdownData.SpeedMps,m_coastdownData.CoastdownSeconds);
+            
+            // Calculate the power fit.
+            m_powerFit = new PowerFit(m_decelFit);
+            m_powerFit.Fit(model.StableSpeedMps, model.StableWatts);
+
+            /*
+            if (Drag < 0.0)
+            {
+                throw new CoastdownException(
+                    "Drag should not be negative, likely entry speed is wrong.");
+            }
+            else if (RollingResistance < 10)
+            {
+                //throw new CoastdownException(
+                // "Rolling Resistance seems incorrect, it should be greater.");
+            }
+             */
+        }
+
+        /// <summary>
+        /// Calculated coefficient of Drag.
+        /// </summary>
+        public double Drag { get { return m_powerFit.Drag; } }
+
+        /// <summary>
+        /// Calculated coefficient of Rolling Resistance.
+        /// </summary>
+        public double RollingResistance { get { return m_powerFit.RollingResistance; } }
+
+        /// <summary>
+        /// Returns the time it takes to coastdown in seconds from a given speed.
+        /// </summary>
+        /// <param name="speedMps"></param>
+        /// <returns></returns>
+        public double CoastdownTime(double speedMps)
+        {
+            return m_decelFit.Seconds(speedMps);
+        }
+
+        /// <summary>
+        /// Calculate the rate of deceleration for a given speed.
+        /// </summary>
+        /// <param name="speed_mps"></param>
+        /// <returns></returns>
+        public double Deceleration(double speedMps)
+        {
+            return m_decelFit.Rate(speedMps);
+        }
+
+        /// <summary>
+        /// Calculate the power required in watts for a given speed.
+        /// </summary>
+        /// <param name="speed_mps"></param>
+        /// <returns></returns>
+        public double Watts(double speedMps)
+        {
+            return m_powerFit.Watts(speedMps);
+        }
+
+        /// <summary>
+        /// Creates an instance of the class by parsing a coastdown file.
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static Coastdown FromFile(string filename, out Model model)
+        {
+            Coastdown coastdown = new Coastdown();
+            model = new Model();
+
+            using (StreamReader reader = File.OpenText(filename))
+            {
+                // Advance through header.
+                reader.ReadLine();
+
+                while (!reader.EndOfStream)
+                {
+                    TickEvent tickEvent;
+                    TickEvent.ParseLine(reader.ReadLine(), out tickEvent);
+
+                    model.AddSpeedEvent(tickEvent);
+                    model.AddPowerEvent(tickEvent.PowerEventCount, tickEvent.AccumulatedPower);
+                }
+            }
+
+            coastdown.Calculate(model);
+
+            return coastdown;
+        }
+    }
+
+    public class CoastdownException : Exception
+    {
+        public CoastdownException(string message) : base(message)
+        {
+
+        }
+    }
+}

@@ -61,13 +61,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Calibration.cs" />
-    <Compile Include="CalibrationForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="CalibrationForm.Designer.cs">
-      <DependentUpon>CalibrationForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="GraphForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -93,9 +86,6 @@
       <DependentUpon>ServoPositions.cs</DependentUpon>
     </Compile>
     <Compile Include="SimulateRefPower.cs" />
-    <EmbeddedResource Include="CalibrationForm.resx">
-      <DependentUpon>CalibrationForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="GraphForm.resx">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -139,6 +129,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="IR 1 red_alter4ICON.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\calibration\Calibration.csproj">
+      <Project>{cbcac49e-7428-4218-b68f-c148e2742e35}</Project>
+      <Name>Calibration</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

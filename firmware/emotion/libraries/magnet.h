@@ -32,8 +32,9 @@
  * the min level we've modeled and the OFF position.
  */
 #define MAGNET_POSITION_OFF						2000		// This is where we park the servo, well out of range.
-#define MAGNET_POSITION_MIN_RESISTANCE			1500		// Above this position, we don't calculate any watts.
+#define MAGNET_POSITION_MIN_RESISTANCE			1600		// Above this position, we don't calculate any watts.
 #define MAGNET_POSITION_MAX_RESISTANCE			800
+#define WATTS_MODEL_MIN							13.0f		// Below this threshold, we might need to solve linearly.
 
 #define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
 

@@ -25,16 +25,20 @@ namespace IRT_GUI
         {
             if (chart1.Series["RefPower"].Points.Count > chart1.ChartAreas[0].AxisX.Maximum)
             {
+                chart1.ChartAreas[0].AxisX.Title = "Time";
+                chart1.ChartAreas[0].AxisX.TitleAlignment = StringAlignment.Near;
+                chart1.ChartAreas[0].AxisX.TextOrientation = TextOrientation.Horizontal;
                 chart1.ChartAreas[0].AxisX.Maximum++;
                 chart1.ChartAreas[0].AxisX.Minimum++;
                 chart1.ChartAreas[0].AxisX.ScaleView.Scroll(chart1.ChartAreas[0].AxisX.Maximum);
             }
 
+            chart1.Series["Speed"].Points.AddY(data.SpeedEMotion);
             chart1.Series["RefPower"].Points.AddY(data.PowerReference);
             chart1.Series["EMotionPower"].Points.AddY(data.PowerEMotion);
-            chart1.Series["Speed"].Points.AddY(data.SpeedEMotion);
             chart1.Series["SpeedMovAvg"].Points.AddY(data.SpeedEmotionAvg);
             chart1.Series["RefPowerMovAvg"].Points.AddY(data.PowerReferenceAvg);
+            
         }
 
         public void Report(string data) { }
