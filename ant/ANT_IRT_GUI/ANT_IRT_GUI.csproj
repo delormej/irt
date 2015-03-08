@@ -86,6 +86,13 @@
       <DependentUpon>ServoPositions.cs</DependentUpon>
     </Compile>
     <Compile Include="SimulateRefPower.cs" />
+    <Compile Include="Simulation\ElevationProfileForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Simulation\ElevationProfileForm.Designer.cs">
+      <DependentUpon>ElevationProfileForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Simulation\SimulationMode.cs" />
     <EmbeddedResource Include="GraphForm.resx">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -104,6 +111,9 @@
     </Compile>
     <EmbeddedResource Include="ServoPositions.resx">
       <DependentUpon>ServoPositions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Simulation\ElevationProfileForm.resx">
+      <DependentUpon>ElevationProfileForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

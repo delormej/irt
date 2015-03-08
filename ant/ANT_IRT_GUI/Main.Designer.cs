@@ -135,6 +135,7 @@
             this.txtRR = new System.Windows.Forms.TextBox();
             this.txtDrag = new System.Windows.Forms.TextBox();
             this.label32 = new System.Windows.Forms.Label();
+            this.btnResistanceLoad = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
@@ -780,6 +781,7 @@
             // 
             // groupBoxResistance
             // 
+            this.groupBoxResistance.Controls.Add(this.btnResistanceLoad);
             this.groupBoxResistance.Controls.Add(this.btnSetResistancePositions);
             this.groupBoxResistance.Controls.Add(this.pnlResistanceStd);
             this.groupBoxResistance.Controls.Add(this.pnlResistancePercent);
@@ -793,14 +795,14 @@
             this.groupBoxResistance.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBoxResistance.Name = "groupBoxResistance";
             this.groupBoxResistance.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBoxResistance.Size = new System.Drawing.Size(490, 180);
+            this.groupBoxResistance.Size = new System.Drawing.Size(483, 223);
             this.groupBoxResistance.TabIndex = 19;
             this.groupBoxResistance.TabStop = false;
             this.groupBoxResistance.Text = "Resistance";
             // 
             // btnSetResistancePositions
             // 
-            this.btnSetResistancePositions.Location = new System.Drawing.Point(38, 135);
+            this.btnSetResistancePositions.Location = new System.Drawing.Point(38, 178);
             this.btnSetResistancePositions.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnSetResistancePositions.Name = "btnSetResistancePositions";
             this.btnSetResistancePositions.Size = new System.Drawing.Size(166, 35);
@@ -933,7 +935,7 @@
             // 
             // btnResistanceSet
             // 
-            this.btnResistanceSet.Location = new System.Drawing.Point(134, 92);
+            this.btnResistanceSet.Location = new System.Drawing.Point(132, 135);
             this.btnResistanceSet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnResistanceSet.Name = "btnResistanceSet";
             this.btnResistanceSet.Size = new System.Drawing.Size(70, 35);
@@ -945,7 +947,7 @@
             // txtServoPos
             // 
             this.txtServoPos.Font = new System.Drawing.Font("Microsoft Sans Serif", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtServoPos.Location = new System.Drawing.Point(38, 88);
+            this.txtServoPos.Location = new System.Drawing.Point(38, 131);
             this.txtServoPos.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtServoPos.Name = "txtServoPos";
             this.txtServoPos.Size = new System.Drawing.Size(92, 39);
@@ -973,7 +975,7 @@
             // label22
             // 
             this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(33, 66);
+            this.label22.Location = new System.Drawing.Point(33, 109);
             this.label22.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(65, 20);
@@ -1099,7 +1101,7 @@
             this.groupBox6.Controls.Add(this.txtWheelSizeMm);
             this.groupBox6.Controls.Add(this.label26);
             this.groupBox6.Controls.Add(this.txtTotalWeight);
-            this.groupBox6.Location = new System.Drawing.Point(21, 342);
+            this.groupBox6.Location = new System.Drawing.Point(21, 390);
             this.groupBox6.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox6.Name = "groupBox6";
             this.groupBox6.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -1178,7 +1180,7 @@
             this.groupBox4.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBox4.Size = new System.Drawing.Size(219, 478);
+            this.groupBox4.Size = new System.Drawing.Size(219, 526);
             this.groupBox4.TabIndex = 18;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Get/Set Parameter";
@@ -1275,7 +1277,7 @@
             this.groupBox5.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBox5.Size = new System.Drawing.Size(256, 322);
+            this.groupBox5.Size = new System.Drawing.Size(256, 362);
             this.groupBox5.TabIndex = 27;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Calibration (Curve)";
@@ -1360,6 +1362,18 @@
             this.label32.Size = new System.Drawing.Size(33, 20);
             this.label32.TabIndex = 16;
             this.label32.Text = "RR";
+            // 
+            // btnResistanceLoad
+            // 
+            this.btnResistanceLoad.Enabled = false;
+            this.btnResistanceLoad.Location = new System.Drawing.Point(132, 70);
+            this.btnResistanceLoad.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnResistanceLoad.Name = "btnResistanceLoad";
+            this.btnResistanceLoad.Size = new System.Drawing.Size(72, 35);
+            this.btnResistanceLoad.TabIndex = 29;
+            this.btnResistanceLoad.Text = "Load";
+            this.btnResistanceLoad.UseVisualStyleBackColor = true;
+            this.btnResistanceLoad.Click += new System.EventHandler(this.btnResistanceLoad_Click);
             // 
             // frmIrtGui
             // 
@@ -1519,6 +1533,7 @@
         private System.Windows.Forms.Label label34;
         private System.Windows.Forms.Button btnStartCalibration;
         private System.Windows.Forms.Button btnLoadCalibration;
+        private System.Windows.Forms.Button btnResistanceLoad;
     }
 }
 

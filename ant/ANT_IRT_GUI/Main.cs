@@ -6,6 +6,7 @@ using AntPlus.Profiles.Components;
 using AntPlus.Types;
 using IRT.Calibration;
 using IRT_GUI.IrtMessages;
+using IRT_GUI.Simulation;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -1500,6 +1501,7 @@ namespace IRT_GUI
                 case ResistanceMode.Percent:
                     pnlResistancePercent.BringToFront();
                     UpdateStatus("Percentage selected.");
+                    ExecuteOnUI(() => { btnResistanceLoad.Enabled = false; });
                     break;
 
                 case ResistanceMode.Erg:
@@ -1512,12 +1514,14 @@ namespace IRT_GUI
                             { 
                                 txtResistanceErgWatts.Focus();
                             }
+                            btnResistanceLoad.Enabled = false;
                         });
                     break;
 
                 case ResistanceMode.Sim:
                     pnlResistanceSim.BringToFront();    
                     UpdateStatus("Sim selected.");
+                    ExecuteOnUI(() => { btnResistanceLoad.Enabled = true; });
                     break;
 
                 case ResistanceMode.Standard:
@@ -1525,10 +1529,12 @@ namespace IRT_GUI
                     SetResistanceStandard(0);
                     pnlResistanceStd.BringToFront();
                     UpdateStatus("Standard selected.");
+                    ExecuteOnUI(() => { btnResistanceLoad.Enabled = false; });
                     break;
 
                 default:
                     UpdateStatus("Unknown resistance mode.");
+                    ExecuteOnUI(() => { btnResistanceLoad.Enabled = false; });
                     break;
             }
         }
@@ -2430,6 +2436,48 @@ namespace IRT_GUI
                 log.Close();
             }
         }
-       
+
+        private void btnResistanceLoad_Click(object sender, EventArgs e)
+        {
+            Simulation.SimulationMode simulator;
+
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "GPS Files (*.csv)|*.csv|All files (*.*)|*.*";
+            dlg.FilterIndex = 1;
+            dlg.RestoreDirectory = false;
+            dlg.CheckFileExists = true;
+            dlg.Multiselect = false;
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    Cursor.Current = Cursors.WaitCursor;
+                    simulator = new Simulation.SimulationMode();
+                    simulator.Load(dlg.FileName);
+                    simulator.SlopeChanged += simulator_SlopeChanged;
+
+                    ElevationProfileForm form = new ElevationProfileForm(simulator);
+                    form.StartPosition = FormStartPosition.Manual;
+                    form.Location = new Point(this.Location.X, this.Location.Y + this.Height);
+                    form.Width = this.Width;
+                    form.Show();
+
+                }
+                catch (Exception ex)
+                {
+                    UpdateStatus("Error loading simulator: \r\n" + ex.Message);
+                }
+                finally
+                {
+                    Cursor.Current = Cursors.Default;
+                }
+            }
+        }
+
+        void simulator_SlopeChanged(double obj)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
