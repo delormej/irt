@@ -74,6 +74,8 @@ namespace IRT_GUI
 
         private SimulateRefPower m_simRefPower = null;
 
+        private Simulation.SimulationMode m_simulator;
+
         private bool m_enteredDFU = false;  // Tracks whether we went into DFU or not.
 
         // Commands
@@ -664,6 +666,12 @@ namespace IRT_GUI
             
             UpdateMovingAverage();
             UpdateWatchClock();
+
+            // Advance the simulator if in use.
+            if (m_simulator != null)
+            {
+                m_simulator.DistanceEvent(m_eMotion.TotalDistanceWheelTorque);
+            }
 
             // Enable calibration start button when over 5 mph.
             if (m_dataPoint.SpeedEMotionMph > 5.0)
@@ -1479,6 +1487,14 @@ namespace IRT_GUI
             }
         }
 
+        private ResistanceMode GetResistanceMode()
+        {
+            ResistanceMode mode = ResistanceMode.Standard;
+            Enum.TryParse<ResistanceMode>(cmbResistanceMode.SelectedItem.ToString(), out mode);
+
+            return mode;
+        }
+
         private void cmbResistanceMode_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (cmbResistanceMode.SelectedItem == null)
@@ -1493,8 +1509,7 @@ namespace IRT_GUI
                 }
             }
 
-            ResistanceMode mode = 0;
-            Enum.TryParse<ResistanceMode>(cmbResistanceMode.SelectedItem.ToString(), out mode);
+            ResistanceMode mode = GetResistanceMode();
 
             switch (mode)
             {
@@ -1815,7 +1830,7 @@ namespace IRT_GUI
                 ushort value = 0;
                 ushort.TryParse(txtResistanceErgWatts.Text, out value);
 
-                if (value > 0 && value < 1500)
+                if (value > 0 && value < 1500) // bounds checking for watt value.
                 {
                     // Send erg target.
                     SendBurst((byte)ResistanceMode.Erg, value);
@@ -1893,27 +1908,7 @@ namespace IRT_GUI
                 float grade = 0.0f;
                 if (float.TryParse(txtSimSlope.Text, out grade))
                 {
-                    /*
-                                     * 	value ^= 1 << 15u;
-                                       grade = value / 32768.0f;
-                                     */
-
-                    ushort value = 0;
-
-                    if (grade < 0.0f)
-                    {
-                        // Make the grade positive.
-                        grade *= -1;
-                    }
-                    else
-                    {
-                        // Set the high order bit.
-                        value = 32768;
-                    }
-
-                    value |= (ushort)(32768 * (grade / 100.0f));
-
-                    SendBurst(RESISTANCE_SET_SLOPE, value);
+                    SetSlope(grade);
                 }
                 else
                 {
@@ -2439,8 +2434,6 @@ namespace IRT_GUI
 
         private void btnResistanceLoad_Click(object sender, EventArgs e)
         {
-            Simulation.SimulationMode simulator;
-
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.Filter = "GPS Files (*.csv)|*.csv|All files (*.*)|*.*";
             dlg.FilterIndex = 1;
@@ -2453,16 +2446,16 @@ namespace IRT_GUI
                 try
                 {
                     Cursor.Current = Cursors.WaitCursor;
-                    simulator = new Simulation.SimulationMode();
-                    simulator.Load(dlg.FileName);
-                    simulator.SlopeChanged += simulator_SlopeChanged;
+                    m_simulator = new Simulation.SimulationMode();
+                    m_simulator.Load(dlg.FileName);
+                    m_simulator.SlopeChanged += simulator_SlopeChanged;
+                    m_simulator.SimulationEnded += m_simulator_SimulationEnded;
 
-                    ElevationProfileForm form = new ElevationProfileForm(simulator);
+                    ElevationProfileForm form = new ElevationProfileForm(m_simulator);
                     form.StartPosition = FormStartPosition.Manual;
                     form.Location = new Point(this.Location.X, this.Location.Y + this.Height);
                     form.Width = this.Width;
                     form.Show();
-
                 }
                 catch (Exception ex)
                 {
@@ -2475,9 +2468,26 @@ namespace IRT_GUI
             }
         }
 
-        void simulator_SlopeChanged(double obj)
+        void m_simulator_SimulationEnded()
         {
-            throw new NotImplementedException();
+            UpdateStatus("Simulation ended.");
+            SetResistanceStandard(0);
+        }
+
+        void simulator_SlopeChanged(double slope)
+        {
+            SetSlope(slope);
+            ExecuteOnUI(() => { UpdateText(txtSimSlope, Math.Round(slope, 1)); });
+        }
+
+        void SetSlope(double slope)
+        {
+            ushort value = 0;
+
+            value = (ushort)(32768 * (slope / 100.0f));
+            value ^= 1 << 15; // Flip the sign.
+
+            SendBurst(RESISTANCE_SET_SLOPE, value);
         }
     }
 }
