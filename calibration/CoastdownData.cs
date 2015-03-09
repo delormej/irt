@@ -128,9 +128,7 @@ namespace IRT.Calibration
 
         private int FindMinSpeedIndex(double[] speeds)
         {
-            // Get the first occurrence of 1 tick delta.
-            // Array.IndexOf<double>(speeds, 1.0);
-
+            // Always returns the end of the file.
             return speeds.Length-1;
         }
     }
