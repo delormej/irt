@@ -94,7 +94,7 @@ float wahoo_sim_grade_decode(int16_t value)
 	value ^= 1 << 15u;
 	grade = value / 32768.0f;
 
-	WH_LOG("[WH]:wahoo_sim_grade_decode %i = %.4f \r\n", value, grade);
+	WH_LOG("[WH]:wahoo_sim_grade_decode %#04x = %.4f\r\n", value, grade);
 
 	return grade;
 }
