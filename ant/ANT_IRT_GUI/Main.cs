@@ -1906,6 +1906,7 @@ namespace IRT_GUI
             if (txtSimSlope.Modified)
             {
                 float grade = 0.0f;
+
                 if (float.TryParse(txtSimSlope.Text, out grade))
                 {
                     SetSlope(grade);
