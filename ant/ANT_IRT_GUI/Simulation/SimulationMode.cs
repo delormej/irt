@@ -47,12 +47,18 @@ namespace IRT_GUI.Simulation
         }
     }
 
+    /// <summary>
+    /// Simulator for replaying slope.
+    /// </summary>
     public class SimulationMode
     {
         private GpsPoint[] m_gpsPoints;
         private int m_currentIndex;
+        private double m_distanceM;
 
         public event Action<double> SlopeChanged;
+        public event Action<double> PositionChanged;
+        public event Action SimulationEnded;
 
         public GpsPoint[] GpsPoints { get { return m_gpsPoints; } }
 
@@ -61,24 +67,43 @@ namespace IRT_GUI.Simulation
             m_currentIndex = 0;
         }
 
-        /// <summary>
-        /// Current distance location in meters.
-        /// </summary>
-        public double CurrentLocation { get { return m_gpsPoints[m_currentIndex].DistanceM; } }
+        public int Index { get { return m_currentIndex; } }
 
         public void DistanceEvent(double distance)
         {
-            int index = m_currentIndex;
+            int lastIndex = m_currentIndex;
+
+            if (distance != m_distanceM)
+            {
+                m_distanceM = distance;
+
+                if (PositionChanged != null)
+                {
+                    PositionChanged(distance);
+                }
+            }
 
             //
             // Advance through points until current distance.
             //
-            while (m_gpsPoints[index].DistanceM >= distance)
-                index++;
-
-            if (index > m_currentIndex)
+            while (m_currentIndex < m_gpsPoints.Length &&
+                distance >= m_gpsPoints[m_currentIndex].DistanceM)
             {
-                SlopeChanged(m_gpsPoints[index].Slope);
+                m_currentIndex++;
+            }
+
+            if (m_currentIndex == m_gpsPoints.Length)
+            {
+                // We've reached the end, just send 0.
+                End();
+            }
+            else if (m_currentIndex > lastIndex &&
+                m_gpsPoints[m_currentIndex].Slope != m_gpsPoints[lastIndex].Slope)
+            {
+                if (SlopeChanged != null)
+                {
+                    SlopeChanged(m_gpsPoints[m_currentIndex].Slope);
+                }
             }
         }
 
@@ -109,6 +134,15 @@ namespace IRT_GUI.Simulation
             }
         }
 
-
+        /// <summary>
+        /// Ends the simulation.
+        /// </summary>
+        public void End()
+        {
+            if (SimulationEnded != null)
+            {
+                SimulationEnded();
+            }
+        }
     }
 }

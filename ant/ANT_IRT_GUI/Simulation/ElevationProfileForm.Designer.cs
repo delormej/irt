@@ -52,17 +52,16 @@
             this.chart1.TabIndex = 0;
             this.chart1.Text = "chart1";
             // 
-            // ElevationProfile
+            // ElevationProfileForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1187, 244);
             this.Controls.Add(this.chart1);
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "ElevationProfile";
+            this.Name = "ElevationProfileForm";
             this.ShowIcon = false;
             this.Text = "Elevation Profile";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ElevationProfileForm_FormClosing);
             this.Load += new System.EventHandler(this.ElevationProfile_Load);
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
             this.ResumeLayout(false);
