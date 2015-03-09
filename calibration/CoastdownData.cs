@@ -111,9 +111,14 @@ namespace IRT.Calibration
             // Ensure that the values continue to increase.
             for (int i = speeds.Length - 1; i > 0; i--)
             {
-                if (speeds[i] >= speeds[i - 1])
+                System.Diagnostics.Debug.WriteLine("{0}: {1:0.0} mps", i, speeds[i]);
+
+                // At least 15mph an faster than the previous?
+                if (speeds[i] > 15 * 0.44704 &&
+                    speeds[i] >= speeds[i - 1])
                 {
-                    return i + 1;
+                    // We've found the start.
+                    return i;
                 }
             }
 
