@@ -1885,27 +1885,13 @@ namespace IRT_GUI
             if (txtSimSlope.Modified)
             {
                 float grade = 0.0f;
+
                 if (float.TryParse(txtSimSlope.Text, out grade))
                 {
-                    /*
-                                     * 	value ^= 1 << 15u;
-                                       grade = value / 32768.0f;
-                                     */
-
                     ushort value = 0;
 
-                    if (grade < 0.0f)
-                    {
-                        // Make the grade positive.
-                        grade *= -1;
-                    }
-                    else
-                    {
-                        // Set the high order bit.
-                        value = 32768;
-                    }
-
-                    value |= (ushort)(32768 * (grade / 100.0f));
+                    value = (ushort)(32768 * (grade / 100.0f));
+                    value ^= 1 << 15;
 
                     SendBurst(RESISTANCE_SET_SLOPE, value);
                 }
