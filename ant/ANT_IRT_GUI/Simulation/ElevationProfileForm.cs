@@ -36,7 +36,14 @@ namespace IRT_GUI.Simulation
             {
                 if (m_positionLine != null)
                 {
-                    m_positionLine.X = value;
+                    try
+                    {
+                        m_positionLine.X = value;
+                    }
+                    finally
+                    {
+                        // When closing the form in the middle of a simulation, a funky state can occur here.
+                    }
                 }
             } 
         }
@@ -105,10 +112,13 @@ namespace IRT_GUI.Simulation
 
         void simulator_SimulationEnded()
         {
-            // Unsubscribe from events.
-            m_simulator.PositionChanged -= simulator_PositionChanged;
-            m_simulator.SlopeChanged -= simulator_SlopeChanged;
-
+            if (m_simulator != null)
+            {
+                // Unsubscribe from events.
+                m_simulator.PositionChanged -= simulator_PositionChanged;
+                m_simulator.SlopeChanged -= simulator_SlopeChanged;
+                m_simulator.SimulationEnded -= simulator_SimulationEnded;
+            }
             // Close the form.
             this.Close();
         }
