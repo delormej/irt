@@ -673,6 +673,9 @@ namespace IRT_GUI
                 m_simulator.DistanceEvent(m_eMotion.TotalDistanceWheelTorque);
             }
 
+            this.lblDistance.Text = 
+                string.Format("{0:0.0}", m_eMotion.TotalDistanceWheelTorque / 1000);
+
             // Enable calibration start button when over 5 mph.
             if (m_dataPoint.SpeedEMotionMph > 5.0)
             {
@@ -2471,6 +2474,7 @@ namespace IRT_GUI
 
         void m_simulator_SimulationEnded()
         {
+            m_simulator = null;
             UpdateStatus("Simulation ended.");
             SetResistanceStandard(0);
         }
