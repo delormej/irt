@@ -63,12 +63,12 @@ namespace IRT.Calibration
 
             ds = DeltaTimestamp(lastTimestamp, tickEvent.Timestamp);
 
-            /* Each flywheel revolution equals 0.1115 meters travelled by the 
+            /* Each flywheel revolution equals 0.115 meters travelled by the 
                 * bike.  Two ticks are recorded for each revolution.
                 * Time is sent in 1/2048 of a second.
                 */
             double seconds = (ds / 2048.0);
-            model.SpeedMps = (dt * 0.1115 / 2.0) / seconds;
+            model.SpeedMps = (dt * 0.115 / 2.0) / seconds;
             
             Motion motion = Stability(model.SpeedMps); 
             
