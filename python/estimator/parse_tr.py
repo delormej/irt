@@ -28,10 +28,18 @@ def main(file_name):
 	#
 	# load the csv file
 	#
-	minutes, power_watts, kmh, target_watts, emr_watts, servo_pos = \
-	np.loadtxt(file_name, delimiter=',', skiprows=3,
-							dtype=[('minutes', float), ('emr_watts', float), ('kmh', float), ('target_watts', float), ('power_watts', float), ('servo_pos', int)], 
-							usecols=[1, 2, 8, 9, 10, 11], unpack=True, comments='"')
+	if (os.path.basename(file_name).startswith("irt_")):
+		power_watts, kmh, target_watts, emr_watts, servo_pos = \
+		np.loadtxt(file_name, delimiter=',', skiprows=3,
+							dtype=[('emr_watts', float), ('kmh', float), ('target_watts', float), ('power_watts', float), ('servo_pos', int)], 
+							usecols=[5, 3, 6, 6, 7], unpack=True, comments='"')
+		minutes = range(0, power_watts.shape[0])
+
+	else:
+		minutes, power_watts, kmh, target_watts, emr_watts, servo_pos = \
+		np.loadtxt(file_name, delimiter=',', skiprows=3,
+								dtype=[('minutes', float), ('emr_watts', float), ('kmh', float), ('target_watts', float), ('power_watts', float), ('servo_pos', int)], 
+								usecols=[1, 2, 8, 9, 10, 11], unpack=True, comments='"')
 
 	labels = []
 
