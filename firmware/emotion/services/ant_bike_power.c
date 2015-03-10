@@ -551,6 +551,9 @@ uint32_t ant_bp_battery_tx_send(irt_battery_status_t status)
 	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 }
 
+/**@brief	Sends an acknowledgement that the resistance command was successful.
+ *
+ */
 uint32_t ant_bp_resistance_tx_send(resistance_mode_t mode, uint16_t value)
 {
 	// State required to be managed.
