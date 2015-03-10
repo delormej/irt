@@ -40,10 +40,9 @@ def main(file_name):
 		np.loadtxt(file_name, delimiter=',', skiprows=3,
 								dtype=[('minutes', float), ('emr_watts', float), ('kmh', float), ('target_watts', float), ('power_watts', float), ('servo_pos', int)], 
 								usecols=[1, 2, 8, 9, 10, 11], unpack=True, comments='"')
+		kmh = kmh * 0.621371
 
 	labels = []
-
-	kmh = kmh * 0.621371
 
 	ma_speed = moving_average(kmh, 30)
 	ma_power30 = moving_average(power_watts, 30)

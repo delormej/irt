@@ -3,13 +3,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Timers;
 
 namespace IntervalParser
 {
-    class Entry
+    public enum ResistanceMode : byte
     {
-        private Entry() {}
+        Erg = 0x42,
+        Level = 0x41,
+        Position = 0x5B
+    }
 
+    public class Entry
+    {
+        public Entry() {}
+
+        public ResistanceMode Type; 
         public int Watts;
         public string Comments;
         public float ElapsedStart;
@@ -30,11 +39,73 @@ namespace IntervalParser
         }
     }
 
+    public class ErgMode
+    {
+        private Timer m_timer;
+        private int m_stepIndex;
+        private float m_seconds; 
+        private Entry[] m_steps;
+
+        public event Action<ResistanceMode, float> ResistanceChanged;
+        public event Action Finished;
+
+        public ErgMode(Entry[] steps)
+        {
+            m_steps = steps;
+        }
+
+        public void Start()
+        {
+            m_stepIndex = 0;
+            m_seconds = 0;
+
+            m_timer = new Timer(1000);
+            m_timer.Elapsed += m_timer_Elapsed;
+            m_timer.Start();
+        }
+
+        public float Seconds { get { return m_seconds; } }
+
+        void m_timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            // Increment each second.
+            m_seconds += ((float)m_timer.Interval / 1000.0f);
+
+            while (m_stepIndex < m_steps.Length && 
+                (m_steps[m_stepIndex].ElapsedEnd /* 60*/) <= m_seconds)
+            {
+                m_stepIndex++;
+
+                if (ResistanceChanged != null)
+                {
+                    ResistanceChanged(ResistanceMode.Erg, m_steps[m_stepIndex].Watts);
+                }
+            }
+
+            if (m_stepIndex >= m_steps.Length)
+            {
+                if (Finished != null)
+                {
+                    Finished();
+                }
+            }
+
+        }
+
+        public static ErgMode FromFile(string filename)
+        {
+            Entry[] entries = Parser.ReadInput(filename).ToArray();
+
+            ErgMode simulator = new ErgMode(entries);
+            return simulator;
+        }
+    }
+
     public class Parser
     {
         private Parser() { }
 
-        private static List<Entry> ReadInput(string filename)
+        public static List<Entry> ReadInput(string filename)
         {
             var list = new List<Entry>();
 
@@ -122,6 +193,35 @@ namespace IntervalParser
             Console.Write("Parsed interval file {0} and output file {1}.",
                 inputFilename,
                 outputFilename);
+        }
+    }
+
+    public class Program
+    {
+        private static bool m_running = false;
+        
+        public static void Main()
+        {
+            m_running = true;
+            ErgMode erg = ErgMode.FromFile("source.txt");
+            erg.ResistanceChanged += erg_ResistanceChanged;
+            erg.Finished += erg_Finished;
+            erg.Start();
+
+            // Loop unti finished.
+            while (m_running)
+                System.Threading.Thread.Sleep(10);
+
+        }
+
+        static void erg_Finished()
+        {
+            m_running = false;   
+        }
+
+        static void erg_ResistanceChanged(ResistanceMode arg1, float arg2)
+        {
+            Console.WriteLine("changed");
         }
     }
 }
