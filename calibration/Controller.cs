@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using AntPlus.Profiles.BikePower;
-using System.IO;
 using IRT.Calibration.Globals;
 
 namespace IRT.Calibration
@@ -14,6 +13,8 @@ namespace IRT.Calibration
         BikePowerDisplay m_emotionPower, m_refPower;
         Model m_model;
         Coastdown m_coastdown;
+
+        ushort m_instantPower;
 
         // Forms
         CoastdownForm m_coastdownForm;
@@ -105,6 +106,7 @@ namespace IRT.Calibration
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
             OnPowerEvent(arg1.EventCount, arg1.AccumulatedPower);
+            m_instantPower = arg1.InstantaneousPower;
         }
 
         void m_emotionPower_GeneralCalibrationResponseFailPageReceived(
@@ -122,14 +124,9 @@ namespace IRT.Calibration
         void m_emotionPower_CalibrationCustomParameterResponsePageReceived(
             CustomCalibrationParameterResponsePage arg1, uint arg2)
         {
-            // Generates 2 events from the buffer.
-            TickEvent[] events = TickEvent.FromBuffer(arg1.CalibrationDataArray.ToArray());
-            
-            for (int i = 0; i < 2; i++)
-            {
-                OnCalibrationEvent(events[i]);
-            }
-
+            // Generate tick event from the buffer.
+            TickEvent tickEvent = TickEvent.FromBuffer(arg1.CalibrationDataArray.ToArray());
+            OnCalibrationEvent(tickEvent);
         }
 
         /// <summary>
@@ -142,9 +139,12 @@ namespace IRT.Calibration
 
             if (m_calibrationForm != null && !m_calibrationForm.IsDisposed)
             {
-                m_calibrationForm.UpdateValues(m_model.StableSeconds,
+                m_calibrationForm.UpdateValues(
                     m_model.SpeedMps * 2.23694,
+                    m_model.StableSeconds,
+                    m_model.StableSpeedMps * 2.23694,
                     (ushort)m_model.StableWatts,
+                    m_instantPower,
                     m_model.Motion);
             }
 

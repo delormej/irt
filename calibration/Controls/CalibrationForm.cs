@@ -20,16 +20,19 @@ namespace IRT.Calibration
             InitializeComponent();
         }
 
-        public void UpdateValues(double seconds, double mph, ushort watts, Motion state)
+        public void UpdateValues(double mph, double stableSeconds, double stableMph, ushort stableWatts, ushort watts, Motion state)
         {
             Action a = () =>
             {
-                lblSeconds.Text = string.Format("{0:0.0}", seconds);
                 lblSpeed.Text = string.Format("{0:0.0}", mph);
-                lblRefPower.Text = watts.ToString();
+                lblSeconds.Text = string.Format("{0:0.0}", stableSeconds);
+                lblStableSpeed.Text = string.Format("{0:0.0}", stableMph);
+                lblRefPower.Text = stableWatts.ToString();
+                lblInstantPower.Text = watts.ToString();
                 lblStable.Text = state.ToString();
 
-                if (state == Motion.Stable && seconds > 3.0f)
+
+                if (state == Motion.Stable && stableSeconds > 3.0f)
                 {
                     lblSeconds.ForeColor = Color.Green;
                 }

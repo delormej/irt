@@ -9,38 +9,36 @@ namespace IRT.Calibration
     /// </summary>
     public class CoastdownData
     {
-        private int[] m_timestamp, m_flywheel;
+        private List<double> m_speedMps, m_coastdownSeconds;
 
-        public CoastdownData(int[] timestamp_2048, int[] flywheel_ticks)
-        {
-            m_timestamp = timestamp_2048;
-            m_flywheel = flywheel_ticks;
-        }
+        public CoastdownData()
+        {}
 
-        public CoastdownData(TickEvent[] tickEvents)
-        {
-            m_timestamp = new int[tickEvents.Length];
-            m_flywheel = new int[tickEvents.Length];
+        public double[] SpeedMps { get {  return m_speedMps.ToArray(); } }
 
-            for (int i = 0; i < tickEvents.Length; i++)
-            {
-                m_timestamp[i] = tickEvents[i].Timestamp;
-                m_flywheel[i] = tickEvents[i].Ticks;
-            }
-        }
-
-        public double[] SpeedMps;
-        public double[] CoastdownSeconds;
+        public double[] CoastdownSeconds { get { return m_coastdownSeconds.ToArray();  } }
 
         /// <summary>
         /// Filters and processes raw coastdown records into only the records that
         /// represent the deceleration phase.
         /// </summary>
-        public void Evaluate()
+        public void Evaluate(TickEvent[] tickEvents)
         {
-            int records = m_timestamp.Length / 4;
+            int[] timestamp, flywheel;
 
-            if (m_timestamp.Length % 4 != 0)
+            // Create timestamp / flywheel records from tickEvents.
+            timestamp = new int[tickEvents.Length];
+            flywheel = new int[tickEvents.Length];
+
+            for (int i = 0; i < tickEvents.Length; i++)
+            {
+                timestamp[i] = tickEvents[i].Timestamp;
+                flywheel[i] = tickEvents[i].Ticks;
+            }
+            
+            int records = timestamp.Length / 4;
+
+            if (timestamp.Length % 4 != 0)
             {
                 // If there was a remainder, add 1.
                 records += 1;
@@ -51,23 +49,23 @@ namespace IRT.Calibration
 
             int ix = 0;
 
-            for (int idx = 0; idx < m_flywheel.Length; idx++)
+            for (int idx = 0; idx < flywheel.Length; idx++)
             {
-                int val = m_flywheel[idx];
+                int val = flywheel[idx];
                 int dt, ds;
 
                 // Evaluate every 4th record AND the last record.
-                if (idx > 0 && idx % 4 == 0 || idx == m_flywheel.Length - 1)
+                if (idx > 0 && idx % 4 == 0 || idx == flywheel.Length - 1)
                 {
-                    if (val < m_flywheel[idx - 4])
-                        dt = val + (m_flywheel[idx - 4] ^ 0xFFFF);
+                    if (val < flywheel[idx - 4])
+                        dt = val + (flywheel[idx - 4] ^ 0xFFFF);
                     else
-                        dt = val - m_flywheel[idx - 4];
+                        dt = val - flywheel[idx - 4];
 
-                    if (m_timestamp[idx] < m_timestamp[idx - 4])
-                        ds = m_timestamp[idx] + (m_timestamp[idx - 4] ^ 0xFFFF);
+                    if (timestamp[idx] < timestamp[idx - 4])
+                        ds = timestamp[idx] + (timestamp[idx - 4] ^ 0xFFFF);
                     else
-                        ds = m_timestamp[idx] - m_timestamp[idx - 4];
+                        ds = timestamp[idx] - timestamp[idx - 4];
 
                     if (ix > 0)
                         seconds[ix] = (ds / 2048.0) + seconds[ix - 1];
@@ -82,18 +80,23 @@ namespace IRT.Calibration
                 }
             }      
 
-            int max = FindDecelerationIndex(speed);
-            int min = FindMinSpeedIndex(speed);
-            int len = min - max;
+            int maxSpeedIdx = FindDecelerationIndex(speed);
+            int minSpeedIdx = FindMinSpeedIndex(speed);
+            //int len = minSpeedIdx - maxSpeedIdx;
 
-            SpeedMps = new double[len];
-            CoastdownSeconds = new double[len];
-            Array.Copy(speed, max, SpeedMps, 0, len);
-
-            // Invert the timestamp seconds to record seconds to min speed.
-            for (int i = 0; i < len; i++)
+            // Copy to the array.
+            if (m_speedMps == null)
             {
-                CoastdownSeconds[i] = seconds[len - 1] - seconds[i];
+                m_speedMps = new List<double>();
+                m_coastdownSeconds = new List<double>();
+            }
+
+            //Array.Copy(speed, maxSpeedIdx, SpeedMps, 0, len);
+            for (int j = maxSpeedIdx; j <= minSpeedIdx; j++)
+            {
+                m_speedMps.Add(speed[j]);
+                // Invert the timestamp seconds to record seconds to min speed.
+                m_coastdownSeconds.Add(seconds[minSpeedIdx] - seconds[j]);
             }
         }
 
@@ -108,9 +111,14 @@ namespace IRT.Calibration
             // Ensure that the values continue to increase.
             for (int i = speeds.Length - 1; i > 0; i--)
             {
-                if (speeds[i] >= speeds[i - 1])
+                System.Diagnostics.Debug.WriteLine("{0}: {1:0.0} mps", i, speeds[i]);
+
+                // At least 15mph an faster than the previous?
+                if (speeds[i] > 15 * 0.44704 &&
+                    speeds[i] >= speeds[i - 1])
                 {
-                    return i + 1;
+                    // We've found the start.
+                    return i;
                 }
             }
 
@@ -120,10 +128,8 @@ namespace IRT.Calibration
 
         private int FindMinSpeedIndex(double[] speeds)
         {
-            // Get the first occurrence of 1 tick delta.
-            // Array.IndexOf<double>(speeds, 1.0);
-
-            return speeds.Length;
+            // Always returns the end of the file.
+            return speeds.Length-1;
         }
     }
 }

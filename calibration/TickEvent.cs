@@ -35,13 +35,12 @@ namespace IRT.Calibration
         }
 
         /// <summary>
-        /// Creates 2 TickEvent objects from a calibration message.
+        /// Creates a TickEvent from a raw calibration message.
         /// </summary>
         /// <param name="buffer"></param>
         /// <returns></returns>
-        public static TickEvent[] FromBuffer(byte[] buffer)
+        public static TickEvent FromBuffer(byte[] buffer)
         {
-            TickEvent[] ticks = new TickEvent[2];
             /*
                 tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
                 tx_buffer[1] = 		ANT_BP_CAL_PARAM_RESPONSE;
@@ -52,32 +51,13 @@ namespace IRT.Calibration
                 tx_buffer[6] = 		LOW_BYTE(flywheel_ticks[1]);
                 tx_buffer[7] = 		HIGH_BYTE(flywheel_ticks[1]);
             */
-            ushort time0 = (ushort)(buffer[0] | buffer[1] << 8);
-            ushort ticks0 = (ushort)(buffer[2] | buffer[3] << 8);
-            ushort ticks1 = (ushort)(buffer[4] | buffer[5] << 8);
 
-            int i = 0;
+            // Ignore the first flywheel recording, just read the second one since that is
+            // the one that is timestamped by the device.
+            ushort time = (ushort)(buffer[0] | buffer[1] << 8);
+            ushort ticks = (ushort)(buffer[4] | buffer[5] << 8);
 
-            //
-            // 2 events are embedded in each buffer message.
-            //
-            while (i < 2) // do this loop 2 times
-            {
-                // Alternate between the two tick counts.
-                if (i % 2 == 0)
-                {
-                    ticks[0] = new TickEvent(time0, ticks0);
-                }
-                else
-                {
-                    // Calculate 125ms in 1/2048s later for the 2nd read.
-                    ushort time1 = (ushort)(time0 + (0.125f * 2048));
-                    ticks[1] = new TickEvent(time1, ticks1);
-                }
-                i++;
-            }
-
-            return ticks;
+            return new TickEvent(time, ticks);
         }
 
         /// <summary>

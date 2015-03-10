@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.IO;
-
 
 namespace IRT.Calibration
 {
@@ -23,9 +21,39 @@ namespace IRT.Calibration
         }
 
         /// <summary>
-        /// Raw coastdown data point.
+        /// Raw coastdown data points, filtered for just the deceleration phase
+        /// from max to min speed.
         /// </summary>
         public CoastdownData Data { get { return m_coastdownData; } }
+
+        /// <summary>
+        /// Calculates based on multiple runs of coastdown.
+        /// </summary>
+        /// <param name="models"></param>
+        public Model Calculate(Model[] models)
+        {
+            m_coastdownData = new CoastdownData();
+
+            foreach (Model m in models)
+            {
+                // Aggregate all valid coast down data points.
+                m_coastdownData.Evaluate(m.Events.ToArray());
+                Fit(m);
+            }
+
+            Model aggregateModel = new Model();
+            
+            // Calculate average inertia for new model.
+            aggregateModel.Inertia = models.Average(m => m.Inertia);
+
+            //aggregateModel.StableSpeedMps = models.Average(m => m.StableSpeedMps);
+            //aggregateModel.StableWatts = models.Average(m => m.StableWatts);
+            aggregateModel.StableSeconds = models.Max(m => m.StableSeconds);
+
+            Fit(aggregateModel);
+
+            return aggregateModel;
+        }
 
         /// <summary>
         /// Parses the coast down x,y values and generates coefficients of Drag 
@@ -35,17 +63,10 @@ namespace IRT.Calibration
         public void Calculate(Model model)
         {
             // Process values to build speed/time arrays.
-            m_coastdownData = new CoastdownData(model.Events.ToArray());
-            m_coastdownData.Evaluate();
+            m_coastdownData = new CoastdownData();
+            m_coastdownData.Evaluate(model.Events.ToArray());
 
-            // Calculate the deceleration.
-            m_decelFit = new DecelerationFit();
-            m_decelFit.Fit(m_coastdownData.SpeedMps,m_coastdownData.CoastdownSeconds);
-            
-            // Calculate the power fit.
-            m_powerFit = new PowerFit(m_decelFit);
-            m_powerFit.Fit(model.StableSpeedMps, model.StableWatts);
-
+            Fit(model);
             /*
             if (Drag < 0.0)
             {
@@ -101,33 +122,23 @@ namespace IRT.Calibration
         }
 
         /// <summary>
-        /// Creates an instance of the class by parsing a coastdown file.
+        /// Performs the deceleration and power fits.
         /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public static Coastdown FromFile(string filename, out Model model)
+        /// <param name="model"></param>
+        private void Fit(Model model)
         {
-            Coastdown coastdown = new Coastdown();
-            model = new Model();
+            // Calculate the deceleration.
+            m_decelFit = new DecelerationFit();
+            m_decelFit.Fit(m_coastdownData.SpeedMps, m_coastdownData.CoastdownSeconds);
 
-            using (StreamReader reader = File.OpenText(filename))
+            // Calculate the power fit.
+            m_powerFit = new PowerFit(m_decelFit);
+
+            if (model.Inertia == 0)
             {
-                // Advance through header.
-                reader.ReadLine();
-
-                while (!reader.EndOfStream)
-                {
-                    TickEvent tickEvent;
-                    TickEvent.ParseLine(reader.ReadLine(), out tickEvent);
-
-                    model.AddSpeedEvent(tickEvent);
-                    model.AddPowerEvent(tickEvent.PowerEventCount, tickEvent.AccumulatedPower);
-                }
+                model.Inertia = m_powerFit.CalculateInteria(model.StableSpeedMps, model.StableWatts);
             }
-
-            coastdown.Calculate(model);
-
-            return coastdown;
+            m_powerFit.Fit(model.Inertia);
         }
     }
 

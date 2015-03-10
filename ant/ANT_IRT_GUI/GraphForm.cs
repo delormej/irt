@@ -33,7 +33,7 @@ namespace IRT_GUI
                 chart1.ChartAreas[0].AxisX.ScaleView.Scroll(chart1.ChartAreas[0].AxisX.Maximum);
             }
 
-            chart1.Series["Speed"].Points.AddY(data.SpeedEMotion);
+            chart1.Series["Speed"].Points.AddY(data.SpeedEMotionMph);
             chart1.Series["RefPower"].Points.AddY(data.PowerReference);
             chart1.Series["EMotionPower"].Points.AddY(data.PowerEMotion);
             chart1.Series["SpeedMovAvg"].Points.AddY(data.SpeedEmotionAvg);

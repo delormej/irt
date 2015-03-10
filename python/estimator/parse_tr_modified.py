@@ -36,10 +36,10 @@ def main(file_name):
 		minutes = range(0, power_watts.shape[0])
 
 	else:
-		minutes, power_watts, kmh, target_watts, emr_watts, servo_pos = \
+		minutes, power_watts, kmh, target_watts, emr_watts, servo_pos, new_watts = \
 		np.loadtxt(file_name, delimiter=',', skiprows=3,
-								dtype=[('minutes', float), ('emr_watts', float), ('kmh', float), ('target_watts', float), ('power_watts', float), ('servo_pos', int)], 
-								usecols=[1, 2, 8, 9, 10, 11], unpack=True, comments='"')
+								dtype=[('minutes', float), ('emr_watts', float), ('kmh', float), ('target_watts', float), ('power_watts', float), ('servo_pos', int), ('new_watts', float)], 
+								usecols=[1, 2, 8, 9, 10, 11, 12], unpack=True, comments='"')
 
 	labels = []
 
@@ -49,6 +49,7 @@ def main(file_name):
 	ma_power30 = moving_average(power_watts, 30)
 	ma_power10 = moving_average(power_watts, 10)
 	ma_est_power = moving_average(emr_watts, 30)
+	ma_new_watts = moving_average(new_watts, 30)
 
 	plt.rc('axes', grid=True)
 	plt.rc('grid', color='0.75', linestyle='-', linewidth=0.5)
@@ -85,10 +86,13 @@ def main(file_name):
 	ax3.plot(minutes, ma_power10, color='lightblue')
 	ax3.plot(minutes, ma_est_power, color='y')
 
+	ax3.plot(minutes, ma_new_watts, color='cyan', linewidth='4')
+
 	#ax2.stackplot(minutes, target_watts)
 	ax3.plot(minutes, target_watts, linestyle='--', linewidth='2', color='g', zorder=100)
 	#labels.append(r'y = %s' % ('Target'))
 	ax3.set_ylim(100, 425)
+
 	plt.show()
 
 if __name__ == "__main__":
