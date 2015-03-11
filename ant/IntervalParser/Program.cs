@@ -3,30 +3,142 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Timers;
 
 namespace IntervalParser
 {
-    class Entry
+    public enum ResistanceType : byte
     {
-        private Entry() {}
+        Erg = 0x42,
+        Level = 0x41,
+        Position = 0x5B
+    }
 
-        public int Watts;
-        public string Comments;
-        public float ElapsedStart;
-        public float ElapsedEnd;
+    // Linked list of steps.
+    public class ResistanceStep
+    {
+        public ResistanceStep() {}
 
-        public static Entry Create(Entry last, float durationMin)
+        public ResistanceType Type = ResistanceType.Erg;
+        
+        public int Watts { get; set; }
+        
+        public string Comments { get; set; }
+        
+        public float ElapsedStart 
         {
-            Entry next = new Entry();
-            
-            if (last != null)
-                next.ElapsedStart = last.ElapsedEnd;
-            else
-                next.ElapsedStart = 0;
-            
-            next.ElapsedEnd = next.ElapsedStart + durationMin;
+            get
+            {
+                if (Previous != null)
+                {
+                    return Previous.ElapsedEnd; 
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public float ElapsedEnd
+        {
+            get
+            {
+                return ElapsedStart + Duration;
+            }
+        }
+
+        public float Duration { get; set; }
+
+        public ResistanceStep Previous { get; set; }
+
+        public static ResistanceStep Create(ResistanceStep last, float durationMin)
+        {
+            ResistanceStep next = new ResistanceStep();
+            next.Duration = durationMin;
+            next.Previous = last;
             
             return next;
+        }
+    }
+
+    public class ErgMode
+    {
+        private Timer m_timer;
+        private int m_stepIndex;
+        private float m_seconds; 
+        private ResistanceStep[] m_steps;
+
+        public event Action<ResistanceStep> ResistanceStepChange;
+        public event Action Finished;
+
+        public ResistanceStep[] Steps { get { return m_steps; } }
+        public float Seconds { get { return m_seconds; } }
+
+        public ErgMode(ResistanceStep[] steps)
+        {
+            m_steps = steps;
+        }
+        
+        public void Start()
+        {
+            m_stepIndex = 0;
+            m_seconds = 0;
+
+            // Kick off the first step.
+            if (m_steps != null && m_steps.Length > 0)
+            {
+                if (ResistanceStepChange != null)
+                {
+                    ResistanceStepChange(m_steps[m_stepIndex]);
+                }
+            }
+            else
+            {
+                return;
+            }
+
+            m_timer = new Timer(1000);
+            m_timer.Elapsed += m_timer_Elapsed;
+            m_timer.Start();
+        }
+
+        void m_timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            // Increment each second.
+            m_seconds += ((float)m_timer.Interval / 1000.0f);
+            int index = m_stepIndex;
+
+            while (index < m_steps.Length && 
+                (m_steps[index].ElapsedEnd /* 60*/) <= m_seconds)
+            {
+                index++;
+            }
+
+            if (index >= m_steps.Length)
+            {
+                if (Finished != null)
+                {
+                    Finished();
+                }
+            }
+            else if (index > m_stepIndex)
+            {
+                m_stepIndex = index;
+
+                if (ResistanceStepChange != null)
+                {
+                    ResistanceStepChange(m_steps[m_stepIndex]);
+                }
+            }
+        }
+
+        public static ErgMode FromFile(string filename)
+        {
+            ResistanceStep[] entries = Parser.ReadInput(filename).ToArray();
+
+            ErgMode simulator = new ErgMode(entries);
+            return simulator;
         }
     }
 
@@ -34,9 +146,9 @@ namespace IntervalParser
     {
         private Parser() { }
 
-        private static List<Entry> ReadInput(string filename)
+        public static List<ResistanceStep> ReadInput(string filename)
         {
-            var list = new List<Entry>();
+            var list = new List<ResistanceStep>();
 
             // read input file into array
             using (StreamReader reader = File.OpenText(filename))
@@ -48,8 +160,10 @@ namespace IntervalParser
                     float durationMin = 0.0f;
                     float.TryParse(vals[0], out durationMin);
 
-                    var entry = Entry.Create(list.LastOrDefault(), durationMin);
-                    int.TryParse(vals[1], out entry.Watts);
+                    var entry = ResistanceStep.Create(list.LastOrDefault(), durationMin);
+                    int watts;
+                    int.TryParse(vals[1], out watts);
+                    entry.Watts = watts;
                     if (vals.Length > 2 && !string.IsNullOrEmpty(vals[2]))
                         entry.Comments = vals[2];
 
@@ -60,7 +174,7 @@ namespace IntervalParser
             return list;
         }
 
-        private static void WriteOuput(string filename, int ftp, List<Entry> list)
+        public static void WriteOuput(string filename, int ftp, List<ResistanceStep> list)
         {
             const string COURSE_HEADER = "[COURSE HEADER]\r\n" +
                 "VERSION=2\r\n" +
@@ -122,6 +236,35 @@ namespace IntervalParser
             Console.Write("Parsed interval file {0} and output file {1}.",
                 inputFilename,
                 outputFilename);
+        }
+    }
+
+    public class Program
+    {
+        private static bool m_running = false;
+        
+        public static void Main()
+        {
+            m_running = true;
+            ErgMode erg = ErgMode.FromFile("source.txt");
+            erg.ResistanceStepChange += erg_ResistanceChanged;
+            erg.Finished += erg_Finished;
+            erg.Start();
+
+            // Loop unti finished.
+            while (m_running)
+                System.Threading.Thread.Sleep(10);
+        }
+
+        static void erg_Finished()
+        {
+            m_running = false;   
+        }
+
+        static void erg_ResistanceChanged(ResistanceStep step)
+        {
+            Console.WriteLine("{0} @ {1} watts for {2} minutes.",
+                step.Comments, step.Watts, step.ElapsedEnd - step.ElapsedStart);
         }
     }
 }

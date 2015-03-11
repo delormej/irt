@@ -4,6 +4,7 @@ using AntPlus.Profiles.BikePower;
 using AntPlus.Profiles.Common;
 using AntPlus.Profiles.Components;
 using AntPlus.Types;
+using IntervalParser;
 using IRT.Calibration;
 using IRT_GUI.IrtMessages;
 using IRT_GUI.Simulation;
@@ -1532,7 +1533,7 @@ namespace IRT_GUI
                             { 
                                 txtResistanceErgWatts.Focus();
                             }
-                            btnResistanceLoad.Enabled = false;
+                            btnResistanceLoad.Enabled = true;
                         });
                     break;
 
@@ -2436,10 +2437,42 @@ namespace IRT_GUI
             }
         }
 
+        private void LaunchErgMode(string filename)
+        {
+            ErgMode erg = ErgMode.FromFile(filename);
+            ErgForm form = new ErgForm(erg);
+            form.Show();
+        }
+
+        private void LaunchSimMode(string filename)
+        {
+            m_simulator = new Simulation.SimulationMode();
+            m_simulator.Load(filename);
+            m_simulator.SlopeChanged += simulator_SlopeChanged;
+            m_simulator.SimulationEnded += m_simulator_SimulationEnded;
+
+            ElevationProfileForm form = new ElevationProfileForm(m_simulator);
+            form.StartPosition = FormStartPosition.Manual;
+            form.Location = new Point(this.Location.X, this.Location.Y + this.Height);
+            form.Width = this.Width;
+            form.Show();
+        }
+
         private void btnResistanceLoad_Click(object sender, EventArgs e)
         {
+            ResistanceMode mode = GetResistanceMode();
+
             OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Filter = "GPS Files (*.csv)|*.csv|All files (*.*)|*.*";
+            
+            if (mode == ResistanceMode.Sim)
+            {
+                dlg.Filter = "GPS Files (*.csv)|*.csv|All files (*.*)|*.*";
+            }
+            else if (mode == ResistanceMode.Erg)
+            {
+                dlg.Filter = "Erg Files (*.csv)|*.csv|All files (*.*)|*.*";
+            }
+
             dlg.FilterIndex = 1;
             dlg.RestoreDirectory = false;
             dlg.CheckFileExists = true;
@@ -2450,16 +2483,21 @@ namespace IRT_GUI
                 try
                 {
                     Cursor.Current = Cursors.WaitCursor;
-                    m_simulator = new Simulation.SimulationMode();
-                    m_simulator.Load(dlg.FileName);
-                    m_simulator.SlopeChanged += simulator_SlopeChanged;
-                    m_simulator.SimulationEnded += m_simulator_SimulationEnded;
 
-                    ElevationProfileForm form = new ElevationProfileForm(m_simulator);
-                    form.StartPosition = FormStartPosition.Manual;
-                    form.Location = new Point(this.Location.X, this.Location.Y + this.Height);
-                    form.Width = this.Width;
-                    form.Show();
+                    switch (mode)
+                    {
+                        case ResistanceMode.Sim:
+                            LaunchSimMode(dlg.FileName);
+                            break;
+
+                        case ResistanceMode.Erg:
+                            LaunchErgMode(dlg.FileName);
+                            break;
+
+                        default:
+                            break;
+                    }
+                
                 }
                 catch (Exception ex)
                 {
