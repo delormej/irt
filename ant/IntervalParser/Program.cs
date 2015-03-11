@@ -14,6 +14,7 @@ namespace IntervalParser
         Position = 0x5B
     }
 
+    // Linked list of steps.
     public class ResistanceStep
     {
         public ResistanceStep() {}
@@ -24,23 +25,38 @@ namespace IntervalParser
         
         public string Comments { get; set; }
         
-        public float ElapsedStart { get; set; }
-        
-        public float ElapsedEnd { get; set; }
+        public float ElapsedStart 
+        {
+            get
+            {
+                if (Previous != null)
+                {
+                    return Previous.ElapsedEnd; 
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public float ElapsedEnd
+        {
+            get
+            {
+                return ElapsedStart + Duration;
+            }
+        }
 
         public float Duration { get; set; }
+
+        public ResistanceStep Previous { get; set; }
 
         public static ResistanceStep Create(ResistanceStep last, float durationMin)
         {
             ResistanceStep next = new ResistanceStep();
             next.Duration = durationMin;
-            
-            if (last != null)
-                next.ElapsedStart = last.ElapsedEnd;
-            else
-                next.ElapsedStart = 0;
-            
-            next.ElapsedEnd = next.ElapsedStart + durationMin;
+            next.Previous = last;
             
             return next;
         }
