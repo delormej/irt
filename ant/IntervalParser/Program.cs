@@ -49,11 +49,14 @@ namespace IntervalParser
         public event Action<ResistanceStep> ResistanceStepChange;
         public event Action Finished;
 
+        public ResistanceStep[] Steps { get { return m_steps; } }
+        public float Seconds { get { return m_seconds; } }
+
         public ErgMode(ResistanceStep[] steps)
         {
             m_steps = steps;
         }
-
+        
         public void Start()
         {
             m_stepIndex = 0;
@@ -76,8 +79,6 @@ namespace IntervalParser
             m_timer.Elapsed += m_timer_Elapsed;
             m_timer.Start();
         }
-
-        public float Seconds { get { return m_seconds; } }
 
         void m_timer_Elapsed(object sender, ElapsedEventArgs e)
         {
