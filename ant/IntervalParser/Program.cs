@@ -19,14 +19,21 @@ namespace IntervalParser
         public ResistanceStep() {}
 
         public ResistanceMode Type = ResistanceMode.Erg;
-        public int Watts;
-        public string Comments;
-        public float ElapsedStart;
-        public float ElapsedEnd;
+        
+        public int Watts { get; set; }
+        
+        public string Comments { get; set; }
+        
+        public float ElapsedStart { get; set; }
+        
+        public float ElapsedEnd { get; set; }
+
+        public float Duration { get; set; }
 
         public static ResistanceStep Create(ResistanceStep last, float durationMin)
         {
             ResistanceStep next = new ResistanceStep();
+            next.Duration = durationMin;
             
             if (last != null)
                 next.ElapsedStart = last.ElapsedEnd;
@@ -138,7 +145,9 @@ namespace IntervalParser
                     float.TryParse(vals[0], out durationMin);
 
                     var entry = ResistanceStep.Create(list.LastOrDefault(), durationMin);
-                    int.TryParse(vals[1], out entry.Watts);
+                    int watts;
+                    int.TryParse(vals[1], out watts);
+                    entry.Watts = watts;
                     if (vals.Length > 2 && !string.IsNullOrEmpty(vals[2]))
                         entry.Comments = vals[2];
 
@@ -149,7 +158,7 @@ namespace IntervalParser
             return list;
         }
 
-        private static void WriteOuput(string filename, int ftp, List<ResistanceStep> list)
+        public static void WriteOuput(string filename, int ftp, List<ResistanceStep> list)
         {
             const string COURSE_HEADER = "[COURSE HEADER]\r\n" +
                 "VERSION=2\r\n" +
