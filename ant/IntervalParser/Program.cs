@@ -7,7 +7,7 @@ using System.Timers;
 
 namespace IntervalParser
 {
-    public enum ResistanceMode : byte
+    public enum ResistanceType : byte
     {
         Erg = 0x42,
         Level = 0x41,
@@ -19,7 +19,7 @@ namespace IntervalParser
     {
         public ResistanceStep() {}
 
-        public ResistanceMode Type = ResistanceMode.Erg;
+        public ResistanceType Type = ResistanceType.Erg;
         
         public int Watts { get; set; }
         

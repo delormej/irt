@@ -92,6 +92,12 @@
     <Compile Include="Simulation\ElevationProfileForm.Designer.cs">
       <DependentUpon>ElevationProfileForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Simulation\ErgForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Simulation\ErgForm.Designer.cs">
+      <DependentUpon>ErgForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Simulation\SimulationMode.cs" />
     <EmbeddedResource Include="GraphForm.resx">
       <DependentUpon>GraphForm.cs</DependentUpon>
@@ -114,6 +120,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Simulation\ElevationProfileForm.resx">
       <DependentUpon>ElevationProfileForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Simulation\ErgForm.resx">
+      <DependentUpon>ErgForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -144,6 +153,10 @@
     <ProjectReference Include="..\..\calibration\Calibration.csproj">
       <Project>{cbcac49e-7428-4218-b68f-c148e2742e35}</Project>
       <Name>Calibration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IntervalParser\IntervalParser.csproj">
+      <Project>{c0c89786-3095-4911-8338-44d9f7d221df}</Project>
+      <Name>IntervalParser</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

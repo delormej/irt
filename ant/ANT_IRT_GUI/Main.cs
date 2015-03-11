@@ -4,6 +4,7 @@ using AntPlus.Profiles.BikePower;
 using AntPlus.Profiles.Common;
 using AntPlus.Profiles.Components;
 using AntPlus.Types;
+using IntervalParser;
 using IRT.Calibration;
 using IRT_GUI.IrtMessages;
 using IRT_GUI.Simulation;
@@ -1532,7 +1533,7 @@ namespace IRT_GUI
                             { 
                                 txtResistanceErgWatts.Focus();
                             }
-                            btnResistanceLoad.Enabled = false;
+                            btnResistanceLoad.Enabled = true;
                         });
                     break;
 
@@ -2438,7 +2439,9 @@ namespace IRT_GUI
 
         private void LaunchErgMode(string filename)
         {
-
+            ErgMode erg = ErgMode.FromFile(filename);
+            ErgForm form = new ErgForm(erg);
+            form.Show();
         }
 
         private void LaunchSimMode(string filename)
