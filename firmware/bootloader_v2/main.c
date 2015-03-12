@@ -50,12 +50,11 @@
 #include "pstorage_platform.h"
 #include "nrf_mbr.h"
 #include "nrf_delay.h"
+#include "irt_bootloader_status.h"
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                                       /**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 
-#warning "Must assigned LED PINS"
 #define BOOTLOADER_BUTTON               22                                            /**< Button used to enter SW update mode. */
-#define UPDATE_IN_PROGRESS_LED          13                                               /**< Led used to indicate that DFU is active. */
 
 #define APP_TIMER_PRESCALER             0                                                       /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_MAX_TIMERS            3                                                       /**< Maximum number of simultaneously created timers. */
@@ -84,25 +83,6 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
     app_error_handler(0xDEADBEEF, line_num, p_file_name);
 }
 
-
-/**@brief Function for initialization of LEDs.
- */
-static void leds_init(void)
-{
-#warning "Set actual LED pins."
-    nrf_gpio_cfg_output(12);
-	nrf_gpio_cfg_output(13);
-	nrf_gpio_cfg_output(18);
-	nrf_gpio_cfg_output(19);
-
-	// turn off all leds
-    nrf_gpio_pin_set(12);
-	nrf_gpio_pin_set(13);
-	nrf_gpio_pin_set(18);
-	nrf_gpio_pin_set(19);
-}
-
-
 /**@brief Function for initializing the timer handler module (app_timer).
  */
 static void timers_init(void)
@@ -116,12 +96,7 @@ static void timers_init(void)
  */
 static void buttons_init(void)
 {   
-#warning "Must init buton properly"
-	/*
-    nrf_gpio_cfg_sense_input(BOOTLOADER_BUTTON,
-                             BUTTON_PULL, 
-                             NRF_GPIO_PIN_SENSE_LOW);*/
-
+    nrf_gpio_cfg_input(BOOTLOADER_BUTTON, NRF_GPIO_PIN_NOPULL);
 }
 
 
@@ -195,7 +170,7 @@ int main(void)
         NRF_POWER->GPREGRET = 0;
     }
     
-    leds_init();
+    bootloader_status_init();
 
     // This check ensures that the defined fields in the bootloader corresponds with actual
     // setting in the nRF51 chip.
@@ -210,9 +185,7 @@ int main(void)
 
     if (bootloader_dfu_sd_in_progress())
     {
-        //nrf_gpio_pin_clear(UPDATE_IN_PROGRESS_LED);
-		
-		nrf_gpio_pin_clear(13); // front green led
+    	on_bootloader_in_progress();
 
         err_code = bootloader_dfu_sd_update_continue();
         APP_ERROR_CHECK(err_code);
@@ -224,37 +197,24 @@ int main(void)
         err_code = bootloader_dfu_sd_update_finalize();
         APP_ERROR_CHECK(err_code);
 
-        //nrf_gpio_pin_set(UPDATE_IN_PROGRESS_LED);
+
+        //on_bootloader_finished();
     }
     else
     {
-		nrf_gpio_pin_clear(19); // back green led
-
         // If stack is present then continue initialization of bootloader.
         //ble_stack_init(!app_reset);
 		ble_stack_init(true);
-		nrf_gpio_pin_set(19); // back green led
         scheduler_init();
-
-		// 2 back red blinks
-		nrf_gpio_pin_clear(18);
-		nrf_delay_ms(500);
-		nrf_gpio_pin_set(18);
-		nrf_delay_ms(500);
-		nrf_gpio_pin_clear(18);
-		nrf_delay_ms(500);
-		nrf_gpio_pin_set(18);
     }
 
     dfu_start  = app_reset;
-    //dfu_start |= ((nrf_gpio_pin_read(BOOTLOADER_BUTTON) == 0) ? true: false);
-    
-	if (dfu_start)
-		nrf_gpio_pin_clear(19); // green on.
+    dfu_start |= ((nrf_gpio_pin_read(BOOTLOADER_BUTTON) == 0) ? true: false);
 
     if (dfu_start || (!bootloader_app_is_valid(DFU_BANK_0_REGION_START)))
     {
         //nrf_gpio_pin_clear(UPDATE_IN_PROGRESS_LED);
+    	on_bootloader_in_progress();
 		
 
         // Initiate an update of the firmware.
@@ -262,6 +222,7 @@ int main(void)
         APP_ERROR_CHECK(err_code);
 
         //nrf_gpio_pin_set(UPDATE_IN_PROGRESS_LED);
+        //on_bootloader_finished();
     }
 
     if (bootloader_app_is_valid(DFU_BANK_0_REGION_START) && !bootloader_dfu_sd_in_progress())

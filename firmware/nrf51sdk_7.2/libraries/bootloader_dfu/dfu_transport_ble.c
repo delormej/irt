@@ -18,7 +18,6 @@
 //#include "boards.h"
 #include "nrf51.h"
 #include "nrf_sdm.h"
-#include "nrf_gpio.h"
 #include "app_util.h"
 #include "app_error.h"
 #include "softdevice_handler.h"
@@ -36,16 +35,17 @@
 #include "bootloader.h"
 #include "dfu_ble_svc_internal.h"
 #include "nrf_delay.h"
+#include "irt_bootloader_status.h"
 
 #define DFU_REV_MAJOR                        0x00                                                    /** DFU Major revision number to be exposed. */
 #define DFU_REV_MINOR                        0x05                                                    /** DFU Minor revision number to be exposed. */
 #define DFU_REVISION                         ((DFU_REV_MAJOR << 8) | DFU_REV_MINOR)                  /** DFU Revision number to be exposed. Combined of major and minor versions. */
 #warning "Must assigned proper LED pins"
-#define ADVERTISING_LED_PIN_NO               12                                               /**< Is on when device is advertising. */
-#define CONNECTED_LED_PIN_NO                 18                                               /**< Is on when device has connected. */
+//#define ADVERTISING_LED_PIN_NO               12                                               		/**< Is on when device is advertising. */
+//#define CONNECTED_LED_PIN_NO                 18                                               		/**< Is on when device has connected. */
 
-#define DEVICE_NAME                          "DfuTarg"                                               /**< Name of device. Will be included in the advertising data. */
-#define MANUFACTURER_NAME                    "NordicSemiconductor"                                   /**< Manufacturer. Will be passed to Device Information Service. */
+#define DEVICE_NAME                          "IRT DFU"                                         /**< Name of device. Will be included in the advertising data. */
+#define MANUFACTURER_NAME                    "InsideRide"                                   /**< Manufacturer. Will be passed to Device Information Service. */
 
 #define MIN_CONN_INTERVAL                    (uint16_t)(MSEC_TO_UNITS(15, UNIT_1_25_MS))             /**< Minimum acceptable connection interval (11.25 milliseconds). */
 #define MAX_CONN_INTERVAL                    (uint16_t)(MSEC_TO_UNITS(30, UNIT_1_25_MS))             /**< Maximum acceptable connection interval (15 milliseconds). */
@@ -668,7 +668,7 @@ static void advertising_start(void)
         err_code = sd_ble_gap_adv_start(&m_adv_params);
         APP_ERROR_CHECK(err_code);
 
-        nrf_gpio_pin_clear(ADVERTISING_LED_PIN_NO);
+        on_bootloader_advertising(true);
 
         m_is_advertising = true;
     }
@@ -686,7 +686,7 @@ static void advertising_stop(void)
         err_code = sd_ble_gap_adv_stop();
         APP_ERROR_CHECK(err_code);
 
-        nrf_gpio_pin_set(ADVERTISING_LED_PIN_NO);
+        on_bootloader_advertising(false);
 
         m_is_advertising = false;
     }
@@ -704,8 +704,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
-            nrf_gpio_pin_clear(CONNECTED_LED_PIN_NO);
-            nrf_gpio_pin_set(ADVERTISING_LED_PIN_NO);
+        	on_bootloader_connected(true);
 
             m_conn_handle    = p_ble_evt->evt.gap_evt.conn_handle;
             m_is_advertising = false;
@@ -713,7 +712,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
         case BLE_GAP_EVT_DISCONNECTED:
             m_direct_adv_cnt = APP_DIRECTED_ADV_TIMEOUT;
-            nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
+
+            on_bootloader_connected(false);
 
             if (!m_tear_down_in_progress)
             {
@@ -797,20 +797,6 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
     on_ble_evt(p_ble_evt);
 }
 
-
-/**@brief       Function for the LEDs initialization.
- *
- * @details     Initializes all LEDs used by this application.
- */
-static void leds_init(void)
-{
-    nrf_gpio_cfg_output(ADVERTISING_LED_PIN_NO);
-    nrf_gpio_cfg_output(CONNECTED_LED_PIN_NO);
-    nrf_gpio_pin_set(ADVERTISING_LED_PIN_NO);
-    nrf_gpio_pin_set(CONNECTED_LED_PIN_NO);
-}
-
-
 /**@brief     Function for the GAP initialization.
  *
  * @details   This function will setup all the necessary GAP (Generic Access Profile) parameters of 
@@ -893,8 +879,6 @@ uint32_t dfu_transport_update_start()
     uint32_t err_code;
     
     m_pkt_type = PKT_TYPE_INVALID;
-
-    leds_init();
 
     err_code = softdevice_ble_evt_handler_set(ble_evt_dispatch);
     if (err_code != NRF_SUCCESS)

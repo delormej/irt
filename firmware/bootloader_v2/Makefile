@@ -93,8 +93,8 @@ debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 # Define the Software Revision.
 ############################################
 SW_REVISION_MAJ := 1
-SW_REVISION_MIN := 2
-SW_REVISION_BLD := 2
+SW_REVISION_MIN := 0
+SW_REVISION_BLD := 0
 
 # Update project name to include the build.
 PROJECT_NAME := $(PROJECT_NAME)_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)
