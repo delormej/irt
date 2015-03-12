@@ -1223,7 +1223,7 @@
             // lblFeatures
             // 
             this.lblFeatures.AutoSize = true;
-            this.lblFeatures.Location = new System.Drawing.Point(129, 302);
+            this.lblFeatures.Location = new System.Drawing.Point(128, 277);
             this.lblFeatures.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblFeatures.Name = "lblFeatures";
             this.lblFeatures.Size = new System.Drawing.Size(17, 20);
