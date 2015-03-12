@@ -89,6 +89,16 @@ debug : CFLAGS += -g							# Enable debug symbols.
 debug : CFLAGS += -Wno-format					# Disable warnings on printf formating
 debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 
+############################################
+# Define the Software Revision.
+############################################
+SW_REVISION_MAJ := 1
+SW_REVISION_MIN := 2
+SW_REVISION_BLD := 2
+
+# Update project name to include the build.
+PROJECT_NAME := $(PROJECT_NAME)_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVISION_BLD)
+
 include $(TEMPLATE_PATH)Makefile.common
 
 debug: all 
@@ -96,12 +106,6 @@ debug: all
 deploy:
 	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
 	cp $(HEX) $(DEPLOY_PATH2)$(OUTPUT_NAME).hex
-
-############################################
-# Flashes both the bootloader & app.
-############################################
-flash-all: 
-	$(NRFJPROG) --program $(HEX) ./../bootloader/gcc/_build/bootloader.hex --verify --reset
 
 name:
 	@echo $(PROJECT_NAME)
