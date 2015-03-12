@@ -1814,6 +1814,17 @@ static uint32_t check_reset_reason()
 
 	// Read the reset reason
 	reason = NRF_POWER->RESETREAS;
+
+	// Reset the battery clock ONLY if the reset reason was NOT from an
+	// interrupt or watch dog timer.
+	if ( ((POWER_RESETREAS_OFF_Msk | POWER_RESETREAS_DOG_Msk) & reason) == 0)
+	{
+		// Reset the battery clock.
+		m_battery_start_ticks = 0;
+	}
+
+	LOG("[MAIN]:Battery Ticks: %i\r\n", m_battery_start_ticks);
+
 	if (reason > 0)
 	{
 		// Clear the reason by writing 1 bit.
@@ -1843,6 +1854,7 @@ static uint32_t check_reset_reason()
 	}
 	else
 	{
+		//  A "cold" start, first time after the battery was unplugged.
 		LOG("[MAIN]:Normal power on.\r\n");
 	}
 
