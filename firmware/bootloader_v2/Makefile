@@ -16,7 +16,6 @@ C_SOURCE_FILES = $(notdir $(wildcard ./*.c))
 ############################################
 # SDK libraries used.
 ############################################
-#C_SOURCE_FILES += system_nrf51.c
 C_SOURCE_FILES += ble_advdata.c
 C_SOURCE_FILES += ble_conn_params.c
 C_SOURCE_FILES += ble_srv_common.c
