@@ -471,4 +471,11 @@ namespace IRT_GUI.IrtMessages
             return data;
         }
     }
+
+    public class IRTDevice
+    {
+        public ushort DeviceId;
+        public uint SerialNumber;
+    }
+
 }

@@ -24,15 +24,15 @@ namespace IRT_GUI
 {
     public partial class frmIrtGui : Form
     {
-        const byte ANT_BURST_MSG_ID_SET_MAGNET_CA   = 0x60;
-        const byte ANT_BURST_MSG_ID_SET_POSITIONS   = 0x59;
-        const byte ANT_BURST_MSG_ID_SET_RESISTANCE  = 0x48;
-        
-        const byte RESISTANCE_SET_SLOPE		        = 0x46;
-	    const byte RESISTANCE_SET_WIND			    = 0x47;
-        const byte RESISTANCE_SET_WHEEL_CR          = 0x48;
-        const byte RESISTANCE_SET_BIKE_TYPE	        = 0x44; // Co-efficient of rolling resistance
-        const byte RESISTANCE_SET_C                 = 0x45; // Wind resistance offset.
+        const byte ANT_BURST_MSG_ID_SET_MAGNET_CA = 0x60;
+        const byte ANT_BURST_MSG_ID_SET_POSITIONS = 0x59;
+        const byte ANT_BURST_MSG_ID_SET_RESISTANCE = 0x48;
+
+        const byte RESISTANCE_SET_SLOPE = 0x46;
+        const byte RESISTANCE_SET_WIND = 0x47;
+        const byte RESISTANCE_SET_WHEEL_CR = 0x48;
+        const byte RESISTANCE_SET_BIKE_TYPE = 0x44; // Co-efficient of rolling resistance
+        const byte RESISTANCE_SET_C = 0x45; // Wind resistance offset.
 
         FirmwareRev m_firmwareRev;
 
@@ -40,7 +40,7 @@ namespace IRT_GUI
         ushort m_min_servo_pos = 2000;
         ushort m_max_servo_pos = 700;
 
-        Position[] m_positions; 
+        Position[] m_positions;
 
         const ushort DEFAULT_WHEEL_SIZE = 2096;
 
@@ -56,6 +56,7 @@ namespace IRT_GUI
 
         ushort m_settings = 0;
         ushort m_EmrDeviceId = 0;
+        List<IRTDevice> m_EmrDevices;
 
         bool m_PauseServoUpdate = false;
         bool m_requestingSettings = false;
@@ -153,13 +154,13 @@ namespace IRT_GUI
 
             // Setup the resistance modes.
             cmbResistanceMode.Items.Clear();
-            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode),
                 ResistanceMode.Standard));
-            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode),
                 ResistanceMode.Percent));
-            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode),
                 ResistanceMode.Erg));
-            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode), 
+            cmbResistanceMode.Items.Add(Enum.GetName(typeof(ResistanceMode),
                 ResistanceMode.Sim));
 
             cmbParamGet.Items.Clear();
@@ -177,7 +178,7 @@ namespace IRT_GUI
             // and react accordingly.
             m_calibration = new Controller(m_eMotion, m_refPower);
             m_calibration.StageChanged += m_calibration_StageChanged;
-            
+
             StartReporting();
         }
 
@@ -253,14 +254,23 @@ namespace IRT_GUI
             // items.Add("Settings", lblFeatures);
             string message = "\"{0}\",\"{1}\"\n";
 
-            foreach(var item in items)
+            foreach (var item in items)
             {
-                reporter.Report(string.Format(message, 
+                reporter.Report(string.Format(message,
                     item.Key, item.Value.Text));
             }
 
             // Report Settings
             reporter.Report(string.Format(message, "Settings", m_settings));
+
+            // Report all E-Motion rollers that were connected.
+            if (m_EmrDevices != null)
+            {
+                foreach(var device in m_EmrDevices)
+                {
+                    reporter.Report(string.Format(message, device.DeviceId, device.SerialNumber));
+                }
+            }
         }
 
         void m_ANT_Device_deviceResponse(ANT_Response response)
@@ -269,7 +279,7 @@ namespace IRT_GUI
             {
                 //System.Diagnostics.Debug.WriteLine(response.getMessageID());
             }
-            catch 
+            catch
             {
                 System.Diagnostics.Debug.WriteLine(response.messageContents);
             }
@@ -277,7 +287,7 @@ namespace IRT_GUI
 
         void m_ANT_Device_serialError(ANT_Device sender, ANT_Device.serialErrorCode error, bool isCritical)
         {
-            
+
         }
 
         void channel_rawChannelResponse(ANT_Device.ANTMessage message, ushort messageSize)
@@ -336,12 +346,12 @@ namespace IRT_GUI
             m_data.ResistanceMode = m.Mode;
              */
 
-            if (m_dataPoint.ResistanceMode != message.Mode || 
+            if (m_dataPoint.ResistanceMode != message.Mode ||
                 m_dataPoint.TargetLevel != message.Level)
             {
                 ResetWatchClock();
             }
-            
+
             m_dataPoint.ServoPosition = message.ServoPosition;
             m_dataPoint.TargetLevel = message.Level;
             m_dataPoint.Temperature = message.Temperature;
@@ -465,7 +475,7 @@ namespace IRT_GUI
                         intercept = 0;
 
                     UpdateStatus("Received CRR parameter.");
-                    
+
                     break;
 
                 case SubPages.TotalWeight:
@@ -532,7 +542,7 @@ namespace IRT_GUI
                     goto default;
                 default:
                     UpdateStatus(string.Format("Received Parameters page: {0} - " +
-                        "[{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]", 
+                        "[{1:x2}][{2:x2}][{3:x2}][{4:x2}][{5:x2}][{6:x2}]",
                         m.SubPage,
                         buffer[2],
                         buffer[3],
@@ -664,7 +674,7 @@ namespace IRT_GUI
 
             foreach (IReporter r in m_reporters)
                 r.Report(m_dataPoint);
-            
+
             UpdateMovingAverage();
             UpdateWatchClock();
 
@@ -674,7 +684,7 @@ namespace IRT_GUI
                 m_simulator.DistanceEvent(m_eMotion.TotalDistanceWheelTorque);
             }
 
-            this.lblDistance.Text = 
+            this.lblDistance.Text =
                 string.Format("{0:0.0}", m_eMotion.TotalDistanceWheelTorque / 1000);
 
             // Enable calibration start button when over 5 mph.
@@ -726,7 +736,7 @@ namespace IRT_GUI
             if (m_eMotion != null)
             {
                 if (!double.IsInfinity(m_eMotion.AverageSpeedWheelTorque) &&
-                    m_eMotion.AverageSpeedWheelTorque > 0 && 
+                    m_eMotion.AverageSpeedWheelTorque > 0 &&
                     m_eMotion.AverageSpeedWheelTorque != ushort.MaxValue)
                 {
                     m_SpeedList[m_movingAvgPosition] = m_eMotion.AverageSpeedWheelTorque * 0.621371;
@@ -738,7 +748,7 @@ namespace IRT_GUI
 
                 if (m_eMotion.StandardPowerOnly != null &&
                     m_eMotion.StandardPowerOnly.InstantaneousPower < 3000) // sometimes we get just huge values here.
-                    //m_eMotion.StandardPowerOnly.InstantaneousPower != ushort.MaxValue)
+                //m_eMotion.StandardPowerOnly.InstantaneousPower != ushort.MaxValue)
                 {
                     m_eMotionPowerList[m_movingAvgPosition] = m_eMotion.StandardPowerOnly.InstantaneousPower;
                 }
@@ -779,7 +789,7 @@ namespace IRT_GUI
         {
             // Non-zeros
             var nonZero = list.Where(x => x > 0);
-            double avg = 0.0; 
+            double avg = 0.0;
 
             if (nonZero.Count() > 0)
             {
@@ -828,19 +838,19 @@ namespace IRT_GUI
                 // Wrap this in a seperate thread.
                 //var t = new System.Threading.Thread(() =>
                 //{
-                    // Use last saved values to reprogram Crr, Weight, WheelSize & ServoOffset.
-                    UpdateStatus("Restoring user profile.");
+                // Use last saved values to reprogram Crr, Weight, WheelSize & ServoOffset.
+                UpdateStatus("Restoring user profile.");
 
-                    // Simulate pressing both of these buttons.
-                    btnServoOffset_Click(this, null);
+                // Simulate pressing both of these buttons.
+                btnServoOffset_Click(this, null);
 
-                    // Wait 1/2 second before pushing the next one.
-                    System.Threading.Thread.Sleep(500);
+                // Wait 1/2 second before pushing the next one.
+                System.Threading.Thread.Sleep(500);
 
-                    btnCalibration2Set_Click(this, null);
-                    System.Threading.Thread.Sleep(500);
+                btnCalibration2Set_Click(this, null);
+                System.Threading.Thread.Sleep(500);
 
-                    btnSettingsSet_Click(this, null);
+                btnSettingsSet_Click(this, null);
                 //});
 
                 //t.Start();
@@ -920,8 +930,8 @@ namespace IRT_GUI
                             // Try to grab the new firmware rev right away.
                             RequestDeviceParameter(SubPages.Product);
                             RestoreUserProfile();
-                        }                        
-                        
+                        }
+
                         break;
 
                     default:
@@ -981,6 +991,13 @@ namespace IRT_GUI
             {
                 m_EmrDeviceId = arg1;
                 RequestSettings();
+
+                if (m_EmrDevices == null)
+                {
+                    m_EmrDevices = new List<IRTDevice>();
+                }
+
+                m_EmrDevices.Add(new IRTDevice() { DeviceId = m_EmrDeviceId });
             }
         }
 
@@ -1002,7 +1019,7 @@ namespace IRT_GUI
 
         void m_eMotion_BatteryStatusPageReceived(AntPlus.Profiles.Common.BatteryStatusPage arg1, uint arg2)
         {
-            float volts = (float)arg1.CoarseBatteryVoltage + 
+            float volts = (float)arg1.CoarseBatteryVoltage +
                 ((float)arg1.FractionalBatteryVoltage / 255);
 
             UpdateStatus("Received battery reading.");
@@ -1034,7 +1051,7 @@ namespace IRT_GUI
                 ExecuteOnUI(() => { lblEmrBattVolt.ForeColor = changeColor; });
             }
 
-            double hours = 0.0; 
+            double hours = 0.0;
             int minutes = 0;
 
             if (arg1.CumulativeOperatingTimeResolution == Common.Resolution.TwoSeconds)
@@ -1074,14 +1091,14 @@ namespace IRT_GUI
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {
             // if we start getting a torque page, we're back out of calibration mode.
-            if (m_calibration != null && 
+            if (m_calibration != null &&
                 m_calibration.Stage != IRT.Calibration.Globals.Stage.Finished &&
                 m_calibration.Stage != IRT.Calibration.Globals.Stage.Ready)
             {
                 m_calibration.Cancel();
             }
 
-            if (lastTorqueEventCount != arg1.WheelTorqueEventCount && 
+            if (lastTorqueEventCount != arg1.WheelTorqueEventCount &&
                 !double.IsInfinity(m_eMotion.AverageSpeedWheelTorque))
             {
                 // Convert to mph from km/h.
@@ -1101,9 +1118,14 @@ namespace IRT_GUI
         void m_eMotion_ProductInformationPageReceived(AntPlus.Profiles.Common.ProductInformationPage arg1, uint arg2)
         {
             UpdateText(lblEmrSerialNo, arg1.SerialNumber.ToString("X"));
-            
+            if (m_EmrDevices != null && m_EmrDevices.Count > 0)
+            {
+                var device = m_EmrDevices.Last();
+                device.SerialNumber = arg1.SerialNumber;
+            }
+
             m_firmwareRev = new FirmwareRev(arg1.SoftwareRevision, arg1.SupplementalSoftwareRevision);
-            
+
             UpdateText(lblEmrFirmwareRev, m_firmwareRev);
         }
 
@@ -1174,7 +1196,7 @@ namespace IRT_GUI
             if (!Enum.TryParse<SubPages>(cmbParamGet.Text, out param))
             {
                 UpdateStatus("Please enter a parameter number.");
-                return 0;   
+                return 0;
             }
             else
             {
@@ -1313,7 +1335,7 @@ namespace IRT_GUI
         bool SendBurstData(byte[] data)
         {
             bool result = RetryCommand(ANT_RETRY_REQUESTS, ANT_RETRY_DELAY, () =>
-                { return m_eMotionChannel.sendBurstTransfer(data, 500); });
+            { return m_eMotionChannel.sendBurstTransfer(data, 500); });
 
             if (!result)
             {
@@ -1354,7 +1376,7 @@ namespace IRT_GUI
                 0x00,
                 0x00
                           };
-            
+
             return SendBurstData(data);
         }
 
@@ -1363,7 +1385,7 @@ namespace IRT_GUI
             byte[] data = ResistanceMessage.GetCommand(
                 (byte)command, m_sequence++, value);
 
-            ANT_ReferenceLibrary.MessagingReturnCode ret = 
+            ANT_ReferenceLibrary.MessagingReturnCode ret =
                 m_eMotionChannel.sendAcknowledgedData(data, 500);
 
             return (ret == ANT_ReferenceLibrary.MessagingReturnCode.Pass);
@@ -1381,7 +1403,7 @@ namespace IRT_GUI
             ushort.TryParse(txtServoPos.Text, out position);
 
             // do a check for valid range if not in admin mode
-            if (!AdminEnabled) 
+            if (!AdminEnabled)
             {
                 if (position < 500 && position > 2500)
                 {
@@ -1402,7 +1424,7 @@ namespace IRT_GUI
             ushort value = 0;
             ushort.TryParse(lblResistanceStdLevel.Text, out value);
 
-            if (value < m_max_resistance_levels-1)
+            if (value < m_max_resistance_levels - 1)
             {
                 if (SetResistanceStandard(++value))
                 {
@@ -1527,18 +1549,18 @@ namespace IRT_GUI
                     pnlErg.BringToFront();
                     UpdateStatus("Erg selected.");
                     ExecuteOnUI(() =>
+                    {
+                        txtResistanceErgWatts.Text = "";
+                        if (!m_SystemUiUpdate)
                         {
-                            txtResistanceErgWatts.Text = "";
-                            if (!m_SystemUiUpdate)
-                            { 
-                                txtResistanceErgWatts.Focus();
-                            }
-                            btnResistanceLoad.Enabled = true;
-                        });
+                            txtResistanceErgWatts.Focus();
+                        }
+                        btnResistanceLoad.Enabled = true;
+                    });
                     break;
 
                 case ResistanceMode.Sim:
-                    pnlResistanceSim.BringToFront();    
+                    pnlResistanceSim.BringToFront();
                     UpdateStatus("Sim selected.");
                     ExecuteOnUI(() => { btnResistanceLoad.Enabled = true; });
                     break;
@@ -1659,7 +1681,7 @@ namespace IRT_GUI
         {
             RequestSettings();
         }
-        
+
         /*private bool TextBoxRangeCheck<T>(TextBox txt, string name, int min, int max, out T value) where T : IComparable<T>
         {
             
@@ -1716,10 +1738,10 @@ namespace IRT_GUI
             {
                 message.RequestedPage = (byte)subPage;
             }
-            else if(subPage == SubPages.Temp)
+            else if (subPage == SubPages.Temp)
             {
                 message.RequestedPage = (byte)SubPages.MeasurementOuput;
-                
+
             }
             else
             {
@@ -1730,7 +1752,7 @@ namespace IRT_GUI
 
             UpdateStatus(String.Format("Requesting parameter: {0}.", subPage));
             bool result = RetryCommand(ANT_RETRY_REQUESTS, ANT_RETRY_DELAY, () =>
-                { return m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT); });
+            { return m_eMotionChannel.sendAcknowledgedData(message.AsBytes(), ACK_TIMEOUT); });
 
             if (!result)
             {
@@ -1739,7 +1761,7 @@ namespace IRT_GUI
 
             return result;
         }
-        
+
         private bool RetryCommand(int times, int delay_ms, Func<ANT_ReferenceLibrary.MessagingReturnCode> command)
         {
             int retries = 0;
@@ -1760,7 +1782,7 @@ namespace IRT_GUI
         {
             if (check != ctl.Checked)
             {
-                ExecuteOnUI(() => 
+                ExecuteOnUI(() =>
                 {
                     ctl.Checked = check;
                 });
@@ -1773,7 +1795,7 @@ namespace IRT_GUI
             {
                 if (txtLog == null || txtLog.IsDisposed)
                     return;
-                
+
                 txtLog.AppendText(text + '\n');
                 lblStatus.Text = text;
             });
@@ -1957,7 +1979,7 @@ namespace IRT_GUI
                     }
 
                     value = (ushort)((wind * 1000) + 32768);
-                    
+
                     SendBurst(RESISTANCE_SET_WIND, value);
                 }
                 else
@@ -1972,7 +1994,7 @@ namespace IRT_GUI
         private void trackBarResistancePct_Scroll(object sender, EventArgs e)
         {
             UpdateText(txtResistancePercent, trackBarResistancePct.Value);
-            
+
             SetResistancePercent((float)trackBarResistancePct.Value);
         }
 
@@ -2135,12 +2157,12 @@ namespace IRT_GUI
             {
                 UpdateStatus("Set new servo positions.");
                 dialog.Close();
-                
+
                 // Initiate a request to verify.
                 var t = new System.Threading.Timer(o =>
-                    {
-                        RequestDeviceParameter(SubPages.ServoPositions, 0);
-                    }
+                {
+                    RequestDeviceParameter(SubPages.ServoPositions, 0);
+                }
                     , null, 500, System.Threading.Timeout.Infinite);
             }
             else
@@ -2152,7 +2174,7 @@ namespace IRT_GUI
         }
 
         // Safety against too many recursive calls to get the next sequence.
-        private int m_lastPositionRequestIndex = 0;  
+        private int m_lastPositionRequestIndex = 0;
 
         private void ProcessServoPositions(byte[] buffer)
         {
@@ -2164,11 +2186,11 @@ namespace IRT_GUI
                 m_positions = new Position[m_max_resistance_levels];
                 m_lastPositionRequestIndex = 0;
             }
-            
+
             for (byte i = 0; startIndex < m_max_resistance_levels && i < 3; ) // can only read 2 positions per buffer.
             {
                 Position p = new Position(Message.BigEndian(buffer[4 + i++], buffer[4 + i++]));
-                m_positions[startIndex++] = p; 
+                m_positions[startIndex++] = p;
             }
 
             // Set minimum servo position value.
@@ -2206,7 +2228,7 @@ namespace IRT_GUI
             graph.Width = width;
             graph.Height = (int)(screen.WorkingArea.Height * 0.4);
             graph.SetDesktopLocation(0, 0);
-            
+
             graph.Show();
         }
 
@@ -2310,7 +2332,7 @@ namespace IRT_GUI
 
                 GetSetMessage dragMessage = new GetSetMessage(SubPages.Drag);
                 dragMessage.SetPayLoad(drag_buffer);
-                
+
                 if (!SetParameter(dragMessage))
                 {
                     throw new Exception("Failed to set drag, please retry.");
@@ -2352,7 +2374,7 @@ namespace IRT_GUI
 
         private void btnLoadCalibration_Click(object sender, EventArgs e)
         {
-           
+
             OpenFileDialog dlg = new OpenFileDialog();
             //dlg.InitialDirectory = m_lastPath;
             dlg.Filter = "Ride Logs (*.csv)|*.csv|All files (*.*)|*.*";
@@ -2379,7 +2401,7 @@ namespace IRT_GUI
 
                         // Calculate based on multiple files.
                         model = coastdown.Calculate(models.ToArray());
-                        
+
                         // For display purposes, use the lsat stable speed and watts.
                         model.StableSeconds = models.Last().StableSeconds;
                         model.StableSpeedMps = models.Last().StableSpeedMps;
@@ -2397,7 +2419,7 @@ namespace IRT_GUI
                 }
                 catch (Exception ex)
                 {
-                    UpdateStatus("Error attempting to parse calibration file.\r\n" + 
+                    UpdateStatus("Error attempting to parse calibration file.\r\n" +
                         ex.Message);
                 }
             }
@@ -2463,7 +2485,7 @@ namespace IRT_GUI
             ResistanceMode mode = GetResistanceMode();
 
             OpenFileDialog dlg = new OpenFileDialog();
-            
+
             if (mode == ResistanceMode.Sim)
             {
                 dlg.Filter = "GPS Files (*.csv)|*.csv|All files (*.*)|*.*";
@@ -2497,7 +2519,7 @@ namespace IRT_GUI
                         default:
                             break;
                     }
-                
+
                 }
                 catch (Exception ex)
                 {
