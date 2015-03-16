@@ -96,24 +96,3 @@ irt_power_meas_t* irt_power_meas_fifo_last()
 
 	return &mp_buf_power_meas[idx_read];
 }
-
-/**@brief Stores features value on flash. */
-uint32_t features_store(uint32_t* p_buffer)
-{
-	uint32_t err_code;
-	uint32_t value = 0;
-
-	// Make a local copy.
-	memcpy(&value, p_buffer, sizeof(uint32_t));
-
-	err_code = sd_flash_write((uint32_t *)(FACTORY_SETTINGS_BASE),
-                            &value,
-                            sizeof(uint32_t));
-
-	CN_LOG("[CN] features_store storing value: %i, returned: %i.\r\n",
-			value, err_code);
-
-	return err_code;
-}
-
-
