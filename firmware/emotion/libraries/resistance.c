@@ -323,7 +323,7 @@ void resistance_adjust(irt_power_meas_t* p_power_meas_first,
 	{
 		case RESISTANCE_SET_ERG:
 			resistance_erg_set(p_sim_forces->erg_watts, speed_avg, rr_force);
-			RC_LOG"([RC] resistance_adjust: %i watts, %.2f mps, flywheel: %i\r\n",
+			RC_LOG("[RC] resistance_adjust: %i watts, %.2f mps, flywheel: %i\r\n",
 				p_sim_forces->erg_watts, speed_avg,
 				p_power_meas_current->accum_flywheel_ticks);
 			break;
