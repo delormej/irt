@@ -115,6 +115,8 @@ name:
 prep:
 	$(NRFJPROG) --memwr 0x3fc00 --val 1		
 	$(NRFJPROG) --memwr 0x3fc04 --val 0		
+	# depends on whether we have battery charger or not, this should be 0 if no charger
+	$(NRFJPROG) --memwr 0x10001080 --val 64
 
 # Does a complete install to a device, wipe clean, new softdevice, bootloader & app.
 install: | flash-softdevice flash prep 
