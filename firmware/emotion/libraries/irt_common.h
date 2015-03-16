@@ -19,8 +19,8 @@ All rights reserved.
 //
 // Global defines.
 //
-#define FACTORY_SETTINGS_BASE		0x10001080	// ((uint32_t*)NRF_UICR) + 4u) // 0x080)
-#define FEATURES ((volatile uint16_t *) FACTORY_SETTINGS_BASE)
+#define FACTORY_SETTINGS_BASE		(((uint8_t*)(NRF_UICR)) + 0x080) 	// Should be NRF_UICR->CUSTOMER[0] or 0x10001080 as per nRF51 Series Manual v3.0
+#define FEATURES 					((uint16_t *) FACTORY_SETTINGS_BASE)
 
 
 
