@@ -16,6 +16,10 @@ namespace IRT.Calibration
 
         ushort m_instantPower;
 
+        // Extra fields to store state for CTF power meters.
+        int m_ctfAccumulatedPower = 0;
+        int m_ctfEventCount = 0;
+
         // Forms
         CoastdownForm m_coastdownForm;
         CalibrationForm m_calibrationForm;
@@ -54,6 +58,7 @@ namespace IRT.Calibration
             {
                 // Register standard power messages from the external power meter.
                 m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
+                m_refPower.CrankTorqueFrequencyPageReceived += m_refPower_CrankTorqueFrequencyPageReceived;
             }
         }
 
@@ -107,6 +112,16 @@ namespace IRT.Calibration
         {
             OnPowerEvent(arg1.EventCount, arg1.AccumulatedPower);
             m_instantPower = arg1.InstantaneousPower;
+        }
+
+        void m_refPower_CrankTorqueFrequencyPageReceived(CrankTorqueFrequencyPage arg1, uint arg2)
+        {
+            // Support for SRM and CTF power meters.
+            m_instantPower = (ushort)m_refPower.PowerCtf;
+            m_ctfAccumulatedPower += m_instantPower;
+            m_ctfEventCount++;
+
+            OnPowerEvent(m_ctfEventCount, (ushort)m_ctfAccumulatedPower);
         }
 
         void m_emotionPower_GeneralCalibrationResponseFailPageReceived(

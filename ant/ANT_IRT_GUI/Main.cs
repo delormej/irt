@@ -62,6 +62,8 @@ namespace IRT_GUI
         bool m_requestingSettings = false;
         bool m_SystemUiUpdate = false;
 
+        bool m_usingCtfRef = false; // using an SRM power meter or Crank Torque Frequency.
+
         // Logging stuff.
         private Timer m_reportTimer;
         private List<IReporter> m_reporters;
@@ -630,6 +632,7 @@ namespace IRT_GUI
                 m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
                 m_refPower.SensorFound += m_refPower_SensorFound;
                 m_refPower.ChannelStatusChanged += m_refPower_ChannelStatusChanged;
+                m_refPower.CrankTorqueFrequencyPageReceived += m_refPower_CrankTorqueFrequencyPageReceived;
             }
             catch (ANT_Managed_Library.ANT_Exception e)
             {
@@ -644,6 +647,14 @@ namespace IRT_GUI
 
                 Application.Exit();
             }
+        }
+
+        void m_refPower_CrankTorqueFrequencyPageReceived(CrankTorqueFrequencyPage arg1, uint arg2)
+        {
+            if (m_usingCtfRef == false)
+                m_usingCtfRef = true;
+
+            UpdateText(lblRefPwrWatts, m_refPower.PowerCtf.ToString("0"));
         }
 
         void m_eMotion_MeasurementOutputPageReceived(MeasurementOutputPage arg1, uint arg2)
@@ -762,7 +773,11 @@ namespace IRT_GUI
                 }
             }
 
-            if (m_refPower != null && m_refPower.StandardPowerOnly != null &&
+            if (m_usingCtfRef)
+            {
+                m_RefPowerList[m_movingAvgPosition] = (ushort)m_refPower.PowerCtf;
+            }
+            else if (m_refPower != null && m_refPower.StandardPowerOnly != null &&
                 m_refPower.StandardPowerOnly.InstantaneousPower != ushort.MaxValue)
             {
                 m_RefPowerList[m_movingAvgPosition] = (ushort)m_dataPoint.PowerReference; // m_refPower.StandardPowerOnly.InstantaneousPower;
@@ -942,6 +957,10 @@ namespace IRT_GUI
 
         void m_refPower_StandardPowerOnlyPageReceived(StandardPowerOnlyPage arg1, uint arg2)
         {
+            // No longer using CTF, reset the flag.  TODO: this should be done on connection instead.
+            if (m_usingCtfRef)
+                m_usingCtfRef = false;
+
             if (arg1.InstantaneousPower != ushort.MaxValue)
             {
                 m_dataPoint.PowerReference = (short)arg1.InstantaneousPower;
