@@ -19,8 +19,10 @@ All rights reserved.
 //
 // Global defines.
 //
-#define FACTORY_SETTINGS_BASE		0x3FC90								// Address in flash in the uppermost page just after bootloader_settings_t
-#define FEATURES ((volatile uint16_t *) FACTORY_SETTINGS_BASE) 			/* 16 bit array of features */
+#define FACTORY_SETTINGS_BASE		0x10001080	// ((uint32_t*)NRF_UICR) + 4u) // 0x080)
+#define FEATURES ((volatile uint16_t *) FACTORY_SETTINGS_BASE)
+
+
 
 #define	GRAVITY						9.81f								// Coefficent of gravity.
 #define	MATH_PI						3.14159f
@@ -200,8 +202,5 @@ void 	 			irt_power_meas_fifo_free();
 irt_power_meas_t* 	irt_power_meas_fifo_next();
 irt_power_meas_t* 	irt_power_meas_fifo_first();
 irt_power_meas_t* 	irt_power_meas_fifo_last();
-
-/**@brief Stores features value on flash. */
-uint32_t features_store(uint32_t* value);
 
 #endif // IRT_COMMON_H
