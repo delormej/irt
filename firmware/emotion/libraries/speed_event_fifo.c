@@ -5,12 +5,12 @@
  *      Author: jasondel
  *
  */
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 #include <float.h>
 #include <math.h>
+#include <string.h>
+#include "speed_event_fifo.h"
 #include "irt_common.h"
 #include "nrf_error.h"
 #include "nrf_soc.h"
@@ -24,33 +24,16 @@
 #define CN_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-static irt_power_meas_t* 	mp_buf_power_meas;
-static uint8_t				m_buf_size;
+#define SPEED_EVENT_CACHE_SIZE		32
+
+static speed_event_t		mp_buf_speed_events[SPEED_EVENT_CACHE_SIZE] = {0};
+static uint8_t				m_buf_size = SPEED_EVENT_CACHE_SIZE;
 static uint8_t				m_fifo_index;
 
-uint32_t irt_power_meas_fifo_init(uint8_t size)
-{
-	m_buf_size = size;
-
-	// Allocate buffer on the heap for events and clear all bytes to 0.
-	mp_buf_power_meas = (irt_power_meas_t*)calloc(size, sizeof(irt_power_meas_t));
-
-	if (mp_buf_power_meas == 0)
-		return NRF_ERROR_NO_MEM;
-
-	return IRT_SUCCESS;
-}
-
-void irt_power_meas_fifo_free()
-{
-	// Free up the heap.
-	free(mp_buf_power_meas);
-}
-
 /*
- * Returns a pointer to use for the next write.
+ * Copies the speed event to the queue and returns a pointer.
  */
-irt_power_meas_t* irt_power_meas_fifo_next()
+speed_event_t* speed_event_fifo_put(speed_event_t speed_event)
 {
 	uint8_t idx_write;
 
@@ -58,7 +41,7 @@ irt_power_meas_t* irt_power_meas_fifo_next()
 	idx_write = m_fifo_index % m_buf_size;
 
 	// Clear the bytes for the next write.
-	memset(&mp_buf_power_meas[idx_write], 0, sizeof(irt_power_meas_t));
+	memset(&mp_buf_speed_events[idx_write], 0, sizeof(speed_event_t));
 
 	// Increment the index.
 	m_fifo_index++;
@@ -66,13 +49,18 @@ irt_power_meas_t* irt_power_meas_fifo_next()
 	//CN_LOG("[CN] _next %i \r\n", idx_write);
 
 	// Set pointer of the current event to write.
-	return &mp_buf_power_meas[idx_write];
+	speed_event_t* p_event = &mp_buf_speed_events[idx_write];
+
+	// Copy the current event into the buffer.
+	memcpy(p_event, &speed_event, sizeof(speed_event_t));
+
+	return p_event;
 }
 
 /*
  * Returns a pointer to oldest event in the queue.
  */
-irt_power_meas_t* irt_power_meas_fifo_first()
+speed_event_t* speed_event_fifo_oldest()
 {
 	// Determine index to read.
 	uint8_t idx_read;
@@ -81,18 +69,18 @@ irt_power_meas_t* irt_power_meas_fifo_first()
 	//CN_LOG("[CN] _first %i \r\n", idx_read);
 
 	// Return the pointer to the oldest event in the stack.
-	return &mp_buf_power_meas[idx_read];
+	return &mp_buf_speed_events[idx_read];
 }
 
 /*
  * Returns the last item written to the queue.
  */
-irt_power_meas_t* irt_power_meas_fifo_last()
+speed_event_t* speed_event_fifo_get()
 {
 	uint8_t idx_read;
 
 	idx_read = (m_fifo_index + m_buf_size - 2) % m_buf_size;
 	//CN_LOG("[CN] _last %i \r\n", idx_read);
 
-	return &mp_buf_power_meas[idx_read];
+	return &mp_buf_speed_events[idx_read];
 }

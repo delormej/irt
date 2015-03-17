@@ -27,11 +27,13 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "nrf.h"
-#include "nrf_assert.h"
-#include "nrf_gpiote.h"
-#include "nrf_gpio.h"
 #include "irt_common.h"
+
+typedef struct
+{
+	uint16_t	event_time_2048;											// Event time in 1/2048s.
+	uint16_t	accum_flywheel_ticks;										// Currently 2 ticks per flywheel rev.
+} speed_event_t;
 
 
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.
@@ -44,10 +46,15 @@ void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm);
 */
 void speed_wheel_size_set(uint16_t wheel_size_mm);
 
-/**@brief	Calculates and records current speed measurement relative to last measurement
+/**@brief	Calculates a running smoothed average of speed.
  *
  */
-uint32_t speed_calc(irt_power_meas_t * current, irt_power_meas_t * last);
+float speed_average_mps(void);
+
+/**@brief	Calculates and records current speed measurement.
+ *
+ */
+uint32_t speed_calc(irt_power_meas_t * p_meas);
 
 /**@brief 	Returns the accumulated count of flywheel ticks (2x revolutions).
  *

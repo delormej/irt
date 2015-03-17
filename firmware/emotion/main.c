@@ -83,7 +83,6 @@
 #define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 #define CRR_ADJUST_VALUE				1											// Amount to adjust (up/down) CRR on button command.
 #define SHUTDOWN_VOLTS					6											// Shut the device down when battery drops below 6.0v
-#define RESISTANCE_MIN_SPEED_ADJUST		3.0f	// (~6.71mph)						// Minimum speed in meters per second at which we adjust resistance.
 
 //
 // General purpose retention register states used.
@@ -93,8 +92,7 @@
 
 #define DATA_PAGE_RESPONSE_TYPE			0x80										// 0X80 For acknowledged response or number of times to send broadcast data requests.
 
-static uint8_t 							m_resistance_level;
-static resistance_mode_t				m_resistance_mode;
+static irt_power_meas_t 				m_current_state;							// Current state structure.
 
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 static app_timer_id_t					m_sensor_read_timer_id;						// Timer used to read sensors, out of phase from the 4hz messages.
@@ -103,11 +101,9 @@ static app_timer_id_t					m_ca_timer_id;								// Calibration timer.
 static user_profile_t  					m_user_profile  __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
 static rc_sim_forces_t					m_sim_forces;
 static accelerometer_data_t 			m_accelerometer_data;
-static float							m_temperature = 0.0f;						// Last temperature read.
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
-static irt_battery_status_t				m_battery_status;
 static uint32_t 						m_battery_start_ticks;						// __attribute__ ((section (".noinit")));			// Time (in ticks) when we started running on battery.
 
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
@@ -231,7 +227,7 @@ static bool dequeue_ant_response(void)
 				break;
 
 			case ANT_PAGE_BATTERY_STATUS:
-				ant_bp_battery_tx_send(m_battery_status);
+				ant_bp_battery_tx_send(m_current_state.battery_status);
 				break;
 
 			case ANT_COMMON_PAGE_80:
@@ -585,12 +581,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 {
 	UNUSED_PARAMETER(p_context);
 	static uint16_t event_count;
-
 	uint32_t err_code;
-	float rr_force;	// Calculated rolling resistance force.
-	irt_power_meas_t* p_power_meas_current 		= NULL;
-	irt_power_meas_t* p_power_meas_first 		= NULL;
-	irt_power_meas_t* p_power_meas_last 		= NULL;
 
 	// All ANT messages on the Bike Power channel are sent in this function:
 
@@ -605,76 +596,31 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Maintain a static event count, we don't do everything each time.
 	event_count++;
-
-	// Get pointers to the event structures.
-	p_power_meas_current = irt_power_meas_fifo_next();
-	p_power_meas_last = irt_power_meas_fifo_last();
-
-	// Set current resistance state.
-	p_power_meas_current->resistance_mode = m_resistance_mode;
-
-	switch (m_resistance_mode)
-	{
-		case RESISTANCE_SET_STANDARD:
-			p_power_meas_current->resistance_level = m_resistance_level;
-			break;
-		case RESISTANCE_SET_ERG: // TOOD: not sure why we're falling through here with SIM?
-		case RESISTANCE_SET_SIM:
-			p_power_meas_current->resistance_level = (uint16_t)(m_sim_forces.erg_watts);
-			break;
-		default:
-			break;
-	}
-
-	p_power_meas_current->servo_position = resistance_position_get();
-	p_power_meas_current->battery_status = m_battery_status;
+	m_current_state.servo_position = resistance_position_get();
 
 	// Report on accelerometer data.
 	if (m_accelerometer_data.source & ACCELEROMETER_SRC_FF_MT)
 	{
-		p_power_meas_current->accel_y_lsb = m_accelerometer_data.out_y_lsb;
-		p_power_meas_current->accel_y_msb = m_accelerometer_data.out_y_msb;
+		m_current_state.accel_y_lsb = m_accelerometer_data.out_y_lsb;
+		m_current_state.accel_y_msb = m_accelerometer_data.out_y_msb;
 
 		// Clear the source now that we've read it.
 		m_accelerometer_data.source = 0;
 	}
 
-	// Record event time.
-	p_power_meas_current->event_time_2048 = seconds_2048_get();
-
-	// Last temperature reading.
-	p_power_meas_current->temp = m_temperature;
-
 	// Calculate speed.
-	err_code = speed_calc(p_power_meas_current, p_power_meas_last);
+	err_code = speed_calc(&m_current_state);
 	APP_ERROR_CHECK(err_code);
 
 	// If we're moving.
-	if (p_power_meas_current->instant_speed_mps > 0.0f)
+	if (m_current_state.instant_speed_mps > 0.0f)
 	{
 		// Reload the WDT since there was motion, preventing the device from going to sleep.
 		WDT_RELOAD();
 
 		// Calculate power and get back the rolling resistance force for use in adjusting resistance.
-		err_code = power_calc(p_power_meas_current, p_power_meas_last, &rr_force);
+		err_code = power_calc(&m_user_profile, &m_current_state);
 		APP_ERROR_CHECK(err_code);
-
-		// Adjust only if above a certain speed threshold.
-		if (p_power_meas_current->instant_speed_mps > RESISTANCE_MIN_SPEED_ADJUST)
-		{
-			// If in erg or sim mode, adjusts the resistance.
-			if (m_resistance_mode == RESISTANCE_SET_ERG || m_resistance_mode == RESISTANCE_SET_SIM)
-			{
-				// Once per second adjust resistance.
-				if (event_count % 4 == 0)
-				{
-					// Use the oldest record we have to average with.
-					p_power_meas_first = irt_power_meas_fifo_first();
-					resistance_adjust(p_power_meas_first, p_power_meas_current, &m_sim_forces,
-							m_resistance_mode, rr_force);
-				}
-			}
-		}
 	}
 	else
 	{
@@ -686,25 +632,32 @@ static void ant_4hz_timeout_handler(void * p_context)
 		// To indicate zero rotational velocity, do not increment the accumulated wheel period and do not increment the wheel ticks.
 		// The update event count continues incrementing to indicate that updates are occurring, but since the wheel is not rotating
 		// the wheel ticks do not increase.
-		p_power_meas_current->accum_wheel_revs = p_power_meas_last->accum_wheel_revs;
-		p_power_meas_current->accum_wheel_period = p_power_meas_last->accum_wheel_period;
-		p_power_meas_current->last_wheel_event_2048 = p_power_meas_last->last_wheel_event_2048;
-		p_power_meas_current->instant_speed_mps = 0.0f;
-
-		// Use the last torque as well since we are not calculating power.
-		p_power_meas_current->accum_torque = p_power_meas_last->accum_torque;
-		p_power_meas_current->instant_power	 = 0;
+		m_current_state.instant_power = 0;
 	}
 
 	// Transmit the power messages.
-	cycling_power_send(p_power_meas_current);
+	cycling_power_send(&m_current_state);
 
 	// Send speed data.
-	ant_sp_tx_send(p_power_meas_current->last_wheel_event_2048 / 2, 	// Requires 1/1024 time
-			(int16_t)p_power_meas_current->accum_wheel_revs); 			// Requires truncating to 16 bits.
+	ant_sp_tx_send(m_current_state.last_wheel_event_2048 / 2, 	// Requires 1/1024 time
+			(int16_t)m_current_state.accum_wheel_revs); 		// Requires truncating to 16 bits.
 
-	// Send remote control a heartbeat.
+	// Send remote control a heart beat.
 	ant_ctrl_available();
+
+	// Adjust resistance as necessary.
+	switch (m_current_state.resistance_mode)
+	{
+		case RESISTANCE_SET_ERG:
+		case RESISTANCE_SET_SIM:
+			// TODO: This little statement belong when the value is getting set.
+			m_current_state.resistance_level = (uint16_t)(m_sim_forces.erg_watts);
+			if (event_count % 4 == 0)
+				resistance_adjust(&m_current_state, &m_sim_forces);
+			break;
+		default:
+			break;
+	}
 }
 
 /**@brief	Timer handler for reading sensors.
@@ -719,8 +672,8 @@ static void sensor_read_timeout_handler(void * p_context)
 	battery_read_start();
 
 	// Read temperature sensor.
-	m_temperature = temperature_read();
-	LOG("[MAIN] Temperature read: %2.1f. \r\n", m_temperature);
+	m_current_state.temp = temperature_read();
+	LOG("[MAIN] Temperature read: %2.1f. \r\n", m_current_state.temp);
 }
 
 /**@brief Function for starting the application timers.
@@ -934,13 +887,13 @@ static void calibration_start(void)
 {
 	uint32_t err_code;
 
-	if (m_resistance_mode != RESISTANCE_SET_STANDARD || m_resistance_level != 0)
+	if (m_current_state.resistance_mode != RESISTANCE_SET_STANDARD || m_current_state.resistance_level != 0)
 	{
 		// Force standard level 0 resistance.  TODO: this should really be better encapsulated.
 		// We don't queue a resistance ack since the timer shuts down right away.
-		m_resistance_level = 0;
-		m_resistance_mode = RESISTANCE_SET_STANDARD;
-		resistance_level_set(m_resistance_level);
+		m_current_state.resistance_level = 0;
+		m_current_state.resistance_mode = RESISTANCE_SET_STANDARD;
+		resistance_level_set(m_current_state.resistance_level);
 	}
 
 	// Stop existing ANT timer.
@@ -1050,10 +1003,10 @@ static void on_power_down(bool accelerometer_wake_disable)
 
 static void on_resistance_off(void)
 {
-	m_resistance_mode = RESISTANCE_SET_STANDARD;
-	m_resistance_level = 0;
-	resistance_level_set(m_resistance_level);
-	bp_queue_resistance_ack(m_resistance_mode, m_resistance_level);
+	m_current_state.resistance_mode = RESISTANCE_SET_STANDARD;
+	m_current_state.resistance_level = 0;
+	resistance_level_set(m_current_state.resistance_level);
+	bp_queue_resistance_ack(m_current_state.resistance_mode, m_current_state.resistance_level);
 
 	// Quick blink for feedback.
 	led_set(LED_MODE_STANDARD);
@@ -1062,13 +1015,13 @@ static void on_resistance_off(void)
 static void on_resistance_dec(void)
 {
 	// decrement
-	switch (m_resistance_mode)
+	switch (m_current_state.resistance_mode)
 	{
 		case RESISTANCE_SET_STANDARD:
-			if (m_resistance_level > 0)
+			if (m_current_state.resistance_level > 0)
 			{
-				resistance_level_set(--m_resistance_level);
-				bp_queue_resistance_ack(m_resistance_mode, m_resistance_level);
+				resistance_level_set(--m_current_state.resistance_level);
+				bp_queue_resistance_ack(m_current_state.resistance_mode, m_current_state.resistance_level);
 				led_set(LED_BUTTON_DOWN);
 			}
 			else
@@ -1083,7 +1036,7 @@ static void on_resistance_dec(void)
 			{
 				// Decrement by n watts;
 				m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
-				bp_queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+				bp_queue_resistance_ack(m_current_state.resistance_mode, m_sim_forces.erg_watts);
 				led_set(LED_BUTTON_DOWN);
 			}
 			else
@@ -1100,13 +1053,13 @@ static void on_resistance_dec(void)
 static void on_resistance_inc(void)
 {
 	// increment
-	switch (m_resistance_mode)
+	switch (m_current_state.resistance_mode)
 	{
 		case RESISTANCE_SET_STANDARD:
-			if (m_resistance_level < (RESISTANCE_LEVELS-1))
+			if (m_current_state.resistance_level < (RESISTANCE_LEVELS-1))
 			{
-				resistance_level_set(++m_resistance_level);
-				bp_queue_resistance_ack(m_resistance_mode, m_resistance_level);
+				resistance_level_set(++m_current_state.resistance_level);
+				bp_queue_resistance_ack(m_current_state.resistance_mode, m_current_state.resistance_level);
 				led_set(LED_BUTTON_UP);
 			}
 			else
@@ -1119,7 +1072,7 @@ static void on_resistance_inc(void)
 		case RESISTANCE_SET_ERG:
 			// Increment by x watts;
 			m_sim_forces.erg_watts += ERG_ADJUST_LEVEL;
-			bp_queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+			bp_queue_resistance_ack(m_current_state.resistance_mode, m_sim_forces.erg_watts);
 
 			led_set(LED_BUTTON_UP);
 			break;
@@ -1131,7 +1084,7 @@ static void on_resistance_inc(void)
 
 static void on_resistance_min(void)
 {
-	switch (m_resistance_mode)
+	switch (m_current_state.resistance_mode)
 	{
 		case RESISTANCE_SET_STANDARD:
 			// Turn off resistance
@@ -1143,7 +1096,7 @@ static void on_resistance_min(void)
 			if (m_sim_forces.erg_watts > ERG_ADJUST_MIN)
 			{
 				m_sim_forces.erg_watts -= (ERG_ADJUST_LEVEL*10);
-				bp_queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+				bp_queue_resistance_ack(m_current_state.resistance_mode, m_sim_forces.erg_watts);
 				led_set(LED_BUTTON_DOWN);
 			}
 			else
@@ -1159,18 +1112,18 @@ static void on_resistance_min(void)
 
 static void on_resistance_max(void)
 {
-	switch (m_resistance_mode)
+	switch (m_current_state.resistance_mode)
 	{
 		case RESISTANCE_SET_STANDARD:
-			m_resistance_level = RESISTANCE_LEVELS-1;
-			resistance_level_set(m_resistance_level);
-			bp_queue_resistance_ack(m_resistance_mode, m_resistance_level);
+			m_current_state.resistance_level = RESISTANCE_LEVELS-1;
+			resistance_level_set(m_current_state.resistance_level);
+			bp_queue_resistance_ack(m_current_state.resistance_mode, m_current_state.resistance_level);
 			break;
 
 		case RESISTANCE_SET_ERG:
 			// Increment by large watts (x watts * 10)
 			m_sim_forces.erg_watts += ERG_ADJUST_LEVEL*10;
-			bp_queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+			bp_queue_resistance_ack(m_current_state.resistance_mode, m_sim_forces.erg_watts);
 			break;
 
 		default:
@@ -1191,21 +1144,21 @@ static void on_button_menu(void)
 	}
 
 	// Toggle between erg mode.
-	if (m_resistance_mode == RESISTANCE_SET_STANDARD)
+	if (m_current_state.resistance_mode == RESISTANCE_SET_STANDARD)
 	{
-		m_resistance_mode = RESISTANCE_SET_ERG;
+		m_current_state.resistance_mode = RESISTANCE_SET_ERG;
 		if (m_sim_forces.erg_watts == 0)
 		{
 			m_sim_forces.erg_watts = DEFAULT_ERG_WATTS;
 		}
-		bp_queue_resistance_ack(m_resistance_mode, m_sim_forces.erg_watts);
+		bp_queue_resistance_ack(m_current_state.resistance_mode, m_sim_forces.erg_watts);
 
 		// Quick blink for feedback.
 		led_set(LED_MODE_ERG);
 	}
 	else
 	{
-		m_resistance_mode = RESISTANCE_SET_STANDARD;
+		m_current_state.resistance_mode = RESISTANCE_SET_STANDARD;
 		on_resistance_off();
 
 		led_set(LED_MODE_STANDARD);
@@ -1331,15 +1284,15 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	switch (rc_evt.operation)
 	{
 		case RESISTANCE_SET_STANDARD:
-			m_resistance_mode = RESISTANCE_SET_STANDARD;
-			m_resistance_level = value;
-			resistance_level_set(m_resistance_level);
+			m_current_state.resistance_mode = RESISTANCE_SET_STANDARD;
+			m_current_state.resistance_level = value;
+			resistance_level_set(m_current_state.resistance_level);
 			break;
 			
 		case RESISTANCE_SET_PERCENT:
 			// Reset state since we're not in standard mode any more.
-			m_resistance_level = 0;
-			m_resistance_mode = RESISTANCE_SET_PERCENT;
+			m_current_state.resistance_level = 0;
+			m_current_state.resistance_mode = RESISTANCE_SET_PERCENT;
 			
 			// Parse the buffer for percentage.
 			float percent = wahoo_resistance_pct_decode(value);
@@ -1348,24 +1301,24 @@ static void on_set_resistance(rc_evt_t rc_evt)
 
 		case RESISTANCE_SET_ERG:
 			// Assign target watt level.
-			m_resistance_mode = RESISTANCE_SET_ERG;
+			m_current_state.resistance_mode = RESISTANCE_SET_ERG;
 			m_sim_forces.erg_watts = value;
 			break;
 
 		// This message never seems to come via the apps?
 		case RESISTANCE_SET_SIM:
-			m_resistance_mode = RESISTANCE_SET_SIM;
+			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
 			set_sim_params(rc_evt.pBuffer);
 			break;
 			
 		case RESISTANCE_SET_SLOPE:
-			m_resistance_mode = RESISTANCE_SET_SIM;
+			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the slope.
 			m_sim_forces.grade = wahoo_sim_grade_decode(value);
 			break;
 			
 		case RESISTANCE_SET_WIND:
-			m_resistance_mode = RESISTANCE_SET_SIM;
+			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the wind speed.
 			m_sim_forces.wind_speed_mps = wahoo_sim_wind_decode(value);
 			break;
@@ -1376,12 +1329,12 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			break;
 			
 		case RESISTANCE_SET_CRR:
-			m_resistance_mode = RESISTANCE_SET_SIM;
+			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
 			m_sim_forces.crr = wahoo_decode_crr(rc_evt.pBuffer);
 			break;
 
 		case RESISTANCE_SET_C:
-			m_resistance_mode = RESISTANCE_SET_SIM;
+			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
 			m_sim_forces.c = wahoo_decode_c(rc_evt.pBuffer);
 			break;
 
@@ -1713,12 +1666,12 @@ static void on_battery_result(uint16_t battery_level)
 	LOG("[MAIN] on_battery_result %i, ticks: %i \r\n",
 			battery_level, m_battery_start_ticks);
 
-	m_battery_status = battery_status(battery_level, m_battery_start_ticks);
+	m_current_state.battery_status = battery_status(battery_level, m_battery_start_ticks);
 
 	// If we're not plugged in and we have a LOW or CRITICAL status, display warnings.
 	if (!peripheral_plugged_in())
 	{
-		switch (m_battery_status.status)
+		switch (m_current_state.battery_status.status)
 		{
 			case BAT_LOW:
 				// Blink a warning.
@@ -1732,14 +1685,14 @@ static void on_battery_result(uint16_t battery_level)
 				on_resistance_off();
 
 				// If we're below 6 volts, shut it all the way down.
-				if (m_battery_status.coarse_volt < SHUTDOWN_VOLTS)
+				if (m_current_state.battery_status.coarse_volt < SHUTDOWN_VOLTS)
 				{
 					// Indicate and then shut down.
 					led_set(LED_BATT_CRITICAL);
 
 					// Critical battery level.
 					LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, powering down.\r\n",
-							m_battery_status.coarse_volt);
+							m_current_state.battery_status.coarse_volt);
 					nrf_delay_ms(3000);
 					on_power_down(false);
 				}
@@ -1750,7 +1703,7 @@ static void on_battery_result(uint16_t battery_level)
 
 					// Critical battery level.
 					LOG("[MAIN] on_battery_result critical low battery coarse volts: %i, displaying warning.\r\n",
-							m_battery_status.coarse_volt);
+							m_current_state.battery_status.coarse_volt);
 
 					// Turn all extra power off.
 					peripheral_low_power_set();
@@ -1972,17 +1925,14 @@ int main(void)
 	// Initialize resistance module and initial values.
 	resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
 	// TODO: This state should be moved to resistance module.
-	m_resistance_level = 0;
-	m_resistance_mode = RESISTANCE_SET_STANDARD;
+	m_current_state.resistance_mode = RESISTANCE_SET_STANDARD;
+	m_current_state.resistance_level = 0;
 
 	// Initialize module to read speed from flywheel.
 	speed_init(PIN_FLYWHEEL, m_user_profile.wheel_size_mm);
 
 	// Initialize power module with user profile.
 	power_init(&m_user_profile, DEFAULT_CRR);
-
-	// Initialize the FIFO queue for holding events.
-	irt_power_meas_fifo_init(IRT_FIFO_SIZE);
 
 	// Begin advertising and receiving ANT messages.
 	ble_ant_start();

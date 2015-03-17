@@ -18,6 +18,8 @@
 #define ERG_ADJUST_LEVEL		2U							// Watts to adjust increment /decrement
 #define ERG_ADJUST_MIN			50U							// Erg doesn't go below this watt level.
 
+#define RESISTANCE_MIN_SPEED_ADJUST		3.0f				// (~6.71mph) Minimum speed in meters per second at which we adjust resistance.
+
 /**@brief Bike types, used for predefined resistance coefficients. */
 typedef enum
 {
@@ -127,12 +129,7 @@ uint16_t resistance_pct_set(float percent);
 /**@brief		Adjusts magnetic resistance for erg and simulation modes.
  *
  */
-void resistance_adjust(irt_power_meas_t* p_power_meas_first,
-		irt_power_meas_t* p_power_meas_current,
-		rc_sim_forces_t *p_sim_forces,
-		resistance_mode_t resistance_mode,
-		float 				rr_force);
-
+void resistance_adjust(irt_power_meas_t* p_context, rc_sim_forces_t* p_sim_forces);
 
 
 #endif //__RESISTANCE_H__

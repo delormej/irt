@@ -19,7 +19,7 @@
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *
  */
-uint32_t power_calc(irt_power_meas_t* current, irt_power_meas_t* last, float* p_rr_force);
+uint32_t power_calc(user_profile_t* p_profile, irt_power_meas_t* p_meas);
 
 /**@brief	Initializes power module with a profile pointer that contains things like
  * 			the total rider weight, calibration details, etc...

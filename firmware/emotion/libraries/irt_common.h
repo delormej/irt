@@ -119,16 +119,18 @@ typedef struct irt_battery_status_s
 /**@brief Cycling Power Service measurement type. */
 typedef struct irt_power_meas_s
 {
-	uint16_t	event_time_2048;											// Event time in 1/2048s.
+	uint16_t	last_wheel_event_2048;										// Last time the virtual wheel completed a rotation, based on wheel size.
+	uint16_t	wheel_period;												// Time between the previous and current virtual wheel rotation in 1/2048s.
+
 	int16_t		instant_power;         										// Note this is a SIGNED int16
 	float		instant_speed_mps;
+
 	uint16_t	accum_torque;												// Unit is in newton meters with a resolution of 1/32
 	uint32_t	accum_wheel_revs;											// BLE uses 32bit value, ANT uses 8 bit.
 	uint16_t	accum_wheel_period;											// Increments of 1/2048s rolls over at 32 seconds.
 	uint16_t	accum_flywheel_ticks;										// Currently 2 ticks per flywheel rev.
 	// TODO: ble cps spec uses accum_energy but we haven't implmented it yet.
 	// uint16_t	accum_energy;												// Unit is in kilojoules with a resolution of 1 (used by ble cps).
-	uint16_t	last_wheel_event_2048;										// Last time the virtual wheel completed a rotation, basd on wheel size.
 
 	// Resistance state.  TODO: Should this be refactored somewhere else? A pointer would save 8 bytes per entry.
 	uint8_t 	resistance_mode;
@@ -139,6 +141,8 @@ typedef struct irt_power_meas_s
 	float		temp;														// Measured temperature in c.
 	uint8_t		accel_y_lsb;												// Accelerometer reading. TODO: determine if we're going to use.
 	uint8_t		accel_y_msb;
+
+	float		rr_force;													// Calculated rolling resistance force.
 
 	irt_battery_status_t battery_status;
 } irt_power_meas_t;
@@ -193,12 +197,5 @@ typedef struct irt_device_info_s
 		(P_DEVICE)->sw_revision.build = SW_REVISION_BLD;	\
 		(P_DEVICE)->serial_num = SERIAL_NUMBER;				\
 	} while(0) 												\
-
-// Abstracts a FIFO queue of events.
-uint32_t 			irt_power_meas_fifo_init(uint8_t size);
-void 	 			irt_power_meas_fifo_free();
-irt_power_meas_t* 	irt_power_meas_fifo_next();
-irt_power_meas_t* 	irt_power_meas_fifo_first();
-irt_power_meas_t* 	irt_power_meas_fifo_last();
 
 #endif // IRT_COMMON_H
