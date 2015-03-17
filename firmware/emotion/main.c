@@ -27,6 +27,7 @@
 #include <string.h>
 #include <math.h>
 #include <float.h>
+#include "nrf_gpio.h"
 #include "nordic_common.h"
 #include "nrf51.h"
 #include "softdevice_handler.h"
