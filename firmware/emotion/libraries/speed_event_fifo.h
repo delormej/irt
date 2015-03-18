@@ -12,6 +12,8 @@
 #include "speed.h"
 #include "irt_common.h"
 
+#define SPEED_EVENT_CACHE_SIZE		8		// @ 2hz, this is 4 seconds of speed data.
+
 // Abstracts a FIFO queue of events.
 speed_event_t* 	speed_event_fifo_put(speed_event_t speed_event);
 speed_event_t* 	speed_event_fifo_get();
