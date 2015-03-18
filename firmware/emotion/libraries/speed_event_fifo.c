@@ -24,7 +24,7 @@
 #define CN_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define SPEED_EVENT_CACHE_SIZE		32
+#define SPEED_EVENT_CACHE_SIZE		16
 
 static speed_event_t		mp_buf_speed_events[SPEED_EVENT_CACHE_SIZE] = {0};
 static uint8_t				m_buf_size = SPEED_EVENT_CACHE_SIZE;
