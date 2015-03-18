@@ -202,7 +202,7 @@ float speed_average_mps(void)
 /**@brief	Calculates and records current speed measurement relative to last measurement
  *
  */
-uint32_t speed_calc(irt_power_meas_t * p_meas)
+uint32_t speed_calc(irt_context_t * p_meas)
 {
 	// Retatined state of accumulate wheel period.
 	static uint16_t accumWheelPeriod = 0;

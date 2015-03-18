@@ -117,7 +117,7 @@ typedef struct irt_battery_status_s
 } irt_battery_status_t;
 
 /**@brief Cycling Power Service measurement type. */
-typedef struct irt_power_meas_s
+typedef struct
 {
 	uint16_t	last_wheel_event_2048;										// Last time the virtual wheel completed a rotation, based on wheel size.
 	uint16_t	wheel_period;												// Time between the previous and current virtual wheel rotation in 1/2048s.
@@ -145,7 +145,7 @@ typedef struct irt_power_meas_s
 	float		rr_force;													// Calculated rolling resistance force.
 
 	irt_battery_status_t battery_status;
-} irt_power_meas_t;
+} irt_context_t;
 
 //
 // 2 byte version supports 4 bits for major, 4 bits for minor, 8 bits for build #.

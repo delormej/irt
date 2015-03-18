@@ -164,7 +164,7 @@ static uint32_t power_transmit(uint16_t watts)
 }
 
 // Encodes the resistance mode into the 2 most significant bits.
-static uint8_t encode_resistance_level(irt_power_meas_t * p_power_meas)
+static uint8_t encode_resistance_level(irt_context_t * p_power_meas)
 {
 	uint8_t target_msb;
 	uint8_t mode;
@@ -185,7 +185,7 @@ static uint8_t encode_resistance_level(irt_power_meas_t * p_power_meas)
 
 // Transmits extra info embedded in the power measurement.
 // TODO: Need a formal message/methodology for this.
-static uint32_t extra_info_transmit(irt_power_meas_t * p_power_meas)
+static uint32_t extra_info_transmit(irt_context_t * p_power_meas)
 {
 	uint16_t flywheel;
 	flywheel = p_power_meas->accum_flywheel_ticks;
@@ -445,7 +445,7 @@ void ant_bp_tx_start(void)
     APP_ERROR_CHECK(err_code);
 }
 
-void ant_bp_tx_send(irt_power_meas_t * p_power_meas)
+void ant_bp_tx_send(irt_context_t * p_power_meas)
 {
 	static const uint8_t power_page_interleave 		= POWER_PAGE_INTERLEAVE_COUNT;
 	static const uint8_t product_page_interleave 		= PRODUCT_PAGE_INTERLEAVE_COUNT;

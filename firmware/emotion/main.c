@@ -92,7 +92,7 @@
 
 #define DATA_PAGE_RESPONSE_TYPE			0x80										// 0X80 For acknowledged response or number of times to send broadcast data requests.
 
-static irt_power_meas_t 				m_current_state;							// Current state structure.
+static irt_context_t 				m_current_state;							// Current state structure.
 
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 static app_timer_id_t					m_sensor_read_timer_id;						// Timer used to read sensors, out of phase from the 4hz messages.

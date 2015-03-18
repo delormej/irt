@@ -129,7 +129,7 @@ uint16_t resistance_pct_set(float percent);
 /**@brief		Adjusts magnetic resistance for erg and simulation modes.
  *
  */
-void resistance_adjust(irt_power_meas_t* p_context, rc_sim_forces_t* p_sim_forces);
+void resistance_adjust(irt_context_t* p_context, rc_sim_forces_t* p_sim_forces);
 
 
 #endif //__RESISTANCE_H__

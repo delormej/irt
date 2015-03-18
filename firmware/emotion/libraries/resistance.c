@@ -299,7 +299,7 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
 /**@brief	Adjusts the magnetic resistance accordingly for erg & sim modes.
  *
  */
-void resistance_adjust(irt_power_meas_t* p_context, rc_sim_forces_t* p_sim_forces)
+void resistance_adjust(irt_context_t* p_context, rc_sim_forces_t* p_sim_forces)
 {
 	float speed_avg = speed_average_mps();
 

@@ -93,7 +93,7 @@ void power_init(user_profile_t* p_profile, uint16_t default_crr)
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *
  */
-uint32_t power_calc(user_profile_t* p_profile, irt_power_meas_t* p_meas)
+uint32_t power_calc(user_profile_t* p_profile, irt_context_t* p_meas)
 {
 	uint16_t torque = 0;
 	float mag_watts;

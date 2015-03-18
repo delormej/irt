@@ -100,7 +100,7 @@ typedef struct ant_request_data_page_s
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers);
 void ble_ant_start(void);
 void ble_advertising_start(void);
-void cycling_power_send(irt_power_meas_t * p_cps_meas);
+void cycling_power_send(irt_context_t * p_cps_meas);
 void ble_ant_resistance_ack(uint8_t op_code, uint16_t value);
 void ant_common_page_transmit(uint8_t ant_channel, uint8_t* common_page);
 

@@ -109,7 +109,7 @@ typedef struct
 	bool                         use_cycling_power_vector;
 	uint8_t *                    p_sensor_location;                               		/**< Pointer to initial value of the Sensor Location characteristic. */
 	uint32_t 					 feature;																							/**< Bitmask of enabled features. */
-	irt_power_meas_t *			 p_cps_meas;																					/**< Initial cycling power service measurement structure. */
+	irt_context_t *			 p_cps_meas;																					/**< Initial cycling power service measurement structure. */
 	rc_evt_handler_t     		 rc_evt_handler;                                  		/**< Event handler to be called for handling resistance control event. */
 	ble_sc_ctrlpt_evt_handler_t  ctrlpt_evt_handler;                    							/**< Control point event handler */
 	ble_srv_error_handler_t      error_handler;                         							/**< Function to be called in case of an error. */
@@ -172,7 +172,7 @@ void ble_cps_on_ble_evt(ble_cps_t * p_cps, ble_evt_t * p_ble_evt);
 *
 * @return      NRF_SUCCESS on success, otherwise an error code.
 */
-uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_meas_t * p_cps_meas);
+uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_context_t * p_cps_meas);
 
 /**@brief	Sends a BLE indication to the attribute responsible for wahoo resistance
  * 			control messages.
