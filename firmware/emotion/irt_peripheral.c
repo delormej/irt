@@ -377,14 +377,14 @@ void peripheral_wakeup_set()
  *
  * @note	This value rolls over at 32 seconds.
  */
-uint16_t timestamp_get()
+uint32_t timestamp_get()
 {
 	// Get current tick count.
 	uint32_t ticks = NRF_RTC1->COUNTER;
 
 	// Based on frequence of ticks, calculate 1/2048 seconds.
 	// freq (hz) = times per second.
-	uint16_t seconds_2048 = ROUNDED_DIV(ticks, (TICK_FREQUENCY / 2048));
+	uint32_t seconds_2048 = ROUNDED_DIV(ticks, (TICK_FREQUENCY / 2048));
 
 	return seconds_2048;
 }

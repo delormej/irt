@@ -90,9 +90,9 @@ static void revs_init_gpiote(uint32_t pin_flywheel_rev)
  *					Returns a value in 1/2048's of a second.
  *
  */
-static uint16_t last_wheel_time_calc(float wheel_revs, float avg_wheel_period, uint16_t event_time)
+static uint32_t last_wheel_time_calc(float wheel_revs, float avg_wheel_period, uint32_t event_time)
 {
-	uint16_t time_to_full_rev_2048 = 0;
+	uint32_t time_to_full_rev_2048 = 0;
 	float partial_wheel_rev;
 	
 	// Difference between calculated partial wheel revs and the last full wheel rev.
@@ -144,7 +144,7 @@ static float speed_calc_mps(speed_event_t first, speed_event_t last)
 	if (last.event_time_2048 < first.event_time_2048)
 	{
 		// Handle time rollover.
-		event_period = (first.event_time_2048 ^ 0xFFFF) + last.event_time_2048;
+		event_period = (first.event_time_2048 ^ UINT32_MAX) + last.event_time_2048;
 	}
 	else
 	{

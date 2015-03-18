@@ -31,7 +31,7 @@
 
 typedef struct
 {
-	uint16_t	event_time_2048;											// Event time in 1/2048s.
+	uint32_t	event_time_2048;											// Event time in 1/2048s.
 	uint16_t	accum_flywheel_ticks;										// Currently 2 ticks per flywheel rev.
 } speed_event_t;
 

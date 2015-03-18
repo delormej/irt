@@ -28,22 +28,7 @@ static int speed_calc_mps(speed_event_t first, speed_event_t last)
 
 int main(int argc, char *argv [])
 {
-	uint16_t total = 0;
 
-	speed_event_t event1;
-	speed_event_t event2;
-
-	event1.event_time_2048 = 1;
-	event2.event_time_2048 = 2;
-
-	speed_event_t* p_event1;
-	speed_event_t* p_event2;
-
-	p_event1 = &event1;
-	p_event2 = &event2;
-
-	total = speed_calc_mps(*p_event1, event2);
-
-	printf("total: %i\r\n", total);
+	printf("total: %u\r\n", UINT32_MAX);
 	return 0;
 }

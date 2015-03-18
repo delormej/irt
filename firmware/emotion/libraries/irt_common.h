@@ -120,7 +120,7 @@ typedef struct irt_battery_status_s
 typedef struct
 {
 	uint8_t		event_count;												// Incremented each time speed/power are calculated.
-	uint16_t	last_wheel_event_2048;										// Last time the virtual wheel completed a rotation, based on wheel size.
+	uint32_t	last_wheel_event_2048;										// Last time the virtual wheel completed a rotation, based on wheel size.
 	uint16_t	wheel_period;												// Time between the previous and current virtual wheel rotation in 1/2048s.
 
 	int16_t		instant_power;         										// Note this is a SIGNED int16
