@@ -608,37 +608,31 @@ static void ant_4hz_timeout_handler(void * p_context)
 		m_accelerometer_data.source = 0;
 	}
 
-	//
-	// Only re-calculate every other time -- each 1/2 second.
-	//
-	if (event_count % 2 == 0)
+	// Calculate speed.
+	err_code = speed_calc(&m_current_state);
+	APP_ERROR_CHECK(err_code);
+
+	// If we're moving.
+	if (m_current_state.instant_speed_mps > 0.0f)
 	{
-		// Calculate speed.
-		err_code = speed_calc(&m_current_state);
+		// Reload the WDT since there was motion, preventing the device from going to sleep.
+		WDT_RELOAD();
+
+		// Calculate power.
+		err_code = power_calc(&m_user_profile, &m_current_state);
 		APP_ERROR_CHECK(err_code);
+	}
+	else
+	{
+		//
+		// Stopped, no speed = no power.
+		//
 
-		// If we're moving.
-		if (m_current_state.instant_speed_mps > 0.0f)
-		{
-			// Reload the WDT since there was motion, preventing the device from going to sleep.
-			WDT_RELOAD();
-
-			// Calculate power.
-			err_code = power_calc(&m_user_profile, &m_current_state);
-			APP_ERROR_CHECK(err_code);
-		}
-		else
-		{
-			//
-			// Stopped, no speed = no power.
-			//
-
-			// From the ANT spec:
-			// To indicate zero rotational velocity, do not increment the accumulated wheel period and do not increment the wheel ticks.
-			// The update event count continues incrementing to indicate that updates are occurring, but since the wheel is not rotating
-			// the wheel ticks do not increase.
-			m_current_state.instant_power = 0;
-		}
+		// From the ANT spec:
+		// To indicate zero rotational velocity, do not increment the accumulated wheel period and do not increment the wheel ticks.
+		// The update event count continues incrementing to indicate that updates are occurring, but since the wheel is not rotating
+		// the wheel ticks do not increase.
+		m_current_state.instant_power = 0;
 	}
 
 	// Transmit the power messages.
