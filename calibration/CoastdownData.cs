@@ -36,49 +36,51 @@ namespace IRT.Calibration
                 flywheel[i] = tickEvents[i].Ticks;
             }
             
-            int records = timestamp.Length / 4;
-
-            if (timestamp.Length % 4 != 0)
-            {
-                // If there was a remainder, add 1.
-                records += 1;
-            }
+            // Get max records, plus the last ones if not divisible by 4.
+            int records = (int)Math.Ceiling(timestamp.Length / 4.0d);
 
             double[] seconds = new double[records];
             double[] speed = new double[records];
 
-            int ix = 0;
-
-            for (int idx = 0; idx < flywheel.Length; idx++)
+            for (int ix = 0; ix < records; ix++)
             {
+                int idx = (ix * 4);
+
+                if (idx == 0)
+                {
+                    // Advance to the next record to start.
+                    idx += 4;
+                }
+                // If we overrun, cap at max.
+                else if (idx > flywheel.Length)
+                {
+                    idx = flywheel.Length - 1;
+                }
+
                 int val = flywheel[idx];
                 int dt, ds;
 
-                // Evaluate every 4th record AND the last record.
-                if (idx > 0 && idx % 4 == 0 || idx == flywheel.Length - 1)
-                {
-                    if (val < flywheel[idx - 4])
-                        dt = val + (flywheel[idx - 4] ^ 0xFFFF);
-                    else
-                        dt = val - flywheel[idx - 4];
+                if (val < flywheel[idx - 4])
+                    dt = val + (flywheel[idx - 4] ^ 0xFFFF);
+                else
+                    dt = val - flywheel[idx - 4];
 
-                    if (timestamp[idx] < timestamp[idx - 4])
-                        ds = timestamp[idx] + (timestamp[idx - 4] ^ 0xFFFF);
-                    else
-                        ds = timestamp[idx] - timestamp[idx - 4];
+                if (timestamp[idx] < timestamp[idx - 4])
+                    ds = timestamp[idx] + (timestamp[idx - 4] ^ 0xFFFF);
+                else
+                    ds = timestamp[idx] - timestamp[idx - 4];
 
-                    if (ix > 0)
-                        seconds[ix] = (ds / 2048.0) + seconds[ix - 1];
-                    else
-                        seconds[ix] = (ds / 2048.0);
+                if (ix > 0)
+                    seconds[ix] = (ds / 2048.0) + seconds[ix - 1];
+                else
+                    seconds[ix] = (ds / 2048.0);
 
-                    /* Each flywheel revolution equals 0.1115 meters travelled by the 
-                     * bike.  Two ticks are recorded for each revolution.
-                     * Time is sent in 1/2048 of a second.
-                     */
-                    speed[ix++] = (dt * 0.1115 / 2.0) / (ds / 2048.0);
-                }
-            }      
+                /* Each flywheel revolution equals 0.115 meters travelled by the 
+                 * bike.  Two ticks are recorded for each revolution.
+                 * Time is sent in 1/2048 of a second.
+                 */
+                speed[ix] = (dt * 0.115 / 2.0) / (ds / 2048.0);
+            }
 
             int maxSpeedIdx = FindDecelerationIndex(speed);
             int minSpeedIdx = FindMinSpeedIndex(speed);
