@@ -135,7 +135,7 @@ static void on_write(ble_cps_t * p_cps, ble_evt_t * p_ble_evt)
  * @return      Size of encoded data.
  */
 static uint8_t cps_measurement_encode(ble_cps_t *      p_cps,
-                                      irt_power_meas_t * p_cps_measurement,
+                                      irt_context_t * p_cps_measurement,
                                       uint8_t *        p_encoded_buffer)
 {
 	uint16_t flags = 0;
@@ -296,7 +296,7 @@ static uint32_t cycling_power_measurement_char_add(ble_cps_t * p_cps, const ble_
     ble_gatts_attr_t    attr_char_value;
     ble_uuid_t          ble_uuid;
     ble_gatts_attr_md_t attr_md;
-	irt_power_meas_t	initial_cpm;
+	irt_context_t	initial_cpm;
 	uint8_t				encoded_cpm[MAX_CPM_LEN];
 	uint8_t				user_desc[] = "CPM";
     
@@ -523,7 +523,7 @@ uint32_t ble_cps_init(ble_cps_t * p_cps, const ble_cps_init_t * p_cps_init)
     return NRF_SUCCESS;	
 }
 
-uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_power_meas_t * p_cps_meas)
+uint32_t ble_cps_cycling_power_measurement_send(ble_cps_t * p_cps, irt_context_t * p_cps_meas)
 {
     uint32_t err_code;
     

@@ -18,18 +18,4 @@ int main(int argc, char *argv [])
 {
 #define DEVICE_NAME "E-Motion (DFU)"
 	printf("%i\r\n",strlen(DEVICE_NAME));
-	
-	bool dfu_start = 0;
-	dfu_start = 1;
-	dfu_start |= false;
-
-	if (dfu_start)
-		printf("true");
-	else
-		printf("false");
-	
-	return;
-
-	// E-Motion-DFU
-	// DdfuTarg
 }

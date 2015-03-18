@@ -13,6 +13,7 @@
 #include "app_error.h"
 #include "magnet.h"
 #include "resistance.h"
+#include "speed.h"
 #include "nrf_pwm.h"
 #include <math.h>
 #include "debug.h"
@@ -298,38 +299,25 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
 /**@brief	Adjusts the magnetic resistance accordingly for erg & sim modes.
  *
  */
-void resistance_adjust(irt_power_meas_t* p_power_meas_first,
-		irt_power_meas_t* 	p_power_meas_current,
-		rc_sim_forces_t* 	p_sim_forces,
-		resistance_mode_t 	resistance_mode,
-		float 				rr_force)
+void resistance_adjust(irt_context_t* p_context, rc_sim_forces_t* p_sim_forces)
 {
-	float speed_avg;
+	float speed_avg = speed_average_mps();
 
-	// If we have a range of events between first and current, we're able to do a moving average of speed.
-	if (p_power_meas_first != NULL)
-	{
-		// Average the speed.
-		speed_avg = ( (p_power_meas_current->instant_speed_mps +
-				p_power_meas_first->instant_speed_mps) / 2.0f );
-	}
-	else
-	{
-		speed_avg = p_power_meas_current->instant_speed_mps;
-	}
+	RC_LOG("[RC] resistance_adjust speed_avg: %.2f, reported: %.2f\r\n",
+			speed_avg, p_context->instant_speed_mps);
+
+	if (speed_avg < RESISTANCE_MIN_SPEED_ADJUST)
+		return;
 
 	// If in erg or sim mode, adjust resistance accordingly.
-	switch (resistance_mode)
+	switch (p_context->resistance_mode)
 	{
 		case RESISTANCE_SET_ERG:
-			resistance_erg_set(p_sim_forces->erg_watts, speed_avg, rr_force);
-			RC_LOG("[RC] resistance_adjust: %i watts, %.2f mps, flywheel: %i\r\n",
-				p_sim_forces->erg_watts, speed_avg,
-				p_power_meas_current->accum_flywheel_ticks);
+			resistance_erg_set(p_sim_forces->erg_watts, speed_avg, p_context->rr_force);
 			break;
 
 		case RESISTANCE_SET_SIM:
-			resistance_sim_set(speed_avg, p_sim_forces, rr_force);
+			resistance_sim_set(speed_avg, p_sim_forces, p_context->rr_force);
 			break;
 
 		default:

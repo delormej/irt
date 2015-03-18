@@ -562,7 +562,7 @@ void ble_ant_resistance_ack(uint8_t op_code, uint16_t value)
 //
 // Sends ble & ant data messages.
 //
-void cycling_power_send(irt_power_meas_t * p_cps_meas)
+void cycling_power_send(irt_context_t * p_cps_meas)
 {
 	uint32_t err_code;
 	// TODO: THIS IS A HACK, BUT NEED TO REFACTOR.

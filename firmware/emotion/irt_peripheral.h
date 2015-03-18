@@ -54,6 +54,6 @@ void peripheral_aux_pwr_set(bool turn_on);
  *
  * @note	This value rolls over at 32 seconds.
  */
-uint16_t timestamp_get(void);
+uint32_t timestamp_get(void);
 
 #endif // IRT_PERIPHERAL_H__
