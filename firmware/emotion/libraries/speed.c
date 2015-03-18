@@ -199,8 +199,11 @@ float speed_average_mps(void)
 	return speed_calc_mps(*p_oldest, *p_current);
 }
 
-/**@brief	Calculates and records current speed measurement relative to last measurement
+/**@brief	Calculates and records current speed measurement relative to last
+ * 			measurement.
  *
+ * @note	This method modifies the state of the speed by recording history
+ * 			of speed events.
  */
 uint32_t speed_calc(irt_context_t * p_meas)
 {
