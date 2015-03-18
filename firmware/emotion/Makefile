@@ -88,7 +88,7 @@ debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 ############################################
 SW_REVISION_MAJ := 1
 SW_REVISION_MIN := 0
-SW_REVISION_BLD := 7
+SW_REVISION_BLD := 8
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -147,6 +147,6 @@ name:
 prep:
 	$(NRFJPROG) --memwr 0x3fc00 --val 1		
 	$(NRFJPROG) --memwr 0x3fc04 --val 0		
-	$(NRFJPROG) --memwr 0x3fc90 --val 64	
+	$(NRFJPROG) --memwr 0x10001080 --val 64	
 
 .PHONY: debug deploy name prep
