@@ -466,7 +466,7 @@ void ant_bp_tx_send(irt_context_t * p_power_meas)
 	 * event count if we are stopped.
 	 *
 	 *
-	 */
+	 *
 	#define STOP_COUNT_TO_FLAG	4
 	static uint8_t stop_flagged = 0;
 
@@ -475,7 +475,7 @@ void ant_bp_tx_send(irt_context_t * p_power_meas)
 	if (stop_flagged < STOP_COUNT_TO_FLAG)
 	{
 		m_event_count++;
-	}
+	}*/
 
 	/*
 	 * After receiving a stop signal (0 speed), send at least a few messages through with
@@ -486,7 +486,7 @@ void ant_bp_tx_send(irt_context_t * p_power_meas)
 	 * average power (Standard Torque) is NaN.  However, without this, it just keeps showing
 	 * the last known speed and power before we stopped updating the event count.
 	 *
-	 */
+	 *
 	if (stopped && stop_flagged < STOP_COUNT_TO_FLAG)
 	{
 		stop_flagged++;
@@ -494,12 +494,19 @@ void ant_bp_tx_send(irt_context_t * p_power_meas)
 	else if (!stopped && stop_flagged >= STOP_COUNT_TO_FLAG)
 	{
 		stop_flagged = 0;
-	}
+	} */
 
 	// Increment the message sequence tracker.
 	message_sequence++;
 
-	//m_event_count++;
+	//
+	// Read old code comments above, moving to a model where the controller
+	// indicates when a measurement 'event' has occurred.  Not using the logic
+	// above seems to cause BKOOL to not show stopped, but so far that is the
+	// only app that breaks and this is required if we want to send these
+	// messages @4hz yet calculate less frequently.
+	//
+	m_event_count = p_power_meas->event_count;
 
 	if (message_sequence % product_page_interleave == 0)
 	{			
