@@ -9,6 +9,8 @@
 *
 ********************************************************************************/
 
+#include <stdint.h>
+#include <stdbool.h>
 #include "irt_peripheral.h"
 #include "app_error.h"
 #include "magnet.h"
@@ -42,19 +44,6 @@
 static uint16_t	m_servo_pos;		// State of current servo position.
 static user_profile_t* mp_user_profile;
 
-/**@brief	Sets the servo by specifying magnet watts required.
- */
-static uint16_t position_set_by_watts(float mag_watts, float speed_mps)
-{
-	uint16_t servo_pos;
-
-	// Determine the required servo position for desired watts.
-	servo_pos = magnet_position(speed_mps, mag_watts);
-
-	// Move the servo.
-	return resistance_position_set(servo_pos);
-}
-
 /**@brief	Initializes the resistance module which controls the servo.
  */
 uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile)
@@ -78,7 +67,7 @@ uint16_t resistance_position_get()
 /**@brief	Determines if there is a move and move accordingly.
  *
  */
-uint16_t resistance_position_set(uint16_t servo_pos)
+uint16_t resistance_position_set(uint16_t servo_pos, bool smooth)
 {
 	uint32_t err_code;
 	// Actual servo position after calibration.
@@ -122,7 +111,7 @@ uint16_t resistance_position_set(uint16_t servo_pos)
 	if ( (m_servo_pos != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
 	{
 		// Issue a command to move the servo.
-		err_code = pwm_set_servo(actual_servo_pos);
+		err_code = pwm_set_servo(actual_servo_pos, smooth);
 		APP_ERROR_CHECK(err_code);
 
 		// Save module state for next adjustment.
@@ -176,7 +165,7 @@ uint16_t resistance_level_set(uint8_t level)
 		level = RESISTANCE_LEVELS - 1;
 	}
 
-	return resistance_position_set(RESISTANCE_LEVEL[level]);
+	return resistance_position_set(RESISTANCE_LEVEL[level], false);
 }
 
 /**@brief		Gets the levels of standard resistance available.
@@ -216,13 +205,13 @@ uint16_t resistance_pct_set(float percent)
 						percent )  );
 	}
 
-	return resistance_position_set(position);
+	return resistance_position_set(position, false);
 }
 
-/**@brief		Sets mag resistance to simulate desired erg watts.
+/**@brief		Gets magnet position resistance to simulate desired erg watts.
  * @returns 	Servo position.
  */
-static uint16_t resistance_erg_set(int16_t target_watts, float speed_mps, float rr_force)
+static uint16_t resistance_erg_position(int16_t target_watts, float speed_mps, float rr_force)
 {
 	float mag_watts;
 
@@ -236,10 +225,10 @@ static uint16_t resistance_erg_set(int16_t target_watts, float speed_mps, float 
 	//
 	mag_watts = ( (float)target_watts - (speed_mps * rr_force ));
 
-	return position_set_by_watts(mag_watts, speed_mps);
+	return magnet_position(speed_mps, mag_watts);
 }
 
-/**@brief	Puts the trainer in simulation mode.
+/**@brief	Get the position of the servo based on simulation mode forces.
  * @note 	Sim Mode is used to simulate real world riding situations. This mode 
  *				will adjust the brake resistance based on the effects of gravity, 
  *				rolling resistance, and wind resistance. In order to create an accurate 
@@ -248,7 +237,7 @@ static uint16_t resistance_erg_set(int16_t target_watts, float speed_mps, float 
  *				wind resistance, wind speed, wheel circumference, and grade. 
  *				If these variables are not set, they will default to an "average" value.
  */
-static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_forces, float rr_force)
+static uint16_t resistance_sim_position(float speed_mps, rc_sim_forces_t *p_sim_forces, float rr_force)
 {
 	float mag_watts;
 
@@ -292,8 +281,8 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
 		mag_watts = 0.0f;
 	}
 
-	// Move the servo to the required position.
-	return position_set_by_watts(mag_watts, speed_mps);
+	// Get the servo to the required position.
+	return magnet_position(speed_mps, mag_watts);
 }
 
 /**@brief	Adjusts the magnetic resistance accordingly for erg & sim modes.
@@ -301,6 +290,7 @@ static uint16_t resistance_sim_set(float speed_mps, rc_sim_forces_t *p_sim_force
  */
 void resistance_adjust(irt_context_t* p_context, rc_sim_forces_t* p_sim_forces)
 {
+	uint16_t servo_pos = 0;
 	float speed_avg = speed_average_mps();
 
 	RC_LOG("[RC] resistance_adjust speed_avg: %.2f, reported: %.2f\r\n",
@@ -309,19 +299,28 @@ void resistance_adjust(irt_context_t* p_context, rc_sim_forces_t* p_sim_forces)
 	if (speed_avg < RESISTANCE_MIN_SPEED_ADJUST)
 		return;
 
-	// If in erg or sim mode, adjust resistance accordingly.
+	// If in erg or sim mode, destermine the magnet position.
 	switch (p_context->resistance_mode)
 	{
 		case RESISTANCE_SET_ERG:
-			resistance_erg_set(p_sim_forces->erg_watts, speed_avg, p_context->rr_force);
+			servo_pos = resistance_erg_position(p_sim_forces->erg_watts,
+					speed_avg, p_context->rr_force);
 			break;
 
 		case RESISTANCE_SET_SIM:
-			resistance_sim_set(speed_avg, p_sim_forces, p_context->rr_force);
+			servo_pos = resistance_sim_position(speed_avg, p_sim_forces,
+					p_context->rr_force);
+
+
 			break;
 
 		default:
+			RC_LOG("[RC] resistance_adjust: WARNING called with invalid resistance mode.\r\n");
 			break;
 	}
+
+	// Move the servo, with smoothing only if in sim mode.
+	resistance_position_set(servo_pos,
+			p_context->resistance_mode == RESISTANCE_SET_SIM);
 }
 

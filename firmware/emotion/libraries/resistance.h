@@ -102,7 +102,7 @@ uint16_t resistance_position_get(void);
 /**@brief		Sets the position of the servo.
  *
  */
-uint16_t resistance_position_set(uint16_t position);
+uint16_t resistance_position_set(uint16_t position, bool smooth);
 
 /**@brief		Validates the values of positions are in range.
  *
