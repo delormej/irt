@@ -18,6 +18,8 @@
  *
  *      -->|        |<-- Pulse Width
 */
+#include <stdint.h>
+#include <stdbool.h>
 #include "nrf_pwm.h"
 #include "nrf_sdm.h"
 #include "nrf51.h"
@@ -57,9 +59,18 @@ static uint8_t m_period_count = 0;
 static bool m_is_running = false;
 static bool m_stop_requested = false;
 
+// State used to manage smoothing servo moves.
+static uint16_t m_last_us;			// Last position moved to.
+static uint16_t m_target_us;		// Utlimate target position.
+static int8_t m_step_us;			// Amount to step up / down each 20 ms.
+
+// 2x faster to release resistance than increase resistance.
+#define STEP_HARDER					-4
+#define STEP_EASIER					8
+
 /**@brief	Forces hard timer stop.
  */
-static void __INLINE pwm_timer_stop()
+static void inline pwm_timer_stop()
 {
 	// Stop & reset timer
 	NRF_TIMER2->TASKS_STOP = 1;
@@ -74,6 +85,39 @@ static void __INLINE pwm_timer_stop()
 
 	//PWM_LOG("[PWM] Stopping at count: %i.\r\n", m_period_count);
 	m_period_count = 0;
+}
+
+//
+// Configuring capture compares for the timer. See file header for description.
+// In theory, we could set the initial pin value to HIGH and get away with 1 less
+// capture and hence free up a PPI channel if needed.
+//
+static void inline pwm_set_pulse_us(uint16_t pulse_width_us)
+{
+	NRF_TIMER2->CC[0] = pulse_width_us;
+	NRF_TIMER2->CC[1] = pulse_width_us*2;
+	NRF_TIMER2->CC[2] = PWM_PERIOD_WIDTH_US - (pulse_width_us*2);
+
+	// Keep track of the last position.
+	m_last_us = pulse_width_us;
+}
+
+static void pwm_smooth_pulse(uint16_t target_us)
+{
+	// Set the goal.
+	m_target_us = target_us;
+
+	if (m_target_us > m_last_us)
+	{
+		m_step_us = STEP_EASIER;
+	}
+	else
+	{
+		m_step_us = STEP_HARDER;
+	}
+
+	// Set first target.
+	pwm_set_pulse_us(m_last_us + m_step_us);
 }
 
 /**@brief Function for initializing the Timer 2 peripheral.
@@ -142,7 +186,7 @@ static void pwm_ppi_init(void)
  *
  *			NRF_ERROR_INVALID_PARAM returned if servo target is out of range.
  */
-uint32_t pwm_set_servo(uint32_t pulse_width_us)
+uint32_t pwm_set_servo(uint16_t pulse_width_us, bool smooth)
 {
 	uint32_t err_code;
 
@@ -166,14 +210,16 @@ uint32_t pwm_set_servo(uint32_t pulse_width_us)
 		}
 	}
 
-	//
-	// Configuring capture compares for the timer. See file header for description.
-	// In theory, we could set the initial pin value to HIGH and get away with 1 less
-	// capture and hence free up a PPI channel if needed.
-	//
-	NRF_TIMER2->CC[0] = pulse_width_us;
-	NRF_TIMER2->CC[1] = pulse_width_us*2;
-	NRF_TIMER2->CC[2] = PWM_PERIOD_WIDTH_US - (pulse_width_us*2);
+	if (smooth)
+	{
+		// Setup smoothing.
+		pwm_smooth_pulse(pulse_width_us);
+	}
+	else
+	{
+		m_step_us = 0;	// Clear any prior smoothing.
+		pwm_set_pulse_us(pulse_width_us);
+	}
 
 	// Reset the counter & flag.
 	m_period_count = 0;
@@ -257,10 +303,37 @@ void TIMER2_IRQHandler(void)
 	// This interrupt handler should get called every 20ms - not more frequently.
 	//PWM_LOG("[PWM] IRQ: %i @ %.2f Stop? %i.\r\n", NRF_TIMER2->CC[2], SECONDS_CURRENT, m_stop_requested);
 
-	if (m_stop_requested || m_period_count++ >= PULSE_TRAIN_MAX_COUNT)
+	if (m_step_us != 0)
 	{
-		pwm_timer_stop();
+		uint16_t next_pulse_us = (m_last_us + m_step_us);
+
+		if ( m_step_us > 0 && m_last_us < m_target_us )
+		{
+			// Don't overshoot the goal.
+			pwm_set_pulse_us(
+					next_pulse_us < m_target_us ? next_pulse_us : m_target_us);
+		}
+		else if ( m_step_us < 0 && m_last_us > m_target_us )
+		{
+			// Don't overshoot the goal.
+			pwm_set_pulse_us(
+					next_pulse_us > m_target_us ? next_pulse_us : m_target_us);
+		}
+		else
+		{
+			m_step_us = 0;
+			m_stop_requested = true;
+		}
 	}
+	else if (m_period_count++ >= PULSE_TRAIN_MAX_COUNT)
+	{
+		m_stop_requested = true;
+	}
+
+	if (m_stop_requested)
+    {
+    	pwm_timer_stop();
+    }
 	else
 	{
 		// Clear the timer and restart.
