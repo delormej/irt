@@ -119,6 +119,7 @@ namespace IRT_GUI.Simulation
                 ResistanceStep step = row.DataBoundItem as ResistanceStep;
                 if (step != null)
                 {
+                    step.Previous = steps.LastOrDefault();
                     steps.Add(step);
                 }
             }
