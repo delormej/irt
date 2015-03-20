@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.label2 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.btnApply = new System.Windows.Forms.Button();
@@ -92,17 +92,17 @@
             // 
             // chartCoastdown
             // 
-            chartArea2.Name = "ChartArea1";
-            this.chartCoastdown.ChartAreas.Add(chartArea2);
+            chartArea3.Name = "ChartArea1";
+            this.chartCoastdown.ChartAreas.Add(chartArea3);
             this.chartCoastdown.Dock = System.Windows.Forms.DockStyle.Bottom;
-            legend2.Name = "Legend1";
-            this.chartCoastdown.Legends.Add(legend2);
+            legend3.Name = "Legend1";
+            this.chartCoastdown.Legends.Add(legend3);
             this.chartCoastdown.Location = new System.Drawing.Point(0, 120);
             this.chartCoastdown.Name = "chartCoastdown";
-            series2.ChartArea = "ChartArea1";
-            series2.Legend = "Legend1";
-            series2.Name = "Series1";
-            this.chartCoastdown.Series.Add(series2);
+            series3.ChartArea = "ChartArea1";
+            series3.Legend = "Legend1";
+            series3.Name = "Series1";
+            this.chartCoastdown.Series.Add(series3);
             this.chartCoastdown.Size = new System.Drawing.Size(516, 429);
             this.chartCoastdown.TabIndex = 7;
             this.chartCoastdown.Text = "chart1";
@@ -192,7 +192,7 @@
             this.btnCalcWatts.Name = "btnCalcWatts";
             this.btnCalcWatts.Size = new System.Drawing.Size(75, 23);
             this.btnCalcWatts.TabIndex = 15;
-            this.btnCalcWatts.Text = "Test";
+            this.btnCalcWatts.Text = "Evalulate";
             this.btnCalcWatts.UseVisualStyleBackColor = true;
             this.btnCalcWatts.Click += new System.EventHandler(this.btnCalcWatts_Click);
             // 
