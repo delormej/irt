@@ -30,13 +30,7 @@ namespace IRT.Calibration
             m_coastdown = coastdown;
             m_model = model;
 
-            this.lblDrag.Text = coastdown.Drag.ToString();
-            this.lblRR.Text = coastdown.RollingResistance.ToString();
-            this.lblStableSeconds.Text = m_model.StableSeconds.ToString();
-            this.lblStableSpeed.Text = String.Format("{0:0.0} mph", m_model.StableSpeedMps * 2.23694);
-            this.lblStableWatts.Text = m_model.StableWatts.ToString();
-            
-            DrawChart();
+            UpdateValues();
             //StartTimer();
         }
 
@@ -135,6 +129,32 @@ namespace IRT.Calibration
             {
                 var watts = m_coastdown.Watts(mph * 0.44704);
                 wattSeries.Points.AddXY(mph, watts);
+            }
+        }
+
+        private void UpdateValues()
+        {
+            this.txtDrag.Text = String.Format("{0:0.0000000}",  m_coastdown.Drag);
+            this.txtRR.Text = String.Format("{00:0.0000000}", m_coastdown.RollingResistance);
+            this.lblStableSeconds.Text = String.Format("{0:0.0}", m_model.StableSeconds);
+            this.txtStableSpeed.Text = String.Format("{0:0.0}", m_model.StableSpeedMps * 2.23694);
+            this.txtStableWatts.Text = m_model.StableWatts.ToString();
+
+            DrawChart();
+        }
+
+        private void btnRecalc_Click(object sender, EventArgs e)
+        {
+            double stableMph;
+
+            if (double.TryParse(txtStableSpeed.Text, out stableMph) &&
+                double.TryParse(txtStableWatts.Text, out m_model.StableWatts))
+            {
+                m_model.StableSpeedMps = stableMph * 0.44704;
+                m_model.Inertia = 0; // 0 out so it recalculates.
+
+                m_coastdown.Calculate(m_model);
+                UpdateValues();
             }
         }
     }
