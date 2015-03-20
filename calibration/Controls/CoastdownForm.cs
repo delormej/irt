@@ -157,5 +157,16 @@ namespace IRT.Calibration
                 UpdateValues();
             }
         }
+
+        private void btnCalcWatts_Click(object sender, EventArgs e)
+        {
+            double stableMph;
+
+            if (double.TryParse(txtStableSpeed.Text, out stableMph))
+            {
+                this.txtStableWatts.Text = 
+                    string.Format("{0:0}", m_coastdown.Watts(stableMph * 0.44704));
+            }
+        }
     }
 }

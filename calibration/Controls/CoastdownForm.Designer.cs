@@ -45,6 +45,7 @@
             this.btnRecalc = new System.Windows.Forms.Button();
             this.txtDrag = new System.Windows.Forms.TextBox();
             this.txtRR = new System.Windows.Forms.TextBox();
+            this.btnCalcWatts = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.chartCoastdown)).BeginInit();
             this.SuspendLayout();
             // 
@@ -70,7 +71,7 @@
             // 
             // btnApply
             // 
-            this.btnApply.Location = new System.Drawing.Point(276, 80);
+            this.btnApply.Location = new System.Drawing.Point(299, 80);
             this.btnApply.Name = "btnApply";
             this.btnApply.Size = new System.Drawing.Size(75, 23);
             this.btnApply.TabIndex = 17;
@@ -81,7 +82,7 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(357, 80);
+            this.btnCancel.Location = new System.Drawing.Point(380, 80);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -150,18 +151,18 @@
             this.txtStableSpeed.Location = new System.Drawing.Point(157, 54);
             this.txtStableSpeed.Name = "txtStableSpeed";
             this.txtStableSpeed.Size = new System.Drawing.Size(75, 20);
-            this.txtStableSpeed.TabIndex = 15;
+            this.txtStableSpeed.TabIndex = 14;
             // 
             // txtStableWatts
             // 
             this.txtStableWatts.Location = new System.Drawing.Point(157, 31);
             this.txtStableWatts.Name = "txtStableWatts";
             this.txtStableWatts.Size = new System.Drawing.Size(75, 20);
-            this.txtStableWatts.TabIndex = 14;
+            this.txtStableWatts.TabIndex = 13;
             // 
             // btnRecalc
             // 
-            this.btnRecalc.Location = new System.Drawing.Point(157, 80);
+            this.btnRecalc.Location = new System.Drawing.Point(134, 80);
             this.btnRecalc.Name = "btnRecalc";
             this.btnRecalc.Size = new System.Drawing.Size(75, 23);
             this.btnRecalc.TabIndex = 16;
@@ -185,6 +186,16 @@
             this.txtRR.Size = new System.Drawing.Size(75, 20);
             this.txtRR.TabIndex = 19;
             // 
+            // btnCalcWatts
+            // 
+            this.btnCalcWatts.Location = new System.Drawing.Point(53, 80);
+            this.btnCalcWatts.Name = "btnCalcWatts";
+            this.btnCalcWatts.Size = new System.Drawing.Size(75, 23);
+            this.btnCalcWatts.TabIndex = 15;
+            this.btnCalcWatts.Text = "Test";
+            this.btnCalcWatts.UseVisualStyleBackColor = true;
+            this.btnCalcWatts.Click += new System.EventHandler(this.btnCalcWatts_Click);
+            // 
             // CoastdownForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -193,6 +204,7 @@
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(516, 549);
             this.ControlBox = false;
+            this.Controls.Add(this.btnCalcWatts);
             this.Controls.Add(this.txtDrag);
             this.Controls.Add(this.txtRR);
             this.Controls.Add(this.btnRecalc);
@@ -232,5 +244,6 @@
         private System.Windows.Forms.Button btnRecalc;
         private System.Windows.Forms.TextBox txtDrag;
         private System.Windows.Forms.TextBox txtRR;
+        private System.Windows.Forms.Button btnCalcWatts;
     }
 }
