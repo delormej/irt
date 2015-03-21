@@ -25,7 +25,7 @@ float magnet_watts(float speed_mps, uint16_t position)
 	// Solve for slope (x: position, y: slope) where slope is the slope of (x: speed(mps), y: watts)
 	// y = 9E-07x3 - 0.0029x2 + 2.89x - 689.51
 	float slope = 9E-07 * pow(position, 3) - 0.0029 * pow(position, 2) + (2.89 * position) - 689.51;
-
+	// =3.286488725*10^-7*G44^3 - 1.109312202*10^-3*G44^2 + 1.120132453*G44 - 291.5232512
 	return slope;
 
 	//
@@ -34,6 +34,7 @@ float magnet_watts(float speed_mps, uint16_t position)
 
 	// Watts @ 4.4704 mps (10 mph)
 	// y = 3E-07x3 - 0.0011x2 + 1.1201x - 291.52
+	// y = -7.371212121·10-7 x3 + 2.578722944·10-3 x2 - 2.797195887 x + 877.024026
 	float intercept = 3E-07 * pow(position, 3) - 0.0011 * pow(position, 2) + (1.1201 * position) - 291.52;
 	
 	//
