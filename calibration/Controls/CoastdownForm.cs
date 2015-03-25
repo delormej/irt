@@ -168,5 +168,10 @@ namespace IRT.Calibration
                     string.Format("{0:0}", m_coastdown.Watts(stableMph * 0.44704));
             }
         }
+
+        private void btnReset_Click(object sender, EventArgs e)
+        {
+            UpdateValues();
+        }
     }
 }
