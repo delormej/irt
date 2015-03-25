@@ -115,6 +115,7 @@ name:
 prep:
 	$(NRFJPROG) --memwr 0x3fc00 --val 1		
 	$(NRFJPROG) --memwr 0x3fc04 --val 0		
+	$(NRFJPROG) --memwr 0x10001080 --val 64	
 
 # Does a complete install to a device, wipe clean, new softdevice, bootloader & app.
 install: | flash-softdevice flash prep 
