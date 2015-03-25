@@ -2401,7 +2401,7 @@ namespace IRT_GUI
             dlg.FilterIndex = 1;
             dlg.RestoreDirectory = false;
             dlg.CheckFileExists = true;
-            dlg.Multiselect = true;
+            dlg.Multiselect = false;
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {

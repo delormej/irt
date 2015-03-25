@@ -32,18 +32,21 @@
             System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.label2 = new System.Windows.Forms.Label();
-            this.lblDrag = new System.Windows.Forms.Label();
-            this.lblRR = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.btnApply = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.chartCoastdown = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.lblStableWatts = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.lblStableSeconds = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
-            this.lblStableSpeed = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
+            this.txtStableSpeed = new System.Windows.Forms.TextBox();
+            this.txtStableWatts = new System.Windows.Forms.TextBox();
+            this.btnRecalc = new System.Windows.Forms.Button();
+            this.txtDrag = new System.Windows.Forms.TextBox();
+            this.txtRR = new System.Windows.Forms.TextBox();
+            this.btnCalcWatts = new System.Windows.Forms.Button();
+            this.btnReset = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.chartCoastdown)).BeginInit();
             this.SuspendLayout();
             // 
@@ -51,46 +54,31 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(273, 10);
+            this.label2.Location = new System.Drawing.Point(410, 52);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(34, 13);
+            this.label2.Size = new System.Drawing.Size(50, 20);
             this.label2.TabIndex = 1;
             this.label2.Text = "Drag";
-            // 
-            // lblDrag
-            // 
-            this.lblDrag.AutoSize = true;
-            this.lblDrag.Location = new System.Drawing.Point(422, 10);
-            this.lblDrag.Name = "lblDrag";
-            this.lblDrag.Size = new System.Drawing.Size(13, 13);
-            this.lblDrag.TabIndex = 2;
-            this.lblDrag.Text = "0";
-            // 
-            // lblRR
-            // 
-            this.lblRR.AutoSize = true;
-            this.lblRR.Location = new System.Drawing.Point(422, 34);
-            this.lblRR.Name = "lblRR";
-            this.lblRR.Size = new System.Drawing.Size(13, 13);
-            this.lblRR.TabIndex = 4;
-            this.lblRR.Text = "0";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(273, 34);
+            this.label4.Location = new System.Drawing.Point(410, 88);
+            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(113, 13);
+            this.label4.Size = new System.Drawing.Size(167, 20);
             this.label4.TabIndex = 3;
             this.label4.Text = "Rolling Resistance";
             // 
             // btnApply
             // 
-            this.btnApply.Location = new System.Drawing.Point(276, 68);
+            this.btnApply.Location = new System.Drawing.Point(484, 123);
+            this.btnApply.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnApply.Name = "btnApply";
-            this.btnApply.Size = new System.Drawing.Size(75, 23);
-            this.btnApply.TabIndex = 5;
+            this.btnApply.Size = new System.Drawing.Size(112, 35);
+            this.btnApply.TabIndex = 20;
             this.btnApply.Text = "Apply";
             this.btnApply.UseVisualStyleBackColor = true;
             this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
@@ -98,10 +86,11 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(357, 68);
+            this.btnCancel.Location = new System.Drawing.Point(606, 123);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 6;
+            this.btnCancel.Size = new System.Drawing.Size(112, 35);
+            this.btnCancel.TabIndex = 1;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
@@ -113,41 +102,35 @@
             this.chartCoastdown.Dock = System.Windows.Forms.DockStyle.Bottom;
             legend1.Name = "Legend1";
             this.chartCoastdown.Legends.Add(legend1);
-            this.chartCoastdown.Location = new System.Drawing.Point(0, 120);
+            this.chartCoastdown.Location = new System.Drawing.Point(0, 185);
+            this.chartCoastdown.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.chartCoastdown.Name = "chartCoastdown";
             series1.ChartArea = "ChartArea1";
             series1.Legend = "Legend1";
             series1.Name = "Series1";
             this.chartCoastdown.Series.Add(series1);
-            this.chartCoastdown.Size = new System.Drawing.Size(516, 429);
+            this.chartCoastdown.Size = new System.Drawing.Size(774, 660);
             this.chartCoastdown.TabIndex = 7;
             this.chartCoastdown.Text = "chart1";
-            // 
-            // lblStableWatts
-            // 
-            this.lblStableWatts.AutoSize = true;
-            this.lblStableWatts.Location = new System.Drawing.Point(162, 34);
-            this.lblStableWatts.Name = "lblStableWatts";
-            this.lblStableWatts.Size = new System.Drawing.Size(13, 13);
-            this.lblStableWatts.TabIndex = 11;
-            this.lblStableWatts.Text = "0";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(13, 34);
+            this.label3.Location = new System.Drawing.Point(18, 52);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(80, 13);
+            this.label3.Size = new System.Drawing.Size(117, 20);
             this.label3.TabIndex = 10;
             this.label3.Text = "Stable Watts";
             // 
             // lblStableSeconds
             // 
             this.lblStableSeconds.AutoSize = true;
-            this.lblStableSeconds.Location = new System.Drawing.Point(162, 56);
+            this.lblStableSeconds.Location = new System.Drawing.Point(231, 15);
+            this.lblStableSeconds.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblStableSeconds.Name = "lblStableSeconds";
-            this.lblStableSeconds.Size = new System.Drawing.Size(13, 13);
+            this.lblStableSeconds.Size = new System.Drawing.Size(18, 20);
             this.lblStableSeconds.TabIndex = 9;
             this.lblStableSeconds.Text = "0";
             // 
@@ -155,52 +138,116 @@
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(13, 56);
+            this.label6.Location = new System.Drawing.Point(18, 15);
+            this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(96, 13);
+            this.label6.Size = new System.Drawing.Size(140, 20);
             this.label6.TabIndex = 8;
             this.label6.Text = "Stable Seconds";
-            // 
-            // lblStableSpeed
-            // 
-            this.lblStableSpeed.AutoSize = true;
-            this.lblStableSpeed.Location = new System.Drawing.Point(162, 9);
-            this.lblStableSpeed.Name = "lblStableSpeed";
-            this.lblStableSpeed.Size = new System.Drawing.Size(13, 13);
-            this.lblStableSpeed.TabIndex = 13;
-            this.lblStableSpeed.Text = "0";
             // 
             // label5
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(13, 9);
+            this.label5.Location = new System.Drawing.Point(18, 88);
+            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(83, 13);
+            this.label5.Size = new System.Drawing.Size(175, 20);
             this.label5.TabIndex = 12;
-            this.label5.Text = "Stable Speed";
+            this.label5.Text = "Stable Speed (mph)";
+            // 
+            // txtStableSpeed
+            // 
+            this.txtStableSpeed.Location = new System.Drawing.Point(236, 83);
+            this.txtStableSpeed.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txtStableSpeed.Name = "txtStableSpeed";
+            this.txtStableSpeed.Size = new System.Drawing.Size(110, 26);
+            this.txtStableSpeed.TabIndex = 14;
+            // 
+            // txtStableWatts
+            // 
+            this.txtStableWatts.Location = new System.Drawing.Point(236, 48);
+            this.txtStableWatts.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txtStableWatts.Name = "txtStableWatts";
+            this.txtStableWatts.Size = new System.Drawing.Size(110, 26);
+            this.txtStableWatts.TabIndex = 13;
+            // 
+            // btnRecalc
+            // 
+            this.btnRecalc.Location = new System.Drawing.Point(137, 123);
+            this.btnRecalc.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnRecalc.Name = "btnRecalc";
+            this.btnRecalc.Size = new System.Drawing.Size(112, 35);
+            this.btnRecalc.TabIndex = 16;
+            this.btnRecalc.Text = "Recalculate";
+            this.btnRecalc.UseVisualStyleBackColor = true;
+            this.btnRecalc.Click += new System.EventHandler(this.btnRecalc_Click);
+            // 
+            // txtDrag
+            // 
+            this.txtDrag.Location = new System.Drawing.Point(608, 48);
+            this.txtDrag.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txtDrag.Name = "txtDrag";
+            this.txtDrag.ReadOnly = true;
+            this.txtDrag.Size = new System.Drawing.Size(110, 26);
+            this.txtDrag.TabIndex = 18;
+            // 
+            // txtRR
+            // 
+            this.txtRR.Location = new System.Drawing.Point(608, 83);
+            this.txtRR.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.txtRR.Name = "txtRR";
+            this.txtRR.ReadOnly = true;
+            this.txtRR.Size = new System.Drawing.Size(110, 26);
+            this.txtRR.TabIndex = 19;
+            // 
+            // btnCalcWatts
+            // 
+            this.btnCalcWatts.Location = new System.Drawing.Point(16, 123);
+            this.btnCalcWatts.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnCalcWatts.Name = "btnCalcWatts";
+            this.btnCalcWatts.Size = new System.Drawing.Size(112, 35);
+            this.btnCalcWatts.TabIndex = 15;
+            this.btnCalcWatts.Text = "Evalulate";
+            this.btnCalcWatts.UseVisualStyleBackColor = true;
+            this.btnCalcWatts.Click += new System.EventHandler(this.btnCalcWatts_Click);
+            // 
+            // btnReset
+            // 
+            this.btnReset.Location = new System.Drawing.Point(257, 123);
+            this.btnReset.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnReset.Name = "btnReset";
+            this.btnReset.Size = new System.Drawing.Size(112, 35);
+            this.btnReset.TabIndex = 17;
+            this.btnReset.Text = "Reset";
+            this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
             // 
             // CoastdownForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(516, 549);
+            this.ClientSize = new System.Drawing.Size(774, 845);
             this.ControlBox = false;
-            this.Controls.Add(this.lblStableSpeed);
+            this.Controls.Add(this.btnReset);
+            this.Controls.Add(this.btnCalcWatts);
+            this.Controls.Add(this.txtDrag);
+            this.Controls.Add(this.txtRR);
+            this.Controls.Add(this.btnRecalc);
+            this.Controls.Add(this.txtStableWatts);
+            this.Controls.Add(this.txtStableSpeed);
             this.Controls.Add(this.label5);
-            this.Controls.Add(this.lblStableWatts);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.lblStableSeconds);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.chartCoastdown);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnApply);
-            this.Controls.Add(this.lblRR);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.lblDrag);
             this.Controls.Add(this.label2);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
             this.Name = "CoastdownForm";
             this.Text = "Coastdown";
@@ -213,17 +260,20 @@
         #endregion
 
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label lblDrag;
-        private System.Windows.Forms.Label lblRR;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button btnApply;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartCoastdown;
-        private System.Windows.Forms.Label lblStableWatts;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label lblStableSeconds;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Label lblStableSpeed;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox txtStableSpeed;
+        private System.Windows.Forms.TextBox txtStableWatts;
+        private System.Windows.Forms.Button btnRecalc;
+        private System.Windows.Forms.TextBox txtDrag;
+        private System.Windows.Forms.TextBox txtRR;
+        private System.Windows.Forms.Button btnCalcWatts;
+        private System.Windows.Forms.Button btnReset;
     }
 }
