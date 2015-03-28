@@ -25,11 +25,11 @@ import traceback
 if len(sys.argv) > 1:
 	input_file_name = sys.argv[1]
 
-speed_threshold = 0.1
-contiguous_count = 5
+speed_threshold = 0.2
+contiguous_count = 3
 
 def in_threshold(current, last):
-	return ( (current < (last + speed_threshold)) and (current > (last - speed_threshold)) )
+	return ( (current <= (last + speed_threshold)) and (current >= (last - speed_threshold)) )
 
 
 def get_mean(ids, speeds, watts):
@@ -49,7 +49,7 @@ def get_mean(ids, speeds, watts):
 		    if not in_threshold(speeds[id], speeds[lastId]):
 		        # average over what we have so far
 		        if (lastId - firstId) > contiguous_count:
-		            yield (round(speeds[firstId:lastId-1].mean(),1), round(watts[firstId:lastId-1].mean(),0))
+		            yield (speeds[firstId:lastId-1].mean(), watts[firstId:lastId-1].mean())
 		            firstId = 0
 		        #else:
 		            #print(id, firstId)
@@ -59,7 +59,7 @@ def get_mean(ids, speeds, watts):
 		
 		lastId = id
 	
-	print("end")
+	#print("end")
 	yield (speeds[firstId:id].mean(), watts[firstId:id].mean())
 
 def xsl(xml_filename):
@@ -368,7 +368,7 @@ def process_file(input_file_name):
 		if ids:
 			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
 			for i in get_mean(ids, speeds, watts):
-				print(p, i[0], i[1])
+				print(p, round(i[0],1), round(i[1],0))
 			"""
 			print(p, 
 				bottleneck.nanmedian(speeds[ids]),
