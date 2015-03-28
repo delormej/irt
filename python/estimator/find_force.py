@@ -1,8 +1,8 @@
 #input_file_name = "180lb_large_mag_range_adjust_speed.csv"
-n = 7       # min. sequence length
-x = 0.2 * 2 # total range of allowed variation
+n = 5       # min. sequence length
+x = 0.1 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
-skip_rows = 120 # data rows skipped at the beginning
+skip_rows = 20 # data rows skipped at the beginning
 txt_offset = 250
 speed_col = 3
 watts_col = 5
@@ -24,6 +24,43 @@ import traceback
 
 if len(sys.argv) > 1:
 	input_file_name = sys.argv[1]
+
+speed_threshold = 0.1
+contiguous_count = 5
+
+def in_threshold(current, last):
+	return ( (current < (last + speed_threshold)) and (current > (last - speed_threshold)) )
+
+
+def get_mean(ids, speeds, watts):
+	lastId = 0
+	firstId = 0
+
+	print("count:", len(ids)) 
+
+	# look for when the speed varies more than threshold
+	for id in ids:
+		#print(speeds[id], watts[id], id, lastId, firstId)
+
+		if firstId == 0:
+			firstId = id
+
+		if lastId > 0:
+		    if not in_threshold(speeds[id], speeds[lastId]):
+		        # average over what we have so far
+		        if (lastId - firstId) > contiguous_count:
+		            yield (round(speeds[firstId:lastId-1].mean(),1), round(watts[firstId:lastId-1].mean(),0))
+		            firstId = 0
+		        #else:
+		            #print(id, firstId)
+
+		        # reset firstId tracking
+		        
+		
+		lastId = id
+	
+	print("end")
+	yield (speeds[firstId:id].mean(), watts[firstId:id].mean())
 
 def xsl(xml_filename):
     """
@@ -330,10 +367,14 @@ def process_file(input_file_name):
 		ids = valid_data[p]
 		if ids:
 			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
+			for i in get_mean(ids, speeds, watts):
+				print(p, i[0], i[1])
+			"""
 			print(p, 
 				bottleneck.nanmedian(speeds[ids]),
 				bottleneck.nanmedian(watts[ids]) )
 				#				bottleneck.nanmedian( forces[ids] - (power_func(speeds[ids], a, b)/speeds[ids]) ))
+            """
 	
 	return sp2000, w2000, slope, intercept
 
