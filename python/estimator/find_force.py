@@ -32,14 +32,14 @@ def in_threshold(current, last):
 	return ( (current <= (last + speed_threshold)) and (current >= (last - speed_threshold)) )
 
 
-def get_mean(ids, speeds, watts):
+def get_mean(speeds, watts):
 	lastId = 0
 	firstId = 0
 
-	print("count:", len(ids)) 
+	print("count:", len(speeds)) 
 
 	# look for when the speed varies more than threshold
-	for id in ids:
+	for id in range(len(speeds)):
 		#print(speeds[id], watts[id], id, lastId, firstId)
 
 		if firstId == 0:
@@ -49,18 +49,14 @@ def get_mean(ids, speeds, watts):
 		    if not in_threshold(speeds[id], speeds[lastId]):
 		        # average over what we have so far
 		        if (lastId - firstId) > contiguous_count:
-		            yield (speeds[firstId:lastId-1].mean(), watts[firstId:lastId-1].mean())
-		            firstId = 0
-		        #else:
-		            #print(id, firstId)
-
-		        # reset firstId tracking
-		        
+		            #print("basing calc on:", lastId, firstId) #, speeds[983])
+		            yield (speeds[firstId:lastId].mean(), watts[firstId:lastId].mean())
+		            firstId = 0		        
 		
 		lastId = id
 	
 	#print("end")
-	yield (speeds[firstId:id].mean(), watts[firstId:id].mean())
+	yield (speeds[firstId:lastId].mean(), watts[firstId:lastId].mean())
 
 def xsl(xml_filename):
     """
@@ -367,8 +363,9 @@ def process_file(input_file_name):
 		ids = valid_data[p]
 		if ids:
 			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
-			for i in get_mean(ids, speeds, watts):
+			for i in get_mean(speeds[ids], watts[ids]):
 				print(p, round(i[0],1), round(i[1],0))
+				#return
 			"""
 			print(p, 
 				bottleneck.nanmedian(speeds[ids]),
