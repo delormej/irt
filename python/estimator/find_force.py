@@ -58,6 +58,25 @@ def get_mean(speeds, watts):
 	#print("end")
 	yield (speeds[firstId:lastId].mean(), watts[firstId:lastId].mean())
 
+"""
+Get the stable speed and watts for each servo position.
+"""
+def get_positions(pos_list, valid_data, speeds, watts):
+    for p in pos_list:
+        speed = []
+        watt = []
+
+        ids = valid_data[p]
+        if ids:
+            #print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
+            for i in get_mean(speeds[ids], watts[ids]):
+                speed.append(round(i[0],1))
+                watt.append(round(i[1],0))
+                print(p, round(i[0],1), round(i[1],0))
+                #plt.scatter(round(i[0],1), round(i[1],0))
+        
+        plt.plot(speed, watt)
+
 def xsl(xml_filename):
     """
     parses garmin tcx file and outputs csv file
@@ -87,7 +106,7 @@ def fit_bike_science(x_new, x, y):
 
 	pars, covar = spo.curve_fit(bike_science_func, x1, y, p0 = [0.3, 0.005])
 	print('bike', pars)
-	plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+')
+	plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+', zorder=100, linewidth=3)
 
 def bicycle_func(x, a, b):
 	x_mps = x * 0.44704
@@ -359,20 +378,9 @@ def process_file(input_file_name):
 	"""
 
 	print("\nposition\tforce\tadd_force")
-	for p in pos_list:
-		ids = valid_data[p]
-		if ids:
-			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
-			for i in get_mean(speeds[ids], watts[ids]):
-				print(p, round(i[0],1), round(i[1],0))
-				#return
-			"""
-			print(p, 
-				bottleneck.nanmedian(speeds[ids]),
-				bottleneck.nanmedian(watts[ids]) )
-				#				bottleneck.nanmedian( forces[ids] - (power_func(speeds[ids], a, b)/speeds[ids]) ))
-            """
 	
+	get_positions(pos_list, valid_data, speeds, watts)
+
 	return sp2000, w2000, slope, intercept
 
 def get_files(rootdir):
