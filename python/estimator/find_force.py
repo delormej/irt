@@ -36,7 +36,7 @@ def get_mean(speeds, watts):
 	lastId = 0
 	firstId = 0
 
-	print("count:", len(speeds)) 
+	#print("count:", len(speeds)) 
 
 	# look for when the speed varies more than threshold
 	for id in range(len(speeds)):
@@ -61,7 +61,7 @@ def get_mean(speeds, watts):
 """
 Get the stable speed and watts for each servo position.
 """
-def get_positions(pos_list, valid_data, speeds, watts):
+def get_positions(pos_list, valid_data, speeds, watts, cal_slope, cal_intercept):
     for p in pos_list:
         speed = []
         watt = []
@@ -70,12 +70,16 @@ def get_positions(pos_list, valid_data, speeds, watts):
         if ids:
             #print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
             for i in get_mean(speeds[ids], watts[ids]):
-                speed.append(round(i[0],1))
-                watt.append(round(i[1],0))
-                print(p, round(i[0],1), round(i[1],0))
+                speed.append(0.44704 * i[0])
+                base_watts = (0.44704 * i[0]) * cal_slope + cal_intercept
+                watt.append(i[1] - base_watts)
+                #print(p, round(i[0],1), round(i[1],0))
                 #plt.scatter(round(i[0],1), round(i[1],0))
         
-        plt.plot(speed, watt)
+            slope, intercept, r_val, p_val, stderr = stats.linregress(speed, watt)
+            print(p, slope, intercept)
+            mph = [x * 2.23694 for x in speed]
+            plt.plot(mph, watt)
 
 def xsl(xml_filename):
     """
@@ -379,7 +383,7 @@ def process_file(input_file_name):
 
 	print("\nposition\tforce\tadd_force")
 	
-	get_positions(pos_list, valid_data, speeds, watts)
+	get_positions(pos_list, valid_data, speeds, watts, slope, intercept)
 
 	return sp2000, w2000, slope, intercept
 
