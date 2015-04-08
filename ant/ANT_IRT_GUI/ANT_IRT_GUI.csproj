@@ -61,6 +61,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DistanceBinding.cs" />
+    <Compile Include="EmotionRollerDisplay.cs" />
     <Compile Include="GraphForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -85,6 +87,7 @@
     <Compile Include="ServoPositions.Designer.cs">
       <DependentUpon>ServoPositions.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsConverter.cs" />
     <Compile Include="SimulateRefPower.cs" />
     <Compile Include="Simulation\ElevationProfileForm.cs">
       <SubType>Form</SubType>
