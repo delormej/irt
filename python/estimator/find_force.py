@@ -1,8 +1,8 @@
 #input_file_name = "180lb_large_mag_range_adjust_speed.csv"
-n = 7       # min. sequence length
-x = 0.2 * 2 # total range of allowed variation
+n = 5       # min. sequence length
+x = 0.1 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
-skip_rows = 120 # data rows skipped at the beginning
+skip_rows = 20 # data rows skipped at the beginning
 txt_offset = 250
 speed_col = 3
 watts_col = 5
@@ -24,6 +24,62 @@ import traceback
 
 if len(sys.argv) > 1:
 	input_file_name = sys.argv[1]
+
+speed_threshold = 0.2
+contiguous_count = 3
+
+def in_threshold(current, last):
+	return ( (current <= (last + speed_threshold)) and (current >= (last - speed_threshold)) )
+
+
+def get_mean(speeds, watts):
+	lastId = 0
+	firstId = 0
+
+	#print("count:", len(speeds)) 
+
+	# look for when the speed varies more than threshold
+	for id in range(len(speeds)):
+		#print(speeds[id], watts[id], id, lastId, firstId)
+
+		if firstId == 0:
+			firstId = id
+
+		if lastId > 0:
+		    if not in_threshold(speeds[id], speeds[lastId]):
+		        # average over what we have so far
+		        if (lastId - firstId) > contiguous_count:
+		            #print("basing calc on:", lastId, firstId) #, speeds[983])
+		            yield (speeds[firstId:lastId].mean(), watts[firstId:lastId].mean())
+		            firstId = 0		        
+		
+		lastId = id
+	
+	#print("end")
+	yield (speeds[firstId:lastId].mean(), watts[firstId:lastId].mean())
+
+"""
+Get the stable speed and watts for each servo position.
+"""
+def get_positions(pos_list, valid_data, speeds, watts, cal_slope, cal_intercept):
+    for p in pos_list:
+        speed = []
+        watt = []
+
+        ids = valid_data[p]
+        if ids:
+            #print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
+            for i in get_mean(speeds[ids], watts[ids]):
+                speed.append(0.44704 * i[0])
+                base_watts = (0.44704 * i[0]) * cal_slope + cal_intercept
+                watt.append(i[1] - base_watts)
+                #print(p, round(i[0],1), round(i[1],0))
+                #plt.scatter(round(i[0],1), round(i[1],0))
+        
+            slope, intercept, r_val, p_val, stderr = stats.linregress(speed, watt)
+            print((p, slope, intercept))
+            mph = [x * 2.23694 for x in speed]
+            plt.plot(mph, watt)
 
 def xsl(xml_filename):
     """
@@ -54,7 +110,7 @@ def fit_bike_science(x_new, x, y):
 
 	pars, covar = spo.curve_fit(bike_science_func, x1, y, p0 = [0.3, 0.005])
 	print('bike', pars)
-	plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+')
+	plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+', zorder=100, linewidth=3)
 
 def bicycle_func(x, a, b):
 	x_mps = x * 0.44704
@@ -326,15 +382,9 @@ def process_file(input_file_name):
 	"""
 
 	print("\nposition\tforce\tadd_force")
-	for p in pos_list:
-		ids = valid_data[p]
-		if ids:
-			#print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
-			print(p, 
-				bottleneck.nanmedian(speeds[ids]),
-				bottleneck.nanmedian(watts[ids]) )
-				#				bottleneck.nanmedian( forces[ids] - (power_func(speeds[ids], a, b)/speeds[ids]) ))
 	
+	get_positions(pos_list, valid_data, speeds, watts, slope, intercept)
+
 	return sp2000, w2000, slope, intercept
 
 def get_files(rootdir):

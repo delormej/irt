@@ -24,8 +24,9 @@ namespace IRT_GUI.IrtMessages
         public byte ResistanceMode;
         public ushort TargetLevel;
         public uint FlywheelRevs;
-        public ushort RefSpeedWheelRevs;
+        public ushort RefPowerWheelEvents;
         public ushort RefPowerAccumTorque;
+        public double RefTorque;
 
         public short PowerReferenceAvg;
         public short PowerEMotionAvg;

@@ -37,19 +37,19 @@ namespace IRT.Calibration
             }
             
             // Get max records, plus the last ones if not divisible by 4.
-            int records = (int)Math.Ceiling(timestamp.Length / 4.0d);
+            int records = timestamp.Length; //  (int)Math.Ceiling(timestamp.Length / 4.0d);
 
             double[] seconds = new double[records];
             double[] speed = new double[records];
 
             for (int ix = 0; ix < records; ix++)
             {
-                int idx = (ix * 4);
+                int idx = ix; //  (ix * 4);
 
                 if (idx == 0)
                 {
                     // Advance to the next record to start.
-                    idx += 4;
+                    idx++; //= 4;
                 }
                 // If we overrun, cap at max.
                 else if (idx > flywheel.Length)
@@ -60,15 +60,16 @@ namespace IRT.Calibration
                 int val = flywheel[idx];
                 int dt, ds;
 
-                if (val < flywheel[idx - 4])
-                    dt = val + (flywheel[idx - 4] ^ 0xFFFF);
+                // Handle rollover
+                if (val < flywheel[idx - 1])
+                    dt = val + (flywheel[idx - 1] ^ 0xFFFF);
                 else
-                    dt = val - flywheel[idx - 4];
+                    dt = val - flywheel[idx - 1];
 
-                if (timestamp[idx] < timestamp[idx - 4])
-                    ds = timestamp[idx] + (timestamp[idx - 4] ^ 0xFFFF);
+                if (timestamp[idx] < timestamp[idx - 1])
+                    ds = timestamp[idx] + (timestamp[idx - 1] ^ 0xFFFF);
                 else
-                    ds = timestamp[idx] - timestamp[idx - 4];
+                    ds = timestamp[idx] - timestamp[idx - 1];
 
                 if (ix > 0)
                     seconds[ix] = (ds / 2048.0) + seconds[ix - 1];
@@ -100,6 +101,12 @@ namespace IRT.Calibration
                 // Invert the timestamp seconds to record seconds to min speed.
                 m_coastdownSeconds.Add(seconds[minSpeedIdx] - seconds[j]);
             }
+
+            if (m_coastdownSeconds.Count < 10)
+            {
+                throw new ApplicationException("Unable to detect suitable deceleration, please retry.");
+            }
+
         }
 
         /// <summary>
@@ -115,7 +122,7 @@ namespace IRT.Calibration
             {
                 System.Diagnostics.Debug.WriteLine("{0}: {1:0.0} mps", i, speeds[i]);
 
-                // At least 15mph an faster than the previous?
+                // At least 15mph and faster than the previous?
                 if (speeds[i] > 15 * 0.44704 &&
                     speeds[i] >= speeds[i - 1])
                 {
