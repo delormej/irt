@@ -60,6 +60,7 @@ namespace IRT.Calibration
                 int val = flywheel[idx];
                 int dt, ds;
 
+                // Handle rollover
                 if (val < flywheel[idx - 1])
                     dt = val + (flywheel[idx - 1] ^ 0xFFFF);
                 else
