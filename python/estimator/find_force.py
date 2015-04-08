@@ -77,7 +77,7 @@ def get_positions(pos_list, valid_data, speeds, watts, cal_slope, cal_intercept)
                 #plt.scatter(round(i[0],1), round(i[1],0))
         
             slope, intercept, r_val, p_val, stderr = stats.linregress(speed, watt)
-            print(p, slope, intercept)
+            print((p, slope, intercept))
             mph = [x * 2.23694 for x in speed]
             plt.plot(mph, watt)
 
