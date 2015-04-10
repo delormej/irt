@@ -9,13 +9,36 @@ class position:
 		self.slope = 0.0
 		self.intercept = 0.0
 
+def fit_polynomial(x, y):
+	x_new = range(800, 1600, 100)
+	coefficients = np.polyfit(x, y, 3)
+	polynomial = np.poly1d(coefficients)
+	ys = polynomial(x_new)
+	# y = ax^2 + bx + c
+	f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
+	print(f)
+	#print(r)
+	
+	# return the text
+	return f, coefficients, ys
+
+def interop_poly(coeffs, mps):
+	# takes 2 polynomials and linearly interopolates by speed.
+	
+def get_power(coeff, mps, servo_pos):
+	f = np.poly1d(coeff)
+	y = f(servo_pos)
+		
 def fit_3rd_poly(positions):
+	polys = []	
 	colors = iter(['r','g','b','y','c'])
+	labels = []
 	plt.subplot(2, 1, 1)
+	plt.grid(b=True, which='major', color='gray', linestyle='--')
 	plt.ylabel('Watts @ Position by Speed')
 	# generate speed data 5-25 mph
 	# calculate power for each position
-	for mph in range(5,25,5):
+	for mph in range(10,26,5):
 		c = next(colors)
 		
 		mps = mph*0.44704
@@ -28,11 +51,18 @@ def fit_3rd_poly(positions):
 			#print(p.servo, mph, watts)
 			
 		plt.plot(servo_pos, power, color=c)
+		labels.append(r'%1.1f' % (mph))
+		
+		fit_polynomial(servo_pos, power)
+		
 		#print(p.intercept)
+		
+	plt.legend(labels, loc='upper right')
 		
 def fit_linear(positions):
 	plt.subplot(2, 1, 2)
 	plt.ylabel('Watts @ Speed by Servo Position')
+	plt.grid(b=True, which='major', color='gray', linestyle='--')
 	
 	for p in positions:
 		speed = []
@@ -46,7 +76,7 @@ def fit_linear(positions):
 def get_position_data():
 	# loads slope & intercept for each position.
 	positions = []
-	data = np.loadtxt('data2.csv', delimiter=',')
+	data = np.loadtxt('data2.csv', delimiter=',', comments='#')
 	
 	for r in data:
 		p = position()
