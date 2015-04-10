@@ -43,7 +43,7 @@
  */
 typedef struct poly_coeff_s {
 	float speed_mps;
-	float coeff[];
+	float coeff[4];
 } poly_coeff_t;
 
 /**@brief	Sets the cofficients for the 3rd order polynomial.

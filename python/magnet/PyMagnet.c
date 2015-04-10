@@ -6,7 +6,8 @@ To build:
 */
 
 /*
- * Function to be called from Python
+ * Python wrapper for C magnet_watts call.  Returns the magnet watts for 
+ * a given speed and magnet position.
  */
 static PyObject* PyMagnet_watts(PyObject* self, PyObject* args)
 {
@@ -25,7 +26,8 @@ static PyObject* PyMagnet_watts(PyObject* self, PyObject* args)
 }
 
 /*
- * Another function to be called from Python
+ * Python wrapper for C magnet_position call.  Returns the position given
+ * speed in meters per second and desired additional watts from magnet.
  */
 static PyObject* PyMagnet_position(PyObject* self, PyObject* args)
 {
@@ -43,11 +45,67 @@ static PyObject* PyMagnet_position(PyObject* self, PyObject* args)
 	return Py_BuildValue("i", position);
 }
 
+/*
+ * Python wrapper for setting coefficients.
+ *
+ */
+static PyObject* PyMagnet_set_coeff(PyObject* self, PyObject* args)
+{
+	float low_speed_mps, 
+		low_a,
+		low_b,
+		low_c,
+		low_d,
+		high_speed_mps, 
+		high_a,
+		high_b,
+		high_c,
+		high_d;
+	
+	// Parse the python arguments.
+	PyArg_ParseTuple(args, "ffffffffff", 
+		&low_speed_mps, 
+		&low_a,
+		&low_b,
+		&low_c,
+		&low_d,
+		&high_speed_mps, 
+		&high_a,
+		&high_b,
+		&high_c,
+		&high_d		
+		);
+	
+	// Build the low and high speed coefficient structures.
+	poly_coeff_t low;
+	low.speed_mps = low_speed_mps;
+	low.coeff[0] = low_a;
+	low.coeff[1] = low_b;
+	low.coeff[2] = low_c;
+	low.coeff[3] = low_d;
+	
+	poly_coeff_t high;
+	high.speed_mps = high_speed_mps;
+	high.coeff[0] = high_a;
+	high.coeff[1] = high_b;
+	high.coeff[2] = high_c;
+	high.coeff[3] = high_d;
+	
+	// Call the actual magnet module function.
+	magnet_set_coeff(low, high);
+	
+	// Build python variable for return value.
+	return Py_BuildValue("i", 0);
+}
+
 static PyMethodDef MagnetMethods[] = {
     {"watts",  PyMagnet_watts, METH_VARARGS,
      "Calculate Watts."},
     {"position",  PyMagnet_position, METH_VARARGS,
      "Calculate position from target watts."},	 
+    {"set_coeff",  PyMagnet_set_coeff, METH_VARARGS,
+     "Sets the coefficients."},	 
+	 
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
