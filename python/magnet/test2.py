@@ -24,6 +24,7 @@ def fit_polynomial(x, y):
 
 def interop_poly(coeffs, mps):
 	# takes 2 polynomials and linearly interopolates by speed.
+	return 0
 	
 def get_power(coeff, mps, servo_pos):
 	f = np.poly1d(coeff)
