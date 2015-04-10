@@ -7,6 +7,7 @@ txt_offset = 250
 speed_col = 3
 watts_col = 5
 servo_col = 7
+labels = [] # Labels for chart legend
 #xsl_filename = '../../tcx-to-csv.xslt'
 
 import sys
@@ -119,12 +120,14 @@ def bike_science_func(v, k, Crr):
 
 def fit_bike_science(x_new, x, y):
 	# convert x to meters per second from mph
+	global labels
 	x1 = x * 0.44704
 	x_new1 = x_new * 0.44704
 
 	pars, covar = spo.curve_fit(bike_science_func, x1, y, p0 = [0.3, 0.005])
 	print('bike', pars)
 	plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+', zorder=100, linewidth=3)
+	labels.append(r'%s' % ('Bike Function'))
 
 def bicycle_func(x, a, b):
 	x_mps = x * 0.44704
@@ -135,6 +138,7 @@ def power_func(x, a, b):
 
 # fit to a 2nd degree polynomial
 def fit_poly2d(x_new, x, y):
+	global labels
 	coefficients = np.polyfit(x, y, 2)
 	polynomial = np.poly1d(coefficients)
 	y_new = polynomial(x_new)
@@ -142,10 +146,12 @@ def fit_poly2d(x_new, x, y):
 	f = ("poly2d: y = %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2]))
 	print(f)
 	plt.plot(x_new, y_new, 'g-')
+	labels.append(r'%s' % ('2D polynomial'))
 
 def speed_watt_median(data):
 	#data = [(22.600000000000001, 204), (25.5, 247), (16.0, 129), (16.0, 139), (15.9, 126), (16.0, 132), (16.699999999999999, 133), (16.800000000000001, 134), (23.0, 200), (23.0, 219)]
 	global txt_offset
+	global labels
 
 	"""
 	Cluster speeds and find the median watts for these speeds.
@@ -174,6 +180,7 @@ def speed_watt_median(data):
 	#x_new = np.linspace(x[0], x[-1], len(x))
 	x_new = np.linspace(5, 40, 50)
 	plt.plot(x_new, power_func(x_new, *pars), 'r--')
+	labels.append(r'%s' % ('Power Function'))
 
 	# Calculate bicycle power function
 	#pars2, covar2 = spo.curve_fit(bicycle_func, x, y)
@@ -208,6 +215,7 @@ def speed_watt_median(data):
 
 def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
 	global txt_offset
+	global labels
 	# convert slope to wheel speed in mph from flywheel mps
 	#slope = slope * (0.4/0.115) * 0.44704
 	#plt.xlim([speeds_mph.min(),speeds_mph.max()])
@@ -215,6 +223,7 @@ def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
 	plt.ylim(0,400)
 	plt.scatter(speeds_mph, watts, c=color1)
 	plt.plot(speeds_mph, (speeds_mph*0.44704)*slope + intercept, color2)
+	labels.append(r'%s' % ('Linear'))
 	txt_offset = txt_offset + 20
 	plt.text(7, txt_offset, "slope: %s, offset: %i" % (math.trunc(slope*1000), math.trunc(abs(intercept)*1000)))
 
@@ -429,6 +438,8 @@ def main(input_file_name):
 	#if (os.path.isdir(dir)):
 	(fig_name, ext) = os.path.splitext(input_file_name)
 
+	plt.legend(labels, loc='upper right')
+	
 	#plt.savefig(os.path.join(dir, 'slope.png'))
 	plt.savefig(fig_name + '.png')
 	plt.show()
