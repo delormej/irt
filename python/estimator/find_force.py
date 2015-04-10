@@ -58,6 +58,18 @@ def get_mean(speeds, watts):
 	#print("end")
 	yield (speeds[firstId:lastId].mean(), watts[firstId:lastId].mean())
 
+	
+
+# used to fit curve by drag (K) an rolling resistance (rr) variables
+# to return power in watts given speed (v) in mps
+def drag_rr_func(v, K, rr):
+	p = K * v**2 + (v * rr)
+	return p
+	
+def get_base_watts(mps):
+	watts = drag_rr_func(mps, 0.3070526, 13.1017213)
+	return watts
+	
 """
 Get the stable speed and watts for each servo position.
 """
@@ -72,6 +84,8 @@ def get_positions(pos_list, valid_data, speeds, watts, cal_slope, cal_intercept)
             for i in get_mean(speeds[ids], watts[ids]):
                 speed.append(0.44704 * i[0])
                 base_watts = (0.44704 * i[0]) * cal_slope + cal_intercept
+				##get_base_watts(0.44704 * i[0]) #
+                #print("base", 0.44704 * i[0], base_watts)
                 watt.append(i[1] - base_watts)
                 #print(p, round(i[0],1), round(i[1],0))
                 #plt.scatter(round(i[0],1), round(i[1],0))
@@ -150,7 +164,6 @@ def speed_watt_median(data):
 		#print(k, med)
 	
 	npgroups = np.array(groups)
-
 	x = npgroups[:,0]
 	y = npgroups[:,1]
 
@@ -365,9 +378,10 @@ def process_file(input_file_name):
 	"""
 	data_tuples = []
 
+	# For all valid speed/watt points at servo position 2000.
 	for id in id2000:
-		if id < id2000.size:
-			data_tuples.append((sp2000[id], w2000[id]))
+		data_tuples.append((speeds[id], watts[id]))
+	
 	a, b = speed_watt_median(data_tuples)
 
 	"""
