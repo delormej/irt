@@ -1,5 +1,4 @@
-# using pyMagnet
-from magnet import *
+import magnet as mag
 
 speed_mps = 15 * 0.44704
 servo_pos = 1300
@@ -16,7 +15,7 @@ high_b = -0.00984147720024
 high_c = 9.8702475382
 high_d = -2663.19364338
 
-set_coeff(low_speed, 
+mag.set_coeff(low_speed, 
 	low_a, 
 	low_b, 
 	low_c, 
@@ -27,8 +26,8 @@ set_coeff(low_speed,
 	high_c,
 	high_d)
 
-watts = watts(speed_mps, servo_pos)
-servo_pos = position(speed_mps, watts)
+watts = mag.watts(speed_mps, servo_pos)
+servo_pos = mag.position(speed_mps, watts)
 
-print("Watts:", watts)
+print("Watts: %i" % round(watts, 0))
 print("Position:", servo_pos)
