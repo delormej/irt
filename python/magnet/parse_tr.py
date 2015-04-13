@@ -61,7 +61,7 @@ Calculates power based coast down fit (drag & rr), speed and magnet position.
 """
 def get_power(speed_mps, servo_pos, drag, rr):
 	# Calculates non-mag power based on speed in meters per second.
-	no_mag_watts = drag*speed_mps**2+rr # Force = K(V^2) + (mgCrr)	
+	no_mag_watts =(drag*speed_mps**2) +(speed_mps * rr) # Force = K(V^2) + (mgCrr)	
 	
 	# If the magnet is ON the position will be less than 1600
 	if servo_pos < 1600:
@@ -105,19 +105,20 @@ def main(file_name):
 	
 	drag = None
 	rr = None
+	mph = []
 	
 	if (os.path.basename(file_name).startswith("irt_")):
 		#
 		# load the irt csv file
 		#
 		#print(read_calibration(file_name))
-		power_watts, kmh, target_watts, emr_watts, servo_pos = \
+		power_watts, mph, target_watts, emr_watts, servo_pos = \
 			np.loadtxt(file_name, delimiter=',', skiprows=3,
-							dtype=[('emr_watts', float), ('kmh', float), ('target_watts', float), ('power_watts', float), ('servo_pos', int)], 
+							dtype=[('emr_watts', float), ('mph', float), ('target_watts', float), ('power_watts', float), ('servo_pos', int)], 
 							usecols=[5, 3, 6, 6, 7], unpack=True, comments='"')
 		minutes = range(0, power_watts.shape[0])
 		drag, rr = read_calibration(file_name)
-		print(drag, rr)
+		print('drag,rr:', drag, rr)
 
 	else:
 		#
@@ -127,11 +128,11 @@ def main(file_name):
 		np.loadtxt(file_name, delimiter=',', skiprows=3,
 								dtype=[('minutes', float), ('emr_watts', float), ('kmh', float), ('target_watts', float), ('power_watts', float), ('servo_pos', int)], 
 								usecols=[1, 2, 8, 9, 10, 11], unpack=True, comments='"')
-		kmh = kmh * 0.621371
+		mph = kmh * 0.621371
 
 	labels = []
 
-	ma_speed = moving_average(kmh, 30)
+	ma_speed = moving_average(mph, 30)
 	ma_power30 = moving_average(power_watts, 30)
 	ma_power10 = moving_average(power_watts, 10)
 	ma_est_power = moving_average(emr_watts, 30)
@@ -150,8 +151,8 @@ def main(file_name):
 	ax3 = plt.subplot(313,sharex=ax1)
 
 	# ax1 = Speed & Servo
-	ax1.plot(minutes, kmh)
-	#labels.append(r'y = %s' % ('kmh'))
+	ax1.plot(minutes, mph)
+	#labels.append(r'y = %s' % ('mph'))
 	ax1.set_ylim(10, 30)
 
 	ax1.plot(minutes, ma_speed)
@@ -174,11 +175,11 @@ def main(file_name):
 	#ax2.stackplot(minutes, target_watts)
 	ax3.plot(minutes, target_watts, linestyle='--', linewidth='2', color='g', zorder=100)
 	#labels.append(r'y = %s' % ('Target'))
-	ax3.set_ylim(50, 450)
+	ax3.set_ylim(0, 500)
 
 	if drag is not None and rr is not None:
 		init_mag()
-		est_watts = estimate_power(kmh, servo_pos, drag, rr)
+		est_watts = estimate_power(mph, servo_pos, drag, rr)
 		ax3.plot(minutes, est_watts, linestyle=':', color='orange', linewidth='3', zorder=200)
 	
 	plt.show()
