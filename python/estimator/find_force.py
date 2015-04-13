@@ -65,17 +65,11 @@ def get_mean(speeds, watts):
     #print("end")
     yield (speeds[firstId:lastId].mean(), watts[firstId:lastId].mean())
 
-
-
 # used to fit curve by drag (K) an rolling resistance (rr) variables
 # to return power in watts given speed (v) in mps
 def drag_rr_func(v, K, rr):
     p = K * v**2 + (v * rr)
     return p
-
-def get_base_watts(mps):
-    watts = drag_rr_func(mps, 0.3070526, 13.1017213)
-    return watts
 
 """
 Get the stable speed and watts for each servo position.
@@ -132,9 +126,10 @@ def xsl(xml_filename):
     except:
         print("Unexpected error:", sys.exc_info())
 
-def bike_science_func(v, k, Crr):
-    m = 72.57
-    return  ( k*(v**2) + (m * 9.81 * Crr) ) * v
+def bike_science_func(v, drag, rr):
+    #m = 72.57 # hard coded for now.
+    #return  ( k*(v**2) + (m * 9.81 * Crr) ) * v
+    return  ( drag*(v**2) + (rr) ) * v
 
 def fit_bike_science(x_new, x, y):
     # convert x to meters per second from mph
@@ -146,10 +141,6 @@ def fit_bike_science(x_new, x, y):
     print('bike', pars)
     plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+', zorder=100, linewidth=3)
     labels.append(r'%s' % ('Bike Function'))
-
-def bicycle_func(x, a, b):
-    x_mps = x * 0.44704
-    return a*x_mps**2+b # Force = K(V^2) + (mgCrr)
 
 def power_func(x, a, b):
     return a*(x**b)
@@ -425,7 +416,7 @@ def process_file(input_file_name):
     # fit both linear and non-linear calibration.
     slope, intercept, a, b = fit_calibration(id2000, speeds, watts)
 
-    get_positions(valid_data, speeds, watts, slope, intercept)
+    positions = get_positions(valid_data, speeds, watts, slope, intercept)
 
     return sp2000, w2000, slope, intercept
 
@@ -464,6 +455,11 @@ def main(input_file_name):
     plt.show()
 
 if __name__ == "__main__":
+    """
+    Usage: parse_tr.py filename [-l]
+    -l to calculate linear
+    """
+
     if (len(sys.argv) > 2):
         speed_col = int(sys.argv[2])
     main(sys.argv[1])
