@@ -60,6 +60,7 @@ namespace IRT.Calibration
                 int val = flywheel[idx];
                 int dt, ds;
 
+                // Handle rollover
                 if (val < flywheel[idx - 1])
                     dt = val + (flywheel[idx - 1] ^ 0xFFFF);
                 else
@@ -100,6 +101,12 @@ namespace IRT.Calibration
                 // Invert the timestamp seconds to record seconds to min speed.
                 m_coastdownSeconds.Add(seconds[minSpeedIdx] - seconds[j]);
             }
+
+            if (m_coastdownSeconds.Count < 10)
+            {
+                throw new ApplicationException("Unable to detect suitable deceleration, please retry.");
+            }
+
         }
 
         /// <summary>
@@ -115,7 +122,7 @@ namespace IRT.Calibration
             {
                 System.Diagnostics.Debug.WriteLine("{0}: {1:0.0} mps", i, speeds[i]);
 
-                // At least 15mph an faster than the previous?
+                // At least 15mph and faster than the previous?
                 if (speeds[i] > 15 * 0.44704 &&
                     speeds[i] >= speeds[i - 1])
                 {

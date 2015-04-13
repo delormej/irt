@@ -380,6 +380,7 @@ namespace IRT_GUI
 
                 m_refPower.ChannelParameters.TransmissionType = 0x5;
                 m_refPower.StandardPowerOnlyPageReceived += m_refPower_StandardPowerOnlyPageReceived;
+                m_refPower.StandardWheelTorquePageReceived += m_refPower_StandardWheelTorquePageReceived;
                 m_refPower.ManufacturerIdentificationPageReceived += m_refPower_ManufacturerIdentificationPageReceived;
                 m_refPower.SensorFound += m_refPower_SensorFound;
                 m_refPower.ChannelStatusChanged += m_refPower_ChannelStatusChanged;
@@ -398,6 +399,11 @@ namespace IRT_GUI
 
                 Application.Exit();
             }
+        }
+
+        void m_refPower_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
+        {
+            RecordTorque(arg1);
         }
 
         void m_refPower_CrankTorqueFrequencyPageReceived(CrankTorqueFrequencyPage arg1, uint arg2)
@@ -719,6 +725,17 @@ namespace IRT_GUI
         }
 
         private byte lastTorqueEventCount = 0;
+
+        private void RecordTorque(StandardWheelTorquePage page)
+        {
+            m_dataPoint.RefPowerAccumTorque = page.AccumulatedTorque;
+            m_dataPoint.RefPowerWheelEvents = page.WheelTorqueEventCount;
+
+            if (m_refPower != null)
+            {
+                m_dataPoint.RefTorque = m_refPower.AverageTorqueStandardTorque;
+            }
+       }
 
         void m_eMotion_StandardWheelTorquePageReceived(StandardWheelTorquePage arg1, uint arg2)
         {

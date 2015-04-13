@@ -523,7 +523,9 @@ static void ant_ctrl_available(void)
 static void calibration_timeout_handler(void * p_context)
 {
 	#define MIN_SPEED_TICKS					5		// 5 ticks @8hz is ~5mph
+	#define STOP_INDICATIONS				2		// # of times that we see below min speed before we flag over.
 	UNUSED_PARAMETER(p_context);
+	static uint8_t stop_count = 0;					// Flag a few times just to be sure it's not just a misread.
 	static uint8_t count = 0;
 	static uint16_t accum_flywheel[2];
 	uint16_t timestamp_2048;
@@ -540,6 +542,9 @@ static void calibration_timeout_handler(void * p_context)
 		accum_flywheel[1] = flywheel_ticks_get();
 		timestamp_2048 = seconds_2048_get();
 
+		// TODO: think about this because we shouldn't actually be sending accum_flywheel[0] since
+		// we don't know exactly when it occured without the timestamp, we just hope that the
+		// recipient doesn't use that value.  Remove the first val in a future build.
 		ant_bp_calibration_speed_tx_send(timestamp_2048, accum_flywheel);
 
 		// Keep device awake.
@@ -563,8 +568,12 @@ static void calibration_timeout_handler(void * p_context)
 
 		if (tick_delta < MIN_SPEED_TICKS)
 		{
-			calibration_stop();
-			LOG("[MAIN] calibration_timeout_handler: min speed reached.\r\n");
+			if (++stop_count >= STOP_INDICATIONS)
+			{
+				calibration_stop();
+				LOG("[MAIN] calibration_timeout_handler: min speed reached.\r\n");
+				stop_count = 0;
+			}
 		}
 	}
 }
