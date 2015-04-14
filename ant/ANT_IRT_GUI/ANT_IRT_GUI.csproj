@@ -61,7 +61,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DistanceBinding.cs" />
     <Compile Include="EmotionRollerDisplay.cs" />
     <Compile Include="GraphForm.cs">
       <SubType>Form</SubType>
