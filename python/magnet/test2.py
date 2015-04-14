@@ -20,15 +20,13 @@ def fit_polynomial(x, y):
 	#print(r)
 	
 	# return the text
-	return f, coefficients, ys
-
-def interop_poly(coeffs, mps):
-	# takes 2 polynomials and linearly interopolates by speed.
-	return 0
+	return coefficients
 	
 def get_power(coeff, mps, servo_pos):
 	f = np.poly1d(coeff)
 	y = f(servo_pos)
+    
+	return y
 		
 def fit_3rd_poly(positions):
 	polys = []	
@@ -36,7 +34,8 @@ def fit_3rd_poly(positions):
 	labels = []
 	plt.subplot(2, 1, 1)
 	plt.grid(b=True, which='major', color='gray', linestyle='--')
-	plt.ylabel('Watts @ Position by Speed')
+	plt.ylabel('Magnet-Only Watts')
+	plt.xlabel('Servo Position')
 	# generate speed data 5-25 mph
 	# calculate power for each position
 	for mph in range(10,26,5):
@@ -54,30 +53,37 @@ def fit_3rd_poly(positions):
 		plt.plot(servo_pos, power, color=c)
 		labels.append(r'%1.1f' % (mph))
 		
-		fit_polynomial(servo_pos, power)
+		coeff = fit_polynomial(servo_pos, power)
 		
 		#print(p.intercept)
 		
 	plt.legend(labels, loc='upper right')
 		
 def fit_linear(positions):
-	plt.subplot(2, 1, 2)
-	plt.ylabel('Watts @ Speed by Servo Position')
-	plt.grid(b=True, which='major', color='gray', linestyle='--')
+    labels = []
+    plt.subplot(2, 1, 2)
+    plt.ylabel('Magnet-Only Watts')
+    plt.xlabel('Speed (mph)')    
+    plt.grid(b=True, which='major', color='gray', linestyle='--')
 	
-	for p in positions:
-		speed = []
-		power = []
+    for p in positions:
+        speed = []
+        power = []
 		
-		for mph in range(5,25,5):
-			speed.append(mph)
-			power.append((mph * 0.44740) * p.slope + p.intercept)
-			plt.plot(speed, power)
+        for mph in range(5,25,5):
+            speed.append(mph)
+            power.append((mph * 0.44740) * p.slope + p.intercept)
+            
+        # plot and label
+        plt.plot(speed, power)
+        labels.append(r'Position: %i' % (p.servo))
+        
+    plt.legend(labels, loc='upper left')
 
 def get_position_data():
 	# loads slope & intercept for each position.
 	positions = []
-	data = np.loadtxt('data2.csv', delimiter=',', comments='#')
+	data = np.loadtxt('data1.csv', delimiter=',', comments='#')
 	
 	for r in data:
 		p = position()
