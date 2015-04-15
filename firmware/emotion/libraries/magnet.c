@@ -34,22 +34,25 @@
  */
 static void curve_coeff(float speed_mps, float *coeff)
 {
-	static const float SPEED1 =	10.0 * 0.44704;	// Convert to meters per second
-	static const float SPEED2 = 19.0 * 0.44704;	// Convert to meters per second
+	static const float SPEED1 =	15.0 * 0.44704;	// Convert to meters per second
+	static const float SPEED2 = 25.0 * 0.44704;	// Convert to meters per second
 
+	//15 y = 1.38266072923e-06x^3 + -0.00449286563303x^2 + 4.30386462317x + -1005.34573167
 	// Low speed
 	static const float COEFF_1[] =  {
-		7.77778E-07,
-		-0.002557143,
-		2.425555556,
-		-504.3809524 };
+		1.38266072923e-06,
+		-0.00449286563303,
+		4.30386462317,
+		-1005.34573167 };
 
+
+	//25 y = 2.67935602319e-06x^3 + -0.0088810954023x^2 + 8.83495353717x + -2298.23697671
 	// High speed
 	static const float COEFF_2[] = {
-		2.22484E-06,
-		-0.007714151,
-		8.151996852,
-		-2371.584904 };
+		2.67935602319e-06,
+		-0.0088810954023,
+		8.83495353717,
+		-2298.23697671 };
 
 	for (uint8_t ix = 0; ix < COEFF_COUNT; ix++)
 	{
