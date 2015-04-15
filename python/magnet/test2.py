@@ -16,11 +16,10 @@ def fit_polynomial(x, y):
 	ys = polynomial(x_new)
 	# y = ax^2 + bx + c
 	f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
-	print(f)
 	#print(r)
 	
 	# return the text
-	return f, coefficients, ys
+	return f, coefficients
 
 def interop_poly(coeffs, mps):
 	# takes 2 polynomials and linearly interopolates by speed.
@@ -54,7 +53,9 @@ def fit_3rd_poly(positions):
 		plt.plot(servo_pos, power, color=c)
 		labels.append(r'%1.1f' % (mph))
 		
-		fit_polynomial(servo_pos, power)
+		f, coeff = fit_polynomial(servo_pos, power)
+
+		print(mph, f)
 		
 		#print(p.intercept)
 		
@@ -77,7 +78,7 @@ def fit_linear(positions):
 def get_position_data():
 	# loads slope & intercept for each position.
 	positions = []
-	data = np.loadtxt('data2.csv', delimiter=',', comments='#')
+	data = np.loadtxt('data3.csv', delimiter=',', comments='#')
 	
 	for r in data:
 		p = position()

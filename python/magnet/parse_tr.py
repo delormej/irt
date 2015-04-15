@@ -33,18 +33,18 @@ def moving_average(x, n, type='simple'):
 Initializes the co-efficients for magnet power.
 """	
 def init_mag():
-	low_speed = 10 * 0.44704
-	low_a = 1.30101069013e-06
-	low_b = -0.00408959829622
-	low_c = 3.89744863571
-	low_d = -992.651847098
-
+	low_speed = 15 * 0.44704
+	low_a = 1.38266072923e-06
+	low_b = -0.00449286563303
+	low_c = 4.30386462317
+	low_d = -1005.34573167	
+	
 	high_speed = 25 * 0.44704
-	high_a = 2.97088134733e-06
-	high_b = -0.00984147720024
-	high_c = 9.8702475382
-	high_d = -2663.19364338
-
+	high_a = 2.67935602319e-06
+	high_b = -0.0088810954023
+	high_c = 8.83495353717
+	high_d = -2298.23697671
+	
 	mag.set_coeff(low_speed, 
 		low_a, 
 		low_b, 
@@ -61,7 +61,7 @@ Calculates power based coast down fit (drag & rr), speed and magnet position.
 """
 def get_power(speed_mps, servo_pos, drag, rr):
 	# Calculates non-mag power based on speed in meters per second.
-	no_mag_watts = drag*speed_mps**2+rr # Force = K(V^2) + (mgCrr)	
+	no_mag_watts = (drag*speed_mps**2)+(speed_mps * rr) # Force = K(V^2) + (mgCrr)	
 	
 	# If the magnet is ON the position will be less than 1600
 	if servo_pos < 1600:
