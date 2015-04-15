@@ -17,7 +17,7 @@ def fit_polynomial(x, y):
 	# y = ax^2 + bx + c
 	f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
 	#print(r)
-	
+	plt.plot(x_new, ys, linestyle='+')
 	# return the text
 	return f, coefficients
 
