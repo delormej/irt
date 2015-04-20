@@ -9,24 +9,27 @@ class position:
 		self.slope = 0.0
 		self.intercept = 0.0
 
-def fit_polynomial(x, y):
-	x_new = range(800, 1600, 100)
+def fit_polynomial(x, y, color):
+	x_new = np.arange(800, 1600, 100)
 	coefficients = np.polyfit(x, y, 3)
 	polynomial = np.poly1d(coefficients)
 	ys = polynomial(x_new)
 	# y = ax^2 + bx + c
 	f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
-	print(f)
 	#print(r)
-	
+	plt.subplot(2, 1, 1)
+	plt.plot(x_new, ys, linestyle='--', color=color)
+
 	# return the text
-	return coefficients
+	return f, coefficients
+
+def interop_poly(coeffs, mps):
+	# takes 2 polynomials and linearly interopolates by speed.
+	return 0
 	
 def get_power(coeff, mps, servo_pos):
 	f = np.poly1d(coeff)
 	y = f(servo_pos)
-    
-	return y
 		
 def fit_3rd_poly(positions):
 	polys = []	
@@ -34,8 +37,7 @@ def fit_3rd_poly(positions):
 	labels = []
 	plt.subplot(2, 1, 1)
 	plt.grid(b=True, which='major', color='gray', linestyle='--')
-	plt.ylabel('Magnet-Only Watts')
-	plt.xlabel('Servo Position')
+	plt.ylabel('Watts @ Position by Speed')
 	# generate speed data 5-25 mph
 	# calculate power for each position
 	for mph in range(10,26,5):
@@ -53,37 +55,32 @@ def fit_3rd_poly(positions):
 		plt.plot(servo_pos, power, color=c)
 		labels.append(r'%1.1f' % (mph))
 		
-		coeff = fit_polynomial(servo_pos, power)
+		f, coeff = fit_polynomial(servo_pos, power, c)
+
+		print(mph, f)
 		
 		#print(p.intercept)
 		
 	plt.legend(labels, loc='upper right')
 		
 def fit_linear(positions):
-    labels = []
-    plt.subplot(2, 1, 2)
-    plt.ylabel('Magnet-Only Watts')
-    plt.xlabel('Speed (mph)')    
-    plt.grid(b=True, which='major', color='gray', linestyle='--')
+	plt.subplot(2, 1, 2)
+	plt.ylabel('Watts @ Speed by Servo Position')
+	plt.grid(b=True, which='major', color='gray', linestyle='--')
 	
-    for p in positions:
-        speed = []
-        power = []
+	for p in positions:
+		speed = []
+		power = []
 		
-        for mph in range(5,25,5):
-            speed.append(mph)
-            power.append((mph * 0.44740) * p.slope + p.intercept)
-            
-        # plot and label
-        plt.plot(speed, power)
-        labels.append(r'Position: %i' % (p.servo))
-        
-    plt.legend(labels, loc='upper left')
+		for mph in range(5,25,5):
+			speed.append(mph)
+			power.append((mph * 0.44740) * p.slope + p.intercept)
+			plt.plot(speed, power)
 
 def get_position_data():
 	# loads slope & intercept for each position.
 	positions = []
-	data = np.loadtxt('data1.csv', delimiter=',', comments='#')
+	data = np.loadtxt('position_slope_intercept.csv', delimiter=',', comments='#')
 	
 	for r in data:
 		p = position()

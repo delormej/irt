@@ -65,16 +65,40 @@ def get_mean(speeds, watts):
     #print("end")
     yield (speeds[firstId:lastId].mean(), watts[firstId:lastId].mean())
 
+# Function that returns power given; Velocity, Max Velocity, Force
+def eddy_current_power(v, max_v, F):
+    #max_v = 7.6
+    fServoPosition = F * ( (max_v * v) / (max_v**2 + v**2) )
+    watts = fServoPosition * v
+    return watts
+
+def fit_eddy_current(x, y):
+    # convert x to meters per second from mph
+    global labels
+    x_new = np.arange(5, 36, 1)
+    
+    x1 = x * 0.44704
+    x_new1 = x_new * 0.44704
+
+    pars, covar = spo.curve_fit(eddy_current_power, x1, y)
+    print('eddy', pars)
+    plt.plot(x_new, eddy_current_power(x_new1, *pars), marker='+', linestyle='-.', zorder=300, linewidth=3)
+    labels.append(r'%s' % ('Eddy Current'))    
+    
 # used to fit curve by drag (K) an rolling resistance (rr) variables
 # to return power in watts given speed (v) in mps
 def drag_rr_func(v, K, rr):
     p = K * v**2 + (v * rr)
     return p
 
+def get_base_watts(mps):
+    watts = drag_rr_func(mps, 0.3070526, 13.1017213)
+    return watts
+
 """
 Get the stable speed and watts for each servo position.
 """
-def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept):
+def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept, drag, rr):
     pos_list = [p for p in valid_data if p < 2000]
     pos_list.sort()
 
@@ -90,6 +114,7 @@ def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept):
             for i in get_mean(speeds[ids], watts[ids]):
                 speed.append(0.44704 * i[0])
                 base_watts = (0.44704 * i[0]) * cal_slope + cal_intercept
+                #base_watts = drag_rr_func(0.44704 * i[0], drag, rr)
                 ##get_base_watts(0.44704 * i[0]) #
                 #print("base", 0.44704 * i[0], base_watts)
                 watt.append(i[1] - base_watts)
@@ -104,7 +129,13 @@ def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept):
             entry.intercept = intercept
             positions.append(entry)
             mph = [x * 2.23694 for x in speed]
-            plt.plot(mph, watt)
+            plt.plot(mph, watt, marker='o')
+            
+            try:
+                fit_eddy_current(np.array(mph), np.array(watt))
+            except:
+                print('could not calculate for:', p)
+            
 
     return positions
 
@@ -126,10 +157,9 @@ def xsl(xml_filename):
     except:
         print("Unexpected error:", sys.exc_info())
 
-def bike_science_func(v, drag, rr):
-    #m = 72.57 # hard coded for now.
-    #return  ( k*(v**2) + (m * 9.81 * Crr) ) * v
-    return  ( drag*(v**2) + (rr) ) * v
+def bike_science_func(v, k, Crr):
+    m = 72.57
+    return  ( k*(v**2) + (m * 9.81 * Crr) ) * v
 
 def fit_bike_science(x_new, x, y):
     # convert x to meters per second from mph
@@ -141,6 +171,10 @@ def fit_bike_science(x_new, x, y):
     print('bike', pars)
     plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+', zorder=100, linewidth=3)
     labels.append(r'%s' % ('Bike Function'))
+
+def bicycle_func(x, a, b):
+    x_mps = x * 0.44704
+    return a*x_mps**2+b # Force = K(V^2) + (mgCrr)
 
 def power_func(x, a, b):
     return a*(x**b)
@@ -232,7 +266,7 @@ def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
     #slope = slope * (0.4/0.115) * 0.44704
     #plt.xlim([speeds_mph.min(),speeds_mph.max()])
     plt.xlim(5,40)
-    plt.ylim(0,400)
+    plt.ylim(0,600)
     plt.scatter(speeds_mph, watts, c=color1)
     plt.plot(speeds_mph, (speeds_mph*0.44704)*slope + intercept, color2)
     labels.append(r'%s' % ('Linear'))
@@ -416,7 +450,7 @@ def process_file(input_file_name):
     # fit both linear and non-linear calibration.
     slope, intercept, a, b = fit_calibration(id2000, speeds, watts)
 
-    positions = get_positions(valid_data, speeds, watts, slope, intercept)
+    get_positions(valid_data, speeds, watts, slope, intercept, b, a)
 
     return sp2000, w2000, slope, intercept
 
@@ -455,11 +489,6 @@ def main(input_file_name):
     plt.show()
 
 if __name__ == "__main__":
-    """
-    Usage: parse_tr.py filename [-l]
-    -l to calculate linear
-    """
-
     if (len(sys.argv) > 2):
         speed_col = int(sys.argv[2])
     main(sys.argv[1])

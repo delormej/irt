@@ -1850,7 +1850,7 @@ static void s310_init()
 	uint32_t err_code;
 
 	// Initialize SoftDevice
-	SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, true);
+	SOFTDEVICE_HANDLER_INIT(NRF_CLOCK_LFCLKSRC_RC_250_PPM_4000MS_CALIBRATION, true);
 
     // Subscribe for system events.
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
