@@ -9,15 +9,17 @@ class position:
 		self.slope = 0.0
 		self.intercept = 0.0
 
-def fit_polynomial(x, y):
-	x_new = range(800, 1600, 100)
+def fit_polynomial(x, y, color):
+	x_new = np.arange(800, 1600, 100)
 	coefficients = np.polyfit(x, y, 3)
 	polynomial = np.poly1d(coefficients)
 	ys = polynomial(x_new)
 	# y = ax^2 + bx + c
 	f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
 	#print(r)
-	plt.plot(x_new, ys, linestyle='+')
+	plt.subplot(2, 1, 1)
+	plt.plot(x_new, ys, linestyle='--', color=color)
+
 	# return the text
 	return f, coefficients
 
@@ -53,7 +55,7 @@ def fit_3rd_poly(positions):
 		plt.plot(servo_pos, power, color=c)
 		labels.append(r'%1.1f' % (mph))
 		
-		f, coeff = fit_polynomial(servo_pos, power)
+		f, coeff = fit_polynomial(servo_pos, power, c)
 
 		print(mph, f)
 		
