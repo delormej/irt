@@ -33,17 +33,18 @@ def moving_average(x, n, type='simple'):
 Initializes the co-efficients for magnet power.
 """	
 def init_mag():
+    
 	low_speed = 15 * 0.44704
-	low_a = 1.38266072923e-06
-	low_b = -0.00449286563303
-	low_c = 4.30386462317
-	low_d = -1005.34573167	
+	low_a = 8.8494476121e-07
+	low_b = -0.00240207003171
+	low_c = 1.39836168772
+	low_d = 329.707200358
 	
 	high_speed = 25 * 0.44704
-	high_a = 2.67935602319e-06
-	high_b = -0.0088810954023
-	high_c = 8.83495353717
-	high_d = -2298.23697671
+	high_a = 2.04928870618e-06
+	high_b = -0.0061578610697
+	high_c = 4.94991737943
+	high_d = -468.940164046
 	
 	mag.set_coeff(low_speed, 
 		low_a, 
@@ -152,7 +153,7 @@ def main(file_name):
 	# ax1 = Speed & Servo
 	ax1.plot(minutes, kmh)
 	#labels.append(r'y = %s' % ('kmh'))
-	ax1.set_ylim(10, 30)
+	ax1.set_ylim(7, 30)
 
 	ax1.plot(minutes, ma_speed)
 
@@ -174,7 +175,7 @@ def main(file_name):
 	#ax2.stackplot(minutes, target_watts)
 	ax3.plot(minutes, target_watts, linestyle='--', linewidth='2', color='g', zorder=100)
 	#labels.append(r'y = %s' % ('Target'))
-	ax3.set_ylim(50, 450)
+	ax3.set_ylim(50, 600)
 
 	if drag is not None and rr is not None:
 		init_mag()
