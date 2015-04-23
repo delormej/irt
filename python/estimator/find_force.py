@@ -9,6 +9,7 @@ watts_col = 5
 servo_col = 7
 labels = [] # Labels for chart legend
 #xsl_filename = '../../tcx-to-csv.xslt'
+device_id = 0
 
 import sys
 import os
@@ -96,6 +97,23 @@ def get_base_watts(mps):
     watts = drag_rr_func(mps, 0.3070526, 13.1017213)
     return watts
 
+    
+label_positions = []    
+"""
+Adds a text annotation to the chart with the position.
+"""    
+def label_position(position, x, y):
+    global label_positions
+    
+    for p in label_positions:
+        if p == position:
+            # return if we've already labelled.
+            return
+        else:
+            label_positions.append(position)
+    
+    plt.text(x, y, position, color=get_color(position))
+    
 """
 Get the stable speed and watts for each servo position.
 """
@@ -110,10 +128,10 @@ def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept, drag, rr)
         speed = []
         watt = []
         
-        color = get_color(p)
-
         ids = valid_data[p]
         if ids:
+            color = get_color(p)
+            
             #print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
             for i in get_mean(speeds[ids], watts[ids]):
                 speed.append(0.44704 * i[0])
@@ -138,6 +156,8 @@ def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept, drag, rr)
             new_mph = np.arange(5,35,1)
             new_watts = lambda x: (x * 0.44704) * entry.slope + entry.intercept
             plt.plot(new_mph, new_watts(new_mph), color=color, linestyle='--')
+            plt.text(25, new_watts(25), ('%i (%i)' % (p, device_id)), color=color)
+            #label_position(p, 25, new_watts(25))
             
             """
             try:
@@ -429,15 +449,21 @@ def fit_calibration(id2000, speeds, watts):
 Reads an irt log file and returns the Drag and RR settings.
 """
 def read_calibration(file_name):
+	global device_id
+
 	drag = 0
 	rr = 0
+    
 	with open(file_name, 'r') as f:
 		for row in reversed(list(csv.reader(f))):
 			if row[0] == 'RR':
 				rr = float(row[1])
 			if row[0] == 'Drag':
 				drag = float(row[1])
-				return drag, rr    
+			if row[0] == 'DeviceID':
+				print("DeviceID", row[1])
+				device_id = int(row[1])
+				return drag, rr				
     
 def process_file(input_file_name):
     """
@@ -448,6 +474,8 @@ def process_file(input_file_name):
     exit()
     """
 
+    global device_id
+    
     speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
             dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[speed_col, watts_col, servo_col], unpack=True, comments='"',
             converters = {5: lambda s: float(s.strip() or 0)})
@@ -485,7 +513,7 @@ positions = []
 def get_color(position):
     global color_ix
     global positions
-    colors = ['g', 'c', 'y', 'b', 'r', 'm', 'k']        
+    colors = ['g', 'c', 'y', 'b', 'r', 'm', 'k', 'orange', 'navy', 'darkolivegreen', 'mediumturquoise']        
     
     # if the position has been seen before, return it's color, otherwise grab a new color.
     for c, p in enumerate(positions):
@@ -493,7 +521,7 @@ def get_color(position):
             return positions[c,1]
     
     color = colors[color_ix]
-    if (color_ix == 6):
+    if (color_ix == 10):
         color_ix = 0
     else:
         color_ix = color_ix + 1
