@@ -99,7 +99,7 @@ def get_base_watts(mps):
 """
 Get the stable speed and watts for each servo position.
 """
-def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept, drag, rr, color):
+def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept, drag, rr):
 
     pos_list = [p for p in valid_data if p < 2000]
     pos_list.sort()
@@ -109,6 +109,8 @@ def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept, drag, rr,
     for p in pos_list:
         speed = []
         watt = []
+        
+        color = get_color(p)
 
         ids = valid_data[p]
         if ids:
@@ -473,22 +475,31 @@ def process_file(input_file_name):
     # fit both linear and non-linear calibration.
     slope, intercept, a, b = fit_calibration(id2000, speeds, watts)
     
-    get_positions(valid_data, speeds, watts, slope, intercept, drag, rr, color=get_color())
+    get_positions(valid_data, speeds, watts, slope, intercept, drag, rr)
 
     return sp2000, w2000, slope, intercept
 
 color_ix = 0
+positions = []
 
-def get_color():
+def get_color(position):
     global color_ix
+    global positions
     colors = ['g', 'c', 'y', 'b', 'r', 'm', 'k']        
+    
+    # if the position has been seen before, return it's color, otherwise grab a new color.
+    for c, p in enumerate(positions):
+        if p == position:
+            return positions[c,1]
     
     color = colors[color_ix]
     if (color_ix == 6):
         color_ix = 0
     else:
         color_ix = color_ix + 1
-        
+    
+    positions.append((position, color))
+    
     return color
     
     
