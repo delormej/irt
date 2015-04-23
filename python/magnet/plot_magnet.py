@@ -1,3 +1,4 @@
+import os
 import sys
 from log_parser import *
 import matplotlib.pyplot as plt
@@ -21,7 +22,13 @@ def plot(data):
 #        
 def main(file_name):
     parser = PositionParser()
-    data = parser.parse(file_name)
+    data = []
+    
+    if os.path.isdir(file_name):
+        data = parser.parse_multiple(file_name)
+    else:
+        data = parser.parse(file_name)
+    
     plot(data)
     
         

@@ -1,3 +1,4 @@
+import os
 import csv
 import numpy as np, numpy.ma as ma
 from collections import defaultdict
@@ -46,6 +47,16 @@ class Util:
                 dtype=[('speed', float), ('power', int), ('position', int)], usecols=[self.speed_col, self.watts_col, self.servo_col], comments='"',
                 converters = {5: lambda s: float(s.strip() or 0)})
 
+    #
+    # Builds a list of matching *.csv filenames.
+    #
+    def get_csv_files(self, rootdir):
+        for root, dirs, files in os.walk(rootdir):
+            for filename in files:
+                if filename.endswith('.csv'):
+                    filepath = os.path.join(root, filename)
+                    yield filepath    
+                
     #
     # Prints comma delimited device, position, speed, power.
     #
@@ -143,9 +154,9 @@ class PositionParser:
     # Returns a dictionary keyed by servo position with an array of indexes 
     # pointing to valid data.
     #
-    # Optionally extend an existing position_list (i.e. if working with multiple files)
-    #
-    def get_position_dictionary(self, records, position_list = defaultdict(list)):
+    def get_position_dictionary(self, records):
+        position_list = defaultdict(list)
+        
         # Create an array for each column.
         positions = records['position']
         speeds = records['speed']
@@ -181,12 +192,22 @@ class PositionParser:
     #
     def parse(self, file_name):
         util = Util()
+        
+        # Read configuration values
         drag, rr, device_id = util.read_calibration(file_name)
+        
+        # Read all data.
         records = util.open(file_name)
 
-        # Gets a dictionary of valid indexes for each position.
+        #
+        # Gets a dictionary keyed by servo position containing a list of indexes
+        # for contiguous stable speed, power data at a given servo position.
+        #
         position_dict = self.get_position_dictionary(records)
 
+        #
+        # Flatten data out into an array of PositionDataPoint objects.
+        #
         stable_data = []
         
         for position, values in position_dict.items():
@@ -199,4 +220,16 @@ class PositionParser:
                 point.power = records['power'][index]
                 stable_data.append(point)
         
+        return stable_data
+        
+     #
+     # Parses a directory of *.csv log files.
+     #
+    def parse_multiple(self, rootdir):
+        stable_data = []
+        util = Util()
+        for file in util.get_csv_files(rootdir):
+            print("parsing: ", file)
+            stable_data.extend(self.parse(file))
+
         return stable_data
