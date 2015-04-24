@@ -75,6 +75,7 @@ class PositionDataPoint:
         self.position = 0
         self.speed_mps = 0
         self.power = 0
+        self.magonly_power = 0
         self.device_id = 0
         
 # ----------------------------------------------------------------------------
@@ -190,7 +191,7 @@ class PositionParser:
     #
     # Extracts stable [position, speed, watts, device_id] from a log file.        
     #
-    def parse(self, file_name):
+    def parse(self, file_name, magonly_calc):
         util = Util()
         
         # Read configuration values
@@ -218,6 +219,8 @@ class PositionParser:
                 point.position = position                           # Servo Position
                 point.speed_mps = records['speed'][index] * 0.44704 # Convert to meters per second from mph.
                 point.power = records['power'][index]
+                if magonly_calc is not None:
+                    point.magonly_power = magonly_calc(point, drag, rr)
                 stable_data.append(point)
         
         return stable_data
@@ -225,11 +228,11 @@ class PositionParser:
      #
      # Parses a directory of *.csv log files.
      #
-    def parse_multiple(self, rootdir):
+    def parse_multiple(self, rootdir, magonly_calc = None):
         stable_data = []
         util = Util()
         for file in util.get_csv_files(rootdir):
             print("parsing: ", file)
-            stable_data.extend(self.parse(file))
+            stable_data.extend(self.parse(file, magonly_calc))
 
         return stable_data
