@@ -56,17 +56,26 @@ def magonly_calc(data, drag, rr):
 #
 # Plots an array of PositionDataPoint.
 #
-def plot_magonly_linear(data):
+def plot_magonly_linear(file_name):
     fit = CalibrationFit()
     clr = ChartColor()
     
-    keyfunc = lambda x: x.position
-    data = sorted(data, key=keyfunc)
+    util = Util()
+    parser = PositionParser()
+    records = util.open(file_name)
+
+    valid = []
+    
+    for ix, avg in parser.power_ma_crossovers(records['power']):
+        valid.append(ix)
+    
+    keyfunc = lambda x: x['position']
+    data = sorted(records[valid], key=keyfunc)
     for k, g in groupby(data, keyfunc):
         items = list(g)
         if k < 1600:
-            speed = [x.speed_mps * 2.23694 for x in items]
-            power = [x.magonly_power for x in items]
+            speed = [x['speed'] for x in items]
+            power = [x['power'] for x in items]
             color = clr.get_color(k)
             plt.scatter( speed, power, color=color, label=(('Position: %i' % (k))), marker='o' )
             
@@ -89,7 +98,7 @@ def plot_crossover(file_name):
     util = Util()
     parser = PositionParser()
     records = util.open(file_name)
-
+    
     labels = []
 
     ma_speed = parser.moving_average(records['speed'], 30)
@@ -144,7 +153,7 @@ def main(file_name):
     else:
         data = parser.parse(file_name, magonly_calc)
     
-    #plot_magonly_linear(data)
+    plot_magonly_linear(file_name)
     plot_crossover(file_name)
         
 if __name__ == "__main__":
