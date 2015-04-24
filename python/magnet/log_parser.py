@@ -89,8 +89,8 @@ class PositionParser:
         # Configuration variables.
         #
         self.min_seq_len = 10               # min. sequence length
-        self.speed_variance_mph = 0.5       # total range of allowed variation
-        self.max_dev = 5                    # maximum deviation of watts
+        self.speed_variance_mph = 0.3       # total range of allowed variation
+        self.max_dev = 7                    # maximum deviation of watts
         
     #
     # Returns a sequence of contiguous stable speed and power data. 

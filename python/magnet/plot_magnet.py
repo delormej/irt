@@ -71,7 +71,7 @@ def plot(data):
             plt.scatter( speed, power, color=color, label=(('Position: %i' % (k))), marker='o' )
             
             # try a linear fit of speed / magonly watts.
-            slope, intercept = fit.fit_linear(np.asarray(speed), np.asarray(power), False)
+            slope, intercept = fit.fit_lin_regress(np.asarray(speed), np.asarray(power))
             
             speed_new = np.arange(5,30)
             power_new = lambda x: x * slope + intercept

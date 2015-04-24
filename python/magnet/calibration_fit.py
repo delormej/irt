@@ -13,7 +13,7 @@ import itertools
 #
 # ----------------------------------------------------------------------------
 class CalibrationFit:
-    def fit_linear(self, x,y, sample= "auto", n_samples = 1e7):
+    def fit_lin_theilsen(self, x,y, sample= "auto", n_samples = 1e7):
         """
         Computes the Theil-Sen estimator for 2d data.
         parameters:
@@ -59,3 +59,10 @@ class CalibrationFit:
         intercept_ = bottleneck.median( intercepts )
 
         return slope_, intercept_
+        
+    """
+    Fits slope & intercept using a linear regression.
+    """
+    def fit_lin_regress(self, speed, power):
+        slope, intercept, r_val, p_val, stderr = stats.linregress(speed, power)
+        return slope, intercept
