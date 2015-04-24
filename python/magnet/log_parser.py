@@ -120,7 +120,9 @@ class PositionParser:
     # Returns the index into the power array where the longer moving average
     # crosses the shorter moving average.
     #
-    def power_ma_crossovers(self, power):
+    def power_ma_crossovers(self, records):
+        power = records['power']
+        
         ma_long = self.moving_average(power, 15)
         ma_short = self.moving_average(power, 5) 
         
@@ -129,8 +131,11 @@ class PositionParser:
             # and the current long average is higher than short
             # we've crossed over.
             if ma_long[i-1] < ma_short[i-1] and ma_long[i] > ma_short[i]:
-                # We've crossed over return a tuple of index and long ma
-                yield i, ma_long[i]
+                # Only include if the servo position hasn't changed for a few seconds.
+                # This eliminates the issue with averages appearing on the edge.
+                if i > 3 and records['position'][i-3] == records['position'][i]:
+                    # We've crossed over return a tuple of index and long ma
+                    yield i, ma_long[i]
         
     #
     # Returns a sequence of contiguous stable speed and power data. 

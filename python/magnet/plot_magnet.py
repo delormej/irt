@@ -57,6 +57,10 @@ def magonly_calc(data, drag, rr):
 # Plots an array of PositionDataPoint.
 #
 def plot_magonly_linear(file_name):
+    
+    plt.subplot(121)
+    plt.title('Linear Magnet Power')
+    
     fit = CalibrationFit()
     clr = ChartColor()
     
@@ -66,8 +70,11 @@ def plot_magonly_linear(file_name):
 
     valid = []
     
-    for ix, avg in parser.power_ma_crossovers(records['power']):
+    for ix, avg in parser.power_ma_crossovers(records):
         valid.append(ix)
+        records[ix]['power'] = avg
+        if records['position'][ix] < 1600:
+                print(ix, records['position'][ix], records['speed'][ix], records[ix]['power'])
     
     keyfunc = lambda x: x['position']
     data = sorted(records[valid], key=keyfunc)
@@ -88,7 +95,6 @@ def plot_magonly_linear(file_name):
     plt.xlabel('Speed (mph)')
     plt.ylabel('Mag Only Power')
     plt.legend()
-    plt.show()        
     
 #
 # Plots the entire ride and places markers at each of the places where long
@@ -108,9 +114,14 @@ def plot_crossover(file_name):
     plt.rc('axes', grid=True)
     plt.rc('grid', color='0.75', linestyle='-', linewidth=0.5)
 
-    ax1 = plt.subplot(311)
-    ax2 = plt.subplot(312,sharex=ax1)
-    ax3 = plt.subplot(313,sharex=ax1)
+    ax1 = plt.subplot(322)
+    plt.title('Speed (mph)')
+    
+    ax2 = plt.subplot(324,sharex=ax1)
+    plt.title('Servo Position')
+    
+    ax3 = plt.subplot(326,sharex=ax1)
+    plt.title('Power')
 
     time = range(0, len(records['speed']), 1)
     
@@ -131,13 +142,8 @@ def plot_crossover(file_name):
 
     ax3.set_ylim(50, 600)
     
-    for ix, avg_power in parser.power_ma_crossovers(records['power']):
-        # Only plot if the servo position hasn't changed for a few seconds.
-        # This eliminates the issue with averages appearing on the edge.
-        if ix > 3 and records['position'][ix-3] == records['position'][ix]:
-            plt.scatter(time[ix], avg_power)
-            #if records['position'][ix] < 1600:
-            #    plt.text(time[ix], avg_power, records['position'][ix])
+    for ix, avg_power in parser.power_ma_crossovers(records):
+        plt.scatter(time[ix], avg_power)
 
     plt.show()
     
@@ -155,6 +161,7 @@ def main(file_name):
     
     plot_magonly_linear(file_name)
     plot_crossover(file_name)
+    plt.show()        
         
 if __name__ == "__main__":
     if (len(sys.argv) > 2):
