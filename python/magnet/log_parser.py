@@ -92,6 +92,7 @@ class PositionParser:
         self.min_seq_len = 10               # min. sequence length
         self.speed_variance_mph = 0.4       # total range of allowed variation
         self.max_dev = 7                    # maximum deviation of watts
+        self.servo_lag = 6                  # don't take any data points within # of seconds of a servo change.
 
     #
     # Calculates a moving average of an array of values.
@@ -135,7 +136,7 @@ class PositionParser:
             if ma_long[i-1] < ma_short[i-1] and ma_long[i] > ma_short[i]:
                 # Only include if the servo position hasn't changed for a few seconds.
                 # This eliminates the issue with averages appearing on the edge.
-                if i > 3 and records['position'][i-3] == records['position'][i]:
+                if i > self.servo_lag and records['position'][i-self.servo_lag] == records['position'][i]:
                     # We've crossed over return a tuple of index and long ma
                     yield i, ma_long[i], ma_speed[i]
         
