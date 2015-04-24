@@ -64,5 +64,10 @@ class CalibrationFit:
     Fits slope & intercept using a linear regression.
     """
     def fit_lin_regress(self, speed, power):
-        slope, intercept, r_val, p_val, stderr = stats.linregress(speed, power)
-        return slope, intercept
+        slope, intercept, r_val, p_val, stderr = stats.linregress(np.asarray(speed), np.asarray(power))
+            
+        speed_new = np.arange(5,30)
+        power_new = lambda x: x * slope + intercept
+        
+        return slope, intercept, speed_new, power_new(speed_new)
+        

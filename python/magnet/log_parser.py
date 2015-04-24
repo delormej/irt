@@ -74,6 +74,7 @@ class PositionDataPoint:
     def __init__(self):
         self.position = 0
         self.speed_mps = 0
+        self.speed_mph = 0
         self.power = 0
         self.magonly_power = 0
         self.device_id = 0
@@ -89,8 +90,47 @@ class PositionParser:
         # Configuration variables.
         #
         self.min_seq_len = 10               # min. sequence length
-        self.speed_variance_mph = 0.3       # total range of allowed variation
+        self.speed_variance_mph = 0.4       # total range of allowed variation
         self.max_dev = 7                    # maximum deviation of watts
+
+    #
+    # Calculates a moving average of an array of values.
+    #
+    def moving_average(self, x, n, type='simple'):
+        """
+        compute an n period moving average.
+
+        type is 'simple' | 'exponential'
+
+        """
+        x = np.asarray(x)
+        if type=='simple':
+            weights = np.ones(n)
+        else:
+            weights = np.exp(np.linspace(-1., 0., n))
+
+        weights /= weights.sum()
+
+
+        a =  np.convolve(x, weights, mode='full')[:len(x)]
+        a[:n] = a[n]
+        return a
+        
+    #
+    # Returns the index into the power array where the longer moving average
+    # crosses the shorter moving average.
+    #
+    def power_ma_crossovers(self, power):
+        ma_long = self.moving_average(power, 15)
+        ma_short = self.moving_average(power, 5) 
+        
+        for i in range(1, len(power)-2, 1):
+            # if the last long average was less than short average
+            # and the current long average is higher than short
+            # we've crossed over.
+            if ma_long[i-1] < ma_short[i-1] and ma_long[i] > ma_short[i]:
+                # eureka, we've crossed over
+                yield i
         
     #
     # Returns a sequence of contiguous stable speed and power data. 
@@ -221,11 +261,12 @@ class PositionParser:
                 point.device_id = device_id
                 point.position = position                           # Servo Position
                 point.speed_mps = records['speed'][index] * 0.44704 # Convert to meters per second from mph.
+                point.speed_mph = records['speed'][index]
                 point.power = records['power'][index]
                 if magonly_calc is not None:
                     point.magonly_power = magonly_calc(point, drag, rr)
                 stable_data.append(point)
-        
+                
         return stable_data
         
      #

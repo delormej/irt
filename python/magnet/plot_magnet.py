@@ -56,7 +56,7 @@ def magonly_calc(data, drag, rr):
 #
 # Plots an array of PositionDataPoint.
 #
-def plot(data):
+def plot_magonly_linear(data):
     fit = CalibrationFit()
     clr = ChartColor()
     
@@ -71,12 +71,8 @@ def plot(data):
             plt.scatter( speed, power, color=color, label=(('Position: %i' % (k))), marker='o' )
             
             # try a linear fit of speed / magonly watts.
-            slope, intercept = fit.fit_lin_regress(np.asarray(speed), np.asarray(power))
-            
-            speed_new = np.arange(5,30)
-            power_new = lambda x: x * slope + intercept
-            
-            plt.plot(speed_new, power_new(speed_new), color=color, linestyle='--')
+            slope, intercept, speed_new, power_new = fit.fit_lin_regress(speed, power)
+            plt.plot(speed_new, power_new, color=color, linestyle='--')
 
     plt.grid(b=True, which='both', color='0.65', linestyle='-')
     plt.axhline(y=0, c='black', linewidth=2)
@@ -84,6 +80,49 @@ def plot(data):
     plt.ylabel('Mag Only Power')
     plt.legend()
     plt.show()        
+    
+def plot_crossover(file_name):
+    #power = [x.power for x in data]
+    util = Util()
+    parser = PositionParser()
+    records = util.open(file_name)
+
+    labels = []
+
+    ma_speed = parser.moving_average(records['speed'], 30)
+    ma_power30 = parser.moving_average(records['power'], 15)
+    ma_power10 = parser.moving_average(records['power'], 5)
+
+    plt.rc('axes', grid=True)
+    plt.rc('grid', color='0.75', linestyle='-', linewidth=0.5)
+
+    ax1 = plt.subplot(311)
+    ax2 = plt.subplot(312,sharex=ax1)
+    ax3 = plt.subplot(313,sharex=ax1)
+
+    time = range(0, len(records['speed']), 1)
+    
+    # ax1 = Speed & Servo
+    ax1.plot(time, records['speed'])
+    ax1.set_ylim(7, 30)
+
+    ax1.plot(time, ma_speed)
+
+    ax2.plot(time, records['position'], color='r')
+    ax2.set_ylim(800, 1700)
+
+    ax3.plot(time, records['power'], 'r')
+
+    ax3.plot(time, ma_power30, color='b')
+    ax3.plot(time, ma_power10, color='lightblue')
+    #ax3.plot(time, ma_est_power, color='y')
+
+    ax3.set_ylim(50, 600)
+    
+    for i in parser.power_ma_crossovers(records['power']):
+        plt.scatter(time[i], ma_power30[i])
+
+    plt.show()
     
 #
 # Main entry point to parse a file.
@@ -97,7 +136,8 @@ def main(file_name):
     else:
         data = parser.parse(file_name, magonly_calc)
     
-    plot(data)
+    #plot_magonly_linear(data)
+    plot_crossover(file_name)
         
 if __name__ == "__main__":
     if (len(sys.argv) > 2):
