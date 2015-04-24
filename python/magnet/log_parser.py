@@ -85,8 +85,11 @@ class PositionDataPoint:
 # ----------------------------------------------------------------------------
 class PositionParser:
     def __init__(self):
-        self.min_seq_len = 7                # min. sequence length
-        self.speed_variance_mph = 0.25 * 2  # total range of allowed variation
+        # 
+        # Configuration variables.
+        #
+        self.min_seq_len = 10               # min. sequence length
+        self.speed_variance_mph = 0.5       # total range of allowed variation
         self.max_dev = 5                    # maximum deviation of watts
         
     #

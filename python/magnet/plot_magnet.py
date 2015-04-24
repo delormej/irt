@@ -3,6 +3,7 @@ import sys
 from log_parser import *
 import matplotlib.pyplot as plt
 from calibration_fit import *
+import itertools
 
 # ----------------------------------------------------------------------------
 #
@@ -14,6 +15,7 @@ class ChartColor:
         self.index = 0
         self.positions = []
         self.colors = ['g', 'c', 'y', 'b', 'r', 'm', 'k', 'orange', 'navy', 'darkolivegreen', 'mediumturquoise']        
+        self.marker = itertools.cycle((',', '+', '.', 'o', '*')) 
     
     #
     # Returns a unique color for each servo position.
@@ -33,7 +35,7 @@ class ChartColor:
         self.positions.append((position, color))
         
         return color
-
+        
 #
 # Calculates the magnet only portion of the power equation based only
 # Drag and RR calibration values when the magnet is not off.
@@ -66,7 +68,7 @@ def plot(data):
             speed = [x.speed_mps * 2.23694 for x in items]
             power = [x.magonly_power for x in items]
             color = clr.get_color(k)
-            plt.scatter( speed, power, color=color, label=(('Position: %i' % (k))) )
+            plt.scatter( speed, power, color=color, label=(('Position: %i' % (k))), marker='o' )
             
             # try a linear fit of speed / magonly watts.
             slope, intercept = fit.fit_linear(np.asarray(speed), np.asarray(power), False)
@@ -75,7 +77,11 @@ def plot(data):
             power_new = lambda x: x * slope + intercept
             
             plt.plot(speed_new, power_new(speed_new), color=color, linestyle='--')
-            
+
+    plt.grid(b=True, which='both', color='0.65', linestyle='-')
+    plt.axhline(y=0, c='black', linewidth=2)
+    plt.xlabel('Speed (mph)')
+    plt.ylabel('Mag Only Power')
     plt.legend()
     plt.show()        
     
