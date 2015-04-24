@@ -3,6 +3,7 @@ import csv
 import numpy as np, numpy.ma as ma
 from collections import defaultdict
 from itertools import groupby, chain
+import statistics as stats
 
 # ----------------------------------------------------------------------------
 #
@@ -119,13 +120,39 @@ class PositionParser:
         return a
         
     #
+    # Calculates a moving average of speed which eliminates outliers where
+    # we may have had data drop.
+    #
+    def speed_moving_average(self, speed, n):
+        stdev_speed = stats.stdev(speed)
+        
+        # look backward and forward 3 to determine if the speed is an
+        # outlier or it's a legitimate change in speed.
+        def normalize_speed(speed):
+            for ix in range(0, len(speed), 1):
+                if ix < 3 or ix+3 > len(speed):
+                    yield speed[ix]
+                else:
+                    if abs(speed[ix-3] - speed[ix]) > stdev_speed and \
+                            abs(speed[ix+3] - speed[ix]) > stdev_speed:
+                        # Return the speed from 3 records back.
+                        yield speed[ix-3]
+                    else:
+                        yield speed[ix]
+        
+        normal_speed = normalize_speed(speed)
+        ma = self.moving_average(list(normal_speed), n)
+        
+        return ma
+        
+    #
     # Returns the index into the power array where the longer moving average
     # crosses the shorter moving average.
     #
     def power_ma_crossovers(self, records):
         power = records['power']
         
-        ma_speed = self.moving_average(records['speed'], 15)
+        ma_speed = self.speed_moving_average(records['speed'], 15)
         ma_long = self.moving_average(power, 15)
         ma_short = self.moving_average(power, 5) 
         

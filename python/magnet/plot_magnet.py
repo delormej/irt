@@ -101,17 +101,17 @@ def plot_magonly_linear(file_name):
 # Plots the entire ride and places markers at each of the places where long
 # moving average crosses the short moving average.
 #
-def plot_crossover(file_name):
+def plot_ride(file_name):
     util = Util()
     parser = PositionParser()
     records = util.open(file_name)
     
     labels = []
 
-    ma_speed = parser.moving_average(records['speed'], 15)
+    ma_speed = parser.speed_moving_average(records['speed'], 15)
     ma_power30 = parser.moving_average(records['power'], 15)
     ma_power10 = parser.moving_average(records['power'], 5)
-
+    
     plt.rc('axes', grid=True)
     plt.rc('grid', color='0.75', linestyle='-', linewidth=0.5)
 
@@ -161,7 +161,7 @@ def main(file_name):
         data = parser.parse(file_name, magonly_calc)
     
     plot_magonly_linear(file_name)
-    plot_crossover(file_name)
+    plot_ride(file_name)
     plt.show()        
         
 if __name__ == "__main__":
