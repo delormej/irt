@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 #
 # Calculates the magnet only portion of the power equation based only
-# Drag and RR calibration values.
+# Drag and RR calibration values when the magnet is not off.
 # 
 def magonly_calc(data, drag, rr):
     power = 0
@@ -19,6 +19,7 @@ def magonly_calc(data, drag, rr):
         power = 0
         
     return power
+    
 #
 # Plots an array of PositionDataPoint.
 #
@@ -33,6 +34,7 @@ def plot(data):
         plt.scatter(speed, power)
 
     plt.show()        
+    
 #
 # Main entry point to parse a file.
 #        
@@ -46,10 +48,9 @@ def main(file_name):
         data = parser.parse(file_name, magonly_calc)
     
     plot(data)
-    
         
 if __name__ == "__main__":
     if (len(sys.argv) > 2):
         speed_col = int(sys.argv[2])
     main(sys.argv[1])
-    #main(input_file_name)    
+    
