@@ -3,6 +3,37 @@ import sys
 from log_parser import *
 import matplotlib.pyplot as plt
 
+# ----------------------------------------------------------------------------
+#
+# Encapsulates function for getting a unique color for plotting.
+#
+# ----------------------------------------------------------------------------
+class ChartColor:
+    def __init__(self):
+        self.index = 0
+        self.positions = []
+        self.colors = ['g', 'c', 'y', 'b', 'r', 'm', 'k', 'orange', 'navy', 'darkolivegreen', 'mediumturquoise']        
+    
+    #
+    # Returns a unique color for each servo position.
+    #
+    def get_color(self, position):
+        # if the position has been seen before, return it's color, otherwise grab a new color.
+        for c, p in enumerate(self.positions):
+            if p == position:
+                return self.positions[c,1]
+        
+        color = self.colors[self.index]
+        if (self.index == 10):
+            self.index = 0
+        else:
+            self.index = self.index + 1
+        
+        self.positions.append((position, color))
+        
+        return color
+       
+
 #
 # Calculates the magnet only portion of the power equation based only
 # Drag and RR calibration values when the magnet is not off.
@@ -19,20 +50,22 @@ def magonly_calc(data, drag, rr):
         power = 0
         
     return power
-    
+ 
 #
 # Plots an array of PositionDataPoint.
 #
 def plot(data):
+    clr = ChartColor()
     keyfunc = lambda x: x.position
     data = sorted(data, key=keyfunc)
     for k, g in groupby(data, keyfunc):
         items = list(g)
-        
-        speed = [x.speed_mps * 2.23694 for x in items]
-        power = [x.magonly_power for x in items]
-        plt.scatter(speed, power)
-
+        if k < 1600:
+            speed = [x.speed_mps * 2.23694 for x in items]
+            power = [x.magonly_power for x in items]
+            plt.scatter( speed, power, color=clr.get_color(k), label=(('Position: %i' % (k))) )
+            
+    plt.legend()
     plt.show()        
     
 #
