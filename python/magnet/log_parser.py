@@ -126,17 +126,17 @@ class PositionParser:
     def speed_moving_average(self, speed, n):
         stdev_speed = stats.stdev(speed)
         
-        # look backward and forward 3 to determine if the speed is an
+        # look backward and forward to determine if the speed is an
         # outlier or it's a legitimate change in speed.
         def normalize_speed(speed):
             for ix in range(0, len(speed), 1):
-                if ix < 3 or ix+3 > len(speed):
+                if ix < 1 or ix+1 > len(speed):
                     yield speed[ix]
                 else:
-                    if abs(speed[ix-3] - speed[ix]) > stdev_speed and \
-                            abs(speed[ix+3] - speed[ix]) > stdev_speed:
-                        # Return the speed from 3 records back.
-                        yield speed[ix-3]
+                    if abs(speed[ix-1] - speed[ix]) > stdev_speed and \
+                            abs(speed[ix+1] - speed[ix]) > stdev_speed:
+                        # Return previous speed.
+                        yield speed[ix-1]
                     else:
                         yield speed[ix]
         
