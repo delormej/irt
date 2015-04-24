@@ -70,11 +70,12 @@ def plot_magonly_linear(file_name):
 
     valid = []
     
-    for ix, avg in parser.power_ma_crossovers(records):
+    for ix, power, speed in parser.power_ma_crossovers(records):
         valid.append(ix)
-        records[ix]['power'] = avg
+        records[ix]['power'] = power
+        records[ix]['speed'] = speed
         if records['position'][ix] < 1600:
-                print(ix, records['position'][ix], records['speed'][ix], records[ix]['power'])
+                print(ix, records['position'][ix], speed, power)
     
     keyfunc = lambda x: x['position']
     data = sorted(records[valid], key=keyfunc)
@@ -107,7 +108,7 @@ def plot_crossover(file_name):
     
     labels = []
 
-    ma_speed = parser.moving_average(records['speed'], 30)
+    ma_speed = parser.moving_average(records['speed'], 15)
     ma_power30 = parser.moving_average(records['power'], 15)
     ma_power10 = parser.moving_average(records['power'], 5)
 
@@ -142,7 +143,7 @@ def plot_crossover(file_name):
 
     ax3.set_ylim(50, 600)
     
-    for ix, avg_power in parser.power_ma_crossovers(records):
+    for ix, avg_power, avg_speed in parser.power_ma_crossovers(records):
         plt.scatter(time[ix], avg_power)
 
     plt.show()

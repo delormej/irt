@@ -104,6 +104,7 @@ class PositionParser:
 
         """
         x = np.asarray(x)
+        
         if type=='simple':
             weights = np.ones(n)
         else:
@@ -123,6 +124,7 @@ class PositionParser:
     def power_ma_crossovers(self, records):
         power = records['power']
         
+        ma_speed = self.moving_average(records['speed'], 15)
         ma_long = self.moving_average(power, 15)
         ma_short = self.moving_average(power, 5) 
         
@@ -135,7 +137,7 @@ class PositionParser:
                 # This eliminates the issue with averages appearing on the edge.
                 if i > 3 and records['position'][i-3] == records['position'][i]:
                     # We've crossed over return a tuple of index and long ma
-                    yield i, ma_long[i]
+                    yield i, ma_long[i], ma_speed[i]
         
     #
     # Returns a sequence of contiguous stable speed and power data. 
