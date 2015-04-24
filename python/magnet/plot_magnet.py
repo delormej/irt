@@ -123,7 +123,12 @@ def plot_crossover(file_name):
     ax3.set_ylim(50, 600)
     
     for ix, avg_power in parser.power_ma_crossovers(records['power']):
-        plt.scatter(time[ix], avg_power)
+        # Only plot if the servo position hasn't changed for a few seconds.
+        # This eliminates the issue with averages appearing on the edge.
+        if ix > 3 and records['position'][ix-3] == records['position'][ix]:
+            plt.scatter(time[ix], avg_power)
+            #if records['position'][ix] < 1600:
+            #    plt.text(time[ix], avg_power, records['position'][ix])
 
     plt.show()
     
