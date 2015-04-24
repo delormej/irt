@@ -129,8 +129,8 @@ class PositionParser:
             # and the current long average is higher than short
             # we've crossed over.
             if ma_long[i-1] < ma_short[i-1] and ma_long[i] > ma_short[i]:
-                # eureka, we've crossed over
-                yield i
+                # We've crossed over return a tuple of index and long ma
+                yield i, ma_long[i]
         
     #
     # Returns a sequence of contiguous stable speed and power data. 

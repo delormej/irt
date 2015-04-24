@@ -81,8 +81,11 @@ def plot_magonly_linear(data):
     plt.legend()
     plt.show()        
     
+#
+# Plots the entire ride and places markers at each of the places where long
+# moving average crosses the short moving average.
+#
 def plot_crossover(file_name):
-    #power = [x.power for x in data]
     util = Util()
     parser = PositionParser()
     records = util.open(file_name)
@@ -119,8 +122,8 @@ def plot_crossover(file_name):
 
     ax3.set_ylim(50, 600)
     
-    for i in parser.power_ma_crossovers(records['power']):
-        plt.scatter(time[i], ma_power30[i])
+    for ix, avg_power in parser.power_ma_crossovers(records['power']):
+        plt.scatter(time[ix], avg_power)
 
     plt.show()
     
