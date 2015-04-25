@@ -273,11 +273,13 @@ class PositionParser:
         util = Util()
         
         # Read configuration values
-        drag, rr, device_id = util.read_calibration(file_name)
+        #drag, rr, device_id = util.read_calibration(file_name)
         
         # Read all data.
         records = util.open(file_name)
-
+        
+        return records
+        """
         #
         # Gets a dictionary keyed by servo position containing a list of indexes
         # for contiguous stable speed, power data at a given servo position.
@@ -303,15 +305,20 @@ class PositionParser:
                 stable_data.append(point)
                 
         return stable_data
+        """
         
      #
      # Parses a directory of *.csv log files.
      #
     def parse_multiple(self, rootdir, magonly_calc = None):
-        stable_data = []
+        records = np.ndarray(0)
         util = Util()
         for file in util.get_csv_files(rootdir):
             print("parsing: ", file)
-            stable_data.extend(self.parse(file, magonly_calc))
-
-        return stable_data
+            if len(records) == 0:
+                records = self.parse(file, magonly_calc)
+            else:
+                new_records = self.parse(file, magonly_calc)
+                records = np.concatenate((records, new_records), axis=0)
+  
+        return records

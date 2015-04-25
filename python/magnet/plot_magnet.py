@@ -56,18 +56,14 @@ def magonly_calc(data, drag, rr):
 #
 # Plots an array of PositionDataPoint.
 #
-def plot_magonly_linear(file_name):
+def plot_magonly_linear(records):
+    parser = PositionParser()
+    fit = CalibrationFit()
+    clr = ChartColor()
     
     plt.subplot(121)
     plt.title('Linear Magnet Power')
     
-    fit = CalibrationFit()
-    clr = ChartColor()
-    
-    util = Util()
-    parser = PositionParser()
-    records = util.open(file_name)
-
     valid = []
     
     for ix, power, speed in parser.power_ma_crossovers(records):
@@ -101,12 +97,8 @@ def plot_magonly_linear(file_name):
 # Plots the entire ride and places markers at each of the places where long
 # moving average crosses the short moving average.
 #
-def plot_ride(file_name):
-    util = Util()
+def plot_ride(records):
     parser = PositionParser()
-    records = util.open(file_name)
-    
-    labels = []
 
     ma_speed = parser.speed_moving_average(records['speed'], 15)
     ma_power30 = parser.moving_average(records['power'], 15)
@@ -160,8 +152,8 @@ def main(file_name):
     else:
         data = parser.parse(file_name, magonly_calc)
     
-    plot_magonly_linear(file_name)
-    plot_ride(file_name)
+    plot_magonly_linear(data)
+    plot_ride(data)
     plt.show()        
         
 if __name__ == "__main__":
