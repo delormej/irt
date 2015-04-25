@@ -60,9 +60,9 @@ class CalibrationFit:
 
         return slope_, intercept_
         
-    """
-    Fits slope & intercept using a linear regression.
-    """
+    #
+    # Fits slope & intercept using a linear regression.
+    #
     def fit_lin_regress(self, speed, power):
         slope, intercept, r_val, p_val, stderr = stats.linregress(np.asarray(speed), np.asarray(power))
             
@@ -70,3 +70,56 @@ class CalibrationFit:
         power_new = lambda x: x * slope + intercept
         
         return slope, intercept, speed_new, power_new(speed_new)
+        
+    #
+    # x = speed_mps
+    # y = power
+    #
+    def fit_bike_science(self, x, y):
+
+        def bike_science_func(v, k, rr):
+            return  ( k*(v**2) + (rr) ) * v        
+        
+        pars, covar = spo.curve_fit(bike_science_func, x, y, p0 = [0.3, 0.005])
+        print('bike', pars)
+        #plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+', zorder=100, linewidth=3)
+        #labels.append(r'%s' % ('Bike Function'))        
+        
+        return pars[0], pars[1]
+        
+    #
+    # Fits calibration data for all records at servo position 2000.
+    #
+    def fit_nonlinear_calibration(self, records):
+        
+        # Skip first 7 minutes of data (7*60 = 420 records).
+        if len(records) < 420:
+            raise "Not enough rows to calibrate."
+    
+        # Only use data where position == 2000
+        #id2000 = np.fromiter(chain.from_iterable((ids for p, ids in records if p == 2000)), dtype=int)
+    
+        id2000 = [i for i, x in enumerate(records) if x['position']==2000]
+    
+        """
+        Cluster speeds and find the median watts for these speeds.
+        """
+        groups = []
+
+        keyfunc = lambda x: float(x['speed_mps'])
+        data = sorted(records[id2000], key=keyfunc)
+        for k, g in groupby(data, keyfunc):
+            items = []
+            for i in g:
+                items.append(i[1])
+            med = np.median(items) #TODO: change this to mean/average?
+            groups.append((k, med))
+            #print(k, med)
+
+        npgroups = np.array(groups)
+        x = npgroups[:,0]
+        y = npgroups[:,1]
+
+        return self.fit_bike_science(x, y)
+            
+            

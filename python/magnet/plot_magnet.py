@@ -35,7 +35,7 @@ class ChartColor:
         self.positions.append((position, color))
         
         return color
-        
+    
 #
 # Plots an array of PositionDataPoint.
 #
@@ -86,6 +86,7 @@ def plot_ride(records):
     ma_speed = parser.speed_moving_average(records['speed'], 15)
     ma_power30 = parser.moving_average(records['power'], 15)
     ma_power10 = parser.moving_average(records['power'], 5)
+    ma_power_est30 = parser.moving_average(records['power_est'], 15)
     
     plt.rc('axes', grid=True)
     plt.rc('grid', color='0.75', linestyle='-', linewidth=0.5)
@@ -111,10 +112,11 @@ def plot_ride(records):
     ax2.set_ylim(800, 1700)
 
     ax3.plot(time, records['power'], 'r')
+    ax3.plot(time, records['power_est'], 'orange', linestyle='--', linewidth=2)
 
     ax3.plot(time, ma_power30, color='b')
     ax3.plot(time, ma_power10, color='lightblue')
-    #ax3.plot(time, ma_est_power, color='y')
+    ax3.plot(time, ma_power_est30, color='y')
 
     ax3.set_ylim(50, 600)
     

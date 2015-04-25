@@ -5,6 +5,8 @@ from collections import defaultdict
 from itertools import groupby, chain
 import statistics as stats
 from numpy.lib.recfunctions import append_fields
+import magnet as mag
+import calibration_fit as fit
 
 # ----------------------------------------------------------------------------
 #
@@ -290,16 +292,63 @@ class PositionParser:
             result.append(magonly_power)
         
         return result
+
+    #
+    # Initializes the co-efficients for magnet power.
+    #
+    def init_mag(self):
+        
+        low_speed = 15 * 0.44704
+        low_a = 8.8494476121e-07
+        low_b = -0.00240207003171
+        low_c = 1.39836168772
+        low_d = 329.707200358
+        
+        high_speed = 25 * 0.44704
+        high_a = 2.04928870618e-06
+        high_b = -0.0061578610697
+        high_c = 4.94991737943
+        high_d = -468.940164046
+        
+        mag.set_coeff(low_speed, 
+            low_a, 
+            low_b, 
+            low_c, 
+            low_d, 
+            high_speed, 
+            high_a, 
+            high_b, 
+            high_c,
+            high_d)
+
+    #
+    # Calculates power based coast down fit (drag & rr), speed and magnet position.
+    #
+    def get_power(self, speed_mps, servo_pos, drag, rr):
+        # Calculates non-mag power based on speed in meters per second.
+        no_mag_watts = (drag*speed_mps**2)+(speed_mps * rr) # Force = K(V^2) + (mgCrr)	
+        
+        # If the magnet is ON the position will be less than 1600
+        if servo_pos < 1600:
+            # Calculates the magnet-only power based on speed in meters per second.
+            mag_watts = mag.watts(speed_mps, servo_pos)
+            #print(servo_pos, mag_watts)
+        else:
+            mag_watts = 0	
+        
+        return no_mag_watts + mag_watts        
+    
     
     #
     # Extracts stable [position, speed, watts, device_id] from a log file.        
     #
     def parse(self, file_name):
         util = Util()
+        cal = fit.CalibrationFit()
         
         # Read configuration values
-        drag, rr, device_id = util.read_calibration(file_name)
-        
+        #drag, rr, device_id = util.read_calibration(file_name)
+                
         # Read all data.
         records = util.open(file_name)
        
@@ -307,8 +356,23 @@ class PositionParser:
         speed_mps = records['speed'] * 0.44704
         records = append_fields(records, 'speed_mps', speed_mps, usemask=False)
 
+        # Perform a calibration against the file.
+        drag, rr = cal.fit_nonlinear_calibration(records)        
+        
         mag_col = self.magonly(records, drag, rr)
         records = append_fields(records, 'magonly_power', mag_col, usemask=False)
+        
+        # TODO: move this out of parse.
+        # Calculate estimated power.
+        #
+        self.init_mag()
+        power_est_col = []
+        
+        for r in records:
+            power_est = self.get_power(r['speed_mps'], r['position'], drag, rr)
+            power_est_col.append(power_est)
+        
+        records = append_fields(records, 'power_est', power_est_col, usemask=False)
         
         return records
         """
