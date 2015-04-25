@@ -97,9 +97,7 @@ class CalibrationFit:
             raise "Not enough rows to calibrate."
     
         # Only use data where position == 2000
-        #id2000 = np.fromiter(chain.from_iterable((ids for p, ids in records if p == 2000)), dtype=int)
-    
-        id2000 = [i for i, x in enumerate(records) if x['position']==2000]
+        id2000 = [i for i, x in enumerate(records[420:]) if x['position']==2000]
     
         """
         Cluster speeds and find the median watts for these speeds.
