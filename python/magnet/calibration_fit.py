@@ -70,4 +70,3 @@ class CalibrationFit:
         power_new = lambda x: x * slope + intercept
         
         return slope, intercept, speed_new, power_new(speed_new)
-        

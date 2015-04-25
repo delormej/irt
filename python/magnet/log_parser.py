@@ -4,6 +4,7 @@ import numpy as np, numpy.ma as ma
 from collections import defaultdict
 from itertools import groupby, chain
 import statistics as stats
+from numpy.lib.recfunctions import append_fields
 
 # ----------------------------------------------------------------------------
 #
@@ -150,7 +151,7 @@ class PositionParser:
     # crosses the shorter moving average.
     #
     def power_ma_crossovers(self, records):
-        power = records['power']
+        power = records['magonly_power']
         
         ma_speed = self.speed_moving_average(records['speed'], 15)
         ma_long = self.moving_average(power, 15)
@@ -265,18 +266,49 @@ class PositionParser:
         remove_empty(position_list)
             
         return position_list
+
+    #
+    # Calculates the magnet only portion of power based on non-linear calibration.
+    #
+    def magonly(self, records, drag, rr):
+        result = []
         
+        for r in records:
+            magonly_power = 0
+            
+            position = r['position']  
+            power = r['power']
+            speed_mps = r['speed'] * 0.44704
+            
+            if position < 1600:
+                magoff = drag * speed_mps**2 + (speed_mps * rr)
+                magonly_power = power - magoff
+
+            if magonly_power < 0:
+                magonly_power = 0
+                
+            result.append(magonly_power)
+        
+        return result
+    
     #
     # Extracts stable [position, speed, watts, device_id] from a log file.        
     #
-    def parse(self, file_name, magonly_calc):
+    def parse(self, file_name):
         util = Util()
         
         # Read configuration values
-        #drag, rr, device_id = util.read_calibration(file_name)
+        drag, rr, device_id = util.read_calibration(file_name)
         
         # Read all data.
         records = util.open(file_name)
+       
+        # Enrich data with meters per second and magnet only power.
+        speed_mps = records['speed'] * 0.44704
+        records = append_fields(records, 'speed_mps', speed_mps, usemask=False)
+
+        mag_col = self.magonly(records, drag, rr)
+        records = append_fields(records, 'magonly_power', mag_col, usemask=False)
         
         return records
         """
@@ -310,15 +342,15 @@ class PositionParser:
      #
      # Parses a directory of *.csv log files.
      #
-    def parse_multiple(self, rootdir, magonly_calc = None):
+    def parse_multiple(self, rootdir):
         records = np.ndarray(0)
         util = Util()
         for file in util.get_csv_files(rootdir):
             print("parsing: ", file)
             if len(records) == 0:
-                records = self.parse(file, magonly_calc)
+                records = self.parse(file)
             else:
-                new_records = self.parse(file, magonly_calc)
+                new_records = self.parse(file)
                 records = np.concatenate((records, new_records), axis=0)
   
         return records

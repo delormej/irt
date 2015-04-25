@@ -37,23 +37,6 @@ class ChartColor:
         return color
         
 #
-# Calculates the magnet only portion of the power equation based only
-# Drag and RR calibration values when the magnet is not off.
-# 
-def magonly_calc(data, drag, rr):
-    power = 0
-    
-    # Only calculate power for magnet positions below 1600.
-    if data.position < 1600:
-        magoff = drag * data.speed_mps**2 + (data.speed_mps * rr)
-        power = data.power - magoff
-
-    if power < 0:
-        power = 0
-        
-    return power
- 
-#
 # Plots an array of PositionDataPoint.
 #
 def plot_magonly_linear(records):
@@ -70,8 +53,8 @@ def plot_magonly_linear(records):
         valid.append(ix)
         records[ix]['power'] = power
         records[ix]['speed'] = speed
-        if records['position'][ix] < 1600:
-                print(ix, records['position'][ix], speed, power)
+        #if records['position'][ix] < 1600:
+                #print(ix, records['position'][ix], speed, records[ix]['speed_mps'], power)
     
     keyfunc = lambda x: x['position']
     data = sorted(records[valid], key=keyfunc)
@@ -148,9 +131,9 @@ def main(file_name):
     data = []
     
     if os.path.isdir(file_name):
-        data = parser.parse_multiple(file_name, magonly_calc)
+        data = parser.parse_multiple(file_name)
     else:
-        data = parser.parse(file_name, magonly_calc)
+        data = parser.parse(file_name)
     
     plot_magonly_linear(data)
     plot_ride(data)
