@@ -33,15 +33,20 @@ class Util:
         drag = 0
         rr = 0
         
-        with open(file_name, 'r') as f:
-            for row in reversed(list(csv.reader(f))):
-                if row[0] == 'RR':
-                    rr = float(row[1])
-                if row[0] == 'Drag':
-                    drag = float(row[1])
-                if row[0] == 'DeviceID':
-                    device_id = int(row[1])
-                    return drag, rr, device_id
+        try:
+            with open(file_name, 'r') as f:
+                for row in reversed(list(csv.reader(f))):
+                    if row[0] == 'RR':
+                        rr = float(row[1])
+                    if row[0] == 'Drag':
+                        drag = float(row[1])
+                    if row[0] == 'DeviceID':
+                        device_id = int(row[1])
+                        break
+        except:
+            print("Unable to parse calibration.")
+                        
+        return drag, rr, device_id
     
     #
     # Opens the log file and returns arrays: speed (mph), power, servo position.
