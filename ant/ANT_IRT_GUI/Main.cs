@@ -840,6 +840,10 @@ namespace IRT_GUI
             UpdateStatus("Reconnected after DFU.");
             m_enteredDFU = false;
 
+            // Don't prompt if version 1.x of firmware.
+            if (m_firmwareRev.Major == 1)
+                return;
+
             var result = MessageBox.Show(
                     "User profile settings are reset during firmware update.\r\n" +
                     "Would you like to restore current user profile settings?",
