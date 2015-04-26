@@ -95,9 +95,16 @@ namespace IRT.Calibration
             }
         }
 
+        /// <summary>
+        /// Model for how power from rolling resistance and drag (no magnet) is calculated.
+        /// </summary>
+        /// <param name="v"></param>
+        /// <param name="K"></param>
+        /// <param name="rr"></param>
+        /// <returns></returns>
         static double fit_drag_rr(double v, double K, double rr)
         {
-            double p = K * Math.Pow(v, 2) + ((v * rr)); // / contact_patch());
+            double p = (K * Math.Pow(v, 2) + rr) * v; // / contact_patch());
 
             return p;
         }
