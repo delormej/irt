@@ -84,9 +84,9 @@ def plot_ride(records):
     parser = PositionParser()
 
     ma_speed = parser.speed_moving_average(records['speed'], 15)
-    ma_power30 = parser.moving_average(records['power'], 15)
+    ma_power30 = parser.moving_average(records['power'], 30)
     ma_power10 = parser.moving_average(records['power'], 5)
-    ma_power_est30 = parser.moving_average(records['power_est'], 15)
+    ma_power_est30 = parser.moving_average(records['power_est'], 30)
     
     plt.rc('axes', grid=True)
     plt.rc('grid', color='0.75', linestyle='-', linewidth=0.5)

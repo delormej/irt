@@ -94,9 +94,10 @@ class PositionParser:
         # Configuration variables.
         #
         self.min_seq_len = 10               # min. sequence length
-        self.speed_variance_mph = 0.4       # total range of allowed variation
+        self.speed_variance_mph = 0.5       # total range of allowed variation
         self.max_dev = 7                    # maximum deviation of watts
         self.servo_lag = 6                  # don't take any data points within # of seconds of a servo change.
+        self.cal = fit.CalibrationFit()
 
     #
     # Calculates a moving average of an array of values.
@@ -270,6 +271,15 @@ class PositionParser:
         return position_list
 
     #
+    # Returns array of data which represents only the consistent speed data
+    # when the magnet is off.
+    #
+    def magoff_records(self, records):
+        position_dict = self.get_position_dictionary(records)
+        magoff = records[position_dict[2000]]
+        return magoff
+        
+    #
     # Calculates the magnet only portion of power based on non-linear calibration.
     #
     def magonly(self, records, drag, rr):
@@ -283,7 +293,7 @@ class PositionParser:
             speed_mps = r['speed'] * 0.44704
             
             if position < 1600:
-                magoff = drag * speed_mps**2 + (speed_mps * rr)
+                magoff = self.cal.magoff_power(speed_mps, drag, rr)
                 magonly_power = power - magoff
 
             if magonly_power < 0:
@@ -326,7 +336,7 @@ class PositionParser:
     #
     def get_power(self, speed_mps, servo_pos, drag, rr):
         # Calculates non-mag power based on speed in meters per second.
-        no_mag_watts = (drag*speed_mps**2)+(speed_mps * rr) # Force = K(V^2) + (mgCrr)	
+        no_mag_watts = self.cal.magoff_power(speed_mps, drag, rr)
         
         # If the magnet is ON the position will be less than 1600
         if servo_pos < 1600:
@@ -344,10 +354,9 @@ class PositionParser:
     #
     def parse(self, file_name):
         util = Util()
-        cal = fit.CalibrationFit()
         
         # Read configuration values
-        #drag, rr, device_id = util.read_calibration(file_name)
+        drag, rr, device_id = util.read_calibration(file_name)
                 
         # Read all data.
         records = util.open(file_name)
@@ -356,8 +365,11 @@ class PositionParser:
         speed_mps = records['speed'] * 0.44704
         records = append_fields(records, 'speed_mps', speed_mps, usemask=False)
 
-        # Perform a calibration against the file.
-        drag, rr = cal.fit_nonlinear_calibration(records)        
+        if drag == 0 or rr == 0:
+            # Perform a calibration against the file.
+            drag, rr = self.cal.fit_nonlinear_calibration(self.magoff_records(records))
+
+        print("drag,rr:", drag, rr)
         
         mag_col = self.magonly(records, drag, rr)
         records = append_fields(records, 'magonly_power', mag_col, usemask=False)

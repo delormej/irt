@@ -70,17 +70,19 @@ class CalibrationFit:
         power_new = lambda x: x * slope + intercept
         
         return slope, intercept, speed_new, power_new(speed_new)
-        
+    
+    #
+    # Returns power as calculated from calibration (drag & speed_mps) with no
+    #
+    def magoff_power(self, speed_mps, drag, rr):
+        return (( drag*(speed_mps**2) + (rr) ) * speed_mps )    
+    
     #
     # x = speed_mps
     # y = power
     #
     def fit_bike_science(self, x, y):
-
-        def bike_science_func(v, k, rr):
-            return  ( k*(v**2) + (rr) ) * v        
-        
-        pars, covar = spo.curve_fit(bike_science_func, x, y, p0 = [0.3, 0.005])
+        pars, covar = spo.curve_fit(self.magoff_power, x, y)
         print('bike', pars)
         #plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+', zorder=100, linewidth=3)
         #labels.append(r'%s' % ('Bike Function'))        
@@ -97,7 +99,7 @@ class CalibrationFit:
             raise "Not enough rows to calibrate."
     
         # Only use data where position == 2000
-        id2000 = [i for i, x in enumerate(records[420:]) if x['position']==2000]
+        #id2000 = [i for i, x in enumerate(records[420:]) if x['position']==2000]
     
         """
         Cluster speeds and find the median watts for these speeds.
@@ -105,19 +107,21 @@ class CalibrationFit:
         groups = []
 
         keyfunc = lambda x: float(x['speed_mps'])
-        data = sorted(records[id2000], key=keyfunc)
+        data = sorted(records, key=keyfunc)
         for k, g in groupby(data, keyfunc):
             items = []
             for i in g:
                 items.append(i[1])
-            med = np.median(items) #TODO: change this to mean/average?
+            med = np.mean(items) #TODO: change this to mean/average?
             groups.append((k, med))
-            #print(k, med)
 
         npgroups = np.array(groups)
         x = npgroups[:,0]
         y = npgroups[:,1]
 
+        #x = [10.1* 0.44704, 15.1* 0.44704, 20.1* 0.44704, 25.2* 0.44704]
+        #y = [74, 113, 158, 217]
+        
         return self.fit_bike_science(x, y)
             
             
