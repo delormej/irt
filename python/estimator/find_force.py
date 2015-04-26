@@ -1,6 +1,6 @@
 #input_file_name = "180lb_large_mag_range_adjust_speed.csv"
-n = 5       # min. sequence length
-x = 0.1 * 2 # total range of allowed variation
+n = 7       # min. sequence length
+x = 0.25 * 2 # total range of allowed variation
 max_dev = 8 # maximum deviation of watts
 skip_rows = 20 # data rows skipped at the beginning
 txt_offset = 250
@@ -9,6 +9,7 @@ watts_col = 5
 servo_col = 7
 labels = [] # Labels for chart legend
 #xsl_filename = '../../tcx-to-csv.xslt'
+device_id = 0
 
 import sys
 import os
@@ -21,6 +22,7 @@ import itertools
 import matplotlib.pyplot as plt
 import math
 import traceback
+import csv
 #import lxml.etree as ET
 
 class position:
@@ -95,10 +97,28 @@ def get_base_watts(mps):
     watts = drag_rr_func(mps, 0.3070526, 13.1017213)
     return watts
 
+    
+label_positions = []    
+"""
+Adds a text annotation to the chart with the position.
+"""    
+def label_position(position, x, y):
+    global label_positions
+    
+    for p in label_positions:
+        if p == position:
+            # return if we've already labelled.
+            return
+        else:
+            label_positions.append(position)
+    
+    plt.text(x, y, position, color=get_color(position))
+    
 """
 Get the stable speed and watts for each servo position.
 """
 def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept, drag, rr):
+
     pos_list = [p for p in valid_data if p < 2000]
     pos_list.sort()
 
@@ -107,19 +127,21 @@ def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept, drag, rr)
     for p in pos_list:
         speed = []
         watt = []
-
+        
         ids = valid_data[p]
         if ids:
+            color = get_color(p)
+            
             #print(p, forces[ids].mean(), (forces[ids] - ((flywheel_mps[ids]*slope - intercept)/flywheel_mps[ids])).mean())
             for i in get_mean(speeds[ids], watts[ids]):
                 speed.append(0.44704 * i[0])
-                base_watts = (0.44704 * i[0]) * cal_slope + cal_intercept
-                #base_watts = drag_rr_func(0.44704 * i[0], drag, rr)
+                #base_watts = (0.44704 * i[0]) * cal_slope + cal_intercept
+                base_watts = drag_rr_func(0.44704 * i[0], drag, rr)
                 ##get_base_watts(0.44704 * i[0]) #
                 #print("base", 0.44704 * i[0], base_watts)
                 watt.append(i[1] - base_watts)
                 #print(p, round(i[0],1), round(i[1],0))
-                #plt.scatter(round(i[0],1), round(i[1],0))
+                plt.scatter(round(i[0],1), round(i[1],0), color=color) # plots speed & watts
 
             slope, intercept, r_val, p_val, stderr = stats.linregress(speed, watt)
             print((p, slope, intercept))
@@ -129,13 +151,20 @@ def get_positions(valid_data, speeds, watts, cal_slope, cal_intercept, drag, rr)
             entry.intercept = intercept
             positions.append(entry)
             mph = [x * 2.23694 for x in speed]
-            plt.plot(mph, watt, marker='o')
+            plt.plot(mph, watt, marker='o', color=color)
+
+            new_mph = np.arange(5,35,1)
+            new_watts = lambda x: (x * 0.44704) * entry.slope + entry.intercept
+            plt.plot(new_mph, new_watts(new_mph), color=color, linestyle='--')
+            plt.text(25, new_watts(25), ('%i (%i)' % (p, device_id)), color=color)
+            #label_position(p, 25, new_watts(25))
             
+            """
             try:
                 fit_eddy_current(np.array(mph), np.array(watt))
             except:
                 print('could not calculate for:', p)
-            
+            """
 
     return positions
 
@@ -169,8 +198,8 @@ def fit_bike_science(x_new, x, y):
 
     pars, covar = spo.curve_fit(bike_science_func, x1, y, p0 = [0.3, 0.005])
     print('bike', pars)
-    plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+', zorder=100, linewidth=3)
-    labels.append(r'%s' % ('Bike Function'))
+    #plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+', zorder=100, linewidth=3)
+    #labels.append(r'%s' % ('Bike Function'))
 
 def bicycle_func(x, a, b):
     x_mps = x * 0.44704
@@ -188,8 +217,8 @@ def fit_poly2d(x_new, x, y):
     # y_new = ax^2 + bx + c
     f = ("poly2d: y = %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2]))
     print(f)
-    plt.plot(x_new, y_new, 'g-')
-    labels.append(r'%s' % ('2D polynomial'))
+    #plt.plot(x_new, y_new, 'g-')
+    #labels.append(r'%s' % ('2D polynomial'))
 
 """
 Non linear fit of base speed/watt data.
@@ -225,8 +254,8 @@ def fit_nonlinear_calibration(data):
     # Create a new set of speed points between 5, 40 mph
     #x_new = np.linspace(x[0], x[-1], len(x))
     x_new = np.linspace(5, 40, 50)
-    plt.plot(x_new, power_func(x_new, *pars), 'r--')
-    labels.append(r'%s' % ('Power Function'))
+    #plt.plot(x_new, power_func(x_new, *pars), 'r--')
+    #labels.append(r'%s' % ('Power Function'))
 
     # Calculate bicycle power function
     #pars2, covar2 = spo.curve_fit(bicycle_func, x, y)
@@ -267,11 +296,11 @@ def graph(speeds_mph, watts, slope, intercept, color1='b', color2='r'):
     #plt.xlim([speeds_mph.min(),speeds_mph.max()])
     plt.xlim(5,40)
     plt.ylim(0,600)
-    plt.scatter(speeds_mph, watts, c=color1)
-    plt.plot(speeds_mph, (speeds_mph*0.44704)*slope + intercept, color2)
-    labels.append(r'%s' % ('Linear'))
-    txt_offset = txt_offset + 20
-    plt.text(7, txt_offset, "slope: %s, offset: %i" % (math.trunc(slope*1000), math.trunc(abs(intercept)*1000)))
+    #plt.scatter(speeds_mph, watts, c=color1)
+    #plt.plot(speeds_mph, (speeds_mph*0.44704)*slope + intercept, color2)
+    #labels.append(r'%s' % ('Linear'))
+    #txt_offset = txt_offset + 20
+    #plt.text(7, txt_offset, "slope: %s, offset: %i" % (math.trunc(slope*1000), math.trunc(abs(intercept)*1000)))
 
 def fit_linear_calibration(x,y, sample= "auto", n_samples = 1e7):
     """
@@ -416,6 +445,26 @@ def fit_calibration(id2000, speeds, watts):
     # return the linear and non-linear calibration.
     return (slope, intercept, a, b)
 
+"""
+Reads an irt log file and returns the Drag and RR settings.
+"""
+def read_calibration(file_name):
+	global device_id
+
+	drag = 0
+	rr = 0
+    
+	with open(file_name, 'r') as f:
+		for row in reversed(list(csv.reader(f))):
+			if row[0] == 'RR':
+				rr = float(row[1])
+			if row[0] == 'Drag':
+				drag = float(row[1])
+			if row[0] == 'DeviceID':
+				print("DeviceID", row[1])
+				device_id = int(row[1])
+				return drag, rr				
+    
 def process_file(input_file_name):
     """
     if input_file_name.endswith('.tcx'):
@@ -425,10 +474,14 @@ def process_file(input_file_name):
     exit()
     """
 
+    global device_id
+    
     speeds, watts, positions = np.loadtxt(input_file_name, delimiter=',', skiprows=skip_rows+1,
             dtype=[('speed', float), ('watts', int), ('position', int)], usecols=[speed_col, watts_col, servo_col], unpack=True, comments='"',
             converters = {5: lambda s: float(s.strip() or 0)})
 
+    drag, rr = read_calibration(input_file_name)
+            
     minval = np.min(speeds[np.nonzero(speeds)])
     maxval = np.max(speeds[np.nonzero(speeds)])
     if (maxval - minval) < 7:
@@ -449,11 +502,35 @@ def process_file(input_file_name):
 
     # fit both linear and non-linear calibration.
     slope, intercept, a, b = fit_calibration(id2000, speeds, watts)
-
-    get_positions(valid_data, speeds, watts, slope, intercept, b, a)
+    
+    get_positions(valid_data, speeds, watts, slope, intercept, drag, rr)
 
     return sp2000, w2000, slope, intercept
 
+color_ix = 0
+positions = []
+
+def get_color(position):
+    global color_ix
+    global positions
+    colors = ['g', 'c', 'y', 'b', 'r', 'm', 'k', 'orange', 'navy', 'darkolivegreen', 'mediumturquoise']        
+    
+    # if the position has been seen before, return it's color, otherwise grab a new color.
+    for c, p in enumerate(positions):
+        if p == position:
+            return positions[c,1]
+    
+    color = colors[color_ix]
+    if (color_ix == 10):
+        color_ix = 0
+    else:
+        color_ix = color_ix + 1
+    
+    positions.append((position, color))
+    
+    return color
+    
+    
 def get_files(rootdir):
     for root, dirs, files in os.walk(rootdir):
         for filename in files:
@@ -482,10 +559,10 @@ def main(input_file_name):
     #if (os.path.isdir(dir)):
     (fig_name, ext) = os.path.splitext(input_file_name)
 
-    plt.legend(labels, loc='upper right')
+    #plt.legend(labels, loc='upper right')
 
     #plt.savefig(os.path.join(dir, 'slope.png'))
-    plt.savefig(fig_name + '.png')
+    #plt.savefig(fig_name + '.png')
     plt.show()
 
 if __name__ == "__main__":
