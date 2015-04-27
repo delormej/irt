@@ -39,7 +39,7 @@ class ChartColor:
 #
 # Plots an array of PositionDataPoint.
 #
-def plot_magonly_linear(records):
+def plot_magonly_linear(records, drag, rr):
     parser = PositionParser()
     fit = CalibrationFit()
     clr = ChartColor()
@@ -53,6 +53,8 @@ def plot_magonly_linear(records):
         valid.append(ix)
         records[ix]['power'] = power
         records[ix]['speed'] = speed
+        records[ix]['magonly_power'] = power - fit.magoff_power(speed * 0.44704, drag, rr)        
+        
         #if records['position'][ix] < 1600:
                 #print(ix, records['position'][ix], speed, records[ix]['speed_mps'], power)
     
@@ -61,18 +63,19 @@ def plot_magonly_linear(records):
     for k, g in groupby(data, keyfunc):
         items = list(g)
         if k < 1600:
-            speed = [x['speed'] for x in items]
-            power = [x['power'] for x in items]
+            speed_mps = [x['speed_mps'] for x in items]
+            power = [x['magonly_power'] for x in items]
             color = clr.get_color(k)
-            plt.scatter( speed, power, color=color, label=(('Position: %i' % (k))), marker='o' )
+            plt.scatter( speed_mps, power, color=color, label=(('Position: %i' % (k))), marker='o' )
             
             # try a linear fit of speed / magonly watts.
-            slope, intercept, speed_new, power_new = fit.fit_lin_regress(speed, power)
+            slope, intercept, speed_new, power_new = fit.fit_lin_regress(speed_mps, power)
             plt.plot(speed_new, power_new, color=color, linestyle='--')
+            print("position, slope, intercept", k, slope, intercept)
 
     plt.grid(b=True, which='both', color='0.65', linestyle='-')
     plt.axhline(y=0, c='black', linewidth=2)
-    plt.xlabel('Speed (mph)')
+    plt.xlabel('Speed (mps)')
     plt.ylabel('Mag Only Power')
     plt.legend()
     
@@ -83,7 +86,7 @@ def plot_magonly_linear(records):
 def plot_ride(records):
     parser = PositionParser()
 
-    ma_speed = parser.speed_moving_average(records['speed'], 15)
+    ma_speed = parser.speed_moving_average(records['speed'], 90)
     ma_power30 = parser.moving_average(records['power'], 30)
     ma_power10 = parser.moving_average(records['power'], 5)
     ma_power_est30 = parser.moving_average(records['power_est'], 30)
@@ -106,7 +109,7 @@ def plot_ride(records):
     ax1.plot(time, records['speed'])
     ax1.set_ylim(7, 30)
 
-    ax1.plot(time, ma_speed)
+    ax1.plot(time, ma_speed, color='g')
 
     ax2.plot(time, records['position'], color='r')
     ax2.set_ylim(800, 1700)
@@ -137,7 +140,11 @@ def main(file_name):
     else:
         data = parser.parse(file_name)
     
-    plot_magonly_linear(data)
+    util = Util()
+    
+    drag, rr, device_id = util.read_calibration(file_name)
+    
+    plot_magonly_linear(data, drag, rr)
     plot_ride(data)
     plt.show()        
         

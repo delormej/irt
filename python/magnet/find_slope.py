@@ -80,7 +80,7 @@ def fit_linear(positions):
 def get_position_data():
 	# loads slope & intercept for each position.
 	positions = []
-	data = np.loadtxt('position_slope_intercept.csv', delimiter=',', comments='#')
+	data = np.loadtxt('data4.txt', delimiter=',', comments='#')
 	
 	for r in data:
 		p = position()

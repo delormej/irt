@@ -67,6 +67,7 @@ class CalibrationFit:
         slope, intercept, r_val, p_val, stderr = stats.linregress(np.asarray(speed), np.asarray(power))
             
         speed_new = np.arange(5,30)
+        speed_new = speed_new * 0.44704
         power_new = lambda x: x * slope + intercept
         
         return slope, intercept, speed_new, power_new(speed_new)

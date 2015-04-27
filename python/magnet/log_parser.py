@@ -159,7 +159,7 @@ class PositionParser:
     # crosses the shorter moving average.
     #
     def power_ma_crossovers(self, records):
-        power = records['magonly_power']
+        power = records['power']
         
         ma_speed = self.speed_moving_average(records['speed'], 15)
         ma_long = self.moving_average(power, 15)
@@ -305,7 +305,7 @@ class PositionParser:
                 magonly_power = 0
                 
             result.append(magonly_power)
-        
+            
         return result
 
     #
@@ -314,16 +314,16 @@ class PositionParser:
     def init_mag(self):
         
         low_speed = 15 * 0.44704
-        low_a = 8.8494476121e-07
-        low_b = -0.00240207003171
-        low_c = 1.39836168772
-        low_d = 329.707200358
+        low_a = 1.62946401435e-06
+        low_b = -0.00558189016886
+        low_c = 5.723209061
+        low_d = -1523.65893615
         
         high_speed = 25 * 0.44704
-        high_a = 2.04928870618e-06
-        high_b = -0.0061578610697
-        high_c = 4.94991737943
-        high_d = -468.940164046
+        high_a = 2.31240494007e-06
+        high_b = -0.00791440790836
+        high_c = 7.9667554644
+        high_d = -1946.53115467
         
         mag.set_coeff(low_speed, 
             low_a, 
