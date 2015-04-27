@@ -312,18 +312,19 @@ class PositionParser:
     # Initializes the co-efficients for magnet power.
     #
     def init_mag(self):
-        
+        #15 y = x^3 + x^2 + x + 
         low_speed = 15 * 0.44704
-        low_a = 1.62946401435e-06
-        low_b = -0.00558189016886
-        low_c = 5.723209061
-        low_d = -1523.65893615
+        low_a = 1.46179331759e-06
+        low_b = -0.00472883434529
+        low_c = 4.50674038105
+        low_d = -1046.51947063
         
+        #25 y = x^3 + x^2 + x + 
         high_speed = 25 * 0.44704
-        high_a = 2.31240494007e-06
-        high_b = -0.00791440790836
-        high_c = 7.9667554644
-        high_d = -1946.53115467
+        high_a = 3.1623163384e-06
+        high_b = -0.0104069996404
+        high_c = 10.2953642271
+        high_d = -2683.37101197
         
         mag.set_coeff(low_speed, 
             low_a, 
@@ -398,8 +399,8 @@ class PositionParser:
         if drag == 0 or rr == 0:
             # Perform a calibration against the file.
             drag, rr = self.cal.fit_nonlinear_calibration(self.magoff_records(records))
-            #x = [10.2*0.44704, 15*0.44704, 20.3*0.44704]
-            #y = [91, 124, 166]
+            #x = [11*0.44704, 15*0.44704, 20.1*0.44704, 25*0.44704]
+            #y = [95, 137, 192, 252]
             #drag, rr = self.cal.fit_bike_science(x, y)
 
         print("drag,rr:", drag, rr)
