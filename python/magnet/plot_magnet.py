@@ -39,27 +39,16 @@ class ChartColor:
 #
 # Plots an array of PositionDataPoint.
 #
-def plot_magonly_linear(records, drag, rr):
+def plot_magonly_linear(records):
     parser = PositionParser()
     fit = CalibrationFit()
     clr = ChartColor()
     
     plt.subplot(121)
     plt.title('Linear Magnet Power')
-    
-    valid = []
-    
-    for ix, power, speed in parser.power_ma_crossovers(records):
-        valid.append(ix)
-        records[ix]['power'] = power
-        records[ix]['speed'] = speed
-        records[ix]['magonly_power'] = power - fit.magoff_power(speed * 0.44704, drag, rr)        
-        
-        #if records['position'][ix] < 1600:
-                #print(ix, records['position'][ix], speed, records[ix]['speed_mps'], power)
-    
+   
     keyfunc = lambda x: x['position']
-    data = sorted(records[valid], key=keyfunc)
+    data = sorted(records, key=keyfunc)
     for k, g in groupby(data, keyfunc):
         items = list(g)
         if k < 1600:
@@ -125,8 +114,6 @@ def plot_ride(records):
     
     for ix, avg_power, avg_speed in parser.power_ma_crossovers(records):
         plt.scatter(time[ix], avg_power)
-
-    plt.show()
     
 #
 # Main entry point to parse a file.
@@ -136,16 +123,15 @@ def main(file_name):
     data = []
     
     if os.path.isdir(file_name):
-        data = parser.parse_multiple(file_name)
+        mag_data = parser.parse_multiple(file_name)
+        plot_magonly_linear(mag_data)
     else:
         data = parser.parse(file_name)
-    
-    util = Util()
-    
-    drag, rr, device_id = util.read_calibration(file_name)
-    
-    plot_magonly_linear(data, drag, rr)
-    plot_ride(data)
+        plot_ride(data)
+        
+        mag_data = parser.parse_magdata(file_name)
+        plot_magonly_linear(mag_data)
+   
     plt.show()        
         
 if __name__ == "__main__":
