@@ -320,12 +320,6 @@ class PositionParser:
         
         positions = fs.get_position_data()
         values = fs.fit_3rd_poly(positions)
-        """
-[(10, array([ -3.01904366e-12,   1.71079155e-08,  -3.77162970e-05,  4.05289009e-02,  -2.15718725e+01,   4.77771480e+03])), 
- (15, array([ -2.35669382e-12,   1.11676725e-08,  -1.83936624e-05,  1.13010366e-02,  -9.23325540e-01,  -6.00964020e+02])), 
- (20, array([ -1.69434399e-12,   5.22742936e-09,   9.28972322e-07, -1.79268277e-02,   1.97252215e+01,  -5.97964284e+03])), 
- (25, array([ -1.03199415e-12,  -7.12813721e-10,   2.02516070e-05, -4.71546920e-02,   4.03737685e+01,  -1.13583217e+04]))]
-        """
         
         low_speed = values[1][0]*0.44704
         low_a = values[1][1][0]
@@ -339,24 +333,6 @@ class PositionParser:
         high_c = values[3][1][2]
         high_d = values[3][1][3]
         
-        """
-        low_speed = 15 * 0.44704
-        low_a = 1.41260098255e-11
-        low_b = -8.57621626418e-08
-        low_c = 0.000206564406769
-        low_d = -0.245741070668
-        low_e = 143.288022217
-        low_f = -32262.2922275
-        
-        high_speed = 25 * 0.44704
-        high_a = 1.02869966634e-11
-        high_b = -6.49259256372e-08
-        high_c = 0.00016329768474
-        high_d = -0.203016701381
-        high_e = 123.005780913
-        high_f = -28270.8112326
-        """
-        
         mag.set_coeff(low_speed, 
             low_a, 
             low_b, 
@@ -367,6 +343,11 @@ class PositionParser:
             high_b, 
             high_c,
             high_d)
+
+        print(values[1][0], values[1][1][0], values[1][1][1], values[1][1][2], values[1][1][3])
+        print(values[3][0], values[3][1][0], values[3][1][1], values[3][1][2], values[3][1][3])
+        
+        return values
 
     #
     # Calculates power based coast down fit (drag & rr), speed and magnet position.

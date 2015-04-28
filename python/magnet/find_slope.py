@@ -59,7 +59,7 @@ def fit_3rd_poly(positions):
 		f, coeff = fit_polynomial(servo_pos, power, c)
 		values.append((mph, coeff))
 
-		print(mph, f)
+		#print(mph, f)
 		
 		#print(p.intercept)
 		
