@@ -22,20 +22,13 @@
 #define MAG_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define COEFF_COUNT							4u				// Cubic poynomial has 4 coefficients.
 #define MAGNET_POSITION_MODEL_MIN			1500u			// Represents the minimum position the 3r order polynomial supports.
 															// The position between MAGNET_POSITION_MIN_RESISTANCE and this is linear.
 
 // Coefficients used for polynomial interpolation.
-static poly_coeff_t low_speed = { 
-	.speed_mps = 10.0 * 0.44704,
-	.coeff = { 0.0f, 0.0f, 0.0f, 0.0f }
-};
+static poly_coeff_t low_speed; 
 
-static poly_coeff_t high_speed = {
-	.speed_mps = 19.0 * 0.44704,
-	.coeff = { 0.0f, 0.0f, 0.0f, 0.0f }
-};
+static poly_coeff_t high_speed;
 															
 /**@brief	Sets the cofficients for the 3rd order polynomial.
  *
@@ -108,12 +101,48 @@ static uint16_t position_linear(float speed_mps, float mag_watts)
 	return position;
 }
 
+/**@brief	Calculates power for given set of coefficients at magnet position.
+ *
+ */
+float static position_power(poly_coeff_t* coeff, uint16_t position)
+{
+	float watts =
+		coeff->coeff[0] * pow(position, 5) +
+		coeff->coeff[1] * pow(position, 4) +
+		coeff->coeff[2] * pow(position, 3) +
+		coeff->coeff[3] * pow(position, 2) +
+		coeff->coeff[4] * position +
+		coeff->coeff[5];		
+		
+	return watts;
+}
+
+/**@brief	Performs the internal computation of power as a result of interpolating
+ *			power between low and high speeds for a given position.
+ */
+float static calcluate_power(float speed_mps, uint16_t position)
+{
+	#define LOW_SPEED_MPS low_speed.speed_mps
+	#define HIGH_SPEED_MPS high_speed.speed_mps
+
+	float low_speed_power = position_power(&low_speed, position);
+	float high_speed_power = position_power(&high_speed, position);
+	
+	// A couple of optimization ideas (once this works):
+	// 1) For the purposes of calculations, power should always be an uint16_t
+	// 2) Speed (mps) should only be relevant to two decimals, so multiple by 100 to work with uint16_t
+	float power = low_speed_power + 
+		((speed_mps - LOW_SPEED_MPS) / (HIGH_SPEED_MPS - LOW_SPEED_MPS)) *
+		(high_speed_power - low_speed_power);
+	
+	return power;
+}
+
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
  *			position.  This is the user mag position, not actual position.
  */
 float magnet_watts(float speed_mps, uint16_t position)
 {
-	float coeff[COEFF_COUNT];
 	float watts;
 	uint16_t linear_position = 0;
 
@@ -140,16 +169,10 @@ float magnet_watts(float speed_mps, uint16_t position)
 		linear_position = position;
 		position = MAGNET_POSITION_MODEL_MIN;
 	}
-
-	// Determine the curve for the speed.
-	curve_coeff(speed_mps, coeff);
-
-	watts =
-		coeff[0] * pow(position, 3) +
-		coeff[1] * pow(position, 2) +
-		coeff[2] * position +
-		coeff[3];
-
+	
+	// Non-linear calculation of power by speed and position.
+	watts = calcluate_power(speed_mps, position);
+	
 	if (linear_position > 0)
 	{
 		// We're at the bottom range, so use linear equation.
@@ -164,6 +187,9 @@ float magnet_watts(float speed_mps, uint16_t position)
  */
 uint16_t magnet_position(float speed_mps, float mag_watts)
 {
+	// this doesn't work now that we've switched to 5th order poly.
+	return 0;
+	
 	float coeff[COEFF_COUNT];
 
 	// A set of math-intensive formula friendly names.

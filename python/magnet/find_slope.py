@@ -11,11 +11,11 @@ class position:
 
 def fit_polynomial(x, y, color):
 	x_new = np.arange(800, 1600, 100)
-	coefficients = np.polyfit(x, y, 3)
+	coefficients = np.polyfit(x, y, 5)
 	polynomial = np.poly1d(coefficients)
 	ys = polynomial(x_new)
 	# y = ax^2 + bx + c
-	f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
+	f = ("y = %s, %s, %s, %s, %s, %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3], coefficients[4], coefficients[5]))
 	#print(r)
 	plt.subplot(2, 1, 1)
 	plt.plot(x_new, ys, linestyle='--', color=color)
