@@ -22,7 +22,7 @@ namespace IRT_GUI.Simulation
 
             m_ergMode = erg;
             BindGridColumns();
-            Load();
+            LoadChart();
 
             m_ergMode.ResistanceStepChange += erg_ResistanceStepChange;
             m_ergMode.Finished += erg_Finished;
@@ -35,29 +35,39 @@ namespace IRT_GUI.Simulation
             colDuration.DataPropertyName = "Duration";
             colInstructions.DataPropertyName = "Comments";
             colTargetValue.DataPropertyName = "Watts";
+
+            BindingSource bs = new BindingSource();
+
+            if (m_ergMode.Steps != null)
+            {
+                foreach (var step in m_ergMode.Steps)
+                {
+                    bs.Add(step);
+                }
+            }
+            else
+            {
+                bs.Add(new ResistanceStep() { Duration = 1, Comments = "Default", Type = ResistanceType.Erg, Watts = 100 });
+            }
+
+            dataGridView1.DataSource = bs;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
         }
 
-        private void Load()
+        private void LoadChart()
         {
             chart1.Series.Clear();
             Series series = chart1.Series.Add("ErgTarget");
             series.ChartType = SeriesChartType.Line;
 
-            BindingSource bs = new BindingSource();
+            chart1.DataSource = dataGridView1.DataSource;
+            series.XValueMember ="ElapsedEnd";
+            series.YValueMembers = "Watts";
 
-            foreach (var step in m_ergMode.Steps)
-            {
-                series.Points.AddXY(step.ElapsedStart, step.Watts);
-                series.Points.AddXY(step.ElapsedEnd, step.Watts);
-                bs.Add(step);
-            }
-
-            dataGridView1.DataSource = bs;
-
+            chart1.DataBind();
         }
 
         private void AddContextMenu()
