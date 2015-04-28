@@ -47,6 +47,7 @@ def plot_magonly_linear(records):
     plt.subplot(121)
     plt.title('Linear Magnet Power')
    
+   # Group data by position.
     keyfunc = lambda x: x['position']
     data = sorted(records, key=keyfunc)
     for k, g in groupby(data, keyfunc):
@@ -58,9 +59,12 @@ def plot_magonly_linear(records):
             plt.scatter( speed_mps, power, color=color, label=(('Position: %i' % (k))), marker='o' )
             
             # try a linear fit of speed / magonly watts.
-            slope, intercept, speed_new, power_new = fit.fit_lin_regress(speed_mps, power)
-            plt.plot(speed_new, power_new, color=color, linestyle='--')
-            print("position, slope, intercept", k, slope, intercept)
+            try:
+                slope, intercept, speed_new, power_new = fit.fit_lin_regress(speed_mps, power)
+                plt.plot(speed_new, power_new, color=color, linestyle='--')
+                print("position, slope, intercept", k, slope, intercept)
+            except:
+                print("couldn't solve for position:", k)
 
     plt.grid(b=True, which='both', color='0.65', linestyle='-')
     plt.axhline(y=0, c='black', linewidth=2)
