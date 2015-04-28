@@ -75,6 +75,10 @@ namespace IntervalParser
         public ResistanceStep[] Steps { get { return m_steps; } }
         public float Seconds { get { return m_seconds; } }
 
+        public ErgMode()
+        {
+        }
+
         public ErgMode(ResistanceStep[] steps)
         {
             m_steps = steps;

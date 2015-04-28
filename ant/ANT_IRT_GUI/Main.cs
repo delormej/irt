@@ -2502,7 +2502,17 @@ namespace IRT_GUI
 
         private void LaunchErgMode(string filename)
         {
-            ErgMode erg = ErgMode.FromFile(filename);
+            ErgMode erg = null;
+
+            if (filename == null)
+            {
+                erg = new ErgMode();
+            }
+            else
+            {
+                ErgMode.FromFile(filename);
+            }
+            
             ErgForm form = new ErgForm(erg);
             form.Show();
         }
@@ -2541,7 +2551,9 @@ namespace IRT_GUI
             dlg.CheckFileExists = true;
             dlg.Multiselect = false;
 
-            if (dlg.ShowDialog() == DialogResult.OK)
+            var dlgResult = dlg.ShowDialog();
+
+            if (dlgResult == DialogResult.OK)
             {
                 try
                 {
@@ -2570,6 +2582,10 @@ namespace IRT_GUI
                 {
                     Cursor.Current = Cursors.Default;
                 }
+            }
+            else if (dlgResult == DialogResult.Cancel && mode == ResistanceMode.Erg)
+            {
+                LaunchErgMode(null);
             }
         }
 
