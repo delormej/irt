@@ -33,21 +33,25 @@ class Util:
         device_id = 0
         drag = 0
         rr = 0
+        offset = 0
         
         try:
             with open(file_name, 'r') as f:
                 for row in reversed(list(csv.reader(f))):
+                    if row[0] == 'AddServoOffset':
+                        offset = int(row[1])
                     if row[0] == 'RR':
                         rr = float(row[1])
                     if row[0] == 'Drag':
                         drag = float(row[1])
                     if row[0] == 'DeviceID':
                         device_id = int(row[1])
+                        # when we get here we've read all the config data
                         break
         except:
             print("Unable to parse calibration.")
                         
-        return drag, rr, device_id
+        return drag, rr, offset, device_id
     
     #
     # Opens the log file and returns arrays: speed (mph), power, servo position.
@@ -399,7 +403,7 @@ class PositionParser:
         cal = fit.CalibrationFit()
         
         data = self.parse(file)
-        drag, rr, device_id = util.read_calibration(file)
+        drag, rr, offset, device_id = util.read_calibration(file)
         
         valid = []
         
@@ -423,7 +427,7 @@ class PositionParser:
         util = Util()
         
         # Read configuration values
-        drag, rr, device_id = util.read_calibration(file_name)
+        drag, rr, servo_offset, device_id = util.read_calibration(file_name)
                 
         # Read all data.
         records = util.open(file_name)
@@ -432,6 +436,15 @@ class PositionParser:
         speed_mps = records['speed'] * 0.44704
         records = append_fields(records, 'speed_mps', speed_mps, usemask=False)
 
+        def offset(x):
+            if x < 2000: 
+                return x+servo_offset
+            else:
+                return x
+        
+        # Implement a servo offset:
+        records['position'] = [offset(x) for x in records['position']]
+        
         if drag == 0 or rr == 0:
             # Perform a calibration against the file.
             drag, rr = self.cal.fit_nonlinear_calibration(self.magoff_records(records))
