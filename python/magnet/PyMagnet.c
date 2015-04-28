@@ -56,24 +56,32 @@ static PyObject* PyMagnet_set_coeff(PyObject* self, PyObject* args)
 		low_b,
 		low_c,
 		low_d,
+		low_e,
+		low_f,
 		high_speed_mps, 
 		high_a,
 		high_b,
 		high_c,
-		high_d;
+		high_d,
+		high_e,
+		high_f;
 	
 	// Parse the python arguments.
-	PyArg_ParseTuple(args, "ffffffffff", 
+	PyArg_ParseTuple(args, "ffffffffffffff", 
 		&low_speed_mps, 
 		&low_a,
 		&low_b,
 		&low_c,
 		&low_d,
+		&low_e,
+		&low_f,
 		&high_speed_mps, 
 		&high_a,
 		&high_b,
 		&high_c,
-		&high_d		
+		&high_d,
+		&high_e,
+		&high_f
 		);
 	
 	// Build the low and high speed coefficient structures.
@@ -83,6 +91,8 @@ static PyObject* PyMagnet_set_coeff(PyObject* self, PyObject* args)
 	low.coeff[1] = low_b;
 	low.coeff[2] = low_c;
 	low.coeff[3] = low_d;
+	low.coeff[4] = low_e;
+	low.coeff[5] = low_f;
 	
 	poly_coeff_t high;
 	high.speed_mps = high_speed_mps;
@@ -90,6 +100,9 @@ static PyObject* PyMagnet_set_coeff(PyObject* self, PyObject* args)
 	high.coeff[1] = high_b;
 	high.coeff[2] = high_c;
 	high.coeff[3] = high_d;
+	high.coeff[4] = high_e;
+	high.coeff[5] = high_f;
+	
 	
 	// Call the actual magnet module function.
 	magnet_set_coeff(low, high);
