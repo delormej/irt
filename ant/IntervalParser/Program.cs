@@ -17,6 +17,9 @@ namespace IntervalParser
     // Linked list of steps.
     public class ResistanceStep
     {
+        private float m_start = 0.0F;
+        private float m_duration = 0.0F;
+
         public ResistanceStep() {}
 
         public ResistanceType Type = ResistanceType.Erg;
@@ -24,41 +27,39 @@ namespace IntervalParser
         public int Watts { get; set; }
         
         public string Comments { get; set; }
-        
-        public float ElapsedStart 
+
+        public float ElapsedStart
         {
-            get
-            {
-                if (Previous != null)
-                {
-                    return Previous.ElapsedEnd; 
-                }
-                else
-                {
-                    return 0;
-                }
-            }
+            get { return m_start; }
+            set { m_start = value; }
         }
 
         public float ElapsedEnd
         {
             get
             {
-                return ElapsedStart + Duration;
+                return m_start + m_duration;
             }
         }
 
-        public float Duration { get; set; }
-
-        public ResistanceStep Previous { get; set; }
-
-        public static ResistanceStep Create(ResistanceStep last, float durationMin)
+        public float Duration 
         {
-            ResistanceStep next = new ResistanceStep();
-            next.Duration = durationMin;
-            next.Previous = last;
+            get { return m_duration; }
+            set { m_duration = value; }
+        }
+
+        public static ResistanceStep Create(float startMin, float durationMin)
+        {
+            ResistanceStep step = new ResistanceStep();
+            step.Duration = durationMin;
+            step.ElapsedStart = startMin;
             
-            return next;
+            return step;
+        }
+
+        public ResistanceStep Copy()
+        {
+            return this.MemberwiseClone() as ResistanceStep;
         }
     }
 
@@ -164,7 +165,7 @@ namespace IntervalParser
                     float durationMin = 0.0f;
                     float.TryParse(vals[0], out durationMin);
 
-                    var entry = ResistanceStep.Create(list.LastOrDefault(), durationMin);
+                    var entry = ResistanceStep.Create(list.LastOrDefault().ElapsedEnd, durationMin);
                     int watts;
                     int.TryParse(vals[1], out watts);
                     entry.Watts = watts;
@@ -178,7 +179,7 @@ namespace IntervalParser
             return list;
         }
 
-        public static void WriteOuput(string filename, int ftp, List<ResistanceStep> list)
+        public static void WriteOuput(string filename, int ftp, IEnumerable<ResistanceStep> steps)
         {
             const string COURSE_HEADER = "[COURSE HEADER]\r\n" +
                 "VERSION=2\r\n" +
@@ -198,7 +199,7 @@ namespace IntervalParser
             StringBuilder formatted = new StringBuilder();
             formatted.AppendFormat(COURSE_HEADER, filename, filename, ftp);
 
-            foreach (var item in list)
+            foreach (var item in steps)
             {
                 formatted.AppendFormat(COURSE_LINE,
                     item.ElapsedStart,
@@ -210,7 +211,7 @@ namespace IntervalParser
 
             formatted.Append(COURSE_TEXT_START);
 
-            foreach (var item in list)
+            foreach (var item in steps)
             {
                 if (item.Comments == null)
                     continue;

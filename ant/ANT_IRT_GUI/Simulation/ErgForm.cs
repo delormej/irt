@@ -105,6 +105,7 @@ namespace IRT_GUI.Simulation
 
             foreach (var step in steps)
             {
+                step.ElapsedStart = 0;
                 bs.Add(step);
             }
         }
@@ -122,19 +123,32 @@ namespace IRT_GUI.Simulation
 
         private void button2_Click(object sender, EventArgs e)
         {
-            List<ResistanceStep> steps = new List<ResistanceStep>();
+            var steps = new List<ResistanceStep>();
 
-            foreach (DataGridViewRow row in this.dataGridView1.Rows)
+            var source = from row in dataGridView1.Rows.Cast<DataGridViewRow>()
+                        orderby row.Index
+                        select row.DataBoundItem as ResistanceStep;
+
+            float lastEnd = 0.0f;
+
+            foreach (ResistanceStep step in source)
             {
-                ResistanceStep step = row.DataBoundItem as ResistanceStep;
                 if (step != null)
                 {
-                    step.Previous = steps.LastOrDefault();
-                    steps.Add(step);
+                    // We must create a copy here, why? Something funky happens if we don't.
+                    ResistanceStep copy = step.Copy();
+
+                    copy.ElapsedStart = lastEnd;
+                    lastEnd = copy.ElapsedEnd;
+                    System.Diagnostics.Debug.Print("Start: {0}, End: {1}, Duration: {2}",
+                        step.ElapsedStart, step.ElapsedEnd, step.Duration);
+                    steps.Add(copy);
                 }
             }
 
-            Parser.WriteOuput("output.txt", 300, steps);
+            int ftp = int.Parse(txtFtp.Text);
+
+            Parser.WriteOuput("output.txt", ftp, steps);
         }
     }
 }
