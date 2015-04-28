@@ -56,6 +56,11 @@ namespace IntervalParser
             
             return step;
         }
+
+        public ResistanceStep Copy()
+        {
+            return this.MemberwiseClone() as ResistanceStep;
+        }
     }
 
     public class ErgMode

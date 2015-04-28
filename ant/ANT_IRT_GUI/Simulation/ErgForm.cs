@@ -135,9 +135,14 @@ namespace IRT_GUI.Simulation
             {
                 if (step != null)
                 {
-                    step.ElapsedStart = lastEnd;
-                    lastEnd = step.ElapsedEnd;
-                    steps.Add(step);
+                    // We must create a copy here, why? Something funky happens if we don't.
+                    ResistanceStep copy = step.Copy();
+
+                    copy.ElapsedStart = lastEnd;
+                    lastEnd = copy.ElapsedEnd;
+                    System.Diagnostics.Debug.Print("Start: {0}, End: {1}, Duration: {2}",
+                        step.ElapsedStart, step.ElapsedEnd, step.Duration);
+                    steps.Add(copy);
                 }
             }
 
