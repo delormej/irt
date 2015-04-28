@@ -352,6 +352,7 @@ namespace IRT_GUI
                 m_dataPoint.TargetLevel != message.Level)
             {
                 ResetWatchClock();
+                InitMovingAverage((int)numMovingAvgSec.Value);
             }
 
             m_dataPoint.ServoPosition = message.ServoPosition;
