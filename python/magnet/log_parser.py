@@ -33,15 +33,20 @@ class Util:
         drag = 0
         rr = 0
         
-        with open(file_name, 'r') as f:
-            for row in reversed(list(csv.reader(f))):
-                if row[0] == 'RR':
-                    rr = float(row[1])
-                if row[0] == 'Drag':
-                    drag = float(row[1])
-                if row[0] == 'DeviceID':
-                    device_id = int(row[1])
-                    return drag, rr, device_id
+        try:
+            with open(file_name, 'r') as f:
+                for row in reversed(list(csv.reader(f))):
+                    if row[0] == 'RR':
+                        rr = float(row[1])
+                    if row[0] == 'Drag':
+                        drag = float(row[1])
+                    if row[0] == 'DeviceID':
+                        device_id = int(row[1])
+                        break
+        except:
+            print("Unable to parse calibration.")
+                        
+        return drag, rr, device_id
     
     #
     # Opens the log file and returns arrays: speed (mph), power, servo position.
@@ -154,7 +159,7 @@ class PositionParser:
     # crosses the shorter moving average.
     #
     def power_ma_crossovers(self, records):
-        power = records['magonly_power']
+        power = records['power']
         
         ma_speed = self.speed_moving_average(records['speed'], 15)
         ma_long = self.moving_average(power, 15)
@@ -357,6 +362,31 @@ class PositionParser:
         
         return no_mag_watts + mag_watts        
     
+    #
+    # Returns only the cleaned up magnet position data.
+    #
+    def parse_magdata(self, file):
+        util = Util()
+        parser = PositionParser()
+        cal = fit.CalibrationFit()
+        
+        data = self.parse(file)
+        drag, rr, device_id = util.read_calibration(file)
+        
+        valid = []
+        
+        for ix, power, speed in parser.power_ma_crossovers(data):
+            # don't take any data less than 7 mph
+            if data[ix]['speed_mps'] > 4:
+                valid.append(ix)
+                data[ix]['power'] = power
+                data[ix]['speed'] = speed
+                data[ix]['magonly_power'] = power - cal.magoff_power(speed * 0.44704, drag, rr)      
+                
+                #if data[ix]['position'] == 1200:
+                    #print(data[ix]['position'], data[ix]['speed_mps'], data[ix]['magonly_power'])
+            
+        return data[valid]
     
     #
     # Extracts stable [position, speed, watts, device_id] from a log file.        
@@ -377,11 +407,16 @@ class PositionParser:
         if drag == 0 or rr == 0:
             # Perform a calibration against the file.
             drag, rr = self.cal.fit_nonlinear_calibration(self.magoff_records(records))
+            #x = [10.2*0.44704, 15*0.44704, 20.3*0.44704]
+            #y = [91, 124, 166]
+            #drag, rr = self.cal.fit_bike_science(x, y)
 
         print("drag,rr:", drag, rr)
         
         mag_col = self.magonly(records, drag, rr)
         records = append_fields(records, 'magonly_power', mag_col, usemask=False)
+        
+        
         
         # TODO: move this out of parse.
         # Calculate estimated power.
@@ -425,17 +460,20 @@ class PositionParser:
         """
         
      #
-     # Parses a directory of *.csv log files.
+     # Parses a directory of *.csv log files.  This only looks at plotting linear
+     # magnet data.
      #
     def parse_multiple(self, rootdir):
         records = np.ndarray(0)
         util = Util()
         for file in util.get_csv_files(rootdir):
             print("parsing: ", file)
+            
+            data = self.parse_magdata(file)
+            
             if len(records) == 0:
-                records = self.parse(file)
+                records = data
             else:
-                new_records = self.parse(file)
-                records = np.concatenate((records, new_records), axis=0)
+                records = np.concatenate((records, data), axis=0)
   
         return records
