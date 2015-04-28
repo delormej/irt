@@ -118,7 +118,15 @@ def plot_ride(records):
     
     for ix, avg_power, avg_speed in parser.power_ma_crossovers(records):
         plt.scatter(time[ix], avg_power)
+        #plt.errorbar(time[ix], avg_power, yerr=records['power_err'][ix])
+   
+def calc_stdev(records):
+    def reject_outliers(data, m=30):
+        return data[abs(data - np.mean(data)) < m * np.std(data)]
     
+    data = reject_outliers(records['power_err'])
+    print("Average Watt Err:", np.mean(data))
+   
 #
 # Main entry point to parse a file.
 #        
@@ -133,13 +141,17 @@ def main(file_name):
         data = parser.parse(file_name)
         plot_ride(data)
         
-        print("sum of error:", sum(data['power_err']))
-        print("stdev:", np.std(data['power_err']))
-        
         mag_data = parser.parse_magdata(file_name)
         plot_magonly_linear(mag_data)
+                
+        #print("sum of error:", sum(mag_data['power_err']))
+        #print("stdev:", np.std(mag_data['power_err']))
+   
+        calc_stdev(mag_data)
    
     plt.show()        
+    
+    
         
 if __name__ == "__main__":
     if (len(sys.argv) > 2):

@@ -332,16 +332,12 @@ class PositionParser:
         low_b = values[1][1][1]
         low_c = values[1][1][2]
         low_d = values[1][1][3]
-        low_e = values[1][1][4]
-        low_f = values[1][1][5]
 
         high_speed = values[3][0]*0.44704
         high_a = values[3][1][0]
         high_b = values[3][1][1]
         high_c = values[3][1][2]
         high_d = values[3][1][3]
-        high_e = values[3][1][4]
-        high_f = values[3][1][5]
         
         """
         low_speed = 15 * 0.44704
@@ -361,21 +357,16 @@ class PositionParser:
         high_f = -28270.8112326
         """
         
-        mag.set_coeff(
-            low_speed, 
+        mag.set_coeff(low_speed, 
             low_a, 
             low_b, 
             low_c, 
             low_d, 
-            low_e,
-            low_f,
             high_speed, 
             high_a, 
             high_b, 
             high_c,
-            high_d,
-            high_e,
-            high_f)
+            high_d)
 
     #
     # Calculates power based coast down fit (drag & rr), speed and magnet position.
