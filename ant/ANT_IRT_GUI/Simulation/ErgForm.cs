@@ -129,12 +129,15 @@ namespace IRT_GUI.Simulation
                 ResistanceStep step = row.DataBoundItem as ResistanceStep;
                 if (step != null)
                 {
-                    step.Previous = steps.LastOrDefault();
+                    if (steps.Count > 0)
+                        step.ElapsedStart = steps.LastOrDefault().ElapsedEnd;
                     steps.Add(step);
                 }
             }
 
-            Parser.WriteOuput("output.txt", 300, steps);
+            int ftp = int.Parse(txtFtp.Text);
+
+            Parser.WriteOuput("output.txt", ftp, steps);
         }
     }
 }

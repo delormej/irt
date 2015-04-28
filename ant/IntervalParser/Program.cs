@@ -26,19 +26,7 @@ namespace IntervalParser
         public string Comments { get; set; }
         
         public float ElapsedStart 
-        {
-            get
-            {
-                if (Previous != null)
-                {
-                    return Previous.ElapsedEnd; 
-                }
-                else
-                {
-                    return 0;
-                }
-            }
-        }
+        { get; set; }
 
         public float ElapsedEnd
         {
@@ -50,15 +38,13 @@ namespace IntervalParser
 
         public float Duration { get; set; }
 
-        public ResistanceStep Previous { get; set; }
-
-        public static ResistanceStep Create(ResistanceStep last, float durationMin)
+        public static ResistanceStep Create(float startMin, float durationMin)
         {
-            ResistanceStep next = new ResistanceStep();
-            next.Duration = durationMin;
-            next.Previous = last;
+            ResistanceStep step = new ResistanceStep();
+            step.Duration = durationMin;
+            step.ElapsedStart = startMin;
             
-            return next;
+            return step;
         }
     }
 
@@ -164,7 +150,7 @@ namespace IntervalParser
                     float durationMin = 0.0f;
                     float.TryParse(vals[0], out durationMin);
 
-                    var entry = ResistanceStep.Create(list.LastOrDefault(), durationMin);
+                    var entry = ResistanceStep.Create(list.LastOrDefault().ElapsedEnd, durationMin);
                     int watts;
                     int.TryParse(vals[1], out watts);
                     entry.Watts = watts;
