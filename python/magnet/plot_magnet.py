@@ -133,6 +133,9 @@ def main(file_name):
         data = parser.parse(file_name)
         plot_ride(data)
         
+        print("sum of error:", sum(data['power_err']))
+        print("stdev:", np.std(data['power_err']))
+        
         mag_data = parser.parse_magdata(file_name)
         plot_magonly_linear(mag_data)
    

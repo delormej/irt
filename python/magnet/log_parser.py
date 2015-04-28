@@ -458,8 +458,6 @@ class PositionParser:
         mag_col = self.magonly(records, drag, rr)
         records = append_fields(records, 'magonly_power', mag_col, usemask=False)
         
-        
-        
         # TODO: move this out of parse.
         # Calculate estimated power.
         #
@@ -471,6 +469,9 @@ class PositionParser:
             power_est_col.append(power_est)
         
         records = append_fields(records, 'power_est', power_est_col, usemask=False)
+        
+        err_col = records['power_est'] - records['power']
+        records = append_fields(records, 'power_err', err_col, usemask=False)
         
         return records
         """
