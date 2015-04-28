@@ -84,7 +84,7 @@ class CalibrationFit:
     #
     def fit_bike_science(self, x, y):
         pars, covar = spo.curve_fit(self.magoff_power, x, y)
-        print('bike', pars)
+        #print('bike', pars)
         #plt.plot(x_new, bike_science_func(x_new1, *pars), 'b+', zorder=100, linewidth=3)
         #labels.append(r'%s' % ('Bike Function'))        
         
@@ -100,7 +100,7 @@ class CalibrationFit:
             raise "Not enough rows to calibrate."
     
         # Only use data where position == 2000
-        #id2000 = [i for i, x in enumerate(records[420:]) if x['position']==2000]
+        id2000 = [i for i, x in enumerate(records[420:]) if x['position']==2000]
     
         """
         Cluster speeds and find the median watts for these speeds.
@@ -108,7 +108,7 @@ class CalibrationFit:
         groups = []
 
         keyfunc = lambda x: float(x['speed_mps'])
-        data = sorted(records, key=keyfunc)
+        data = sorted(records[id2000], key=keyfunc)
         for k, g in groupby(data, keyfunc):
             items = []
             for i in g:
