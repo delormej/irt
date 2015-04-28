@@ -448,11 +448,8 @@ class PositionParser:
         if drag == 0 or rr == 0:
             # Perform a calibration against the file.
             drag, rr = self.cal.fit_nonlinear_calibration(self.magoff_records(records))
-            #x = [10.2*0.44704, 15*0.44704, 20.3*0.44704]
-            #y = [91, 124, 166]
-            
-            #x = [3.79984,5.588,7.15264,9.030208,10.818368,12.51712,14.484096]
-            #y = [27,43,59,79,99,120,148]
+            #x = [8.761984,7.063232,5.677408]
+            #y = [177,154,106]
             #drag, rr = self.cal.fit_bike_science(x, y)
 
 
