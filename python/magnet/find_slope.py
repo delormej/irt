@@ -17,8 +17,8 @@ def fit_polynomial(x, y, color):
 	# y = ax^2 + bx + c
 	f = ("y = %s, %s, %s, %s, %s, %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3], coefficients[4], coefficients[5]))
 	#print(r)
-	plt.subplot(2, 1, 1)
-	plt.plot(x_new, ys, linestyle='--', color=color)
+	#plt.subplot(2, 1, 1)
+	#plt.plot(x_new, ys, linestyle='--', color=color)
 
 	# return the text
 	return f, coefficients
@@ -32,12 +32,13 @@ def get_power(coeff, mps, servo_pos):
 	y = f(servo_pos)
 		
 def fit_3rd_poly(positions):
+	values = []
 	polys = []	
 	colors = iter(['r','g','b','y','c'])
 	labels = []
-	plt.subplot(2, 1, 1)
-	plt.grid(b=True, which='major', color='gray', linestyle='--')
-	plt.ylabel('Watts @ Position by Speed')
+	#plt.subplot(2, 1, 1)
+	#plt.grid(b=True, which='major', color='gray', linestyle='--')
+	#plt.ylabel('Watts @ Position by Speed')
 	# generate speed data 5-25 mph
 	# calculate power for each position
 	for mph in range(10,26,5):
@@ -52,21 +53,23 @@ def fit_3rd_poly(positions):
 			servo_pos.append(p.servo)
 			#print(p.servo, mph, watts)
 			
-		plt.plot(servo_pos, power, color=c)
+		#plt.plot(servo_pos, power, color=c)
 		labels.append(r'%1.1f' % (mph))
 		
 		f, coeff = fit_polynomial(servo_pos, power, c)
+		values.append((mph, coeff))
 
 		print(mph, f)
 		
 		#print(p.intercept)
 		
-	plt.legend(labels, loc='upper right')
+	#plt.legend(labels, loc='upper right')
+	return values
 		
 def fit_linear(positions):
-	plt.subplot(2, 1, 2)
-	plt.ylabel('Watts @ Speed by Servo Position')
-	plt.grid(b=True, which='major', color='gray', linestyle='--')
+	#plt.subplot(2, 1, 2)
+	#plt.ylabel('Watts @ Speed by Servo Position')
+	#plt.grid(b=True, which='major', color='gray', linestyle='--')
 	
 	for p in positions:
 		speed = []
@@ -75,12 +78,12 @@ def fit_linear(positions):
 		for mph in range(5,25,5):
 			speed.append(mph)
 			power.append((mph * 0.44740) * p.slope + p.intercept)
-			plt.plot(speed, power)
+			#plt.plot(speed, power)
 
 def get_position_data():
 	# loads slope & intercept for each position.
 	positions = []
-	data = np.loadtxt('data4.txt', delimiter=',', comments='#')
+	data = np.loadtxt('position_slope_intercept.csv', delimiter=',', comments='#')
 	
 	for r in data:
 		p = position()
@@ -116,11 +119,10 @@ def get_position_data():
 	"""
 	return positions
 
-def main():
+def plot():
 
 	positions = get_position_data()
 	fit_3rd_poly(positions)
 	fit_linear(positions)
 	plt.show()
 	
-main()
