@@ -101,13 +101,11 @@ uint32_t power_calc(user_profile_t* p_profile, irt_context_t* p_meas)
 
 	if (!isnan(p_profile->ca_drag) && !isnan(p_profile->ca_rr))
 	{
-		//PW_LOG("[PW] power_calc: We have ca_drag %.7f, ca_rr: %.7f\r\n",
-		//		mp_profile->ca_drag, mp_profile->ca_rr);
 		/*
-		 * Power equation = (K * v^2) + (v * rr)
+		 * Power equation = ((K * v^2) + rr) * v
 		 */
-		magoff_watts = (p_profile->ca_drag * pow(p_meas->instant_speed_mps, 2)) +
-				p_meas->instant_speed_mps * p_profile->ca_rr;
+		magoff_watts = ( (p_profile->ca_drag * pow(p_meas->instant_speed_mps, 2)) +
+				p_profile->ca_rr ) * p_meas->instant_speed_mps ;
 
 		p_meas->rr_force = (magoff_watts / p_meas->instant_speed_mps);
 	}
