@@ -105,6 +105,7 @@ namespace IRT_GUI.Simulation
 
             foreach (var step in steps)
             {
+                step.ElapsedStart = 0;
                 bs.Add(step);
             }
         }
@@ -122,15 +123,20 @@ namespace IRT_GUI.Simulation
 
         private void button2_Click(object sender, EventArgs e)
         {
-            List<ResistanceStep> steps = new List<ResistanceStep>();
+            var steps = new List<ResistanceStep>();
 
-            foreach (DataGridViewRow row in this.dataGridView1.Rows)
+            var source = from row in dataGridView1.Rows.Cast<DataGridViewRow>()
+                        orderby row.Index
+                        select row.DataBoundItem as ResistanceStep;
+
+            float lastEnd = 0.0f;
+
+            foreach (ResistanceStep step in source)
             {
-                ResistanceStep step = row.DataBoundItem as ResistanceStep;
                 if (step != null)
                 {
-                    if (steps.Count > 0)
-                        step.ElapsedStart = steps.LastOrDefault().ElapsedEnd;
+                    step.ElapsedStart = lastEnd;
+                    lastEnd = step.ElapsedEnd;
                     steps.Add(step);
                 }
             }

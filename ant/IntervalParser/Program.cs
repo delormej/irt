@@ -17,6 +17,9 @@ namespace IntervalParser
     // Linked list of steps.
     public class ResistanceStep
     {
+        private float m_start = 0.0F;
+        private float m_duration = 0.0F;
+
         public ResistanceStep() {}
 
         public ResistanceType Type = ResistanceType.Erg;
@@ -24,19 +27,26 @@ namespace IntervalParser
         public int Watts { get; set; }
         
         public string Comments { get; set; }
-        
-        public float ElapsedStart 
-        { get; set; }
+
+        public float ElapsedStart
+        {
+            get { return m_start; }
+            set { m_start = value; }
+        }
 
         public float ElapsedEnd
         {
             get
             {
-                return ElapsedStart + Duration;
+                return m_start + m_duration;
             }
         }
 
-        public float Duration { get; set; }
+        public float Duration 
+        {
+            get { return m_duration; }
+            set { m_duration = value; }
+        }
 
         public static ResistanceStep Create(float startMin, float durationMin)
         {
@@ -164,7 +174,7 @@ namespace IntervalParser
             return list;
         }
 
-        public static void WriteOuput(string filename, int ftp, List<ResistanceStep> list)
+        public static void WriteOuput(string filename, int ftp, IEnumerable<ResistanceStep> steps)
         {
             const string COURSE_HEADER = "[COURSE HEADER]\r\n" +
                 "VERSION=2\r\n" +
@@ -184,7 +194,7 @@ namespace IntervalParser
             StringBuilder formatted = new StringBuilder();
             formatted.AppendFormat(COURSE_HEADER, filename, filename, ftp);
 
-            foreach (var item in list)
+            foreach (var item in steps)
             {
                 formatted.AppendFormat(COURSE_LINE,
                     item.ElapsedStart,
@@ -196,7 +206,7 @@ namespace IntervalParser
 
             formatted.Append(COURSE_TEXT_START);
 
-            foreach (var item in list)
+            foreach (var item in steps)
             {
                 if (item.Comments == null)
                     continue;
