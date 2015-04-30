@@ -119,6 +119,15 @@ namespace IRT.Calibration
             var powerArea = chartCoastdown.ChartAreas.Add("Power");
             powerArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
 
+            // Plot the watts at stable speed.
+            var stablePowerSeries = chartCoastdown.Series.Add("StablePower");
+            stablePowerSeries.ChartArea = "Power";
+            stablePowerSeries.ChartType = SeriesChartType.Point;
+            int stablePoint = stablePowerSeries.Points.AddXY(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
+            stablePowerSeries.Points[stablePoint].MarkerStyle = MarkerStyle.Diamond;
+            stablePowerSeries.Points[stablePoint].MarkerSize = 8;
+            chartCoastdown.Series["StablePower"].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
+
             AddWatts("Watts");
         }
 
@@ -144,12 +153,6 @@ namespace IRT.Calibration
             //chartCoastdown.ChartAreas["Coastdown"].AxisX = chartCoastdown.ChartAreas["Power"].AxisX;
 
             chartCoastdown.Series[seriesName].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
-
-            // Plot the watts at stable speed.
-            int stablePoint = wattSeries.Points.AddXY(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
-            wattSeries.Points[stablePoint].MarkerStyle = MarkerStyle.Star10;
-            wattSeries.Points[stablePoint].MarkerSize = 10;
-            wattSeries.Points[stablePoint].MarkerColor = Color.Gold;
 
             for (double mph = 2; mph < 35; mph++)
             {
