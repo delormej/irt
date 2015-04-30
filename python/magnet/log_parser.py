@@ -3,6 +3,7 @@ import os
 import csv
 import numpy as np, numpy.ma as ma
 from collections import defaultdict
+import itertools
 from itertools import groupby, chain
 import statistics as stats
 from numpy.lib.recfunctions import append_fields
@@ -33,6 +34,7 @@ class LogParser:
         
     def MagOnlyPower(self):
         # Returns array of stable: position, speed, watt records
+        print(len(self.stable_records))
         return self.stable_records;
 
     def PlotRide(self):
@@ -40,7 +42,7 @@ class LogParser:
         # returns chart area... 
         
     def PlotMagnet(self):
-        return 0
+        self.__create_magnet_plot()
         
     # ------------------------------------------------------------------------
     #  Internal methods
@@ -185,13 +187,15 @@ class LogParser:
     
         stable = []
     
-        for i, power, speed in fit.power_ma_crossovers(self.records[420:]):
+        for i, power, speed in fit.power_ma_crossovers(self.records):
             position = self.records[i]['position']
             speed_mps = speed * 0.44704
             stable.append((i, position, speed_mps, power)) 
             
         dtp = np.dtype([('index','i4'), ('position','i4'), ('speed_mps','f4'), ('power','f4')])
         self.stable_records = np.array(stable, dtype=dtp)
+        
+        #print(len(self.records),len(self.stable_records))
 
     def __create_ride_plot(self):
         plt.rc('axes', grid=True)
@@ -234,18 +238,37 @@ class LogParser:
         plt.title('Linear Magnet Power')
         plt.grid(b=True, which='both', color='0.65', linestyle='-')
         plt.axhline(y=0, c='black', linewidth=2)
-        plt.xlabel('Speed (mps)')
+        plt.xlabel('Speed (mph)')
         plt.ylabel('Mag Only Power')
-
-        for p in positions:
-            color = cc.get_color(p)
+        
+        # Draw the model power 
+        model_speed_mps = np.array( [ min(self.stable_records['speed_mps']), max(self.stable_records['speed_mps']) ] )
+        
+        for p in self.positions:
+            position = p[0]
+            slope = p[1]
+            intercept = p[2]
+            ix = p[3]
+            speed = self.stable_records[ix]['speed_mps']
+            power = self.stable_records[ix]['magonly_power']
+        
+            color = cc.get_color(position)
         
             # Scatter plot all stable magonly power values by position.
-            plt.scatter(speed, power, color=color, label=(('Position: %i' % (p))), marker='o')
+            plt.scatter(speed*2.23694, power, color=color, label=(('Position: %i' % (position))), marker='o')
             
             # Draw linear slope/intercept for a given position.
-            lin_power = lambda x: x * slope + interecpt
-            plt.plot(speed, lin_power(speed), color=color, linestyle='--')
+            lin_power = lambda x: x * slope + intercept
+            plt.plot(speed*2.23694, lin_power(speed), color=color, linestyle='--')
+            
+            def mag_watts(speeds):
+                watts = []
+                for s in speeds:
+                    watts.append(mag.watts(s, position))
+                    
+                return watts
+            
+            plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps), color=color, linestyle=':')
         
         plt.legend()
         
