@@ -31,6 +31,7 @@ namespace IRT.Calibration
             m_model = model;
 
             UpdateValues();
+            DrawChart();
             //StartTimer();
         }
 
@@ -117,8 +118,23 @@ namespace IRT.Calibration
             // Second chart with power curve.
             var powerArea = chartCoastdown.ChartAreas.Add("Power");
             powerArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
-            
-            var wattSeries = chartCoastdown.Series.Add("Watts");
+
+            AddWatts("Watts");
+        }
+
+        private void AddWatts(string seriesName)
+        {
+            Series wattSeries = chartCoastdown.Series.FirstOrDefault(x => x.Name == seriesName);
+
+            if (wattSeries != null)
+            {
+                // Remove if already exists.
+                chartCoastdown.Series.Remove(wattSeries);
+            }
+
+            var powerArea = chartCoastdown.ChartAreas["Power"];
+
+            wattSeries = chartCoastdown.Series.Add(seriesName);
             wattSeries.ChartArea = "Power";
             wattSeries.ChartType = SeriesChartType.Spline;
 
@@ -127,7 +143,7 @@ namespace IRT.Calibration
             chartCoastdown.ChartAreas["Power"].AxisX.RoundAxisValues();
             //chartCoastdown.ChartAreas["Coastdown"].AxisX = chartCoastdown.ChartAreas["Power"].AxisX;
 
-            chartCoastdown.Series["Watts"].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
+            chartCoastdown.Series[seriesName].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
 
             // Plot the watts at stable speed.
             int stablePoint = wattSeries.Points.AddXY(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
@@ -146,6 +162,7 @@ namespace IRT.Calibration
                     wattSeries.Points[i].MarkerSize = 5;
                 }
             }
+
         }
 
         private void UpdateValues()
@@ -155,8 +172,6 @@ namespace IRT.Calibration
             this.lblStableSeconds.Text = String.Format("{0:0.0}", m_model.StableSeconds);
             this.txtStableSpeed.Text = String.Format("{0:0.0}", m_model.StableSpeedMps * 2.23694);
             this.txtStableWatts.Text = m_model.StableWatts.ToString();
-
-            DrawChart();
         }
 
         private void btnRecalc_Click(object sender, EventArgs e)
@@ -171,6 +186,7 @@ namespace IRT.Calibration
 
                 m_coastdown.Calculate(m_model);
                 UpdateValues();
+                AddWatts("Recalculated");
             }
         }
 
@@ -188,6 +204,7 @@ namespace IRT.Calibration
         private void btnReset_Click(object sender, EventArgs e)
         {
             UpdateValues();
+            DrawChart();
         }
     }
 }
