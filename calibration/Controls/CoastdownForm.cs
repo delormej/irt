@@ -92,7 +92,7 @@ namespace IRT.Calibration
             series2.ChartType = SeriesChartType.Point;
 
             chartCoastdown.ChartAreas["Coastdown"].AxisY.Minimum = 0;
-            chartCoastdown.ChartAreas["Coastdown"].AxisX.Minimum = 2;
+            chartCoastdown.ChartAreas["Coastdown"].AxisX.Minimum = 0;
 
             chartCoastdown.Legends[0].Docking = Docking.Bottom;
 
@@ -124,11 +124,27 @@ namespace IRT.Calibration
 
             chartCoastdown.ChartAreas["Power"].AxisY.Title = "Power (watts)";
             chartCoastdown.ChartAreas["Power"].AxisX.Title = "Speed (mph)";
+            chartCoastdown.ChartAreas["Power"].AxisX.RoundAxisValues();
+            //chartCoastdown.ChartAreas["Coastdown"].AxisX = chartCoastdown.ChartAreas["Power"].AxisX;
+
+            chartCoastdown.Series["Watts"].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
+
+            // Plot the watts at stable speed.
+            int stablePoint = wattSeries.Points.AddXY(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
+            wattSeries.Points[stablePoint].MarkerStyle = MarkerStyle.Star10;
+            wattSeries.Points[stablePoint].MarkerSize = 10;
+            wattSeries.Points[stablePoint].MarkerColor = Color.Gold;
 
             for (double mph = 2; mph < 35; mph++)
             {
                 var watts = m_coastdown.Watts(mph * 0.44704);
-                wattSeries.Points.AddXY(mph, watts);
+                int i = wattSeries.Points.AddXY(mph, watts);
+
+                if (mph % 5 == 0)
+                {
+                    wattSeries.Points[i].MarkerStyle = MarkerStyle.Circle;
+                    wattSeries.Points[i].MarkerSize = 5;
+                }
             }
         }
 
