@@ -4,6 +4,7 @@ from collections import defaultdict
 from itertools import groupby, chain
 import numpy as np, numpy.ma as ma
 import scipy.optimize as spo
+import scipy.stats as scistat
 import statistics as stats
 import bottleneck
 import itertools
@@ -66,13 +67,9 @@ def fit_lin_theilsen(x,y, sample= "auto", n_samples = 1e7):
 # Fits slope & intercept using a linear regression.
 #
 def fit_lin_regress(speed, power):
-    slope, intercept, r_val, p_val, stderr = stats.linregress(np.asarray(speed), np.asarray(power))
-        
-    speed_new = np.arange(5,30)
-    speed_new = speed_new * 0.44704
-    power_new = lambda x: x * slope + intercept
+    slope, intercept, r_val, p_val, stderr = scistat.linregress(speed, power)
     
-    return slope, intercept, speed_new, power_new(speed_new)
+    return slope, intercept
 
 #
 # Returns power as calculated from calibration (drag & speed_mps) with no
@@ -80,6 +77,20 @@ def fit_lin_regress(speed, power):
 def magoff_power(speed_mps, drag, rr):
     return (( drag*(speed_mps**2) + (rr) ) * speed_mps )    
 
+#
+# Returns the magnet only portion of power by subtracting estimated power at 
+# speed given drag and rolling resistance.
+#
+def magonly_power(speed_mps, power, drag, rr):
+    magoff = magoff_power(speed_mps, drag, rr)
+    magonly_power = power - magoff
+
+    # must by positive
+    if magonly_power < 0:
+        magonly_power = 0    
+        
+    return magonly_power
+    
 #
 # x = speed_mps
 # y = power

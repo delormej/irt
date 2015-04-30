@@ -22,19 +22,26 @@ class LogParser:
         # Runs a calibration fit 
         drag, rr = fit.fit_nonlinear_calibration(self.MagOffPower())
         return drag, rr
-
+    
+    def MagnetFit(self, servo_offset=0):
+        # Fits slope/intercept for each magnet position.
+        return self.positions
+        
     def MagOffPower(self):
         # Returns an array of all stable records where the magnet is off.
-        return self.records[self.magoff_ix]
-        
-    def MagnetFit(self, servo_offset=0):
-        # Returns a series of position, slope, intercepts
-        return 0
+        return self.records[self.__stable_by_position(2000)]
         
     def MagOnlyPower(self):
-        # returns array of stable: position, speed, watt records
-        return list(fit.power_ma_crossovers(self.records))
+        # Returns array of stable: position, speed, watt records
+        return self.stable_records;
 
+    def PlotRide(self):
+        self.__create_ride_plot()
+        # returns chart area... 
+        
+    def PlotMagnet(self):
+        return 0
+        
     # ------------------------------------------------------------------------
     #  Internal methods
     # ------------------------------------------------------------------------
@@ -42,7 +49,8 @@ class LogParser:
     def __init__(self, file_name, drag=0, rr=0, servo_offset=0):
         self.file_name = file_name
         self.records = []
-        self.stable_records = []
+        self.stable_records = []    # index, avg_power, avg_speed for stable data points.
+        self.positions = []         # tuple (position, slope, intercept, stable_records_ix[])
         
         self.drag = drag
         self.rr = rr
@@ -99,21 +107,18 @@ class LogParser:
     def __enrich(self):
 
         # Identify the stable records.
-    
         self.__find_stable()
-        self.magoff_ix = [i for i, x in enumerate(self.records[self.stable_records['index']]) if x['position']==2000]
     
-        # Calibrate if drag & rr are not present.
+        # Calibrate if drag & rr are not present based on stable records.
         if self.drag == 0 or self.rr == 0:
             self.drag, self.rr = self.CalibrationFit()
-
-        # Add speed in meters per second.
-        speed_mps_col = self.records['speed'] * 0.44704
-        self.records = append_fields(self.records, 'speed_mps', speed_mps_col, usemask=False)
-            
-        # Add magnet only power.
-        mag_col = self.__magonly_power()
-        self.records = append_fields(self.records, 'magonly_power', mag_col, usemask=False)
+        
+        # Enrich the stable records with mag only power.
+        magonly_col = self.__stable_magonly_power()
+        self.stable_records = append_fields(self.stable_records, 'magonly_power', magonly_col, usemask=False)
+        
+        # Calculate the slope/intercept of each magnet position.
+        self.__calculate_positions()
         
         # Add power estimate.
         power_est_col = self.__power_estimate()
@@ -122,29 +127,42 @@ class LogParser:
         # Add actual vs. estimate error column.
         err_col = self.records['power_est'] - self.records['power']
         self.records = append_fields(self.records, 'power_err', err_col, usemask=False)
-    
-    # TODO: not sure if this is needed??
-    def __magonly_power(self):
-        result = []
-        
-        for r in self.records:
-            magonly_power = 0
-            
-            position = r['position']  
-            power = r['power']
-            speed_mps = r['speed_mps'] 
-            
-            if position < 1600:
-                magoff = fit.magoff_power(speed_mps, self.drag, self.rr)
-                magonly_power = power - magoff
 
-            if magonly_power < 0:
-                magonly_power = 0
-                
-            result.append(magonly_power)
+    #
+    # Returns a list of valid indexes of stable data by servo position.
+    #
+    def __stable_by_position(self, position):
+        #return [i for i, x in enumerate(self.records[self.stable_records['index']]) if x['position']==position]
+        return [x for x in self.stable_records if x['position'] == position]
         
-        return result
+    def __stable_magonly_power(self):
+        magonly_col = []
         
+        for r in self.stable_records:
+            magonly_power = fit.magonly_power(r['speed_mps'], r['power'], self.drag, self.rr)    
+            magonly_col.append(magonly_power)
+            
+        return magonly_col
+        
+    def __calculate_positions(self):
+        records = []
+        
+        # find all unique servo positions
+        positions, counts = np.unique(self.stable_records['position'], return_counts=True)
+        
+        for i,p in enumerate(positions):
+            # Need at least 2 records.
+            if p >= 1600 or counts[i] < 2:
+                continue
+        
+            ix = [i for i,x in enumerate(self.stable_records) if x['position'] == p]
+            slope, intercept = fit.fit_lin_regress(self.stable_records[ix]['speed_mps'], self.stable_records[ix]['magonly_power'])
+            records.append((p, slope, intercept, ix))
+
+        #dtp = np.dtype([('position','i4'), ('slope','f4'), ('intercept','f4'), ('ix')])
+        #self.positions = np.array(records, dtype=dtp)
+        self.positions = records
+            
     # 
     # Builds a single dimension array, same length as records with power estimate.
     #
@@ -152,7 +170,7 @@ class LogParser:
         power_est_col = []
         
         for r in self.records:
-            power_est = fit.power_estimate(r['speed_mps'], r['position'], self.drag, self.rr)
+            power_est = fit.power_estimate(r['speed'] * 0.44704, r['position'], self.drag, self.rr)
             power_est_col.append(power_est)
         
         return power_est_col       
@@ -168,8 +186,98 @@ class LogParser:
         stable = []
     
         for i, power, speed in fit.power_ma_crossovers(self.records[420:]):
-            stable.append((i,power,speed)) 
+            position = self.records[i]['position']
+            speed_mps = speed * 0.44704
+            stable.append((i, position, speed_mps, power)) 
             
-        dtp = np.dtype([('index','i4'), ('power','f4'),('speed','f4')])
+        dtp = np.dtype([('index','i4'), ('position','i4'), ('speed_mps','f4'), ('power','f4')])
         self.stable_records = np.array(stable, dtype=dtp)
+
+    def __create_ride_plot(self):
+        plt.rc('axes', grid=True)
+        plt.rc('grid', color='0.75', linestyle='-', linewidth=0.5)
+
+        ax1 = plt.subplot(322)
+        plt.title('Speed (mph)')
+        
+        ax2 = plt.subplot(324,sharex=ax1)
+        plt.title('Servo Position')
+        
+        ax3 = plt.subplot(326,sharex=ax1)
+        plt.title('Power')
+
+        time = range(0, len(self.records['speed']), 1)
+        
+        # ax1 = Speed & Servo
+        ax1.plot(time, self.records['speed'])
+        ax1.set_ylim(7, 30)
+
+        # 15 second moving average for speed.
+        ax1.plot(time, fit.speed_moving_average(self.records['speed'], 15), color='g')
+
+        ax2.plot(time, self.records['position'], color='r')
+        ax2.set_ylim(800, 1700)
+
+        ax3.plot(time, self.records['power'], 'r')
+        ax3.plot(time, self.records['power_est'], 'orange', linestyle='--', linewidth=2)
+
+        ax3.plot(time, fit.moving_average(self.records['power'], 30), color='b')
+        ax3.plot(time, fit.moving_average(self.records['power'], 10), color='lightblue')
+        ax3.plot(time, fit.moving_average(self.records['power_est'], 30), color='y')
+
+        ax3.set_ylim(50, 600)
+
+    def __create_magnet_plot(self):
+        cc = ChartColor()
+
+        plt.subplot(121)
+        plt.title('Linear Magnet Power')
+        plt.grid(b=True, which='both', color='0.65', linestyle='-')
+        plt.axhline(y=0, c='black', linewidth=2)
+        plt.xlabel('Speed (mps)')
+        plt.ylabel('Mag Only Power')
+
+        for p in positions:
+            color = cc.get_color(p)
+        
+            # Scatter plot all stable magonly power values by position.
+            plt.scatter(speed, power, color=color, label=(('Position: %i' % (p))), marker='o')
+            
+            # Draw linear slope/intercept for a given position.
+            lin_power = lambda x: x * slope + interecpt
+            plt.plot(speed, lin_power(speed), color=color, linestyle='--')
+        
+        plt.legend()
+        
+            
+# ----------------------------------------------------------------------------
+#
+# Encapsulates function for getting a unique color for plotting.
+#
+# ----------------------------------------------------------------------------
+class ChartColor:
+    def __init__(self):
+        self.index = 0
+        self.positions = []
+        self.colors = ['g', 'c', 'y', 'b', 'r', 'm', 'k', 'orange', 'navy', 'darkolivegreen', 'mediumturquoise']        
+        self.marker = itertools.cycle((',', '+', '.', 'o', '*')) 
+    
+    #
+    # Returns a unique color for each servo position.
+    #
+    def get_color(self, position):
+        # if the position has been seen before, return it's color, otherwise grab a new color.
+        for c, p in enumerate(self.positions):
+            if p == position:
+                return self.positions[c,1]
+        
+        color = self.colors[self.index]
+        if (self.index == 10):
+            self.index = 0
+        else:
+            self.index = self.index + 1
+        
+        self.positions.append((position, color))
+        
+        return color            
             
