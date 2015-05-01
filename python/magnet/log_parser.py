@@ -43,12 +43,14 @@ class LogParser:
         
     def PlotMagnet(self):
         self.__create_magnet_plot()
+        self.__create_model_mag_plot()
         
     # ------------------------------------------------------------------------
     #  Internal methods
     # ------------------------------------------------------------------------
 
     def __init__(self, file_name, drag=0, rr=0, servo_offset=0):
+        self.cc = ChartColor()
         self.file_name = file_name
         self.records = []
         self.stable_records = []    # index, avg_power, avg_speed for stable data points.
@@ -232,7 +234,6 @@ class LogParser:
         ax3.set_ylim(50, 600)
 
     def __create_magnet_plot(self):
-        cc = ChartColor()
 
         plt.subplot(121)
         plt.title('Linear Magnet Power')
@@ -240,9 +241,6 @@ class LogParser:
         plt.axhline(y=0, c='black', linewidth=2)
         plt.xlabel('Speed (mph)')
         plt.ylabel('Mag Only Power')
-        
-        # Draw the model power 
-        model_speed_mps = np.array( [ min(self.stable_records['speed_mps']), max(self.stable_records['speed_mps']) ] )
         
         for p in self.positions:
             position = p[0]
@@ -252,7 +250,7 @@ class LogParser:
             speed = self.stable_records[ix]['speed_mps']
             power = self.stable_records[ix]['magonly_power']
         
-            color = cc.get_color(position)
+            color = self.cc.get_color(position)
         
             # Scatter plot all stable magonly power values by position.
             plt.scatter(speed*2.23694, power, color=color, label=(('Position: %i' % (position))), marker='o')
@@ -260,18 +258,25 @@ class LogParser:
             # Draw linear slope/intercept for a given position.
             lin_power = lambda x: x * slope + intercept
             plt.plot(speed*2.23694, lin_power(speed), color=color, linestyle='--')
-            
-            def mag_watts(speeds):
-                watts = []
-                for s in speeds:
-                    watts.append(mag.watts(s, position))
-                    
-                return watts
-            
-            plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps), color=color, linestyle=':')
         
         plt.legend()
-        
+
+    def __create_model_mag_plot(self):
+        # Draw the model power 
+        model_speed_mps = np.array( [ min(self.stable_records['speed_mps']), max(self.stable_records['speed_mps']) ] )
+
+        def mag_watts(speeds, position):
+            watts = []
+            for s in speeds:
+                watts.append(mag.watts(s, position))
+                
+            return watts
+
+        for x in range(800, 1400, 100):
+            color = self.cc.get_color(x)
+            plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps, x), color=color, linestyle=':', label=(('Position: %i' % (x))))
+
+        plt.legend()
             
 # ----------------------------------------------------------------------------
 #
@@ -290,9 +295,10 @@ class ChartColor:
     #
     def get_color(self, position):
         # if the position has been seen before, return it's color, otherwise grab a new color.
-        for c, p in enumerate(self.positions):
-            if p == position:
-                return self.positions[c,1]
+        keyfunc = lambda x: x[0]
+        for c, p in enumerate(sorted(self.positions, key=keyfunc)):
+            if p[0] == position:
+                return p[1]
         
         color = self.colors[self.index]
         if (self.index == 10):
