@@ -1,10 +1,10 @@
-import math
 import traceback
 from collections import defaultdict
 from itertools import groupby, chain
 import numpy as np, numpy.ma as ma
 import scipy.optimize as spo
 import scipy.stats as scistat
+from scipy import log as log
 import statistics as stats
 import bottleneck
 import itertools
@@ -71,6 +71,19 @@ def fit_lin_regress(speed, power):
     
     return slope, intercept
 
+def get_force(x, a, b):
+    #return a*x**b   # Power Function
+    #return a * log(x) + b # Log function
+    #return a*b**x # Exp function
+    #return a * x * 2 + b * x + c # Quadratic
+    #return f * ((v_pk * x) / (x**2 + v_pk**2))
+    return (a / x) + b
+    
+    
+def fit_force(x, y):
+    pars, covar = spo.curve_fit(get_force, x, y)
+    return pars[0],pars[1]
+    
 #
 # Returns power as calculated from calibration (drag & speed_mps) with no
 #
@@ -132,11 +145,11 @@ def fit_nonlinear_calibration(records):
     
     return fit_bike_science(x, y)
         
-def fit_polynomial(x, y, color):
-	x_new = np.arange(800, 1600, 100)
+def fit_polynomial(x, y):
+	#x_new = np.arange(800, 1600, 100)
 	coefficients = np.polyfit(x, y, 3)
 	polynomial = np.poly1d(coefficients)
-	ys = polynomial(x_new)
+	#ys = polynomial(x_new)
 	# y = ax^2 + bx + c
 	f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
 	#print(r)
@@ -179,7 +192,7 @@ def fit_3rd_poly(positions):
 		#plt.plot(servo_pos, power, color=c)
 		labels.append(r'%1.1f' % (mph))
 		
-		f, coeff = fit_polynomial(servo_pos, power, c)
+		f, coeff = fit_polynomial(servo_pos, power)
 		values.append((mph, coeff))
 
 		#print(mph, f)

@@ -10,6 +10,7 @@ from numpy.lib.recfunctions import append_fields
 import magnet as mag
 import fit as fit
 import matplotlib.pyplot as plt
+import math as math
 
 
 # ----------------------------------------------------------------------------
@@ -34,16 +35,16 @@ class LogParser:
         
     def MagOnlyPower(self):
         # Returns array of stable: position, speed, watt records
-        print(len(self.stable_records))
-        return self.stable_records;
+        return [r in self.stable_records ];
 
     def PlotRide(self):
         self.__create_ride_plot()
         # returns chart area... 
         
     def PlotMagnet(self):
-        self.__create_magnet_plot()
-        self.__create_model_mag_plot()
+        #self.__create_magnet_plot()
+        #self.__create_model_mag_plot()
+        self.__create_mag_force_plot()
         
     # ------------------------------------------------------------------------
     #  Internal methods
@@ -180,6 +181,15 @@ class LogParser:
         return power_est_col       
 
     #
+    # Calculates the Force for the magnet portion of the data.
+    #
+    def __calculate_mag_force(self, records):        
+        force = lambda r: r['magonly_power'] / r['speed_mps']
+        force_records = [force(records)]
+        
+        return force_records
+        
+    #
     # Identifies stable data.
     #
     def __find_stable(self):
@@ -272,12 +282,57 @@ class LogParser:
                 
             return watts
 
-        for x in range(800, 1400, 100):
+        for x in range(820, 1420, 10):
             color = self.cc.get_color(x)
-            plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps, x), color=color, linestyle=':', label=(('Position: %i' % (x))))
-
-        plt.legend()
             
+            if x % 100 == 0:
+                linewidth=2
+                plt.text(model_speed_mps[1]*2.23694, mag.watts(model_speed_mps[1], x)-4, x, color=color)
+            else:
+                linewidth=.5
+                
+            plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps, x), color=color, linestyle=':', linewidth=linewidth)
+        
+    def __create_mag_force_plot(self):
+        
+        def calc_force(speed_mps, slope, intercept):
+            power = speed_mps * slope + intercept
+            force = power / speed_mps
+            return force
+        
+        def calc_force_actual(speed_mps, magonly_power):
+            return (magonly_power / speed_mps)
+        
+        ax = plt.subplot(121)
+        
+        for p in self.positions:
+            position = p[0]
+            slope = p[1]
+            intercept = p[2]
+            ix = p[3]
+            
+            # Create a range of speeds
+            speed = np.linspace(0, 15, 50)
+            f = lambda x: calc_force(x, slope, intercept)
+            force = [f(speed)][0]
+            
+            # Plot linear data as force
+            ax.plot(speed, force, marker='o')
+
+            
+            # indexes where force is > 0
+            ix = [i for i,x in enumerate(force) if x > 0]
+            a,b = fit.fit_force(speed[ix], force[ix])
+            print((position,a,b))
+            force2 = [fit.get_force(x, a, b) for x in speed]
+            ax.plot(speed, force2, color='orange')
+            
+            stable_force = [calc_force_actual(x['speed_mps'], x['magonly_power']) for x in self.stable_records if x['position'] == position]
+            stable_speed = [x['speed_mps'] for x in self.stable_records if x['position'] == position]
+            
+            ax.plot(stable_speed, stable_force, color='red', marker='*')
+                        
+    
 # ----------------------------------------------------------------------------
 #
 # Encapsulates function for getting a unique color for plotting.
