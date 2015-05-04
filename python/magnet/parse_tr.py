@@ -124,10 +124,20 @@ def main(file_name):
 		#
 		# load a TrainerRoad log file
 		#
-		minutes, power_watts, kmh, target_watts, emr_watts, servo_pos = \
-		np.loadtxt(file_name, delimiter=',', skiprows=3,
-								dtype=[('minutes', float), ('emr_watts', float), ('kmh', float), ('target_watts', float), ('power_watts', float), ('servo_pos', int)], 
-								usecols=[1, 2, 8, 9, 10, 11], unpack=True, comments='"')
+        # "Watts" == Power Meter
+        # "TargetData" == TR's erg target
+        # "PowerMeterData" == E-Motion Virtual Power
+		input = np.genfromtxt(file_name, delimiter=',', skiprows=3, missing_values=0, \
+				usecols=[1, 2, 8, 9, 10, 11], dtype=[('minutes', float), ('power_watts', float), \
+                ('kmh', float), ('target_watts', float), ('emr_watts', float), ('servo_pos', int)])
+                                
+		minutes = input['minutes']
+		power_watts = input['power_watts']
+		kmh = input['kmh']
+		target_watts = input['target_watts']
+		emr_watts = input['emr_watts']
+		servo_pos = input['servo_pos']
+        
 		kmh = kmh * 0.621371
 
 	labels = []
@@ -158,30 +168,33 @@ def main(file_name):
 	ax1.plot(minutes, ma_speed)
 
 	ax2.plot(minutes, servo_pos, color='r')
-	ax2.set_ylim(800, 1700)
+	ax2.set_ylim(750, 1700)
 
 	ax3.plot(minutes, power_watts, 'r')
-	#labels.append(r'y = %s' % ('Actual'))
+	labels.append(r'%s' % ('Actual'))
 	
 	ax3.plot(minutes, emr_watts, color='c')
-	#labels.append(r'y = %s' % ('Estimated'))
-
-	#plt.legend(labels, loc='upper right')
+	labels.append(r'%s' % ('Estimated'))
 
 	ax3.plot(minutes, ma_power30, color='b')
+	labels.append(r'%s' % ('30 sec MA'))
 	ax3.plot(minutes, ma_power10, color='lightblue')
+	labels.append(r'%s' % ('10 sec MA'))
 	ax3.plot(minutes, ma_est_power, color='y')
+	labels.append(r'%s' % ('Est 30 sec MA'))
 
 	#ax2.stackplot(minutes, target_watts)
 	ax3.plot(minutes, target_watts, linestyle='--', linewidth='2', color='g', zorder=100)
-	#labels.append(r'y = %s' % ('Target'))
+	labels.append(r'%s' % ('Target'))
 	ax3.set_ylim(50, 600)
 
 	if drag is not None and rr is not None:
 		init_mag()
 		est_watts = estimate_power(kmh, servo_pos, drag, rr)
 		ax3.plot(minutes, est_watts, linestyle=':', color='orange', linewidth='3', zorder=200)
+		labels.append(r'%s' % ('Revised Estimate'))
 	
+	plt.legend(labels, loc='upper right')	
 	plt.show()
 
 if __name__ == "__main__":
