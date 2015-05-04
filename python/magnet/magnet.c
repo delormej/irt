@@ -22,7 +22,6 @@
 #define MAG_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define COEFF_COUNT							4u				// Cubic poynomial has 4 coefficients.
 #define MAGNET_POSITION_MODEL_MIN			1500u			// Represents the minimum position the 3r order polynomial supports.
 															// The position between MAGNET_POSITION_MIN_RESISTANCE and this is linear.
 
@@ -158,10 +157,12 @@ float magnet_watts(float speed_mps, uint16_t position)
 	curve_coeff(speed_mps, coeff);
 
 	watts =
-		coeff[0] * pow(position, 3) +
-		coeff[1] * pow(position, 2) +
-		coeff[2] * position +
-		coeff[3];
+		coeff[0] * pow(position, 5) +
+		coeff[1] * pow(position, 4) +
+		coeff[2] * pow(position, 3) +
+		coeff[3] * pow(position, 2) +
+		coeff[4] * position +
+		coeff[5];
 
 	if (linear_position > 0)
 	{

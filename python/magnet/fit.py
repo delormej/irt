@@ -147,7 +147,7 @@ def fit_nonlinear_calibration(records):
         
 def fit_polynomial(x, y):
     #x_new = np.arange(800, 1600, 100)
-    coefficients = np.polyfit(x, y, 3)
+    coefficients = np.polyfit(x, y, 5)
     polynomial = np.poly1d(coefficients)
     #ys = polynomial(x_new)
     # y = ax^2 + bx + c
@@ -244,23 +244,31 @@ def init_mag(force_offset = 0):
     low_b = values[1][1][1]
     low_c = values[1][1][2]
     low_d = values[1][1][3]
+    low_e = values[1][1][4]
+    low_f = values[1][1][5]
 
     high_speed = values[3][0]*0.44704
     high_a = values[3][1][0]
     high_b = values[3][1][1]
     high_c = values[3][1][2]
     high_d = values[3][1][3]
+    high_e = values[3][1][4]
+    high_f = values[3][1][5]    
     
     mag.set_coeff(low_speed, 
         low_a, 
         low_b, 
         low_c, 
         low_d, 
+        low_e,
+        low_f,
         high_speed, 
         high_a, 
         high_b, 
         high_c,
-        high_d)
+        high_d,
+        high_e,
+        high_f)
         
     if force_offset > 0:
         mag.force_offset(force_offset)

@@ -35,6 +35,7 @@
 #define MAGNET_POSITION_MIN_RESISTANCE			1600		// Above this position, we don't calculate any watts.
 #define MAGNET_POSITION_MAX_RESISTANCE			800
 #define WATTS_MODEL_MIN							13.0f		// Below this threshold, we might need to solve linearly.
+#define COEFF_COUNT								6u			// Cubic poynomial has 4 coefficients.
 
 #define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
 
@@ -43,7 +44,7 @@
  */
 typedef struct poly_coeff_s {
 	float speed_mps;
-	float coeff[4];
+	float coeff[COEFF_COUNT];
 } poly_coeff_t;
 
 /**@brief	Sets the cofficients for the 3rd order polynomial.
