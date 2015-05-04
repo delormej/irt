@@ -259,7 +259,7 @@ def init_mag(force_offset = 0):
         high_d)
         
     if force_offset > 0:
-        mg.force_offset(force_offset)
+        mag.force_offset(force_offset)
      
     return mag
 

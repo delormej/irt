@@ -159,7 +159,7 @@ def main(file_name, drag, rr, offset):
     ax3.set_ylim(50, 600)
 
     if drag > 0 and rr > 0:
-        #fit.init_mag(offset)
+        fit.init_mag(offset)
         est_watts = estimate_power(kmh, servo_pos, drag, rr)
         ax3.plot(minutes, est_watts, linestyle=':', color='orange', linewidth='3', zorder=200)
         labels.append(r'%s' % ('Revised Estimate'))

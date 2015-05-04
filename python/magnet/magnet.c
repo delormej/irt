@@ -37,6 +37,8 @@ static poly_coeff_t high_speed = {
 	.coeff = { 0.0f, 0.0f, 0.0f, 0.0f }
 };
 
+// Magnet force offset which is a rounded percent offset * 100 
+// (i.e. for 80.4%, force_offset == 804)
 static uint16_t m_force_offset = 0;
 															
 /**@brief	Sets the cofficients for the 3rd order polynomial.

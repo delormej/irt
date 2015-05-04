@@ -2,7 +2,10 @@
 #include "magnet.c"
 /*
 To build: 
+	[on x1]:
 	$ gcc -shared -I/c/Python34/include -I../../firmware/emotion/libraries/math -L/c/Python34/libs ../../firmware/emotion/libraries/math/*.c pyMagnet.c -lpython34 -std=gnu99 -o magnet.pyd
+	[on desktop]:
+	..\python\magnet>gcc -shared -IC:\Tools\Anaconda3\include -I../../firmware/emotion/libraries/math -LC:\Tools\Anaconda3 ../../firmware/emotion/libraries/math/*.c pyMagnet.c -lpython34 -std=gnu99 -o magnet.pyd
 */
 
 /*
@@ -57,6 +60,9 @@ static PyObject* PyMagnet_force_offset(PyObject* self, PyObject* args)
 	// Parse the python arguments.
 	PyArg_ParseTuple(args, "I", &offset);
 	
+	// Call the magnet object.
+	magnet_force_offset(offset);
+
 	// Return 0 for success.
 	return Py_BuildValue("i", 0);
 }
