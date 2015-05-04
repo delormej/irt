@@ -177,7 +177,7 @@ float magnet_watts(float speed_mps, uint16_t position)
 		
 		// Recalculate watts based on offset force which is stored as 
 		// an integer in percent.
-		watts = speed_mps * (force * (m_force_offset / 100.0f));
+		watts = speed_mps * (force * (m_force_offset / 1000.0f));
 	}
 
 	return watts;
