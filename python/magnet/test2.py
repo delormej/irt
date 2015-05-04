@@ -1,6 +1,8 @@
 import sys, getopt
 import log_parser as lp
 import matplotlib.pyplot as plt
+import fit
+import numpy as np
 
 #def calc_force(speed_mps, watts):
     #f, coeff = fit_polynomial(servo_pos, power, c)
@@ -10,6 +12,12 @@ import matplotlib.pyplot as plt
 # Main entry point to parse a file.
 #        
 def main(file_name, drag, rr, offset):
+    #x = np.array([12, 16, 20, 28, 32])  # 20 == 73??
+    #y = [39 ,54 ,73, 113, 131]
+    
+    #drag, rr = fit.fit_bike_science(x*0.44704,y)
+    #print("using calibration:", drag, rr)
+    
     p = lp.LogParser(file_name, drag, rr, force_offset=offset)
     #print(p.MagOnlyPower())
     """

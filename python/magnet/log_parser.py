@@ -306,6 +306,9 @@ class LogParser:
                 
             plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps, x), color=color, linestyle='-.', linewidth=linewidth)
         
+    #
+    # Plots force as opposed to watts.
+    #
     def __create_mag_force_plot(self):
         
         def calc_force(speed_mps, slope, intercept):
@@ -327,6 +330,7 @@ class LogParser:
         
         ax = plt.subplot(121)
         
+        # For each position we've found with stable data in the file.
         for p in self.positions:
             position = p[0]
             slope = p[1]
@@ -335,30 +339,48 @@ class LogParser:
             
             # Create a range of speeds
             speed = np.linspace(0, 15, 50)
+            
+            #
+            # Calculate force based on derived slope / intercept.
+            #
             f = lambda x: calc_force(x, slope, intercept)
             force = [f(speed)][0]
             
-            # Plot linear data as force
-            ax.plot(speed, force, marker='o')
+            # Plot force derived from linear speed/watt fit.
+            ax.plot(speed, force, marker='o', label=('%s Derived') % position)
             
+            
+            #
             # Fit force to a model.
-            # indexes where force is > 0
-            ix = [i for i,x in enumerate(force) if x > 0]
+            #
+            ix = [i for i,x in enumerate(force) if x > 0]      # indexes where force is > 0
             a,b = fit.fit_force(speed[ix], force[ix])
-            #force2 = [fit.get_force(x, a, b) for x in speed]
+            fit_force = []
+            for s in (speed):
+                fit_force.append(fit.get_force(s, a, b))
+            plt.plot(speed, fit_force, label=('%s Fit') % position) 
+                
+
+            #
+            # Get force from established model based on speed/watts.
+            #
             force2 = model_force(speed, position)
-            ax.plot(speed, force2, color='orange')
+            ax.plot(speed, force2, color='orange', label=('%s Known Model') % position)
             
+            #
             # Get the actual force by position.
+            #
             stable_force = [calc_force_actual(x['speed_mps'], x['magonly_power']) for x in self.stable_records if x['position'] == position]
             stable_speed = [x['speed_mps'] for x in self.stable_records if x['position'] == position]
             
             for i, f in enumerate(stable_force):
                 print((position, stable_speed[i], f))
             
-            ax.plot(stable_speed, stable_force, color='red', marker='*')
+            ax.plot(stable_speed, stable_force, color='red', marker='*', label=('%s Actual') % position)
                         
-    
+        plt.ylim(-5)
+        plt.legend(loc='lower_right')
+        
 # ----------------------------------------------------------------------------
 #
 # Encapsulates function for getting a unique color for plotting.
