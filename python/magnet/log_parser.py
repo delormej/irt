@@ -42,9 +42,9 @@ class LogParser:
         # returns chart area... 
         
     def PlotMagnet(self):
-        self.__create_magnet_plot()
-        self.__create_model_mag_plot()
-        #self.__create_mag_force_plot()
+        #self.__create_magnet_plot()
+        #self.__create_model_mag_plot()
+        self.__create_mag_force_plot()
         
     # ------------------------------------------------------------------------
     #  Internal methods
@@ -193,7 +193,7 @@ class LogParser:
     #
     # Identifies stable data.
     #
-    def __find_stable(self, skip=1200):
+    def __find_stable(self, skip=420):
         # Skip first 7 minutes of data (7*60 = 420 records).
         if len(self.records) < skip:
             raise "Not enough rows to find stable data."
@@ -299,6 +299,7 @@ class LogParser:
         
         def calc_force(speed_mps, slope, intercept):
             power = speed_mps * slope + intercept
+                   
             force = power / speed_mps
             return force
         
@@ -309,11 +310,9 @@ class LogParser:
             force = []
             for v in speed_mps:
                 w = mag.watts(v, position)
-                f = (w / v) * 0.804272
+                f = (w / v)
                 force.append(f) 
-                
             return force
-            
         
         ax = plt.subplot(121)
         
@@ -335,7 +334,6 @@ class LogParser:
             # indexes where force is > 0
             ix = [i for i,x in enumerate(force) if x > 0]
             a,b = fit.fit_force(speed[ix], force[ix])
-            print((position,a,b))
             #force2 = [fit.get_force(x, a, b) for x in speed]
             force2 = model_force(speed, position)
             ax.plot(speed, force2, color='orange')
