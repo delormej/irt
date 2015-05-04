@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 import magnet as mag
+import fit as fit
 
 """
 Calculates a moving average of an array of values.
@@ -33,29 +34,7 @@ def moving_average(x, n, type='simple'):
 Initializes the co-efficients for magnet power.
 """ 
 def init_mag():
-    
-    low_speed = 15 * 0.44704
-    low_a = 8.8494476121e-07
-    low_b = -0.00240207003171
-    low_c = 1.39836168772
-    low_d = 329.707200358
-    
-    high_speed = 25 * 0.44704
-    high_a = 2.04928870618e-06
-    high_b = -0.0061578610697
-    high_c = 4.94991737943
-    high_d = -468.940164046
-    
-    mag.set_coeff(low_speed, 
-        low_a, 
-        low_b, 
-        low_c, 
-        low_d, 
-        high_speed, 
-        high_a, 
-        high_b, 
-        high_c,
-        high_d)
+    fit.init_mag()
 
 """
 Calculates power based coast down fit (drag & rr), speed and magnet position.
