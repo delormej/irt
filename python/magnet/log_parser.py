@@ -1,4 +1,5 @@
 import sys
+import ntpath
 import os
 import csv
 import numpy as np, numpy.ma as ma
@@ -79,14 +80,18 @@ class LogParser:
         self.records = np.loadtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
                 dtype=[('speed', float), ('power', int), ('position', int)], usecols=[speed_col, watts_col, servo_col], comments='"',
                 converters = {5: lambda s: float(s.strip() or 0)})
+        #self.records = self.records[0:1550]
                 
     #
     # Get the configuration settings from the log file.
     #
     def __read_config(self):
         
-        if not self.file_name.startswith('irt_'):
+        name = ntpath.basename(self.file_name)
+        
+        if not name.startswith('irt_'):
             # it's not an IRT log file, so skip.
+            print("Not an irt log file, not attempting to read config.")    
             return 
         
         try:
@@ -101,7 +106,9 @@ class LogParser:
                         # when we get here we've read all the config records
                         break
         except:
-            print("Unable to parse calibration.")
+            print("Unable to parse config.")
+            
+        print("found config", self.drag, self.rr)
 
     # 
     # Enriches the records with moving averages and other functions.
@@ -115,6 +122,7 @@ class LogParser:
         # Calibrate if drag & rr are not present based on stable records.
         if self.drag == 0 or self.rr == 0:
             self.drag, self.rr = self.CalibrationFit()
+            print("Calculated calibration fit as:", self.drag, self.rr)
         
         # Enrich the stable records with mag only power.
         magonly_col = self.__stable_magonly_power()
