@@ -36,6 +36,8 @@ static poly_coeff_t high_speed = {
 	.speed_mps = 19.0 * 0.44704,
 	.coeff = { 0.0f, 0.0f, 0.0f, 0.0f }
 };
+
+static uint16_t m_force_offset = 0;
 															
 /**@brief	Sets the cofficients for the 3rd order polynomial.
  *
@@ -44,6 +46,14 @@ static poly_coeff_t high_speed = {
  {
 	 low_speed = low;
 	 high_speed = high;
+ }
+
+ /**@brief	Sets the magnet force offset.  Offset is a percentage.
+ *
+ */
+ void magnet_force_offset(uint16_t offset)
+ {
+	 m_force_offset = offset;
  }
 															
 /**@brief	Calculates the coefficient values for a cubic polynomial
@@ -116,6 +126,7 @@ float magnet_watts(float speed_mps, uint16_t position)
 	float coeff[COEFF_COUNT];
 	float watts;
 	uint16_t linear_position = 0;
+	float force;
 
 	/*
 	 * After max servo position the curve turns upwards.
@@ -153,7 +164,18 @@ float magnet_watts(float speed_mps, uint16_t position)
 	if (linear_position > 0)
 	{
 		// We're at the bottom range, so use linear equation.
-		return watts_linear(watts, linear_position);
+		watts = watts_linear(watts, linear_position);
+	}
+
+	// Adjust for force offset percentage.
+	if (m_force_offset > 0)
+	{
+		// Calculate force.
+		force = watts / speed_mps;
+		
+		// Recalculate watts based on offset force which is stored as 
+		// an integer in percent.
+		watts = speed_mps * (force * (m_force_offset / 100.0f));
 	}
 
 	return watts;

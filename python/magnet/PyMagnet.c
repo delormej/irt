@@ -46,6 +46,22 @@ static PyObject* PyMagnet_position(PyObject* self, PyObject* args)
 }
 
 /*
+ * Python wrapper for setting the magnet force offset percentage which
+ * is passed as an unsigned short int.
+ *
+ */
+static PyObject* PyMagnet_force_offset(PyObject* self, PyObject* args)
+{
+	uint16_t offset = 0;
+	
+	// Parse the python arguments.
+	PyArg_ParseTuple(args, "I", &offset);
+	
+	// Return 0 for success.
+	return Py_BuildValue("i", 0);
+}
+
+/*
  * Python wrapper for setting coefficients.
  *
  */
@@ -105,6 +121,8 @@ static PyMethodDef MagnetMethods[] = {
      "Calculate position from target watts."},	 
     {"set_coeff",  PyMagnet_set_coeff, METH_VARARGS,
      "Sets the coefficients."},	 
+    {"force_offset",  PyMagnet_force_offset, METH_VARARGS,
+     "Sets the magnet force offset."},	 
 	 
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };

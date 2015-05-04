@@ -31,12 +31,6 @@ def moving_average(x, n, type='simple'):
     return a
 
 """
-Initializes the co-efficients for magnet power.
-""" 
-def init_mag():
-    fit.init_mag()
-
-"""
 Calculates power based coast down fit (drag & rr), speed and magnet position.
 """
 def get_power(speed_mps, servo_pos, drag, rr):
@@ -81,7 +75,7 @@ def estimate_power(mph, servo_pos, drag, rr):
     
     return est_watts
     
-def main(file_name, drag, rr):
+def main(file_name, drag, rr, offset):
     
     if (os.path.basename(file_name).startswith("irt_")):
         #
@@ -165,7 +159,7 @@ def main(file_name, drag, rr):
     ax3.set_ylim(50, 600)
 
     if drag > 0 and rr > 0:
-        init_mag()
+        #fit.init_mag(offset)
         est_watts = estimate_power(kmh, servo_pos, drag, rr)
         ax3.plot(minutes, est_watts, linestyle=':', color='orange', linewidth='3', zorder=200)
         labels.append(r'%s' % ('Revised Estimate'))
@@ -177,11 +171,12 @@ if __name__ == "__main__":
     file = ""
     drag = 0
     rr = 0
+    offset = 0
 
     try:
-      opts, args = getopt.getopt(sys.argv[1:],"hi:d:r:",["input=","drag=","rr="])
+      opts, args = getopt.getopt(sys.argv[1:],"hi:d:r:o:",["input=","drag=","rr=","offset="])
     except getopt.GetoptError:
-      print('parse_tr.py -i <inputfile> -d <drag> -r <rolling resistance>')
+      print('parse_tr.py -i <inputfile> -d <drag> -r <rolling resistance> -o <force offset>')
       sys.exit(2)        
     
     for opt, arg in opts:
@@ -194,6 +189,8 @@ if __name__ == "__main__":
             drag = float(arg)
         elif opt in ("-r", "--rr"):
             rr = float(arg)
-             
-    main(file, drag, rr)
+        elif opt in ("-o", "--offset"):
+            offset = int(arg)
+            
+    main(file, drag, rr, offset)
 

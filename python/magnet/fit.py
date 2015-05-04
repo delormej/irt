@@ -229,8 +229,9 @@ def get_position_data():
 		positions.append(p)
 
 	return positions
-            
-def init_mag():
+
+# Optional param to set the force offset.    
+def init_mag(force_offset = 0):
     positions = get_position_data()
     values = fit_3rd_poly(positions)
     
@@ -257,6 +258,9 @@ def init_mag():
         high_c,
         high_d)
         
+    if force_offset > 0:
+        mg.force_offset(force_offset)
+     
     return mag
 
 #
