@@ -251,6 +251,9 @@ class LogParser:
         ax3.plot(time, fit.moving_average(self.records['power_est'], 30), color='y')
 
         ax3.set_ylim(50, 600)
+        
+        # Add markers where we're getting our stable data.
+        ax3.scatter(self.stable_records['index'], self.stable_records['power'])
 
     def __create_magnet_plot(self):
 
