@@ -25,7 +25,7 @@ class LogParser:
         drag, rr = fit.fit_nonlinear_calibration(self.MagOffPower())
         return drag, rr
     
-    def MagnetFit(self, servo_offset=0):
+    def MagnetFit(self):
         # Fits slope/intercept for each magnet position.
         return self.positions
         
@@ -42,15 +42,15 @@ class LogParser:
         # returns chart area... 
         
     def PlotMagnet(self):
-        #self.__create_magnet_plot()
-        #self.__create_model_mag_plot()
-        self.__create_mag_force_plot()
+        self.__create_magnet_plot()
+        self.__create_model_mag_plot()
+        #self.__create_mag_force_plot()
         
     # ------------------------------------------------------------------------
     #  Internal methods
     # ------------------------------------------------------------------------
 
-    def __init__(self, file_name, drag=0, rr=0, servo_offset=0):
+    def __init__(self, file_name, drag=0, rr=0, force_offset=0):
         self.cc = ChartColor()
         self.file_name = file_name
         self.records = []
@@ -59,7 +59,7 @@ class LogParser:
         
         self.drag = drag
         self.rr = rr
-        self.servo_offset = servo_offset
+        self.force_offset = force_offset
         self.device_id = 0
         
         # Grab all the records and config settings.
@@ -67,7 +67,7 @@ class LogParser:
         self.__read_config()
         
         # Initializes the co-efficients for magnet power.
-        fit.init_mag()
+        fit.init_mag(force_offset)
         
         self.__enrich()
         
@@ -92,8 +92,6 @@ class LogParser:
         try:
             with open(self.file_name, 'r') as f:
                 for row in reversed(list(csv.reader(f))):
-                    if row[0] == 'AddServoOffset' and self.servo_offset == 0:
-                        self.servo_offset = int(row[1])
                     if row[0] == 'RR' and self.rr == 0:
                         self.rr = float(row[1])
                     if row[0] == 'Drag' and self.drag == 0:
@@ -184,6 +182,9 @@ class LogParser:
     # Calculates the Force for the magnet portion of the data.
     #
     def __calculate_mag_force(self, records):        
+        #stable_force = [calc_force_actual(x['speed_mps'], x['magonly_power']) for x in self.stable_records if x['position'] == position]
+        #stable_speed = [x['speed_mps'] for x in self.stable_records if x['position'] == position]        
+        
         force = lambda r: r['magonly_power'] / r['speed_mps']
         force_records = [force(records)]
         
@@ -192,14 +193,14 @@ class LogParser:
     #
     # Identifies stable data.
     #
-    def __find_stable(self):
+    def __find_stable(self, skip=1200):
         # Skip first 7 minutes of data (7*60 = 420 records).
-        if len(self.records) < 420:
+        if len(self.records) < skip:
             raise "Not enough rows to find stable data."
     
         stable = []
     
-        for i, power, speed in fit.power_ma_crossovers(self.records):
+        for i, power, speed in fit.power_ma_crossovers(self.records, skip):
             position = self.records[i]['position']
             speed_mps = speed * 0.44704
             stable.append((i, position, speed_mps, power)) 
@@ -286,12 +287,13 @@ class LogParser:
             color = self.cc.get_color(x)
             
             if x % 100 == 0:
-                linewidth=2
+                # Every 100 positions make a stronger line
+                linewidth=4
                 plt.text(model_speed_mps[1]*2.23694, mag.watts(model_speed_mps[1], x)-4, x, color=color)
             else:
                 linewidth=.5
                 
-            plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps, x), color=color, linestyle=':', linewidth=linewidth)
+            plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps, x), color=color, linestyle='-.', linewidth=linewidth)
         
     def __create_mag_force_plot(self):
         
@@ -302,6 +304,16 @@ class LogParser:
         
         def calc_force_actual(speed_mps, magonly_power):
             return (magonly_power / speed_mps)
+            
+        def model_force(speed_mps, position):
+            force = []
+            for v in speed_mps:
+                w = mag.watts(v, position)
+                f = (w / v) * 0.804272
+                force.append(f) 
+                
+            return force
+            
         
         ax = plt.subplot(121)
         
@@ -318,17 +330,22 @@ class LogParser:
             
             # Plot linear data as force
             ax.plot(speed, force, marker='o')
-
             
+            # Fit force to a model.
             # indexes where force is > 0
             ix = [i for i,x in enumerate(force) if x > 0]
             a,b = fit.fit_force(speed[ix], force[ix])
             print((position,a,b))
-            force2 = [fit.get_force(x, a, b) for x in speed]
+            #force2 = [fit.get_force(x, a, b) for x in speed]
+            force2 = model_force(speed, position)
             ax.plot(speed, force2, color='orange')
             
+            # Get the actual force by position.
             stable_force = [calc_force_actual(x['speed_mps'], x['magonly_power']) for x in self.stable_records if x['position'] == position]
             stable_speed = [x['speed_mps'] for x in self.stable_records if x['position'] == position]
+            
+            for i, f in enumerate(stable_force):
+                print((position, stable_speed[i], f))
             
             ax.plot(stable_speed, stable_force, color='red', marker='*')
                         

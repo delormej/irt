@@ -337,7 +337,7 @@ def speed_moving_average(speed, n):
 # 
 # Returns at iterator which yields: index, power moving average, speed
 #
-def power_ma_crossovers(records):
+def power_ma_crossovers(records, skip=0):
     # don't take any data points within # of seconds of a servo change.
     servo_lag = 6                  
     speed_sec = 15
@@ -350,7 +350,7 @@ def power_ma_crossovers(records):
     ma_long = moving_average(power, long_power_sec)
     ma_short = moving_average(power, short_power_sec) 
     
-    for i in range(1, len(power)-2, 1):
+    for i in range(1+skip, len(power)-2, 1):
         # if the last long average was less than short average
         # and the current long average is higher than short
         # we've crossed over.
