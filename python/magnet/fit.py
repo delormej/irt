@@ -11,10 +11,10 @@ import itertools
 import magnet as mag
 
 class position:
-	def __init__(self):
-		self.servo = 0
-		self.slope = 0.0
-		self.intercept = 0.0
+    def __init__(self):
+        self.servo = 0
+        self.slope = 0.0
+        self.intercept = 0.0
 
 def fit_lin_theilsen(x,y, sample= "auto", n_samples = 1e7):
     """
@@ -146,89 +146,93 @@ def fit_nonlinear_calibration(records):
     return fit_bike_science(x, y)
         
 def fit_polynomial(x, y):
-	#x_new = np.arange(800, 1600, 100)
-	coefficients = np.polyfit(x, y, 3)
-	polynomial = np.poly1d(coefficients)
-	#ys = polynomial(x_new)
-	# y = ax^2 + bx + c
-	f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
-	#print(r)
-	#plt.subplot(2, 1, 1)
-	#plt.plot(x_new, ys, linestyle='--', color=color)
+    #x_new = np.arange(800, 1600, 100)
+    coefficients = np.polyfit(x, y, 3)
+    polynomial = np.poly1d(coefficients)
+    #ys = polynomial(x_new)
+    # y = ax^2 + bx + c
+    f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
+    #print(r)
+    #plt.subplot(2, 1, 1)
+    #plt.plot(x_new, ys, linestyle='--', color=color)
 
-	# return the text
-	return f, coefficients
+    # return the text
+    return f, coefficients
 
 def interop_poly(coeffs, mps):
-	# takes 2 polynomials and linearly interopolates by speed.
-	return 0
-	
+    # takes 2 polynomials and linearly interopolates by speed.
+    return 0
+    
 def get_power(coeff, mps, servo_pos):
-	f = np.poly1d(coeff)
-	y = f(servo_pos)
-		
+    f = np.poly1d(coeff)
+    y = f(servo_pos)
+        
 def fit_3rd_poly(positions):
-	values = []
-	polys = []	
-	colors = iter(['r','g','b','y','c'])
-	labels = []
-	#plt.subplot(2, 1, 1)
-	#plt.grid(b=True, which='major', color='gray', linestyle='--')
-	#plt.ylabel('Watts @ Position by Speed')
-	# generate speed data 5-25 mph
-	# calculate power for each position
-	for mph in range(10,26,5):
-		c = next(colors)
-		
-		mps = mph*0.44704
-		power = []
-		servo_pos = []
+    values = []
+    polys = []  
+    colors = iter(['r','g','b','y','c'])
+    labels = []
+    #plt.subplot(2, 1, 1)
+    #plt.grid(b=True, which='major', color='gray', linestyle='--')
+    #plt.ylabel('Watts @ Position by Speed')
+    # generate speed data 5-25 mph
+    # calculate power for each position
+    for mph in range(5,26,5):
+        c = next(colors)
+        
+        mps = mph*0.44704
+        power = []
+        servo_pos = []
 
-		for p in positions:
-			power.append(mps * p.slope + p.intercept)
-			servo_pos.append(p.servo)
-			#print(p.servo, mph, watts)
-			
-		#plt.plot(servo_pos, power, color=c)
-		labels.append(r'%1.1f' % (mph))
-		
-		f, coeff = fit_polynomial(servo_pos, power)
-		values.append((mph, coeff))
+        for p in positions:
+            #power.append(mps * p.slope + p.intercept)
+            f = get_force(mps, p.slope, p.intercept)
+            w = f * mps
+            print(f, mps, w)
+            power.append(w)
+            servo_pos.append(p.servo)
+            #print(p.servo, mph, watts)
+            
+        #plt.plot(servo_pos, power, color=c)
+        #labels.append(r'%1.1f' % (mph))
+        
+        f, coeff = fit_polynomial(servo_pos, power)
+        values.append((mph, coeff))
 
-		#print(mph, f)
-		
-		#print(p.intercept)
-		
-	#plt.legend(labels, loc='upper right')
-	return values
-		
+        #print(mph, f)
+        
+        #print(p.intercept)
+        
+    #plt.legend(labels, loc='upper right')
+    return values
+        
 def fit_linear(positions):
-	#plt.subplot(2, 1, 2)
-	#plt.ylabel('Watts @ Speed by Servo Position')
-	#plt.grid(b=True, which='major', color='gray', linestyle='--')
-	
-	for p in positions:
-		speed = []
-		power = []
-		
-		for mph in range(5,25,5):
-			speed.append(mph)
-			power.append((mph * 0.44740) * p.slope + p.intercept)
-			#plt.plot(speed, power)        
+    #plt.subplot(2, 1, 2)
+    #plt.ylabel('Watts @ Speed by Servo Position')
+    #plt.grid(b=True, which='major', color='gray', linestyle='--')
+    
+    for p in positions:
+        speed = []
+        power = []
+        
+        for mph in range(5,25,5):
+            speed.append(mph)
+            power.append((mph * 0.44740) * p.slope + p.intercept)
+            #plt.plot(speed, power)        
 
 def get_position_data():
-	# loads slope & intercept for each position.
-	positions = []
-	data = np.loadtxt('position_slope_intercept.csv', delimiter=',', comments='#')
-	
-	for r in data:
-		p = position()
-		p.servo = r[0]
-		p.slope = r[1]
-		p.intercept = r[2]
-		positions.append(p)
+    # loads slope & intercept for each position.
+    positions = []
+    data = np.loadtxt('position_force.csv', delimiter=',', comments='#')
+    
+    for r in data:
+        p = position()
+        p.servo = r[0]
+        p.slope = r[1]
+        p.intercept = r[2]
+        positions.append(p)
 
-	return positions
+    return positions
 
 # Optional param to set the force offset.    
 def init_mag(force_offset = 0):
@@ -276,7 +280,7 @@ def power_estimate(speed_mps, servo_pos, drag, rr):
         mag_watts = mag.watts(speed_mps, servo_pos)
         #print(servo_pos, mag_watts)
     else:
-        mag_watts = 0	
+        mag_watts = 0   
     
     return no_mag_watts + mag_watts          
     

@@ -332,6 +332,10 @@ class LogParser:
         
         # For each position we've found with stable data in the file.
         for p in self.positions:
+            # skip 900
+            if p[0] == 900:
+                continue
+                
             position = p[0]
             slope = p[1]
             intercept = p[2]
@@ -348,6 +352,7 @@ class LogParser:
             
             # Plot force derived from linear speed/watt fit.
             ax.plot(speed, force, marker='o', label=('%s Derived') % position)
+            plt.text(max(speed), max(force), position)
             
             
             #
@@ -355,6 +360,7 @@ class LogParser:
             #
             ix = [i for i,x in enumerate(force) if x > 0]      # indexes where force is > 0
             a,b = fit.fit_force(speed[ix], force[ix])
+            print((position, a, b))
             fit_force = []
             for s in (speed):
                 fit_force.append(fit.get_force(s, a, b))
@@ -373,13 +379,13 @@ class LogParser:
             stable_force = [calc_force_actual(x['speed_mps'], x['magonly_power']) for x in self.stable_records if x['position'] == position]
             stable_speed = [x['speed_mps'] for x in self.stable_records if x['position'] == position]
             
-            for i, f in enumerate(stable_force):
-                print((position, stable_speed[i], f))
+            #for i, f in enumerate(stable_force):
+            #    print((position, stable_speed[i], f))
             
             ax.plot(stable_speed, stable_force, color='red', marker='*', label=('%s Actual') % position)
                         
         plt.ylim(-5)
-        plt.legend(loc='lower_right')
+        #plt.legend(loc='lower_right')
         
 # ----------------------------------------------------------------------------
 #
