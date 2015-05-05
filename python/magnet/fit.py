@@ -346,9 +346,8 @@ def speed_moving_average(speed, n):
 #
 # Determines is servo has been stable based on records and index into records.
 #
-def servo_stable(records, i):
+def servo_stable(records, i, servo_lag):
     # don't take any data points within # of seconds of a servo change.
-    servo_lag = 6
     
     if i < servo_lag+1:
         # Not enough data
@@ -363,6 +362,7 @@ def servo_stable(records, i):
 # Returns at iterator which yields: index, power moving average, speed
 #
 def power_ma_crossovers(records, skip=0):
+    servo_lag = 6
     speed_sec = 15
     long_power_sec = 15
     short_power_sec = 5
@@ -380,13 +380,14 @@ def power_ma_crossovers(records, skip=0):
         if ma_long[i-1] < ma_short[i-1] and ma_long[i] > ma_short[i]:
             # Only include if the servo position hasn't changed for a few seconds.
             # This eliminates the issue with averages appearing on the edge.
-            if servo_stable(records, i):
+            if servo_stable(records, i, servo_lag):
                 # We've crossed over return index, position, power moving average, speed.
                 yield i, ma_long[i], ma_speed[i]
 
 def stable_speed_points(records):
+    servo_lag = 2
     min_count = 5     # Minimum 5 seconds of stable data.
-    max_dev = 0.2   # Max deviation in speed +/-
+    max_dev = 0.25   # Max deviation in speed +/-
     tuples = []
     start = 0
     end = 0
@@ -402,7 +403,7 @@ def stable_speed_points(records):
     # iterate through speed, until there is a speed change of greater than .2 mph 
     # identify the indexes where the speed starts and ends and create a tuple
     for i, s in enumerate(records['speed']):
-        if speed_stable(i) and servo_stable(records, i):
+        if speed_stable(i) and servo_stable(records, i, servo_lag):
             # increment stability length
             count = count + 1
             
@@ -413,8 +414,8 @@ def stable_speed_points(records):
                 count = 0
         else:
             if start > 0 and count > min_count:
-                # we changed, so end must be the last record
-                end = i-1
+                # we changed, so end must be the last record, and then trim one more for good measure.
+                end = i-2
                 tuples.append((start, end))
                 
             # restart
