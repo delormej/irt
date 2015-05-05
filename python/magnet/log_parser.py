@@ -43,9 +43,9 @@ class LogParser:
         # returns chart area... 
         
     def PlotMagnet(self):
-        #self.__create_magnet_plot()
-        #self.__create_model_mag_plot()
-        self.__create_mag_force_plot()
+        self.__create_magnet_plot()
+        self.__create_model_mag_plot()
+        #self.__create_mag_force_plot()
         
     # ------------------------------------------------------------------------
     #  Internal methods
@@ -143,8 +143,7 @@ class LogParser:
     # Returns a list of valid indexes of stable data by servo position.
     #
     def __stable_by_position(self, position):
-        #return [i for i, x in enumerate(self.records[self.stable_records['index']]) if x['position']==position]
-        return [x for x in self.stable_records if x['position'] == position]
+        return [ x['index'] for x in self.stable_records if x['position'] == position ]
         
     def __stable_magonly_power(self):
         magonly_col = []
@@ -208,7 +207,8 @@ class LogParser:
     
         stable = []
     
-        for i, power, speed in fit.power_ma_crossovers(self.records, skip):
+        #for i, power, speed in fit.power_ma_crossovers(self.records, skip):
+        for i, power, speed in fit.power_stable(self.records):
             position = self.records[i]['position']
             speed_mps = speed * 0.44704
             stable.append((i, position, speed_mps, power)) 
@@ -216,7 +216,7 @@ class LogParser:
         dtp = np.dtype([('index','i4'), ('position','i4'), ('speed_mps','f4'), ('power','f4')])
         self.stable_records = np.array(stable, dtype=dtp)
         
-        #print(len(self.records),len(self.stable_records))
+        
 
     def __create_ride_plot(self):
         plt.rc('axes', grid=True)
@@ -243,18 +243,29 @@ class LogParser:
         ax2.plot(time, self.records['position'], color='r')
         ax2.set_ylim(800, 1700)
 
-        ax3.plot(time, self.records['power'], 'r')
-        ax3.plot(time, self.records['power_est'], 'orange', linestyle='--', linewidth=2)
+        ax3.plot(time, self.records['power'], 'r', label='Actual')
+        ax3.plot(time, self.records['power_est'], 'orange', linestyle='--', linewidth=2, label='Est.')
 
-        ax3.plot(time, fit.moving_average(self.records['power'], 30), color='b')
-        ax3.plot(time, fit.moving_average(self.records['power'], 10), color='lightblue')
-        ax3.plot(time, fit.moving_average(self.records['power_est'], 30), color='y')
+        ax3.plot(time, fit.moving_average(self.records['power'], 30), color='b', label='30 Sec MA')
+        ax3.plot(time, fit.moving_average(self.records['power'], 10), color='lightblue', label='10 Sec MA')
+        ax3.plot(time, fit.moving_average(self.records['power_est'], 30), color='y', label='30 Sec Est. MA')
 
         ax3.set_ylim(50, 600)
         
         # Add markers where we're getting our stable data.
-        ax3.scatter(self.stable_records['index'], self.stable_records['power'])
+        ax3.scatter(self.stable_records['index'], self.stable_records['power'], label='Stable Points')
+        
+        # Shade in stable speed data sections.
+        for p in fit.stable_speed_points(self.records):
+            ax1.axvspan(p[0], p[1], color='yellow', alpha=0.2)
+            ax2.axvspan(p[0], p[1], color='yellow', alpha=0.2)
+            ax3.axvspan(p[0], p[1], color='yellow', alpha=0.2)
+        
+        ax3.legend()
 
+    #
+    # Plots speed:watts based on empirical magnet data in this file.
+    #
     def __create_magnet_plot(self):
 
         plt.subplot(121)
@@ -283,6 +294,9 @@ class LogParser:
         
         plt.legend()
 
+    # 
+    # Plots the known, trusted model for speed:watts.
+    #
     def __create_model_mag_plot(self):
         # Draw the model power 
         model_speed_mps = np.array( [ min(self.stable_records['speed_mps']), max(self.stable_records['speed_mps']) ] )
@@ -332,13 +346,17 @@ class LogParser:
         
         # For each position we've found with stable data in the file.
         for p in self.positions:
+            # skip 900
+            #if p[0] == 900:
+            #    continue
+                
             position = p[0]
             slope = p[1]
             intercept = p[2]
             ix = p[3]
             
-            # Create a range of speeds
-            speed = np.linspace(0, 15, 50)
+            # Create a range of speeds in meters per second.
+            speed = np.linspace(1, 15, 50)
             
             #
             # Calculate force based on derived slope / intercept.
@@ -348,13 +366,19 @@ class LogParser:
             
             # Plot force derived from linear speed/watt fit.
             ax.plot(speed, force, marker='o', label=('%s Derived') % position)
+            plt.text(max(speed), max(force), position)
             
             
             #
             # Fit force to a model.
             #
             ix = [i for i,x in enumerate(force) if x > 0]      # indexes where force is > 0
+            if len(speed[ix]) < 2 or len(force[ix]) != len(speed[ix]):
+                print("not enough data to fit force for: ", position)
+                continue
+            
             a,b = fit.fit_force(speed[ix], force[ix])
+            print((position, a, b))
             fit_force = []
             for s in (speed):
                 fit_force.append(fit.get_force(s, a, b))
@@ -373,13 +397,13 @@ class LogParser:
             stable_force = [calc_force_actual(x['speed_mps'], x['magonly_power']) for x in self.stable_records if x['position'] == position]
             stable_speed = [x['speed_mps'] for x in self.stable_records if x['position'] == position]
             
-            for i, f in enumerate(stable_force):
-                print((position, stable_speed[i], f))
+            #for i, f in enumerate(stable_force):
+            #    print((position, stable_speed[i], f))
             
             ax.plot(stable_speed, stable_force, color='red', marker='*', label=('%s Actual') % position)
                         
         plt.ylim(-5)
-        plt.legend(loc='lower_right')
+        #plt.legend(loc='lower_right')
         
 # ----------------------------------------------------------------------------
 #

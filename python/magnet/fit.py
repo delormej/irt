@@ -11,10 +11,10 @@ import itertools
 import magnet as mag
 
 class position:
-	def __init__(self):
-		self.servo = 0
-		self.slope = 0.0
-		self.intercept = 0.0
+    def __init__(self):
+        self.servo = 0
+        self.slope = 0.0
+        self.intercept = 0.0
 
 def fit_lin_theilsen(x,y, sample= "auto", n_samples = 1e7):
     """
@@ -146,89 +146,93 @@ def fit_nonlinear_calibration(records):
     return fit_bike_science(x, y)
         
 def fit_polynomial(x, y):
-	#x_new = np.arange(800, 1600, 100)
-	coefficients = np.polyfit(x, y, 3)
-	polynomial = np.poly1d(coefficients)
-	#ys = polynomial(x_new)
-	# y = ax^2 + bx + c
-	f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
-	#print(r)
-	#plt.subplot(2, 1, 1)
-	#plt.plot(x_new, ys, linestyle='--', color=color)
+    #x_new = np.arange(800, 1600, 100)
+    coefficients = np.polyfit(x, y, 3)
+    polynomial = np.poly1d(coefficients)
+    #ys = polynomial(x_new)
+    # y = ax^2 + bx + c
+    f = ("y = %sx^3 + %sx^2 + %sx + %s" % (coefficients[0], coefficients[1], coefficients[2], coefficients[3]))
+    #print(r)
+    #plt.subplot(2, 1, 1)
+    #plt.plot(x_new, ys, linestyle='--', color=color)
 
-	# return the text
-	return f, coefficients
+    # return the text
+    return f, coefficients
 
 def interop_poly(coeffs, mps):
-	# takes 2 polynomials and linearly interopolates by speed.
-	return 0
-	
+    # takes 2 polynomials and linearly interopolates by speed.
+    return 0
+    
 def get_power(coeff, mps, servo_pos):
-	f = np.poly1d(coeff)
-	y = f(servo_pos)
-		
+    f = np.poly1d(coeff)
+    y = f(servo_pos)
+        
 def fit_3rd_poly(positions):
-	values = []
-	polys = []	
-	colors = iter(['r','g','b','y','c'])
-	labels = []
-	#plt.subplot(2, 1, 1)
-	#plt.grid(b=True, which='major', color='gray', linestyle='--')
-	#plt.ylabel('Watts @ Position by Speed')
-	# generate speed data 5-25 mph
-	# calculate power for each position
-	for mph in range(10,26,5):
-		c = next(colors)
-		
-		mps = mph*0.44704
-		power = []
-		servo_pos = []
+    values = []
+    polys = []  
+    colors = iter(['r','g','b','y','c'])
+    labels = []
+    #plt.subplot(2, 1, 1)
+    #plt.grid(b=True, which='major', color='gray', linestyle='--')
+    #plt.ylabel('Watts @ Position by Speed')
+    # generate speed data 5-25 mph
+    # calculate power for each position
+    for mph in range(5,26,5):
+        c = next(colors)
+        
+        mps = mph*0.44704
+        power = []
+        servo_pos = []
 
-		for p in positions:
-			power.append(mps * p.slope + p.intercept)
-			servo_pos.append(p.servo)
-			#print(p.servo, mph, watts)
-			
-		#plt.plot(servo_pos, power, color=c)
-		labels.append(r'%1.1f' % (mph))
-		
-		f, coeff = fit_polynomial(servo_pos, power)
-		values.append((mph, coeff))
+        for p in positions:
+            #power.append(mps * p.slope + p.intercept)
+            f = get_force(mps, p.slope, p.intercept)
+            w = f * mps
+            print(f, mps, w)
+            power.append(w)
+            servo_pos.append(p.servo)
+            #print(p.servo, mph, watts)
+            
+        #plt.plot(servo_pos, power, color=c)
+        #labels.append(r'%1.1f' % (mph))
+        
+        f, coeff = fit_polynomial(servo_pos, power)
+        values.append((mph, coeff))
 
-		#print(mph, f)
-		
-		#print(p.intercept)
-		
-	#plt.legend(labels, loc='upper right')
-	return values
-		
+        #print(mph, f)
+        
+        #print(p.intercept)
+        
+    #plt.legend(labels, loc='upper right')
+    return values
+        
 def fit_linear(positions):
-	#plt.subplot(2, 1, 2)
-	#plt.ylabel('Watts @ Speed by Servo Position')
-	#plt.grid(b=True, which='major', color='gray', linestyle='--')
-	
-	for p in positions:
-		speed = []
-		power = []
-		
-		for mph in range(5,25,5):
-			speed.append(mph)
-			power.append((mph * 0.44740) * p.slope + p.intercept)
-			#plt.plot(speed, power)        
+    #plt.subplot(2, 1, 2)
+    #plt.ylabel('Watts @ Speed by Servo Position')
+    #plt.grid(b=True, which='major', color='gray', linestyle='--')
+    
+    for p in positions:
+        speed = []
+        power = []
+        
+        for mph in range(5,25,5):
+            speed.append(mph)
+            power.append((mph * 0.44740) * p.slope + p.intercept)
+            #plt.plot(speed, power)        
 
 def get_position_data():
-	# loads slope & intercept for each position.
-	positions = []
-	data = np.loadtxt('position_slope_intercept.csv', delimiter=',', comments='#')
-	
-	for r in data:
-		p = position()
-		p.servo = r[0]
-		p.slope = r[1]
-		p.intercept = r[2]
-		positions.append(p)
+    # loads slope & intercept for each position.
+    positions = []
+    data = np.loadtxt('position_force.csv', delimiter=',', comments='#')
+    
+    for r in data:
+        p = position()
+        p.servo = r[0]
+        p.slope = r[1]
+        p.intercept = r[2]
+        positions.append(p)
 
-	return positions
+    return positions
 
 # Optional param to set the force offset.    
 def init_mag(force_offset = 0):
@@ -276,7 +280,7 @@ def power_estimate(speed_mps, servo_pos, drag, rr):
         mag_watts = mag.watts(speed_mps, servo_pos)
         #print(servo_pos, mag_watts)
     else:
-        mag_watts = 0	
+        mag_watts = 0   
     
     return no_mag_watts + mag_watts          
     
@@ -332,14 +336,25 @@ def speed_moving_average(speed, n):
     return ma
 
 #
+# Determines is servo has been stable based on records and index into records.
+#
+def servo_stable(records, i, servo_lag):
+    # don't take any data points within # of seconds of a servo change.
+    
+    if i < servo_lag+1:
+        # Not enough data
+        return False
+    
+    return (i > servo_lag and records['position'][i-servo_lag] == records['position'][i])
+    
+#
 # Returns the index into the power array where the longer moving average
 # crosses the shorter moving average.
 # 
 # Returns at iterator which yields: index, power moving average, speed
 #
 def power_ma_crossovers(records, skip=0):
-    # don't take any data points within # of seconds of a servo change.
-    servo_lag = 6                  
+    servo_lag = 6
     speed_sec = 15
     long_power_sec = 15
     short_power_sec = 5
@@ -357,7 +372,103 @@ def power_ma_crossovers(records, skip=0):
         if ma_long[i-1] < ma_short[i-1] and ma_long[i] > ma_short[i]:
             # Only include if the servo position hasn't changed for a few seconds.
             # This eliminates the issue with averages appearing on the edge.
-            if i > servo_lag and records['position'][i-servo_lag] == records['position'][i]:
+            if servo_stable(records, i, servo_lag):
                 # We've crossed over return index, position, power moving average, speed.
                 yield i, ma_long[i], ma_speed[i]
+
+#
+# Create a list of tuples that contain start / end indexes of stable speed & servo data. 
+#
+def stable_speed_points(records):
+    servo_lag = 2
+    min_count = 5       # Minimum 5 seconds of stable data.
+    max_dev = 0.25      # Max deviation in speed +/-
+    tuples = []
+    start = 0
+    end = 0
+    count = 0
     
+    def speed_stable(i):
+        if i < 1:
+            # skip first record
+            return False
+        
+        return (abs(records['speed'][i] - records['speed'][i-1]) < max_dev)
+    
+    # iterate through speed, until there is a speed change of greater than .2 mph 
+    # identify the indexes where the speed starts and ends and create a tuple
+    for i, s in enumerate(records['speed']):
+        if speed_stable(i) and servo_stable(records, i, servo_lag):
+            # increment stability length
+            count = count + 1
+            
+            if start == 0:
+                # begin a new series
+                start = i   
+                end = 0
+                count = 0
+        else:
+            if start > 0 and count > min_count:
+                # we changed, so end must be the last record, and then trim one more for good measure.
+                end = i-2
+                tuples.append((start, end))
+                
+            # restart
+            start = 0   
+            end = 0
+            
+    return tuples
+    
+#
+# Returns the index into the power array where the servo, power, speed are stable.
+# 
+# Returns at iterator which yields: index, power average, speed
+#
+# records is the raw data, points is the start/end points where it's stable.
+#
+def power_stable(records, points=None):
+    max_watt_dev = 10
+    max_speed_dev = 1
+    
+    # Calculate points if not already calculated
+    if points == None:
+        points = stable_speed_points(records)
+
+    print("calculating power_stable")
+        
+    avg_power = 0
+    avg_speed = 0
+    for p in points:
+        #avg_power = np.mean(records['power'][p[0]:p[1]])
+        avg_power = normalized_mean(records['power'][p[0]:p[1]], max_watt_dev)
+        avg_speed = normalized_mean(records['speed'][p[0]:p[1]], max_speed_dev)
+        i = np.median([p[0], p[1]])
+        
+        if avg_power > 0 and avg_speed > 0:
+            yield i, avg_power, avg_speed
+
+#
+# Removes outliers and calculates average.
+# maximum standard deviation after filtering outliers.
+#
+def normalized_mean(myList, max_std):
+    # determine the average for the list
+    mean_duration = np.mean(myList)
+    
+    # find the standard deviation of the list
+    std_dev_one_test = np.std(myList)     
+
+    # remove values that exceed standard deviation
+    def drop_outliers(x):
+        if abs(x - mean_duration) <= std_dev_one_test:
+            return x
+
+    # filter the outliers
+    filtered = filter(drop_outliers, myList)
+    myList = list(filtered)
+   
+    if len(myList) > 0 and np.std(myList) < max_std:
+        # return the average of the cleaned up values
+        return np.mean(myList)
+    else:
+        return 0
