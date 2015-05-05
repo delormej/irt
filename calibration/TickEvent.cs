@@ -44,18 +44,20 @@ namespace IRT.Calibration
             /*
                 tx_buffer[0] = 		ANT_BP_PAGE_CALIBRATION;
                 tx_buffer[1] = 		ANT_BP_CAL_PARAM_RESPONSE;
-                tx_buffer[2] = 		LOW_BYTE(time_2048);
-                tx_buffer[3] = 		HIGH_BYTE(time_2048);
+                tx_buffer[2] = 		LOW_BYTE(time_2048);                // == buffer[0]
+                tx_buffer[3] = 		HIGH_BYTE(time_2048);               // == buffer[1]
                 tx_buffer[4] = 		LOW_BYTE(flywheel_ticks[0]);
                 tx_buffer[5] = 		HIGH_BYTE(flywheel_ticks[0]);
-                tx_buffer[6] = 		LOW_BYTE(flywheel_ticks[1]);
-                tx_buffer[7] = 		HIGH_BYTE(flywheel_ticks[1]);
+                tx_buffer[6] = 		LOW_BYTE(flywheel_ticks[1]);        // == buffer[4]
+                tx_buffer[7] = 		HIGH_BYTE(flywheel_ticks[1]);       // == buffer[5]
+
+                NOTE: we only get the last 6 bytes in the buffer.
             */
 
             // Ignore the first flywheel recording, just read the second one since that is
             // the one that is timestamped by the device.
             ushort time = (ushort)(buffer[0] | buffer[1] << 8);
-            ushort ticks = (ushort)(buffer[6] | buffer[7] << 8);
+            ushort ticks = (ushort)(buffer[4] | buffer[5] << 8);
 
             return new TickEvent(time, ticks);
         }
