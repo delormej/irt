@@ -368,6 +368,10 @@ class LogParser:
             # Fit force to a model.
             #
             ix = [i for i,x in enumerate(force) if x > 0]      # indexes where force is > 0
+            if len(speed[ix]) < 2 or len(force[ix]) != len(speed[ix]):
+                print("not enough data to fit force for: ", position)
+                continue
+            
             a,b = fit.fit_force(speed[ix], force[ix])
             print((position, a, b))
             fit_force = []
