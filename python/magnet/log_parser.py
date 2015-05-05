@@ -333,16 +333,16 @@ class LogParser:
         # For each position we've found with stable data in the file.
         for p in self.positions:
             # skip 900
-            if p[0] == 900:
-                continue
+            #if p[0] == 900:
+            #    continue
                 
             position = p[0]
             slope = p[1]
             intercept = p[2]
             ix = p[3]
             
-            # Create a range of speeds
-            speed = np.linspace(0, 15, 50)
+            # Create a range of speeds in meters per second.
+            speed = np.linspace(1, 15, 50)
             
             #
             # Calculate force based on derived slope / intercept.
