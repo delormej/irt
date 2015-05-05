@@ -188,7 +188,6 @@ def fit_3rd_poly(positions):
             #power.append(mps * p.slope + p.intercept)
             f = get_force(mps, p.slope, p.intercept)
             w = f * mps
-            print(f, mps, w)
             power.append(w)
             servo_pos.append(p.servo)
             #print(p.servo, mph, watts)

@@ -212,6 +212,7 @@ class LogParser:
             position = self.records[i]['position']
             speed_mps = speed * 0.44704
             stable.append((i, position, speed_mps, power)) 
+            #print((position, speed, power))
             
         dtp = np.dtype([('index','i4'), ('position','i4'), ('speed_mps','f4'), ('power','f4')])
         self.stable_records = np.array(stable, dtype=dtp)
