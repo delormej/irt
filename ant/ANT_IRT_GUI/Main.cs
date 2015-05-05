@@ -2414,6 +2414,37 @@ namespace IRT_GUI
             }
         }
 
+        private void BatchCalibrate(string[] fileNames)
+        {
+            Model model = null;
+            Coastdown coastdown = new Coastdown();
+
+            UpdateStatus("Drag, RR, Inertia, Coastdown, Watts");
+
+            foreach (string file in fileNames)
+            {
+                try
+                {
+                    model = Model.FromFile(file);
+                    coastdown.Calculate(model);
+
+                    string output = string.Format("{0:0.000000}, {1:0.0000}, {2:0.000}, {3:0.0}, {4:0}",
+                        coastdown.Drag,
+                        coastdown.RollingResistance,
+                        model.Inertia,
+                        coastdown.CoastdownTime(15 * 0.44704),
+                        coastdown.Watts(15 * 0.44704)
+                        );
+
+                    UpdateStatus(output);
+                }
+                catch (Exception e)
+                {
+                    UpdateStatus("Failed on: " + file);
+                }
+            }
+        }
+
         private void btnLoadCalibration_Click(object sender, EventArgs e)
         {
 
@@ -2423,31 +2454,18 @@ namespace IRT_GUI
             dlg.FilterIndex = 1;
             dlg.RestoreDirectory = false;
             dlg.CheckFileExists = true;
-            dlg.Multiselect = false;
+            dlg.Multiselect = true;
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    Model model;
+                    Model model = null;
                     Coastdown coastdown = new Coastdown();
 
                     if (dlg.FileNames.Length > 1)
                     {
-                        List<Model> models = new List<Model>();
-
-                        foreach (string file in dlg.FileNames)
-                        {
-                            models.Add(Model.FromFile(file));
-                        }
-
-                        // Calculate based on multiple files.
-                        model = coastdown.Calculate(models.ToArray());
-
-                        // For display purposes, use the lsat stable speed and watts.
-                        model.StableSeconds = models.Last().StableSeconds;
-                        model.StableSpeedMps = models.Last().StableSpeedMps;
-                        model.StableWatts = models.Last().StableWatts;
+                        BatchCalibrate(dlg.FileNames);
                     }
                     else
                     {
