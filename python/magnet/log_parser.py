@@ -43,9 +43,9 @@ class LogParser:
         # returns chart area... 
         
     def PlotMagnet(self):
-        #self.__create_magnet_plot()
-        #self.__create_model_mag_plot()
-        self.__create_mag_force_plot()
+        self.__create_magnet_plot()
+        self.__create_model_mag_plot()
+        #self.__create_mag_force_plot()
         
     # ------------------------------------------------------------------------
     #  Internal methods
@@ -143,8 +143,7 @@ class LogParser:
     # Returns a list of valid indexes of stable data by servo position.
     #
     def __stable_by_position(self, position):
-        #return [i for i, x in enumerate(self.records[self.stable_records['index']]) if x['position']==position]
-        return [x for x in self.stable_records if x['position'] == position]
+        return [ x['index'] for x in self.stable_records if x['position'] == position ]
         
     def __stable_magonly_power(self):
         magonly_col = []
@@ -264,6 +263,9 @@ class LogParser:
         
         ax3.legend()
 
+    #
+    # Plots speed:watts based on empirical magnet data in this file.
+    #
     def __create_magnet_plot(self):
 
         plt.subplot(121)
@@ -292,6 +294,9 @@ class LogParser:
         
         plt.legend()
 
+    # 
+    # Plots the known, trusted model for speed:watts.
+    #
     def __create_model_mag_plot(self):
         # Draw the model power 
         model_speed_mps = np.array( [ min(self.stable_records['speed_mps']), max(self.stable_records['speed_mps']) ] )

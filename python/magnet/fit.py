@@ -389,8 +389,8 @@ def power_ma_crossovers(records, skip=0):
 #
 def stable_speed_points(records):
     servo_lag = 2
-    min_count = 5     # Minimum 5 seconds of stable data.
-    max_dev = 0.25   # Max deviation in speed +/-
+    min_count = 5       # Minimum 5 seconds of stable data.
+    max_dev = 0.25      # Max deviation in speed +/-
     tuples = []
     start = 0
     end = 0
