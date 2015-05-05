@@ -446,10 +446,11 @@ def power_stable(records, points=None):
     for p in points:
         #avg_power = np.mean(records['power'][p[0]:p[1]])
         avg_power = normalized_mean(records['power'][p[0]:p[1]])
-        avg_speed = np.mean(records['speed'][p[0]:p[1]])
+        avg_speed = normalized_mean(records['speed'][p[0]:p[1]])
         i = np.median([p[0], p[1]])
-        #print(i, avg_power, avg_speed)
-        yield i, avg_power, avg_speed
+        
+        if avg_power > 0 and avg_speed > 0:
+            yield i, avg_power, avg_speed
 
 #
 # Removes outliers and calculates average.
@@ -470,5 +471,8 @@ def normalized_mean(myList):
     filtered = filter(drop_outliers, myList)
     myList = list(filtered)
     
-    # return the average of the cleaned up values
-    return np.mean(myList)
+    if len(myList) > 0:
+        # return the average of the cleaned up values
+        return np.mean(myList)
+    else:
+        return 0
