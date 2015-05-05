@@ -243,17 +243,19 @@ class LogParser:
         ax2.plot(time, self.records['position'], color='r')
         ax2.set_ylim(800, 1700)
 
-        ax3.plot(time, self.records['power'], 'r')
-        ax3.plot(time, self.records['power_est'], 'orange', linestyle='--', linewidth=2)
+        ax3.plot(time, self.records['power'], 'r', label='Actual')
+        ax3.plot(time, self.records['power_est'], 'orange', linestyle='--', linewidth=2, label='Est.')
 
-        ax3.plot(time, fit.moving_average(self.records['power'], 30), color='b')
-        ax3.plot(time, fit.moving_average(self.records['power'], 10), color='lightblue')
-        ax3.plot(time, fit.moving_average(self.records['power_est'], 30), color='y')
+        ax3.plot(time, fit.moving_average(self.records['power'], 30), color='b', label='30 Sec MA')
+        ax3.plot(time, fit.moving_average(self.records['power'], 10), color='lightblue', label='10 Sec MA')
+        ax3.plot(time, fit.moving_average(self.records['power_est'], 30), color='y', label='30 Sec Est. MA')
 
         ax3.set_ylim(50, 600)
         
         # Add markers where we're getting our stable data.
-        ax3.scatter(self.stable_records['index'], self.stable_records['power'])
+        ax3.scatter(self.stable_records['index'], self.stable_records['power'], label='Stable Points')
+        
+        ax3.legend()
 
     def __create_magnet_plot(self):
 
