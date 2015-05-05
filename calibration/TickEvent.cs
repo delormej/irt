@@ -55,7 +55,7 @@ namespace IRT.Calibration
             // Ignore the first flywheel recording, just read the second one since that is
             // the one that is timestamped by the device.
             ushort time = (ushort)(buffer[0] | buffer[1] << 8);
-            ushort ticks = (ushort)(buffer[4] | buffer[5] << 8);
+            ushort ticks = (ushort)(buffer[6] | buffer[7] << 8);
 
             return new TickEvent(time, ticks);
         }
