@@ -435,6 +435,9 @@ def stable_speed_points(records):
 # records is the raw data, points is the start/end points where it's stable.
 #
 def power_stable(records, points=None):
+    max_watt_dev = 10
+    max_speed_dev = 1
+    
     # Calculate points if not already calculated
     if points == None:
         points = stable_speed_points(records)
@@ -445,8 +448,8 @@ def power_stable(records, points=None):
     avg_speed = 0
     for p in points:
         #avg_power = np.mean(records['power'][p[0]:p[1]])
-        avg_power = normalized_mean(records['power'][p[0]:p[1]])
-        avg_speed = normalized_mean(records['speed'][p[0]:p[1]])
+        avg_power = normalized_mean(records['power'][p[0]:p[1]], max_watt_dev)
+        avg_speed = normalized_mean(records['speed'][p[0]:p[1]], max_speed_dev)
         i = np.median([p[0], p[1]])
         
         if avg_power > 0 and avg_speed > 0:
@@ -454,8 +457,9 @@ def power_stable(records, points=None):
 
 #
 # Removes outliers and calculates average.
+# maximum standard deviation after filtering outliers.
 #
-def normalized_mean(myList):
+def normalized_mean(myList, max_std):
     # determine the average for the list
     mean_duration = np.mean(myList)
     
@@ -470,8 +474,8 @@ def normalized_mean(myList):
     # filter the outliers
     filtered = filter(drop_outliers, myList)
     myList = list(filtered)
-    
-    if len(myList) > 0:
+   
+    if len(myList) > 0 and np.std(myList) < max_std:
         # return the average of the cleaned up values
         return np.mean(myList)
     else:
