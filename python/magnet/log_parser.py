@@ -208,7 +208,8 @@ class LogParser:
     
         stable = []
     
-        for i, power, speed in fit.power_ma_crossovers(self.records, skip):
+        #for i, power, speed in fit.power_ma_crossovers(self.records, skip):
+        for i, power, speed in fit.power_stable(self.records):
             position = self.records[i]['position']
             speed_mps = speed * 0.44704
             stable.append((i, position, speed_mps, power)) 

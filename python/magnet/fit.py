@@ -384,6 +384,9 @@ def power_ma_crossovers(records, skip=0):
                 # We've crossed over return index, position, power moving average, speed.
                 yield i, ma_long[i], ma_speed[i]
 
+#
+# Create a list of tuples that contain start / end indexes of stable speed & servo data. 
+#
 def stable_speed_points(records):
     servo_lag = 2
     min_count = 5     # Minimum 5 seconds of stable data.
@@ -424,3 +427,48 @@ def stable_speed_points(records):
             
     return tuples
     
+#
+# Returns the index into the power array where the servo, power, speed are stable.
+# 
+# Returns at iterator which yields: index, power average, speed
+#
+# records is the raw data, points is the start/end points where it's stable.
+#
+def power_stable(records, points=None):
+    # Calculate points if not already calculated
+    if points == None:
+        points = stable_speed_points(records)
+
+    print("calculating power_stable")
+        
+    avg_power = 0
+    avg_speed = 0
+    for p in points:
+        #avg_power = np.mean(records['power'][p[0]:p[1]])
+        avg_power = normalized_mean(records['power'][p[0]:p[1]])
+        avg_speed = np.mean(records['speed'][p[0]:p[1]])
+        i = np.median([p[0], p[1]])
+        #print(i, avg_power, avg_speed)
+        yield i, avg_power, avg_speed
+
+#
+# Removes outliers and calculates average.
+#
+def normalized_mean(myList):
+    # determine the average for the list
+    mean_duration = np.mean(myList)
+    
+    # find the standard deviation of the list
+    std_dev_one_test = np.std(myList)     
+
+    # remove values that exceed standard deviation
+    def drop_outliers(x):
+        if abs(x - mean_duration) <= std_dev_one_test:
+            return x
+
+    # filter the outliers
+    filtered = filter(drop_outliers, myList)
+    myList = list(filtered)
+    
+    # return the average of the cleaned up values
+    return np.mean(myList)
