@@ -80,58 +80,101 @@ namespace IRT.Calibration
 
         private void DrawChart()
         {
+            //
+            // Setup the chart.
+            //
             chartCoastdown.ChartAreas.Clear();
             var coastdownArea = chartCoastdown.ChartAreas.Add("Coastdown");
             coastdownArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
             
             chartCoastdown.Series.Clear();
 
-            var series1 = chartCoastdown.Series.Add("Computed");
-            series1.ChartType = SeriesChartType.Spline;
-
-            var series2 = chartCoastdown.Series.Add("Actual");
-            series2.ChartType = SeriesChartType.Point;
-
             chartCoastdown.ChartAreas["Coastdown"].AxisY.Minimum = 0;
             chartCoastdown.ChartAreas["Coastdown"].AxisX.Minimum = 0;
 
             chartCoastdown.Legends[0].Docking = Docking.Bottom;
 
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Title = "Coastdown (seconds)";
-            chartCoastdown.ChartAreas["Coastdown"].AxisX.Title = "Speed (mph)";
-
-            // Plot the calculated curve line first.
-            for (double mph = 2; mph < 35; mph++)
-            {
-                var time = m_coastdown.CoastdownTime(mph * 0.44704);
-                series1.Points.AddXY(mph, time);
-            }
-
-            // Plot the actual values as points.
-            for (int i = 0; i < m_coastdown.Data.SpeedMps.Length; i++)
-            {
-                series2.Points.AddXY(
-                    Math.Round(m_coastdown.Data.SpeedMps[i] * 2.23694, 1),
-                    m_coastdown.Data.CoastdownSeconds[i]);
-            }
+            chartCoastdown.ChartAreas["Coastdown"].AxisX.Title = "Coastdown (seconds)";
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Title = "Speed (mph)";
 
             // Second chart with power curve.
             var powerArea = chartCoastdown.ChartAreas.Add("Power");
             powerArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
 
+            // Plot data on the chart.
+            PlotComputedCoastDown();
+            PlotActualCoastDown(m_coastdown.Data.CoastdownSeconds, 
+                m_coastdown.Data.SpeedMps);
+            PlotStableWatts();
+            PlotWatts("Watts");
+        }
+
+        /// <summary>
+        /// Plots coastdown data.
+        /// </summary>
+        private void PlotComputedCoastDown()
+        {
+            var series1 = chartCoastdown.Series.Add("Computed");
+            series1.ChartType = SeriesChartType.Spline;
+
+            // Plot the calculated curve line first.
+            for (double mph = 2; mph < 35; mph++)
+            {
+                var time = m_coastdown.CoastdownTime(mph * 0.44704);
+                series1.Points.AddXY(time, mph);
+            }
+        }
+
+        /// <summary>
+        /// Plot actual coast down time/speed values.
+        /// </summary>
+        /// <param name="time"></param>
+        /// <param name="speed"></param>
+        public void PlotActualCoastDown(double[] time, double[] speed)
+        {
+            Series series2 = null;
+            if (!chartCoastdown.Series.IsUniqueName("Actual"))
+            {
+                series2 = chartCoastdown.Series.Add("Actual");
+            }
+            else
+            {
+                string name = chartCoastdown.Series.NextUniqueName();
+                series2 = chartCoastdown.Series.Add(name);
+            }
+            
+            series2.ChartType = SeriesChartType.Point;
+
+            // Plot the actual values as points.
+            for (int i = 0; i < speed.Length; i++)
+            {
+                series2.Points.AddXY(
+                    time[i],
+                    Math.Round(speed[i] * 2.23694, 1));
+            }
+        }
+
+        /// <summary>
+        /// Plots a marker showing the stable watts.
+        /// </summary>
+        private void PlotStableWatts()
+        {
             // Plot the watts at stable speed.
             var stablePowerSeries = chartCoastdown.Series.Add("StablePower");
             stablePowerSeries.ChartArea = "Power";
             stablePowerSeries.ChartType = SeriesChartType.Point;
+
             int stablePoint = stablePowerSeries.Points.AddXY(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
             stablePowerSeries.Points[stablePoint].MarkerStyle = MarkerStyle.Diamond;
             stablePowerSeries.Points[stablePoint].MarkerSize = 8;
             chartCoastdown.Series["StablePower"].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
-
-            AddWatts("Watts");
         }
 
-        private void AddWatts(string seriesName)
+        /// <summary>
+        /// Plots power data on the chart.
+        /// </summary>
+        /// <param name="seriesName"></param>
+        private void PlotWatts(string seriesName)
         {
             Series wattSeries = chartCoastdown.Series.FirstOrDefault(x => x.Name == seriesName);
 
@@ -189,7 +232,7 @@ namespace IRT.Calibration
 
                 m_coastdown.Calculate(m_model);
                 UpdateValues();
-                AddWatts("Recalculated");
+                PlotWatts("Recalculated");
             }
         }
 

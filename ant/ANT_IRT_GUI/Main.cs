@@ -2418,6 +2418,7 @@ namespace IRT_GUI
         {
             Model model = null;
             Coastdown coastdown = new Coastdown();
+            CoastdownForm form = null;
 
             UpdateStatus("Drag, RR, Inertia, Coastdown, Watts");
 
@@ -2437,12 +2438,25 @@ namespace IRT_GUI
                         );
 
                     UpdateStatus(output);
+
+                    if (form == null)
+                    {
+                        form = new CoastdownForm(coastdown, model);
+                    }
+                    else
+                    {
+                        form.PlotActualCoastDown(coastdown.Data.CoastdownSeconds, 
+                            coastdown.Data.SpeedMps);
+                    }
+
                 }
                 catch (Exception e)
                 {
                     UpdateStatus("Failed on: " + file);
                 }
             }
+
+            form.Show();
         }
 
         private void btnLoadCalibration_Click(object sender, EventArgs e)
