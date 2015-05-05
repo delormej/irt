@@ -216,7 +216,7 @@ class LogParser:
         dtp = np.dtype([('index','i4'), ('position','i4'), ('speed_mps','f4'), ('power','f4')])
         self.stable_records = np.array(stable, dtype=dtp)
         
-        #print(len(self.records),len(self.stable_records))
+        
 
     def __create_ride_plot(self):
         plt.rc('axes', grid=True)
@@ -254,6 +254,12 @@ class LogParser:
         
         # Add markers where we're getting our stable data.
         ax3.scatter(self.stable_records['index'], self.stable_records['power'], label='Stable Points')
+        
+        # Shade in stable speed data sections.
+        for p in fit.stable_speed_points(self.records):
+            ax1.axvspan(p[0], p[1], color='yellow', alpha=0.2)
+            ax2.axvspan(p[0], p[1], color='yellow', alpha=0.2)
+            ax3.axvspan(p[0], p[1], color='yellow', alpha=0.2)
         
         ax3.legend()
 

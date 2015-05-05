@@ -344,14 +344,25 @@ def speed_moving_average(speed, n):
     return ma
 
 #
+# Determines is servo has been stable based on records and index into records.
+#
+def servo_stable(records, i):
+    # don't take any data points within # of seconds of a servo change.
+    servo_lag = 6
+    
+    if i < servo_lag+1:
+        # Not enough data
+        return False
+    
+    return (i > servo_lag and records['position'][i-servo_lag] == records['position'][i])
+    
+#
 # Returns the index into the power array where the longer moving average
 # crosses the shorter moving average.
 # 
 # Returns at iterator which yields: index, power moving average, speed
 #
 def power_ma_crossovers(records, skip=0):
-    # don't take any data points within # of seconds of a servo change.
-    servo_lag = 6                  
     speed_sec = 15
     long_power_sec = 15
     short_power_sec = 5
@@ -369,7 +380,46 @@ def power_ma_crossovers(records, skip=0):
         if ma_long[i-1] < ma_short[i-1] and ma_long[i] > ma_short[i]:
             # Only include if the servo position hasn't changed for a few seconds.
             # This eliminates the issue with averages appearing on the edge.
-            if i > servo_lag and records['position'][i-servo_lag] == records['position'][i]:
+            if servo_stable(records, i):
                 # We've crossed over return index, position, power moving average, speed.
                 yield i, ma_long[i], ma_speed[i]
+
+def stable_speed_points(records):
+    min_count = 5     # Minimum 5 seconds of stable data.
+    max_dev = 0.2   # Max deviation in speed +/-
+    tuples = []
+    start = 0
+    end = 0
+    count = 0
+    
+    def speed_stable(i):
+        if i < 1:
+            # skip first record
+            return False
+        
+        return (abs(records['speed'][i] - records['speed'][i-1]) < max_dev)
+    
+    # iterate through speed, until there is a speed change of greater than .2 mph 
+    # identify the indexes where the speed starts and ends and create a tuple
+    for i, s in enumerate(records['speed']):
+        if speed_stable(i) and servo_stable(records, i):
+            # increment stability length
+            count = count + 1
+            
+            if start == 0:
+                # begin a new series
+                start = i   
+                end = 0
+                count = 0
+        else:
+            if start > 0 and count > min_count:
+                # we changed, so end must be the last record
+                end = i-1
+                tuples.append((start, end))
+                
+            # restart
+            start = 0   
+            end = 0
+            
+    return tuples
     
