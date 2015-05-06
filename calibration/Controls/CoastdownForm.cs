@@ -105,7 +105,7 @@ namespace IRT.Calibration
             PlotComputedCoastDown();
             PlotActualCoastDown(m_coastdown.Data.CoastdownSeconds, 
                 m_coastdown.Data.SpeedMps);
-            PlotStableWatts();
+            PlotStableWatts(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
             PlotWatts("Watts");
         }
 
@@ -133,16 +133,14 @@ namespace IRT.Calibration
         public void PlotActualCoastDown(double[] time, double[] speed)
         {
             Series series2 = null;
-            if (!chartCoastdown.Series.IsUniqueName("Actual"))
+            string name = "Actual";
+
+            if (!chartCoastdown.Series.IsUniqueName(name))
             {
-                series2 = chartCoastdown.Series.Add("Actual");
+                name = chartCoastdown.Series.NextUniqueName();
             }
-            else
-            {
-                string name = chartCoastdown.Series.NextUniqueName();
-                series2 = chartCoastdown.Series.Add(name);
-            }
-            
+
+            series2 = chartCoastdown.Series.Add(name);
             series2.ChartType = SeriesChartType.Point;
 
             // Plot the actual values as points.
@@ -157,17 +155,27 @@ namespace IRT.Calibration
         /// <summary>
         /// Plots a marker showing the stable watts.
         /// </summary>
-        private void PlotStableWatts()
+        public void PlotStableWatts(double speed_mph, double watts)
         {
             // Plot the watts at stable speed.
-            var stablePowerSeries = chartCoastdown.Series.Add("StablePower");
+            Series stablePowerSeries = null;
+            string name = "StablePower";
+
+            if (!chartCoastdown.Series.IsUniqueName(name))
+            { 
+                // Add additional series name
+                name = "Stable " + chartCoastdown.Series.NextUniqueName();
+            }
+
+            stablePowerSeries = chartCoastdown.Series.Add(name);
+
             stablePowerSeries.ChartArea = "Power";
             stablePowerSeries.ChartType = SeriesChartType.Point;
 
-            int stablePoint = stablePowerSeries.Points.AddXY(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
+            int stablePoint = stablePowerSeries.Points.AddXY(speed_mph, watts);
             stablePowerSeries.Points[stablePoint].MarkerStyle = MarkerStyle.Diamond;
             stablePowerSeries.Points[stablePoint].MarkerSize = 8;
-            chartCoastdown.Series["StablePower"].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
+            stablePowerSeries.ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
         }
 
         /// <summary>

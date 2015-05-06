@@ -2447,6 +2447,7 @@ namespace IRT_GUI
                     {
                         form.PlotActualCoastDown(coastdown.Data.CoastdownSeconds, 
                             coastdown.Data.SpeedMps);
+                        form.PlotStableWatts(model.StableSpeedMps * 2.23694, model.StableWatts);
                     }
 
                 }
