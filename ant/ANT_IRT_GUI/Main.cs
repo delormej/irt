@@ -2414,6 +2414,17 @@ namespace IRT_GUI
             }
         }
 
+        private void Calibrate(string file)
+        {
+            Model model = Model.FromFile(file);
+            Coastdown coastdown = new Coastdown();
+
+            coastdown.Calculate(model);
+            CoastdownForm form = new CoastdownForm(coastdown, model);
+            form.Apply += m_calibration_CoastdownCalibrationApply;
+            form.Show();
+        }
+
         private void BatchCalibrate(string[] fileNames)
         {
             Model model = null;
@@ -2457,7 +2468,10 @@ namespace IRT_GUI
                 }
             }
 
-            form.Show();
+            if (form != null)
+            {
+                form.Show();
+            }
         }
 
         private void btnLoadCalibration_Click(object sender, EventArgs e)
@@ -2475,22 +2489,14 @@ namespace IRT_GUI
             {
                 try
                 {
-                    Model model = null;
-                    Coastdown coastdown = new Coastdown();
-
                     if (dlg.FileNames.Length > 1)
                     {
                         BatchCalibrate(dlg.FileNames);
                     }
                     else
                     {
-                        model = Model.FromFile(dlg.FileName);
-                        coastdown.Calculate(model);
+                        Calibrate(dlg.FileName);
                     }
-
-                    CoastdownForm form = new CoastdownForm(coastdown, model);
-                    form.Apply += m_calibration_CoastdownCalibrationApply;
-                    form.Show();
                 }
                 catch (Exception ex)
                 {
