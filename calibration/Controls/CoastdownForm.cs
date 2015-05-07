@@ -27,6 +27,10 @@ namespace IRT.Calibration
         {
             InitializeComponent();
 
+            evaluateToolStripMenuItem.Click += btnCalcWatts_Click;
+            resetToolStripMenuItem.Click += btnReset_Click;
+            recalculateToolStripMenuItem.Click += btnReset_Click;
+
             m_coastdown = coastdown;
             m_model = model;
 
