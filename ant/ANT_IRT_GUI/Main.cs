@@ -2456,8 +2456,12 @@ namespace IRT_GUI
                     }
                     else
                     {
+                        int start = file.LastIndexOf(@"\");
+
+                        string label = file.Substring(start+1, file.Length - start);
+
                         form.PlotActualCoastDown(coastdown.Data.CoastdownSeconds, 
-                            coastdown.Data.SpeedMps);
+                            coastdown.Data.SpeedMps, label);
                         form.PlotStableWatts(model.StableSpeedMps * 2.23694, model.StableWatts);
                     }
 

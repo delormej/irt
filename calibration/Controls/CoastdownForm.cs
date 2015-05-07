@@ -130,10 +130,9 @@ namespace IRT.Calibration
         /// </summary>
         /// <param name="time"></param>
         /// <param name="speed"></param>
-        public void PlotActualCoastDown(double[] time, double[] speed)
+        public void PlotActualCoastDown(double[] time, double[] speed, string name = "Actual")
         {
             Series series2 = null;
-            string name = "Actual";
 
             if (!chartCoastdown.Series.IsUniqueName(name))
             {
