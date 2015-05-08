@@ -51,6 +51,8 @@
             this.recalculateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chartCoastdown = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.applyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chartCoastdown)).BeginInit();
             this.SuspendLayout();
@@ -191,6 +193,8 @@
             // 
             // fileToolStripMenuItem
             // 
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -200,7 +204,8 @@
             this.coastdownToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.evaluateToolStripMenuItem,
             this.recalculateToolStripMenuItem,
-            this.resetToolStripMenuItem});
+            this.resetToolStripMenuItem,
+            this.applyToolStripMenuItem});
             this.coastdownToolStripMenuItem.Name = "coastdownToolStripMenuItem";
             this.coastdownToolStripMenuItem.Size = new System.Drawing.Size(79, 20);
             this.coastdownToolStripMenuItem.Text = "Coastdown";
@@ -241,6 +246,18 @@
             this.chartCoastdown.Size = new System.Drawing.Size(516, 419);
             this.chartCoastdown.TabIndex = 7;
             this.chartCoastdown.Text = "chart1";
+            // 
+            // applyToolStripMenuItem
+            // 
+            this.applyToolStripMenuItem.Name = "applyToolStripMenuItem";
+            this.applyToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.applyToolStripMenuItem.Text = "&Apply";
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Text = "E&xit";
             // 
             // CoastdownForm
             // 
@@ -297,5 +314,7 @@
         private System.Windows.Forms.ToolStripMenuItem recalculateToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartCoastdown;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem applyToolStripMenuItem;
     }
 }

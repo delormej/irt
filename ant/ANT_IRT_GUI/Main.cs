@@ -2458,7 +2458,7 @@ namespace IRT_GUI
                     {
                         int start = file.LastIndexOf(@"\");
 
-                        string label = file.Substring(start+1, file.Length - start);
+                        string label = file.Substring(start+1, file.Length - start-1);
 
                         form.PlotActualCoastDown(coastdown.Data.CoastdownSeconds, 
                             coastdown.Data.SpeedMps, label);

@@ -30,6 +30,8 @@ namespace IRT.Calibration
             evaluateToolStripMenuItem.Click += btnCalcWatts_Click;
             resetToolStripMenuItem.Click += btnReset_Click;
             recalculateToolStripMenuItem.Click += btnReset_Click;
+            applyToolStripMenuItem.Click += btnApply_Click;
+            exitToolStripMenuItem.Click += btnCancel_Click;
 
             m_coastdown = coastdown;
             m_model = model;
@@ -167,7 +169,7 @@ namespace IRT.Calibration
             if (!chartCoastdown.Series.IsUniqueName(name))
             { 
                 // Add additional series name
-                name = "Stable " + chartCoastdown.Series.NextUniqueName();
+                name = chartCoastdown.Series.NextUniqueName();
             }
 
             stablePowerSeries = chartCoastdown.Series.Add(name);
