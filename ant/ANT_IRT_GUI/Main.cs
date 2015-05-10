@@ -1838,7 +1838,8 @@ namespace IRT_GUI
                 if (txtLog == null || txtLog.IsDisposed)
                     return;
 
-                txtLog.AppendText(text + '\n');
+                txtLog.AppendText(string.Format("{0:s}: {1}\n", 
+                    DateTime.UtcNow, text));
                 lblStatus.Text = text;
             });
         }
