@@ -233,6 +233,17 @@ namespace IRT.Calibration
             this.txtStableWatts.Text = m_model.StableWatts.ToString();
         }
 
+        private void RecalculateWatts()
+        {
+            double stableMph;
+
+            if (double.TryParse(txtStableSpeed.Text, out stableMph))
+            {
+                this.txtStableWatts.Text =
+                    string.Format("{0:0}", m_coastdown.Watts(stableMph * 0.44704));
+            }
+        }
+
         private void btnRecalc_Click(object sender, EventArgs e)
         {
             double stableMph;
@@ -251,19 +262,21 @@ namespace IRT.Calibration
 
         private void btnCalcWatts_Click(object sender, EventArgs e)
         {
-            double stableMph;
-
-            if (double.TryParse(txtStableSpeed.Text, out stableMph))
-            {
-                this.txtStableWatts.Text = 
-                    string.Format("{0:0}", m_coastdown.Watts(stableMph * 0.44704));
-            }
+            RecalculateWatts();
         }
 
         private void btnReset_Click(object sender, EventArgs e)
         {
             UpdateValues();
             DrawChart();
+        }
+
+        private void txtStableSpeed_Leave(object sender, EventArgs e)
+        {
+            if (txtStableSpeed.Modified)
+            {
+                RecalculateWatts();
+            }
         }
     }
 }
