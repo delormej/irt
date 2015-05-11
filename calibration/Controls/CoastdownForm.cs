@@ -29,7 +29,7 @@ namespace IRT.Calibration
 
             evaluateToolStripMenuItem.Click += btnCalcWatts_Click;
             resetToolStripMenuItem.Click += btnReset_Click;
-            recalculateToolStripMenuItem.Click += btnReset_Click;
+            recalculateToolStripMenuItem.Click += btnRecalc_Click;
             applyToolStripMenuItem.Click += btnApply_Click;
             exitToolStripMenuItem.Click += btnCancel_Click;
 
@@ -233,18 +233,7 @@ namespace IRT.Calibration
             this.txtStableWatts.Text = m_model.StableWatts.ToString();
         }
 
-        private void RecalculateWatts()
-        {
-            double stableMph;
-
-            if (double.TryParse(txtStableSpeed.Text, out stableMph))
-            {
-                this.txtStableWatts.Text =
-                    string.Format("{0:0}", m_coastdown.Watts(stableMph * 0.44704));
-            }
-        }
-
-        private void btnRecalc_Click(object sender, EventArgs e)
+        private void RecalculateCoastdown()
         {
             double stableMph;
 
@@ -260,9 +249,25 @@ namespace IRT.Calibration
             }
         }
 
+        private void RecalculatePower()
+        {
+            double stableMph;
+
+            if (double.TryParse(txtStableSpeed.Text, out stableMph))
+            {
+                this.txtStableWatts.Text =
+                    string.Format("{0:0}", m_coastdown.Watts(stableMph * 0.44704));
+            }
+        }
+
+        private void btnRecalc_Click(object sender, EventArgs e)
+        {
+            RecalculateCoastdown();
+        }
+
         private void btnCalcWatts_Click(object sender, EventArgs e)
         {
-            RecalculateWatts();
+            RecalculatePower();
         }
 
         private void btnReset_Click(object sender, EventArgs e)
@@ -275,7 +280,7 @@ namespace IRT.Calibration
         {
             if (txtStableSpeed.Modified)
             {
-                RecalculateWatts();
+                RecalculatePower();
             }
         }
     }
