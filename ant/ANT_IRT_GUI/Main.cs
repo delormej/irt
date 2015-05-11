@@ -2481,7 +2481,6 @@ namespace IRT_GUI
 
         private void btnLoadCalibration_Click(object sender, EventArgs e)
         {
-
             OpenFileDialog dlg = new OpenFileDialog();
             //dlg.InitialDirectory = m_lastPath;
             dlg.Filter = "Ride Logs (*.csv)|*.csv|All files (*.*)|*.*";
