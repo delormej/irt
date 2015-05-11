@@ -46,7 +46,7 @@ namespace IRT.Calibration
             // Get the change in speed.
             double dSpeed = speedMps - m_lastSpeed;
 
-            // Get the rate of change.
+            // Get the rate of change in m/s^2.
             double acceleration = dSpeed / dTime;
 
             return acceleration;
