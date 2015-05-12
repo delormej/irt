@@ -30,8 +30,11 @@ def main(file_name, drag, rr, offset):
     #plt.plot(p.records['speed'], p.records['power'])
     #plt.show()
     
-    p.PlotRide();
-    p.PlotMagnet();
+    est, points, avg_err = p.EstimateError()
+    print("Error estimate: %f based on: %d points, avg err: %f" % (est, points, avg_err))
+    
+    p.PlotRide()
+    p.PlotMagnet()
     plt.show()
     
         

@@ -43,9 +43,24 @@ class LogParser:
         # returns chart area... 
         
     def PlotMagnet(self):
-        self.__create_magnet_plot()
-        self.__create_model_mag_plot()
-        #self.__create_mag_force_plot()
+        #self.__create_magnet_plot()
+        #self.__create_model_mag_plot()
+        self.__create_mag_force_plot()
+        
+    def EstimateError(self):
+        # Returns the sum of the errors of the difference between 
+        # estimated power and actual power for stable data points.
+        err = 0
+        for r in self.stable_records:
+            i = r['index']
+            # note there is an err column in the data set we could use, but we're using
+            # the power_re_est for this value.
+            err += float(self.records[i]['power_re_est']) - float(r['power'])
+        
+        points = len(self.stable_records)
+        avg_err = err / points
+        
+        return err, points, avg_err 
         
     # ------------------------------------------------------------------------
     #  Internal methods
@@ -78,9 +93,10 @@ class LogParser:
     def __open(self, speed_col = 3, watts_col = 5, servo_col = 7, skip_rows = 20):
     
         self.records = np.loadtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
-                dtype=[('speed', float), ('power', int), ('position', int)], usecols=[speed_col, watts_col, servo_col], comments='"',
+                dtype=[('speed', float), ('power', int), ('position', int)], 
+                usecols=[speed_col, watts_col, servo_col], comments='"',
                 converters = {5: lambda s: float(s.strip() or 0)})
-        #self.records = self.records[0:1550]
+        #self.records = self.records[1550:]
                 
     #
     # Get the configuration settings from the log file.
@@ -134,7 +150,11 @@ class LogParser:
         # Add power estimate.
         power_est_col = self.__power_estimate()
         self.records = append_fields(self.records, 'power_est', power_est_col, usemask=False)
-        
+
+        # Re-estimated power based on magnet gap.
+        re_est_col = self.__power_maggap(gap=0.87)
+        self.records = append_fields(self.records, 'power_re_est', re_est_col, usemask=False)
+
         # Add actual vs. estimate error column.
         err_col = self.records['power_est'] - self.records['power']
         self.records = append_fields(self.records, 'power_err', err_col, usemask=False)
@@ -168,6 +188,7 @@ class LogParser:
             ix = [i for i,x in enumerate(self.stable_records) if x['position'] == p]
             slope, intercept = fit.fit_lin_regress(self.stable_records[ix]['speed_mps'], self.stable_records[ix]['magonly_power'])
             records.append((p, slope, intercept, ix))
+            print((p, slope, intercept))
 
         #dtp = np.dtype([('position','i4'), ('slope','f4'), ('intercept','f4'), ('ix')])
         #self.positions = np.array(records, dtype=dtp)
@@ -186,6 +207,30 @@ class LogParser:
         return power_est_col       
 
     #
+    # Builds a single dimension array, same length as records, containaing a power estimate
+    # that accomodates a magnet gap.
+    #
+    def __power_maggap(self, gap=0):
+        
+        def mag_gap(v, p, position):
+            # only adjust for mag on positions when we have a gap.
+            if gap == 0 or position >= 1600:
+                return p
+            
+            f = p / v
+            f2 = f * gap
+            p2 = f2 * v
+            return p2
+
+        power_est_col = []
+        
+        for r in self.records:
+            power_est = mag_gap(r['speed'] * 0.44704, r['power_est'], r['position'])
+            power_est_col.append(power_est)
+        
+        return power_est_col          
+
+    #
     # Calculates the Force for the magnet portion of the data.
     #
     def __calculate_mag_force(self, records):        
@@ -200,7 +245,7 @@ class LogParser:
     #
     # Identifies stable data.
     #
-    def __find_stable(self, skip=420):
+    def __find_stable(self, skip=0):
         # Skip first 7 minutes of data (7*60 = 420 records).
         if len(self.records) < skip:
             raise "Not enough rows to find stable data."
@@ -212,7 +257,7 @@ class LogParser:
             position = self.records[i]['position']
             speed_mps = speed * 0.44704
             stable.append((i, position, speed_mps, power)) 
-            #print((position, speed, power))
+            print("%.0f, %.2f, %.1f" % (position, speed, power))
             
         dtp = np.dtype([('index','i4'), ('position','i4'), ('speed_mps','f4'), ('power','f4')])
         self.stable_records = np.array(stable, dtype=dtp)
@@ -246,6 +291,7 @@ class LogParser:
 
         ax3.plot(time, self.records['power'], 'r', label='Actual')
         ax3.plot(time, self.records['power_est'], 'orange', linestyle='--', linewidth=2, label='Est.')
+        ax3.plot(time, self.records['power_re_est'], 'green', linestyle='--', linewidth=2, label='Mag Gap Est.')
 
         ax3.plot(time, fit.moving_average(self.records['power'], 30), color='b', label='30 Sec MA')
         ax3.plot(time, fit.moving_average(self.records['power'], 10), color='lightblue', label='10 Sec MA')
@@ -322,7 +368,7 @@ class LogParser:
             plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps, x), color=color, linestyle='-.', linewidth=linewidth)
         
     #
-    # Plots force as opposed to watts.
+    # Plots force.
     #
     def __create_mag_force_plot(self):
         
@@ -335,11 +381,13 @@ class LogParser:
         def calc_force_actual(speed_mps, magonly_power):
             return (magonly_power / speed_mps)
             
-        def model_force(speed_mps, position):
+        def model_force(speed_mps, position, gap_offset=0):
             force = []
             for v in speed_mps:
                 w = mag.watts(v, position)
                 f = (w / v)
+                if gap_offset > 0:
+                    f = f * gap_offset
                 force.append(f) 
             return force
         
@@ -379,18 +427,28 @@ class LogParser:
                 continue
             
             a,b = fit.fit_force(speed[ix], force[ix])
-            print((position, a, b))
+            #print((position, a, b))
             fit_force = []
+            #fit_force2 = []
             for s in (speed):
                 fit_force.append(fit.get_force(s, a, b))
+                #fit_force2.append(fit.get_force(s, a*1.2, b*1.2))
+                f2 = float(fit.get_force(s, a, b))
+                #fit_force2.append(f2 * 0.8)
             plt.plot(speed, fit_force, label=('%s Fit') % position) 
-                
+            #plt.plot(speed, fit_force2, label=('%s Contrived') % position)    
 
             #
             # Get force from established model based on speed/watts.
             #
             force2 = model_force(speed, position)
             ax.plot(speed, force2, color='orange', label=('%s Known Model') % position)
+
+            #
+            # Make up the force based on an offset to get the known model to match.
+            #
+            force3 = model_force(speed, position, gap_offset=0.78) #gap_offset=1.25)
+            plt.plot(speed, force3, label=('%s Contrived') % position)    
             
             #
             # Get the actual force by position.
@@ -404,7 +462,7 @@ class LogParser:
             ax.plot(stable_speed, stable_force, color='red', marker='*', label=('%s Actual') % position)
                         
         plt.ylim(-5)
-        #plt.legend(loc='lower_right')
+        plt.legend(loc='lower right')
         
 # ----------------------------------------------------------------------------
 #
