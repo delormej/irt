@@ -55,10 +55,10 @@ class LogParser:
             i = r['index']
             # note there is an err column in the data set we could use, but we're using
             # the power_re_est for this value.
-            err += float(self.records[i]['power_re_est']) - float(r['power'])
+            err += abs(float(self.records[i]['power_re_est']) - float(r['power']))**2
         
         points = len(self.stable_records)
-        avg_err = err / points
+        avg_err = math.sqrt(err) / points
         
         return err, points, avg_err 
         
@@ -152,7 +152,7 @@ class LogParser:
         self.records = append_fields(self.records, 'power_est', power_est_col, usemask=False)
 
         # Re-estimated power based on magnet gap.
-        re_est_col = self.__power_maggap(gap=0.87)
+        re_est_col = self.__power_maggap(gap=1.33) # smaller gap=1.33,  #larger gap=0.855
         self.records = append_fields(self.records, 'power_re_est', re_est_col, usemask=False)
 
         # Add actual vs. estimate error column.
@@ -208,27 +208,42 @@ class LogParser:
 
     #
     # Builds a single dimension array, same length as records, containaing a power estimate
-    # that accomodates a magnet gap.
+    # that accomodates a magnet gap offset.
     #
     def __power_maggap(self, gap=0):
         
-        def mag_gap(v, p, position):
-            # only adjust for mag on positions when we have a gap.
-            if gap == 0 or position >= 1600:
-                return p
+        def mag_gap(r):
+            # Get speed in meters per second.
+            v = r['speed'] * 0.44704
             
+            # Get calibration adjusted power.                        
+            magoff_power = fit.magoff_power(v, self.drag, self.rr)
+            
+            # Derive magnet only portion
+            p = r['power_est'] - magoff_power   
+            
+            # Apply gap offset percentage to mag only portion of power.
             f = p / v
             f2 = f * gap
             p2 = f2 * v
-            return p2
+            
+            # Compute new power.
+            return magoff_power + p2
 
-        power_est_col = []
+        gap_power_est_col = []
         
         for r in self.records:
-            power_est = mag_gap(r['speed'] * 0.44704, r['power_est'], r['position'])
-            power_est_col.append(power_est)
+            gap_adjusted_power = 0
+            
+            # only adjust for mag on positions when we have a gap.
+            if gap == 0 or r['position'] >= 1600:
+                gap_adjusted_power = r['power_est'] 
+            else:
+                gap_adjusted_power = mag_gap(r)
+            
+            gap_power_est_col.append(gap_adjusted_power)
         
-        return power_est_col          
+        return gap_power_est_col          
 
     #
     # Calculates the Force for the magnet portion of the data.
@@ -447,8 +462,8 @@ class LogParser:
             #
             # Make up the force based on an offset to get the known model to match.
             #
-            force3 = model_force(speed, position, gap_offset=0.78) #gap_offset=1.25)
-            plt.plot(speed, force3, label=('%s Contrived') % position)    
+            #force3 = model_force(speed, position, gap_offset=0) #gap_offset=1.25)
+            #plt.plot(speed, force3, label=('%s Contrived') % position)    
             
             #
             # Get the actual force by position.
