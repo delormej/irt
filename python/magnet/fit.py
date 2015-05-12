@@ -185,10 +185,10 @@ def fit_3rd_poly(positions):
         servo_pos = []
 
         for p in positions:
-            #power.append(mps * p.slope + p.intercept)
-            f = get_force(mps, p.slope, p.intercept)
-            w = f * mps
-            power.append(w)
+            power.append(mps * p.slope + p.intercept)
+            #f = get_force(mps, p.slope, p.intercept)
+            #w = f * mps
+            #power.append(w)
             servo_pos.append(p.servo)
             #print(p.servo, mph, watts)
             
@@ -222,7 +222,7 @@ def fit_linear(positions):
 def get_position_data():
     # loads slope & intercept for each position.
     positions = []
-    data = np.loadtxt('position_force.csv', delimiter=',', comments='#')
+    data = np.loadtxt('position_slope_intercept.csv', delimiter=',', comments='#')
     
     for r in data:
         p = position()
