@@ -77,6 +77,7 @@ class LogParser:
         self.rr = rr
         self.force_offset = force_offset
         self.device_id = 0
+        self.firmware_rev = ""
         
         # Grab all the records and config settings.
         self.__open()
@@ -117,6 +118,8 @@ class LogParser:
                         self.rr = float(row[1])
                     if row[0] == 'Drag' and self.drag == 0:
                         self.drag = float(row[1])
+                    if row[0] == 'FirmwareRev':
+                        self.firmware_rev = row[1]
                     if row[0] == 'DeviceID':
                         self.device_id = int(row[1])
                         # when we get here we've read all the config records
@@ -152,7 +155,7 @@ class LogParser:
         self.records = append_fields(self.records, 'power_est', power_est_col, usemask=False)
 
         # Re-estimated power based on magnet gap.
-        re_est_col = self.__power_maggap(gap=1.33) # smaller gap=1.33,  #larger gap=0.855
+        re_est_col = self.__power_maggap(gap=0.83) # smaller gap=1.33,  #larger gap=0.855
         self.records = append_fields(self.records, 'power_re_est', re_est_col, usemask=False)
 
         # Add actual vs. estimate error column.
@@ -323,6 +326,24 @@ class LogParser:
             ax2.axvspan(p[0], p[1], color='yellow', alpha=0.2)
             ax3.axvspan(p[0], p[1], color='yellow', alpha=0.2)
         
+        # Add error bars to show discrepency between power_est and actual power.
+        for r in self.stable_records:
+            i = r['index']
+            power_est = self.records[i]['power_re_est']
+            
+            if r['power'] > power_est:
+                bottom = power_est
+                height = r['power'] - bottom
+            else:   
+                bottom = r['power'] 
+                height = power_est - bottom
+                 
+            ax3.bar(left=i-0.4, height=height, bottom=bottom, width=0.8, color='red' )
+            
+            # Write the error in the center of the column.
+            err_text = "%.1f" % (height)
+            ax3.text(x=i+1, y=bottom+(height/2), s=err_text) 
+            
         ax3.legend()
 
     #
