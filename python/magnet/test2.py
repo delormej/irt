@@ -1,17 +1,36 @@
+import os
 import sys, getopt
 import log_parser as lp
 import matplotlib.pyplot as plt
 import fit
 import numpy as np
 
-#def calc_force(speed_mps, watts):
-    #f, coeff = fit_polynomial(servo_pos, power, c)
-    
+#
+# Enumerator for recursive file search.
+#
+def get_files(rootdir):
+    for root, dirs, files in os.walk(rootdir):
+        for filename in files:
+            if filename.startswith('irt_') and filename.endswith('.csv'):
+                filepath = os.path.join(root, filename)
+                yield filepath
+
+#
+#
+#
+def isBeta2(file):
+    p = lp.LogParser(file)
+    if (p.firmware_rev.startswith("1.")):
+        try:
+            main(file)
+        except:
+            print("skipping:", file)
+                    				
 
 #
 # Main entry point to parse a file.
 #        
-def main(file_name, drag, rr, offset):
+def main(file_name, drag=0, rr=0, offset=0):
     #x = np.array([12, 16, 20, 28, 32])  # 20 == 73??
     #y = [39 ,54 ,73, 113, 131]
     
@@ -19,6 +38,7 @@ def main(file_name, drag, rr, offset):
     #print("using calibration:", drag, rr)
     
     p = lp.LogParser(file_name, drag, rr, force_offset=offset)
+    p.Parse()
     #print(p.MagOnlyPower())
     """
     BCI values:
@@ -63,4 +83,9 @@ if __name__ == "__main__":
         elif opt in ("-o", "--offset"):
             offset = int(arg)
             
-    main(file, drag, rr, offset)
+    if os.path.isdir(file):
+        for f in get_files(file):
+            isBeta2(f)
+    else:
+        main(file, drag, rr, offset)
+        

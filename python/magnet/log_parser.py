@@ -21,6 +21,16 @@ import math as math
 # ----------------------------------------------------------------------------
 class LogParser:
     
+    def Parse(self):
+        # Grab all the records and config settings.
+        self.__open()
+        
+        # Initializes the co-efficients for magnet power.
+        fit.init_mag(self.force_offset)
+        
+        # Enrich the data
+        self.__enrich()
+    
     def CalibrationFit(self):
         # Runs a calibration fit 
         drag, rr = fit.fit_nonlinear_calibration(self.MagOffPower())
@@ -50,17 +60,20 @@ class LogParser:
     def EstimateError(self):
         # Returns the sum of the errors of the difference between 
         # estimated power and actual power for stable data points.
-        err = 0
+        total_err = 0
         for r in self.stable_records:
             i = r['index']
-            # note there is an err column in the data set we could use, but we're using
+            # note there is an total_err column in the data set we could use, but we're using
             # the power_re_est for this value.
-            err += abs(float(self.records[i]['power_re_est']) - float(r['power']))**2
+            err = abs(float(self.records[i]['power_re_est']) - float(r['power']))
+            total_err += err
+            print(err)
         
         points = len(self.stable_records)
-        avg_err = math.sqrt(err) / points
+        #avg_err = math.sqrt(total_err) / points
+        avg_err = total_err / points
         
-        return err, points, avg_err 
+        return total_err, points, avg_err 
         
     # ------------------------------------------------------------------------
     #  Internal methods
@@ -79,14 +92,8 @@ class LogParser:
         self.device_id = 0
         self.firmware_rev = ""
         
-        # Grab all the records and config settings.
-        self.__open()
+        # Populate object with config values from the file.
         self.__read_config()
-        
-        # Initializes the co-efficients for magnet power.
-        fit.init_mag(force_offset)
-        
-        self.__enrich()
         
     #
     # Opens the log file and returns arrays: speed (mph), power, servo position.
@@ -139,7 +146,8 @@ class LogParser:
         self.__find_stable()
     
         # Calibrate if drag & rr are not present based on stable records.
-        if self.drag == 0 or self.rr == 0:
+        if self.drag == 0 or self.rr == 0 \
+                or math.isnan(self.drag) or math.isnan(self.rr):
             self.drag, self.rr = self.CalibrationFit()
             print("Calculated calibration fit as:", self.drag, self.rr)
         
@@ -155,7 +163,7 @@ class LogParser:
         self.records = append_fields(self.records, 'power_est', power_est_col, usemask=False)
 
         # Re-estimated power based on magnet gap.
-        re_est_col = self.__power_maggap(gap=0.83) # smaller gap=1.33,  #larger gap=0.855
+        re_est_col = self.__power_maggap(gap=0.855) # smaller gap=1.33,  #larger gap=0.855
         self.records = append_fields(self.records, 'power_re_est', re_est_col, usemask=False)
 
         # Add actual vs. estimate error column.
@@ -278,7 +286,12 @@ class LogParser:
             print("%.0f, %.2f, %.1f" % (position, speed, power))
             
         dtp = np.dtype([('index','i4'), ('position','i4'), ('speed_mps','f4'), ('power','f4')])
-        self.stable_records = np.array(stable, dtype=dtp)
+        
+        # need some records
+        if len(stable) > 2:
+            self.stable_records = np.array(stable, dtype=dtp)
+        else:
+            raise ValueError("No stable records")
         
         
 
