@@ -67,7 +67,6 @@ class LogParser:
             # the power_re_est for this value.
             err = abs(float(self.records[i]['power_re_est']) - float(r['power']))
             total_err += err
-            print(err)
         
         points = len(self.stable_records)
         #avg_err = math.sqrt(total_err) / points
