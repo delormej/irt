@@ -132,7 +132,7 @@ def fit_nonlinear_calibration(records):
     for k, g in groupby(data, keyfunc):
         items = []
         for i in g:
-            items.append(i[1])
+            items.append(i['power'])
         med = np.mean(items) #TODO: change this to mean/average?
         groups.append((k, med))
 
