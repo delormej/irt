@@ -102,13 +102,39 @@ class LogParser:
     #
     # Opens the log file and returns arrays: speed (mph), power, servo position.
     #
-    def __open(self, speed_col = 3, watts_col = 5, servo_col = 7, skip_rows = 20):
+    def __open(self):
+        skip_rows = 20
+        
+        if (os.path.basename(self.file_name).startswith("irt_")):
+            #
+            # load the irt csv file
+            #
+            speed_col = 3
+            watts_col = 5
+            servo_col = 7
+            
+            self.records = np.loadtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
+                    dtype=[('speed', float), ('power', int), ('position', int)], 
+                    usecols=[speed_col, watts_col, servo_col], comments='"',
+                    converters = {5: lambda s: float(s.strip() or 0)})
+        else:
+            #
+            # load a TrainerRoad log file
+            #
+            # "Watts" == Power Meter
+            # "TargetData" == TR's erg target
+            # "PowerMeterData" == E-Motion Virtual Power
+            speed_col = 2
+            watts_col = 8
+            servo_col = 11
+            
+            self.records = np.genfromtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
+                    dtype=[('power', int), ('speed', float), ('position', int)],
+                    usecols=[speed_col, watts_col, servo_col], 
+                    converters = {5: lambda s: float(s.strip() or 0)})
     
-        self.records = np.loadtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
-                dtype=[('speed', float), ('power', int), ('position', int)], 
-                usecols=[speed_col, watts_col, servo_col], comments='"',
-                converters = {5: lambda s: float(s.strip() or 0)})
-        #self.records = self.records[1550:]
+            # Convert from Km/h to Mph
+            self.records['speed'] = self.records['speed']  * 0.621371  
                 
     #
     # Get the configuration settings from the log file.
