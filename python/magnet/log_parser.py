@@ -34,8 +34,14 @@ class LogParser:
     
     def CalibrationFit(self):
         # Runs a calibration fit 
-        drag, rr = fit.fit_nonlinear_calibration(self.MagOffPower())
-        return drag, rr
+        nomag = self.MagOffPower()
+        
+        if len(nomag) > 0:
+            drag, rr = fit.fit_nonlinear_calibration()
+            return drag, rr
+        else: 
+            print('not enough mag off data')
+            return 0,0             
     
     def MagnetFit(self):
         # Fits slope/intercept for each magnet position.
@@ -129,8 +135,8 @@ class LogParser:
             servo_col = 11
             
             self.records = np.genfromtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
-                    dtype=[('power', int), ('speed', float), ('position', int)],
-                    usecols=[speed_col, watts_col, servo_col], 
+                    dtype=[('power', int), ('speed', float), ('target', int), ('position', int)],
+                    usecols=[speed_col, watts_col, 9, servo_col], 
                     converters = {5: lambda s: float(s.strip() or 0)})
     
             # Convert from Km/h to Mph
@@ -363,6 +369,12 @@ class LogParser:
         ax3.plot(time, fit.moving_average(self.records['power'], 30), color='b', label='30 Sec MA')
         ax3.plot(time, fit.moving_average(self.records['power'], 10), color='lightblue', label='10 Sec MA')
         ax3.plot(time, fit.moving_average(self.records['power_est'], 30), color='y', label='30 Sec Est. MA')
+
+        # Display TR targets if we have them.
+        try:
+            ax3.plot(time, self.records['target'], color='purple', label='Target')
+        except:
+            print("no target")
 
         ax3.set_ylim(50, max(self.records['power']))
         
