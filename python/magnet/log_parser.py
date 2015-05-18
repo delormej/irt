@@ -37,7 +37,7 @@ class LogParser:
         nomag = self.MagOffPower()
         
         if len(nomag) > 0:
-            drag, rr = fit.fit_nonlinear_calibration()
+            drag, rr = fit.fit_nonlinear_calibration(nomag)
             return drag, rr
         else: 
             print('not enough mag off data')
