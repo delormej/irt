@@ -39,13 +39,15 @@
 #define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
 
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
- *			position.
+ *			position.  Accepts an offset for the gap as a multiple of 1,000.
+ *			Divides gap_offset by 1,000 to get a % offset to Force.
  */
-float magnet_watts(float speed_mps, uint16_t position);
+float magnet_watts(float speed_mps, uint16_t position, uint16_t gap_offset);
 
 /**@brief	Calculates magnet position for a given speed and watt target.
- *
+ *			Accepts an offset for the gap as a multiple of 1,000.
+ *			Divides gap_offset by 1,000 to get a % offset to Force.
  */
-uint16_t magnet_position(float speed_mps, float mag_watts);
+uint16_t magnet_position(float speed_mps, float mag_watts, uint16_t gap_offset);
 
 #endif /* MAGNET_H_ */

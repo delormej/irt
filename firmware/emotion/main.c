@@ -406,6 +406,12 @@ static void profile_init(void)
 				m_user_profile.servo_positions.positions[6] = 800;
 			}
 
+			if (m_user_profile.ca_gap_offset == 0xFFFF)
+			{
+				// Default to no gap offset.
+				m_user_profile.ca_gap_offset = 0;
+			}
+
 			// Schedule an update.
 			profile_update_sched();
 		}
@@ -636,7 +642,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 			WDT_RELOAD();
 
 			// Calculate power.
-			err_code = power_calc(&m_user_profile, &m_current_state);
+			err_code = power_calc(&m_current_state);
 			APP_ERROR_CHECK(err_code);
 		}
 		else
@@ -873,6 +879,10 @@ static void on_get_parameter(ant_request_data_page_t* p_request)
 
 		case IRT_MSG_SUBPAGE_RR:
 			memcpy(&response, &m_user_profile.ca_rr, sizeof(uint32_t));
+			break;
+
+		case IRT_MSG_SUBPAGE_GAP_OFFSET:
+			memcpy(&response, &m_user_profile.ca_gap_offset, sizeof(uint32_t));
 			break;
 
 		default:
@@ -1599,6 +1609,14 @@ static void on_set_parameter(uint8_t* buffer)
 			{
 				LOG("[MAIN] on_set_parameter: No battery charger present.\r\n");
 			}
+			break;
+
+		case IRT_MSG_SUBPAGE_GAP_OFFSET:
+			memcpy(&m_user_profile.ca_gap_offset, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint16_t));
+			LOG("[MAIN] on_set_parameter ca_gap_offset:%i\r\n", m_user_profile.ca_gap_offset);
+
+			// Schedule update to the user profile.
+			profile_update_sched();
 			break;
 
 			/*

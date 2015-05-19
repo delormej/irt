@@ -16,7 +16,7 @@
 #include <float.h>
 #include "pstorage.h"
 
-#define PROFILE_VERSION					6u	// Current version of the profile.
+#define PROFILE_VERSION					7u	// Current version of the profile.
 
 #define SETTING_ACL_SLEEP_ON			1UL				// Put device to sleep when accelerometer signals no motion.
 #define SETTING_BTLE_ENABLED			2UL				// BTLE Enabled
@@ -70,6 +70,7 @@ typedef struct user_profile_s {
 	servo_positions_t servo_positions;		// Servo positions (size should be 21 bytes)
 	float		ca_drag;					// Calibration co-efficient of drag which produces the "curve" from a coastdown.
 	float		ca_rr;						// Co-efficient of rolling resistance.
+	uint16_t	ca_gap_offset;				// Variable used to adjust for the magnet spacing gap which changes the force by this percent.  Stored as unsigned short, divide by 1,000 to get % value.
 	//uint8_t		reserved_2[7]; // (sizeof(servo_positions_t)+2) % 16];					// For block size alignment -- 16 bit alignment
 } user_profile_t;
 

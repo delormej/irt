@@ -225,7 +225,7 @@ static uint16_t resistance_erg_position(int16_t target_watts, float speed_mps, f
 	//
 	mag_watts = ( (float)target_watts - (speed_mps * rr_force ));
 
-	return magnet_position(speed_mps, mag_watts);
+	return magnet_position(speed_mps, mag_watts, mp_user_profile->ca_gap_offset);
 }
 
 /**@brief	Get the position of the servo based on simulation mode forces.
@@ -282,7 +282,7 @@ static uint16_t resistance_sim_position(float speed_mps, rc_sim_forces_t *p_sim_
 	}
 
 	// Get the servo to the required position.
-	return magnet_position(speed_mps, mag_watts);
+	return magnet_position(speed_mps, mag_watts, mp_user_profile->ca_gap_offset);
 }
 
 /**@brief	Adjusts the magnetic resistance accordingly for erg & sim modes.
