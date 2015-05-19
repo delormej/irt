@@ -21,10 +21,27 @@ import math as math
 # ----------------------------------------------------------------------------
 class LogParser:
     
+    def Parse(self):
+        # Grab all the records and config settings.
+        self.__open()
+        
+        # Initializes the co-efficients for magnet power.
+        # Passing 0 for force offset since we're doing the gap_offset here in this file now.
+        fit.init_mag(force_offset = 0)
+        
+        # Enrich the data
+        self.__enrich()
+    
     def CalibrationFit(self):
         # Runs a calibration fit 
-        drag, rr = fit.fit_nonlinear_calibration(self.MagOffPower())
-        return drag, rr
+        nomag = self.MagOffPower()
+        
+        if len(nomag) > 0:
+            drag, rr = fit.fit_nonlinear_calibration(nomag)
+            return drag, rr
+        else: 
+            print('not enough mag off data')
+            return 0,0             
     
     def MagnetFit(self):
         # Fits slope/intercept for each magnet position.
@@ -43,61 +60,98 @@ class LogParser:
         # returns chart area... 
         
     def PlotMagnet(self):
-        #self.__create_magnet_plot()
-        #self.__create_model_mag_plot()
-        self.__create_mag_force_plot()
+        self.__create_magnet_plot()
+        self.__create_model_mag_plot()
+        #self.__create_mag_force_plot()
         
     def EstimateError(self):
+        """
         # Returns the sum of the errors of the difference between 
         # estimated power and actual power for stable data points.
-        err = 0
+        total_err = 0
         for r in self.stable_records:
             i = r['index']
-            # note there is an err column in the data set we could use, but we're using
+            # note there is an total_err column in the data set we could use, but we're using
             # the power_re_est for this value.
-            err += abs(float(self.records[i]['power_re_est']) - float(r['power']))**2
+            #err = abs(float(self.records[i]['power_re_est']) - float(r['power']))
+            err = abs(float(self.records[i][self.err_est_column]) - float(r['power']))
+            total_err += err
         
         points = len(self.stable_records)
-        avg_err = math.sqrt(err) / points
+        #avg_err = math.sqrt(total_err) / points
+        avg_err = total_err / points
         
-        return err, points, avg_err 
+        return total_err, points, avg_err
+        """
+        stable_errs = [x['power_err'] for x in self.records[self.stable_records['index']]]
+        
+        for e in stable_errs:
+            print(e)
+        
+        
+        return np.mean(stable_errs)
+        #return np.std(stable_errs)
+         
         
     # ------------------------------------------------------------------------
     #  Internal methods
     # ------------------------------------------------------------------------
 
-    def __init__(self, file_name, drag=0, rr=0, force_offset=0):
+    def __init__(self, file_name):
         self.cc = ChartColor()
         self.file_name = file_name
         self.records = []
-        self.stable_records = []    # index, avg_power, avg_speed for stable data points.
-        self.positions = []         # tuple (position, slope, intercept, stable_records_ix[])
+        self.stable_records = []        # index, avg_power, avg_speed for stable data points.
+        self.positions = []             # tuple (position, slope, intercept, stable_records_ix[])
         
-        self.drag = drag
-        self.rr = rr
-        self.force_offset = force_offset
+        self.drag = 0
+        self.rr = 0
+        self.force_offset = 0
         self.device_id = 0
         self.firmware_rev = ""
         
-        # Grab all the records and config settings.
-        self.__open()
+        self.err_est_column = 'power_re_est'    # which column to use for error estimating. 
+        self.gap_offset = 0                 	# smaller gap=1.33,  #larger gap=0.855
+        
+        # Populate object with config values from the file.
         self.__read_config()
-        
-        # Initializes the co-efficients for magnet power.
-        fit.init_mag(force_offset)
-        
-        self.__enrich()
         
     #
     # Opens the log file and returns arrays: speed (mph), power, servo position.
     #
-    def __open(self, speed_col = 3, watts_col = 5, servo_col = 7, skip_rows = 20):
+    def __open(self):
+        skip_rows = 20
+        
+        if (os.path.basename(self.file_name).startswith("irt_")):
+            #
+            # load the irt csv file
+            #
+            speed_col = 3
+            watts_col = 5
+            servo_col = 7
+            
+            self.records = np.loadtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
+                    dtype=[('speed', float), ('power', int), ('position', int)], 
+                    usecols=[speed_col, watts_col, servo_col], comments='"',
+                    converters = {5: lambda s: float(s.strip() or 0)})
+        else:
+            #
+            # load a TrainerRoad log file
+            #
+            # "Watts" == Power Meter
+            # "TargetData" == TR's erg target
+            # "PowerMeterData" == E-Motion Virtual Power
+            speed_col = 2
+            watts_col = 8
+            servo_col = 11
+            
+            self.records = np.genfromtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
+                    dtype=[('power', int), ('speed', float), ('target', int), ('position', int)],
+                    usecols=[speed_col, watts_col, 9, servo_col], 
+                    converters = {5: lambda s: float(s.strip() or 0)})
     
-        self.records = np.loadtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
-                dtype=[('speed', float), ('power', int), ('position', int)], 
-                usecols=[speed_col, watts_col, servo_col], comments='"',
-                converters = {5: lambda s: float(s.strip() or 0)})
-        #self.records = self.records[1550:]
+            # Convert from Km/h to Mph
+            self.records['speed'] = self.records['speed']  * 0.621371  
                 
     #
     # Get the configuration settings from the log file.
@@ -117,9 +171,15 @@ class LogParser:
                     if row[0] == 'RR' and self.rr == 0:
                         self.rr = float(row[1])
                     if row[0] == 'Drag' and self.drag == 0:
-                        self.drag = float(row[1])
+                        drag = float(row[1])
+                        if (drag > 0.1):
+                            # Don't use previous generation drag #s.
+                            drag = 0
+                        self.drag = drag
                     if row[0] == 'FirmwareRev':
                         self.firmware_rev = row[1]
+                    if row[0] == 'GapOffset':
+                        self.gap_offset = float(row[1])                        
                     if row[0] == 'DeviceID':
                         self.device_id = int(row[1])
                         # when we get here we've read all the config records
@@ -139,7 +199,8 @@ class LogParser:
         self.__find_stable()
     
         # Calibrate if drag & rr are not present based on stable records.
-        if self.drag == 0 or self.rr == 0:
+        if self.drag == 0 or self.rr == 0 \
+                or math.isnan(self.drag) or math.isnan(self.rr):
             self.drag, self.rr = self.CalibrationFit()
             print("Calculated calibration fit as:", self.drag, self.rr)
         
@@ -155,11 +216,11 @@ class LogParser:
         self.records = append_fields(self.records, 'power_est', power_est_col, usemask=False)
 
         # Re-estimated power based on magnet gap.
-        re_est_col = self.__power_maggap(gap=0.83) # smaller gap=1.33,  #larger gap=0.855
+        re_est_col = self.__power_maggap()
         self.records = append_fields(self.records, 'power_re_est', re_est_col, usemask=False)
 
         # Add actual vs. estimate error column.
-        err_col = self.records['power_est'] - self.records['power']
+        err_col = self.records[self.err_est_column] - self.records['power']
         self.records = append_fields(self.records, 'power_err', err_col, usemask=False)
 
     #
@@ -213,7 +274,7 @@ class LogParser:
     # Builds a single dimension array, same length as records, containaing a power estimate
     # that accomodates a magnet gap offset.
     #
-    def __power_maggap(self, gap=0):
+    def __power_maggap(self):
         
         def mag_gap(r):
             # Get speed in meters per second.
@@ -227,7 +288,7 @@ class LogParser:
             
             # Apply gap offset percentage to mag only portion of power.
             f = p / v
-            f2 = f * gap
+            f2 = f * self.gap_offset
             p2 = f2 * v
             
             # Compute new power.
@@ -239,7 +300,7 @@ class LogParser:
             gap_adjusted_power = 0
             
             # only adjust for mag on positions when we have a gap.
-            if gap == 0 or r['position'] >= 1600:
+            if self.gap_offset == 0 or r['position'] >= 1600:
                 gap_adjusted_power = r['power_est'] 
             else:
                 gap_adjusted_power = mag_gap(r)
@@ -278,8 +339,12 @@ class LogParser:
             print("%.0f, %.2f, %.1f" % (position, speed, power))
             
         dtp = np.dtype([('index','i4'), ('position','i4'), ('speed_mps','f4'), ('power','f4')])
-        self.stable_records = np.array(stable, dtype=dtp)
         
+        # need some records
+        if len(stable) > 2:
+            self.stable_records = np.array(stable, dtype=dtp)
+        else:
+            raise ValueError("No stable records")
         
 
     def __create_ride_plot(self):
@@ -315,7 +380,13 @@ class LogParser:
         ax3.plot(time, fit.moving_average(self.records['power'], 10), color='lightblue', label='10 Sec MA')
         ax3.plot(time, fit.moving_average(self.records['power_est'], 30), color='y', label='30 Sec Est. MA')
 
-        ax3.set_ylim(50, 600)
+        # Display TR targets if we have them.
+        try:
+            ax3.plot(time, self.records['target'], color='purple', label='Target')
+        except:
+            print("no target")
+
+        ax3.set_ylim(50, max(self.records['power']))
         
         # Add markers where we're getting our stable data.
         ax3.scatter(self.stable_records['index'], self.stable_records['power'], label='Stable Points')
@@ -329,7 +400,7 @@ class LogParser:
         # Add error bars to show discrepency between power_est and actual power.
         for r in self.stable_records:
             i = r['index']
-            power_est = self.records[i]['power_re_est']
+            power_est = self.records[i][self.err_est_column]
             
             if r['power'] > power_est:
                 bottom = power_est
@@ -417,13 +488,13 @@ class LogParser:
         def calc_force_actual(speed_mps, magonly_power):
             return (magonly_power / speed_mps)
             
-        def model_force(speed_mps, position, gap_offset=0):
+        def model_force(speed_mps, position):
             force = []
             for v in speed_mps:
                 w = mag.watts(v, position)
                 f = (w / v)
-                if gap_offset > 0:
-                    f = f * gap_offset
+                if self.gap_offset > 0:
+                    f = f * self.gap_offset
                 force.append(f) 
             return force
         
