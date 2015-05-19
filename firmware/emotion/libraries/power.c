@@ -28,6 +28,7 @@
 static float m_rr_force;
 static float m_ca_slope;			// calibration parameters
 static float m_ca_intercept;
+static user_profile_t* mp_profile;
 //static bool  m_use_big_mag;
 
 
@@ -71,11 +72,12 @@ void power_init(user_profile_t* p_profile, uint16_t default_crr)
 {
 	//m_use_big_mag = FEATURE_AVAILABLE(FEATURE_BIG_MAG);
 	//PW_LOG("[PW] Use small mag?: %i\r\n", m_use_big_mag);
+	mp_profile = p_profile;
 
-	if (p_profile->ca_slope != 0xFFFF)
+	if (mp_profile->ca_slope != 0xFFFF)
 	{
-		m_ca_slope = (p_profile->ca_slope / 1000.0f);
-		m_ca_intercept = (p_profile->ca_intercept / 1000.0f);
+		m_ca_slope = (mp_profile->ca_slope / 1000.0f);
+		m_ca_intercept = (mp_profile->ca_intercept / 1000.0f);
 		m_rr_force = 0;
 
 		PW_LOG("[PW] Initializing power with slope: %.4f intercept %.3f \r\n",
@@ -83,7 +85,7 @@ void power_init(user_profile_t* p_profile, uint16_t default_crr)
 	}
 	else
 	{
-		m_rr_force = (GRAVITY * (p_profile->total_weight_kg / 100.0f) *
+		m_rr_force = (GRAVITY * (mp_profile->total_weight_kg / 100.0f) *
 				(default_crr / 1000.0f));
 		m_ca_slope = 0xFFFF;
 		m_ca_intercept = 0xFFFF;
@@ -93,19 +95,19 @@ void power_init(user_profile_t* p_profile, uint16_t default_crr)
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *
  */
-uint32_t power_calc(user_profile_t* p_profile, irt_context_t* p_meas)
+uint32_t power_calc(irt_context_t* p_meas)
 {
 	uint16_t torque = 0;
 	float mag_watts;
 	float magoff_watts;
 
-	if (!isnan(p_profile->ca_drag) && !isnan(p_profile->ca_rr))
+	if (!isnan(mp_profile->ca_drag) && !isnan(mp_profile->ca_rr))
 	{
 		/*
 		 * Power equation = ((K * v^2) + rr) * v
 		 */
-		magoff_watts = ( (p_profile->ca_drag * pow(p_meas->instant_speed_mps, 2)) +
-				p_profile->ca_rr ) * p_meas->instant_speed_mps ;
+		magoff_watts = ( (mp_profile->ca_drag * pow(p_meas->instant_speed_mps, 2)) +
+				mp_profile->ca_rr ) * p_meas->instant_speed_mps ;
 
 		p_meas->rr_force = (magoff_watts / p_meas->instant_speed_mps);
 	}
@@ -133,7 +135,8 @@ uint32_t power_calc(user_profile_t* p_profile, irt_context_t* p_meas)
 	}
 
 	// Calculate watts added by magnet.
-	mag_watts = magnet_watts(p_meas->instant_speed_mps, p_meas->servo_position);
+	mag_watts = magnet_watts(p_meas->instant_speed_mps, p_meas->servo_position,
+			mp_profile->ca_gap_offset);
 
 	// Calculate power.
 	p_meas->instant_power = ( p_meas->rr_force * p_meas->instant_speed_mps ) + mag_watts;

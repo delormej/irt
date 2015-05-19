@@ -16,7 +16,7 @@
 #include <float.h>
 #include "pstorage.h"
 
-#define PROFILE_VERSION					6u	// Current version of the profile.
+#define PROFILE_VERSION					7u	// Current version of the profile.
 
 #define SETTING_ACL_SLEEP_ON			1UL				// Put device to sleep when accelerometer signals no motion.
 #define SETTING_BTLE_ENABLED			2UL				// BTLE Enabled
