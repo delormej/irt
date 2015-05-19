@@ -203,6 +203,7 @@ namespace IRT_GUI.IrtMessages
         Features = 29,
         Drag = 30,          // Co-efficient of drag for calibration.
         RR = 31,            // Co-efficient of rolling resistance for calibration.
+        GapOffset = 32,
 
         // These are not actually subpages, they are pages in of themselves.
         Manufacturer = 0x50,
