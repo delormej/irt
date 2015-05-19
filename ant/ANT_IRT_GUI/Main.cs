@@ -252,6 +252,7 @@ namespace IRT_GUI
             items.Add("RefPwrManuf", lblRefPwrManuf);
             items.Add("Drag", txtDrag);
             items.Add("RR", txtRR);
+            items.Add("GapOffset", txtGapOffset);
 
             // items.Add("Settings", lblFeatures);
             string message = "\"{0}\",\"{1}\"\n";
@@ -493,6 +494,12 @@ namespace IRT_GUI
                     ushort servoOffset = Message.BigEndian(buffer[2], buffer[3]);
                     UpdateStatus("Received ServoOffset parameter.");
                     UpdateText(txtServoOffset, servoOffset);
+                    break;
+
+                case SubPages.GapOffset:
+                    ushort gapOffset = Message.BigEndian(buffer[2], buffer[3]);
+                    UpdateStatus("Received magnet gap offset parameter.");
+                    UpdateText(txtGapOffset, gapOffset);
                     break;
 
                 case SubPages.CalibrationSpeed:
@@ -1555,6 +1562,30 @@ namespace IRT_GUI
             }
         }
 
+        private void btnSetGapOffset_Click(object sender, EventArgs e)
+        {
+            uint value = 0;
+
+            try
+            {
+                value = uint.Parse(txtGapOffset.Text);
+            }
+            catch
+            {
+                UpdateStatus("Invalid gap offset.");
+                return;
+            }
+
+            if (SetParameter((byte)(SubPages.GapOffset), value))
+            {
+                UpdateStatus("Sent gap offset command.");
+            }
+            else
+            {
+                UpdateStatus("Failed to send gap offset command.");
+            }
+        }
+
         private ResistanceMode GetResistanceMode()
         {
             ResistanceMode mode = ResistanceMode.Standard;
@@ -1716,6 +1747,7 @@ namespace IRT_GUI
             UpdateText(txtWheelSizeMm, "");
             UpdateText(txtTotalWeight, "");
             UpdateText(txtServoOffset, 0);
+            UpdateText(txtGapOffset, 0);
 
         }
 
@@ -1747,6 +1779,7 @@ namespace IRT_GUI
                     parameters.Add(SubPages.WheelSize);
                     parameters.Add(SubPages.Settings);
                     parameters.Add(SubPages.ServoOffset);
+                    parameters.Add(SubPages.GapOffset);
                     parameters.Add(SubPages.Charger);
                     parameters.Add(SubPages.Features);
                     parameters.Add(SubPages.Crr);
