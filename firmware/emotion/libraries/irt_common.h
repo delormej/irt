@@ -102,6 +102,7 @@ static bool __inline__ irt_feature_is_available(uint16_t feature)
 #define IRT_MSG_SUBPAGE_FEATURES			29u					// Configured features.
 #define IRT_MSG_SUBPAGE_DRAG				30u					// Co-efficient of drag factor for calibration.
 #define IRT_MSG_SUBPAGE_RR					31u					// Co-efficient of rolling resistance for calibration.
+#define IRT_MSG_SUBPAGE_GAP_OFFSET			32u					// Co-efficient for magnet gap offset.
 
 #define IRT_FIFO_SIZE		4	// Must be a power of 2: 4,16,64,256, 1024, see NRF FIFO docs.
 

@@ -1600,6 +1600,14 @@ static void on_set_parameter(uint8_t* buffer)
 			}
 			break;
 
+		case IRT_MSG_SUBPAGE_GAP_OFFSET:
+			memcpy(&m_user_profile.ca_gap_offset, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint16_t));
+			LOG("[MAIN] on_set_parameter ca_gap_offset:%i\r\n", m_user_profile.ca_gap_offset);
+
+			// Schedule update to the user profile.
+			profile_update_sched();
+			break;
+
 			/*
 		case IRT_MSG_SUBPAGE_FEATURES:
 
