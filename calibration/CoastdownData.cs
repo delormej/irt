@@ -76,11 +76,18 @@ namespace IRT.Calibration
                 else
                     seconds[ix] = (ds / 2048.0);
 
-                /* Each flywheel revolution equals 0.115 meters travelled by the 
-                 * bike.  Two ticks are recorded for each revolution.
-                 * Time is sent in 1/2048 of a second.
-                 */
-                speed[ix] = (dt * 0.115 / 2.0) / (ds / 2048.0);
+                if (dt > 0 && ds > 0)
+                {
+                    /* Each flywheel revolution equals 0.115 meters travelled by the 
+                     * bike.  Two ticks are recorded for each revolution.
+                     * Time is sent in 1/2048 of a second.
+                     */
+                    speed[ix] = (dt * 0.115 / 2.0) / (ds / 2048.0);
+                }
+                else
+                {
+                    speed[ix] = 0;
+                }
             }
 
             int maxSpeedIdx = FindDecelerationIndex(speed);
@@ -97,9 +104,12 @@ namespace IRT.Calibration
             //Array.Copy(speed, maxSpeedIdx, SpeedMps, 0, len);
             for (int j = maxSpeedIdx; j <= minSpeedIdx; j++)
             {
-                m_speedMps.Add(speed[j]);
-                // Invert the timestamp seconds to record seconds to min speed.
-                m_coastdownSeconds.Add(seconds[minSpeedIdx] - seconds[j]);
+                if (speed[j] > 0)
+                {
+                    m_speedMps.Add(speed[j]);
+                    // Invert the timestamp seconds to record seconds to min speed.
+                    m_coastdownSeconds.Add(seconds[minSpeedIdx] - seconds[j]);
+                }
             }
 
             if (m_coastdownSeconds.Count < 10)

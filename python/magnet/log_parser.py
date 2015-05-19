@@ -1,494 +1,605 @@
+import sys
+import ntpath
 import os
 import csv
 import numpy as np, numpy.ma as ma
 from collections import defaultdict
+import itertools
 from itertools import groupby, chain
 import statistics as stats
 from numpy.lib.recfunctions import append_fields
 import magnet as mag
-import calibration_fit as fit
-import find_slope as fs
+import fit as fit
+import matplotlib.pyplot as plt
+import math as math
+
 
 # ----------------------------------------------------------------------------
 #
-# Encapsulates common utility functions, mainly dealing with reading log files.
+#  Works with IRT & TrainerRoad log files.
 #
 # ----------------------------------------------------------------------------
-class Util:
-    def __init__(self):
-        #
-        #Column position definitions
-        #
-        self.speed_col = 3
-        self.watts_col = 5
-        self.servo_col = 7
-        
-        # Data rows skipped at the beginning
-        self.skip_rows = 20 
+class LogParser:
     
-    #
-    # Reads an irt log file and returns the Drag and RR settings.
-    #
-    def read_calibration(self, file_name):
-        device_id = 0
-        drag = 0
-        rr = 0
-        offset = 0
+    def Parse(self):
+        # Grab all the records and config settings.
+        self.__open()
         
-        try:
-            with open(file_name, 'r') as f:
-                for row in reversed(list(csv.reader(f))):
-                    if row[0] == 'AddServoOffset':
-                        offset = int(row[1])
-                    if row[0] == 'RR':
-                        rr = float(row[1])
-                    if row[0] == 'Drag':
-                        drag = float(row[1])
-                    if row[0] == 'DeviceID':
-                        device_id = int(row[1])
-                        # when we get here we've read all the config data
-                        break
-        except:
-            print("Unable to parse calibration.")
-                        
-        return drag, rr, offset, device_id
+        # Initializes the co-efficients for magnet power.
+        # Passing 0 for force offset since we're doing the gap_offset here in this file now.
+        fit.init_mag(force_offset = 0)
+        
+        # Enrich the data
+        self.__enrich()
     
+    def CalibrationFit(self):
+        # Runs a calibration fit 
+        nomag = self.MagOffPower()
+        
+        if len(nomag) > 0:
+            drag, rr = fit.fit_nonlinear_calibration(nomag)
+            return drag, rr
+        else: 
+            print('not enough mag off data')
+            return 0,0             
+    
+    def MagnetFit(self):
+        # Fits slope/intercept for each magnet position.
+        return self.positions
+        
+    def MagOffPower(self):
+        # Returns an array of all stable records where the magnet is off.
+        return self.records[self.__stable_by_position(2000)]
+        
+    def MagOnlyPower(self):
+        # Returns array of stable: position, speed, watt records
+        return [r in self.stable_records ];
+
+    def PlotRide(self):
+        self.__create_ride_plot()
+        # returns chart area... 
+        
+    def PlotMagnet(self):
+        self.__create_magnet_plot()
+        self.__create_model_mag_plot()
+        #self.__create_mag_force_plot()
+        
+    def EstimateError(self):
+        """
+        # Returns the sum of the errors of the difference between 
+        # estimated power and actual power for stable data points.
+        total_err = 0
+        for r in self.stable_records:
+            i = r['index']
+            # note there is an total_err column in the data set we could use, but we're using
+            # the power_re_est for this value.
+            #err = abs(float(self.records[i]['power_re_est']) - float(r['power']))
+            err = abs(float(self.records[i][self.err_est_column]) - float(r['power']))
+            total_err += err
+        
+        points = len(self.stable_records)
+        #avg_err = math.sqrt(total_err) / points
+        avg_err = total_err / points
+        
+        return total_err, points, avg_err
+        """
+        stable_errs = [x['power_err'] for x in self.records[self.stable_records['index']]]
+        
+        for e in stable_errs:
+            print(e)
+        
+        
+        return np.mean(stable_errs)
+        #return np.std(stable_errs)
+         
+        
+    # ------------------------------------------------------------------------
+    #  Internal methods
+    # ------------------------------------------------------------------------
+
+    def __init__(self, file_name):
+        self.cc = ChartColor()
+        self.file_name = file_name
+        self.records = []
+        self.stable_records = []        # index, avg_power, avg_speed for stable data points.
+        self.positions = []             # tuple (position, slope, intercept, stable_records_ix[])
+        
+        self.drag = 0
+        self.rr = 0
+        self.force_offset = 0
+        self.device_id = 0
+        self.firmware_rev = ""
+        
+        self.err_est_column = 'power_re_est'    # which column to use for error estimating. 
+        self.gap_offset = 0                 	# smaller gap=1.33,  #larger gap=0.855
+        
+        # Populate object with config values from the file.
+        self.__read_config()
+        
     #
     # Opens the log file and returns arrays: speed (mph), power, servo position.
     #
-    def open(self, file_name):
-        return np.loadtxt(file_name, delimiter=',', skiprows=self.skip_rows+1,
-                dtype=[('speed', float), ('power', int), ('position', int)], usecols=[self.speed_col, self.watts_col, self.servo_col], comments='"',
-                converters = {5: lambda s: float(s.strip() or 0)})
-
-    #
-    # Builds a list of matching *.csv filenames.
-    #
-    def get_csv_files(self, rootdir):
-        for root, dirs, files in os.walk(rootdir):
-            for filename in files:
-                if filename.endswith('.csv'):
-                    filepath = os.path.join(root, filename)
-                    yield filepath    
-                
-    #
-    # Prints comma delimited device, position, speed, power.
-    #
-    def print_csv(data):
-        for p in data:
-            print(('%i,%i,%.2f,%i' % (p.device_id, p.position, p.speed_mps, p.power)))
-
-
-# ----------------------------------------------------------------------------
-# 
-# Encapsulates stable position data.
-#
-# ----------------------------------------------------------------------------
-class PositionDataPoint:
-    def __init__(self):
-        self.position = 0
-        self.speed_mps = 0
-        self.speed_mph = 0
-        self.power = 0
-        self.magonly_power = 0
-        self.device_id = 0
+    def __open(self):
+        skip_rows = 20
         
-# ----------------------------------------------------------------------------
-# 
-# Class responsible for parsing stable position, speed, power data.
-#
-# ----------------------------------------------------------------------------
-class PositionParser:
-    def __init__(self):
-        # 
-        # Configuration variables.
-        #
-        self.min_seq_len = 10               # min. sequence length
-        self.speed_variance_mph = 0.5       # total range of allowed variation
-        self.max_dev = 7                    # maximum deviation of watts
-        self.servo_lag = 6                  # don't take any data points within # of seconds of a servo change.
-        self.cal = fit.CalibrationFit()
-
-    #
-    # Calculates a moving average of an array of values.
-    #
-    def moving_average(self, x, n, type='simple'):
-        """
-        compute an n period moving average.
-
-        type is 'simple' | 'exponential'
-
-        """
-        x = np.asarray(x)
-        
-        if type=='simple':
-            weights = np.ones(n)
+        if (os.path.basename(self.file_name).startswith("irt_")):
+            #
+            # load the irt csv file
+            #
+            speed_col = 3
+            watts_col = 5
+            servo_col = 7
+            
+            self.records = np.loadtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
+                    dtype=[('speed', float), ('power', int), ('position', int)], 
+                    usecols=[speed_col, watts_col, servo_col], comments='"',
+                    converters = {5: lambda s: float(s.strip() or 0)})
         else:
-            weights = np.exp(np.linspace(-1., 0., n))
-
-        weights /= weights.sum()
-
-
-        a =  np.convolve(x, weights, mode='full')[:len(x)]
-        a[:n] = a[n]
-        return a
-        
-    #
-    # Calculates a moving average of speed which eliminates outliers where
-    # we may have had data drop.
-    #
-    def speed_moving_average(self, speed, n):
-        stdev_speed = stats.stdev(speed)
-        
-        # look backward and forward to determine if the speed is an
-        # outlier or it's a legitimate change in speed.
-        def normalize_speed(speed):
-            for ix in range(0, len(speed), 1):
-                if ix < 1 or ix+1 > len(speed):
-                    yield speed[ix]
-                else:
-                    if abs(speed[ix-1] - speed[ix]) > stdev_speed and \
-                            abs(speed[ix+1] - speed[ix]) > stdev_speed:
-                        # Return previous speed.
-                        yield speed[ix-1]
-                    else:
-                        yield speed[ix]
-        
-        normal_speed = normalize_speed(speed)
-        ma = self.moving_average(list(normal_speed), n)
-        
-        return ma
-        
-    #
-    # Returns the index into the power array where the longer moving average
-    # crosses the shorter moving average.
-    #
-    def power_ma_crossovers(self, records):
-        power = records['power']
-        
-        ma_speed = self.speed_moving_average(records['speed'], 15)
-        ma_long = self.moving_average(power, 15)
-        ma_short = self.moving_average(power, 5) 
-        
-        for i in range(1, len(power)-2, 1):
-            # if the last long average was less than short average
-            # and the current long average is higher than short
-            # we've crossed over.
-            if ma_long[i-1] < ma_short[i-1] and ma_long[i] > ma_short[i]:
-                # Only include if the servo position hasn't changed for a few seconds.
-                # This eliminates the issue with averages appearing on the edge.
-                if i > self.servo_lag and records['position'][i-self.servo_lag] == records['position'][i]:
-                    # We've crossed over return a tuple of index and long ma
-                    yield i, ma_long[i], ma_speed[i]
-        
-    #
-    # Returns a sequence of contiguous stable speed and power data. 
-    #
-    def find_seq(self, speeds, watts, offset):
-        def check_seq(se): # test range [i..se) for a valid sequence
-            if se > speeds.size:
-                return False
-            return watts[i:se].all() and speeds[i:se].all() and speeds[i:se].ptp() <= self.speed_variance_mph
-
-        seqs = []
-        last_end = -1 # where last found sequence ended
-        for i in range(speeds.size): # possible start of sequence
-            seq_end = max(i + self.min_seq_len, last_end + 1) # we need a sequence extending beyond the previous one
-            if seq_end > speeds.size: # reached the end
-                break
-            if check_seq(seq_end): # minimum sequence is OK
-                while check_seq(seq_end+1): # extend the sequence while we can
-                    seq_end += 1
-                last_end = seq_end
-                seqs.append((i, last_end))
-
-        result = [] # list of indices of valid values
-
-        def split_cluster(cluster): # splits a cluster of overlapped sequences into non-overlapped
-            if len(cluster) > 0:
-                longest_beg, longest_end = max(cluster, key=lambda s: s[1]-s[0])
-                if longest_end - longest_beg < self.min_seq_len:
-                    return
-                left = []; right = []
-                for beg, end in cluster: # adjust each sequence overlapped by the longest
-                    if beg < longest_beg:
-                        end = min(end, longest_beg)
-                        if end-beg >= self.min_seq_len:
-                            left.append((beg, end))
-                    elif end > longest_end:
-                        beg = max(beg, longest_end)
-                        if end-beg >= self.min_seq_len:
-                            right.append((beg, end))
-
-                split_cluster(left)
-
-                m_watts = ma.array(watts[longest_beg:longest_end])
-                while m_watts.std(ddof=1) > self.max_dev: # strip outliers until stdev in range
-                    edges = np.array([m_watts.min(), m_watts.max()])
-                    distances = abs(edges - m_watts.mean())
-                    outlier = edges[distances.argmax()]
-                    m_watts[m_watts == outlier] = ma.masked
-                if m_watts.count() >= self.min_seq_len:
-                    result.extend(np.flatnonzero(~ma.getmaskarray(m_watts))+longest_beg+offset)
-                split_cluster(right)
-
-        last_end = -1
-        cluster = []
-        for s in seqs:
-            if s[0] >= last_end: # broke overlapping cluster
-                split_cluster(cluster)
-                cluster = []
-            cluster.append(s)
-            last_end = s[1]
-        split_cluster(cluster)
-        return sorted(result)    
-
-    #
-    # Returns a dictionary keyed by servo position with an array of indexes 
-    # pointing to valid data.
-    #
-    def get_position_dictionary(self, records):
-        position_list = defaultdict(list)
-        
-        # Create an array for each column.
-        positions = records['position']
-        speeds = records['speed']
-        watts = records['power']
-
-        #valid_data = defaultdict(list) # { postion: [indices of all good values] }
-        splits = np.flatnonzero(np.ediff1d(positions, to_begin=1, to_end=1)) # indexes where pos changed, split original sequence there
-        for i_beg, i_end in zip(splits[:-1], splits[1:]): # iterate pairs of splits
-            assert positions[i_beg] == positions[i_end-1]
-            position_list[positions[i_beg]].extend(
-                    self.find_seq(speeds[i_beg:i_end], watts[i_beg:i_end], i_beg) # process each chunk separately
-            )
-
-        #
-        # Removes positions from the dictionary that do not have at least 2 data points.
-        #
-        def remove_empty(list):
-            empty = []
-            for p in list:
-                if len(list[p]) < 3:
-                    empty.append(p)
-                    
-            for p in empty:
-                del(list[p])
+            #
+            # load a TrainerRoad log file
+            #
+            # "Watts" == Power Meter
+            # "TargetData" == TR's erg target
+            # "PowerMeterData" == E-Motion Virtual Power
+            speed_col = 2
+            watts_col = 8
+            servo_col = 11
             
-        # remove positions that don't contain any data.
-        remove_empty(position_list)
-            
-        return position_list
-
-    #
-    # Returns array of data which represents only the consistent speed data
-    # when the magnet is off.
-    #
-    def magoff_records(self, records):
-        position_dict = self.get_position_dictionary(records)
-        magoff = records[position_dict[2000]]
-        return magoff
-        
-    #
-    # Calculates the magnet only portion of power based on non-linear calibration.
-    #
-    def magonly(self, records, drag, rr):
-        result = []
-        
-        for r in records:
-            magonly_power = 0
-            
-            position = r['position']  
-            power = r['power']
-            speed_mps = r['speed'] * 0.44704
-            
-            if position < 1600:
-                magoff = self.cal.magoff_power(speed_mps, drag, rr)
-                magonly_power = power - magoff
-
-            if magonly_power < 0:
-                magonly_power = 0
-                
-            result.append(magonly_power)
-        
-        return result
-
-    #
-    # Initializes the co-efficients for magnet power.
-    #
-    def init_mag(self):
-        
-        positions = fs.get_position_data()
-        values = fs.fit_3rd_poly(positions)
-        
-        low_speed = values[1][0]*0.44704
-        low_a = values[1][1][0]
-        low_b = values[1][1][1]
-        low_c = values[1][1][2]
-        low_d = values[1][1][3]
-
-        high_speed = values[3][0]*0.44704
-        high_a = values[3][1][0]
-        high_b = values[3][1][1]
-        high_c = values[3][1][2]
-        high_d = values[3][1][3]
-        
-        mag.set_coeff(low_speed, 
-            low_a, 
-            low_b, 
-            low_c, 
-            low_d, 
-            high_speed, 
-            high_a, 
-            high_b, 
-            high_c,
-            high_d)
-
-        print(values[1][0], values[1][1][0], values[1][1][1], values[1][1][2], values[1][1][3])
-        print(values[3][0], values[3][1][0], values[3][1][1], values[3][1][2], values[3][1][3])
-        
-        return values
-
-    #
-    # Calculates power based coast down fit (drag & rr), speed and magnet position.
-    #
-    def get_power(self, speed_mps, servo_pos, drag, rr):
-        # Calculates non-mag power based on speed in meters per second.
-        no_mag_watts = self.cal.magoff_power(speed_mps, drag, rr)
-        
-        # If the magnet is ON the position will be less than 1600
-        if servo_pos < 1600:
-            # Calculates the magnet-only power based on speed in meters per second.
-            mag_watts = mag.watts(speed_mps, servo_pos)
-            #print(servo_pos, mag_watts)
-        else:
-            mag_watts = 0	
-        
-        return no_mag_watts + mag_watts        
+            self.records = np.genfromtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
+                    dtype=[('power', int), ('speed', float), ('target', int), ('position', int)],
+                    usecols=[speed_col, watts_col, 9, servo_col], 
+                    converters = {5: lambda s: float(s.strip() or 0)})
     
-    #
-    # Returns only the cleaned up magnet position data.
-    #
-    def parse_magdata(self, file):
-        util = Util()
-        parser = PositionParser()
-        cal = fit.CalibrationFit()
-        
-        data = self.parse(file)
-        drag, rr, offset, device_id = util.read_calibration(file)
-        
-        valid = []
-        
-        for ix, power, speed in parser.power_ma_crossovers(data):
-            # don't take any data less than ~7 mph
-            if data[ix]['speed_mps'] > 3:
-                valid.append(ix)
-                data[ix]['power'] = power
-                data[ix]['speed'] = speed
-                data[ix]['magonly_power'] = power - cal.magoff_power(speed * 0.44704, drag, rr)      
+            # Convert from Km/h to Mph
+            self.records['speed'] = self.records['speed']  * 0.621371  
                 
-                #if data[ix]['position'] != 2000:
-                    #print(data[ix]['position'], data[ix]['speed_mps'], data[ix]['magonly_power'], power, cal.magoff_power(speed * 0.44704, drag, rr))
+    #
+    # Get the configuration settings from the log file.
+    #
+    def __read_config(self):
+        
+        name = ntpath.basename(self.file_name)
+        
+        if not name.startswith('irt_'):
+            # it's not an IRT log file, so skip.
+            print("Not an irt log file, not attempting to read config.")    
+            return 
+        
+        try:
+            with open(self.file_name, 'r') as f:
+                for row in reversed(list(csv.reader(f))):
+                    if row[0] == 'RR' and self.rr == 0:
+                        self.rr = float(row[1])
+                    if row[0] == 'Drag' and self.drag == 0:
+                        drag = float(row[1])
+                        if (drag > 0.1):
+                            # Don't use previous generation drag #s.
+                            drag = 0
+                        self.drag = drag
+                    if row[0] == 'FirmwareRev':
+                        self.firmware_rev = row[1]
+                    if row[0] == 'GapOffset':
+                        self.gap_offset = float(row[1])                        
+                    if row[0] == 'DeviceID':
+                        self.device_id = int(row[1])
+                        # when we get here we've read all the config records
+                        break
+        except:
+            print("Unable to parse config.")
             
-        return data[valid]
+        print("found config", self.drag, self.rr)
+
+    # 
+    # Enriches the records with moving averages and other functions.
+    # Add additional calls in here to further enrich.
+    #
+    def __enrich(self):
+
+        # Identify the stable records.
+        self.__find_stable()
     
+        # Calibrate if drag & rr are not present based on stable records.
+        if self.drag == 0 or self.rr == 0 \
+                or math.isnan(self.drag) or math.isnan(self.rr):
+            self.drag, self.rr = self.CalibrationFit()
+            print("Calculated calibration fit as:", self.drag, self.rr)
+        
+        # Enrich the stable records with mag only power.
+        magonly_col = self.__stable_magonly_power()
+        self.stable_records = append_fields(self.stable_records, 'magonly_power', magonly_col, usemask=False)
+        
+        # Calculate the slope/intercept of each magnet position.
+        self.__calculate_positions()
+        
+        # Add power estimate.
+        power_est_col = self.__power_estimate()
+        self.records = append_fields(self.records, 'power_est', power_est_col, usemask=False)
+
+        # Re-estimated power based on magnet gap.
+        re_est_col = self.__power_maggap()
+        self.records = append_fields(self.records, 'power_re_est', re_est_col, usemask=False)
+
+        # Add actual vs. estimate error column.
+        err_col = self.records[self.err_est_column] - self.records['power']
+        self.records = append_fields(self.records, 'power_err', err_col, usemask=False)
+
     #
-    # Extracts stable [position, speed, watts, device_id] from a log file.        
+    # Returns a list of valid indexes of stable data by servo position.
     #
-    def parse(self, file_name):
-        util = Util()
+    def __stable_by_position(self, position):
+        return [ x['index'] for x in self.stable_records if x['position'] == position ]
         
-        # Read configuration values
-        drag, rr, servo_offset, device_id = util.read_calibration(file_name)
-                
-        # Read all data.
-        records = util.open(file_name)
-       
-        # Enrich data with meters per second and magnet only power.
-        speed_mps = records['speed'] * 0.44704
-        records = append_fields(records, 'speed_mps', speed_mps, usemask=False)
+    def __stable_magonly_power(self):
+        magonly_col = []
+        
+        for r in self.stable_records:
+            magonly_power = fit.magonly_power(r['speed_mps'], r['power'], self.drag, self.rr)    
+            magonly_col.append(magonly_power)
+            
+        return magonly_col
+        
+    def __calculate_positions(self):
+        records = []
+        
+        # find all unique servo positions
+        positions, counts = np.unique(self.stable_records['position'], return_counts=True)
+        
+        for i,p in enumerate(positions):
+            # Need at least 2 records.
+            if p >= 1600 or counts[i] < 2:
+                continue
+        
+            ix = [i for i,x in enumerate(self.stable_records) if x['position'] == p]
+            slope, intercept = fit.fit_lin_regress(self.stable_records[ix]['speed_mps'], self.stable_records[ix]['magonly_power'])
+            records.append((p, slope, intercept, ix))
+            print((p, slope, intercept))
 
-        def offset(x):
-            if x < 2000: 
-                return x+servo_offset
-            else:
-                return x
-        
-        # Implement a servo offset:
-        records['position'] = [offset(x) for x in records['position']]
-        
-        if drag == 0 or rr == 0:
-            # Perform a calibration against the file.
-            drag, rr = self.cal.fit_nonlinear_calibration(self.magoff_records(records))
-            #x = [8.761984,7.063232,5.677408]
-            #y = [177,154,106]
-            #drag, rr = self.cal.fit_bike_science(x, y)
-
-
-        print("drag,rr:", drag, rr)
-        
-        mag_col = self.magonly(records, drag, rr)
-        records = append_fields(records, 'magonly_power', mag_col, usemask=False)
-        
-        # TODO: move this out of parse.
-        # Calculate estimated power.
-        #
-        self.init_mag()
+        #dtp = np.dtype([('position','i4'), ('slope','f4'), ('intercept','f4'), ('ix')])
+        #self.positions = np.array(records, dtype=dtp)
+        self.positions = records
+            
+    # 
+    # Builds a single dimension array, same length as records with power estimate.
+    #
+    def __power_estimate(self):
         power_est_col = []
         
-        for r in records:
-            power_est = self.get_power(r['speed_mps'], r['position'], drag, rr)
+        for r in self.records:
+            power_est = fit.power_estimate(r['speed'] * 0.44704, r['position'], self.drag, self.rr)
             power_est_col.append(power_est)
         
-        records = append_fields(records, 'power_est', power_est_col, usemask=False)
-        
-        err_col = records['power_est'] - records['power']
-        records = append_fields(records, 'power_err', err_col, usemask=False)
-        
-        return records
-        """
-        #
-        # Gets a dictionary keyed by servo position containing a list of indexes
-        # for contiguous stable speed, power data at a given servo position.
-        #
-        position_dict = self.get_position_dictionary(records)
+        return power_est_col       
 
-        #
-        # Flatten data out into an array of PositionDataPoint objects.
-        #
-        stable_data = []
+    #
+    # Builds a single dimension array, same length as records, containaing a power estimate
+    # that accomodates a magnet gap offset.
+    #
+    def __power_maggap(self):
         
-        for position, values in position_dict.items():
-            for index in values:
-                #print(position, records['speed'][index], records['power'][index])
-                point = PositionDataPoint()
-                point.device_id = device_id
-                point.position = position                           # Servo Position
-                point.speed_mps = records['speed'][index] * 0.44704 # Convert to meters per second from mph.
-                point.speed_mph = records['speed'][index]
-                point.power = records['power'][index]
-                if magonly_calc is not None:
-                    point.magonly_power = magonly_calc(point, drag, rr)
-                stable_data.append(point)
-                
-        return stable_data
-        """
+        def mag_gap(r):
+            # Get speed in meters per second.
+            v = r['speed'] * 0.44704
+            
+            # Get calibration adjusted power.                        
+            magoff_power = fit.magoff_power(v, self.drag, self.rr)
+            
+            # Derive magnet only portion
+            p = r['power_est'] - magoff_power   
+            
+            # Apply gap offset percentage to mag only portion of power.
+            f = p / v
+            f2 = f * self.gap_offset
+            p2 = f2 * v
+            
+            # Compute new power.
+            return magoff_power + p2
+
+        gap_power_est_col = []
         
-     #
-     # Parses a directory of *.csv log files.  This only looks at plotting linear
-     # magnet data.
-     #
-    def parse_multiple(self, rootdir):
-        records = np.ndarray(0)
-        util = Util()
-        for file in util.get_csv_files(rootdir):
-            print("parsing: ", file)
+        for r in self.records:
+            gap_adjusted_power = 0
             
-            data = self.parse_magdata(file)
-            
-            if len(records) == 0:
-                records = data
+            # only adjust for mag on positions when we have a gap.
+            if self.gap_offset == 0 or r['position'] >= 1600:
+                gap_adjusted_power = r['power_est'] 
             else:
-                records = np.concatenate((records, data), axis=0)
-  
-        return records
+                gap_adjusted_power = mag_gap(r)
+            
+            gap_power_est_col.append(gap_adjusted_power)
+        
+        return gap_power_est_col          
+
+    #
+    # Calculates the Force for the magnet portion of the data.
+    #
+    def __calculate_mag_force(self, records):        
+        #stable_force = [calc_force_actual(x['speed_mps'], x['magonly_power']) for x in self.stable_records if x['position'] == position]
+        #stable_speed = [x['speed_mps'] for x in self.stable_records if x['position'] == position]        
+        
+        force = lambda r: r['magonly_power'] / r['speed_mps']
+        force_records = [force(records)]
+        
+        return force_records
+        
+    #
+    # Identifies stable data.
+    #
+    def __find_stable(self, skip=0):
+        # Skip first 7 minutes of data (7*60 = 420 records).
+        if len(self.records) < skip:
+            raise "Not enough rows to find stable data."
+    
+        stable = []
+    
+        #for i, power, speed in fit.power_ma_crossovers(self.records, skip):
+        for i, power, speed in fit.power_stable(self.records):
+            position = self.records[i]['position']
+            speed_mps = speed * 0.44704
+            stable.append((i, position, speed_mps, power)) 
+            print("%.0f, %.2f, %.1f" % (position, speed, power))
+            
+        dtp = np.dtype([('index','i4'), ('position','i4'), ('speed_mps','f4'), ('power','f4')])
+        
+        # need some records
+        if len(stable) > 2:
+            self.stable_records = np.array(stable, dtype=dtp)
+        else:
+            raise ValueError("No stable records")
+        
+
+    def __create_ride_plot(self):
+        plt.rc('axes', grid=True)
+        plt.rc('grid', color='0.75', linestyle='-', linewidth=0.5)
+
+        ax1 = plt.subplot(322)
+        plt.title('Speed (mph)')
+        
+        ax2 = plt.subplot(324,sharex=ax1)
+        plt.title('Servo Position')
+        
+        ax3 = plt.subplot(326,sharex=ax1)
+        plt.title('Power')
+
+        time = range(0, len(self.records['speed']), 1)
+        
+        # ax1 = Speed & Servo
+        ax1.plot(time, self.records['speed'])
+        ax1.set_ylim(7, 30)
+
+        # 15 second moving average for speed.
+        ax1.plot(time, fit.speed_moving_average(self.records['speed'], 15), color='g')
+
+        ax2.plot(time, self.records['position'], color='r')
+        ax2.set_ylim(800, 1700)
+
+        ax3.plot(time, self.records['power'], 'r', label='Actual')
+        ax3.plot(time, self.records['power_est'], 'orange', linestyle='--', linewidth=2, label='Est.')
+        ax3.plot(time, self.records['power_re_est'], 'green', linestyle='--', linewidth=2, label='Mag Gap Est.')
+
+        ax3.plot(time, fit.moving_average(self.records['power'], 30), color='b', label='30 Sec MA')
+        ax3.plot(time, fit.moving_average(self.records['power'], 10), color='lightblue', label='10 Sec MA')
+        ax3.plot(time, fit.moving_average(self.records['power_est'], 30), color='y', label='30 Sec Est. MA')
+
+        # Display TR targets if we have them.
+        try:
+            ax3.plot(time, self.records['target'], color='purple', label='Target')
+        except:
+            print("no target")
+
+        ax3.set_ylim(50, max(self.records['power']))
+        
+        # Add markers where we're getting our stable data.
+        ax3.scatter(self.stable_records['index'], self.stable_records['power'], label='Stable Points')
+        
+        # Shade in stable speed data sections.
+        for p in fit.stable_speed_points(self.records):
+            ax1.axvspan(p[0], p[1], color='yellow', alpha=0.2)
+            ax2.axvspan(p[0], p[1], color='yellow', alpha=0.2)
+            ax3.axvspan(p[0], p[1], color='yellow', alpha=0.2)
+        
+        # Add error bars to show discrepency between power_est and actual power.
+        for r in self.stable_records:
+            i = r['index']
+            power_est = self.records[i][self.err_est_column]
+            
+            if r['power'] > power_est:
+                bottom = power_est
+                height = r['power'] - bottom
+            else:   
+                bottom = r['power'] 
+                height = power_est - bottom
+                 
+            ax3.bar(left=i-0.4, height=height, bottom=bottom, width=0.8, color='red' )
+            
+            # Write the error in the center of the column.
+            err_text = "%.1f" % (height)
+            ax3.text(x=i+1, y=bottom+(height/2), s=err_text) 
+            
+        ax3.legend()
+
+    #
+    # Plots speed:watts based on empirical magnet data in this file.
+    #
+    def __create_magnet_plot(self):
+
+        plt.subplot(121)
+        plt.title('Linear Magnet Power')
+        plt.grid(b=True, which='both', color='0.65', linestyle='-')
+        plt.axhline(y=0, c='black', linewidth=2)
+        plt.xlabel('Speed (mph)')
+        plt.ylabel('Mag Only Power')
+        
+        for p in self.positions:
+            position = p[0]
+            slope = p[1]
+            intercept = p[2]
+            ix = p[3]
+            speed = self.stable_records[ix]['speed_mps']
+            power = self.stable_records[ix]['magonly_power']
+        
+            color = self.cc.get_color(position)
+        
+            # Scatter plot all stable magonly power values by position.
+            plt.scatter(speed*2.23694, power, color=color, label=(('Position: %i' % (position))), marker='o')
+            
+            # Draw linear slope/intercept for a given position.
+            lin_power = lambda x: x * slope + intercept
+            plt.plot(speed*2.23694, lin_power(speed), color=color, linestyle='--')
+        
+        plt.legend()
+
+    # 
+    # Plots the known, trusted model for speed:watts.
+    #
+    def __create_model_mag_plot(self):
+        # Draw the model power 
+        model_speed_mps = np.array( [ min(self.stable_records['speed_mps']), max(self.stable_records['speed_mps']) ] )
+
+        def mag_watts(speeds, position):
+            watts = []
+            for s in speeds:
+                watts.append(mag.watts(s, position))
+                
+            return watts
+
+        for x in range(820, 1420, 10):
+            color = self.cc.get_color(x)
+            
+            if x % 100 == 0:
+                # Every 100 positions make a stronger line
+                linewidth=4
+                plt.text(model_speed_mps[1]*2.23694, mag.watts(model_speed_mps[1], x)-4, x, color=color)
+            else:
+                linewidth=.5
+                
+            plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps, x), color=color, linestyle='-.', linewidth=linewidth)
+        
+    #
+    # Plots force.
+    #
+    def __create_mag_force_plot(self):
+        
+        def calc_force(speed_mps, slope, intercept):
+            power = speed_mps * slope + intercept
+                   
+            force = power / speed_mps
+            return force
+        
+        def calc_force_actual(speed_mps, magonly_power):
+            return (magonly_power / speed_mps)
+            
+        def model_force(speed_mps, position):
+            force = []
+            for v in speed_mps:
+                w = mag.watts(v, position)
+                f = (w / v)
+                if self.gap_offset > 0:
+                    f = f * self.gap_offset
+                force.append(f) 
+            return force
+        
+        ax = plt.subplot(121)
+        
+        # For each position we've found with stable data in the file.
+        for p in self.positions:
+            # skip 900
+            #if p[0] == 900:
+            #    continue
+                
+            position = p[0]
+            slope = p[1]
+            intercept = p[2]
+            ix = p[3]
+            
+            # Create a range of speeds in meters per second.
+            speed = np.linspace(1, 15, 50)
+            
+            #
+            # Calculate force based on derived slope / intercept.
+            #
+            f = lambda x: calc_force(x, slope, intercept)
+            force = [f(speed)][0]
+            
+            # Plot force derived from linear speed/watt fit.
+            ax.plot(speed, force, marker='o', label=('%s Derived') % position)
+            plt.text(max(speed), max(force), position)
+            
+            
+            #
+            # Fit force to a model.
+            #
+            ix = [i for i,x in enumerate(force) if x > 0]      # indexes where force is > 0
+            if len(speed[ix]) < 2 or len(force[ix]) != len(speed[ix]):
+                print("not enough data to fit force for: ", position)
+                continue
+            
+            a,b = fit.fit_force(speed[ix], force[ix])
+            #print((position, a, b))
+            fit_force = []
+            #fit_force2 = []
+            for s in (speed):
+                fit_force.append(fit.get_force(s, a, b))
+                #fit_force2.append(fit.get_force(s, a*1.2, b*1.2))
+                f2 = float(fit.get_force(s, a, b))
+                #fit_force2.append(f2 * 0.8)
+            plt.plot(speed, fit_force, label=('%s Fit') % position) 
+            #plt.plot(speed, fit_force2, label=('%s Contrived') % position)    
+
+            #
+            # Get force from established model based on speed/watts.
+            #
+            force2 = model_force(speed, position)
+            ax.plot(speed, force2, color='orange', label=('%s Known Model') % position)
+
+            #
+            # Make up the force based on an offset to get the known model to match.
+            #
+            #force3 = model_force(speed, position, gap_offset=0) #gap_offset=1.25)
+            #plt.plot(speed, force3, label=('%s Contrived') % position)    
+            
+            #
+            # Get the actual force by position.
+            #
+            stable_force = [calc_force_actual(x['speed_mps'], x['magonly_power']) for x in self.stable_records if x['position'] == position]
+            stable_speed = [x['speed_mps'] for x in self.stable_records if x['position'] == position]
+            
+            #for i, f in enumerate(stable_force):
+            #    print((position, stable_speed[i], f))
+            
+            ax.plot(stable_speed, stable_force, color='red', marker='*', label=('%s Actual') % position)
+                        
+        plt.ylim(-5)
+        plt.legend(loc='lower right')
+        
+# ----------------------------------------------------------------------------
+#
+# Encapsulates function for getting a unique color for plotting.
+#
+# ----------------------------------------------------------------------------
+class ChartColor:
+    def __init__(self):
+        self.index = 0
+        self.positions = []
+        self.colors = ['g', 'c', 'y', 'b', 'r', 'm', 'k', 'orange', 'navy', 'darkolivegreen', 'mediumturquoise']        
+        self.marker = itertools.cycle((',', '+', '.', 'o', '*')) 
+    
+    #
+    # Returns a unique color for each servo position.
+    #
+    def get_color(self, position):
+        # if the position has been seen before, return it's color, otherwise grab a new color.
+        keyfunc = lambda x: x[0]
+        for c, p in enumerate(sorted(self.positions, key=keyfunc)):
+            if p[0] == position:
+                return p[1]
+        
+        color = self.colors[self.index]
+        if (self.index == 10):
+            self.index = 0
+        else:
+            self.index = self.index + 1
+        
+        self.positions.append((position, color))
+        
+        return color            
+            

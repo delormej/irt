@@ -105,8 +105,11 @@ namespace IRT_GUI.Simulation
 
             foreach (var step in steps)
             {
-                step.ElapsedStart = 0;
-                bs.Add(step);
+                // Make a copy of the object so that it's not a reference, a change in one step
+                // should not change copied steps.
+                ResistanceStep copy = step.Copy();
+                copy.ElapsedStart = 0;
+                bs.Add(copy);
             }
         }
 

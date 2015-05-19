@@ -1838,7 +1838,8 @@ namespace IRT_GUI
                 if (txtLog == null || txtLog.IsDisposed)
                     return;
 
-                txtLog.AppendText(text + '\n');
+                txtLog.AppendText(string.Format("{0:s}: {1}\n", 
+                    DateTime.UtcNow, text));
                 lblStatus.Text = text;
             });
         }
@@ -2414,50 +2415,92 @@ namespace IRT_GUI
             }
         }
 
+        private void Calibrate(string file)
+        {
+            Model model = Model.FromFile(file);
+            Coastdown coastdown = new Coastdown();
+
+            coastdown.Calculate(model);
+            CoastdownForm form = new CoastdownForm(coastdown, model);
+            form.Apply += m_calibration_CoastdownCalibrationApply;
+            form.Show();
+        }
+
+        private void BatchCalibrate(string[] fileNames)
+        {
+            Model model = null;
+            Coastdown coastdown = new Coastdown();
+            CoastdownForm form = null;
+
+            UpdateStatus("Drag, RR, Inertia, Coastdown, Watts");
+
+            foreach (string file in fileNames)
+            {
+                try
+                {
+                    model = Model.FromFile(file);
+                    coastdown.Calculate(model);
+
+                    string output = string.Format("{0:0.000000}, {1:0.0000}, {2:0.000}, {3:0.0}, {4:0}",
+                        coastdown.Drag,
+                        coastdown.RollingResistance,
+                        model.Inertia,
+                        coastdown.CoastdownTime(15 * 0.44704),
+                        coastdown.Watts(15 * 0.44704)
+                        );
+
+                    UpdateStatus(output);
+
+                    if (form == null)
+                    {
+                        form = new CoastdownForm(coastdown, model);
+                    }
+                    else
+                    {
+                        int start = file.LastIndexOf(@"\");
+
+                        string label = file.Substring(start+1, file.Length - start-1);
+
+                        form.PlotActualCoastDown(coastdown.Data.CoastdownSeconds, 
+                            coastdown.Data.SpeedMps, label);
+                        form.PlotStableWatts(model.StableSpeedMps * 2.23694, model.StableWatts);
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    UpdateStatus("Failed on: " + file);
+                }
+            }
+
+            if (form != null)
+            {
+                form.Show();
+            }
+        }
+
         private void btnLoadCalibration_Click(object sender, EventArgs e)
         {
-
             OpenFileDialog dlg = new OpenFileDialog();
             //dlg.InitialDirectory = m_lastPath;
             dlg.Filter = "Ride Logs (*.csv)|*.csv|All files (*.*)|*.*";
             dlg.FilterIndex = 1;
             dlg.RestoreDirectory = false;
             dlg.CheckFileExists = true;
-            dlg.Multiselect = false;
+            dlg.Multiselect = true;
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    Model model;
-                    Coastdown coastdown = new Coastdown();
-
                     if (dlg.FileNames.Length > 1)
                     {
-                        List<Model> models = new List<Model>();
-
-                        foreach (string file in dlg.FileNames)
-                        {
-                            models.Add(Model.FromFile(file));
-                        }
-
-                        // Calculate based on multiple files.
-                        model = coastdown.Calculate(models.ToArray());
-
-                        // For display purposes, use the lsat stable speed and watts.
-                        model.StableSeconds = models.Last().StableSeconds;
-                        model.StableSpeedMps = models.Last().StableSpeedMps;
-                        model.StableWatts = models.Last().StableWatts;
+                        BatchCalibrate(dlg.FileNames);
                     }
                     else
                     {
-                        model = Model.FromFile(dlg.FileName);
-                        coastdown.Calculate(model);
+                        Calibrate(dlg.FileName);
                     }
-
-                    CoastdownForm form = new CoastdownForm(coastdown, model);
-                    form.Apply += m_calibration_CoastdownCalibrationApply;
-                    form.Show();
                 }
                 catch (Exception ex)
                 {

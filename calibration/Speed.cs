@@ -33,7 +33,7 @@ namespace IRT.Calibration
             List<TickEvent> events = model.Events;
             TickEvent tickEvent = events.Last();
 
-            // Event offset skip, every 4th event.
+            // Event offset skip, every other event.
             int SkipOffset = 2;
             int currentIndex = events.Count;
             

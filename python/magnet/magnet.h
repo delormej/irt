@@ -51,6 +51,11 @@ typedef struct poly_coeff_s {
  */
 void magnet_set_coeff(poly_coeff_t low_speed, poly_coeff_t high_speed);
 
+/**@brief	Sets the magnet force offset.  Offset is a percentage.
+*
+*/
+void magnet_force_offset(uint16_t offset);
+
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
  *			position.
  */

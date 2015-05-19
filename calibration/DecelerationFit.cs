@@ -46,7 +46,7 @@ namespace IRT.Calibration
             // Get the change in speed.
             double dSpeed = speedMps - m_lastSpeed;
 
-            // Get the rate of change.
+            // Get the rate of change in m/s^2.
             double acceleration = dSpeed / dTime;
 
             return acceleration;
@@ -66,7 +66,7 @@ namespace IRT.Calibration
             alglib.polynomialfitreport report;
 
             alglib.polynomialfit(speedMps, coastdownSeconds, speedMps.Length,
-                3, out info, out m_interpolant, out report);
+                4, out info, out m_interpolant, out report);
             alglib.polynomialbar2pow(m_interpolant, out m_coeff);
 
             if (info != 1)
