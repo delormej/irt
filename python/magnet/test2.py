@@ -67,8 +67,9 @@ def main(file_name, drag=0, rr=0, offset=0):
     #plt.plot(p.records['speed'], p.records['power'])
     #plt.show()
     
-    est, points, avg_err = p.EstimateError()
-    print("Error estimate: %f based on: %d points, avg err: %f" % (est, points, avg_err))
+    #est, points, avg_err = p.EstimateError()
+    print("Error estimate: ", p.EstimateError())
+    #print("Error estimate: %f based on: %d points, avg err: %f" % (est, points, avg_err))
     
     p.PlotRide()
     p.PlotMagnet()

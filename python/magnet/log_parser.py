@@ -65,6 +65,7 @@ class LogParser:
         #self.__create_mag_force_plot()
         
     def EstimateError(self):
+        """
         # Returns the sum of the errors of the difference between 
         # estimated power and actual power for stable data points.
         total_err = 0
@@ -80,7 +81,17 @@ class LogParser:
         #avg_err = math.sqrt(total_err) / points
         avg_err = total_err / points
         
-        return total_err, points, avg_err 
+        return total_err, points, avg_err
+        """
+        stable_errs = [x['power_err'] for x in self.records[self.stable_records['index']]]
+        
+        for e in stable_errs:
+            print(e)
+        
+        
+        return np.mean(stable_errs)
+        #return np.std(stable_errs)
+         
         
     # ------------------------------------------------------------------------
     #  Internal methods
@@ -209,7 +220,7 @@ class LogParser:
         self.records = append_fields(self.records, 'power_re_est', re_est_col, usemask=False)
 
         # Add actual vs. estimate error column.
-        err_col = self.records['power_est'] - self.records['power']
+        err_col = self.records[self.err_est_column] - self.records['power']
         self.records = append_fields(self.records, 'power_err', err_col, usemask=False)
 
     #
@@ -334,7 +345,6 @@ class LogParser:
             self.stable_records = np.array(stable, dtype=dtp)
         else:
             raise ValueError("No stable records")
-        
         
 
     def __create_ride_plot(self):
