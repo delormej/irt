@@ -5,10 +5,11 @@ import os
 def deploy(hex_path):
 	# archive name is the same, except ends in .zip
 	zip_path = hex_path.replace('.hex', '.zip')
+	appdat_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'application.dat')
 	
 	with zip.ZipFile(zip_path, 'w') as zipPkg:
 		zipPkg.write(hex_path, os.path.basename(hex_path))
-		zipPkg.write('application.dat')
+		zipPkg.write(appdat_path, os.path.basename(appdat_path))
 		
 	return zip_path
 

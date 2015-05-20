@@ -126,11 +126,14 @@ PROJECT_NAME := $(PROJECT_NAME)_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVIS
 
 include $(TEMPLATE_PATH)Makefile.common
 
+DEPLOY_SCRIPT = ..\..\python\deploy\deploy.py 
+
 debug: all 
 
 deploy:
-	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
-	cp $(HEX) $(DEPLOY_PATH2)$(OUTPUT_NAME).hex
+	python $(DEPLOY_SCRIPT) $(HEX) 
+	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).zip
+	cp $(HEX) $(DEPLOY_PATH2)$(OUTPUT_NAME).zip
 
 ############################################
 # Flashes both the bootloader & app.
