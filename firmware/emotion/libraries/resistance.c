@@ -242,17 +242,13 @@ uint16_t resistance_pct_set(float percent)
 static uint16_t resistance_erg_position(float speed_mps, int16_t magoff_watts)
 {
 	float mag_watts;
-	float erg_target;
 
 	// Handle adjustment.
 	if (m_resistance_state.adjust_pct > 0)
 	{
-		// Adjust erg target.
-		erg_target = m_resistance_state.erg_watts * (m_resistance_state.adjust_pct / 100.0f);
-	}
-	else
-	{
-		erg_target = m_resistance_state.erg_watts;
+		// Adjust erg target against original target value.
+		m_resistance_state.erg_watts = m_resistance_state.unadjusted_erg_watts *
+				(m_resistance_state.adjust_pct / 100.0f);
 	}
 
 	//
@@ -261,7 +257,7 @@ static uint16_t resistance_erg_position(float speed_mps, int16_t magoff_watts)
 	// TODO: We could get smarter here and deal with 'erg-ing out' or if the user
 	// stops pedaling deal with them starting back up.
 	//
-	mag_watts = erg_target - magoff_watts;
+	mag_watts = m_resistance_state.erg_watts - magoff_watts;
 
 	return magnet_position(speed_mps, mag_watts, mp_user_profile->ca_gap_offset);
 }
@@ -372,6 +368,7 @@ void resistance_erg_set(uint16_t watts)
 	}
 
 	m_resistance_state.erg_watts = watts;
+	m_resistance_state.unadjusted_erg_watts = watts;
 	m_resistance_state.mode = RESISTANCE_SET_ERG;
 }
 

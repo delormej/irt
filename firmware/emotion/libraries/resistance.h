@@ -93,8 +93,9 @@ typedef struct
 	float 		wind_speed_mps;
 	float 		grade;
 	int16_t 	erg_watts;
+	int16_t 	unadjusted_erg_watts;	// Unadjusted, original erg target.
 	uint8_t 	level;
-	uint8_t		adjust_pct;		// Tracks a percentage of adjustment 0-254%
+	uint8_t		adjust_pct;				// Tracks a percentage of adjustment 0-254%
 } irt_resistance_state_t;
 
 /**@brief	Initializes the resistance module which controls the servo.
