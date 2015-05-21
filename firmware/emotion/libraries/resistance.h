@@ -15,9 +15,10 @@
 #include "user_profile.h"
 
 #define RESISTANCE_LEVELS 		resistance_level_count() 	// Number of resistance levels available.
-#define ERG_ADJUST_LEVEL		2U							// Watts to adjust increment /decrement
+#define ERG_ADJUST_MINOR		1U							// Percent watts to adjust increment /decrement for minor step
+#define ERG_ADJUST_MAJOR		10U							// Percent watts to adjust increment /decrement for major step
 #define ERG_ADJUST_MIN			50U							// Erg doesn't go below this watt level.
-
+#define DEFAULT_ERG_WATTS				175u				// Default erg target_watts when not otherwise set.
 #define RESISTANCE_MIN_SPEED_ADJUST		3.0f				// (~6.71mph) Minimum speed in meters per second at which we adjust resistance.
 
 /**@brief Bike types, used for predefined resistance coefficients. */
@@ -68,7 +69,11 @@ typedef enum
     
 } WFKICKRCommands_t;
 */
-/**@brief Resistance control event payload. */
+
+/**@brief 		Resistance control event payload.
+ * 				TODO: this belongs in a separate module responsible for decoding
+ * 				resistance control messages.
+ */
 typedef struct
 {
 	resistance_mode_t 	operation;				// Operation to perform or mode to set for resistance.
@@ -79,25 +84,29 @@ typedef struct
 typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);
 
 /**@brief Factors used when calculating simulation forces. */
-typedef struct rc_sim_forces_s
+typedef struct
 {
-	float 	crr;
-	float 	c;
-	float 	wind_speed_mps;
-	float 	grade;
-	int16_t erg_watts;
-} rc_sim_forces_t;
+	resistance_mode_t mode;
+	uint16_t 	servo_position;
+	float 		crr;
+	float 		c;
+	float 		wind_speed_mps;
+	float 		grade;
+	int16_t 	erg_watts;
+	int16_t 	unadjusted_erg_watts;	// Unadjusted, original erg target.
+	uint8_t 	level;
+	uint8_t		adjust_pct;				// Tracks a percentage of adjustment 0-254%
+} irt_resistance_state_t;
 
-/**@brief		Initializes the pulse-width-modulation for the servo.
- * 				Returns the position of the servo after initialization.
+/**@brief	Initializes the resistance module which controls the servo.
  *
  */
-uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile);
+irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile);
 
-/**@brief		Gets the current position of the servo.
+/**@brief		Gets the current resistance state object.
  *
  */
-uint16_t resistance_position_get(void);
+irt_resistance_state_t* resistance_state_get(void);
 
 /**@brief		Sets the position of the servo.
  *
@@ -125,11 +134,41 @@ uint8_t resistance_level_count(void);
  */
 uint16_t resistance_pct_set(float percent);
 
-
-/**@brief		Adjusts magnetic resistance for erg and simulation modes.
+/**@brief		Sets erg mode with a watt target.
  *
  */
-void resistance_adjust(irt_context_t* p_context, rc_sim_forces_t* p_sim_forces);
+void resistance_erg_set(uint16_t watts);
+
+/**@brief		Sets simulation grade.
+ *
+ */
+void resistance_grade_set(float grade);
+
+/**@brief		Sets simulation wind speed.
+ *
+ */
+void resistance_windspeed_set(float windspeed_mps);
+
+/**@brief		Sets simulation coefficient of drag.
+ *
+ */
+void resistance_c_set(float drag);
+
+/**@brief		Sets simulation coefficient of rolling resistance.
+ *
+ */
+void resistance_crr_set(float crr);
+
+/**@brief		Adjusts dynamic magnetic resistance control based on current
+ * 				speed and watts.
+ *
+ */
+void resistance_adjust(float speed_mps, int16_t magoff_watts);
+
+/**@brief		Adjusts resistance +/- by either a step or % (erg mode).
+ *
+ */
+uint32_t resistance_step(bool increment, bool minor_step);
 
 
 #endif //__RESISTANCE_H__
