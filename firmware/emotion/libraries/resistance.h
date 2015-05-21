@@ -158,11 +158,6 @@ void resistance_c_set(float drag);
  */
 void resistance_crr_set(float crr);
 
-/**@brief		Sets to the maximum resistance in standard level mode.
- *
- */
-uint32_t resistance_max_set();
-
 /**@brief		Adjusts dynamic magnetic resistance control based on current
  * 				speed and watts.
  *

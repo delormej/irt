@@ -178,8 +178,8 @@ bool resistance_positions_validate(servo_positions_t* positions)
  */
 uint16_t resistance_level_set(uint8_t level)
 {
-	/*RC_LOG("[RC] resistance_level_set: %i, max: %i\r\n",
-			level, RESISTANCE_LEVELS);*/
+	RC_LOG("[RC] resistance_level_set: %i, max: %i\r\n",
+			level, RESISTANCE_LEVELS);
 
 	// Ensures the resistance to a standard 0-9 level.
 	if (level >= RESISTANCE_LEVELS)
@@ -364,6 +364,13 @@ void resistance_adjust(float speed_mps, int16_t magoff_watts)
  */
 void resistance_erg_set(uint16_t watts)
 {
+	// If set to 0, use the default.
+	// This can happen when first set from the button vs. an app.
+	if (watts == 0)
+	{
+		watts = DEFAULT_ERG_WATTS;
+	}
+
 	m_resistance_state.erg_watts = watts;
 	m_resistance_state.mode = RESISTANCE_SET_ERG;
 }
@@ -402,31 +409,6 @@ void resistance_crr_set(float crr)
 {
 	m_resistance_state.crr = crr;
 	m_resistance_state.mode = RESISTANCE_SET_SIM;
-}
-
-/**@brief		Sets maximum resistance.
- *
- */
-uint32_t resistance_max_set()
-{
-	uint32_t err_code = NRF_SUCCESS;
-
-	if (m_resistance_state.mode == RESISTANCE_SET_STANDARD &&
-			m_resistance_state.level < (RESISTANCE_LEVELS - 1))
-	{
-		resistance_level_set(RESISTANCE_LEVELS - 1);
-	}
-	else if (m_resistance_state.mode == RESISTANCE_SET_ERG)
-	{
-		// Increment by the max amount (10%)?
-		resistance_increment();
-	}
-	else
-	{
-		err_code = NRF_ERROR_INVALID_STATE;
-	}
-
-	return err_code;
 }
 
 /**@brief		Adjusts resistance +/- by either a step or % (erg mode).
@@ -506,12 +488,15 @@ uint32_t resistance_step(bool increment, bool minor_step)
 				}
 			}
 
+			RC_LOG("[RC]:resistance_step erg adjust %i\r\n", m_resistance_state.adjust_pct);
+
 			err_code = NRF_SUCCESS;
 			break;
 
 		default:
 			break;
 	}
+
 
 	return err_code;
 }
