@@ -363,6 +363,7 @@ namespace IRT_GUI
             m_dataPoint.FlywheelRevs = message.FlyweelRevs;
 
             UpdateText(lblFlywheel, message.FlyweelRevs);
+            UpdateText(lblTemperature, message.Temperature);
 
             UpdateResistanceDisplay((ResistanceMode)message.Mode, message.Level,
                 message.ServoPosition);
