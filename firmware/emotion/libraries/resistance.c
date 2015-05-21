@@ -16,7 +16,6 @@
 #include "app_error.h"
 #include "magnet.h"
 #include "resistance.h"
-#include "speed.h"
 #include "nrf_pwm.h"
 #include <math.h>
 #include "debug.h"
