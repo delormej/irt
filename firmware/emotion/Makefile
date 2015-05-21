@@ -132,8 +132,8 @@ debug: all
 
 deploy:
 	python $(DEPLOY_SCRIPT) $(HEX) 
-	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).zip
-	cp $(HEX) $(DEPLOY_PATH2)$(OUTPUT_NAME).zip
+	cp $(OUTPUT_PATH)$(OUTPUT_NAME).zip $(DEPLOY_PATH)$(OUTPUT_NAME).zip
+	cp $(OUTPUT_PATH)$(OUTPUT_NAME).zip $(DEPLOY_PATH2)$(OUTPUT_NAME).zip
 
 ############################################
 # Flashes both the bootloader & app.
