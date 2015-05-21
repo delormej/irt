@@ -1108,48 +1108,48 @@ static void on_resistance_off(void)
 	led_set(LED_MODE_STANDARD);
 }
 
-static void on_resistance_dec(void)
+// Steps resistance up or down.
+static void on_resistance_step(bool increment)
 {
+	uint32_t err_code;
+
+	if (increment)
+	{
+		err_code = resistance_increment();
+	}
+	else
+	{
+		err_code = resistance_decrement();
+	}
+
 	// Decrement resistance.
-	if (resistance_decrement() == NRF_SUCCESS)
+	if (err_code == NRF_SUCCESS)
 	{
 		// Queue acknowledgment.
 		acknowledge_resistance();
 
 		// LED indication.
-		led_set(LED_BUTTON_DOWN);
+		led_set(increment ? LED_BUTTON_UP : LED_BUTTON_DOWN);
 	}
 	else
 	{
-		LOG("[MAIN] on_resistance_dec hit minimum.\r\n");
+		LOG("[MAIN] on_resistance_step hit min/max.\r\n");
 		led_set(LED_MIN_MAX);
 	}
+
 }
 
-static void on_resistance_inc(void)
+static void on_button_long_down(void)
 {
-	if (resistance_increment() == NRF_SUCCESS)
-	{
-		// Queue acknowledgment.
-		acknowledge_resistance();
+	// If we're in ERG mode, decrement by a big step.
 
-		// LED indication.
-		led_set(LED_BUTTON_UP);
-	}
-	else
-	{
-		LOG("[MAIN] on_resistance_inc hit maximum.\r\n");
-		led_set(LED_MIN_MAX);
-	}
-}
+	// Otherwise, turn resistance off.
 
-static void on_resistance_min(void)
-{
 	// Turn off resistance.
 	on_resistance_off();
 }
 
-static void on_resistance_max(void)
+static void on_button_long_up(void)
 {
 	if (resistance_max_set() == NRF_SUCCESS)
 	{
@@ -1385,7 +1385,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			else
 			{
 				// Increment resistance.
-				on_resistance_inc();
+				on_resistance_step(true);
 			}
 			break;
 
@@ -1398,16 +1398,16 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			else
 			{
 				// Decrement resistance.
-				on_resistance_dec();
+				on_resistance_step(false);
 			}
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_UP:
-			on_resistance_max();
+			on_button_long_up();
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_DOWN:
-			on_resistance_min();
+			on_button_long_down();
 			break;
 
 		case ANT_CTRL_BUTTON_MIDDLE:
