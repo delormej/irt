@@ -391,9 +391,12 @@ void resistance_crr_set(float crr)
 /**@brief		Sets maximum resistance.
  *
  */
-void resistance_max_set()
+uint32_t resistance_max_set()
 {
-	if (m_resistance_state.mode == RESISTANCE_SET_STANDARD)
+	uint32_t err_code = NRF_SUCCESS;
+
+	if (m_resistance_state.mode == RESISTANCE_SET_STANDARD &&
+			m_resistance_state.level < (RESISTANCE_LEVELS - 1))
 	{
 		resistance_level_set(RESISTANCE_LEVELS - 1);
 	}
@@ -402,6 +405,12 @@ void resistance_max_set()
 		// Increment by the max amount (10%)?
 		resistance_increment();
 	}
+	else
+	{
+		err_code = NRF_ERROR_INVALID_STATE;
+	}
+
+	return err_code;
 }
 
 /**@brief		Decrements the current resistance, implements specific logic
