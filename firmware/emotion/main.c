@@ -1125,7 +1125,6 @@ static void on_resistance_step(bool increment, bool minor)
 		LOG("[MAIN] on_resistance_step hit min/max.\r\n");
 		led_set(LED_MIN_MAX);
 	}
-
 }
 
 static void on_button_up(void)
@@ -1309,7 +1308,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	switch (rc_evt.operation)
 	{
 		case RESISTANCE_SET_STANDARD:
-			resistance_level_set(m_current_state.resistance_level);
+			resistance_level_set(value);
 			break;
 			
 		case RESISTANCE_SET_PERCENT:
@@ -1328,13 +1327,11 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			break;
 			
 		case RESISTANCE_SET_SLOPE:
-			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the slope.
 			resistance_grade_set(wahoo_sim_grade_decode(value));
 			break;
 			
 		case RESISTANCE_SET_WIND:
-			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the wind speed.
 			resistance_windspeed_set(wahoo_sim_wind_decode(value));
 			break;
