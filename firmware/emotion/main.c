@@ -365,6 +365,8 @@ static void toggle_resistance_mode()
 
 	if (p_state->mode == RESISTANCE_SET_STANDARD)
 	{
+		// Current mode is standard, switch to Erg.
+
 		// Use last or default erg setting.
 		resistance_erg_set(p_state->erg_watts);
 
@@ -376,7 +378,32 @@ static void toggle_resistance_mode()
 	}
 	else
 	{
+		// Current mode is Erg or another, turn off resistance.
 		on_resistance_off();
+	}
+}
+
+/**@brief	Queues a resistance acknowledgment based on current resistance state.
+ *
+ * @note	Only handles VALUE for Erg & Standard modes.
+ *
+ */
+static void acknowledge_resistance()
+{
+	irt_resistance_state_t* p_state = resistance_state_get();
+
+	switch (p_state->mode)
+	{
+		case RESISTANCE_SET_ERG:
+			bp_queue_resistance_ack(p_state->mode, p_state->erg_watts);
+			break;
+		case RESISTANCE_SET_STANDARD:
+			bp_queue_resistance_ack(p_state->mode, p_state->level);
+			break;
+		default:
+			// For all others (percent, sim, etc...), send 0 for value.
+			bp_queue_resistance_ack(p_state->mode, 0);
+			break;
 	}
 }
 
@@ -1084,7 +1111,15 @@ static void on_resistance_off(void)
 static void on_resistance_dec(void)
 {
 	// Decrement resistance.
-	if (resistance_decrement() != NRF_SUCCESS)
+	if (resistance_decrement() == NRF_SUCCESS)
+	{
+		// Queue acknowledgment.
+		acknowledge_resistance();
+
+		// LED indication.
+		led_set(LED_BUTTON_DOWN);
+	}
+	else
 	{
 		LOG("[MAIN] on_resistance_dec hit minimum.\r\n");
 		led_set(LED_MIN_MAX);
@@ -1093,7 +1128,15 @@ static void on_resistance_dec(void)
 
 static void on_resistance_inc(void)
 {
-	if (resistance_increment() != NRF_SUCCESS)
+	if (resistance_increment() == NRF_SUCCESS)
+	{
+		// Queue acknowledgment.
+		acknowledge_resistance();
+
+		// LED indication.
+		led_set(LED_BUTTON_UP);
+	}
+	else
 	{
 		LOG("[MAIN] on_resistance_inc hit maximum.\r\n");
 		led_set(LED_MIN_MAX);
