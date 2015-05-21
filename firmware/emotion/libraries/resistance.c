@@ -434,12 +434,12 @@ uint32_t resistance_step(bool increment, bool minor_step)
 				//
 				if (increment)
 				{
-					step = minor_step ? m_resistance_state.level + 1 :
-							RESISTANCE_LEVELS - 1;
+					step = minor_step ? (m_resistance_state.level + 1) :
+							(RESISTANCE_LEVELS - 1);
 				}
 				else
 				{
-					step = minor_step ? m_resistance_state.level - 1 : 0;
+					step = minor_step ? (m_resistance_state.level - 1) : 0;
 				}
 
 				resistance_level_set(step);
@@ -458,11 +458,11 @@ uint32_t resistance_step(bool increment, bool minor_step)
 			if (increment)
 			{
 				// Adjust by minor or major increment.
-				step = m_resistance_state.adjust_pct + minor_step ? ERG_ADJUST_MINOR :
-						ERG_ADJUST_MAJOR;
+				step = m_resistance_state.adjust_pct + (minor_step ? ERG_ADJUST_MINOR :
+						ERG_ADJUST_MAJOR);
 
 				// Ensure we won't overflow as a result.
-				if (m_resistance_state.adjust_pct > (UINT8_MAX - step))
+				if (m_resistance_state.adjust_pct < (UINT8_MAX - step))
 				{
 					m_resistance_state.adjust_pct = step;
 				}
@@ -474,8 +474,8 @@ uint32_t resistance_step(bool increment, bool minor_step)
 			}
 			else // decrement
 			{
-				step = m_resistance_state.adjust_pct - minor_step ? ERG_ADJUST_MINOR :
-						ERG_ADJUST_MAJOR;
+				step = m_resistance_state.adjust_pct - (minor_step ? ERG_ADJUST_MINOR :
+						ERG_ADJUST_MAJOR);
 
 				// Never go below the step change of ERG_ADJUST_MAJOR.
 				if (step > ERG_ADJUST_MAJOR)
