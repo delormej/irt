@@ -243,14 +243,6 @@ static uint16_t resistance_erg_position(float speed_mps, int16_t magoff_watts)
 {
 	float mag_watts;
 
-	// Handle adjustment.
-	if (m_resistance_state.adjust_pct > 0)
-	{
-		// Adjust erg target against original target value.
-		m_resistance_state.erg_watts = m_resistance_state.unadjusted_erg_watts *
-				(m_resistance_state.adjust_pct / 100.0f);
-	}
-
 	//
 	// Calculate the required incremental magnet force required (if any).
 	//
@@ -355,16 +347,24 @@ void resistance_adjust(float speed_mps, int16_t magoff_watts)
 	resistance_position_set(servo_pos, use_smoothing);
 }
 
-/**@brief		Sets erg mode with a watt target.
+/**@brief		Sets erg mode with a watt target.  If 0, resumes last setting.
+ * 				If no last setting, uses configured default.
  *
  */
 void resistance_erg_set(uint16_t watts)
 {
-	// If set to 0, use the default.
-	// This can happen when first set from the button vs. an app.
+	// If watts == 0, use the last setting.
 	if (watts == 0)
 	{
-		watts = DEFAULT_ERG_WATTS;
+		if (m_resistance_state.unadjusted_erg_watts == 0)
+		{
+			// If last setting is 0, use the default.
+			watts = DEFAULT_ERG_WATTS;
+		}
+		else
+		{
+			watts = m_resistance_state.unadjusted_erg_watts;
+		}
 	}
 
 	m_resistance_state.erg_watts = watts;

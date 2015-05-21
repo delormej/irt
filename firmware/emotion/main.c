@@ -364,7 +364,7 @@ static void toggle_resistance_mode()
 		// Current mode is standard, switch to Erg.
 
 		// Use last or default erg setting.
-		resistance_erg_set(mp_resistance_state->erg_watts);
+		resistance_erg_set(0);
 
 		// Queue acknowledgment.
 		bp_queue_resistance_ack(mp_resistance_state->mode, mp_resistance_state->erg_watts);
