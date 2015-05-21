@@ -391,9 +391,11 @@ static void acknowledge_resistance()
 		case RESISTANCE_SET_ERG:
 			bp_queue_resistance_ack(mp_resistance_state->mode, mp_resistance_state->erg_watts);
 			break;
+
 		case RESISTANCE_SET_STANDARD:
 			bp_queue_resistance_ack(mp_resistance_state->mode, mp_resistance_state->level);
 			break;
+
 		default:
 			// For all others (percent, sim, etc...), send 0 for value.
 			bp_queue_resistance_ack(mp_resistance_state->mode, 0);
@@ -1103,18 +1105,11 @@ static void on_resistance_off(void)
 }
 
 // Steps resistance up or down.
-static void on_resistance_step(bool increment)
+static void on_resistance_step(bool increment, bool minor)
 {
 	uint32_t err_code;
 
-	if (increment)
-	{
-		err_code = resistance_increment();
-	}
-	else
-	{
-		err_code = resistance_decrement();
-	}
+	err_code = resistance_step(increment, minor);
 
 	// Decrement resistance.
 	if (err_code == NRF_SUCCESS)
@@ -1133,34 +1128,66 @@ static void on_resistance_step(bool increment)
 
 }
 
+static void on_button_up(void)
+{
+	if (m_crr_adjust_mode)
+	{
+		crr_adjust(CRR_ADJUST_VALUE);
+		led_set(LED_BUTTON_UP);
+	}
+	else
+	{
+		// Increment resistance.
+		on_resistance_step(true, true);
+	}
+}
+
+static void on_button_down(void)
+{
+	if (m_crr_adjust_mode)
+	{
+		crr_adjust(CRR_ADJUST_VALUE*-1);
+		led_set(LED_BUTTON_DOWN);
+	}
+	else
+	{
+		// Decrement resistance.
+		on_resistance_step(false, true);
+	}
+}
+
 static void on_button_long_down(void)
 {
-	// If we're in ERG mode, decrement by a big step.
-
-	// Otherwise, turn resistance off.
-
-	// Turn off resistance.
-	on_resistance_off();
+	resistance_step(false, false);
 }
 
 static void on_button_long_up(void)
 {
-	if (resistance_max_set() == NRF_SUCCESS)
-	{
-		led_set(LED_MIN_MAX);
-	}
+	resistance_step(true, false);
 }
 
 static void on_button_menu(void)
 {
-	// Start / stop TR whenever the middle button is pushed.
-	if ( SETTING_IS_SET(m_user_profile.settings, SETTING_ANT_TR_PAUSE_ENABLED) )
+	if (!m_crr_adjust_mode)
 	{
-		bp_queue_resistance_ack(RESISTANCE_START_STOP_TR, 0);
-	}
+		// Start / stop TR whenever the middle button is pushed.
+		if ( SETTING_IS_SET(m_user_profile.settings, SETTING_ANT_TR_PAUSE_ENABLED) )
+		{
+			bp_queue_resistance_ack(RESISTANCE_START_STOP_TR, 0);
+		}
 
-	// Toggle between erg mode.
-	toggle_resistance_mode();
+		// Toggle between erg mode.
+		toggle_resistance_mode();
+	}
+}
+
+static void on_button_long_menu(void)
+{
+	if (!m_crr_adjust_mode)
+	{
+		// Change into crr mode.
+		calibration_start();
+	}
 }
 
 // This is the button on the board.
@@ -1371,29 +1398,11 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 	switch (evt.command)
 	{
 		case ANT_CTRL_BUTTON_UP:
-			if (m_crr_adjust_mode)
-			{
-				crr_adjust(CRR_ADJUST_VALUE);
-				led_set(LED_BUTTON_UP);
-			}
-			else
-			{
-				// Increment resistance.
-				on_resistance_step(true);
-			}
+			on_button_up();
 			break;
 
 		case ANT_CTRL_BUTTON_DOWN:
-			if (m_crr_adjust_mode)
-			{
-				crr_adjust(CRR_ADJUST_VALUE*-1);
-				led_set(LED_BUTTON_DOWN);
-			}
-			else
-			{
-				// Decrement resistance.
-				on_resistance_step(false);
-			}
+			on_button_down();
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_UP:
@@ -1405,19 +1414,11 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			break;
 
 		case ANT_CTRL_BUTTON_MIDDLE:
-			if (!m_crr_adjust_mode)
-			{
-				on_button_menu();
-			}
+			on_button_menu();
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_MIDDLE:
-			if (!m_crr_adjust_mode)
-			{
-				// Change into crr mode.
-				calibration_start();
-			}
-
+			on_button_long_menu();
 			break;
 
 		default:

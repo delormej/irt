@@ -15,7 +15,8 @@
 #include "user_profile.h"
 
 #define RESISTANCE_LEVELS 		resistance_level_count() 	// Number of resistance levels available.
-#define ERG_ADJUST_LEVEL		2U							// Watts to adjust increment /decrement
+#define ERG_ADJUST_MINOR		1U							// Percent watts to adjust increment /decrement for minor step
+#define ERG_ADJUST_MAJOR		10U							// Percent watts to adjust increment /decrement for major step
 #define ERG_ADJUST_MIN			50U							// Erg doesn't go below this watt level.
 #define DEFAULT_ERG_WATTS				175u				// Default erg target_watts when not otherwise set.
 #define RESISTANCE_MIN_SPEED_ADJUST		3.0f				// (~6.71mph) Minimum speed in meters per second at which we adjust resistance.
@@ -93,6 +94,7 @@ typedef struct
 	float 		grade;
 	int16_t 	erg_watts;
 	uint8_t 	level;
+	uint8_t		adjust_pct;		// Tracks a percentage of adjustment 0-254%
 } irt_resistance_state_t;
 
 /**@brief	Initializes the resistance module which controls the servo.
@@ -167,15 +169,10 @@ uint32_t resistance_max_set();
  */
 void resistance_adjust(float speed_mps, int16_t magoff_watts);
 
-/**@brief		Decrements the current resistance, implements specific logic
- * 				based on current mode.
+/**@brief		Adjusts resistance +/- by either a step or % (erg mode).
+ *
  */
-uint32_t resistance_decrement();
-
-/**@brief		Increments the current resistance, implements specific logic
- * 				based on current mode.
- */
-uint32_t resistance_increment();
+uint32_t resistance_step(bool increment, bool minor_step);
 
 
 #endif //__RESISTANCE_H__

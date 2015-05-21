@@ -242,6 +242,18 @@ uint16_t resistance_pct_set(float percent)
 static uint16_t resistance_erg_position(float speed_mps, int16_t magoff_watts)
 {
 	float mag_watts;
+	float erg_target;
+
+	// Handle adjustment.
+	if (m_resistance_state.adjust_pct > 0)
+	{
+		// Adjust erg target.
+		erg_target = m_resistance_state.erg_watts * (m_resistance_state.adjust_pct / 100.0f);
+	}
+	else
+	{
+		erg_target = m_resistance_state.erg_watts;
+	}
 
 	//
 	// Calculate the required incremental magnet force required (if any).
@@ -249,7 +261,7 @@ static uint16_t resistance_erg_position(float speed_mps, int16_t magoff_watts)
 	// TODO: We could get smarter here and deal with 'erg-ing out' or if the user
 	// stops pedaling deal with them starting back up.
 	//
-	mag_watts = m_resistance_state.erg_watts - magoff_watts;
+	mag_watts = erg_target - magoff_watts;
 
 	return magnet_position(speed_mps, mag_watts, mp_user_profile->ca_gap_offset);
 }
@@ -417,18 +429,89 @@ uint32_t resistance_max_set()
 	return err_code;
 }
 
-/**@brief		Decrements the current resistance, implements specific logic
- * 				based on current mode.
+/**@brief		Adjusts resistance +/- by either a step or % (erg mode).
+ * 				If major step for standard, maxes resistance.
+ * 				If minor step for standard, turns resistance off.
+ *
  */
-uint32_t resistance_decrement()
+uint32_t resistance_step(bool increment, bool minor_step)
 {
-	return 0;
-}
+	uint32_t err_code = NRF_ERROR_INVALID_STATE;
+	int8_t step;
 
-/**@brief		Increments the current resistance, implements specific logic
- * 				based on current mode.
- */
-uint32_t resistance_increment()
-{
-	return 0;
+	switch (m_resistance_state.mode)
+	{
+		case RESISTANCE_SET_STANDARD:
+			// If incrementing, ensure we're not at the top.
+			// If decrementing, ensure we're not at the bottom.
+			if ( (increment && m_resistance_state.level < (RESISTANCE_LEVELS-1)) ||
+					(!increment && m_resistance_state.level > 0) )
+			{
+				//
+				// Increment or decrement by one for minor step, major step is to MIN or MAX.
+				//
+				if (increment)
+				{
+					step = minor_step ? m_resistance_state.level + 1 :
+							RESISTANCE_LEVELS - 1;
+				}
+				else
+				{
+					step = minor_step ? m_resistance_state.level - 1 : 0;
+				}
+
+				resistance_level_set(step);
+				err_code = NRF_SUCCESS;
+			}
+			break;
+
+		case RESISTANCE_SET_ERG:
+			// If adjusting in erg mode, we keep this value around for the session.
+			if (m_resistance_state.adjust_pct == 0)
+			{
+				// Set initial value to 100%
+				m_resistance_state.adjust_pct = 100;
+			}
+
+			if (increment)
+			{
+				// Adjust by minor or major increment.
+				step = m_resistance_state.adjust_pct + minor_step ? ERG_ADJUST_MINOR :
+						ERG_ADJUST_MAJOR;
+
+				// Ensure we won't overflow as a result.
+				if (m_resistance_state.adjust_pct > (UINT8_MAX - step))
+				{
+					m_resistance_state.adjust_pct = step;
+				}
+				else
+				{
+					// Otherwise set to max.
+					m_resistance_state.adjust_pct = UINT8_MAX;
+				}
+			}
+			else // decrement
+			{
+				step = m_resistance_state.adjust_pct - minor_step ? ERG_ADJUST_MINOR :
+						ERG_ADJUST_MAJOR;
+
+				// Never go below the step change of ERG_ADJUST_MAJOR.
+				if (step > ERG_ADJUST_MAJOR)
+				{
+					m_resistance_state.adjust_pct = step;
+				}
+				else
+				{
+					step = ERG_ADJUST_MAJOR;
+				}
+			}
+
+			err_code = NRF_SUCCESS;
+			break;
+
+		default:
+			break;
+	}
+
+	return err_code;
 }
