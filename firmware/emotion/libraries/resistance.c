@@ -48,8 +48,9 @@ static irt_resistance_state_t	m_resistance_state;
 
 
 /**@brief	Initializes the resistance module which controls the servo.
+ *
  */
-uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile)
+irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile)
 {
 	mp_user_profile = p_user_profile;
 
@@ -68,7 +69,10 @@ uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profi
 	pwm_init(servo_pin_number);
 
 	// Always start off with resistance at level 0.
-	return resistance_level_set(0);
+	resistance_level_set(0);
+
+	// Return the state object.
+	return &m_resistance_state;
 }
 
 /**@brief		Gets the current resistance state object.

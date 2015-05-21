@@ -101,6 +101,7 @@ static app_timer_id_t					m_ca_timer_id;								// Calibration timer.
 
 static user_profile_t  					m_user_profile  __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
 static accelerometer_data_t 			m_accelerometer_data;
+static const irt_resistance_state_t* 	mp_resistance_state;
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
@@ -334,20 +335,17 @@ static void set_sim_params(uint8_t *pBuffer)
  */
 static void update_resistance_state()
 {
-	// Get the current state from the resistance module.
-	irt_resistance_state_t* p_state = resistance_state_get();
-
-	m_current_state.servo_position = p_state->servo_position;
-	m_current_state.resistance_mode = p_state->mode;
+	m_current_state.servo_position = mp_resistance_state->servo_position;
+	m_current_state.resistance_mode = mp_resistance_state->mode;
 
 	switch (m_current_state.resistance_mode)
 	{
 		case RESISTANCE_SET_ERG:
-			m_current_state.resistance_level = (int16_t)p_state->erg_watts;
+			m_current_state.resistance_level = (int16_t)mp_resistance_state->erg_watts;
 			break;
 
 		case RESISTANCE_SET_STANDARD:
-			m_current_state.resistance_level = p_state->level;
+			m_current_state.resistance_level = mp_resistance_state->level;
 			break;
 
 		default:
@@ -361,17 +359,15 @@ static void update_resistance_state()
  */
 static void toggle_resistance_mode()
 {
-	irt_resistance_state_t* p_state = resistance_state_get();
-
-	if (p_state->mode == RESISTANCE_SET_STANDARD)
+	if (mp_resistance_state->mode == RESISTANCE_SET_STANDARD)
 	{
 		// Current mode is standard, switch to Erg.
 
 		// Use last or default erg setting.
-		resistance_erg_set(p_state->erg_watts);
+		resistance_erg_set(mp_resistance_state->erg_watts);
 
 		// Queue acknowledgment.
-		bp_queue_resistance_ack(p_state->mode, p_state->erg_watts);
+		bp_queue_resistance_ack(mp_resistance_state->mode, mp_resistance_state->erg_watts);
 
 		// Quick blink for feedback.
 		led_set(LED_MODE_ERG);
@@ -390,19 +386,17 @@ static void toggle_resistance_mode()
  */
 static void acknowledge_resistance()
 {
-	irt_resistance_state_t* p_state = resistance_state_get();
-
-	switch (p_state->mode)
+	switch (mp_resistance_state->mode)
 	{
 		case RESISTANCE_SET_ERG:
-			bp_queue_resistance_ack(p_state->mode, p_state->erg_watts);
+			bp_queue_resistance_ack(mp_resistance_state->mode, mp_resistance_state->erg_watts);
 			break;
 		case RESISTANCE_SET_STANDARD:
-			bp_queue_resistance_ack(p_state->mode, p_state->level);
+			bp_queue_resistance_ack(mp_resistance_state->mode, mp_resistance_state->level);
 			break;
 		default:
 			// For all others (percent, sim, etc...), send 0 for value.
-			bp_queue_resistance_ack(p_state->mode, 0);
+			bp_queue_resistance_ack(mp_resistance_state->mode, 0);
 			break;
 	}
 }
@@ -1922,7 +1916,7 @@ int main(void)
 	profile_init();
 
 	// Initialize resistance module and initial values.
-	resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
+	mp_resistance_state = resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
 
 	// Initialize module to read speed from flywheel.
 	speed_init(PIN_FLYWHEEL, m_user_profile.wheel_size_mm);

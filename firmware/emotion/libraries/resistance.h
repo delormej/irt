@@ -95,11 +95,10 @@ typedef struct
 	uint8_t 	level;
 } irt_resistance_state_t;
 
-/**@brief		Initializes the pulse-width-modulation for the servo.
- * 				Returns the position of the servo after initialization.
+/**@brief	Initializes the resistance module which controls the servo.
  *
  */
-uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile);
+irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile);
 
 /**@brief		Gets the current resistance state object.
  *
