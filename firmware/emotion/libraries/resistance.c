@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include "irt_peripheral.h"
 #include "app_error.h"
 #include "magnet.h"
@@ -35,20 +36,34 @@
 /**@brief	Determines if the move is above the threshold for a servo move.
  */
 #define ABOVE_TRESHOLD(POS)										\
-		((POS - m_servo_pos) > MIN_THRESHOLD_MOVE || 			\
-				(m_servo_pos - POS > MIN_THRESHOLD_MOVE))		\
+		((POS - m_resistance_state.servo_position) > MIN_THRESHOLD_MOVE || 			\
+				(m_resistance_state.servo_position - POS > MIN_THRESHOLD_MOVE))		\
 
 // MACRO for getting to the array.
 #define RESISTANCE_LEVEL 	mp_user_profile->servo_positions.positions
+#define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
+#define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 
-static uint16_t	m_servo_pos;		// State of current servo position.
-static user_profile_t* mp_user_profile;
+static user_profile_t* 			mp_user_profile;
+static irt_resistance_state_t	m_resistance_state;
+
 
 /**@brief	Initializes the resistance module which controls the servo.
  */
 uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile)
 {
 	mp_user_profile = p_user_profile;
+
+	memset(&m_resistance_state, 0, sizeof(m_resistance_state));
+
+	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004.
+	 *
+	 *	fC is equal to A*Cw*Rho where A is effective frontal area (m^2); Cw is drag
+	 *	coefficent (unitless); and Rho is the air density (kg/m^3). The default value
+	 *	for A*Cw*Rho is 0.60.
+	 */
+	m_resistance_state.crr = SIM_CRR;
+	m_resistance_state.c = SIM_C;
 
 	// Initialize pulse-width-modulation.
 	pwm_init(servo_pin_number);
@@ -57,11 +72,12 @@ uint16_t resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profi
 	return resistance_level_set(0);
 }
 
-/**@brief	Returns the last known position of the servo.
+/**@brief		Gets the current resistance state object.
+ *
  */
-uint16_t resistance_position_get()
+irt_resistance_state_t* resistance_state_get(void)
 {
-	return m_servo_pos;
+	return &m_resistance_state;
 }
 
 /**@brief	Determines if there is a move and move accordingly.
@@ -108,19 +124,19 @@ uint16_t resistance_position_set(uint16_t servo_pos, bool smooth)
 	}
 
 	// Check if we actually need to move.
-	if ( (m_servo_pos != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
+	if ( (m_resistance_state.servo_position != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
 	{
 		// Issue a command to move the servo.
 		err_code = pwm_set_servo(actual_servo_pos, smooth);
 		APP_ERROR_CHECK(err_code);
 
 		// Save module state for next adjustment.
-		m_servo_pos = servo_pos;
+		m_resistance_state.servo_position = servo_pos;
 
 		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
 	}
 
-	return m_servo_pos;
+	return m_resistance_state.servo_position;
 }
 
 /**@brief		Validates the values of positions are in range.
@@ -154,16 +170,23 @@ bool resistance_positions_validate(servo_positions_t* positions)
 	return true;
 }
 
+/**@brief		Sets to a standard resistance level (0-9).
+ *
+ */
 uint16_t resistance_level_set(uint8_t level)
 {
 	/*RC_LOG("[RC] resistance_level_set: %i, max: %i\r\n",
 			level, RESISTANCE_LEVELS);*/
 
-	// Sets the resistance to a standard 0-9 level.
+	// Ensures the resistance to a standard 0-9 level.
 	if (level >= RESISTANCE_LEVELS)
 	{
+		// Set to the highest level.
 		level = RESISTANCE_LEVELS - 1;
 	}
+
+	m_resistance_state.mode = RESISTANCE_SET_STANDARD;
+	m_resistance_state.level = level;
 
 	return resistance_position_set(RESISTANCE_LEVEL[level], false);
 }
@@ -189,6 +212,8 @@ uint16_t resistance_pct_set(float percent)
 	*/
 	uint16_t position;
 
+	m_resistance_state.mode = RESISTANCE_SET_PERCENT;
+
 	if (percent == 0.0f)
 	{
 		position = MAGNET_POSITION_OFF;
@@ -211,19 +236,17 @@ uint16_t resistance_pct_set(float percent)
 /**@brief		Gets magnet position resistance to simulate desired erg watts.
  * @returns 	Servo position.
  */
-static uint16_t resistance_erg_position(int16_t target_watts, float speed_mps, float rr_force)
+static uint16_t resistance_erg_position(float speed_mps, int16_t magoff_watts)
 {
 	float mag_watts;
 
 	//
 	// Calculate the required incremental magnet force required (if any).
-	// By finding the total force required at current speed and backing
-	// out the baseline force of rolling resistance.
 	//
 	// TODO: We could get smarter here and deal with 'erg-ing out' or if the user
 	// stops pedaling deal with them starting back up.
 	//
-	mag_watts = ( (float)target_watts - (speed_mps * rr_force ));
+	mag_watts = m_resistance_state.erg_watts - magoff_watts;
 
 	return magnet_position(speed_mps, mag_watts, mp_user_profile->ca_gap_offset);
 }
@@ -237,9 +260,10 @@ static uint16_t resistance_erg_position(int16_t target_watts, float speed_mps, f
  *				wind resistance, wind speed, wheel circumference, and grade. 
  *				If these variables are not set, they will default to an "average" value.
  */
-static uint16_t resistance_sim_position(float speed_mps, rc_sim_forces_t *p_sim_forces, float rr_force)
+static uint16_t resistance_sim_position(float speed_mps, int16_t magoff_watts)
 {
-	float mag_watts;
+	float rr_force = (float)magoff_watts / speed_mps;
+	float mag_watts = 0;
 
 	// sim is going to calculate the estimated watts required at grade + wind for
 	// the current speed and rider total weight.  It will then hand this off to
@@ -250,16 +274,16 @@ static uint16_t resistance_sim_position(float speed_mps, rc_sim_forces_t *p_sim_
 	// The default value for A*Cw*Rho is 0.60.
 
 	// Note that we add HEAD and subtract TAIL wind speed in the speed calc here.
-	float wind = 0.5f * (p_sim_forces->c * pow((speed_mps + p_sim_forces->wind_speed_mps), 2));
+	float wind = 0.5f * (m_resistance_state.c * pow((speed_mps + m_resistance_state.wind_speed_mps), 2));
 
 	// Weight * GRAVITY * Co-efficient of rolling resistance.
-	float rolling = (mp_user_profile->total_weight_kg / 100.0f) * GRAVITY * p_sim_forces->crr;
+	float rolling = (mp_user_profile->total_weight_kg / 100.0f) * GRAVITY * m_resistance_state.crr;
 
 	// fGrade is the slope of the hill (slope = rise / run). Should be from -1.0 : 1.0, 
 	// where -1.0 is a 45 degree downhill slope, 0.0 is flat ground, and 1.0 is a 45 
 	// degree uphil slope. 
 	float gravitational = (mp_user_profile->total_weight_kg / 100.0f) * GRAVITY *
-							p_sim_forces->grade;
+			m_resistance_state.grade;
 
 	// Determine the additional force required from the magnet if necessary.
 	mag_watts = ( (wind + rolling + gravitational) - rr_force ) * speed_mps;
@@ -285,33 +309,27 @@ static uint16_t resistance_sim_position(float speed_mps, rc_sim_forces_t *p_sim_
 	return magnet_position(speed_mps, mag_watts, mp_user_profile->ca_gap_offset);
 }
 
-/**@brief	Adjusts the magnetic resistance accordingly for erg & sim modes.
+/**@brief		Adjusts dynamic magnetic resistance control based on current
+ * 				speed and watts.
  *
  */
-void resistance_adjust(irt_context_t* p_context, rc_sim_forces_t* p_sim_forces)
+void resistance_adjust(float speed_mps, int16_t magoff_watts)
 {
 	uint16_t servo_pos = 0;
-	float speed_avg = speed_average_mps();
+	bool use_smoothing;
 
-	RC_LOG("[RC] resistance_adjust speed_avg: %.2f, reported: %.2f\r\n",
-			speed_avg, p_context->instant_speed_mps);
-
-	if (speed_avg < RESISTANCE_MIN_SPEED_ADJUST)
+	if (speed_mps < RESISTANCE_MIN_SPEED_ADJUST)
 		return;
 
 	// If in erg or sim mode, destermine the magnet position.
-	switch (p_context->resistance_mode)
+	switch (m_resistance_state.mode)
 	{
 		case RESISTANCE_SET_ERG:
-			servo_pos = resistance_erg_position(p_sim_forces->erg_watts,
-					speed_avg, p_context->rr_force);
+			servo_pos = resistance_erg_position(speed_mps, magoff_watts);
 			break;
 
 		case RESISTANCE_SET_SIM:
-			servo_pos = resistance_sim_position(speed_avg, p_sim_forces,
-					p_context->rr_force);
-
-
+			servo_pos = resistance_sim_position(speed_mps, magoff_watts);
 			break;
 
 		default:
@@ -319,8 +337,86 @@ void resistance_adjust(irt_context_t* p_context, rc_sim_forces_t* p_sim_forces)
 			break;
 	}
 
+	// Only smooth out servo transition if in simulation mode.
+	use_smoothing = (m_resistance_state.mode == RESISTANCE_SET_SIM);
+
 	// Move the servo, with smoothing only if in sim mode.
-	resistance_position_set(servo_pos,
-			p_context->resistance_mode == RESISTANCE_SET_SIM);
+	resistance_position_set(servo_pos, use_smoothing);
 }
 
+/**@brief		Sets erg mode with a watt target.
+ *
+ */
+void resistance_erg_set(uint16_t watts)
+{
+	m_resistance_state.erg_watts = watts;
+	m_resistance_state.mode = RESISTANCE_SET_ERG;
+}
+
+/**@brief		Sets simulation grade.
+ *
+ */
+void resistance_grade_set(float grade)
+{
+	m_resistance_state.grade = grade;
+	m_resistance_state.mode = RESISTANCE_SET_SIM;
+}
+
+/**@brief		Sets simulation wind speed.
+ *
+ */
+void resistance_windspeed_set(float windspeed_mps)
+{
+	m_resistance_state.wind_speed_mps = windspeed_mps;
+	m_resistance_state.mode = RESISTANCE_SET_SIM;
+}
+
+/**@brief		Sets simulation coefficient of drag.
+ *
+ */
+void resistance_c_set(float drag)
+{
+	m_resistance_state.c = drag;
+	m_resistance_state.mode = RESISTANCE_SET_SIM;
+}
+
+/**@brief		Sets simulation coefficient of rolling resistance.
+ *
+ */
+void resistance_crr_set(float crr)
+{
+	m_resistance_state.crr = crr;
+	m_resistance_state.mode = RESISTANCE_SET_SIM;
+}
+
+/**@brief		Sets maximum resistance.
+ *
+ */
+void resistance_max_set()
+{
+	if (m_resistance_state.mode == RESISTANCE_SET_STANDARD)
+	{
+		resistance_level_set(RESISTANCE_LEVELS - 1);
+	}
+	else if (m_resistance_state.mode == RESISTANCE_SET_ERG)
+	{
+		// Increment by the max amount (10%)?
+		resistance_increment();
+	}
+}
+
+/**@brief		Decrements the current resistance, implements specific logic
+ * 				based on current mode.
+ */
+uint32_t resistance_decrement()
+{
+	return 0;
+}
+
+/**@brief		Increments the current resistance, implements specific logic
+ * 				based on current mode.
+ */
+uint32_t resistance_increment()
+{
+	return 0;
+}

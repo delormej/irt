@@ -127,14 +127,15 @@ typedef struct
 	int16_t		instant_power;         										// Note this is a SIGNED int16
 	float		instant_speed_mps;
 
+	int16_t		magoff_power;												// Magoff portion of the power equation.
 	uint16_t	accum_torque;												// Unit is in newton meters with a resolution of 1/32
 	uint32_t	accum_wheel_revs;											// BLE uses 32bit value, ANT uses 8 bit.
 	uint16_t	accum_wheel_period;											// Increments of 1/2048s rolls over at 32 seconds.
 	uint16_t	accum_flywheel_ticks;										// Currently 2 ticks per flywheel rev.
+
 	// TODO: ble cps spec uses accum_energy but we haven't implmented it yet.
 	// uint16_t	accum_energy;												// Unit is in kilojoules with a resolution of 1 (used by ble cps).
 
-	// Resistance state.  TODO: Should this be refactored somewhere else? A pointer would save 8 bytes per entry.
 	uint8_t 	resistance_mode;
 	uint16_t	resistance_level;
 	uint16_t	servo_position;
@@ -143,8 +144,6 @@ typedef struct
 	float		temp;														// Measured temperature in c.
 	uint8_t		accel_y_lsb;												// Accelerometer reading. TODO: determine if we're going to use.
 	uint8_t		accel_y_msb;
-
-	float		rr_force;													// Calculated rolling resistance force.
 
 	irt_battery_status_t battery_status;
 } irt_context_t;

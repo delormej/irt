@@ -15,9 +15,14 @@
  *		ANT Speed Sensor TX profile
  *
  * @file 		main.c 
- * @brief 	The purpose of main is to control program flow and manage any
- *					application specific state.  All other protocol details are handled 
- *					in referenced modules.
+ * @brief 		The purpose of main is to control program flow and manage any
+ *				application specific state.  All other protocol details are handled
+ *				in referenced modules.
+ *
+ *				This module is responsible for the timing of all activities, for
+ *				example it determines when (not how) to adjust resistance, send
+ *				ANT & BLE messages, etc...
+ *
  *
  ******************************************************************************/
 
@@ -76,11 +81,7 @@
 //
 #define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
 #define DEFAULT_TOTAL_WEIGHT_KG			8180ul 										// Default weight (convert 180.0lbs to KG).
-#define DEFAULT_ERG_WATTS				175u										// Default erg target_watts when not otherwise set.
 #define DEFAULT_SETTINGS				SETTING_INVALID								// Default 32bit field of settings.
-#define DEFAULT_CRR						30ul										// Default Co-efficient for rolling resistance used when no slope/intercept defined.  Divide by 1000 to get 0.03f.
-#define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
-#define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
 #define CRR_ADJUST_VALUE				1											// Amount to adjust (up/down) CRR on button command.
 #define SHUTDOWN_VOLTS					6											// Shut the device down when battery drops below 6.0v
 
@@ -92,14 +93,13 @@
 
 #define DATA_PAGE_RESPONSE_TYPE			0x80										// 0X80 For acknowledged response or number of times to send broadcast data requests.
 
-static irt_context_t 				m_current_state;							// Current state structure.
+static irt_context_t 					m_current_state;							// Current state structure.
 
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 static app_timer_id_t					m_sensor_read_timer_id;						// Timer used to read sensors, out of phase from the 4hz messages.
 static app_timer_id_t					m_ca_timer_id;								// Calibration timer.
 
 static user_profile_t  					m_user_profile  __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
-static rc_sim_forces_t					m_sim_forces;
 static accelerometer_data_t 			m_accelerometer_data;
 
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
@@ -123,6 +123,7 @@ static void on_get_parameter(ant_request_data_page_t* p_request);
 static void send_temperature();
 static void on_enable_dfu_mode();
 static void calibration_stop();
+static void on_resistance_off();
 
 /**@brief Debug logging for main module.
  *
@@ -305,7 +306,7 @@ static void set_sim_params(uint8_t *pBuffer)
 			profile_update_sched();
 
 			// Re-initialize the power module with updated weight.
-			power_init(&m_user_profile, DEFAULT_CRR);
+			power_init(&m_user_profile);
 		}
 	}
 
@@ -316,15 +317,67 @@ static void set_sim_params(uint8_t *pBuffer)
 
 	// Store and just precision if new values came across.
 	if (crr > 0.0f)
-		m_sim_forces.crr = crr;
+		resistance_crr_set(crr);
 	if (c > 0.0f)
-		m_sim_forces.c = c;
+		resistance_c_set(c);
 
 	/*
 	LOG("[MAIN]:set_sim_params {weight:%.2f, crr:%i, c:%i}\r\n",
 		(m_user_profile.total_weight_kg / 100.0f),
 		(uint16_t)(m_sim_forces.crr * 10000),
 		(uint16_t)(m_sim_forces.c * 1000) ); */
+}
+
+/**@brief	Helper method that updates context object with current resistance state.
+ * 			Copies the resistance state for point in time reporting.
+ *
+ */
+static void update_resistance_state()
+{
+	// Get the current state from the resistance module.
+	irt_resistance_state_t* p_state = resistance_state_get();
+
+	m_current_state.servo_position = p_state->servo_position;
+	m_current_state.resistance_mode = p_state->mode;
+
+	switch (m_current_state.resistance_mode)
+	{
+		case RESISTANCE_SET_ERG:
+			m_current_state.resistance_level = (int16_t)p_state->erg_watts;
+			break;
+
+		case RESISTANCE_SET_STANDARD:
+			m_current_state.resistance_level = p_state->level;
+			break;
+
+		default:
+			m_current_state.resistance_level = 0;
+			break;
+	}
+}
+
+/**@brief	Toggles between standard and erg mode.
+ *
+ */
+static void toggle_resistance_mode()
+{
+	irt_resistance_state_t* p_state = resistance_state_get();
+
+	if (p_state->mode == RESISTANCE_SET_STANDARD)
+	{
+		// Use last or default erg setting.
+		resistance_erg_set(p_state->erg_watts);
+
+		// Queue acknowledgment.
+		bp_queue_resistance_ack(p_state->mode, p_state->erg_watts);
+
+		// Quick blink for feedback.
+		led_set(LED_MODE_ERG);
+	}
+	else
+	{
+		on_resistance_off();
+	}
 }
 
 /**@brief	Initializes user profile and loads from flash.  Sets defaults for
@@ -341,9 +394,6 @@ static void profile_init(void)
 
 		// Initialize hard coded user profile for now.
 		memset(&m_user_profile, 0, sizeof(m_user_profile));
-		
-		// Initialize simulation forces structure.
-		memset(&m_sim_forces, 0, sizeof(m_sim_forces));
 
 		// Attempt to load stored profile from flash.
 		err_code = user_profile_load(&m_user_profile);
@@ -414,15 +464,6 @@ static void profile_init(void)
 			// Schedule an update.
 			profile_update_sched();
 		}
-
-	 /*	fCrr is the coefficient of rolling resistance (unitless). Default value is 0.004. 
-	 *
-	 *	fC is equal to A*Cw*Rho where A is effective frontal area (m^2); Cw is drag 
-	 *	coefficent (unitless); and Rho is the air density (kg/m^3). The default value 
-	 *	for A*Cw*Rho is 0.60. 	
-	 */
-		m_sim_forces.crr = SIM_CRR;
-		m_sim_forces.c = SIM_C;
 
 		LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t ca_slope: %i \r\n\t ca_intercept: %i \r\n",
 				m_user_profile.total_weight_kg,
@@ -611,7 +652,9 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Maintain a static event count, we don't do everything each time.
 	event_count++;
-	m_current_state.servo_position = resistance_position_get();
+
+	// Make a copy of the resistance state
+	update_resistance_state();
 
 	// Report on accelerometer data.
 	if (m_accelerometer_data.source & ACCELEROMETER_SRC_FF_MT)
@@ -668,18 +711,18 @@ static void ant_4hz_timeout_handler(void * p_context)
 	// Send remote control a heart beat.
 	ant_ctrl_available();
 
-	// Adjust resistance as necessary.
-	switch (m_current_state.resistance_mode)
+	//
+	// Only adjust resistance once per second (4 events == 1 second) and only
+	// if in Erg or Sim mode.
+	//
+	if (event_count % 4 == 0 && (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
+			m_current_state.resistance_mode == RESISTANCE_SET_SIM))
 	{
-		case RESISTANCE_SET_ERG:
-		case RESISTANCE_SET_SIM:
-			// TODO: This little statement belong when the value is getting set.
-			m_current_state.resistance_level = (uint16_t)(m_sim_forces.erg_watts);
-			if (event_count % 4 == 0)
-				resistance_adjust(&m_current_state, &m_sim_forces);
-			break;
-		default:
-			break;
+		// Calculate average speed.
+		float speed_avg	 = speed_average_mps();
+
+		// Adjust resistance.
+		resistance_adjust(speed_avg, m_current_state.magoff_power);
 	}
 }
 
@@ -777,6 +820,9 @@ static void scheduler_init(void)
 }
 
 /**@brief	Sets relevant servo positions in response.
+ * 			TODO: all message parsing belongs somewhere else (NOT the resistance
+ * 			nor profile modules in this case), but a separate object that abstracts
+ * 			the protocol.
  */
 static void servo_pos_to_response(ant_request_data_page_t* p_request, uint8_t* p_response)
 {
@@ -914,14 +960,9 @@ static void calibration_start(void)
 {
 	uint32_t err_code;
 
-	if (m_current_state.resistance_mode != RESISTANCE_SET_STANDARD || m_current_state.resistance_level != 0)
-	{
-		// Force standard level 0 resistance.  TODO: this should really be better encapsulated.
-		// We don't queue a resistance ack since the timer shuts down right away.
-		m_current_state.resistance_level = 0;
-		m_current_state.resistance_mode = RESISTANCE_SET_STANDARD;
-		resistance_level_set(m_current_state.resistance_level);
-	}
+	// Force standard level 0 resistance.
+	// TODO: This should send a standard ack indicating changed state (if it has).
+	resistance_level_set(0);
 
 	// Stop existing ANT timer.
 	err_code = app_timer_stop(m_ant_4hz_timer_id);
@@ -1003,7 +1044,7 @@ static void crr_adjust(int8_t value)
 	{
 		// Wire value of intercept is sent in 1/1000, i.e. 57236 == 57.236
 		m_user_profile.ca_intercept += (value * 1000);
-		power_init(&m_user_profile, DEFAULT_CRR);
+		power_init(&m_user_profile);
 		bp_queue_data_response(request);
 	}
 }
@@ -1030,10 +1071,11 @@ static void on_power_down(bool accelerometer_wake_disable)
 
 static void on_resistance_off(void)
 {
-	m_current_state.resistance_mode = RESISTANCE_SET_STANDARD;
-	m_current_state.resistance_level = 0;
-	resistance_level_set(m_current_state.resistance_level);
-	bp_queue_resistance_ack(m_current_state.resistance_mode, m_current_state.resistance_level);
+	// Execute the command.
+	resistance_level_set(0);
+
+	// Queue acknowledgment for the command.
+	bp_queue_resistance_ack(RESISTANCE_SET_STANDARD, 0);
 
 	// Quick blink for feedback.
 	led_set(LED_MODE_STANDARD);
@@ -1041,129 +1083,39 @@ static void on_resistance_off(void)
 
 static void on_resistance_dec(void)
 {
-	// decrement
-	switch (m_current_state.resistance_mode)
+	// Decrement resistance.
+	if (resistance_decrement() != NRF_SUCCESS)
 	{
-		case RESISTANCE_SET_STANDARD:
-			if (m_current_state.resistance_level > 0)
-			{
-				resistance_level_set(--m_current_state.resistance_level);
-				bp_queue_resistance_ack(m_current_state.resistance_mode, m_current_state.resistance_level);
-				led_set(LED_BUTTON_DOWN);
-			}
-			else
-			{
-				LOG("[MAIN] on_resistance_dec hit minimum.\r\n");
-				led_set(LED_MIN_MAX);
-			}
-			break;
-
-		case RESISTANCE_SET_ERG:
-			if (m_sim_forces.erg_watts > ERG_ADJUST_MIN)
-			{
-				// Decrement by n watts;
-				m_sim_forces.erg_watts -= ERG_ADJUST_LEVEL;
-				bp_queue_resistance_ack(m_current_state.resistance_mode, m_sim_forces.erg_watts);
-				led_set(LED_BUTTON_DOWN);
-			}
-			else
-			{
-				led_set(LED_MIN_MAX);
-			}
-			break;
-
-		default:
-			break;
+		LOG("[MAIN] on_resistance_dec hit minimum.\r\n");
+		led_set(LED_MIN_MAX);
 	}
 }
 
 static void on_resistance_inc(void)
 {
-	// increment
-	switch (m_current_state.resistance_mode)
+	if (resistance_increment() != NRF_SUCCESS)
 	{
-		case RESISTANCE_SET_STANDARD:
-			if (m_current_state.resistance_level < (RESISTANCE_LEVELS-1))
-			{
-				resistance_level_set(++m_current_state.resistance_level);
-				bp_queue_resistance_ack(m_current_state.resistance_mode, m_current_state.resistance_level);
-				led_set(LED_BUTTON_UP);
-			}
-			else
-			{
-				led_set(LED_MIN_MAX);
-			}
-
-			break;
-
-		case RESISTANCE_SET_ERG:
-			// Increment by x watts;
-			m_sim_forces.erg_watts += ERG_ADJUST_LEVEL;
-			bp_queue_resistance_ack(m_current_state.resistance_mode, m_sim_forces.erg_watts);
-
-			led_set(LED_BUTTON_UP);
-			break;
-
-		default:
-			break;
+		LOG("[MAIN] on_resistance_inc hit maximum.\r\n");
+		led_set(LED_MIN_MAX);
 	}
 }
 
 static void on_resistance_min(void)
 {
-	switch (m_current_state.resistance_mode)
-	{
-		case RESISTANCE_SET_STANDARD:
-			// Turn off resistance
-			on_resistance_off();
-			break;
-
-		case RESISTANCE_SET_ERG:
-			// Decrement by large watts (x watts * 10)
-			if (m_sim_forces.erg_watts > ERG_ADJUST_MIN)
-			{
-				m_sim_forces.erg_watts -= (ERG_ADJUST_LEVEL*10);
-				bp_queue_resistance_ack(m_current_state.resistance_mode, m_sim_forces.erg_watts);
-				led_set(LED_BUTTON_DOWN);
-			}
-			else
-			{
-				led_set(LED_MIN_MAX);
-			}
-			break;
-
-		default:
-			break;
-	}
+	// Turn off resistance.
+	on_resistance_off();
 }
 
 static void on_resistance_max(void)
 {
-	switch (m_current_state.resistance_mode)
+	if (resistance_max_set() == NRF_SUCCESS)
 	{
-		case RESISTANCE_SET_STANDARD:
-			m_current_state.resistance_level = RESISTANCE_LEVELS-1;
-			resistance_level_set(m_current_state.resistance_level);
-			bp_queue_resistance_ack(m_current_state.resistance_mode, m_current_state.resistance_level);
-			break;
-
-		case RESISTANCE_SET_ERG:
-			// Increment by large watts (x watts * 10)
-			m_sim_forces.erg_watts += ERG_ADJUST_LEVEL*10;
-			bp_queue_resistance_ack(m_current_state.resistance_mode, m_sim_forces.erg_watts);
-			break;
-
-		default:
-			break;
+		led_set(LED_MIN_MAX);
 	}
-
-	// Quick blink for feedback.
-	led_set(LED_BUTTON_UP);
 }
 
 static void on_button_menu(void)
 {
-
 	// Start / stop TR whenever the middle button is pushed.
 	if ( SETTING_IS_SET(m_user_profile.settings, SETTING_ANT_TR_PAUSE_ENABLED) )
 	{
@@ -1171,25 +1123,7 @@ static void on_button_menu(void)
 	}
 
 	// Toggle between erg mode.
-	if (m_current_state.resistance_mode == RESISTANCE_SET_STANDARD)
-	{
-		m_current_state.resistance_mode = RESISTANCE_SET_ERG;
-		if (m_sim_forces.erg_watts == 0)
-		{
-			m_sim_forces.erg_watts = DEFAULT_ERG_WATTS;
-		}
-		bp_queue_resistance_ack(m_current_state.resistance_mode, m_sim_forces.erg_watts);
-
-		// Quick blink for feedback.
-		led_set(LED_MODE_ERG);
-	}
-	else
-	{
-		m_current_state.resistance_mode = RESISTANCE_SET_STANDARD;
-		on_resistance_off();
-
-		led_set(LED_MODE_STANDARD);
-	}
+	toggle_resistance_mode();
 }
 
 // This is the button on the board.
@@ -1311,43 +1245,34 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	switch (rc_evt.operation)
 	{
 		case RESISTANCE_SET_STANDARD:
-			m_current_state.resistance_mode = RESISTANCE_SET_STANDARD;
-			m_current_state.resistance_level = value;
 			resistance_level_set(m_current_state.resistance_level);
 			break;
 			
 		case RESISTANCE_SET_PERCENT:
-			// Reset state since we're not in standard mode any more.
-			m_current_state.resistance_level = 0;
-			m_current_state.resistance_mode = RESISTANCE_SET_PERCENT;
-			
 			// Parse the buffer for percentage.
-			float percent = wahoo_resistance_pct_decode(value);
-			resistance_pct_set(percent);
+			resistance_pct_set(wahoo_resistance_pct_decode(value));
 			break;
 
 		case RESISTANCE_SET_ERG:
 			// Assign target watt level.
-			m_current_state.resistance_mode = RESISTANCE_SET_ERG;
-			m_sim_forces.erg_watts = value;
+			resistance_erg_set(value);
 			break;
 
 		// This message never seems to come via the apps?
 		case RESISTANCE_SET_SIM:
-			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
 			set_sim_params(rc_evt.pBuffer);
 			break;
 			
 		case RESISTANCE_SET_SLOPE:
 			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the slope.
-			m_sim_forces.grade = wahoo_sim_grade_decode(value);
+			resistance_grade_set(wahoo_sim_grade_decode(value));
 			break;
 			
 		case RESISTANCE_SET_WIND:
 			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
 			// Parse out the wind speed.
-			m_sim_forces.wind_speed_mps = wahoo_sim_wind_decode(value);
+			resistance_windspeed_set(wahoo_sim_wind_decode(value));
 			break;
 			
 		case RESISTANCE_SET_WHEEL_CR:
@@ -1356,13 +1281,11 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			break;
 			
 		case RESISTANCE_SET_CRR:
-			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
-			m_sim_forces.crr = wahoo_decode_crr(rc_evt.pBuffer);
+			resistance_crr_set(wahoo_decode_crr(rc_evt.pBuffer));
 			break;
 
 		case RESISTANCE_SET_C:
-			m_current_state.resistance_mode = RESISTANCE_SET_SIM;
-			m_sim_forces.c = wahoo_decode_c(rc_evt.pBuffer);
+			resistance_c_set(wahoo_decode_c(rc_evt.pBuffer));
 			break;
 
 		case RESISTANCE_SET_SERVO_POS:
@@ -1371,7 +1294,6 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			break;
 
 		case RESISTANCE_SET_WEIGHT:
-			// Set sim params without changing the mode.
 			set_sim_params(rc_evt.pBuffer);
 			break;
 
@@ -1438,7 +1360,6 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			break;
 
 		case ANT_CTRL_BUTTON_LONG_UP:
-			// Set full resistance
 			on_resistance_max();
 			break;
 
@@ -1557,7 +1478,7 @@ static void on_set_parameter(uint8_t* buffer)
 			m_user_profile.ca_rr = NAN;
 
 			// Reinitialize power.
-			power_init(&m_user_profile, DEFAULT_CRR);
+			power_init(&m_user_profile);
 
 			// Schedule update to the user profile.
 			profile_update_sched();
@@ -1959,15 +1880,12 @@ int main(void)
 
 	// Initialize resistance module and initial values.
 	resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
-	// TODO: This state should be moved to resistance module.
-	m_current_state.resistance_mode = RESISTANCE_SET_STANDARD;
-	m_current_state.resistance_level = 0;
 
 	// Initialize module to read speed from flywheel.
 	speed_init(PIN_FLYWHEEL, m_user_profile.wheel_size_mm);
 
 	// Initialize power module with user profile.
-	power_init(&m_user_profile, DEFAULT_CRR);
+	power_init(&m_user_profile);
 
 	// Begin advertising and receiving ANT messages.
 	ble_ant_start();
