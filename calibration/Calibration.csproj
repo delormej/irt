@@ -65,6 +65,7 @@
       <DependentUpon>CalibrationForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Global.cs" />
+    <Compile Include="MagGapCalibration.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="AveragePower.cs" />
     <Compile Include="Speed.cs" />
@@ -83,6 +84,9 @@
     <Compile Include="TickEvent.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\python\magnet\position_slope_intercept.csv">
+      <Link>position_slope_intercept.csv</Link>
+    </EmbeddedResource>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
