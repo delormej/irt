@@ -178,7 +178,7 @@ namespace IRT_GUI
 
             // Create calibration object, which will listen for calibration events 
             // and react accordingly.
-            m_calibration = new Controller(m_eMotion, m_refPower);
+            m_calibration = new Controller(m_eMotion, m_refPower, new MoveServoDelegate(MoveServo));
             m_calibration.StageChanged += m_calibration_StageChanged;
 
             StartReporting();

@@ -6,6 +6,13 @@ using IRT.Calibration.Globals;
 namespace IRT.Calibration
 {
     /// <summary>
+    /// This is a HACK to pass in a function pointer to move the servo during the 
+    /// calibratin process.
+    /// </summary>
+    /// <param name="position"></param>
+    public delegate void MoveServoDelegate(int position);
+
+    /// <summary>
     /// Orchestrates and manages the state of the calibration workflow end to end.
     /// </summary>
     public class Controller
@@ -13,6 +20,7 @@ namespace IRT.Calibration
         BikePowerDisplay m_emotionPower, m_refPower;
         Model m_model;
         Coastdown m_coastdown;
+        MoveServoDelegate m_moveServo;
 
         ushort m_instantPower;
 
@@ -37,11 +45,13 @@ namespace IRT.Calibration
         /// </summary>
         /// <param name="emotionPower"></param>
         /// <param name="refPower"></param>
-        public Controller(BikePowerDisplay emotionPower, BikePowerDisplay refPower) : this()
+        public Controller(BikePowerDisplay emotionPower, BikePowerDisplay refPower, 
+            MoveServoDelegate moveServo) : this()
         {
             // Listeners for ANT+ events.
             m_emotionPower = emotionPower;
             m_refPower = refPower;
+            m_moveServo = moveServo;
 
             if (m_emotionPower != null)
             {
@@ -216,6 +226,16 @@ namespace IRT.Calibration
             this.Stage = Stage.Stable;
 
             // Indicate to user it's time to accelerate to threshold speed.
+        }
+
+        private void OnStartMagCalibration()
+        {
+
+        }
+
+        private void OnStopMagCalibration()
+        {
+
         }
 
         private void OnAccelerating()
