@@ -20,6 +20,8 @@ namespace IRT.Calibration.Globals
         Stable,
         Accelerating,
         SpeedThresholdReached,
+        MagCalibrationStarted,
+        MagCalibrationComplete,
         Coasting,
         CoastdownComplete,
         Finished,
@@ -39,5 +41,11 @@ namespace IRT.Calibration.Globals
 
         // Minimum of 25mph to reach peak speed.
         public const double MinAccelerationSpeedMps = 25.0f * 0.44704;
+
+        // Magnet position used for calibration.
+        public const int MagPositionCalibration = 1200;
+
+        // Manget position used for MAG OFF (home).
+        public const int MagPositionHome = 2000;
     }
 }
