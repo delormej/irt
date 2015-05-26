@@ -73,6 +73,7 @@ def main(file_name, drag=0, rr=0, offset=0):
     
     p.PlotRide()
     p.PlotMagnet()
+    plt.title(file_name, fontsize=6)
     plt.show()
     
         
