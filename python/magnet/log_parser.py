@@ -192,8 +192,9 @@ class LogParser:
                         break
         except:
             print("Unable to parse config.")
-            
-        print("found config", self.drag, self.rr)
+
+        if self.drag > 0 and self.rr > 0:
+            print("found config", self.drag, self.rr)
 
     # 
     # Enriches the records with moving averages and other functions.

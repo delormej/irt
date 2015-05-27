@@ -10,7 +10,7 @@ import numpy as np
 #
 def get_files(rootdir):
     for root, dirs, files in os.walk(rootdir):
-        if root.find("BCI") > -1:
+        if root.find("BCI") > -1 or root.find("Mag_Calibration") > -1:
             continue
         for filename in files:
             if filename.startswith('irt_') and filename.endswith('.csv'):
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     drag = 0
     rr = 0
     offset = 0
-
+    
     try:
       opts, args = getopt.getopt(sys.argv[1:],"hi:d:r:g:",["input=","drag=","rr=","gap_offset="])
     except getopt.GetoptError:
