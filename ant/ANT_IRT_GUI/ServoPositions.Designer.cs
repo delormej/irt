@@ -73,7 +73,7 @@
             this.dgResistancePositions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Position});
             this.dgResistancePositions.Location = new System.Drawing.Point(236, 20);
-            this.dgResistancePositions.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.dgResistancePositions.Margin = new System.Windows.Forms.Padding(2);
             this.dgResistancePositions.Name = "dgResistancePositions";
             this.dgResistancePositions.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
             this.dgResistancePositions.RowHeadersVisible = false;
@@ -106,7 +106,7 @@
             // numResistancePositions
             // 
             this.numResistancePositions.Location = new System.Drawing.Point(84, 152);
-            this.numResistancePositions.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.numResistancePositions.Margin = new System.Windows.Forms.Padding(2);
             this.numResistancePositions.Maximum = new decimal(new int[] {
             9,
             0,
@@ -126,7 +126,7 @@
             // 
             this.btnSetServoPositions.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnSetServoPositions.Location = new System.Drawing.Point(111, 257);
-            this.btnSetServoPositions.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnSetServoPositions.Margin = new System.Windows.Forms.Padding(2);
             this.btnSetServoPositions.Name = "btnSetServoPositions";
             this.btnSetServoPositions.Size = new System.Drawing.Size(61, 23);
             this.btnSetServoPositions.TabIndex = 2;
@@ -177,7 +177,7 @@
             // 
             this.txtMinPosition.Enabled = false;
             this.txtMinPosition.Location = new System.Drawing.Point(111, 40);
-            this.txtMinPosition.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txtMinPosition.Margin = new System.Windows.Forms.Padding(2);
             this.txtMinPosition.Name = "txtMinPosition";
             this.txtMinPosition.Size = new System.Drawing.Size(51, 20);
             this.txtMinPosition.TabIndex = 10;
@@ -186,7 +186,7 @@
             // 
             this.txtMaxPosition.Enabled = false;
             this.txtMaxPosition.Location = new System.Drawing.Point(111, 66);
-            this.txtMaxPosition.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txtMaxPosition.Margin = new System.Windows.Forms.Padding(2);
             this.txtMaxPosition.Name = "txtMaxPosition";
             this.txtMaxPosition.Size = new System.Drawing.Size(51, 20);
             this.txtMaxPosition.TabIndex = 11;
@@ -196,7 +196,7 @@
             this.tabControl1.Controls.Add(this.tabPositions);
             this.tabControl1.Controls.Add(this.tabCalibration);
             this.tabControl1.Location = new System.Drawing.Point(8, 8);
-            this.tabControl1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabControl1.Margin = new System.Windows.Forms.Padding(2);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(405, 318);
@@ -215,9 +215,9 @@
             this.tabPositions.Controls.Add(this.btnSetServoPositions);
             this.tabPositions.Controls.Add(this.button1);
             this.tabPositions.Location = new System.Drawing.Point(4, 22);
-            this.tabPositions.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabPositions.Margin = new System.Windows.Forms.Padding(2);
             this.tabPositions.Name = "tabPositions";
-            this.tabPositions.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabPositions.Padding = new System.Windows.Forms.Padding(2);
             this.tabPositions.Size = new System.Drawing.Size(397, 292);
             this.tabPositions.TabIndex = 0;
             this.tabPositions.Text = "Positions";
@@ -233,9 +233,9 @@
             this.tabCalibration.Controls.Add(this.label5);
             this.tabCalibration.Controls.Add(this.label4);
             this.tabCalibration.Location = new System.Drawing.Point(4, 22);
-            this.tabCalibration.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabCalibration.Margin = new System.Windows.Forms.Padding(2);
             this.tabCalibration.Name = "tabCalibration";
-            this.tabCalibration.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabCalibration.Padding = new System.Windows.Forms.Padding(2);
             this.tabCalibration.Size = new System.Drawing.Size(397, 292);
             this.tabCalibration.TabIndex = 1;
             this.tabCalibration.Text = "Calibration";
@@ -244,7 +244,7 @@
             // btnMagnetCalibrationLoadDefaults
             // 
             this.btnMagnetCalibrationLoadDefaults.Location = new System.Drawing.Point(33, 222);
-            this.btnMagnetCalibrationLoadDefaults.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnMagnetCalibrationLoadDefaults.Margin = new System.Windows.Forms.Padding(2);
             this.btnMagnetCalibrationLoadDefaults.Name = "btnMagnetCalibrationLoadDefaults";
             this.btnMagnetCalibrationLoadDefaults.Size = new System.Drawing.Size(69, 23);
             this.btnMagnetCalibrationLoadDefaults.TabIndex = 8;
@@ -265,7 +265,7 @@
             this.dgvPos2Force.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn1});
             this.dgvPos2Force.Location = new System.Drawing.Point(181, 62);
-            this.dgvPos2Force.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.dgvPos2Force.Margin = new System.Windows.Forms.Padding(2);
             this.dgvPos2Force.Name = "dgvPos2Force";
             this.dgvPos2Force.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
             this.dgvPos2Force.RowHeadersVisible = false;
@@ -298,7 +298,7 @@
             this.dgvForce2Pos.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn2});
             this.dgvForce2Pos.Location = new System.Drawing.Point(33, 62);
-            this.dgvForce2Pos.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.dgvForce2Pos.Margin = new System.Windows.Forms.Padding(2);
             this.dgvForce2Pos.Name = "dgvForce2Pos";
             this.dgvForce2Pos.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
             this.dgvForce2Pos.RowHeadersVisible = false;
@@ -330,9 +330,8 @@
             // 
             // btnMagnetCalibrationSet
             // 
-            this.btnMagnetCalibrationSet.Enabled = false;
             this.btnMagnetCalibrationSet.Location = new System.Drawing.Point(33, 259);
-            this.btnMagnetCalibrationSet.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btnMagnetCalibrationSet.Margin = new System.Windows.Forms.Padding(2);
             this.btnMagnetCalibrationSet.Name = "btnMagnetCalibrationSet";
             this.btnMagnetCalibrationSet.Size = new System.Drawing.Size(69, 23);
             this.btnMagnetCalibrationSet.TabIndex = 4;
@@ -371,7 +370,7 @@
             this.ControlBox = false;
             this.Controls.Add(this.tabControl1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ServoPositions";

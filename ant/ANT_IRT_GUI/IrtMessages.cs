@@ -230,6 +230,9 @@ namespace IRT_GUI.IrtMessages
 
     public abstract class Message
     {
+        public const byte ANT_BURST_MSG_ID_SET_MAGNET_CA = 0x60;
+
+
         // Message format defines.
         const byte PAGE_INDEX = 0;
 
