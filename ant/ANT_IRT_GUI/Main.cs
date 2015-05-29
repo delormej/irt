@@ -2153,7 +2153,7 @@ namespace IRT_GUI
         // calculation and the Position to Force calculation.
         void OnSetMagnetCalibration(object sender, MagnetCalibrationEventArgs e)
         {
-            byte[] buffer = e.Calibration.GetBytes();
+            byte[] buffer = MagnetCalibrationMessage.GetBytes(e.Calibration);
 
             // Dispatch burst over ANT.
             if (SendBurstData(buffer))

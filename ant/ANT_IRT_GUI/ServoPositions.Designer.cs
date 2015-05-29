@@ -43,21 +43,23 @@
             this.tabPositions = new System.Windows.Forms.TabPage();
             this.tabCalibration = new System.Windows.Forms.TabPage();
             this.btnMagnetCalibrationLoadDefaults = new System.Windows.Forms.Button();
-            this.dgvPos2Force = new System.Windows.Forms.DataGridView();
+            this.dgvHighSpeed = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgvForce2Pos = new System.Windows.Forms.DataGridView();
+            this.dgvLowSpeed = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label6 = new System.Windows.Forms.Label();
             this.btnMagnetCalibrationSet = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.txtLowSpeedMph = new System.Windows.Forms.TextBox();
+            this.txtHighSpeedMph = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dgResistancePositions)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numResistancePositions)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPositions.SuspendLayout();
             this.tabCalibration.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvPos2Force)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvForce2Pos)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvHighSpeed)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvLowSpeed)).BeginInit();
             this.SuspendLayout();
             // 
             // dgResistancePositions
@@ -225,9 +227,11 @@
             // 
             // tabCalibration
             // 
+            this.tabCalibration.Controls.Add(this.txtHighSpeedMph);
+            this.tabCalibration.Controls.Add(this.txtLowSpeedMph);
             this.tabCalibration.Controls.Add(this.btnMagnetCalibrationLoadDefaults);
-            this.tabCalibration.Controls.Add(this.dgvPos2Force);
-            this.tabCalibration.Controls.Add(this.dgvForce2Pos);
+            this.tabCalibration.Controls.Add(this.dgvHighSpeed);
+            this.tabCalibration.Controls.Add(this.dgvLowSpeed);
             this.tabCalibration.Controls.Add(this.label6);
             this.tabCalibration.Controls.Add(this.btnMagnetCalibrationSet);
             this.tabCalibration.Controls.Add(this.label5);
@@ -252,30 +256,30 @@
             this.btnMagnetCalibrationLoadDefaults.UseVisualStyleBackColor = true;
             this.btnMagnetCalibrationLoadDefaults.Click += new System.EventHandler(this.btnMagnetCalibrationLoadDefaults_Click);
             // 
-            // dgvPos2Force
+            // dgvHighSpeed
             // 
-            this.dgvPos2Force.AllowUserToAddRows = false;
-            this.dgvPos2Force.AllowUserToDeleteRows = false;
-            this.dgvPos2Force.AllowUserToResizeColumns = false;
-            this.dgvPos2Force.AllowUserToResizeRows = false;
-            this.dgvPos2Force.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvPos2Force.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
-            this.dgvPos2Force.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            this.dgvPos2Force.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvPos2Force.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dgvHighSpeed.AllowUserToAddRows = false;
+            this.dgvHighSpeed.AllowUserToDeleteRows = false;
+            this.dgvHighSpeed.AllowUserToResizeColumns = false;
+            this.dgvHighSpeed.AllowUserToResizeRows = false;
+            this.dgvHighSpeed.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvHighSpeed.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
+            this.dgvHighSpeed.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            this.dgvHighSpeed.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvHighSpeed.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn1});
-            this.dgvPos2Force.Location = new System.Drawing.Point(181, 62);
-            this.dgvPos2Force.Margin = new System.Windows.Forms.Padding(2);
-            this.dgvPos2Force.Name = "dgvPos2Force";
-            this.dgvPos2Force.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
-            this.dgvPos2Force.RowHeadersVisible = false;
-            this.dgvPos2Force.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dgvPos2Force.RowTemplate.Height = 18;
-            this.dgvPos2Force.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvPos2Force.ScrollBars = System.Windows.Forms.ScrollBars.None;
-            this.dgvPos2Force.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dgvPos2Force.Size = new System.Drawing.Size(118, 137);
-            this.dgvPos2Force.TabIndex = 7;
+            this.dgvHighSpeed.Location = new System.Drawing.Point(181, 91);
+            this.dgvHighSpeed.Margin = new System.Windows.Forms.Padding(2);
+            this.dgvHighSpeed.Name = "dgvHighSpeed";
+            this.dgvHighSpeed.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
+            this.dgvHighSpeed.RowHeadersVisible = false;
+            this.dgvHighSpeed.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            this.dgvHighSpeed.RowTemplate.Height = 18;
+            this.dgvHighSpeed.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvHighSpeed.ScrollBars = System.Windows.Forms.ScrollBars.None;
+            this.dgvHighSpeed.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dgvHighSpeed.Size = new System.Drawing.Size(118, 108);
+            this.dgvHighSpeed.TabIndex = 7;
             // 
             // dataGridViewTextBoxColumn1
             // 
@@ -285,30 +289,30 @@
             this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
             this.dataGridViewTextBoxColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             // 
-            // dgvForce2Pos
+            // dgvLowSpeed
             // 
-            this.dgvForce2Pos.AllowUserToAddRows = false;
-            this.dgvForce2Pos.AllowUserToDeleteRows = false;
-            this.dgvForce2Pos.AllowUserToResizeColumns = false;
-            this.dgvForce2Pos.AllowUserToResizeRows = false;
-            this.dgvForce2Pos.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvForce2Pos.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
-            this.dgvForce2Pos.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            this.dgvForce2Pos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvForce2Pos.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dgvLowSpeed.AllowUserToAddRows = false;
+            this.dgvLowSpeed.AllowUserToDeleteRows = false;
+            this.dgvLowSpeed.AllowUserToResizeColumns = false;
+            this.dgvLowSpeed.AllowUserToResizeRows = false;
+            this.dgvLowSpeed.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvLowSpeed.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
+            this.dgvLowSpeed.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            this.dgvLowSpeed.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvLowSpeed.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn2});
-            this.dgvForce2Pos.Location = new System.Drawing.Point(33, 62);
-            this.dgvForce2Pos.Margin = new System.Windows.Forms.Padding(2);
-            this.dgvForce2Pos.Name = "dgvForce2Pos";
-            this.dgvForce2Pos.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
-            this.dgvForce2Pos.RowHeadersVisible = false;
-            this.dgvForce2Pos.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dgvForce2Pos.RowTemplate.Height = 18;
-            this.dgvForce2Pos.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvForce2Pos.ScrollBars = System.Windows.Forms.ScrollBars.None;
-            this.dgvForce2Pos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dgvForce2Pos.Size = new System.Drawing.Size(118, 137);
-            this.dgvForce2Pos.TabIndex = 0;
+            this.dgvLowSpeed.Location = new System.Drawing.Point(33, 91);
+            this.dgvLowSpeed.Margin = new System.Windows.Forms.Padding(2);
+            this.dgvLowSpeed.Name = "dgvLowSpeed";
+            this.dgvLowSpeed.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
+            this.dgvLowSpeed.RowHeadersVisible = false;
+            this.dgvLowSpeed.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            this.dgvLowSpeed.RowTemplate.Height = 18;
+            this.dgvLowSpeed.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvLowSpeed.ScrollBars = System.Windows.Forms.ScrollBars.None;
+            this.dgvLowSpeed.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dgvLowSpeed.Size = new System.Drawing.Size(118, 108);
+            this.dgvLowSpeed.TabIndex = 0;
             // 
             // dataGridViewTextBoxColumn2
             // 
@@ -326,7 +330,7 @@
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(142, 13);
             this.label6.TabIndex = 6;
-            this.label6.Text = "5th Order Polynomial Factors";
+            this.label6.Text = "3rd Order Polynomial Factors";
             // 
             // btnMagnetCalibrationSet
             // 
@@ -346,9 +350,9 @@
             this.label5.Location = new System.Drawing.Point(179, 47);
             this.label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(103, 13);
+            this.label5.Size = new System.Drawing.Size(73, 13);
             this.label5.TabIndex = 3;
-            this.label5.Text = "Position to Force";
+            this.label5.Text = "High Speed";
             // 
             // label4
             // 
@@ -357,9 +361,23 @@
             this.label4.Location = new System.Drawing.Point(30, 47);
             this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(103, 13);
+            this.label4.Size = new System.Drawing.Size(70, 13);
             this.label4.TabIndex = 2;
-            this.label4.Text = "Force to Position";
+            this.label4.Text = "Low Speed";
+            // 
+            // txtLowSpeedMph
+            // 
+            this.txtLowSpeedMph.Location = new System.Drawing.Point(33, 64);
+            this.txtLowSpeedMph.Name = "txtLowSpeedMph";
+            this.txtLowSpeedMph.Size = new System.Drawing.Size(100, 20);
+            this.txtLowSpeedMph.TabIndex = 9;
+            // 
+            // txtHighSpeedMph
+            // 
+            this.txtHighSpeedMph.Location = new System.Drawing.Point(181, 64);
+            this.txtHighSpeedMph.Name = "txtHighSpeedMph";
+            this.txtHighSpeedMph.Size = new System.Drawing.Size(100, 20);
+            this.txtHighSpeedMph.TabIndex = 10;
             // 
             // ServoPositions
             // 
@@ -383,8 +401,8 @@
             this.tabPositions.PerformLayout();
             this.tabCalibration.ResumeLayout(false);
             this.tabCalibration.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvPos2Force)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvForce2Pos)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvHighSpeed)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvLowSpeed)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -409,10 +427,12 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.DataGridView dgvForce2Pos;
+        private System.Windows.Forms.DataGridView dgvLowSpeed;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
-        private System.Windows.Forms.DataGridView dgvPos2Force;
+        private System.Windows.Forms.DataGridView dgvHighSpeed;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.Button btnMagnetCalibrationLoadDefaults;
+        private System.Windows.Forms.TextBox txtHighSpeedMph;
+        private System.Windows.Forms.TextBox txtLowSpeedMph;
     }
 }

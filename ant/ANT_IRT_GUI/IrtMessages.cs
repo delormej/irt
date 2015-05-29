@@ -1,8 +1,6 @@
 ﻿using ANT_Managed_Library;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using IRT.Calibration;
 
 namespace IRT_GUI.IrtMessages
 {
@@ -483,4 +481,46 @@ namespace IRT_GUI.IrtMessages
         public uint SerialNumber;
     }
 
+    public class MagnetCalibrationMessage
+    {
+        public static byte[] GetBytes(MagnetCalibration magCalibration)
+        {
+            byte[] buffer = new byte[8 * 5];
+            int index = 0;
+
+            buffer[index++] = Message.ANT_BURST_MSG_ID_SET_MAGNET_CA;
+
+            // Convert speeds to uint16_t.
+            ushort lowSpeed = (ushort)(magCalibration.LowSpeedMps * 1000);
+            ushort highSpeed = (ushort)(magCalibration.HighSpeedMps * 1000);
+
+            Message.LittleEndian(lowSpeed, out buffer[index++], out buffer[index++]);
+            Message.LittleEndian(highSpeed, out buffer[index++], out buffer[index++]);
+
+            int factorIdx = 0;
+
+            // Advance 3 places, 4 blank bytes to advance to 2nd message.
+            index = 8;
+
+            while (index < buffer.Length)
+            {
+                if (index >= 24)
+                {
+                    // We're into page 4 & 5
+                    Array.Copy(BitConverter.GetBytes(magCalibration.HighSpeedFactors[factorIdx % 4]), 0,
+                    buffer, index, sizeof(float));
+                }
+                else
+                {
+                    Array.Copy(BitConverter.GetBytes(magCalibration.LowSpeedFactors[factorIdx % 4]), 0,
+                    buffer, index, sizeof(float));
+                }
+
+                factorIdx++;
+                index += sizeof(float);
+            }
+
+            return buffer;
+        }
+    }
 }
