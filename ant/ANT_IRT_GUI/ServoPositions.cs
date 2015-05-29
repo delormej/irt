@@ -197,6 +197,8 @@ namespace IRT_GUI
 
         private void btnMagnetCalibrationSet_Click(object sender, EventArgs e)
         {
+            // Validate that all the values are set properly before calling.
+
             MagnetCalibrationSet();
         }
 
