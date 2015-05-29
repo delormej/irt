@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <float.h>
+#include "irt_common.h"
 
 /*
  * These MIN & MAX positions represent the limits of the math that has been
@@ -37,6 +38,11 @@
 #define WATTS_MODEL_MIN							13.0f		// Below this threshold, we might need to solve linearly.
 
 #define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
+
+/**@brief	Initializes the magnet module with a set of factors for a low and
+ * 			high speed polynomial.
+ */
+void magnet_init(mag_calibration_factors_t* p_factors);
 
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
  *			position.  Accepts an offset for the gap as a multiple of 1,000.
