@@ -237,7 +237,7 @@ static void process_servo_positions(servo_positions_t* p_pos, const uint8_t* p_b
  * 			operations.
  *
  */
-static void handle_burst_set_resistance(const uint8_t* p_buffer, uint8_t sequence)
+static void handle_burst_set_resistance(uint8_t* p_buffer, uint8_t sequence)
 {
 	static rc_evt_t	resistance_evt; // resistance message
 
@@ -295,7 +295,7 @@ static void decode_magnet_factors(const uint8_t* p_buffer, float* p_factors)
 /**@brief	Handles the burst packets that contain magnet calibration.
  *
  */
-static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
+static void handle_burst_magnet_calibration(uint8_t* p_payload, uint8_t sequence)
 {
 	/*
 	 * 5 Messages in total.  Each speed has 4 factors, for a total of 8 factors.
@@ -303,8 +303,8 @@ static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
 	 *
 	 * message 1:
 	 * 				byte 0: 	Message ID
-	 * 				byte 1-2: 	Low Speed as uint16_t, divide by 100.
-	 * 				byte 3-4:	High Speed  as uint16_t, divide by 100.
+	 * 				byte 1-2: 	Low Speed as uint16_t, divide by 1000.
+	 * 				byte 3-4:	High Speed  as uint16_t, divide by 1000.
 	 *
 	 * message 2-5:
 	 *				byte 0-3:	float factor
@@ -325,13 +325,13 @@ static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
 		memset(&factors, 0, sizeof(mag_calibration_factors_t));
 
 		// Decode speeds.
-		memcpy(&factors.low_speed_mps, &p_buffer[1], sizeof(uint16_t));
-		memcpy(&factors.high_speed_mps, &p_buffer[3], sizeof(uint16_t));
+		memcpy(&factors.low_speed_mps, &p_payload[1], sizeof(uint16_t));
+		memcpy(&factors.high_speed_mps, &p_payload[3], sizeof(uint16_t));
 	}
 	else if (BURST_SEQ_LAST_PACKET(sequence))
 	{
-		// Decode last point.
-		decode_magnet_factors(&p_buffer[2], &factors.high_factors[2]);
+		// Decode last two factors for high speed from this final message.
+		decode_magnet_factors(p_payload, &factors.high_factors[2]);
 
 		BP_LOG("[BP] handle_burst_magnet_calibration: received magnet factors: %i, %i\r\n%.5f,%.5f,%.5f,%.5f",
 				factors.low_speed_mps, factors.high_speed_mps,
@@ -350,13 +350,13 @@ static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
 	{
 		if (factor_index>=4)
 		{
-			// Decoding high speed factors.
-			decode_magnet_factors(&p_buffer[2], &factors.high_factors[0]);
+			// Decode first two high speed factors.
+			decode_magnet_factors(p_payload, &factors.high_factors[0]);
 		}
 		else
 		{
-			// Decode low speed.
-			decode_magnet_factors(&p_buffer[2], &factors.low_factors[factor_index]);
+			// Decode low speed factors (2 factors per message, two messages as flagged by factor_index).
+			decode_magnet_factors(p_payload, &factors.low_factors[factor_index]);
 
 			// Increment factor index by 2 since we read two factors.
 			factor_index+=2;
@@ -400,7 +400,7 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 			break;
 
 		case ANT_BURST_MSG_ID_SET_MAGNET_CA:
-			handle_burst_magnet_calibration(p_ant_evt->evt_buffer, sequence);
+			handle_burst_magnet_calibration(&p_ant_evt->evt_buffer[3], sequence);
 			break;
 
 		default:
