@@ -1715,6 +1715,19 @@ static void on_request_calibration()
 	calibration_start();
 }
 
+/**@brief	Called when the magnet calibration is received.
+ *
+ */
+static void on_set_mag_calibration(mag_calibration_factors_t* p_factors)
+{
+	LOG("[MAIN] on_set_mag_calibration: received magnet factors: %i, %i\r\n%.5f,%.5f,%.5f,%.5f",
+			p_factors->low_speed_mps, p_factors->high_speed_mps,
+			p_factors->low_factors[0],
+			p_factors->low_factors[1],
+			p_factors->low_factors[2],
+			p_factors->low_factors[3]);
+}
+
 /**@brief	Configures chip power options.
  *
  * @note	Note this must happen after softdevice is enabled.
@@ -1898,7 +1911,8 @@ int main(void)
 		on_request_data,
 		on_set_parameter,
 		on_set_servo_positions,
-		on_request_calibration
+		on_request_calibration,
+		on_set_mag_calibration
 	};
 
 	// Initialize and enable the softdevice.

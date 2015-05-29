@@ -13,7 +13,7 @@
 #include "ant_error.h"
 #include "app_error.h"
 #include "nordic_common.h"
-#include "user_profile.h"
+#include "irt_common.h"
 #include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
@@ -63,7 +63,7 @@
 
 #define ANT_BURST_MSG_ID_SET_RESISTANCE	0x48									/** Message ID used when setting resistance via an ANT BURST. */
 #define ANT_BURST_MSG_ID_SET_POSITIONS	0x59									/** Message ID used when setting servo button stop positions via an ANT BURST. */
-//#define ANT_BURST_MSG_ID_SET_MAGNET_CA	0x60									/** Message ID used when setting magnet calibration via an ANT BURST. */
+#define ANT_BURST_MSG_ID_SET_MAGNET_CA	0x60									/** Message ID used when setting magnet calibration via an ANT BURST. */
 
 /**@brief Debug logging for module.
  *
@@ -286,6 +286,84 @@ static void handle_burst_set_positions(const uint8_t* p_buffer, uint8_t sequence
 	}
 }
 
+static void decode_magnet_factors(const uint8_t* p_buffer, float* p_factors)
+{
+	memcpy(&p_factors[0], &p_buffer[0], sizeof(float));
+	memcpy(&p_factors[1], &p_buffer[4], sizeof(float));
+}
+
+/**@brief	Handles the burst packets that contain magnet calibration.
+ *
+ */
+static void handle_burst_magnet_calibration(uint8_t* p_buffer, uint8_t sequence)
+{
+	/*
+	 * 5 Messages in total.  Each speed has 4 factors, for a total of 8 factors.
+	 * 2 messages per speed, 2 factors per message.
+	 *
+	 * message 1:
+	 * 				byte 0: 	Message ID
+	 * 				byte 1-2: 	Low Speed as uint16_t, divide by 100.
+	 * 				byte 3-4:	High Speed  as uint16_t, divide by 100.
+	 *
+	 * message 2-5:
+	 *				byte 0-3:	float factor
+	 *				byte 4-7:	float factor
+	 */
+
+	// Polynomial factors.
+	static mag_calibration_factors_t factors;
+
+	// Running count of which factor we're on.
+	static uint8_t factor_index = 0;
+
+	if (BURST_SEQ_FIRST_PACKET(sequence))
+	{
+		factor_index = 0;
+
+		// Initialize the struct.
+		memset(&factors, 0, sizeof(mag_calibration_factors_t));
+
+		// Decode speeds.
+		memcpy(&factors.low_speed_mps, &p_buffer[1], sizeof(uint16_t));
+		memcpy(&factors.high_speed_mps, &p_buffer[3], sizeof(uint16_t));
+	}
+	else if (BURST_SEQ_LAST_PACKET(sequence))
+	{
+		// Decode last point.
+		decode_magnet_factors(&p_buffer[2], &factors.high_factors[2]);
+
+		BP_LOG("[BP] handle_burst_magnet_calibration: received magnet factors: %i, %i\r\n%.5f,%.5f,%.5f,%.5f",
+				factors.low_speed_mps, factors.high_speed_mps,
+				factors.low_factors[0],
+				factors.low_factors[1],
+				factors.low_factors[2],
+				factors.low_factors[3]);
+
+		// Notify & report out that we're done here.
+		if (mp_evt_handlers->on_set_mag_calibration != NULL)
+		{
+			mp_evt_handlers->on_set_mag_calibration(&factors);
+		}
+	}
+	else
+	{
+		if (factor_index>=4)
+		{
+			// Decoding high speed factors.
+			decode_magnet_factors(&p_buffer[2], &factors.high_factors[0]);
+		}
+		else
+		{
+			// Decode low speed.
+			decode_magnet_factors(&p_buffer[2], &factors.low_factors[factor_index]);
+
+			// Increment factor index by 2 since we read two factors.
+			factor_index+=2;
+		}
+	}
+}
+
 /**@brief	Manages the state of a burst sequence which has 3 messages
  *			and starts with a byte that represent the type of message.
  */
@@ -319,6 +397,10 @@ static void handle_burst(ant_evt_t * p_ant_evt)
 
 		case ANT_BURST_MSG_ID_SET_POSITIONS:
 			handle_burst_set_positions(p_ant_evt->evt_buffer, sequence);
+			break;
+
+		case ANT_BURST_MSG_ID_SET_MAGNET_CA:
+			handle_burst_magnet_calibration(p_ant_evt->evt_buffer, sequence);
 			break;
 
 		default:

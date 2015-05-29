@@ -12,6 +12,7 @@
 #include <float.h>
 #include <math.h>
 #include <stdint.h>
+#include "irt_common.h"
 
 #include "debug.h"
 #include "math/math_private.h"
