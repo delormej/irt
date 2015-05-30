@@ -42,6 +42,8 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPositions = new System.Windows.Forms.TabPage();
             this.tabCalibration = new System.Windows.Forms.TabPage();
+            this.txtHighSpeedMph = new System.Windows.Forms.TextBox();
+            this.txtLowSpeedMph = new System.Windows.Forms.TextBox();
             this.btnMagnetCalibrationLoadDefaults = new System.Windows.Forms.Button();
             this.dgvHighSpeed = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -51,8 +53,7 @@
             this.btnMagnetCalibrationSet = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.txtLowSpeedMph = new System.Windows.Forms.TextBox();
-            this.txtHighSpeedMph = new System.Windows.Forms.TextBox();
+            this.btnLoadMagCalibration = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgResistancePositions)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numResistancePositions)).BeginInit();
             this.tabControl1.SuspendLayout();
@@ -227,6 +228,7 @@
             // 
             // tabCalibration
             // 
+            this.tabCalibration.Controls.Add(this.btnLoadMagCalibration);
             this.tabCalibration.Controls.Add(this.txtHighSpeedMph);
             this.tabCalibration.Controls.Add(this.txtLowSpeedMph);
             this.tabCalibration.Controls.Add(this.btnMagnetCalibrationLoadDefaults);
@@ -245,9 +247,23 @@
             this.tabCalibration.Text = "Calibration";
             this.tabCalibration.UseVisualStyleBackColor = true;
             // 
+            // txtHighSpeedMph
+            // 
+            this.txtHighSpeedMph.Location = new System.Drawing.Point(181, 64);
+            this.txtHighSpeedMph.Name = "txtHighSpeedMph";
+            this.txtHighSpeedMph.Size = new System.Drawing.Size(100, 20);
+            this.txtHighSpeedMph.TabIndex = 10;
+            // 
+            // txtLowSpeedMph
+            // 
+            this.txtLowSpeedMph.Location = new System.Drawing.Point(33, 64);
+            this.txtLowSpeedMph.Name = "txtLowSpeedMph";
+            this.txtLowSpeedMph.Size = new System.Drawing.Size(100, 20);
+            this.txtLowSpeedMph.TabIndex = 9;
+            // 
             // btnMagnetCalibrationLoadDefaults
             // 
-            this.btnMagnetCalibrationLoadDefaults.Location = new System.Drawing.Point(33, 222);
+            this.btnMagnetCalibrationLoadDefaults.Location = new System.Drawing.Point(106, 259);
             this.btnMagnetCalibrationLoadDefaults.Margin = new System.Windows.Forms.Padding(2);
             this.btnMagnetCalibrationLoadDefaults.Name = "btnMagnetCalibrationLoadDefaults";
             this.btnMagnetCalibrationLoadDefaults.Size = new System.Drawing.Size(69, 23);
@@ -365,19 +381,16 @@
             this.label4.TabIndex = 2;
             this.label4.Text = "Low Speed";
             // 
-            // txtLowSpeedMph
+            // btnLoadMagCalibration
             // 
-            this.txtLowSpeedMph.Location = new System.Drawing.Point(33, 64);
-            this.txtLowSpeedMph.Name = "txtLowSpeedMph";
-            this.txtLowSpeedMph.Size = new System.Drawing.Size(100, 20);
-            this.txtLowSpeedMph.TabIndex = 9;
-            // 
-            // txtHighSpeedMph
-            // 
-            this.txtHighSpeedMph.Location = new System.Drawing.Point(181, 64);
-            this.txtHighSpeedMph.Name = "txtHighSpeedMph";
-            this.txtHighSpeedMph.Size = new System.Drawing.Size(100, 20);
-            this.txtHighSpeedMph.TabIndex = 10;
+            this.btnLoadMagCalibration.Location = new System.Drawing.Point(179, 259);
+            this.btnLoadMagCalibration.Margin = new System.Windows.Forms.Padding(2);
+            this.btnLoadMagCalibration.Name = "btnLoadMagCalibration";
+            this.btnLoadMagCalibration.Size = new System.Drawing.Size(69, 23);
+            this.btnLoadMagCalibration.TabIndex = 11;
+            this.btnLoadMagCalibration.Text = "Load";
+            this.btnLoadMagCalibration.UseVisualStyleBackColor = true;
+            this.btnLoadMagCalibration.Click += new System.EventHandler(this.btnLoadMagCalibration_Click);
             // 
             // ServoPositions
             // 
@@ -434,5 +447,6 @@
         private System.Windows.Forms.Button btnMagnetCalibrationLoadDefaults;
         private System.Windows.Forms.TextBox txtHighSpeedMph;
         private System.Windows.Forms.TextBox txtLowSpeedMph;
+        private System.Windows.Forms.Button btnLoadMagCalibration;
     }
 }

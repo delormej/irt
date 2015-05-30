@@ -202,12 +202,38 @@ namespace IRT_GUI
             MagnetCalibrationSet();
         }
 
+        private void btnLoadMagCalibration_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            //dlg.InitialDirectory = m_lastPath;
+            dlg.Filter = "Mag Calibration (*.csv)|*.csv|All files (*.*)|*.*";
+            dlg.FilterIndex = 1;
+            dlg.RestoreDirectory = false;
+            dlg.CheckFileExists = true;
+            dlg.Multiselect = false;
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                List<MagnetPosition> positions = MagnetPosition.GetMagnetPositions(dlg.FileName);
+                if (positions != null && positions.Count > 0)
+                {
+                    ShowMagnetCalibration(positions);
+                }
+            }
+        }
+
         private void btnMagnetCalibrationLoadDefaults_Click(object sender, EventArgs e)
+        {
+            List<MagnetPosition> positions = MagnetPosition.GetMagnetPositions();
+            ShowMagnetCalibration(positions);
+        }
+
+        private void ShowMagnetCalibration(List<MagnetPosition> positions)
         {
             float lowSpeedMph = 15;
             float highSpeedMph = 25;
 
-            List<MagnetPosition> positions = MagnetPosition.GetMagnetPositions();
+            
             MagnetCalibration magCalibration = new MagnetCalibration();
             float[] lowSpeedFactors = magCalibration.Fit(lowSpeedMph * 0.44704f, positions);
             float[] highSpeedFactors = magCalibration.Fit(highSpeedMph * 0.44704f, positions);
