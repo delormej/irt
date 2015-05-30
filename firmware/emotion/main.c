@@ -485,6 +485,26 @@ static void profile_init(void)
 				m_user_profile.ca_gap_offset = 0;
 			}
 
+			// Initialize default magnet calibration.
+			if (m_user_profile.ca_mag_factors.low_speed_mps == 0xFFFF)
+			{
+				// 15 mph in meters per second * 1,000.
+				m_user_profile.ca_mag_factors.low_speed_mps = 6705;
+
+				// 25 mph in meters per second * 1,000.
+				m_user_profile.ca_mag_factors.low_speed_mps = 11176;
+
+				m_user_profile.ca_mag_factors.low_factors[0] = 1.27516039631e-06f;
+				m_user_profile.ca_mag_factors.low_factors[1] = -0.00401345920329f;
+				m_user_profile.ca_mag_factors.low_factors[2] = 3.58655403892f;
+				m_user_profile.ca_mag_factors.low_factors[3] = -645.523540742f;
+
+				m_user_profile.ca_mag_factors.high_factors[0] = 2.19872670294e-06f;
+				m_user_profile.ca_mag_factors.high_factors[1] = -0.00686992504214f;
+				m_user_profile.ca_mag_factors.high_factors[2] = 6.03431060782f;
+				m_user_profile.ca_mag_factors.high_factors[3] = -998.115074474f;
+			}
+
 			// Schedule an update.
 			profile_update_sched();
 		}
@@ -1716,6 +1736,24 @@ static void on_request_calibration()
 	calibration_start();
 }
 
+/**@brief	Called when the magnet calibration is received.
+ *
+ */
+static void on_set_mag_calibration(mag_calibration_factors_t* p_factors)
+{
+	LOG("[MAIN] on_set_mag_calibration: received magnet factors: %i, %i\r\n%.5f,%.5f,%.5f,%.5f",
+			p_factors->low_speed_mps, p_factors->high_speed_mps,
+			p_factors->low_factors[0],
+			p_factors->low_factors[1],
+			p_factors->low_factors[2],
+			p_factors->low_factors[3]);
+
+	// Update profile.
+
+	// Re-initialize the magnet module.
+	magnet_init(&m_user_profile.ca_mag_factors);
+}
+
 /**@brief	Configures chip power options.
  *
  * @note	Note this must happen after softdevice is enabled.
@@ -1911,7 +1949,8 @@ int main(void)
 		on_request_data,
 		on_set_parameter,
 		on_set_servo_positions,
-		on_request_calibration
+		on_request_calibration,
+		on_set_mag_calibration
 	};
 
 	// Initialize and enable the softdevice.
@@ -1925,6 +1964,9 @@ int main(void)
 
 	// initialize the user profile.
 	profile_init();
+
+	// Initialize the magnet module.
+	magnet_init(&m_user_profile.ca_mag_factors);
 
 	// Initialize resistance module and initial values.
 	mp_resistance_state = resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);

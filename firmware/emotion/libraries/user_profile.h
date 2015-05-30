@@ -15,8 +15,9 @@
 #include <stdint.h>
 #include <float.h>
 #include "pstorage.h"
+#include "irt_common.h"
 
-#define PROFILE_VERSION					7u	// Current version of the profile.
+#define PROFILE_VERSION					8u	// Current version of the profile.
 
 #define SETTING_ACL_SLEEP_ON			1UL				// Put device to sleep when accelerometer signals no motion.
 #define SETTING_BTLE_ENABLED			2UL				// BTLE Enabled
@@ -27,8 +28,6 @@
 #define SETTING_ANT_BIKE_SPEED_ENABLED	64UL			// ANT+ Bike Speed enabled.
 #define SETTING_ANT_TR_PAUSE_ENABLED	128UL			// ANT+ Command via button to pause Trainer Road.
 #define SETTING_INVALID					65535UL			// Max for 16 bit settings.
-
-#define MAX_RESISTANCE_LEVEL_COUNT 		10u 			// Max number of resistance levels possible to set.
 
 /**@brief	Helper macro for determining if a setting is flagged.
  */
@@ -44,14 +43,6 @@
  */
 #define SETTING_VALUE(SETTING) \
 	(SETTING & 0x7FFF)
-
-/**@brief	Servo positions available.
- */
-typedef struct servo_positions_s
-{
-	uint8_t				count;
-	uint16_t			positions[MAX_RESISTANCE_LEVEL_COUNT];
-} servo_positions_t;
 
 /**@brief	Structure used to for storing/reading user profile.
  * 			Must be at least PSTORAGE_MIN_BLOCK_SIZE (i.e. 16 bytes) in size and should be word aligned (16 bits).
@@ -71,6 +62,7 @@ typedef struct user_profile_s {
 	float		ca_drag;					// Calibration co-efficient of drag which produces the "curve" from a coastdown.
 	float		ca_rr;						// Co-efficient of rolling resistance.
 	uint16_t	ca_gap_offset;				// Variable used to adjust for the magnet spacing gap which changes the force by this percent.  Stored as unsigned short, divide by 1,000 to get % value.
+	mag_calibration_factors_t ca_mag_factors; // Magnet calibration factors.
 	//uint8_t		reserved_2[7]; // (sizeof(servo_positions_t)+2) % 16];					// For block size alignment -- 16 bit alignment
 } user_profile_t;
 

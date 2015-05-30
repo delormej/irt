@@ -85,8 +85,9 @@ class LogParser:
         """
         stable_errs = [x['power_err'] for x in self.records[self.stable_records['index']]]
         
-        for e in stable_errs:
-            print(e)
+        if self.print_errors:
+            for e in stable_errs:
+                print(e)
         
         
         return np.mean(stable_errs)
@@ -112,6 +113,11 @@ class LogParser:
         
         self.err_est_column = 'power_re_est'    # which column to use for error estimating. 
         self.gap_offset = 0                 	# smaller gap=1.33,  #larger gap=0.855
+        
+        # Configuration options
+        self.print_errors = False
+        self.print_slope_intercept = False
+        self.print_position_speed_power = False
         
         # Populate object with config values from the file.
         self.__read_config()
@@ -186,8 +192,9 @@ class LogParser:
                         break
         except:
             print("Unable to parse config.")
-            
-        print("found config", self.drag, self.rr)
+
+        if self.drag > 0 and self.rr > 0:
+            print("found config", self.drag, self.rr)
 
     # 
     # Enriches the records with moving averages and other functions.
@@ -252,7 +259,8 @@ class LogParser:
             ix = [i for i,x in enumerate(self.stable_records) if x['position'] == p]
             slope, intercept = fit.fit_lin_regress(self.stable_records[ix]['speed_mps'], self.stable_records[ix]['magonly_power'])
             records.append((p, slope, intercept, ix))
-            print((p, slope, intercept))
+            if self.print_slope_intercept:
+                print((p, slope, intercept))
 
         #dtp = np.dtype([('position','i4'), ('slope','f4'), ('intercept','f4'), ('ix')])
         #self.positions = np.array(records, dtype=dtp)
@@ -336,7 +344,8 @@ class LogParser:
             position = self.records[i]['position']
             speed_mps = speed * 0.44704
             stable.append((i, position, speed_mps, power)) 
-            print("%.0f, %.2f, %.1f" % (position, speed, power))
+            if self.print_position_speed_power:
+                print("%.0f, %.2f, %.1f" % (position, speed, power))
             
         dtp = np.dtype([('index','i4'), ('position','i4'), ('speed_mps','f4'), ('power','f4')])
         

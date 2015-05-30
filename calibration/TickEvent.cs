@@ -81,6 +81,12 @@ namespace IRT.Calibration
              */
 
             string[] column = line.Split(',');
+            if (column.Length < 3)
+            {
+                tickEvent = null;
+                return;
+            }
+
             tickEvent = new TickEvent();
 
             if (!ushort.TryParse(column[0], out tickEvent.Timestamp))

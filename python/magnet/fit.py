@@ -433,7 +433,7 @@ def power_stable(records, points=None):
     if points == None:
         points = stable_speed_points(records)
 
-    print("calculating power_stable")
+    #print("calculating power_stable")
         
     avg_power = 0
     avg_speed = 0

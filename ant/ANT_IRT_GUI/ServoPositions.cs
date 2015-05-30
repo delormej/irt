@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Message = IRT_GUI.IrtMessages.Message;
+using IRT.Calibration;
 
 namespace IRT_GUI
 {
@@ -90,9 +92,9 @@ namespace IRT_GUI
             }
             dgResistancePositions.CellValidating += dgResistancePositions_CellValidating;
 
-            // Create 6 rows.
-            dgvForce2Pos.Rows.Add(6);
-            dgvPos2Force.Rows.Add(6);
+            // Create 4 rows.
+            dgvLowSpeed.Rows.Add(4);
+            dgvHighSpeed.Rows.Add(4);
         }
 
         private void btnSetServoPositions_Click(object sender, EventArgs e)
@@ -160,30 +162,30 @@ namespace IRT_GUI
             this.Close();
         }
 
-        private void MagnetCalibrationSet(MagnetCalibrationType type)
+        private void MagnetCalibrationSet()
         {
-            DataGridView dgv = null;
-
-            switch (type)
-            {
-                case MagnetCalibrationType.Force2Position:
-                    dgv = dgvForce2Pos;
-                    break;
-                case MagnetCalibrationType.Position2Force:
-                    dgv = dgvPos2Force;
-                    break;
-            }
-
             try
             {
-                var values = dgv.Rows.Cast<DataGridViewRow>()
+                var lowSpeedValues = dgvLowSpeed.Rows.Cast<DataGridViewRow>()
+                    .Select(row => float.Parse(row.Cells[0].Value.ToString()));
+
+                var highSpeedValues = dgvHighSpeed.Rows.Cast<DataGridViewRow>()
                     .Select(row => float.Parse(row.Cells[0].Value.ToString()));
 
                 if (SetMagnetCalibration != null)
                 {
-                    SetMagnetCalibration(this, 
-                        new MagnetCalibrationEventArgs(type,
-                            values.ToArray()));
+                    MagnetCalibration calibration = new MagnetCalibration();
+                    calibration.LowSpeedMps = 15 * 0.44704f;
+                    calibration.HighSpeedMps = 25 * 0.44704f;
+
+                    Array.Copy(lowSpeedValues.ToArray(), 0, calibration.LowSpeedFactors, 
+                        0, calibration.LowSpeedFactors.Length);
+
+                    Array.Copy(highSpeedValues.ToArray(), 0, calibration.HighSpeedFactors,
+                        0, calibration.HighSpeedFactors.Length);
+
+                    MagnetCalibrationEventArgs e = new MagnetCalibrationEventArgs(calibration);
+                    SetMagnetCalibration(this, e);
                 }
             }
             catch (Exception ex)
@@ -195,55 +197,56 @@ namespace IRT_GUI
 
         private void btnMagnetCalibrationSet_Click(object sender, EventArgs e)
         {
-            // Set both.
-            MagnetCalibrationSet(MagnetCalibrationType.Force2Position);
-            MagnetCalibrationSet(MagnetCalibrationType.Position2Force);
+            // Validate that all the values are set properly before calling.
+
+            MagnetCalibrationSet();
+        }
+
+        private void btnLoadMagCalibration_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            //dlg.InitialDirectory = m_lastPath;
+            dlg.Filter = "Mag Calibration (*.csv)|*.csv|All files (*.*)|*.*";
+            dlg.FilterIndex = 1;
+            dlg.RestoreDirectory = false;
+            dlg.CheckFileExists = true;
+            dlg.Multiselect = false;
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                List<MagnetPosition> positions = MagnetPosition.GetMagnetPositions(dlg.FileName);
+                if (positions != null && positions.Count > 0)
+                {
+                    ShowMagnetCalibration(positions);
+                }
+            }
         }
 
         private void btnMagnetCalibrationLoadDefaults_Click(object sender, EventArgs e)
         {
-            float[] force2Servo = {
-                -0.00000000000033469583f,
-				+0.00000000202071048200f,
-				-0.00000466916875500000f,
-				+0.00513145135800000000f,
-				-2.691480529f,
-				+562.4577135f };
+            List<MagnetPosition> positions = MagnetPosition.GetMagnetPositions();
+            ShowMagnetCalibration(positions);
+        }
 
-            float[] servo2Force = {
-					-0.0000000000012401f,
-					+0.0000000067486647f,
-					-0.0000141629606351f,
-					+0.0142639827784839f,
-					-6.92836459712442f,
-					+1351.463567618f };
+        private void ShowMagnetCalibration(List<MagnetPosition> positions)
+        {
+            float lowSpeedMph = 15;
+            float highSpeedMph = 25;
 
-            for (int i = 0; i < 6; i++)
+            
+            MagnetCalibration magCalibration = new MagnetCalibration();
+            float[] lowSpeedFactors = magCalibration.Fit(lowSpeedMph * 0.44704f, positions);
+            float[] highSpeedFactors = magCalibration.Fit(highSpeedMph * 0.44704f, positions);
+
+            txtLowSpeedMph.Text = lowSpeedMph.ToString("0.0");
+            txtHighSpeedMph.Text = highSpeedMph.ToString("0.0");
+
+            for (int i = 0; i < highSpeedFactors.Length; i++)
             {
-                dgvPos2Force.Rows[i].Cells[0].Value = servo2Force[i];
-                dgvForce2Pos.Rows[i].Cells[0].Value = force2Servo[i];
+                dgvLowSpeed.Rows[i].Cells[0].Value = lowSpeedFactors[i];
+                dgvHighSpeed.Rows[i].Cells[0].Value = highSpeedFactors[i];
             }
         }
     }
-
-    public delegate void MagnetCalibrationEventHandler(object sender, MagnetCalibrationEventArgs e);
-
-    public enum MagnetCalibrationType : byte
-    {
-        Force2Position = 0,
-        Position2Force = 1
-    }
-
-    public class MagnetCalibrationEventArgs : EventArgs
-    {
-        public float[] Factors;
-        public MagnetCalibrationType CalibrationType;
-
-        public MagnetCalibrationEventArgs(MagnetCalibrationType calibrationType, float[] factors)
-        {
-            this.CalibrationType = calibrationType;
-            this.Factors = factors;
-        }
-    }
-
 }
+

@@ -122,8 +122,11 @@ namespace IRT.Calibration
                     TickEvent tickEvent;
                     TickEvent.ParseLine(reader.ReadLine(), out tickEvent);
 
-                    model.AddSpeedEvent(tickEvent);
-                    model.AddPowerEvent(tickEvent.PowerEventCount, tickEvent.AccumulatedPower);
+                    if (tickEvent != null)
+                    {
+                        model.AddSpeedEvent(tickEvent);
+                        model.AddPowerEvent(tickEvent.PowerEventCount, tickEvent.AccumulatedPower);
+                    }
                 }
             }
 

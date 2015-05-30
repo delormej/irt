@@ -12,6 +12,7 @@
 #include <float.h>
 #include <math.h>
 #include <stdint.h>
+#include "irt_common.h"
 
 #include "debug.h"
 #include "math/math_private.h"
@@ -31,6 +32,13 @@
 // Macro to convert gap offset storage format to percent.
 #define GAP_OFFSET_TO_PCT(x) 				(gap_offset / 1000.0f)
 
+#define SPEED1 		mp_mag_calibration_factors->low_speed_mps
+#define SPEED2 		mp_mag_calibration_factors->high_speed_mps
+#define COEFF_1		mp_mag_calibration_factors->low_factors
+#define COEFF_2		mp_mag_calibration_factors->high_factors
+
+static mag_calibration_factors_t* mp_mag_calibration_factors;
+
 /**@brief	Calculates the coefficient values for a cubic polynomial
  *			that plots a power curve for the magnet at a given speed.
  *
@@ -39,23 +47,6 @@
  */
 static void curve_coeff(float speed_mps, float *coeff)
 {
-	static const float SPEED1 =	15.0 * 0.44704;	// Convert to meters per second
-	static const float SPEED2 = 25.0 * 0.44704;	// Convert to meters per second
-
-	// Low speed (15 mph)
-	static const float COEFF_1[] =  {
-		1.27516039631e-06,
-		-0.00401345920329,
-		3.58655403892,
-		-645.523540742 };
-
-	// High speed (25 mph)
-	static const float COEFF_2[] = {
-		2.19872670294e-06,
-		-0.00686992504214,
-		6.03431060782,
-		-998.115074474 };
-
 	for (uint8_t ix = 0; ix < COEFF_COUNT; ix++)
 	{
 		coeff[ix] = COEFF_1[ix] +
@@ -125,6 +116,14 @@ static float watts_offset(float speed_mps, float watts, uint16_t gap_offset, boo
 	float adjusted_watts = adjusted_force * speed_mps;
 
 	return adjusted_watts;
+}
+
+/**@brief	Initializes the magnet module with a set of factors for a low and
+ * 			high speed polynomial.
+ */
+void magnet_init(mag_calibration_factors_t* p_factors)
+{
+	mp_mag_calibration_factors = p_factors;
 }
 
 /**@brief	Calculates watts added by the magnet for a given speed at magnet

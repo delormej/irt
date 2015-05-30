@@ -6,6 +6,13 @@ using IRT.Calibration.Globals;
 namespace IRT.Calibration
 {
     /// <summary>
+    /// This is a HACK to pass in a function pointer to move the servo during the 
+    /// calibratin process.
+    /// </summary>
+    /// <param name="position"></param>
+    public delegate void MoveServoDelegate(int position);
+    
+    /// <summary>
     /// Orchestrates and manages the state of the calibration workflow end to end.
     /// </summary>
     public class Controller
@@ -13,6 +20,7 @@ namespace IRT.Calibration
         BikePowerDisplay m_emotionPower, m_refPower;
         Model m_model;
         Coastdown m_coastdown;
+        MoveServoDelegate m_moveServo;
 
         ushort m_instantPower;
 
@@ -37,11 +45,13 @@ namespace IRT.Calibration
         /// </summary>
         /// <param name="emotionPower"></param>
         /// <param name="refPower"></param>
-        public Controller(BikePowerDisplay emotionPower, BikePowerDisplay refPower) : this()
+        public Controller(BikePowerDisplay emotionPower, BikePowerDisplay refPower, 
+            MoveServoDelegate moveServo) : this()
         {
             // Listeners for ANT+ events.
             m_emotionPower = emotionPower;
             m_refPower = refPower;
+            m_moveServo = moveServo;
 
             if (m_emotionPower != null)
             {
@@ -170,7 +180,7 @@ namespace IRT.Calibration
             {
                 OnStarted();
             }
-            else if (m_model.Stage == Stage.Started &&
+            else if ( (m_model.Stage == Stage.Started | m_model.Stage == Stage.MagCalibrationStarted) &&
                 m_model.Motion == Motion.Stable &&
                 m_model.StableSeconds >= Settings.StableThresholdSeconds)
             {
@@ -212,10 +222,51 @@ namespace IRT.Calibration
 
         private void OnStable()
         {
+            // 3 possible states:
+            // 1) Transition to Stable from MagCalibration, so stop calibration and mark stable.
+            // 2) Transition to Stable from unstable, start magnet calibration.
+            // 3) Transition to Stable from unstable, but do not start magnet calibration.
+            
             // Called when we've reached stable speed for threshold time.
             this.Stage = Stage.Stable;
 
-            // Indicate to user it's time to accelerate to threshold speed.
+            if (this.Stage == Stage.MagCalibrationStarted)
+            {
+                StopMagCalibration();
+            }
+            else 
+            {
+                StartMagCalibration();
+            }
+        }
+
+        /// <summary>
+        /// Initiates magnet calibration if a delegate was given for moving magnet.
+        /// </summary>
+        private bool StartMagCalibration()
+        {
+            if (m_moveServo != null)
+            {
+                this.Stage = Stage.MagCalibrationStarted;
+                m_moveServo(Settings.MagPositionCalibration);
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Stop magnet calibration.
+        /// </summary>
+        private void StopMagCalibration()
+        {
+            if (m_moveServo != null)
+            {
+                m_moveServo(Settings.MagPositionHome);
+            }
         }
 
         private void OnAccelerating()
