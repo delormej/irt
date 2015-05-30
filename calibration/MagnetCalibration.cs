@@ -19,19 +19,32 @@ namespace IRT.Calibration
         public float[] LowSpeedFactors;
         public float[] HighSpeedFactors;
 
-        public void Fit(List<MagnetPosition> magSlopeIntercepts)
+        public float[] Fit(float speedMps, List<MagnetPosition> magSlopeIntercepts)
         {
-            double speedMps = 15 * 0.44704f;
             double[] x;
             double[] y;
+            double[] coeff;
             int m = 4; // polynomial_degree + 1
             int info;
             alglib.barycentricinterpolant p;
             alglib.polynomialfitreport rep;
 
+            // Generate sample data.
             GeneratePowerData(speedMps, magSlopeIntercepts, out x, out y);
 
+            // Fit to the curve.
             alglib.polynomialfit(x, y, m, out info, out p, out rep);
+
+            // Get the polynomial coefficients.
+            alglib.polynomialbar2pow(p, out coeff);
+
+            // Reverse the array as it is return backwards from the way we use it.
+            Array.Reverse(coeff);
+
+            // Convert to float.
+            float[] coeff_f = Array.ConvertAll(coeff, c => (float)c);
+
+            return coeff_f;
         }
 
         private void GeneratePowerData(double speedMps, 

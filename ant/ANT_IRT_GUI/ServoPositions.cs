@@ -204,20 +204,16 @@ namespace IRT_GUI
 
         private void btnMagnetCalibrationLoadDefaults_Click(object sender, EventArgs e)
         {
-            float[] lowSpeedFactors = {
-                1.27516039631e-06f,
-                -0.00401345920329f,
-                3.58655403892f,
-                -645.523540742f };
+            float lowSpeedMph = 15;
+            float highSpeedMph = 25;
 
-            float[] highSpeedFactors = {
-                2.19872670294e-06f,
-                -0.00686992504214f,
-                6.03431060782f,
-                -998.115074474f };
+            List<MagnetPosition> positions = MagnetPosition.GetMagnetPositions();
+            MagnetCalibration magCalibration = new MagnetCalibration();
+            float[] lowSpeedFactors = magCalibration.Fit(lowSpeedMph * 0.44704f, positions);
+            float[] highSpeedFactors = magCalibration.Fit(highSpeedMph * 0.44704f, positions);
 
-            txtLowSpeedMph.Text = "15.0";
-            txtHighSpeedMph.Text = "25.0";
+            txtLowSpeedMph.Text = lowSpeedMph.ToString("0.0");
+            txtHighSpeedMph.Text = highSpeedMph.ToString("0.0");
 
             for (int i = 0; i < highSpeedFactors.Length; i++)
             {
