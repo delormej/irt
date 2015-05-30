@@ -67,6 +67,7 @@
     <Compile Include="Global.cs" />
     <Compile Include="MagGapCalibration.cs" />
     <Compile Include="MagnetCalibration.cs" />
+    <Compile Include="MagnetPosition.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="AveragePower.cs" />
     <Compile Include="Speed.cs" />

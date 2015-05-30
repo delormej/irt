@@ -1,43 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 
 namespace IRT.Calibration
 {
-    public struct MagnetPosition
-    {
-        public int Position;
-        public float Slope;
-        public float Intercept;
-
-        public static bool operator ==(MagnetPosition lhs, MagnetPosition rhs)
-        {
-            return (lhs.Position == rhs.Position);
-        }
-
-        public static bool operator !=(MagnetPosition lhs, MagnetPosition rhs)
-        {
-            return (lhs.Position != rhs.Position);
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is MagnetPosition && this == (MagnetPosition)obj;
-        }
-
-        public override int GetHashCode()
-        {
-            if (Position > 0)
-            {
-                return Position.GetHashCode();
-            }
-            else
-            {
-                return base.GetHashCode();
-            }
-        }
-    }
 
     public class MagGapCalibration
     {
@@ -62,8 +28,14 @@ namespace IRT.Calibration
             }
             
             // Load slope & intercept for magPosition
-            MagnetPosition position = GetSlopeIntercept(magPosition);
+            MagnetPosition position = MagnetPosition.Find(magPosition);
             
+            if (position == null)
+            {
+                throw new ArgumentOutOfRangeException("magPosition",
+                    string.Format("Unable to locate slope/intercept for {0}", magPosition));
+            }
+
             float force = magOnlyPower / speedMps;
 
             // Calculate mag only estimate.
@@ -74,21 +46,6 @@ namespace IRT.Calibration
             float magOffset = force / estForce; 
 
             return magOffset;
-        }
-
-        private MagnetPosition GetSlopeIntercept(int magPosition)
-        {
-            if (magPosition != 1200)
-            {
-                throw new ArgumentOutOfRangeException("Invalid magnet position.", "magPosition");
-            }
-             
-            float slope = 14.3916520783f;
-            float intercept = -17.4455956139f;
-
-            var p = new MagnetPosition { Slope = slope, Intercept = intercept, Position = magPosition };
-            
-            return p;
         }
     }
 }
