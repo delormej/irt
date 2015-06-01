@@ -1328,6 +1328,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	switch (rc_evt.operation)
 	{
 		case RESISTANCE_SET_STANDARD:
+			value = (uint8_t)value;
 			resistance_level_set(value);
 			break;
 			
