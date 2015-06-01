@@ -56,7 +56,7 @@ INCLUDE_PATHS += $(SDK_PATH)ble/ble_services/ble_cscs/
 INCLUDE_PATHS += $(SDK_PATH)ble/ble_error_log/
 
 DEPLOY_PATH = './../../../../Google Drive/Firmware/'
-DEPLOY_PATH2 = './../../../../SkyDrive/InsideRide/Builds/'
+DEPLOY_PATH2 = './../../../../OneDrive/InsideRide/Builds/'
 
 DEVICE_VARIANT = xxAA
 USE_SOFTDEVICE = s310
@@ -88,7 +88,7 @@ debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 ############################################
 SW_REVISION_MAJ := 1
 SW_REVISION_MIN := 0
-SW_REVISION_BLD := 14
+SW_REVISION_BLD := 15
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
 CFLAGS += -DSW_REVISION_MIN=$(SW_REVISION_MIN)
@@ -132,7 +132,6 @@ debug: all
 
 deploy:
 	python $(DEPLOY_SCRIPT) $(HEX) 
-	cp $(OUTPUT_PATH)$(OUTPUT_NAME).zip $(DEPLOY_PATH)$(OUTPUT_NAME).zip
 	cp $(OUTPUT_PATH)$(OUTPUT_NAME).zip $(DEPLOY_PATH2)$(OUTPUT_NAME).zip
 
 ############################################
