@@ -471,7 +471,7 @@ class LogParser:
                 
             return watts
 
-        for x in range(820, 1420, 10):
+        for x in range(790, 1420, 10):
             color = self.cc.get_color(x)
             
             if x % 100 == 0:
