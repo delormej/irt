@@ -46,7 +46,9 @@ def main(file_name, drag=0, rr=0, offset=0):
     #print("using calibration:", drag, rr)
     
     p = lp.LogParser(file_name)
-
+    
+    #p.servo_offset = 320
+    
     # Override config if passed here.
     if drag > 0:
         p.drag = drag
