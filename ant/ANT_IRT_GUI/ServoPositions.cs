@@ -82,9 +82,14 @@ namespace IRT_GUI
 
                     chartPowerCurve.Series.Clear();
                     chartPowerCurve.Series.Add(refPowerSeries);
+                    int root = calibration.GetRootPosition();
 
                     foreach (var point in values)
                     {
+                        // Don't plot after root.
+                        if (point.Item1 > root)
+                            break;
+                        
                         refPowerSeries.Points.AddXY(point.Item1, point.Item2);
                     }
                 }
