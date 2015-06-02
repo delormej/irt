@@ -30,6 +30,32 @@ namespace IRT_GUI
         public ServoPositions()
         {
             InitializeComponent();
+
+            dgvHighSpeed.Columns.Clear();
+            dgvHighSpeed.Columns.Add("lowSpeed", "Low");
+            dgvHighSpeed.Columns.Add("highSpeed", "High");
+            dgvHighSpeed.RowHeadersVisible = true;
+
+            // Add rows to the grid.
+            for (int i = 0; i < 5; i++)
+            {
+                var row = new DataGridViewRow();
+                string header = string.Empty;
+
+                if (i == 0)
+                {
+                    header = "Speed (Mph)";
+                }
+                else
+                {
+                    header = i.ToString();
+                }
+
+                row.HeaderCell.Value = header;
+                dgvHighSpeed.Rows.Add(row);
+            }
+
+            dgvHighSpeed.RowHeadersWidth = 110;
         }
 
         public ServoPositions(ushort min, ushort max, bool admin) : this()
@@ -91,10 +117,6 @@ namespace IRT_GUI
                 numResistancePositions.Value = count;
             }
             dgResistancePositions.CellValidating += dgResistancePositions_CellValidating;
-
-            // Create 4 rows.
-            dgvLowSpeed.Rows.Add(4);
-            dgvHighSpeed.Rows.Add(4);
         }
 
         private void btnSetServoPositions_Click(object sender, EventArgs e)
@@ -166,11 +188,11 @@ namespace IRT_GUI
         {
             try
             {
-                var lowSpeedValues = dgvLowSpeed.Rows.Cast<DataGridViewRow>()
-                    .Select(row => float.Parse(row.Cells[0].Value.ToString()));
+                var lowSpeedValues = dgvHighSpeed.Rows.Cast<DataGridViewRow>()
+                    .Select(row => float.Parse(row.Cells[0].Value.ToString())); 
 
                 var highSpeedValues = dgvHighSpeed.Rows.Cast<DataGridViewRow>()
-                    .Select(row => float.Parse(row.Cells[0].Value.ToString()));
+                    .Select(row => float.Parse(row.Cells[1].Value.ToString()));
 
                 if (SetMagnetCalibration != null)
                 {
@@ -238,13 +260,13 @@ namespace IRT_GUI
             float[] lowSpeedFactors = magCalibration.Fit(lowSpeedMph * 0.44704f, positions);
             float[] highSpeedFactors = magCalibration.Fit(highSpeedMph * 0.44704f, positions);
 
-            txtLowSpeedMph.Text = lowSpeedMph.ToString("0.0");
-            txtHighSpeedMph.Text = highSpeedMph.ToString("0.0");
+            dgvHighSpeed.Rows[0].Cells[0].Value = lowSpeedMph.ToString("0.0");
+            dgvHighSpeed.Rows[0].Cells[1].Value = highSpeedMph.ToString("0.0");
 
             for (int i = 0; i < highSpeedFactors.Length; i++)
             {
-                dgvLowSpeed.Rows[i].Cells[0].Value = lowSpeedFactors[i];
-                dgvHighSpeed.Rows[i].Cells[0].Value = highSpeedFactors[i];
+                dgvHighSpeed.Rows[i+1].Cells[0].Value = lowSpeedFactors[i];
+                dgvHighSpeed.Rows[i+1].Cells[1].Value = highSpeedFactors[i];
             }
         }
     }
