@@ -107,12 +107,13 @@ class LogParser:
         
         self.drag = 0
         self.rr = 0
-        self.force_offset = 0
         self.device_id = 0
         self.firmware_rev = ""
         
         self.err_est_column = 'power_re_est'    # which column to use for error estimating. 
         self.gap_offset = 0                 	# smaller gap=1.33,  #larger gap=0.855
+        
+        self.servo_offset = 0                   # Set an additional servo offset for "what if" testing.
         
         # Configuration options
         self.print_errors = False
@@ -204,6 +205,9 @@ class LogParser:
     # Add additional calls in here to further enrich.
     #
     def __enrich(self):
+
+        if self.servo_offset != 0:
+            self.records['position'] = self.records['position'] + self.servo_offset 
 
         # Identify the stable records.
         self.__find_stable()
@@ -467,6 +471,10 @@ class LogParser:
         # Draw the model power 
         model_speed_mps = np.array( [ min(self.stable_records['speed_mps']), max(self.stable_records['speed_mps']) ] )
 
+        # Adjust for calculations.
+        if self.gap_offset > 0:
+            mag.force_offset(int(self.gap_offset * 1000))
+
         def mag_watts(speeds, position):
             watts = []
             for s in speeds:
@@ -486,6 +494,8 @@ class LogParser:
                 
             plt.plot(model_speed_mps*2.23694, mag_watts(model_speed_mps, x), color=color, linestyle='-.', linewidth=linewidth)
         
+        # Reset force offset.
+        mag.force_offset(0)
     #
     # Plots force.
     #

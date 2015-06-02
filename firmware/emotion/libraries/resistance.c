@@ -243,6 +243,14 @@ static uint16_t resistance_erg_position(float speed_mps, int16_t magoff_watts)
 {
 	float mag_watts;
 
+	// Handle adjustment.
+	if (m_resistance_state.adjust_pct > 0)
+	{
+		// Adjust erg target.
+		m_resistance_state.erg_watts = m_resistance_state.unadjusted_erg_watts * 
+			(m_resistance_state.adjust_pct / 100.0f);
+	}
+
 	//
 	// Calculate the required incremental magnet force required (if any).
 	//
