@@ -44,15 +44,13 @@
 void magnet_init(mag_calibration_factors_t* p_factors);
 
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
- *			position.  Accepts an offset for the gap as a multiple of 1,000.
- *			Divides gap_offset by 1,000 to get a % offset to Force.
+ *			position.  
  */
-float magnet_watts(float speed_mps, uint16_t position, uint16_t gap_offset);
+float magnet_watts(float speed_mps, uint16_t position);
 
 /**@brief	Calculates magnet position for a given speed and watt target.
- *			Accepts an offset for the gap as a multiple of 1,000.
- *			Divides gap_offset by 1,000 to get a % offset to Force.
+ *
  */
-uint16_t magnet_position(float speed_mps, float mag_watts, uint16_t gap_offset);
+uint16_t magnet_position(float speed_mps, float mag_watts);
 
 #endif /* MAGNET_H_ */

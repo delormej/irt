@@ -259,7 +259,7 @@ static uint16_t resistance_erg_position(float speed_mps, int16_t magoff_watts)
 	//
 	mag_watts = m_resistance_state.erg_watts - magoff_watts;
 
-	return magnet_position(speed_mps, mag_watts, mp_user_profile->ca_gap_offset);
+	return magnet_position(speed_mps, mag_watts);
 }
 
 /**@brief	Get the position of the servo based on simulation mode forces.
@@ -317,7 +317,7 @@ static uint16_t resistance_sim_position(float speed_mps, int16_t magoff_watts)
 	}
 
 	// Get the servo to the required position.
-	return magnet_position(speed_mps, mag_watts, mp_user_profile->ca_gap_offset);
+	return magnet_position(speed_mps, mag_watts);
 }
 
 /**@brief		Adjusts dynamic magnetic resistance control based on current

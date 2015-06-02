@@ -125,8 +125,7 @@ uint32_t power_calc(irt_context_t* p_meas)
 	}
 
 	// Calculate watts added by magnet.
-	mag_watts = magnet_watts(p_meas->instant_speed_mps, p_meas->servo_position,
-			mp_profile->ca_gap_offset);
+	mag_watts = magnet_watts(p_meas->instant_speed_mps, p_meas->servo_position);
 
 	// Calculate power.
 	p_meas->instant_power = p_meas->magoff_power + mag_watts;

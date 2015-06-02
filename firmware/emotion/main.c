@@ -478,15 +478,12 @@ static void profile_init(void)
 				m_user_profile.servo_positions.positions[6] = 800;
 			}
 
-			if (m_user_profile.ca_gap_offset == 0xFFFF)
-			{
-				// Default to no gap offset.
-				m_user_profile.ca_gap_offset = 0;
-			}
-
 			// Initialize default magnet calibration.
 			if (m_user_profile.ca_mag_factors.low_speed_mps == 0xFFFF)
 			{
+				// Default to no gap offset.
+				m_user_profile.ca_mag_factors.gap_offset = 0;				
+				
 				// 15 mph in meters per second * 1,000.
 				m_user_profile.ca_mag_factors.low_speed_mps = 6705;
 
@@ -984,7 +981,7 @@ static void on_get_parameter(ant_request_data_page_t* p_request)
 			break;
 
 		case IRT_MSG_SUBPAGE_GAP_OFFSET:
-			memcpy(&response, &m_user_profile.ca_gap_offset, sizeof(uint32_t));
+			memcpy(&response, &m_user_profile.ca_mag_factors.gap_offset, sizeof(uint32_t));
 			break;
 
 		default:
@@ -1602,8 +1599,8 @@ static void on_set_parameter(uint8_t* buffer)
 			break;
 
 		case IRT_MSG_SUBPAGE_GAP_OFFSET:
-			memcpy(&m_user_profile.ca_gap_offset, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint16_t));
-			LOG("[MAIN] on_set_parameter ca_gap_offset:%i\r\n", m_user_profile.ca_gap_offset);
+			memcpy(&m_user_profile.ca_mag_factors.gap_offset, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint16_t));
+			LOG("[MAIN] on_set_parameter ca_gap_offset:%i\r\n", m_user_profile.ca_mag_factors.gap_offset);
 
 			// Schedule update to the user profile.
 			profile_update_sched();
