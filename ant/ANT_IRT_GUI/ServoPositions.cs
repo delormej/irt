@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using Message = IRT_GUI.IrtMessages.Message;
 using IRT.Calibration;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace IRT_GUI
 {
@@ -58,7 +59,36 @@ namespace IRT_GUI
             dgvPolyFactors.RowHeadersWidth = 110;
 
             txtPosition.LostFocus += TxtPosition_LostFocus;
+            txtSpeed.LostFocus += TxtSpeed_LostFocus;
 
+        }
+
+        private void TxtSpeed_LostFocus(object sender, EventArgs e)
+        {
+            float speedMph;
+            if (float.TryParse(txtSpeed.Text, out speedMph))
+            {
+                MagnetCalibration calibration = GetMagnetCalibration();
+                if (calibration != null)
+                {
+                    var values = calibration.MagnetWatts(speedMph * 0.44704f);
+
+                    chartPowerCurve.ChartAreas.Clear();
+                    chartPowerCurve.ChartAreas.Add("Power");
+                    
+                    Series refPowerSeries = new Series("powerSeries");
+                    refPowerSeries.ChartType = SeriesChartType.FastLine;
+                    refPowerSeries.ChartArea = "Power";
+
+                    chartPowerCurve.Series.Clear();
+                    chartPowerCurve.Series.Add(refPowerSeries);
+
+                    foreach (var point in values)
+                    {
+                        refPowerSeries.Points.AddXY(point.Item1, point.Item2);
+                    }
+                }
+            }
         }
 
         private void TxtPosition_LostFocus(object sender, EventArgs e)
@@ -69,8 +99,11 @@ namespace IRT_GUI
                 float.TryParse(txtSpeed.Text, out speedMph))
             {
                 MagnetCalibration calibration = GetMagnetCalibration();
-                float watts = calibration.MagnetWatts(speedMph * 0.44704f, position);
-                lblCalculatedWatts.Text = watts.ToString();
+                if (calibration != null)
+                {
+                    float watts = calibration.MagnetWatts(speedMph * 0.44704f, position);
+                    lblCalculatedWatts.Text = watts.ToString();
+                }
             }
         }
 
@@ -112,6 +145,9 @@ namespace IRT_GUI
         {
             var lowSpeedValues = GetPolyFactors(Factor.Low);
             var highSpeedValues = GetPolyFactors(Factor.High);
+
+            if (lowSpeedValues == null || highSpeedValues == null)
+                return null;
 
             MagnetCalibration calibration = new MagnetCalibration();
             calibration.LowSpeedMps = lowSpeedValues[0] * 0.44704f;
@@ -222,10 +258,17 @@ namespace IRT_GUI
 
         private float[] GetPolyFactors(Factor factor)
         {
-            var values = dgvPolyFactors.Rows.Cast<DataGridViewRow>()
-                .Select(row => float.Parse(row.Cells[(int)factor].Value.ToString()));
+            try
+            {
+                var values = dgvPolyFactors.Rows.Cast<DataGridViewRow>()
+                    .Select(row => float.Parse(row.Cells[(int)factor].Value.ToString()));
 
-            return values.ToArray<float>();
+                return values.ToArray<float>();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private void MagnetCalibrationSet()

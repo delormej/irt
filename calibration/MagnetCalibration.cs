@@ -47,6 +47,33 @@ namespace IRT.Calibration
             return coeff_f;
         }
 
+        /// <summary>
+        /// Returns an array of power values for the spectrum of positions from 800 - 1600 at 100
+        /// position increments.
+        /// </summary>
+        /// <param name="speedMps"></param>
+        /// <returns></returns>
+        public Tuple<int, float>[] MagnetWatts(float speedMps)
+        {
+            const int min_position = 1600;
+            const int max_position = 800;
+            const int step = 50;
+
+            int len = (min_position - max_position) / step;
+
+            Tuple<int, float>[] positions = new Tuple<int, float>[len];
+
+            for (int i = 0; i < len; i++)
+            {
+                int position = max_position + (i * step);
+                float watts = MagnetWatts(speedMps, position);
+
+                positions[i] = new Tuple<int, float>(position, watts);
+            }
+
+            return positions;
+        }
+
         public float MagnetWatts(float speedMps, int position)
         {
             float lowWatts = CalculateWattsFromFactors(LowSpeedFactors, position);
