@@ -212,9 +212,11 @@ uint16_t magnet_position(float speed_mps, float mag_watts, uint16_t gap_offset)
 	{
 		return MAGNET_POSITION_MIN_RESISTANCE;
 	}
-	else if (mag_watts < WATTS_MODEL_MIN)
+	else if (mag_watts < 
+		magnet_watts(speed_mps, mp_mag_calibration_factors->root_position, 
+			gap_offset))
 	{
-		// Check and see if we need to solve linearly.
+		// Solve for the position linearly.
 		x3 = position_linear(speed_mps, mag_watts, gap_offset);
 
 		if (x3 != 0)
