@@ -35,7 +35,6 @@
 #define MAGNET_POSITION_OFF						2000		// This is where we park the servo, well out of range.
 #define MAGNET_POSITION_MIN_RESISTANCE			1600		// Above this position, we don't calculate any watts.
 #define MAGNET_POSITION_MAX_RESISTANCE			800
-#define WATTS_MODEL_MIN							13.0f		// Below this threshold, we might need to solve linearly.
 
 #define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
 
@@ -45,15 +44,13 @@
 void magnet_init(mag_calibration_factors_t* p_factors);
 
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
- *			position.  Accepts an offset for the gap as a multiple of 1,000.
- *			Divides gap_offset by 1,000 to get a % offset to Force.
+ *			position.  
  */
-float magnet_watts(float speed_mps, uint16_t position, uint16_t gap_offset);
+float magnet_watts(float speed_mps, uint16_t position);
 
 /**@brief	Calculates magnet position for a given speed and watt target.
- *			Accepts an offset for the gap as a multiple of 1,000.
- *			Divides gap_offset by 1,000 to get a % offset to Force.
+ *
  */
-uint16_t magnet_position(float speed_mps, float mag_watts, uint16_t gap_offset);
+uint16_t magnet_position(float speed_mps, float mag_watts);
 
 #endif /* MAGNET_H_ */

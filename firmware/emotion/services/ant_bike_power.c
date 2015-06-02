@@ -202,6 +202,16 @@ static uint32_t extra_info_transmit(irt_context_t * p_power_meas)
 	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 }
 
+/**@brief	Helper method to decode an ANT buffer into array of 2 floats.	
+ *
+ */
+static void decode_magnet_factors(const uint8_t* p_buffer, float* p_factors)
+{
+	memcpy(&p_factors[0], &p_buffer[0], sizeof(float));
+	memcpy(&p_factors[1], &p_buffer[4], sizeof(float));
+}
+
+
 static void handle_move_servo(ant_evt_t * p_ant_evt)
 {
 	rc_evt_t evt;
@@ -286,12 +296,6 @@ static void handle_burst_set_positions(const uint8_t* p_buffer, uint8_t sequence
 	}
 }
 
-static void decode_magnet_factors(const uint8_t* p_buffer, float* p_factors)
-{
-	memcpy(&p_factors[0], &p_buffer[0], sizeof(float));
-	memcpy(&p_factors[1], &p_buffer[4], sizeof(float));
-}
-
 /**@brief	Handles the burst packets that contain magnet calibration.
  *
  */
@@ -305,6 +309,8 @@ static void handle_burst_magnet_calibration(uint8_t* p_payload, uint8_t sequence
 	 * 				byte 0: 	Message ID
 	 * 				byte 1-2: 	Low Speed as uint16_t, divide by 1000.
 	 * 				byte 3-4:	High Speed  as uint16_t, divide by 1000.
+	 * 				byte 5-6:	Minimum servo position supported by polynomial, 
+	 *							below which we use linear formula to solve.
 	 *
 	 * message 2-5:
 	 *				byte 0-3:	float factor
@@ -324,17 +330,20 @@ static void handle_burst_magnet_calibration(uint8_t* p_payload, uint8_t sequence
 		// Initialize the struct.
 		memset(&factors, 0, sizeof(mag_calibration_factors_t));
 
-		// Decode speeds.
+		// Decode low and high speeds used for two curves.
 		memcpy(&factors.low_speed_mps, &p_payload[1], sizeof(uint16_t));
 		memcpy(&factors.high_speed_mps, &p_payload[3], sizeof(uint16_t));
+		
+		// Decode the root servo position.
+		memcpy(&factors.root_position, &p_payload[5], sizeof(uint16_t));
 	}
 	else if (BURST_SEQ_LAST_PACKET(sequence))
 	{
 		// Decode last two factors for high speed from this final message.
 		decode_magnet_factors(p_payload, &factors.high_factors[2]);
 
-		BP_LOG("[BP] handle_burst_magnet_calibration: received magnet factors: %i, %i\r\n%.5f,%.5f,%.5f,%.5f",
-				factors.low_speed_mps, factors.high_speed_mps,
+		BP_LOG("[BP] handle_burst_magnet_calibration: received magnet factors: %i, %i, %i\r\n%.5f,%.5f,%.5f,%.5f",
+				factors.low_speed_mps, factors.high_speed_mps, factors.root_position,
 				factors.low_factors[0],
 				factors.low_factors[1],
 				factors.low_factors[2],
@@ -693,7 +702,7 @@ uint32_t ant_bp_calibration_speed_tx_send(uint16_t time_2048, uint16_t* flywheel
  *			tx_type Describes transmission characteristics of the data requested.
  *			Bit 0-6: Number of times to transmit requested page.
  *			Bit 7: Setting the MSB means the device replies using acknowledged messages if possible.
- *			Special Values: 0x80 - Transmit until a successful acknowledge is received. 0x00 – Invalid
+ *			Special Values: 0x80 - Transmit until a successful acknowledge is received. 0x00 ï¿½ Invalid
  *
  */
 void ant_bp_page2_tx_send(uint8_t subpage, uint8_t buffer[6], uint8_t tx_type)

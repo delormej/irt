@@ -135,11 +135,12 @@ class LogParser:
             #
             speed_col = 3
             watts_col = 5
+            calc_col = 6 
             servo_col = 7
             
             self.records = np.loadtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
-                    dtype=[('speed', float), ('power', int), ('position', int)], 
-                    usecols=[speed_col, watts_col, servo_col], comments='"',
+                    dtype=[('speed', float), ('power', int),  ('calc', int), ('position', int)], 
+                    usecols=[speed_col, watts_col, calc_col, servo_col], comments='"',
                     converters = {5: lambda s: float(s.strip() or 0)})
         else:
             #
@@ -147,14 +148,16 @@ class LogParser:
             #
             # "Watts" == Power Meter
             # "TargetData" == TR's erg target
-            # "PowerMeterData" == E-Motion Virtual Power
-            speed_col = 2
-            watts_col = 8
+            # "PowerMeterWatts" == E-Motion Virtual Power
+            watts_col = 2
+            speed_col = 8
+            target_col = 9
+            calc_col = 10
             servo_col = 11
             
             self.records = np.genfromtxt(self.file_name, delimiter=',', skiprows=skip_rows+1,
-                    dtype=[('power', int), ('speed', float), ('target', int), ('position', int)],
-                    usecols=[speed_col, watts_col, 9, servo_col], 
+                    dtype=[('power', int), ('speed', float), ('target', int), ('calc', int), ('position', int)],
+                    usecols=[watts_col, speed_col, target_col, calc_col, servo_col], 
                     converters = {5: lambda s: float(s.strip() or 0)})
     
             # Convert from Km/h to Mph
@@ -387,7 +390,7 @@ class LogParser:
 
         ax3.plot(time, self.records['power'], 'r', label='Actual')
         ax3.plot(time, self.records['power_est'], 'orange', linestyle='--', linewidth=2, label='Est.')
-        ax3.plot(time, self.records['power_re_est'], 'green', linestyle='--', linewidth=2, label='Mag Gap Est.')
+        ax3.plot(time, self.records['calc'], 'green', linestyle='--', linewidth=2, label='Device Estimated')
 
         ax3.plot(time, fit.moving_average(self.records['power'], 30), color='b', label='30 Sec MA')
         ax3.plot(time, fit.moving_average(self.records['power'], 10), color='lightblue', label='10 Sec MA')

@@ -485,6 +485,21 @@ namespace IRT_GUI.IrtMessages
     {
         public static byte[] GetBytes(MagnetCalibration magCalibration)
         {
+            /*
+             * 5 Messages in total.  Each speed has 4 factors, for a total of 8 factors.
+             * 2 messages per speed, 2 factors per message.
+             *
+             * message 1:
+             * 				byte 0: 	Message ID
+             * 				byte 1-2: 	Low Speed as uint16_t, divide by 1000.
+             * 				byte 3-4:	High Speed  as uint16_t, divide by 1000.
+             * 				byte 5-6:	Minimum servo position supported by polynomial, 
+             *							below which we use linear formula to solve.
+             *
+             * message 2-5:
+             *				byte 0-3:	float factor
+             *				byte 4-7:	float factor
+             */
             byte[] buffer = new byte[8 * 5];
             int index = 0;
 
@@ -497,10 +512,13 @@ namespace IRT_GUI.IrtMessages
             Message.LittleEndian(lowSpeed, out buffer[index++], out buffer[index++]);
             Message.LittleEndian(highSpeed, out buffer[index++], out buffer[index++]);
 
-            int factorIdx = 0;
+            ushort rootPosition = (ushort)magCalibration.GetRootPosition();
+            Message.LittleEndian(rootPosition, out buffer[index++], out buffer[index++]);
 
-            // Advance 3 places, 4 blank bytes to advance to 2nd message.
-            index = 8;
+            // Advance 1 place, 1 blank byte to 2nd message.
+            index++;
+
+            int factorIdx = 0;
 
             while (index < buffer.Length)
             {

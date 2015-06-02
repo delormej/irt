@@ -27,15 +27,13 @@
 #endif // ENABLE_DEBUG_LOG
 
 #define COEFF_COUNT							4u				// Cubic poynomial has 4 coefficients.
-#define MAGNET_POSITION_MODEL_MIN			1500u			// Represents the minimum position the 3r order polynomial supports.
 															// The position between MAGNET_POSITION_MIN_RESISTANCE and this is linear.
-// Macro to convert gap offset storage format to percent.
-#define GAP_OFFSET_TO_PCT(x) 				(gap_offset / 1000.0f)
 
-#define SPEED1 		mp_mag_calibration_factors->low_speed_mps
-#define SPEED2 		mp_mag_calibration_factors->high_speed_mps
+#define SPEED1 		(float)(mp_mag_calibration_factors->low_speed_mps) / 1000.0f
+#define SPEED2 		(float)(mp_mag_calibration_factors->high_speed_mps) / 1000.0f
 #define COEFF_1		mp_mag_calibration_factors->low_factors
 #define COEFF_2		mp_mag_calibration_factors->high_factors
+#define GAP_OFFSET	(float)(mp_mag_calibration_factors->gap_offset) / 1000.0f	// Macro to convert gap offset storage format to percent.
 
 static mag_calibration_factors_t* mp_mag_calibration_factors;
 
@@ -67,7 +65,7 @@ static float watts_linear(const float watts, uint16_t position)
 
 	linear_watts = (
 				(float)(MAGNET_POSITION_MIN_RESISTANCE - position) /
-				(float)(MAGNET_POSITION_MIN_RESISTANCE - MAGNET_POSITION_MODEL_MIN)
+				(float)(MAGNET_POSITION_MIN_RESISTANCE - mp_mag_calibration_factors->root_position)
 			) * watts;
 
 	MAG_LOG("pos: %i, watts_linear: %.2f from min: %.2f\r\n", position,
@@ -82,17 +80,17 @@ static float watts_linear(const float watts, uint16_t position)
  *
  * 			Returns 0 if the value is in range.
  */
-static uint16_t position_linear(float speed_mps, float mag_watts, uint16_t gap_offset)
+static uint16_t position_linear(float speed_mps, float mag_watts)
 {
 	uint16_t position = 0;
-	float min_watts = magnet_watts(speed_mps, MAGNET_POSITION_MODEL_MIN, gap_offset);
+	float min_watts = magnet_watts(speed_mps, mp_mag_calibration_factors->root_position);
 
 	// Check if we're asking for less than the model can support.
 	if (mag_watts < min_watts)
 	{
 		position = ( ((min_watts - mag_watts) / min_watts) *
-				(MAGNET_POSITION_MIN_RESISTANCE - MAGNET_POSITION_MODEL_MIN) ) +
-				MAGNET_POSITION_MODEL_MIN;
+				(MAGNET_POSITION_MIN_RESISTANCE - mp_mag_calibration_factors->root_position) ) +
+				mp_mag_calibration_factors->root_position;
 	}
 
 	return position;
@@ -101,9 +99,9 @@ static uint16_t position_linear(float speed_mps, float mag_watts, uint16_t gap_o
 /*@brief	Calculates the *MAG ONLY* portion of power given an offset.
  *
  */
-static float watts_offset(float speed_mps, float watts, uint16_t gap_offset, bool invert)
+static float watts_offset(float speed_mps, float watts, bool invert)
 {
-	float offset = GAP_OFFSET_TO_PCT(gap_offset);
+	float offset = GAP_OFFSET;
 
 	// If we're doing the inverted calculation (matching power to position).
 	if (invert)
@@ -127,10 +125,9 @@ void magnet_init(mag_calibration_factors_t* p_factors)
 }
 
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
- *			position.  Accepts an offset for the gap as a multiple of 1,000.
- *			Divides gap_offset by 1,000 to get a % offset to Force.
+ *			position.  
  */
-float magnet_watts(float speed_mps, uint16_t position, uint16_t gap_offset)
+float magnet_watts(float speed_mps, uint16_t position)
 {
 	float coeff[COEFF_COUNT];
 	float watts;
@@ -149,7 +146,7 @@ float magnet_watts(float speed_mps, uint16_t position, uint16_t gap_offset)
 	{
 		position = MAGNET_POSITION_MAX_RESISTANCE;
 	}
-	else if (position > MAGNET_POSITION_MODEL_MIN &&
+	else if (position > mp_mag_calibration_factors->root_position &&
 			position < MAGNET_POSITION_MIN_RESISTANCE)
 	{
 		/* Between where the model stops and 0 watts is very little at low speed
@@ -157,7 +154,7 @@ float magnet_watts(float speed_mps, uint16_t position, uint16_t gap_offset)
 		 * determine watts in this zone.
 		 */
 		linear_position = position;
-		position = MAGNET_POSITION_MODEL_MIN;
+		position = mp_mag_calibration_factors->root_position;
 	}
 
 	// Determine the curve for the speed.
@@ -176,19 +173,18 @@ float magnet_watts(float speed_mps, uint16_t position, uint16_t gap_offset)
 	}
 
 	// If we have a gap offset, use it here.
-	if (gap_offset > 0)
+	if (GAP_OFFSET > 0)
 	{
-		watts = watts_offset(speed_mps, watts, gap_offset, false);
+		watts = watts_offset(speed_mps, watts, false);
 	}
 
 	return watts;
 }
 
 /**@brief	Calculates magnet position for a given speed and watt target.
- *			Accepts an offset for the gap as a multiple of 1,000.
- *			Divides gap_offset by 1,000 to get a % offset to Force.
+ *
  */
-uint16_t magnet_position(float speed_mps, float mag_watts, uint16_t gap_offset)
+uint16_t magnet_position(float speed_mps, float mag_watts)
 {
 	float coeff[COEFF_COUNT];
 
@@ -203,9 +199,9 @@ uint16_t magnet_position(float speed_mps, float mag_watts, uint16_t gap_offset)
 	int8_t k;
 
 	// Calculate the offset.
-	if (gap_offset > 0)
+	if (GAP_OFFSET > 0)
 	{
-		mag_watts = watts_offset(speed_mps, mag_watts, gap_offset, true);
+		mag_watts = watts_offset(speed_mps, mag_watts, true);
 	}
 
 	// Send the magnet to the home position if no mag watts required.
@@ -213,10 +209,11 @@ uint16_t magnet_position(float speed_mps, float mag_watts, uint16_t gap_offset)
 	{
 		return MAGNET_POSITION_MIN_RESISTANCE;
 	}
-	else if (mag_watts < WATTS_MODEL_MIN)
+	else if (mag_watts < 
+		magnet_watts(speed_mps, mp_mag_calibration_factors->root_position))
 	{
-		// Check and see if we need to solve linearly.
-		x3 = position_linear(speed_mps, mag_watts, gap_offset);
+		// Solve for the position linearly.
+		x3 = position_linear(speed_mps, mag_watts);
 
 		if (x3 != 0)
 		{

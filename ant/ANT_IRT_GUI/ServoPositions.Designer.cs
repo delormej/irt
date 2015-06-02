@@ -42,25 +42,27 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPositions = new System.Windows.Forms.TabPage();
             this.tabCalibration = new System.Windows.Forms.TabPage();
-            this.txtHighSpeedMph = new System.Windows.Forms.TextBox();
-            this.txtLowSpeedMph = new System.Windows.Forms.TextBox();
-            this.btnMagnetCalibrationLoadDefaults = new System.Windows.Forms.Button();
-            this.dgvHighSpeed = new System.Windows.Forms.DataGridView();
-            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.dgvLowSpeed = new System.Windows.Forms.DataGridView();
-            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.label6 = new System.Windows.Forms.Label();
-            this.btnMagnetCalibrationSet = new System.Windows.Forms.Button();
+            this.label7 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.txtPosition = new System.Windows.Forms.TextBox();
+            this.lblCalculatedWatts = new System.Windows.Forms.Label();
+            this.txtSpeed = new System.Windows.Forms.TextBox();
             this.btnLoadMagCalibration = new System.Windows.Forms.Button();
+            this.btnMagnetCalibrationLoadDefaults = new System.Windows.Forms.Button();
+            this.dgvPolyFactors = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.btnMagnetCalibrationSet = new System.Windows.Forms.Button();
+            this.chartPowerCurve = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.lblRootPosition = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgResistancePositions)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numResistancePositions)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPositions.SuspendLayout();
             this.tabCalibration.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvHighSpeed)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvLowSpeed)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvPolyFactors)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chartPowerCurve)).BeginInit();
             this.SuspendLayout();
             // 
             // dgResistancePositions
@@ -202,7 +204,7 @@
             this.tabControl1.Margin = new System.Windows.Forms.Padding(2);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(405, 318);
+            this.tabControl1.Size = new System.Drawing.Size(405, 439);
             this.tabControl1.TabIndex = 12;
             // 
             // tabPositions
@@ -228,42 +230,93 @@
             // 
             // tabCalibration
             // 
-            this.tabCalibration.Controls.Add(this.btnLoadMagCalibration);
-            this.tabCalibration.Controls.Add(this.txtHighSpeedMph);
-            this.tabCalibration.Controls.Add(this.txtLowSpeedMph);
-            this.tabCalibration.Controls.Add(this.btnMagnetCalibrationLoadDefaults);
-            this.tabCalibration.Controls.Add(this.dgvHighSpeed);
-            this.tabCalibration.Controls.Add(this.dgvLowSpeed);
-            this.tabCalibration.Controls.Add(this.label6);
-            this.tabCalibration.Controls.Add(this.btnMagnetCalibrationSet);
+            this.tabCalibration.Controls.Add(this.label8);
+            this.tabCalibration.Controls.Add(this.lblRootPosition);
+            this.tabCalibration.Controls.Add(this.chartPowerCurve);
+            this.tabCalibration.Controls.Add(this.label7);
             this.tabCalibration.Controls.Add(this.label5);
             this.tabCalibration.Controls.Add(this.label4);
+            this.tabCalibration.Controls.Add(this.txtPosition);
+            this.tabCalibration.Controls.Add(this.lblCalculatedWatts);
+            this.tabCalibration.Controls.Add(this.txtSpeed);
+            this.tabCalibration.Controls.Add(this.btnLoadMagCalibration);
+            this.tabCalibration.Controls.Add(this.btnMagnetCalibrationLoadDefaults);
+            this.tabCalibration.Controls.Add(this.dgvPolyFactors);
+            this.tabCalibration.Controls.Add(this.btnMagnetCalibrationSet);
             this.tabCalibration.Location = new System.Drawing.Point(4, 22);
             this.tabCalibration.Margin = new System.Windows.Forms.Padding(2);
             this.tabCalibration.Name = "tabCalibration";
             this.tabCalibration.Padding = new System.Windows.Forms.Padding(2);
-            this.tabCalibration.Size = new System.Drawing.Size(397, 292);
+            this.tabCalibration.Size = new System.Drawing.Size(397, 413);
             this.tabCalibration.TabIndex = 1;
             this.tabCalibration.Text = "Calibration";
             this.tabCalibration.UseVisualStyleBackColor = true;
             // 
-            // txtHighSpeedMph
+            // label7
             // 
-            this.txtHighSpeedMph.Location = new System.Drawing.Point(181, 64);
-            this.txtHighSpeedMph.Name = "txtHighSpeedMph";
-            this.txtHighSpeedMph.Size = new System.Drawing.Size(100, 20);
-            this.txtHighSpeedMph.TabIndex = 10;
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(150, 148);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(35, 13);
+            this.label7.TabIndex = 17;
+            this.label7.Text = "Watts";
             // 
-            // txtLowSpeedMph
+            // label5
             // 
-            this.txtLowSpeedMph.Location = new System.Drawing.Point(33, 64);
-            this.txtLowSpeedMph.Name = "txtLowSpeedMph";
-            this.txtLowSpeedMph.Size = new System.Drawing.Size(100, 20);
-            this.txtLowSpeedMph.TabIndex = 9;
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(4, 148);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(68, 13);
+            this.label5.TabIndex = 16;
+            this.label5.Text = "Speed (Mph)";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(77, 148);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(44, 13);
+            this.label4.TabIndex = 15;
+            this.label4.Text = "Position";
+            // 
+            // txtPosition
+            // 
+            this.txtPosition.Location = new System.Drawing.Point(80, 164);
+            this.txtPosition.Name = "txtPosition";
+            this.txtPosition.Size = new System.Drawing.Size(59, 20);
+            this.txtPosition.TabIndex = 14;
+            // 
+            // lblCalculatedWatts
+            // 
+            this.lblCalculatedWatts.AutoSize = true;
+            this.lblCalculatedWatts.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblCalculatedWatts.Location = new System.Drawing.Point(150, 167);
+            this.lblCalculatedWatts.Name = "lblCalculatedWatts";
+            this.lblCalculatedWatts.Size = new System.Drawing.Size(14, 13);
+            this.lblCalculatedWatts.TabIndex = 13;
+            this.lblCalculatedWatts.Text = "0";
+            // 
+            // txtSpeed
+            // 
+            this.txtSpeed.Location = new System.Drawing.Point(7, 164);
+            this.txtSpeed.Name = "txtSpeed";
+            this.txtSpeed.Size = new System.Drawing.Size(59, 20);
+            this.txtSpeed.TabIndex = 12;
+            // 
+            // btnLoadMagCalibration
+            // 
+            this.btnLoadMagCalibration.Location = new System.Drawing.Point(246, 386);
+            this.btnLoadMagCalibration.Margin = new System.Windows.Forms.Padding(2);
+            this.btnLoadMagCalibration.Name = "btnLoadMagCalibration";
+            this.btnLoadMagCalibration.Size = new System.Drawing.Size(69, 23);
+            this.btnLoadMagCalibration.TabIndex = 11;
+            this.btnLoadMagCalibration.Text = "Load";
+            this.btnLoadMagCalibration.UseVisualStyleBackColor = true;
+            this.btnLoadMagCalibration.Click += new System.EventHandler(this.btnLoadMagCalibration_Click);
             // 
             // btnMagnetCalibrationLoadDefaults
             // 
-            this.btnMagnetCalibrationLoadDefaults.Location = new System.Drawing.Point(106, 259);
+            this.btnMagnetCalibrationLoadDefaults.Location = new System.Drawing.Point(173, 386);
             this.btnMagnetCalibrationLoadDefaults.Margin = new System.Windows.Forms.Padding(2);
             this.btnMagnetCalibrationLoadDefaults.Name = "btnMagnetCalibrationLoadDefaults";
             this.btnMagnetCalibrationLoadDefaults.Size = new System.Drawing.Size(69, 23);
@@ -272,30 +325,30 @@
             this.btnMagnetCalibrationLoadDefaults.UseVisualStyleBackColor = true;
             this.btnMagnetCalibrationLoadDefaults.Click += new System.EventHandler(this.btnMagnetCalibrationLoadDefaults_Click);
             // 
-            // dgvHighSpeed
+            // dgvPolyFactors
             // 
-            this.dgvHighSpeed.AllowUserToAddRows = false;
-            this.dgvHighSpeed.AllowUserToDeleteRows = false;
-            this.dgvHighSpeed.AllowUserToResizeColumns = false;
-            this.dgvHighSpeed.AllowUserToResizeRows = false;
-            this.dgvHighSpeed.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvHighSpeed.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
-            this.dgvHighSpeed.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            this.dgvHighSpeed.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvHighSpeed.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dgvPolyFactors.AllowUserToAddRows = false;
+            this.dgvPolyFactors.AllowUserToDeleteRows = false;
+            this.dgvPolyFactors.AllowUserToResizeColumns = false;
+            this.dgvPolyFactors.AllowUserToResizeRows = false;
+            this.dgvPolyFactors.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvPolyFactors.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
+            this.dgvPolyFactors.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
+            this.dgvPolyFactors.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvPolyFactors.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn1});
-            this.dgvHighSpeed.Location = new System.Drawing.Point(181, 91);
-            this.dgvHighSpeed.Margin = new System.Windows.Forms.Padding(2);
-            this.dgvHighSpeed.Name = "dgvHighSpeed";
-            this.dgvHighSpeed.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
-            this.dgvHighSpeed.RowHeadersVisible = false;
-            this.dgvHighSpeed.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dgvHighSpeed.RowTemplate.Height = 18;
-            this.dgvHighSpeed.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvHighSpeed.ScrollBars = System.Windows.Forms.ScrollBars.None;
-            this.dgvHighSpeed.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dgvHighSpeed.Size = new System.Drawing.Size(118, 108);
-            this.dgvHighSpeed.TabIndex = 7;
+            this.dgvPolyFactors.Location = new System.Drawing.Point(4, 4);
+            this.dgvPolyFactors.Margin = new System.Windows.Forms.Padding(2);
+            this.dgvPolyFactors.Name = "dgvPolyFactors";
+            this.dgvPolyFactors.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
+            this.dgvPolyFactors.RowHeadersVisible = false;
+            this.dgvPolyFactors.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            this.dgvPolyFactors.RowTemplate.Height = 18;
+            this.dgvPolyFactors.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvPolyFactors.ScrollBars = System.Windows.Forms.ScrollBars.None;
+            this.dgvPolyFactors.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dgvPolyFactors.Size = new System.Drawing.Size(389, 130);
+            this.dgvPolyFactors.TabIndex = 7;
             // 
             // dataGridViewTextBoxColumn1
             // 
@@ -305,52 +358,9 @@
             this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
             this.dataGridViewTextBoxColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             // 
-            // dgvLowSpeed
-            // 
-            this.dgvLowSpeed.AllowUserToAddRows = false;
-            this.dgvLowSpeed.AllowUserToDeleteRows = false;
-            this.dgvLowSpeed.AllowUserToResizeColumns = false;
-            this.dgvLowSpeed.AllowUserToResizeRows = false;
-            this.dgvLowSpeed.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgvLowSpeed.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
-            this.dgvLowSpeed.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            this.dgvLowSpeed.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvLowSpeed.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.dataGridViewTextBoxColumn2});
-            this.dgvLowSpeed.Location = new System.Drawing.Point(33, 91);
-            this.dgvLowSpeed.Margin = new System.Windows.Forms.Padding(2);
-            this.dgvLowSpeed.Name = "dgvLowSpeed";
-            this.dgvLowSpeed.RowHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.None;
-            this.dgvLowSpeed.RowHeadersVisible = false;
-            this.dgvLowSpeed.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dgvLowSpeed.RowTemplate.Height = 18;
-            this.dgvLowSpeed.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvLowSpeed.ScrollBars = System.Windows.Forms.ScrollBars.None;
-            this.dgvLowSpeed.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dgvLowSpeed.Size = new System.Drawing.Size(118, 108);
-            this.dgvLowSpeed.TabIndex = 0;
-            // 
-            // dataGridViewTextBoxColumn2
-            // 
-            this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewTextBoxColumn2.HeaderText = "Factor";
-            this.dataGridViewTextBoxColumn2.MaxInputLength = 10;
-            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
-            this.dataGridViewTextBoxColumn2.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(30, 18);
-            this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(142, 13);
-            this.label6.TabIndex = 6;
-            this.label6.Text = "3rd Order Polynomial Factors";
-            // 
             // btnMagnetCalibrationSet
             // 
-            this.btnMagnetCalibrationSet.Location = new System.Drawing.Point(33, 259);
+            this.btnMagnetCalibrationSet.Location = new System.Drawing.Point(100, 386);
             this.btnMagnetCalibrationSet.Margin = new System.Windows.Forms.Padding(2);
             this.btnMagnetCalibrationSet.Name = "btnMagnetCalibrationSet";
             this.btnMagnetCalibrationSet.Size = new System.Drawing.Size(69, 23);
@@ -359,45 +369,39 @@
             this.btnMagnetCalibrationSet.UseVisualStyleBackColor = true;
             this.btnMagnetCalibrationSet.Click += new System.EventHandler(this.btnMagnetCalibrationSet_Click);
             // 
-            // label5
+            // chartPowerCurve
             // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(179, 47);
-            this.label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(73, 13);
-            this.label5.TabIndex = 3;
-            this.label5.Text = "High Speed";
+            this.chartPowerCurve.Location = new System.Drawing.Point(0, 190);
+            this.chartPowerCurve.Name = "chartPowerCurve";
+            this.chartPowerCurve.Size = new System.Drawing.Size(394, 191);
+            this.chartPowerCurve.TabIndex = 18;
+            this.chartPowerCurve.Text = "chart1";
             // 
-            // label4
+            // lblRootPosition
             // 
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(30, 47);
-            this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(70, 13);
-            this.label4.TabIndex = 2;
-            this.label4.Text = "Low Speed";
+            this.lblRootPosition.AutoSize = true;
+            this.lblRootPosition.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblRootPosition.Location = new System.Drawing.Point(195, 167);
+            this.lblRootPosition.Name = "lblRootPosition";
+            this.lblRootPosition.Size = new System.Drawing.Size(14, 13);
+            this.lblRootPosition.TabIndex = 19;
+            this.lblRootPosition.Text = "0";
             // 
-            // btnLoadMagCalibration
+            // label8
             // 
-            this.btnLoadMagCalibration.Location = new System.Drawing.Point(179, 259);
-            this.btnLoadMagCalibration.Margin = new System.Windows.Forms.Padding(2);
-            this.btnLoadMagCalibration.Name = "btnLoadMagCalibration";
-            this.btnLoadMagCalibration.Size = new System.Drawing.Size(69, 23);
-            this.btnLoadMagCalibration.TabIndex = 11;
-            this.btnLoadMagCalibration.Text = "Load";
-            this.btnLoadMagCalibration.UseVisualStyleBackColor = true;
-            this.btnLoadMagCalibration.Click += new System.EventHandler(this.btnLoadMagCalibration_Click);
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(195, 148);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(30, 13);
+            this.label8.TabIndex = 20;
+            this.label8.Text = "Root";
             // 
             // ServoPositions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.button1;
-            this.ClientSize = new System.Drawing.Size(419, 352);
+            this.ClientSize = new System.Drawing.Size(419, 458);
             this.ControlBox = false;
             this.Controls.Add(this.tabControl1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -414,8 +418,8 @@
             this.tabPositions.PerformLayout();
             this.tabCalibration.ResumeLayout(false);
             this.tabCalibration.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvHighSpeed)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvLowSpeed)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvPolyFactors)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.chartPowerCurve)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -437,16 +441,18 @@
         private System.Windows.Forms.TabPage tabPositions;
         private System.Windows.Forms.TabPage tabCalibration;
         private System.Windows.Forms.Button btnMagnetCalibrationSet;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.DataGridView dgvLowSpeed;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
-        private System.Windows.Forms.DataGridView dgvHighSpeed;
+        private System.Windows.Forms.DataGridView dgvPolyFactors;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.Button btnMagnetCalibrationLoadDefaults;
-        private System.Windows.Forms.TextBox txtHighSpeedMph;
-        private System.Windows.Forms.TextBox txtLowSpeedMph;
         private System.Windows.Forms.Button btnLoadMagCalibration;
+        private System.Windows.Forms.TextBox txtPosition;
+        private System.Windows.Forms.Label lblCalculatedWatts;
+        private System.Windows.Forms.TextBox txtSpeed;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chartPowerCurve;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label lblRootPosition;
     }
 }
