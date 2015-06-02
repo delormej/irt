@@ -216,6 +216,7 @@ typedef struct mag_calibration_factors_s
 {
 	uint16_t			low_speed_mps;		// Divide by 100 to get speed.
 	uint16_t			high_speed_mps;
+	uint16_t			root_position;		// Servo position above which we no longer calculate as the curve turns.
 	float				low_factors[4];		// 4 factors for each speed.
 	float				high_factors[4];
 } mag_calibration_factors_t;

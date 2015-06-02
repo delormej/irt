@@ -492,6 +492,9 @@ static void profile_init(void)
 
 				// 25 mph in meters per second * 1,000.
 				m_user_profile.ca_mag_factors.high_speed_mps = 11176;
+				
+				// Position at which we no longer use power curve, revert to linear.
+				m_user_profile.ca_mag_factors.root_position = 1454;
 
 				m_user_profile.ca_mag_factors.low_factors[0] = 1.27516039631e-06f;
 				m_user_profile.ca_mag_factors.low_factors[1] = -0.00401345920329f;
@@ -509,14 +512,13 @@ static void profile_init(void)
 		}
 
 		LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t " \
-			"settings: %lu \r\n\t ca_slope: %i \r\n\t ca_intercept: %i \r\n\t " \
+			"settings: %lu \r\n\t ca_root_position: %i \r\n\t " \
 			"ca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
 			"ca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n",
 				m_user_profile.total_weight_kg,
 				m_user_profile.wheel_size_mm,
 				m_user_profile.settings,
-				m_user_profile.ca_slope,
-				m_user_profile.ca_intercept,
+				m_user_profile.ca_mag_factors.root_position,
 				m_user_profile.ca_mag_factors.low_factors[0],
 				m_user_profile.ca_mag_factors.low_factors[1],
 				m_user_profile.ca_mag_factors.low_factors[2],
