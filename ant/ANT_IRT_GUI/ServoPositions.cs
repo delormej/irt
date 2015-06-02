@@ -31,10 +31,10 @@ namespace IRT_GUI
         {
             InitializeComponent();
 
-            dgvHighSpeed.Columns.Clear();
-            dgvHighSpeed.Columns.Add("lowSpeed", "Low");
-            dgvHighSpeed.Columns.Add("highSpeed", "High");
-            dgvHighSpeed.RowHeadersVisible = true;
+            dgvPolyFactors.Columns.Clear();
+            dgvPolyFactors.Columns.Add("lowSpeed", "Low");
+            dgvPolyFactors.Columns.Add("highSpeed", "High");
+            dgvPolyFactors.RowHeadersVisible = true;
 
             // Add rows to the grid.
             for (int i = 0; i < 5; i++)
@@ -52,10 +52,26 @@ namespace IRT_GUI
                 }
 
                 row.HeaderCell.Value = header;
-                dgvHighSpeed.Rows.Add(row);
+                dgvPolyFactors.Rows.Add(row);
             }
 
-            dgvHighSpeed.RowHeadersWidth = 110;
+            dgvPolyFactors.RowHeadersWidth = 110;
+
+            txtPosition.LostFocus += TxtPosition_LostFocus;
+
+        }
+
+        private void TxtPosition_LostFocus(object sender, EventArgs e)
+        {
+            int position;
+            float speedMph;
+            if (int.TryParse(txtPosition.Text, out position) && 
+                float.TryParse(txtSpeed.Text, out speedMph))
+            {
+                MagnetCalibration calibration = GetMagnetCalibration();
+                float watts = calibration.MagnetWatts(speedMph * 0.44704f, position);
+                lblCalculatedWatts.Text = watts.ToString();
+            }
         }
 
         public ServoPositions(ushort min, ushort max, bool admin) : this()
@@ -90,6 +106,24 @@ namespace IRT_GUI
                 "Invalid Position",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
+        }
+
+        private MagnetCalibration GetMagnetCalibration()
+        {
+            var lowSpeedValues = GetPolyFactors(Factor.Low);
+            var highSpeedValues = GetPolyFactors(Factor.High);
+
+            MagnetCalibration calibration = new MagnetCalibration();
+            calibration.LowSpeedMps = lowSpeedValues[0] * 0.44704f;
+            calibration.HighSpeedMps = highSpeedValues[0] * 0.44704f;
+
+            Array.Copy(lowSpeedValues, 1, calibration.LowSpeedFactors,
+                0, calibration.LowSpeedFactors.Length);
+
+            Array.Copy(highSpeedValues, 1, calibration.HighSpeedFactors,
+                0, calibration.HighSpeedFactors.Length);
+
+            return calibration;
         }
 
         private void ServoPositions_Load(object sender, EventArgs e)
@@ -184,28 +218,23 @@ namespace IRT_GUI
             this.Close();
         }
 
+        private enum Factor { Low, High };
+
+        private float[] GetPolyFactors(Factor factor)
+        {
+            var values = dgvPolyFactors.Rows.Cast<DataGridViewRow>()
+                .Select(row => float.Parse(row.Cells[(int)factor].Value.ToString()));
+
+            return values.ToArray<float>();
+        }
+
         private void MagnetCalibrationSet()
         {
             try
             {
-                var lowSpeedValues = dgvHighSpeed.Rows.Cast<DataGridViewRow>()
-                    .Select(row => float.Parse(row.Cells[0].Value.ToString())); 
-
-                var highSpeedValues = dgvHighSpeed.Rows.Cast<DataGridViewRow>()
-                    .Select(row => float.Parse(row.Cells[1].Value.ToString()));
-
                 if (SetMagnetCalibration != null)
                 {
-                    MagnetCalibration calibration = new MagnetCalibration();
-                    calibration.LowSpeedMps = 15 * 0.44704f;
-                    calibration.HighSpeedMps = 25 * 0.44704f;
-
-                    Array.Copy(lowSpeedValues.ToArray(), 0, calibration.LowSpeedFactors, 
-                        0, calibration.LowSpeedFactors.Length);
-
-                    Array.Copy(highSpeedValues.ToArray(), 0, calibration.HighSpeedFactors,
-                        0, calibration.HighSpeedFactors.Length);
-
+                    MagnetCalibration calibration = GetMagnetCalibration();
                     MagnetCalibrationEventArgs e = new MagnetCalibrationEventArgs(calibration);
                     SetMagnetCalibration(this, e);
                 }
@@ -260,13 +289,13 @@ namespace IRT_GUI
             float[] lowSpeedFactors = magCalibration.Fit(lowSpeedMph * 0.44704f, positions);
             float[] highSpeedFactors = magCalibration.Fit(highSpeedMph * 0.44704f, positions);
 
-            dgvHighSpeed.Rows[0].Cells[0].Value = lowSpeedMph.ToString("0.0");
-            dgvHighSpeed.Rows[0].Cells[1].Value = highSpeedMph.ToString("0.0");
+            dgvPolyFactors.Rows[0].Cells[0].Value = lowSpeedMph.ToString("0.0");
+            dgvPolyFactors.Rows[0].Cells[1].Value = highSpeedMph.ToString("0.0");
 
             for (int i = 0; i < highSpeedFactors.Length; i++)
             {
-                dgvHighSpeed.Rows[i+1].Cells[0].Value = lowSpeedFactors[i];
-                dgvHighSpeed.Rows[i+1].Cells[1].Value = highSpeedFactors[i];
+                dgvPolyFactors.Rows[i+1].Cells[0].Value = lowSpeedFactors[i];
+                dgvPolyFactors.Rows[i+1].Cells[1].Value = highSpeedFactors[i];
             }
         }
     }

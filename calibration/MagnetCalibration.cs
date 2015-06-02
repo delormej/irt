@@ -47,6 +47,28 @@ namespace IRT.Calibration
             return coeff_f;
         }
 
+        public float MagnetWatts(float speedMps, int position)
+        {
+            float lowWatts = CalculateWattsFromFactors(LowSpeedFactors, position);
+            float highWatts = CalculateWattsFromFactors(HighSpeedFactors, position);
+
+            // Interopolate.
+            float watts = lowWatts + ((speedMps - LowSpeedMps) / (HighSpeedMps - LowSpeedMps)) *
+                (highWatts - lowWatts);
+
+            return watts;
+        }
+
+        private float CalculateWattsFromFactors(float[] factors, int position)
+        {
+            float watts = factors[0] * (float)Math.Pow(position, 3) +
+                factors[1] * (float)Math.Pow(position, 2) +
+                factors[2] * position +
+                factors[3];
+
+            return watts;
+        }
+
         private void GeneratePowerData(double speedMps, 
             List<MagnetPosition> magSlopeIntercepts,
             out double[] position, out double[] watts)
