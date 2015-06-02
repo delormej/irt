@@ -326,20 +326,21 @@ namespace IRT_GUI
         {
             float lowSpeedMph = 15;
             float highSpeedMph = 25;
-
             
-            MagnetCalibration magCalibration = new MagnetCalibration();
-            float[] lowSpeedFactors = magCalibration.Fit(lowSpeedMph * 0.44704f, positions);
-            float[] highSpeedFactors = magCalibration.Fit(highSpeedMph * 0.44704f, positions);
+            MagnetCalibration mag = new MagnetCalibration();
+            mag.FitLowSpeed(lowSpeedMph * 0.44704f, positions);
+            mag.FitHighSpeed(highSpeedMph * 0.44704f, positions);
 
             dgvPolyFactors.Rows[0].Cells[0].Value = lowSpeedMph.ToString("0.0");
             dgvPolyFactors.Rows[0].Cells[1].Value = highSpeedMph.ToString("0.0");
 
-            for (int i = 0; i < highSpeedFactors.Length; i++)
+            for (int i = 0; i < mag.HighSpeedFactors.Length; i++)
             {
-                dgvPolyFactors.Rows[i+1].Cells[0].Value = lowSpeedFactors[i];
-                dgvPolyFactors.Rows[i+1].Cells[1].Value = highSpeedFactors[i];
+                dgvPolyFactors.Rows[i+1].Cells[0].Value = mag.LowSpeedFactors[i];
+                dgvPolyFactors.Rows[i+1].Cells[1].Value = mag.HighSpeedFactors[i];
             }
+
+            lblRootPosition.Text = mag.GetRootPosition().ToString();
         }
     }
 }

@@ -497,10 +497,13 @@ namespace IRT_GUI.IrtMessages
             Message.LittleEndian(lowSpeed, out buffer[index++], out buffer[index++]);
             Message.LittleEndian(highSpeed, out buffer[index++], out buffer[index++]);
 
-            int factorIdx = 0;
+            ushort rootPosition = (ushort)magCalibration.GetRootPosition();
+            Message.LittleEndian(rootPosition, out buffer[index++], out buffer[index++]);
 
-            // Advance 3 places, 4 blank bytes to advance to 2nd message.
-            index = 8;
+            // Advance 1 place, 1 blank byte to 2nd message.
+            index++;
+
+            int factorIdx = 0;
 
             while (index < buffer.Length)
             {
