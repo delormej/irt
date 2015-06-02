@@ -19,7 +19,49 @@ namespace IRT.Calibration
         public float[] LowSpeedFactors;
         public float[] HighSpeedFactors;
 
-        public float[] Fit(float speedMps, List<MagnetPosition> magSlopeIntercepts)
+        public float[] FitLowSpeed(float speedMps, List<MagnetPosition> magSlopeIntercepts)
+        {
+            LowSpeedMps = speedMps;
+            LowSpeedFactors = Fit(speedMps, magSlopeIntercepts);
+            return LowSpeedFactors;
+        }
+
+        public float[] FitHighSpeed(float speedMps, List<MagnetPosition> magSlopeIntercepts)
+        {
+            HighSpeedMps = speedMps;
+            HighSpeedFactors = Fit(speedMps, magSlopeIntercepts);
+            return HighSpeedFactors;
+        }
+
+        /// <summary>
+        /// Returns the servo position where the power curve crosses 0 on the Y axis (a "root").
+        /// This indicates the position where the curve effectively turns upwards and is no longer
+        /// valid.
+        /// </summary>
+        /// <returns></returns>
+        public int GetRootPosition()
+        {
+            // Iterate through all positions from max to min, until one is bigger.
+            const float speedMps = 6; // random any speed.
+            float lastPower = float.MaxValue;
+            float power = 0;
+            int position = 800;
+
+            do
+            {
+                power = MagnetWatts(speedMps, position);
+
+                // Iterate until power increases, which is where we hit the root.
+                if (power > lastPower)
+                    break;
+                else
+                    lastPower = power;
+            } while (position++ < 1600);
+
+            return position;
+        }
+
+        private float[] Fit(float speedMps, List<MagnetPosition> magSlopeIntercepts)
         {
             double[] x;
             double[] y;
