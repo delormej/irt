@@ -51,6 +51,9 @@
             this.txtSpeed = new System.Windows.Forms.TextBox();
             this.lblCalculatedWatts = new System.Windows.Forms.Label();
             this.txtPosition = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgResistancePositions)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numResistancePositions)).BeginInit();
             this.tabControl1.SuspendLayout();
@@ -224,6 +227,9 @@
             // 
             // tabCalibration
             // 
+            this.tabCalibration.Controls.Add(this.label7);
+            this.tabCalibration.Controls.Add(this.label5);
+            this.tabCalibration.Controls.Add(this.label4);
             this.tabCalibration.Controls.Add(this.txtPosition);
             this.tabCalibration.Controls.Add(this.lblCalculatedWatts);
             this.tabCalibration.Controls.Add(this.txtSpeed);
@@ -285,7 +291,7 @@
             this.dgvPolyFactors.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dgvPolyFactors.ScrollBars = System.Windows.Forms.ScrollBars.None;
             this.dgvPolyFactors.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dgvPolyFactors.Size = new System.Drawing.Size(331, 137);
+            this.dgvPolyFactors.Size = new System.Drawing.Size(327, 137);
             this.dgvPolyFactors.TabIndex = 7;
             // 
             // dataGridViewTextBoxColumn1
@@ -319,7 +325,7 @@
             // 
             // txtSpeed
             // 
-            this.txtSpeed.Location = new System.Drawing.Point(33, 187);
+            this.txtSpeed.Location = new System.Drawing.Point(33, 202);
             this.txtSpeed.Name = "txtSpeed";
             this.txtSpeed.Size = new System.Drawing.Size(59, 20);
             this.txtSpeed.TabIndex = 12;
@@ -327,18 +333,46 @@
             // lblCalculatedWatts
             // 
             this.lblCalculatedWatts.AutoSize = true;
-            this.lblCalculatedWatts.Location = new System.Drawing.Point(329, 190);
+            this.lblCalculatedWatts.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblCalculatedWatts.Location = new System.Drawing.Point(176, 205);
             this.lblCalculatedWatts.Name = "lblCalculatedWatts";
-            this.lblCalculatedWatts.Size = new System.Drawing.Size(35, 13);
+            this.lblCalculatedWatts.Size = new System.Drawing.Size(14, 13);
             this.lblCalculatedWatts.TabIndex = 13;
-            this.lblCalculatedWatts.Text = "label4";
+            this.lblCalculatedWatts.Text = "0";
             // 
             // txtPosition
             // 
-            this.txtPosition.Location = new System.Drawing.Point(98, 187);
+            this.txtPosition.Location = new System.Drawing.Point(106, 202);
             this.txtPosition.Name = "txtPosition";
             this.txtPosition.Size = new System.Drawing.Size(59, 20);
             this.txtPosition.TabIndex = 14;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(103, 186);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(44, 13);
+            this.label4.TabIndex = 15;
+            this.label4.Text = "Position";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(30, 186);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(68, 13);
+            this.label5.TabIndex = 16;
+            this.label5.Text = "Speed (Mph)";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(176, 186);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(35, 13);
+            this.label7.TabIndex = 17;
+            this.label7.Text = "Watts";
             // 
             // ServoPositions
             // 
@@ -392,5 +426,8 @@
         private System.Windows.Forms.TextBox txtPosition;
         private System.Windows.Forms.Label lblCalculatedWatts;
         private System.Windows.Forms.TextBox txtSpeed;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label4;
     }
 }
