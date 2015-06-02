@@ -57,6 +57,8 @@ def main(file_name, drag=0, rr=0, offset=0):
     if offset > 0:
         p.gap_offset = offset
 
+    p.print_slope_intercept = True   
+
     p.Parse()
     #print(p.MagOnlyPower())
     """
