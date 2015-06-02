@@ -32,8 +32,8 @@
 // Macro to convert gap offset storage format to percent.
 #define GAP_OFFSET_TO_PCT(x) 				(gap_offset / 1000.0f)
 
-#define SPEED1 		mp_mag_calibration_factors->low_speed_mps
-#define SPEED2 		mp_mag_calibration_factors->high_speed_mps
+#define SPEED1 		(float)(mp_mag_calibration_factors->low_speed_mps) / 1000.0f
+#define SPEED2 		(float)(mp_mag_calibration_factors->high_speed_mps) / 1000.0f
 #define COEFF_1		mp_mag_calibration_factors->low_factors
 #define COEFF_2		mp_mag_calibration_factors->high_factors
 

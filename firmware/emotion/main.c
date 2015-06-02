@@ -491,7 +491,7 @@ static void profile_init(void)
 				m_user_profile.ca_mag_factors.low_speed_mps = 6705;
 
 				// 25 mph in meters per second * 1,000.
-				m_user_profile.ca_mag_factors.low_speed_mps = 11176;
+				m_user_profile.ca_mag_factors.high_speed_mps = 11176;
 
 				m_user_profile.ca_mag_factors.low_factors[0] = 1.27516039631e-06f;
 				m_user_profile.ca_mag_factors.low_factors[1] = -0.00401345920329f;
@@ -508,12 +508,24 @@ static void profile_init(void)
 			profile_update_sched();
 		}
 
-		LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t ca_slope: %i \r\n\t ca_intercept: %i \r\n",
+		LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t " \
+			"settings: %lu \r\n\t ca_slope: %i \r\n\t ca_intercept: %i \r\n\t " \
+			"ca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
+			"ca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n",
 				m_user_profile.total_weight_kg,
 				m_user_profile.wheel_size_mm,
 				m_user_profile.settings,
 				m_user_profile.ca_slope,
-				m_user_profile.ca_intercept);
+				m_user_profile.ca_intercept,
+				m_user_profile.ca_mag_factors.low_factors[0],
+				m_user_profile.ca_mag_factors.low_factors[1],
+				m_user_profile.ca_mag_factors.low_factors[2],
+				m_user_profile.ca_mag_factors.low_factors[3],			
+				m_user_profile.ca_mag_factors.high_factors[0],
+				m_user_profile.ca_mag_factors.high_factors[1],
+				m_user_profile.ca_mag_factors.high_factors[2],
+				m_user_profile.ca_mag_factors.high_factors[3]
+				);
 }
 
 /**@brief 	Callback function used by pstorage which reports result of trying to store
@@ -1749,9 +1761,9 @@ static void on_set_mag_calibration(mag_calibration_factors_t* p_factors)
 			p_factors->low_factors[3]);
 
 	// Update profile.
-
-	// Re-initialize the magnet module.
-	magnet_init(&m_user_profile.ca_mag_factors);
+	memcpy(&m_user_profile.ca_mag_factors, p_factors, 
+		sizeof(mag_calibration_factors_t));
+	profile_update_sched(); 
 }
 
 /**@brief	Configures chip power options.
