@@ -107,7 +107,7 @@ namespace IRT_GUI
                 if (calibration != null)
                 {
                     float watts = calibration.MagnetWatts(speedMph * 0.44704f, position);
-                    lblCalculatedWatts.Text = watts.ToString();
+                    lblCalculatedWatts.Text = watts.ToString("0.0");
                 }
             }
         }

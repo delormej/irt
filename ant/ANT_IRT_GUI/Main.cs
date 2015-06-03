@@ -2141,7 +2141,7 @@ namespace IRT_GUI
                 }
 
                 pos.SetPositions += OnSetPositions;
-                pos.ShowDialog();
+                pos.Show();
             }
             catch (Exception ex)
             {
