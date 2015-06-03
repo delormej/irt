@@ -63,7 +63,23 @@ namespace IRT_GUI
 
         }
 
-        private void TxtSpeed_LostFocus(object sender, EventArgs e)
+        private void CalculateMagnetWatts()
+        {
+            int position;
+            float speedMph;
+            if (int.TryParse(txtPosition.Text, out position) &&
+                float.TryParse(txtSpeed.Text, out speedMph))
+            {
+                MagnetCalibration calibration = GetMagnetCalibration();
+                if (calibration != null)
+                {
+                    float watts = calibration.MagnetWatts(speedMph * 0.44704f, position);
+                    lblCalculatedWatts.Text = watts.ToString("0.0");
+                }
+            }
+        }
+
+        private void PlotMagnetCurve()
         {
             float speedMph;
             if (float.TryParse(txtSpeed.Text, out speedMph))
@@ -75,7 +91,7 @@ namespace IRT_GUI
 
                     chartPowerCurve.ChartAreas.Clear();
                     chartPowerCurve.ChartAreas.Add("Power");
-                    
+
                     Series refPowerSeries = new Series("powerSeries");
                     refPowerSeries.ChartType = SeriesChartType.FastLine;
                     refPowerSeries.ChartArea = "Power";
@@ -89,27 +105,21 @@ namespace IRT_GUI
                         // Don't plot after root.
                         if (point.Item1 > root)
                             break;
-                        
+
                         refPowerSeries.Points.AddXY(point.Item1, point.Item2);
                     }
                 }
             }
         }
 
+        private void TxtSpeed_LostFocus(object sender, EventArgs e)
+        {
+            PlotMagnetCurve();
+        }
+
         private void TxtPosition_LostFocus(object sender, EventArgs e)
         {
-            int position;
-            float speedMph;
-            if (int.TryParse(txtPosition.Text, out position) && 
-                float.TryParse(txtSpeed.Text, out speedMph))
-            {
-                MagnetCalibration calibration = GetMagnetCalibration();
-                if (calibration != null)
-                {
-                    float watts = calibration.MagnetWatts(speedMph * 0.44704f, position);
-                    lblCalculatedWatts.Text = watts.ToString("0.0");
-                }
-            }
+            CalculateMagnetWatts();
         }
 
         public ServoPositions(ushort min, ushort max, bool admin) : this()
@@ -278,27 +288,41 @@ namespace IRT_GUI
 
         private void MagnetCalibrationSet()
         {
-            try
-            {
-                if (SetMagnetCalibration != null)
-                {
-                    MagnetCalibration calibration = GetMagnetCalibration();
-                    MagnetCalibrationEventArgs e = new MagnetCalibrationEventArgs(calibration);
-                    SetMagnetCalibration(this, e);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Invalid value:" + ex.Message, "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            MagnetCalibration calibration = GetMagnetCalibration();
+
+            if (calibration == null)
+                throw new InvalidOperationException("No values provided for calibration.");
+
+            MagnetCalibrationEventArgs e = new MagnetCalibrationEventArgs(calibration);
+            SetMagnetCalibration(this, e);
         }
 
         private void btnMagnetCalibrationSet_Click(object sender, EventArgs e)
         {
-            // Validate that all the values are set properly before calling.
+            this.Cursor = Cursors.WaitCursor;
 
-            MagnetCalibrationSet();
+            // Validate that all the values are set properly before calling.
+            try
+            {
+                if (SetMagnetCalibration != null)
+                {
+                    MagnetCalibrationSet();
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Cursor = Cursors.Default;
+
+                MessageBox.Show(ex.Message, "Magnet Calibration Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                return;
+            }
+
+            this.Cursor = Cursors.Default;
+
+            MessageBox.Show("Set magnet calibration.", "Success", MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
 
         private void btnLoadMagCalibration_Click(object sender, EventArgs e)
@@ -346,6 +370,13 @@ namespace IRT_GUI
             }
 
             lblRootPosition.Text = mag.GetRootPosition().ToString();
+
+            // Default text.
+            txtSpeed.Text = "15";
+            txtPosition.Text = "1000";
+
+            PlotMagnetCurve();
+            CalculateMagnetWatts();
         }
     }
 }

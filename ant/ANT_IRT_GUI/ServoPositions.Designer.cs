@@ -258,9 +258,9 @@
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(195, 148);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(30, 13);
+            this.label8.Size = new System.Drawing.Size(119, 13);
             this.label8.TabIndex = 20;
-            this.label8.Text = "Root";
+            this.label8.Text = "Minimum Curve Position";
             // 
             // lblRootPosition
             // 
