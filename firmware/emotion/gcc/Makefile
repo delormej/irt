@@ -32,8 +32,8 @@ SOURCE_PATHS += ../libraries/math/
 LIBRARY_PATHS += ../libraries/
 LIBRARY_PATHS += ../libraries/math/
 LIBRARY_PATHS += ../services/
-DEPLOY_PATH = '../../../../../Google Drive/Firmware/'
-DEPLOY_PATH2 = '../../../../../SkyDrive/InsideRide/Builds/'
+#DEPLOY_PATH = '../../../../../Google Drive/Firmware/'
+DEPLOY_PATH2 = '../../../../../OneDrive/InsideRide/Builds/'
 
 DEVICE = NRF51
 BOARD = BOARD_IRT_V2_REV_A1
