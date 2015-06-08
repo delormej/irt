@@ -1386,7 +1386,7 @@ namespace IRT_GUI
         bool SendBurstData(byte[] data)
         {
             bool result = RetryCommand(ANT_RETRY_REQUESTS, ANT_RETRY_DELAY, () =>
-            { return m_eMotionChannel.sendBurstTransfer(data, 500); });
+            { return m_eMotionChannel.sendBurstTransfer(data, 1000); });
 
             if (!result)
             {
@@ -1642,7 +1642,7 @@ namespace IRT_GUI
 
                 case ResistanceMode.Standard:
                     // set the level to 0
-                    SetResistanceStandard(0);
+                    //SetResistanceStandard(0);
                     pnlResistanceStd.BringToFront();
                     UpdateStatus("Standard selected.");
                     ExecuteOnUI(() => { btnResistanceLoad.Enabled = false; });
@@ -2141,7 +2141,7 @@ namespace IRT_GUI
                 }
 
                 pos.SetPositions += OnSetPositions;
-                pos.ShowDialog();
+                pos.Show();
             }
             catch (Exception ex)
             {
@@ -2162,7 +2162,7 @@ namespace IRT_GUI
             }
             else
             {
-                UpdateStatus("Failed to send servo calibration.");
+                throw new ApplicationException("Unable to send magnet calibration, please retry.");
             }
         }
 
