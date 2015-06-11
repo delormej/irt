@@ -100,10 +100,10 @@ namespace BikeSignalProcessing
                         if (i > (segment.Start + window))
                         {
                             segment.End = i - 3;
-                            segment.Power = PowerSmoothing.Average(
+                            segment.AveragePower = PowerSmoothing.Average(
                                 data, segment.Start, segment.End - segment.Start);
 
-                            if (segment.Power > 0)
+                            if (segment.AveragePower > 0)
                             {
                                 Segment copy = segment.Copy();
                                 segments.Add(copy);

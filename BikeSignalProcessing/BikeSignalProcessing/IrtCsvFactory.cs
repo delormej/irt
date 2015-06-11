@@ -14,8 +14,7 @@ namespace BikeSignalProcessing
     {
         public static object Open(string filename)
         {
-            List<double> powerData = new List<double>();
-            const int dataColumn = 5;
+            Data data = new Data();
 
             using (StreamReader reader = File.OpenText(filename))
             {
@@ -27,17 +26,26 @@ namespace BikeSignalProcessing
                     string line = reader.ReadLine();
                     string[] vals = line.Split(',');
 
-                    if (vals.Length > dataColumn)
+                    if (vals.Length > 7)
                     {
                         // Parse power data.
                         double power;
-                        double.TryParse(vals[dataColumn], out power);
-                        powerData.Add(power);
+                        double.TryParse(vals[5], out power);
+
+                        // Parse speed
+                        double speedMph;
+                        double.TryParse(vals[3], out speedMph);
+
+                        // Parse servo position
+                        int servoPosition;
+                        int.TryParse(vals[7], out servoPosition);
+
+                        data.Update(speedMph, power, servoPosition);
                     }
                 }
             }
 
-            return powerData.ToArray();
+            return data;
         }
     }
 }

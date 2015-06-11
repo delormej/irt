@@ -16,8 +16,13 @@ namespace BikeSignalProcessing
         private const string ActualSeriesName = "Actual";
         private const string SmoothSeriesName = "Smoothed";
         private Data mData;
+        private Data mData2;
+
         private int mZoomStart = -1;
         private int mZoomEnd = -1;
+
+        public double Threshold = 4.0;
+        public int Window = 10;
 
         public Form1()
         {
@@ -49,20 +54,14 @@ namespace BikeSignalProcessing
             Series series = chart1.Series.Add(seriesName);
             series.ChartType = SeriesChartType.Line;
 
-            //series.Points.Add(points);
+            int i = mZoomStart > 0 ? mZoomStart : 0;
+            int end = mZoomEnd > 0 ? mZoomEnd : data.Length;
 
-            foreach (double d in data)
+            do
             {
+                double d = data[i];
                 series.Points.AddY(d);
-            }
-        }
-
-        private void Chart(double[] data, string seriesName, int start, int end)
-        {
-            double[] subset = new double[end - start];
-            Array.Copy(data, start, subset, 0, subset.Length-1);
-
-            Chart(subset, seriesName);
+            } while (i++ < end);
         }
 
         private void DrawSegmentMarkers(Segment segment)
@@ -79,7 +78,7 @@ namespace BikeSignalProcessing
 
             aStart.X = segment.Start; 
             aStart.Right = segment.End; 
-            aStart.Y = segment.Power; 
+            aStart.Y = segment.AveragePower; 
 
             aStart.ClipToChartArea = chart1.ChartAreas[0].Name;
             aStart.LineColor = Color.Green;
@@ -113,7 +112,7 @@ namespace BikeSignalProcessing
                 return;
 
             List<Segment> segments = PowerSmoothing.GetSegments(data,
-                mData.Threshold, mData.Window);
+                Threshold, Window);
 
             if (segments == null)
                 return;
@@ -121,22 +120,61 @@ namespace BikeSignalProcessing
             foreach (var seg in segments)
             {
                 System.Diagnostics.Debug.WriteLine("Start: {0}, End: {1}, Power: {2}",
-                    seg.Start, seg.End, seg.Power);
+                    seg.Start, seg.End, seg.AveragePower);
                 DrawSegmentMarkers(seg);
             }
         }
 
+        
         private void ChartSegments(int start, int end)
         {
+            /*
             double[] sample = new double[end - start];
             Array.Copy(mData.SmoothedPower, start, sample, 0, end - start);
 
             ChartSegments(sample);
+            */
         }
 
         private void ChartSegments()
         {
-            ChartSegments(mData.SmoothedPower);
+            //ChartSegments(mData.SmoothedPower);
+        }
+
+        private void BindChart(Data data)
+        {
+            chart1.Series.Clear();
+            chart1.ChartAreas.Clear();
+            chart1.ChartAreas.Add("Default");
+
+            chart1.DataSource = mData2.DataPoints;
+
+            mData2.DataPoints.CollectionChanged += (object sender, 
+                System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
+            {
+                // Chart doesn't seem to catch collection changed, so force update.
+                chart1.DataBind();
+            };
+
+            Series actualPower = chart1.Series.Add(ActualSeriesName);
+            actualPower.ChartType = SeriesChartType.FastLine;
+            actualPower.YValueMembers = "PowerWatts";
+            //actualPower.Points.DataBind(mData2, "Seconds", "PowerWatts", "");
+            //actualPower.Points.DataBindXY(mData2, "Seconds", mData2, "PowerWatts");
+
+            Series smoothPower = chart1.Series.Add(SmoothSeriesName);
+            smoothPower.ChartType = SeriesChartType.FastLine;
+            smoothPower.YValueMembers = "SmoothedPowerWatts";
+
+            Series actualSpeed = chart1.Series.Add("Speed (mph)");
+            actualSpeed.ChartType = SeriesChartType.FastLine;
+            actualSpeed.YValueMembers = "SpeedMph";
+            actualSpeed.YAxisType = AxisType.Secondary;
+
+            Series smoothSpeed = chart1.Series.Add("Smoothed Speed");
+            smoothSpeed.ChartType = SeriesChartType.FastLine;
+            smoothSpeed.YValueMembers = "SmoothedSpeedMph";
+            smoothSpeed.YAxisType = AxisType.Secondary;
         }
 
         private void SmoothData(string filename)
@@ -145,12 +183,14 @@ namespace BikeSignalProcessing
             // output smoothed power signal vs. actual power signal
             if (filename != null)
             {
-                mData = new Data(filename);
+                mData2 = (Data)IrtCsvFactory.Open(filename);
+                BindChart(mData2);
+                return;
             }
-
+            /*
             if (mData != null)
             {
-                upDownThreshold.Value = (decimal)mData.Threshold;
+                upDownThreshold.Value = (decimal)Threshold;
 
                 PowerSmoothing smoother = new PowerSmoothing();
 
@@ -167,6 +207,7 @@ namespace BikeSignalProcessing
 
                 ChartSegments();
             }
+            */
         }
 
         private void Load()
@@ -181,15 +222,7 @@ namespace BikeSignalProcessing
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                try
-                {
-                    SmoothData(dlg.FileName);
-                }
-                catch (Exception ex)
-                {
-                    //UpdateStatus("Error attempting to parse calibration file.\r\n" +
-                    //  ex.Message);
-                }
+                SmoothData(dlg.FileName);
             }
         }
 
@@ -259,6 +292,9 @@ namespace BikeSignalProcessing
 
         private void Zoom()
         {
+            mData2.Update(50, 510, 1000);
+            return;
+            /*
             if (mZoomStart == -1 || mZoomEnd == -1)
                 return;
 
@@ -274,12 +310,13 @@ namespace BikeSignalProcessing
                 ChartSmoothPower(smoothed);
             }
 
-            Chart(mData.RawPower, "Actual", mZoomStart, mZoomEnd);
-            Chart(mData.SmoothedPower, "Smoothed", mZoomStart, mZoomEnd);
+            Chart(mData.RawPower, "Actual");
+            Chart(mData.SmoothedPower, "Smoothed");
             //Chart(mData.Power5secMA, "Moving Average (5 sec)", x[0], x[1]);
             //Chart(mData.Power10secMA, "Moving Average (10 sec)", x[0], x[1]);
 
             ChartSegments(mZoomStart, mZoomEnd);
+            */
         }
 
         private void Chart1_MouseClick(object sender, MouseEventArgs e)
@@ -304,7 +341,7 @@ namespace BikeSignalProcessing
 
         private void upDownThreshold_ValueChanged(object sender, EventArgs e)
         {
-            mData.Threshold = (double)upDownThreshold.Value;
+            Threshold = (double)upDownThreshold.Value;
             ChartSegments();
         }
     }

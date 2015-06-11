@@ -1,43 +1,207 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MathNet.Filtering;
+using MathNet.Filtering.Median;
+using MathNet.Numerics.Statistics;
+using System.ComponentModel;
 
 namespace BikeSignalProcessing
 {
-    public class Segment
+    /// <summary>
+    /// Encapsulates state and calculations for stable, smoothed data.
+    /// </summary>
+    public class Data : INotifyPropertyChanged
     {
-        public int Start;
-        public int End;
-        public double StdDev;
-        public double Power;
-
-        public Segment Copy()
-        {
-            return this.MemberwiseClone() as Segment;
-        }
-    }
-
-    public class Data
-    {
-        public double Threshold = 4.0;
+        /// <summary>
+        /// Minimum number of data points in a segment. 
+        /// </summary>
         public int Window = 10;
 
-        public double[] RawPower;
+        /// <summary>
+        /// Threshold for standard deviation in stable segment.
+        /// </summary>
+        public double Threshold = 4.0;
 
-        public double[] SmoothedPower;
+        /// <summary>
+        /// Hangs on to the active segment.
+        /// </summary>
+        private Segment mCurrentSegment;
 
-        public double[] Power5secMA;
+        /// <summary>
+        /// Index of the last data point added to the collection.
+        /// </summary>
+        private int mIndex;
 
-        public double[] Power10secMA;
+        /// <summary>
+        /// Filter for smoothing speed data.
+        /// </summary>
+        private IOnlineFilter mSpeedFilter;
 
-        public Data(string filename)
+        /// <summary>
+        /// Filter for smoothing power data.
+        /// </summary>
+        private IOnlineFilter mPowerFilter;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>
+        /// Segments represent stable windows into this collection of data points.
+        /// </summary>
+        public ObservableCollection<Segment> StableSegments { get; set; }
+
+        /// <summary>
+        /// Data points including raw received and smoothed values.
+        /// </summary>
+        public ObservableCollection<DataPoint> DataPoints { get; set; }
+
+        public Segment CurrentSegment
         {
-            RawPower = (double[])IrtCsvFactory.Open(filename);
-            SmoothedPower = PowerSmoothing.Smooth(RawPower);
-            Power5secMA = PowerSmoothing.MovingAverage(SmoothedPower, 5);
-            Power10secMA = PowerSmoothing.MovingAverage(SmoothedPower, 10);
+            get { return mCurrentSegment; }
+            private set
+            {
+                mCurrentSegment = value;
+
+                if (PropertyChanged != null)
+                {
+                    PropertyChanged(this, new PropertyChangedEventArgs("CurrentSegment"));
+                }
+            }
+        }
+
+        public Data()
+        {
+            mIndex = 0;
+
+            mCurrentSegment = null;
+            StableSegments = new ObservableCollection<Segment>();
+            DataPoints = new ObservableCollection<DataPoint>();
+
+            mSpeedFilter = OnlineFilter.CreateDenoise();
+            mPowerFilter = OnlineFilter.CreateDenoise();
+        }
+
+        /// <summary>
+        /// Update the collection with key data values, calculate smoothness factor and
+        /// evaluate whether it's in a smooth window.
+        /// </summary>
+        /// <param name="speedMph"></param>
+        /// <param name="powerWatts"></param>
+        /// <param name="servoPosition"></param>
+        public void Update(double speedMph, double powerWatts, int servoPosition)
+        {
+            DataPoint value = new DataPoint();
+            value.Seconds = mIndex;
+
+            value.SpeedMph = speedMph;
+            value.PowerWatts = powerWatts;
+            value.ServoPosition = servoPosition;
+
+            // Calculate smoothed values.
+            value.SmoothedPowerWatts = Smooth(mPowerFilter, powerWatts);
+            value.SmoothedSpeedMph = Smooth(mSpeedFilter, speedMph);
+
+            // Maintain segment state.
+            EvaluateSegment(value);
+
+            // Update the collection.
+            DataPoints.Add(value);
+
+            // Increment internal index.
+            mIndex++;
+        }
+
+        /// <summary>
+        /// Returns a smoothed value for a given filter.
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="sample"></param>
+        /// <returns></returns>
+        private double Smooth(IOnlineFilter filter, double sample)
+        {
+            return filter.ProcessSample(sample);
+        }
+
+        private double[] SlicePower(int start, int end)
+        {
+            int len = end - start;
+            double[] power = new double[len];
+            for (int i = 0; i < len; i++)
+            {
+                power[i] = DataPoints[i + start].SmoothedPowerWatts;
+            }
+
+            return power;
+        }
+
+        private double StandardDeviation(int start, int end)
+        {
+            double[] power = SlicePower(start, end);
+            return Statistics.StandardDeviation(power);
+        }
+
+        private double AveragePower(int start, int end)
+        {
+            double[] power = SlicePower(start, end);
+            return power.Average();
+        }
+
+        /// <summary>
+        /// Evaluates whether to start, end, add to a segment or not.
+        /// </summary>
+        /// <param name="value"></param>
+        private void EvaluateSegment(DataPoint value)
+        {
+            // Can't evaluate until we have at least enough points in the window.
+            if (mIndex < Window || value.PowerWatts == 0)
+                return;
+
+            int start = mCurrentSegment != null ? this.mCurrentSegment.Start :
+                mIndex - Window;
+
+            double dev = StandardDeviation(start, mIndex);
+
+            if (dev <= Threshold)
+            {
+                //
+                // Within threshold.
+                //
+                if (mCurrentSegment == null)
+                {
+                    mCurrentSegment = new Segment();
+                    mCurrentSegment.Start = start;
+                }
+                else
+                {
+                    mCurrentSegment.StdDev = dev;
+                }
+            }
+            else
+            {
+                //
+                // Outside of threshold
+                //
+                if (mCurrentSegment != null)
+                {
+                    // Make sure segment is at least as big as Window
+                    if (mIndex > (mCurrentSegment.Start + Window))
+                    {
+                        mCurrentSegment.End = mIndex - 3;
+                        mCurrentSegment.AveragePower = AveragePower(
+                            mCurrentSegment.Start, mCurrentSegment.End);
+
+                        if (mCurrentSegment.AveragePower > 0)
+                        {
+                            Segment copy = mCurrentSegment.Copy();
+                            StableSegments.Add(copy);
+                        }
+                    }
+                    mCurrentSegment = null;
+                }
+            }
         }
     }
 }
