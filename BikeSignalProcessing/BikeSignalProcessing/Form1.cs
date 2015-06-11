@@ -146,8 +146,19 @@ namespace BikeSignalProcessing
             mData2.DataPoints.CollectionChanged += (object sender, 
                 System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
             {
+                Action a = () => { chart1.DataBind(); };
+
                 // Chart doesn't seem to catch collection changed, so force update.
-                chart1.DataBind();
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(a);
+                }
+                else
+                {
+                    this.Invoke(a);
+                }
+
+                //chart1.DataBind();
             };
 
             Series actualPower = chart1.Series.Add(ActualSeriesName);
