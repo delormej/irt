@@ -11,6 +11,18 @@ namespace BikeSignalProcessing
 {
     public class PowerSmoothing
     {
+        private IOnlineFilter powerFilter;
+
+        public PowerSmoothing()
+        {
+            powerFilter = OnlineFilter.CreateDenoise();
+        }
+
+        public double SmoothPower(double sample)
+        {
+            return powerFilter.ProcessSample(sample);
+        }
+
         public static double[] Smooth(double[] data)
         {
             double[] filteredData;

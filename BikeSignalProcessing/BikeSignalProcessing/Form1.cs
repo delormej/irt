@@ -13,7 +13,11 @@ namespace BikeSignalProcessing
 {
     public partial class Form1 : Form
     {
+        private const string ActualSeriesName = "Actual";
+        private const string SmoothSeriesName = "Smoothed";
         private Data mData;
+        private int mZoomStart = -1;
+        private int mZoomEnd = -1;
 
         public Form1()
         {
@@ -24,14 +28,26 @@ namespace BikeSignalProcessing
 
         private void ClearChart()
         {
-            RemoveVerticalLines();
+            RemoveZoomMarkers();
             chart1.Series.Clear();
+        }
+
+        private void ChartSmoothPower(double point)
+        {
+            Series series = chart1.Series.FindByName(SmoothSeriesName+2);
+            if (series == null)
+            {
+                series = chart1.Series.Add(SmoothSeriesName + 2);
+                series.ChartType = SeriesChartType.FastLine;
+            }
+
+            series.Points.AddY(point);
         }
 
         private void Chart(double[] data, string seriesName)
         {
             Series series = chart1.Series.Add(seriesName);
-            series.ChartType = SeriesChartType.FastLine;
+            series.ChartType = SeriesChartType.Line;
 
             //series.Points.Add(points);
 
@@ -136,10 +152,18 @@ namespace BikeSignalProcessing
             {
                 upDownThreshold.Value = (decimal)mData.Threshold;
 
-                Chart(mData.RawPower, "Actual");
-                Chart(mData.Power5secMA, "Moving Average (5 sec)");
-                Chart(mData.SmoothedPower, "Smoothed");
-                Chart(mData.Power10secMA, "Moving Average (10 sec)");
+                PowerSmoothing smoother = new PowerSmoothing();
+
+                foreach (double d in mData.RawPower)
+                {
+                    double smoothed = smoother.SmoothPower(d);
+                    ChartSmoothPower(smoothed);
+                }
+
+                Chart(mData.RawPower, ActualSeriesName);
+                //Chart(mData.Power5secMA, "Moving Average (5 sec)");
+                Chart(mData.SmoothedPower, SmoothSeriesName);
+                //Chart(mData.Power10secMA, "Moving Average (10 sec)");
 
                 ChartSegments();
             }
@@ -174,20 +198,7 @@ namespace BikeSignalProcessing
             Load();
         }
 
-        private int CountVerticalLines()
-        {
-            int count = 0;
-
-            foreach (var a in chart1.Annotations)
-            {
-                if (a is VerticalLineAnnotation)
-                    count++;
-            }
-
-            return count;
-        }
-
-        private void RemoveVerticalLines()
+        private void RemoveZoomMarkers()
         {
             chart1.Annotations.Clear();
             return;
@@ -205,57 +216,34 @@ namespace BikeSignalProcessing
             }
         }
 
-        private int[] GetVerticaLineXs()
-        {
-            double start = 0;
-            double end = 0;
-
-            foreach (var a in chart1.Annotations)
-            {
-                if (a is VerticalLineAnnotation)
-                {
-                    if (start == 0)
-                    {
-                        start = a.X;
-                    }
-                    else if (a.X > start)
-                    {
-                        end = a.X;
-                    }
-                    else
-                    {
-                        end = start;
-                        start = a.X;
-                    }
-                }
-            }
-
-            return new int[] { (int)start, (int)end };
-        }
-
         /// <summary>
         /// Draws start and end lines for selecting a region to zoom into.
         /// </summary>
         /// <param name="xPosition"></param>
-        private void DrawVerticalLine(double xPosition)
+        private void DrawZoomMarker(double xPosition)
         {
-            int lines = CountVerticalLines();
-
-            if (lines >= 2)
+            if (mZoomStart > 0 && mZoomEnd > 0)
             {
                 // Erase all the lines and start over.
-                RemoveVerticalLines();
-                lines = 0;
+                RemoveZoomMarkers();
+                mZoomStart = -1;
+                mZoomEnd = -1;
             }
 
             var line = new VerticalLineAnnotation();
 
-            if (lines == 0)
+            if (mZoomStart == -1)
             {
+                mZoomStart = (int)xPosition;
                 line.LineColor = Color.Green;
+                
             }
             else
             {
+                if ((int)xPosition <= mZoomStart)
+                    return;
+
+                mZoomEnd = (int)xPosition;
                 line.LineColor = Color.Red;
             }
 
@@ -267,29 +255,31 @@ namespace BikeSignalProcessing
             line.ClipToChartArea = chart1.ChartAreas[0].Name;
 
             chart1.Annotations.Add(line);
-
-            if (line.LineColor == Color.Red)
-            {
-                int[] x = GetVerticaLineXs();
-            }
         }
 
         private void Zoom()
         {
-            if (CountVerticalLines() != 2)
+            if (mZoomStart == -1 || mZoomEnd == -1)
                 return;
-
-            // TODO: if we actually use this code, do something better here!
-            int[] x = GetVerticaLineXs();
 
             ClearChart();
 
-            Chart(mData.RawPower, "Actual", x[0], x[1]);
-            Chart(mData.SmoothedPower, "Smoothed", x[0], x[1]);
-            Chart(mData.Power5secMA, "Moving Average (5 sec)", x[0], x[1]);
-            Chart(mData.Power10secMA, "Moving Average (10 sec)", x[0], x[1]);
+            PowerSmoothing smoother = new PowerSmoothing();
 
-            ChartSegments(x[0], x[1]);
+            for (int i = mZoomStart; i < mZoomEnd; i++)
+            {
+                double d = mData.RawPower[i];
+
+                double smoothed = smoother.SmoothPower(d);
+                ChartSmoothPower(smoothed);
+            }
+
+            Chart(mData.RawPower, "Actual", mZoomStart, mZoomEnd);
+            Chart(mData.SmoothedPower, "Smoothed", mZoomStart, mZoomEnd);
+            //Chart(mData.Power5secMA, "Moving Average (5 sec)", x[0], x[1]);
+            //Chart(mData.Power10secMA, "Moving Average (10 sec)", x[0], x[1]);
+
+            ChartSegments(mZoomStart, mZoomEnd);
         }
 
         private void Chart1_MouseClick(object sender, MouseEventArgs e)
@@ -297,7 +287,7 @@ namespace BikeSignalProcessing
             var chartArea = chart1.ChartAreas[0];
             double x = chartArea.AxisX.PixelPositionToValue(e.X);
 
-            DrawVerticalLine(x);
+            DrawZoomMarker(x);
         }
 
         private void button2_Click(object sender, EventArgs e)
