@@ -64,11 +64,7 @@ namespace BikeSignalProcessing
             private set
             {
                 mCurrentSegment = value;
-
-                if (PropertyChanged != null)
-                {
-                    PropertyChanged(this, new PropertyChangedEventArgs("CurrentSegment"));
-                }
+                OnPropertyChanged("CurrentSegment");
             }
         }
 
@@ -112,6 +108,14 @@ namespace BikeSignalProcessing
 
             // Increment internal index.
             mIndex++;
+        }
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
         /// <summary>
@@ -159,6 +163,14 @@ namespace BikeSignalProcessing
             if (mIndex < Window || value.PowerWatts == 0)
                 return;
 
+            // Ensure that we've accumulated enough points since the last segment.
+            if (StableSegments.Count > 0)
+            {
+                Segment last = StableSegments[StableSegments.Count - 1];
+                if (last != null && (last.End + Window) > mIndex)
+                    return;
+            }
+
             int start = mCurrentSegment != null ? this.mCurrentSegment.Start :
                 mIndex - Window;
 
@@ -198,7 +210,12 @@ namespace BikeSignalProcessing
                             Segment copy = mCurrentSegment.Copy();
                             StableSegments.Add(copy);
                         }
+
+                        // Notify that the property changed.
+                        OnPropertyChanged("CurrentSegment");
                     }
+
+                    // Now clear the current segment to make way for next.
                     mCurrentSegment = null;
                 }
             }
