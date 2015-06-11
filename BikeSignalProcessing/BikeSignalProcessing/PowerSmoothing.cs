@@ -26,5 +26,12 @@ namespace BikeSignalProcessing
             OnlineMedianFilter filter = new OnlineMedianFilter(duration);
             return filter.ProcessSamples(data);
         }
+
+        public static double Average(double[] data, int start, int window)
+        {
+            double[] sample = new double[window];
+            Array.Copy(data, start, sample, 0, window);
+            return sample.Average();
+        }
     }
 }

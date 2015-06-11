@@ -49,6 +49,57 @@ namespace BikeSignalProcessing
             Chart(subset, seriesName);
         }
 
+        private void DrawSegmentMarkers(Segment segment)
+        {
+            var aStart = new HorizontalLineAnnotation();
+            //aStart.AnchorDataPoint = chart1.Series[0].Points[segment.Start];
+
+            aStart.AxisX = chart1.ChartAreas[0].AxisX;
+            aStart.AxisY = chart1.ChartAreas[0].AxisY;
+            aStart.IsSizeAlwaysRelative = false;
+            /*aStart.SetAnchor(
+                aStart.AnchorDataPoint = chart1.Series[0].Points[segment.Start],
+                aStart.AnchorDataPoint = chart1.Series[0].Points[segment.End]); */
+
+            aStart.X = segment.Start; //  611;
+            aStart.Right = segment.End; //674;
+            aStart.Y = segment.Power; // 250;
+
+            aStart.ClipToChartArea = chart1.ChartAreas[0].Name;
+            aStart.LineColor = Color.Yellow;
+            aStart.LineWidth = 2;
+            aStart.LineDashStyle = ChartDashStyle.Solid;
+            aStart.EndCap = LineAnchorCapStyle.Round;
+            aStart.AllowMoving = false;
+            aStart.IsInfinitive = false;
+
+            //aStart.X = segment.Start;
+            //aStart.Y = segment.Power;
+            //aStart.Bottom = 0; // segment.Power - segment.StdDev;
+            //aStart.Right = segment.End;
+            //aStart.StartCap = LineAnchorCapStyle.Square;
+
+            chart1.Annotations.Add(aStart);
+        }
+        
+        private void ChartSegments()
+        {
+            if (mData == null)
+                return;
+
+            List<Segment> segments = mData.GetSegments();
+
+            if (segments == null)
+                return;
+
+            foreach (var seg in segments)
+            {
+                System.Diagnostics.Debug.WriteLine("Start: {0}, End: {1}, Power: {2}",
+                    seg.Start, seg.End, seg.Power);
+                DrawSegmentMarkers(seg);
+            }
+        }
+
         private void SmoothData(string filename)
         {
             // Open a CSV file, grab speed, power, servo pos columns
@@ -64,10 +115,12 @@ namespace BikeSignalProcessing
                 Chart(mData.Power5secMA, "Moving Average (5 sec)");
                 Chart(mData.SmoothedPower, "Smoothed");
                 Chart(mData.Power10secMA, "Moving Average (10 sec)");
+
+                ChartSegments();
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void Load()
         {
             OpenFileDialog dlg = new OpenFileDialog();
             //dlg.InitialDirectory = m_lastPath;
@@ -86,10 +139,14 @@ namespace BikeSignalProcessing
                 catch (Exception ex)
                 {
                     //UpdateStatus("Error attempting to parse calibration file.\r\n" +
-                      //  ex.Message);
+                    //  ex.Message);
                 }
             }
+        }
 
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Load();
         }
 
         private int CountVerticalLines()
