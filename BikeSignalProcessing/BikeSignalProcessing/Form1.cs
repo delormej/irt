@@ -61,14 +61,14 @@ namespace BikeSignalProcessing
                 aStart.AnchorDataPoint = chart1.Series[0].Points[segment.Start],
                 aStart.AnchorDataPoint = chart1.Series[0].Points[segment.End]); */
 
-            aStart.X = segment.Start; //  611;
-            aStart.Right = segment.End; //674;
-            aStart.Y = segment.Power; // 250;
+            aStart.X = segment.Start; 
+            aStart.Right = segment.End; 
+            aStart.Y = segment.Power; 
 
             aStart.ClipToChartArea = chart1.ChartAreas[0].Name;
-            aStart.LineColor = Color.Yellow;
-            aStart.LineWidth = 2;
-            aStart.LineDashStyle = ChartDashStyle.Solid;
+            aStart.LineColor = Color.Green;
+            aStart.LineWidth = 3;
+            aStart.LineDashStyle = ChartDashStyle.Dot;
             aStart.EndCap = LineAnchorCapStyle.Round;
             aStart.AllowMoving = false;
             aStart.IsInfinitive = false;
@@ -82,12 +82,22 @@ namespace BikeSignalProcessing
             chart1.Annotations.Add(aStart);
         }
         
-        private void ChartSegments()
+        private void RemoveSegments()
         {
+            // hack for now.
+            chart1.Annotations.Clear();
+        }
+
+        private void ChartSegments(double[] data)
+        {
+            // Remove any old segments.
+            RemoveSegments(); 
+
             if (mData == null)
                 return;
 
-            List<Segment> segments = mData.GetSegments();
+            List<Segment> segments = PowerSmoothing.GetSegments(data,
+                mData.Threshold, mData.Window);
 
             if (segments == null)
                 return;
@@ -98,6 +108,19 @@ namespace BikeSignalProcessing
                     seg.Start, seg.End, seg.Power);
                 DrawSegmentMarkers(seg);
             }
+        }
+
+        private void ChartSegments(int start, int end)
+        {
+            double[] sample = new double[end - start];
+            Array.Copy(mData.SmoothedPower, start, sample, 0, end - start);
+
+            ChartSegments(sample);
+        }
+
+        private void ChartSegments()
+        {
+            ChartSegments(mData.SmoothedPower);
         }
 
         private void SmoothData(string filename)
@@ -111,6 +134,8 @@ namespace BikeSignalProcessing
 
             if (mData != null)
             {
+                upDownThreshold.Value = (decimal)mData.Threshold;
+
                 Chart(mData.RawPower, "Actual");
                 Chart(mData.Power5secMA, "Moving Average (5 sec)");
                 Chart(mData.SmoothedPower, "Smoothed");
@@ -246,8 +271,6 @@ namespace BikeSignalProcessing
             if (line.LineColor == Color.Red)
             {
                 int[] x = GetVerticaLineXs();
-                System.Diagnostics.Debug.WriteLine(
-                mData.StandardDeviation(x[0], x[1]));
             }
         }
 
@@ -265,6 +288,8 @@ namespace BikeSignalProcessing
             Chart(mData.SmoothedPower, "Smoothed", x[0], x[1]);
             Chart(mData.Power5secMA, "Moving Average (5 sec)", x[0], x[1]);
             Chart(mData.Power10secMA, "Moving Average (10 sec)", x[0], x[1]);
+
+            ChartSegments(x[0], x[1]);
         }
 
         private void Chart1_MouseClick(object sender, MouseEventArgs e)
@@ -285,6 +310,12 @@ namespace BikeSignalProcessing
             // Reset
             ClearChart();
             SmoothData(null);
+        }
+
+        private void upDownThreshold_ValueChanged(object sender, EventArgs e)
+        {
+            mData.Threshold = (double)upDownThreshold.Value;
+            ChartSegments();
         }
     }
 }
