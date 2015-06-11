@@ -103,16 +103,10 @@ namespace BikeSignalProcessing
             chart1.Annotations.Clear();
         }
 
-        private void ChartSegments(double[] data)
+        private void ChartSegments(IEnumerable<Segment> segments)
         {
             // Remove any old segments.
             RemoveSegments(); 
-
-            if (mData == null)
-                return;
-
-            List<Segment> segments = PowerSmoothing.GetSegments(data,
-                Threshold, Window);
 
             if (segments == null)
                 return;
@@ -185,6 +179,9 @@ namespace BikeSignalProcessing
             {
                 mData2 = (Data)IrtCsvFactory.Open(filename);
                 BindChart(mData2);
+                ChartSegments(mData2.StableSegments);
+                mData2.PropertyChanged += MData2_PropertyChanged;
+
                 return;
             }
             /*
@@ -208,6 +205,14 @@ namespace BikeSignalProcessing
                 ChartSegments();
             }
             */
+        }
+
+        private void MData2_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "CurrentSegment")
+            {
+                DrawSegmentMarkers(mData2.CurrentSegment);
+            }
         }
 
         private void Load()
