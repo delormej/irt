@@ -65,40 +65,45 @@ namespace BikeSignalProcessing
             } while (i++ < end);
         }
 
-        private void DrawSegmentMarkers(Segment segment)
+        private void DrawSegment(Segment segment)
         {
             if (segment == null || segment.End == 0)
                 return;
 
-            var aStart = new HorizontalLineAnnotation();
+            var line = new HorizontalLineAnnotation();
             //aStart.AnchorDataPoint = chart1.Series[0].Points[segment.Start];
 
-            aStart.AxisX = chart1.ChartAreas[0].AxisX;
-            aStart.AxisY = chart1.ChartAreas[0].AxisY;
-            aStart.IsSizeAlwaysRelative = false;
+            line.AxisX = chart1.ChartAreas[0].AxisX;
+            line.AxisY = chart1.ChartAreas[0].AxisY;
+            line.IsSizeAlwaysRelative = false;
             /*aStart.SetAnchor(
                 aStart.AnchorDataPoint = chart1.Series[0].Points[segment.Start],
                 aStart.AnchorDataPoint = chart1.Series[0].Points[segment.End]); */
 
-            aStart.X = segment.Start; 
-            aStart.Right = segment.End; 
-            aStart.Y = segment.AveragePower; 
+            line.X = segment.Start; 
+            line.Right = segment.End; 
+            line.Y = segment.AveragePower; 
 
-            aStart.ClipToChartArea = chart1.ChartAreas[0].Name;
-            aStart.LineColor = Color.Green;
-            aStart.LineWidth = 3;
-            aStart.LineDashStyle = ChartDashStyle.Dot;
-            aStart.EndCap = LineAnchorCapStyle.Round;
-            aStart.AllowMoving = false;
-            aStart.IsInfinitive = false;
+            line.ClipToChartArea = chart1.ChartAreas[0].Name;
+            line.LineColor = Color.Green;
+            line.LineWidth = 3;
+            line.LineDashStyle = ChartDashStyle.Dot;
+            line.EndCap = LineAnchorCapStyle.Round;
+            line.AllowMoving = false;
+            line.IsInfinitive = false;
 
-            //aStart.X = segment.Start;
-            //aStart.Y = segment.Power;
-            //aStart.Bottom = 0; // segment.Power - segment.StdDev;
-            //aStart.Right = segment.End;
-            //aStart.StartCap = LineAnchorCapStyle.Square;
+            chart1.Annotations.Add(line);
 
-            chart1.Annotations.Add(aStart);
+            var text = new TextAnnotation();
+            text.Text = string.Format("Duration: {0}\r\nStdDev: {1:N1}\r\nSpeed: {2:N1}\r\nWatts: {3:N0}\r\n Position: {4}",
+                (segment.End - segment.Start), segment.StdDev,
+                segment.AverageSpeed, segment.AveragePower, segment.ServoPosition);
+            text.AxisX = chart1.ChartAreas[0].AxisX;
+            text.AxisY = chart1.ChartAreas[0].AxisY;
+            text.X = segment.Start;
+            text.Y = segment.AveragePower;
+
+            chart1.Annotations.Add(text);
         }
         
         private void RemoveSegments()
@@ -119,7 +124,7 @@ namespace BikeSignalProcessing
             {
                 System.Diagnostics.Debug.WriteLine("Start: {0}, End: {1}, Power: {2}",
                     seg.Start, seg.End, seg.AveragePower);
-                DrawSegmentMarkers(seg);
+                DrawSegment(seg);
             }
         }
 
@@ -237,7 +242,7 @@ namespace BikeSignalProcessing
 
         private void MData2_SegmentDetected(Segment segment)
         {
-            Action a = () => { DrawSegmentMarkers(segment); };
+            Action a = () => { DrawSegment(segment); };
 
             // Chart doesn't seem to catch collection changed, so force update.
             if (this.InvokeRequired)

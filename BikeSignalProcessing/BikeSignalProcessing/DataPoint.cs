@@ -28,6 +28,8 @@ namespace BikeSignalProcessing
         public int End;
         public double StdDev;
         public double AveragePower;
+        public double AverageSpeed;
+        public int ServoPosition;
 
         public Segment()
         {

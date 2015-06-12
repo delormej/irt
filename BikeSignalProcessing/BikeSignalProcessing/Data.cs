@@ -52,6 +52,12 @@ namespace BikeSignalProcessing
         /// </summary>
         private IOnlineFilter mPowerFilter;
 
+        private enum Field
+        {
+            Power,
+            Speed
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
@@ -130,28 +136,46 @@ namespace BikeSignalProcessing
             return filter.ProcessSample(sample);
         }
 
-        private double[] SlicePower(int start, int end)
+        private double[] SliceData(Field field, int start, int end)
         {
             int len = end - start;
-            double[] power = new double[len];
+            double[] data = new double[len];
             for (int i = 0; i < len; i++)
             {
-                power[i] = DataPoints[i + start].SmoothedPowerWatts;
+                switch (field)
+                {
+                    case Field.Power:
+                        data[i] = DataPoints[i + start].SmoothedPowerWatts;
+                        break;
+
+                    case Field.Speed:
+                        data[i] = DataPoints[i + start].SmoothedSpeedMph;
+                        break;
+
+                    default:
+                        break;
+                }
             }
 
-            return power;
+            return data;
         }
 
         private double StandardDeviation(int start, int end)
         {
-            double[] power = SlicePower(start, end);
+            double[] power = SliceData(Field.Power, start, end);
             return Statistics.StandardDeviation(power);
         }
 
         private double AveragePower(int start, int end)
         {
-            double[] power = SlicePower(start, end);
+            double[] power = SliceData(Field.Power, start, end);
             return power.Average();
+        }
+
+        private double AverageSpeed(int start, int end)
+        {
+            double[] speed = SliceData(Field.Speed, start, end);
+            return speed.Average();
         }
 
         private int GetLastSegmentEnd()
@@ -218,16 +242,29 @@ namespace BikeSignalProcessing
                     // Make sure segment is at least as big as Window
                     if (mIndex > (mCurrentSegment.Start + Window))
                     {
+                        // Back up 3 data points.
                         mCurrentSegment.End = mIndex - 3;
+
                         mCurrentSegment.AveragePower = AveragePower(
                             mCurrentSegment.Start, mCurrentSegment.End);
 
-                        Segment copy = mCurrentSegment.Copy();
-                        StableSegments.Add(copy);
+                        mCurrentSegment.AverageSpeed = AverageSpeed(
+                            mCurrentSegment.Start, mCurrentSegment.End);
 
-                        // Notify that a segment was added.
-                        if (SegmentDetected != null)
-                            SegmentDetected(copy);
+                        // Not interested in data points below these thresholds.
+                        if (mCurrentSegment.AveragePower > 40 &&
+                            mCurrentSegment.AverageSpeed > 4.0)
+                        {
+                            mCurrentSegment.ServoPosition =
+                                DataPoints[mCurrentSegment.End].ServoPosition;
+
+                            Segment copy = mCurrentSegment.Copy();
+                            StableSegments.Add(copy);
+
+                            // Notify that a segment was added.
+                            if (SegmentDetected != null)
+                                SegmentDetected(copy);
+                        }
                     }
                 }
 
