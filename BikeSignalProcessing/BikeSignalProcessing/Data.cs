@@ -171,8 +171,8 @@ namespace BikeSignalProcessing
                     return;
             }
 
-            int start = mCurrentSegment != null ? this.mCurrentSegment.Start :
-                mIndex - Window;
+            int start = (mCurrentSegment != null && mCurrentSegment.End == 0) ? 
+                this.mCurrentSegment.Start : mIndex - Window;
 
             double dev = StandardDeviation(start, mIndex);
 
@@ -181,10 +181,13 @@ namespace BikeSignalProcessing
                 //
                 // Within threshold.
                 //
-                if (mCurrentSegment == null)
+                if (mCurrentSegment == null || mCurrentSegment.End > 0)
                 {
                     mCurrentSegment = new Segment();
                     mCurrentSegment.Start = start;
+
+                    // Starting a new segment.
+                    OnPropertyChanged("CurrentSegment");
                 }
                 else
                 {
@@ -214,9 +217,6 @@ namespace BikeSignalProcessing
                         // Notify that the property changed.
                         OnPropertyChanged("CurrentSegment");
                     }
-
-                    // Now clear the current segment to make way for next.
-                    mCurrentSegment = null;
                 }
             }
         }

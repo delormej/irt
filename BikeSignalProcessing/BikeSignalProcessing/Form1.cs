@@ -17,6 +17,7 @@ namespace BikeSignalProcessing
         private const string SmoothSeriesName = "Smoothed";
         private Data mData;
         private Data mData2;
+        private AsyncCsvFactory asyncCsv;
 
         private int mZoomStart = -1;
         private int mZoomEnd = -1;
@@ -66,6 +67,9 @@ namespace BikeSignalProcessing
 
         private void DrawSegmentMarkers(Segment segment)
         {
+            if (segment == null)
+                return;
+
             var aStart = new HorizontalLineAnnotation();
             //aStart.AnchorDataPoint = chart1.Series[0].Points[segment.Start];
 
@@ -146,7 +150,16 @@ namespace BikeSignalProcessing
             mData2.DataPoints.CollectionChanged += (object sender, 
                 System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
             {
-                Action a = () => { chart1.DataBind(); };
+                Action a = () => {
+                    try
+                    {
+                        chart1.DataBind();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ex);
+                    }
+                };
 
                 // Chart doesn't seem to catch collection changed, so force update.
                 if (this.InvokeRequired)
@@ -188,7 +201,11 @@ namespace BikeSignalProcessing
             // output smoothed power signal vs. actual power signal
             if (filename != null)
             {
-                mData2 = (Data)IrtCsvFactory.Open(filename);
+                //mData2 = (Data)IrtCsvFactory.Open(filename);
+
+                asyncCsv = new AsyncCsvFactory();
+                mData2 = asyncCsv.Open(filename);
+
                 BindChart(mData2);
                 ChartSegments(mData2.StableSegments);
                 mData2.PropertyChanged += MData2_PropertyChanged;
@@ -222,7 +239,18 @@ namespace BikeSignalProcessing
         {
             if (e.PropertyName == "CurrentSegment")
             {
-                DrawSegmentMarkers(mData2.CurrentSegment);
+                Action a = () => { DrawSegmentMarkers(mData2.CurrentSegment); };
+
+                // Chart doesn't seem to catch collection changed, so force update.
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(a);
+                }
+                else
+                {
+                    this.Invoke(a);
+                }
+
             }
         }
 
