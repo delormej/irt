@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using MathNet.Numerics.Statistics;
 
 namespace BikeSignalProcessing
 {
@@ -94,16 +95,18 @@ namespace BikeSignalProcessing
 
             chart1.Annotations.Add(line);
 
-            var text = new TextAnnotation();
-            text.Text = string.Format("Duration: {0}\r\nStdDev: {1:N1}\r\nSpeed: {2:N1}\r\nWatts: {3:N0}\r\n Position: {4}",
+            string summary = string.Format("Duration: {0}\r\nStdDev: {1:N1}\r\nSpeed: {2:N1}\r\nWatts: {3:N0}\r\n Position: {4}",
                 (segment.End - segment.Start), segment.StdDev,
                 segment.AverageSpeed, segment.AveragePower, segment.ServoPosition);
+
+            /*var text = new TextAnnotation();
+            text.Text = summary;
             text.AxisX = chart1.ChartAreas[0].AxisX;
             text.AxisY = chart1.ChartAreas[0].AxisY;
             text.X = segment.Start;
             text.Y = segment.AveragePower;
 
-            chart1.Annotations.Add(text);
+            chart1.Annotations.Add(text);*/
 
             // Look for or create series in mag chart.
             Series mag = chart1.Series.FindByName(segment.ServoPosition.ToString());
@@ -114,7 +117,13 @@ namespace BikeSignalProcessing
                 mag.ChartType = SeriesChartType.Point;
             }
 
-            mag.Points.AddXY(segment.AverageSpeed, segment.AveragePower);
+            System.Windows.Forms.DataVisualization.Charting.DataPoint d =
+                new System.Windows.Forms.DataVisualization.Charting.DataPoint(
+                    segment.AverageSpeed, segment.AveragePower);
+            d.MarkerSize = ((segment.End - segment.Start) / 20) * 5;
+            //d.ToolTip = summary;
+            //d.Label = summary;
+            mag.Points.Add(d);
         }
         
         private void RemoveSegments()
@@ -165,10 +174,7 @@ namespace BikeSignalProcessing
             rideArea.Position.Height = 100;
             rideArea.Position.X = 0;
             rideArea.AxisX.IntervalType = DateTimeIntervalType.Seconds;
-            //rideArea.Position.X = 0;
-            //rideArea.Position.Y = 0;
-            //rideArea.AlignmentOrientation = AreaAlignmentOrientations.All;
-            //rideArea.AlignmentStyle = AreaAlignmentStyles.Position;
+            rideArea.AxisY2.Maximum = 40; // limit to 40 mph.
 
             ChartArea magArea = chart1.ChartAreas.Add("Magnet");
             magArea.Position.Width = 30;
@@ -176,7 +182,6 @@ namespace BikeSignalProcessing
             magArea.AlignWithChartArea = "Ride";
             magArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
             magArea.AlignmentStyle = AreaAlignmentStyles.AxesView;
-            magArea.AxisY2.Maximum = 40; // limit to 40 mph.
             magArea.Position.X = 70;
             magArea.AxisX.Interval = 3;
             magArea.AxisX.LabelStyle.Format = "{0:0} mph";
@@ -242,15 +247,35 @@ namespace BikeSignalProcessing
             // output smoothed power signal vs. actual power signal
             if (filename != null)
             {
-                //mData2 = (Data)IrtCsvFactory.Open(filename);
+                mData2 = (Data)IrtCsvFactory.Open(filename);
 
-                asyncCsv = new AsyncCsvFactory();
-                mData2 = asyncCsv.Open(filename);
+                //asyncCsv = new AsyncCsvFactory();
+                //mData2 = asyncCsv.Open(filename);
 
                 BindChart(mData2);
                 ChartSegments(mData2.StableSegments);
                 mData2.SegmentDetected += MData2_SegmentDetected;
 
+                foreach (Segment seg in mData2.StableSegments.OrderBy(s => s.AverageSpeed))
+                {
+                    System.Diagnostics.Debug.WriteLine("Speed: {0:N1}, Len: {1:N0}",
+                        seg.AverageSpeed, seg.End - seg.Start);
+                }
+
+                System.Diagnostics.Debug.WriteLine("BEST...");
+
+                var best = FindBest(mData2.StableSegments);
+                foreach (Segment seg in best)
+                {
+                    System.Diagnostics.Debug.WriteLine("Speed: {0:N1}, Len: {1:N0}",
+                        seg.AverageSpeed, seg.End - seg.Start);
+                }
+
+                /*
+                double[] d = mData2.StableSegments.Select(s => s.AverageSpeed).ToArray();
+                MathNet.Numerics.Statistics.Histogram h = new MathNet.Numerics.Statistics.Histogram(d, 5);
+                int x = h.BucketCount;
+                */
                 return;
             }
             /*
@@ -274,6 +299,73 @@ namespace BikeSignalProcessing
                 ChartSegments();
             }
             */
+        }
+
+        private IEnumerable<Segment> FindBest(IEnumerable<Segment> segments)
+        {
+            var speeds = segments
+                .OrderBy(s => s.AverageSpeed)
+                .Select(s => s.AverageSpeed);
+
+            double dev = speeds.StandardDeviation();
+            var segs = mData2.StableSegments.OrderBy(s => s.AverageSpeed);
+            
+            List<Segment> group = null;
+
+            // Get an enumerator and stash the first record.
+            var enumerator = segs.GetEnumerator();
+            enumerator.MoveNext();
+            Segment last = enumerator.Current;
+
+            do
+            {
+                Segment seg = null;
+                if (enumerator.MoveNext())
+                    seg = enumerator.Current;
+
+                //Start:
+                if (seg != null && (seg.AverageSpeed - last.AverageSpeed) < dev)
+                {
+                    // group-em
+                    if (group == null)
+                    {
+                        group = new List<Segment>();
+                        group.Add(last);
+                    }
+
+                    group.Add(seg);
+                    continue;
+                }
+                else
+                {
+                    Segment best = null;
+
+                    // If group exists, select the best from the group.
+                    if (group != null)
+                    {
+                        // Evaluate the group and find the one with the most
+                        double minSpeed = group.Min(s => s.AverageSpeed);
+                        double maxSpeed = group.Max(s => s.AverageSpeed);
+
+                        int max = group.Max(s => (s.End - s.Start));
+                        best = group.Where(s => (s.End - s.Start) == max).Single();
+
+                        group = null;
+                        System.Diagnostics.Debug.WriteLine("GROUP: Min: {0:N1}, Max:{1:N1}, Count:{2:N0}",
+                            minSpeed, maxSpeed, best.End - best.Start);
+                        // Loop back to the begining of this loop without advancing to next seg.       
+                        //goto Start;
+                    }
+                    else
+                    {
+                        best = last;
+                    }
+
+                    last = seg;
+
+                    yield return best;
+                }
+            } while (last != null);
         }
 
         private void MData2_SegmentDetected(Segment segment)
@@ -369,6 +461,17 @@ namespace BikeSignalProcessing
             line.ClipToChartArea = chart1.ChartAreas[0].Name;
 
             chart1.Annotations.Add(line);
+
+            /*
+            TextAnnotation text = new TextAnnotation();
+            text.Text = xPosition.ToString("N0");
+            text.X = xPosition;
+            text.Y = 10;
+            text.ClipToChartArea = chart1.ChartAreas[0].Name;
+            text.AxisX = chart1.ChartAreas[0].AxisX;
+            text.AxisY = chart1.ChartAreas[0].AxisY;
+            chart1.Annotations.Add(text);
+            */
         }
 
         private void Zoom()
