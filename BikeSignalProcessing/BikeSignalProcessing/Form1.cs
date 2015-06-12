@@ -104,6 +104,17 @@ namespace BikeSignalProcessing
             text.Y = segment.AveragePower;
 
             chart1.Annotations.Add(text);
+
+            // Look for or create series in mag chart.
+            Series mag = chart1.Series.FindByName(segment.ServoPosition.ToString());
+            if (mag == null)
+            {
+                mag = chart1.Series.Add(segment.ServoPosition.ToString());
+                mag.ChartArea = "Magnet";
+                mag.ChartType = SeriesChartType.Point;
+            }
+
+            mag.Points.AddXY(segment.AverageSpeed, segment.AveragePower);
         }
         
         private void RemoveSegments()
@@ -148,7 +159,27 @@ namespace BikeSignalProcessing
         {
             chart1.Series.Clear();
             chart1.ChartAreas.Clear();
-            chart1.ChartAreas.Add("Default");
+
+            ChartArea rideArea = chart1.ChartAreas.Add("Ride");
+            rideArea.Position.Width = 70;
+            rideArea.Position.Height = 100;
+            rideArea.Position.X = 0;
+            rideArea.AxisX.IntervalType = DateTimeIntervalType.Seconds;
+            //rideArea.Position.X = 0;
+            //rideArea.Position.Y = 0;
+            //rideArea.AlignmentOrientation = AreaAlignmentOrientations.All;
+            //rideArea.AlignmentStyle = AreaAlignmentStyles.Position;
+
+            ChartArea magArea = chart1.ChartAreas.Add("Magnet");
+            magArea.Position.Width = 30;
+            magArea.Position.Height = 100;
+            magArea.AlignWithChartArea = "Ride";
+            magArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
+            magArea.AlignmentStyle = AreaAlignmentStyles.AxesView;
+            magArea.AxisY2.Maximum = 40; // limit to 40 mph.
+            magArea.Position.X = 70;
+            magArea.AxisX.Interval = 3;
+            magArea.AxisX.LabelStyle.Format = "{0:0} mph";
 
             chart1.DataSource = mData2.DataPoints;
 
@@ -181,23 +212,28 @@ namespace BikeSignalProcessing
 
             Series actualPower = chart1.Series.Add(ActualSeriesName);
             actualPower.ChartType = SeriesChartType.FastLine;
+            actualPower.YAxisType = AxisType.Primary;
             actualPower.YValueMembers = "PowerWatts";
             //actualPower.Points.DataBind(mData2, "Seconds", "PowerWatts", "");
             //actualPower.Points.DataBindXY(mData2, "Seconds", mData2, "PowerWatts");
+            actualPower.ChartArea = "Ride";
 
             Series smoothPower = chart1.Series.Add(SmoothSeriesName);
             smoothPower.ChartType = SeriesChartType.FastLine;
             smoothPower.YValueMembers = "SmoothedPowerWatts";
+            smoothPower.ChartArea = "Ride";
 
             Series actualSpeed = chart1.Series.Add("Speed (mph)");
             actualSpeed.ChartType = SeriesChartType.FastLine;
             actualSpeed.YValueMembers = "SpeedMph";
             actualSpeed.YAxisType = AxisType.Secondary;
+            actualSpeed.ChartArea = "Ride";
 
             Series smoothSpeed = chart1.Series.Add("Smoothed Speed");
             smoothSpeed.ChartType = SeriesChartType.FastLine;
             smoothSpeed.YValueMembers = "SmoothedSpeedMph";
             smoothSpeed.YAxisType = AxisType.Secondary;
+            smoothSpeed.ChartArea = "Ride";
         }
 
         private void SmoothData(string filename)

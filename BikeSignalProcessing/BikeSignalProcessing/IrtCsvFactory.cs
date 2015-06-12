@@ -68,9 +68,9 @@ namespace BikeSignalProcessing
             reader.ReadLine();
 
             for (int i = 0; i < 1000; i++)
-                Callback(reader);
+                reader.ReadLine();
 
-            mTimer = new Timer(Callback, reader, 0, 500);
+            mTimer = new Timer(Callback, reader, 0, 250);
 
             return mData;
         }
