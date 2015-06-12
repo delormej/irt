@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
-using MathNet.Numerics.Statistics;
 
 namespace BikeSignalProcessing
 {
@@ -264,7 +263,7 @@ namespace BikeSignalProcessing
 
                 System.Diagnostics.Debug.WriteLine("BEST...");
 
-                var best = FindBest(mData2.StableSegments);
+                var best = Segment.FindBestSegments(mData2.StableSegments);
                 foreach (Segment seg in best)
                 {
                     System.Diagnostics.Debug.WriteLine("Speed: {0:N1}, Len: {1:N0}",
@@ -299,73 +298,6 @@ namespace BikeSignalProcessing
                 ChartSegments();
             }
             */
-        }
-
-        private IEnumerable<Segment> FindBest(IEnumerable<Segment> segments)
-        {
-            var speeds = segments
-                .OrderBy(s => s.AverageSpeed)
-                .Select(s => s.AverageSpeed);
-
-            double dev = speeds.StandardDeviation();
-            var segs = mData2.StableSegments.OrderBy(s => s.AverageSpeed);
-            
-            List<Segment> group = null;
-
-            // Get an enumerator and stash the first record.
-            var enumerator = segs.GetEnumerator();
-            enumerator.MoveNext();
-            Segment last = enumerator.Current;
-
-            do
-            {
-                Segment seg = null;
-                if (enumerator.MoveNext())
-                    seg = enumerator.Current;
-
-                //Start:
-                if (seg != null && (seg.AverageSpeed - last.AverageSpeed) < dev)
-                {
-                    // group-em
-                    if (group == null)
-                    {
-                        group = new List<Segment>();
-                        group.Add(last);
-                    }
-
-                    group.Add(seg);
-                    continue;
-                }
-                else
-                {
-                    Segment best = null;
-
-                    // If group exists, select the best from the group.
-                    if (group != null)
-                    {
-                        // Evaluate the group and find the one with the most
-                        double minSpeed = group.Min(s => s.AverageSpeed);
-                        double maxSpeed = group.Max(s => s.AverageSpeed);
-
-                        int max = group.Max(s => (s.End - s.Start));
-                        best = group.Where(s => (s.End - s.Start) == max).Single();
-
-                        group = null;
-                        System.Diagnostics.Debug.WriteLine("GROUP: Min: {0:N1}, Max:{1:N1}, Count:{2:N0}",
-                            minSpeed, maxSpeed, best.End - best.Start);
-                        // Loop back to the begining of this loop without advancing to next seg.       
-                        //goto Start;
-                    }
-                    else
-                    {
-                        best = last;
-                    }
-
-                    last = seg;
-
-                    yield return best;
-                }
-            } while (last != null);
         }
 
         private void MData2_SegmentDetected(Segment segment)
