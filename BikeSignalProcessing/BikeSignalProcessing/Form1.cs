@@ -208,7 +208,7 @@ namespace BikeSignalProcessing
 
                 BindChart(mData2);
                 ChartSegments(mData2.StableSegments);
-                mData2.PropertyChanged += MData2_PropertyChanged;
+                mData2.SegmentDetected += MData2_SegmentDetected;
 
                 return;
             }
@@ -235,22 +235,18 @@ namespace BikeSignalProcessing
             */
         }
 
-        private void MData2_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void MData2_SegmentDetected(Segment segment)
         {
-            if (e.PropertyName == "CurrentSegment")
+            Action a = () => { DrawSegmentMarkers(segment); };
+
+            // Chart doesn't seem to catch collection changed, so force update.
+            if (this.InvokeRequired)
             {
-                Action a = () => { DrawSegmentMarkers(mData2.CurrentSegment); };
-
-                // Chart doesn't seem to catch collection changed, so force update.
-                if (this.InvokeRequired)
-                {
-                    this.BeginInvoke(a);
-                }
-                else
-                {
-                    this.Invoke(a);
-                }
-
+                this.BeginInvoke(a);
+            }
+            else
+            {
+                this.Invoke(a);
             }
         }
 

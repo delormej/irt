@@ -12,6 +12,12 @@ using System.ComponentModel;
 namespace BikeSignalProcessing
 {
     /// <summary>
+    /// Signature of a method that receives new segments.
+    /// </summary>
+    /// <param name="segment"></param>
+    public delegate void SegmentDetectedEventHandler(Segment segment);
+
+    /// <summary>
     /// Encapsulates state and calculations for stable, smoothed data.
     /// </summary>
     public class Data : INotifyPropertyChanged
@@ -49,6 +55,11 @@ namespace BikeSignalProcessing
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
+        /// Invoked when a stable segment is added.
+        /// </summary>
+        public event SegmentDetectedEventHandler SegmentDetected;
+
+        /// <summary>
         /// Segments represent stable windows into this collection of data points.
         /// </summary>
         public ObservableCollection<Segment> StableSegments { get; set; }
@@ -57,16 +68,6 @@ namespace BikeSignalProcessing
         /// Data points including raw received and smoothed values.
         /// </summary>
         public ObservableCollection<DataPoint> DataPoints { get; set; }
-
-        public Segment CurrentSegment
-        {
-            get { return mCurrentSegment; }
-            private set
-            {
-                mCurrentSegment = value;
-                OnPropertyChanged("CurrentSegment");
-            }
-        }
 
         public Data()
         {
@@ -153,41 +154,54 @@ namespace BikeSignalProcessing
             return power.Average();
         }
 
+        private int GetLastSegmentEnd()
+        {
+            int end = 0;
+
+            if (StableSegments != null)
+            {
+                int count = StableSegments.Count;
+                if (count > 0)
+                    end = StableSegments[count-1].End;
+            }
+
+            return end;
+        }
+
         /// <summary>
         /// Evaluates whether to start, end, add to a segment or not.
         /// </summary>
         /// <param name="value"></param>
         private void EvaluateSegment(DataPoint value)
         {
-            // Can't evaluate until we have at least enough points in the window.
-            if (mIndex < Window)
-                return;
+            // Get the last end.
+            int end = GetLastSegmentEnd();
 
             // Ensure that we've accumulated enough points since the last segment.
-            if (StableSegments.Count > 0)
-            {
-                Segment last = StableSegments[StableSegments.Count - 1];
-                if (last != null && (last.End + Window) > mIndex)
-                    return;
-            }
+            if ((end + Window) > mIndex)
+                return;
 
-            int start = (mCurrentSegment != null && mCurrentSegment.End == 0) ? 
-                this.mCurrentSegment.Start : mIndex - Window;
+            // Determine where the window starts.
+            int start = (mCurrentSegment != null) ? mCurrentSegment.Start
+                 : mIndex - Window;
 
+            // Determine variation inside the window.
             double dev = StandardDeviation(start, mIndex);
+
+            //
+            // 3 possible states: (1) New/Invalidated, (2) Started, (3) Ended
+            //
 
             if (dev <= Threshold)
             {
                 //
                 // Within threshold.
                 //
-                if (mCurrentSegment == null || mCurrentSegment.End > 0)
+                if (mCurrentSegment == null)
                 {
+                    // Starting a new segment.
                     mCurrentSegment = new Segment();
                     mCurrentSegment.Start = start;
-
-                    // Starting a new segment.
-                    OnPropertyChanged("CurrentSegment");
                 }
                 else
                 {
@@ -208,16 +222,16 @@ namespace BikeSignalProcessing
                         mCurrentSegment.AveragePower = AveragePower(
                             mCurrentSegment.Start, mCurrentSegment.End);
 
-                        if (mCurrentSegment.AveragePower > 0)
-                        {
-                            Segment copy = mCurrentSegment.Copy();
-                            StableSegments.Add(copy);
-                        }
+                        Segment copy = mCurrentSegment.Copy();
+                        StableSegments.Add(copy);
 
-                        // Notify that the property changed.
-                        OnPropertyChanged("CurrentSegment");
+                        // Notify that a segment was added.
+                        if (SegmentDetected != null)
+                            SegmentDetected(copy);
                     }
                 }
+
+                mCurrentSegment = null;
             }
         }
     }
