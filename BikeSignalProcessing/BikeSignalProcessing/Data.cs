@@ -160,7 +160,7 @@ namespace BikeSignalProcessing
         private void EvaluateSegment(DataPoint value)
         {
             // Can't evaluate until we have at least enough points in the window.
-            if (mIndex < Window || value.PowerWatts == 0)
+            if (mIndex < Window)
                 return;
 
             // Ensure that we've accumulated enough points since the last segment.

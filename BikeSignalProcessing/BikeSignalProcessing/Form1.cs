@@ -67,7 +67,7 @@ namespace BikeSignalProcessing
 
         private void DrawSegmentMarkers(Segment segment)
         {
-            if (segment == null)
+            if (segment == null || segment.End == 0)
                 return;
 
             var aStart = new HorizontalLineAnnotation();
