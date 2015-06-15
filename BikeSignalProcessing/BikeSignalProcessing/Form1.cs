@@ -36,6 +36,12 @@ namespace BikeSignalProcessing
             this.chart1.MouseMove += Chart1_MouseMove;
         }
         
+        public Form1(Data data) : this()
+        {
+            mData2 = data;
+            BindData();
+        }
+
         private void Chart1_MouseMove(object sender, MouseEventArgs e)
         {
             HitTestResult result = chart1.HitTest(e.X, e.Y);
@@ -296,9 +302,7 @@ namespace BikeSignalProcessing
                 //asyncCsv = new AsyncCsvFactory();
                 //mData2 = asyncCsv.Open(filename);
 
-                BindChart(mData2);
-                ChartSegments(mData2.StableSegments);
-                mData2.SegmentDetected += MData2_SegmentDetected;
+                BindData();
 
                 //foreach (Segment seg in mData2.StableSegments.OrderBy(s => s.AverageSpeed))
                 //{
@@ -342,6 +346,13 @@ namespace BikeSignalProcessing
                 ChartSegments();
             }
             */
+        }
+
+        private void BindData()
+        {
+            BindChart(mData2);
+            ChartSegments(mData2.StableSegments);
+            mData2.SegmentDetected += MData2_SegmentDetected;
         }
 
         private void MData2_SegmentDetected(Segment segment)

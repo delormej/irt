@@ -2256,20 +2256,28 @@ namespace IRT_GUI
 
         private void btnChartOpen_Click(object sender, EventArgs e)
         {
-            GraphForm graph = new GraphForm();
-            m_reporters.Add(graph);
-            graph.FormClosing += (o, v) =>
+            BikeSignalProcessingReporter bsp = new BikeSignalProcessingReporter();
+            m_reporters.Add(bsp);
+
+            bsp.Closing += (o, v) =>
             {
-                m_reporters.Remove(graph);
+                m_reporters.Remove(bsp);
             };
 
-            Screen screen = Screen.FromControl(this);
-            int width = screen.WorkingArea.Width;
-            graph.Width = width;
-            graph.Height = (int)(screen.WorkingArea.Height * 0.4);
-            graph.SetDesktopLocation(0, 0);
+            //GraphForm graph = new GraphForm();
+            //m_reporters.Add(graph);
+            //graph.FormClosing += (o, v) =>
+            //{
+            //    m_reporters.Remove(graph);
+            //};
 
-            graph.Show();
+            //Screen screen = Screen.FromControl(this);
+            //int width = screen.WorkingArea.Width;
+            //graph.Width = width;
+            //graph.Height = (int)(screen.WorkingArea.Height * 0.4);
+            //graph.SetDesktopLocation(0, 0);
+
+            //graph.Show();
         }
 
         private void btnSimRefPower_Click(object sender, EventArgs e)

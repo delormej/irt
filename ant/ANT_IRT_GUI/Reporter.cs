@@ -1,4 +1,5 @@
-﻿using IRT_GUI.IrtMessages;
+﻿using BikeSignalProcessing;
+using IRT_GUI.IrtMessages;
 using System;
 using System.IO;
 
@@ -29,6 +30,40 @@ namespace ANT_Console
                 data.FlywheelRevs);
 
             return value;
+        }
+    }
+
+    public class BikeSignalProcessingReporter : IReporter
+    {
+        BikeSignalProcessing.Form1 mForm;
+        BikeSignalProcessing.Data mData;
+
+        public event EventHandler Closing;
+
+        public BikeSignalProcessingReporter()
+        {
+            mData = new Data();
+            BikeSignalProcessing.Form1 mForm = new Form1(mData);
+            mForm.FormClosing += MForm_FormClosing;
+            mForm.Show();
+        }
+
+        private void MForm_FormClosing(object sender, System.Windows.Forms.FormClosingEventArgs e)
+        {
+            if (this.Closing != null)
+            {
+                Closing(this, EventArgs.Empty);
+            }
+        }
+
+        public void Report(string message)
+        {
+            return;
+        }
+
+        public void Report(DataPoint data)
+        {
+            mData.Update(data.SpeedEMotionMph, data.PowerReference, data.ServoPosition);
         }
     }
 
