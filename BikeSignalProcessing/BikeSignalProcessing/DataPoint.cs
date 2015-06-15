@@ -22,15 +22,44 @@ namespace BikeSignalProcessing
 
         public double SmoothedSpeedMph { get; set; }
     }
+    
+    public enum SegmentState
+    {
+        Started,
+        Finished,
+        Invalidated
+    }
 
     public class Segment
     {
-        public int Start;
-        public int End;
+        private int mStart;
+        private int mEnd;
+
+        public int Start {
+            get { return mStart; }
+            set
+            {
+                mStart = value;
+                State = SegmentState.Started;
+            }
+        }
+
+        public int End
+        {
+            get { return mEnd; }
+            set
+            {
+                mEnd = value;
+                State = SegmentState.Finished;
+            }
+        }
+
         public double StdDev;
         public double AveragePower;
         public double AverageSpeed;
         public int ServoPosition;
+
+        public SegmentState State { get; set; }
 
         public Segment()
         {

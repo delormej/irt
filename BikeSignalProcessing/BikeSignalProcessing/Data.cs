@@ -10,7 +10,7 @@ using MathNet.Numerics.Statistics;
 using System.ComponentModel;
 
 namespace BikeSignalProcessing
-{
+{ 
     /// <summary>
     /// Signature of a method that receives new segments.
     /// </summary>
@@ -226,6 +226,10 @@ namespace BikeSignalProcessing
                     // Starting a new segment.
                     mCurrentSegment = new Segment();
                     mCurrentSegment.Start = start;
+
+                    // Notify that we started a segment.
+                    if (SegmentDetected != null)
+                        SegmentDetected(mCurrentSegment);
                 }
                 else
                 {
@@ -265,6 +269,17 @@ namespace BikeSignalProcessing
                             if (SegmentDetected != null)
                                 SegmentDetected(copy);
                         }
+                    }
+                }
+                else
+                {
+                    // Invalidate the segment.
+                    // Notify that a segment was added.
+                    if (SegmentDetected != null)
+                    {
+                        Segment copy = mCurrentSegment.Copy();
+                        copy.State = SegmentState.Invalidated;
+                        SegmentDetected(copy);
                     }
                 }
 
