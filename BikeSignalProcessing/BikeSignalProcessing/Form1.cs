@@ -31,11 +31,11 @@ namespace BikeSignalProcessing
         public Form1()
         {
             InitializeComponent();
-            chart1.MouseClick += Chart1_MouseClick;
             ClearChart();
-            this.chart1.MouseMove += Chart1_MouseMove;
+
+            chart1.MouseClick += Chart1_MouseClick;
+            chart1.MouseMove += Chart1_MouseMove;
         }
-        
         public Form1(Data data) : this()
         {
             mData2 = data;
@@ -65,7 +65,67 @@ namespace BikeSignalProcessing
                 }
             }
         }
+        private void Chart1_MouseClick(object sender, MouseEventArgs e)
+        {
+            HitTestResult result = chart1.HitTest(e.X, e.Y);
 
+            if (result.ChartElementType == ChartElementType.Annotation)
+            {
+                Annotation annotation = result.Object as Annotation;
+
+                // Click on text to hide.
+                if (annotation is TextAnnotation)
+                {
+                    annotation.Visible = false;
+                }
+                else if (annotation is LineAnnotation)
+                {
+                    Segment segment = annotation.Tag as Segment;
+                    if (segment != null)
+                    {
+                        TextAnnotation text = FindTextAnnotation(segment);
+                        if (text != null)
+                        {
+                            text.Visible = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        private TextAnnotation FindTextAnnotation(Segment segment)
+        {
+            foreach (var a in chart1.Annotations)
+            {
+                if (a is TextAnnotation && a.X == segment.Start)
+                    return a as TextAnnotation;
+            }
+
+            return null;
+        }
+
+        private TextAnnotation CreateText(Segment segment)
+        {
+            string summary = string.Format("Duration: {0}\r\nStdDev: {1:N1}\r\nSpeed: " +
+                "{2:N1}\r\nWatts: {3:N0}\r\n Position: {4}\r\nStart: {5}",
+                (segment.End - segment.Start), segment.StdDev,
+                segment.AverageSpeed, segment.AveragePower, segment.ServoPosition,
+                segment.Start);
+
+            var text = new TextAnnotation();
+            text.Text = summary;
+            text.AxisX = chart1.ChartAreas[0].AxisX;
+            text.AxisY = chart1.ChartAreas[0].AxisY;
+            text.X = segment.Start;
+            text.Y = segment.AveragePower;
+
+            return text;
+        }
+
+        /// <summary>
+        /// Shows the segment by highlighting the line.
+        /// </summary>
+        /// <param name="line"></param>
         private void HighlightSegment(LineAnnotation line)
         {
             Segment segment = line.Tag as Segment;
@@ -75,19 +135,11 @@ namespace BikeSignalProcessing
 
             line.LineColor = Color.Red;
             line.LineWidth = 10;
+
+            TextAnnotation text = FindTextAnnotation(segment);
+            if (text != null)
+                text.Visible = true;
             
-            string summary = string.Format("Duration: {0}\r\nStdDev: {1:N1}\r\nSpeed: {2:N1}\r\nWatts: {3:N0}\r\n Position: {4}",
-                (segment.End - segment.Start), segment.StdDev,
-                segment.AverageSpeed, segment.AveragePower, segment.ServoPosition);
-
-            var text = new TextAnnotation();
-            text.Text = summary;
-            text.AxisX = chart1.ChartAreas[0].AxisX;
-            text.AxisY = chart1.ChartAreas[0].AxisY;
-            text.X = segment.Start;
-            text.Y = segment.AveragePower;
-
-            chart1.Annotations.Add(text);
         }
 
         private void ClearChart()
@@ -153,6 +205,10 @@ namespace BikeSignalProcessing
             line.Tag = segment;     // Tag the line with the segment.
 
             chart1.Annotations.Add(line);
+
+            TextAnnotation text = CreateText(segment);
+            text.Visible = false;
+            chart1.Annotations.Add(text);
 
             // Look for or create series in mag chart.
             Series mag = chart1.Series.FindByName(segment.ServoPosition.ToString());
@@ -484,16 +540,6 @@ namespace BikeSignalProcessing
             ////Chart(mData.Power10secMA, "Moving Average (10 sec)", x[0], x[1]);
 
             ////ChartSegments(mZoomStart, mZoomEnd);
-        }
-
-        private void Chart1_MouseClick(object sender, MouseEventArgs e)
-        {
-            return;
-
-            var chartArea = chart1.ChartAreas[0];
-            double x = chartArea.AxisX.PixelPositionToValue(e.X);
-
-            DrawZoomMarker(x);
         }
 
         private void button2_Click(object sender, EventArgs e)

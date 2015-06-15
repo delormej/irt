@@ -256,7 +256,7 @@ namespace BikeSignalProcessing
                             mCurrentSegment.AverageSpeed > 4.0)
                         {
                             mCurrentSegment.ServoPosition =
-                                DataPoints[mCurrentSegment.End].ServoPosition;
+                                DataPoints[mCurrentSegment.Start].ServoPosition;
 
                             Segment copy = mCurrentSegment.Copy();
                             StableSegments.Add(copy);
