@@ -8,7 +8,7 @@ using MathNet.Numerics.Statistics;
 
 namespace BikeSignalProcessing
 {
-    public class DataPoint
+    public class BikeDataPoint
     {
         public int Seconds { get; set; }
 

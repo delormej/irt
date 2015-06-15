@@ -73,7 +73,7 @@ namespace BikeSignalProcessing
         /// <summary>
         /// Data points including raw received and smoothed values.
         /// </summary>
-        public ObservableCollection<DataPoint> DataPoints { get; set; }
+        public ObservableCollection<BikeDataPoint> DataPoints { get; set; }
 
         public Data()
         {
@@ -81,7 +81,7 @@ namespace BikeSignalProcessing
 
             mCurrentSegment = null;
             StableSegments = new ObservableCollection<Segment>();
-            DataPoints = new ObservableCollection<DataPoint>();
+            DataPoints = new ObservableCollection<BikeDataPoint>();
 
             mSpeedFilter = OnlineFilter.CreateDenoise();
             mPowerFilter = OnlineFilter.CreateDenoise();
@@ -96,7 +96,7 @@ namespace BikeSignalProcessing
         /// <param name="servoPosition"></param>
         public void Update(double speedMph, double powerWatts, int servoPosition)
         {
-            DataPoint value = new DataPoint();
+            BikeDataPoint value = new BikeDataPoint();
             value.Seconds = mIndex;
 
             value.SpeedMph = speedMph;
@@ -196,7 +196,7 @@ namespace BikeSignalProcessing
         /// Evaluates whether to start, end, add to a segment or not.
         /// </summary>
         /// <param name="value"></param>
-        private void EvaluateSegment(DataPoint value)
+        private void EvaluateSegment(BikeDataPoint value)
         {
             // Get the last end.
             int end = GetLastSegmentEnd();
@@ -213,7 +213,7 @@ namespace BikeSignalProcessing
             double dev = StandardDeviation(start, mIndex);
 
             //
-            // 3 possible states: (1) New/Invalidated, (2) Started, (3) Ended
+            // 3 possible states: (1) New/Invalidated, (2) Segment started, (3) Segment Ended
             //
 
             if (dev <= Threshold)

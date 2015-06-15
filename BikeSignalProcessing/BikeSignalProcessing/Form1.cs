@@ -15,6 +15,9 @@ namespace BikeSignalProcessing
     {
         private const string ActualSeriesName = "Actual";
         private const string SmoothSeriesName = "Smoothed";
+        private const string ChartAreaMagnet = "Magnet";
+        private const int SegmentLineWidth = 3;
+
         private Data mData;
         private Data mData2;
         private AsyncCsvFactory asyncCsv;
@@ -30,6 +33,55 @@ namespace BikeSignalProcessing
             InitializeComponent();
             chart1.MouseClick += Chart1_MouseClick;
             ClearChart();
+            this.chart1.MouseMove += Chart1_MouseMove;
+        }
+        
+        private void Chart1_MouseMove(object sender, MouseEventArgs e)
+        {
+            HitTestResult result = chart1.HitTest(e.X, e.Y);
+
+            if (result.ChartElementType == ChartElementType.DataPoint)
+            {
+                DataPoint point = result.Series.Points[result.PointIndex];
+                LineAnnotation segment = point.Tag as LineAnnotation;
+
+                if (segment != null)
+                {
+                    HighlightSegment(segment);
+                }
+            }
+            else if (result.ChartElementType == ChartElementType.Annotation)
+            {
+                LineAnnotation line = result.Object as LineAnnotation;
+                if (line != null)
+                {
+                    line.LineWidth = SegmentLineWidth;
+                }
+            }
+        }
+
+        private void HighlightSegment(LineAnnotation line)
+        {
+            Segment segment = line.Tag as Segment;
+
+            if (segment == null)
+                return;
+
+            line.LineColor = Color.Red;
+            line.LineWidth = 10;
+            
+            string summary = string.Format("Duration: {0}\r\nStdDev: {1:N1}\r\nSpeed: {2:N1}\r\nWatts: {3:N0}\r\n Position: {4}",
+                (segment.End - segment.Start), segment.StdDev,
+                segment.AverageSpeed, segment.AveragePower, segment.ServoPosition);
+
+            var text = new TextAnnotation();
+            text.Text = summary;
+            text.AxisX = chart1.ChartAreas[0].AxisX;
+            text.AxisY = chart1.ChartAreas[0].AxisY;
+            text.X = segment.Start;
+            text.Y = segment.AveragePower;
+
+            chart1.Annotations.Add(text);
         }
 
         private void ClearChart()
@@ -86,33 +138,22 @@ namespace BikeSignalProcessing
 
             line.ClipToChartArea = chart1.ChartAreas[0].Name;
             line.LineColor = Color.Green;
-            line.LineWidth = 3;
+            line.LineWidth = SegmentLineWidth;
             line.LineDashStyle = ChartDashStyle.Dot;
             line.EndCap = LineAnchorCapStyle.Round;
             line.AllowMoving = false;
             line.IsInfinitive = false;
 
+            line.Tag = segment;     // Tag the line with the segment.
+
             chart1.Annotations.Add(line);
-
-            string summary = string.Format("Duration: {0}\r\nStdDev: {1:N1}\r\nSpeed: {2:N1}\r\nWatts: {3:N0}\r\n Position: {4}",
-                (segment.End - segment.Start), segment.StdDev,
-                segment.AverageSpeed, segment.AveragePower, segment.ServoPosition);
-
-            /*var text = new TextAnnotation();
-            text.Text = summary;
-            text.AxisX = chart1.ChartAreas[0].AxisX;
-            text.AxisY = chart1.ChartAreas[0].AxisY;
-            text.X = segment.Start;
-            text.Y = segment.AveragePower;
-
-            chart1.Annotations.Add(text);*/
 
             // Look for or create series in mag chart.
             Series mag = chart1.Series.FindByName(segment.ServoPosition.ToString());
             if (mag == null)
             {
                 mag = chart1.Series.Add(segment.ServoPosition.ToString());
-                mag.ChartArea = "Magnet";
+                mag.ChartArea = ChartAreaMagnet;
                 mag.ChartType = SeriesChartType.Point;
             }
 
@@ -120,8 +161,10 @@ namespace BikeSignalProcessing
                 new System.Windows.Forms.DataVisualization.Charting.DataPoint(
                     segment.AverageSpeed, segment.AveragePower);
             d.MarkerSize = ((segment.End - segment.Start) / 20) * 5;
+            d.Tag = line;  // Tag the segment so we can find it.
             //d.ToolTip = summary;
             //d.Label = summary;
+
             mag.Points.Add(d);
         }
         
@@ -174,6 +217,8 @@ namespace BikeSignalProcessing
             rideArea.Position.X = 0;
             rideArea.AxisX.IntervalType = DateTimeIntervalType.Seconds;
             rideArea.AxisY2.Maximum = 40; // limit to 40 mph.
+            rideArea.CursorX.IsUserSelectionEnabled = true;
+
 
             ChartArea magArea = chart1.ChartAreas.Add("Magnet");
             magArea.Position.Width = 30;
@@ -255,27 +300,26 @@ namespace BikeSignalProcessing
                 ChartSegments(mData2.StableSegments);
                 mData2.SegmentDetected += MData2_SegmentDetected;
 
-                foreach (Segment seg in mData2.StableSegments.OrderBy(s => s.AverageSpeed))
-                {
-                    System.Diagnostics.Debug.WriteLine("Speed: {0:N1}, Len: {1:N0}",
-                        seg.AverageSpeed, seg.End - seg.Start);
-                }
+                //foreach (Segment seg in mData2.StableSegments.OrderBy(s => s.AverageSpeed))
+                //{
+                //    System.Diagnostics.Debug.WriteLine("Speed: {0:N1}, Len: {1:N0}",
+                //        seg.AverageSpeed, seg.End - seg.Start);
+                //}
 
-                System.Diagnostics.Debug.WriteLine("BEST...");
+                //System.Diagnostics.Debug.WriteLine("BEST...");
 
-                var best = Segment.FindBestSegments(mData2.StableSegments);
-                foreach (Segment seg in best)
-                {
-                    System.Diagnostics.Debug.WriteLine("Speed: {0:N1}, Len: {1:N0}",
-                        seg.AverageSpeed, seg.End - seg.Start);
-                }
+                //var best = Segment.FindBestSegments(mData2.StableSegments);
+                //foreach (Segment seg in best)
+                //{
+                //    System.Diagnostics.Debug.WriteLine("Speed: {0:N1}, Len: {1:N0}",
+                //        seg.AverageSpeed, seg.End - seg.Start);
+                //}
 
                 /*
                 double[] d = mData2.StableSegments.Select(s => s.AverageSpeed).ToArray();
                 MathNet.Numerics.Statistics.Histogram h = new MathNet.Numerics.Statistics.Histogram(d, 5);
                 int x = h.BucketCount;
                 */
-                return;
             }
             /*
             if (mData != null)
@@ -408,35 +452,33 @@ namespace BikeSignalProcessing
 
         private void Zoom()
         {
-            mData2.Update(50, 510, 1000);
-            return;
-            /*
-            if (mZoomStart == -1 || mZoomEnd == -1)
-                return;
+            //if (mZoomStart == -1 || mZoomEnd == -1)
+            //    return;
 
-            ClearChart();
+            //ClearChart();
 
-            PowerSmoothing smoother = new PowerSmoothing();
+            //PowerSmoothing smoother = new PowerSmoothing();
 
-            for (int i = mZoomStart; i < mZoomEnd; i++)
-            {
-                double d = mData.RawPower[i];
+            //for (int i = mZoomStart; i < mZoomEnd; i++)
+            //{
+            //    double d = mData.RawPower[i];
 
-                double smoothed = smoother.SmoothPower(d);
-                ChartSmoothPower(smoothed);
-            }
+            //    double smoothed = smoother.SmoothPower(d);
+            //    ChartSmoothPower(smoothed);
+            //}
 
-            Chart(mData.RawPower, "Actual");
-            Chart(mData.SmoothedPower, "Smoothed");
-            //Chart(mData.Power5secMA, "Moving Average (5 sec)", x[0], x[1]);
-            //Chart(mData.Power10secMA, "Moving Average (10 sec)", x[0], x[1]);
+            //Chart(mData.RawPower, "Actual");
+            //Chart(mData.SmoothedPower, "Smoothed");
+            ////Chart(mData.Power5secMA, "Moving Average (5 sec)", x[0], x[1]);
+            ////Chart(mData.Power10secMA, "Moving Average (10 sec)", x[0], x[1]);
 
-            ChartSegments(mZoomStart, mZoomEnd);
-            */
+            ////ChartSegments(mZoomStart, mZoomEnd);
         }
 
         private void Chart1_MouseClick(object sender, MouseEventArgs e)
         {
+            return;
+
             var chartArea = chart1.ChartAreas[0];
             double x = chartArea.AxisX.PixelPositionToValue(e.X);
 
