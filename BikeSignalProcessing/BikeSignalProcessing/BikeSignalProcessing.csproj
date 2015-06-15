@@ -66,6 +66,7 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="IrtCsvFactory.cs" />
+    <Compile Include="MagnetFit.cs" />
     <Compile Include="PowerSmoothing.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

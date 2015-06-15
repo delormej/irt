@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MathNet.Numerics.Statistics;
+using MathNet.Numerics.LinearRegression;
 
 namespace BikeSignalProcessing
 {
@@ -41,7 +42,9 @@ namespace BikeSignalProcessing
         public double StdDev;
         public double AveragePower;
         public double AverageSpeed;
-        public int ServoPosition;
+        public int MagnetPosition;
+
+        public MagnetFit Fit;
 
         public SegmentState State { get; set; }
 
@@ -129,6 +132,42 @@ namespace BikeSignalProcessing
                     yield return best;
                 }
             } while (last != null);
+        }
+
+        /// <summary>
+        /// Fits this segment against others for a given magnet position.
+        /// </summary>
+        /// <param name="segments"></param>
+        /// <returns></returns>
+        public void FitMagnet(IEnumerable<Segment> segments)
+        {
+            var matchingSegments = segments.Where(s => s.MagnetPosition ==
+                this.MagnetPosition);
+
+            // Return null if no matches.
+            if (matchingSegments == null || matchingSegments.Count() < 2)
+                return;
+
+            // Find the best segments if there are multiple for a given speed.
+            var bestSegments = FindBestSegments(matchingSegments);
+
+            List<double> x, y;
+
+            x = new List<double>();
+            y = new List<double>();
+
+            foreach (Segment segment in bestSegments)
+            {
+                x.Add(segment.AverageSpeed);
+                y.Add(segment.AveragePower);
+            }
+
+            Tuple<double, double> fit = SimpleRegression.Fit(x.ToArray(), y.ToArray());
+
+            // Assign fit.
+            Fit = new MagnetFit();
+            Fit.Intercept = fit.Item1;
+            Fit.Slope = fit.Item2;
         }
     }
 }

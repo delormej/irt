@@ -139,6 +139,10 @@ namespace BikeSignalProcessing
         private double[] SliceData(Field field, int start, int end)
         {
             int len = end - start;
+
+            if (len < 1)
+                return null;
+
             double[] data = new double[len];
             for (int i = 0; i < len; i++)
             {
@@ -200,7 +204,7 @@ namespace BikeSignalProcessing
         {
             // Get the last end.
             int end = GetLastSegmentEnd();
-
+            
             // Ensure that we've accumulated enough points since the last segment.
             if ((end + Window) > mIndex)
                 return;
@@ -259,11 +263,14 @@ namespace BikeSignalProcessing
                         if (mCurrentSegment.AveragePower > 40 &&
                             mCurrentSegment.AverageSpeed > 4.0)
                         {
-                            mCurrentSegment.ServoPosition =
+                            mCurrentSegment.MagnetPosition =
                                 DataPoints[mCurrentSegment.Start].ServoPosition;
 
                             Segment copy = mCurrentSegment.Copy();
                             StableSegments.Add(copy);
+
+                            // Try fitting linear regression if there are multiple points for this position.
+                            copy.FitMagnet(this.StableSegments);
 
                             // Notify that a segment was added.
                             if (SegmentDetected != null)

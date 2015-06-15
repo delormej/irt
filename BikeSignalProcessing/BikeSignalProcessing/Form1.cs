@@ -109,7 +109,7 @@ namespace BikeSignalProcessing
             string summary = string.Format("Duration: {0}\r\nStdDev: {1:N1}\r\nSpeed: " +
                 "{2:N1}\r\nWatts: {3:N0}\r\n Position: {4}\r\nStart: {5}",
                 (segment.End - segment.Start), segment.StdDev,
-                segment.AverageSpeed, segment.AveragePower, segment.ServoPosition,
+                segment.AverageSpeed, segment.AveragePower, segment.MagnetPosition,
                 segment.Start);
 
             var text = new TextAnnotation();
@@ -175,6 +175,42 @@ namespace BikeSignalProcessing
             } while (i++ < end);
         }
 
+        private void DrawMagLinear(Segment segment)
+        {
+            double lowSpeed = 10.0; //  chart1.ChartAreas[ChartAreaMagnet].AxisX.ScaleView.ViewMinimum;
+            double highSpeed = 25.0; //  chart1.ChartAreas[ChartAreaMagnet].AxisX.ScaleView.ViewMinimum;
+
+            if (double.IsNaN(lowSpeed) || double.IsNaN(highSpeed))
+                return;
+
+            string name = segment.MagnetPosition.ToString() + " Fit";
+
+            // Find or create the series
+            Series magLinear = chart1.Series.FindByName(name);
+            if (magLinear == null)
+            {
+                magLinear = chart1.Series.Add(name);
+                magLinear.ChartArea = ChartAreaMagnet;
+                magLinear.ChartType = SeriesChartType.Line;
+            }
+            else
+            {
+                magLinear.Points.Clear();
+            }
+
+            // Low speed watts.
+            double lowPower = segment.Fit.Slope * lowSpeed +
+                segment.Fit.Intercept;
+
+            // High speed watts
+            double highPower = segment.Fit.Slope * highSpeed +
+                segment.Fit.Intercept;
+
+            magLinear.Points.AddXY(lowSpeed, lowPower);
+            magLinear.Points.AddXY(highSpeed, highPower);
+        }
+    
+
         private void DrawSegment(Segment segment)
         {
             if (segment == null || segment.End == 0)
@@ -201,20 +237,20 @@ namespace BikeSignalProcessing
             line.EndCap = LineAnchorCapStyle.Round;
             line.AllowMoving = false;
             line.IsInfinitive = false;
-
             line.Tag = segment;     // Tag the line with the segment.
 
             chart1.Annotations.Add(line);
 
+            // Create text annotation with details.
             TextAnnotation text = CreateText(segment);
             text.Visible = false;
             chart1.Annotations.Add(text);
 
             // Look for or create series in mag chart.
-            Series mag = chart1.Series.FindByName(segment.ServoPosition.ToString());
+            Series mag = chart1.Series.FindByName(segment.MagnetPosition.ToString());
             if (mag == null)
             {
-                mag = chart1.Series.Add(segment.ServoPosition.ToString());
+                mag = chart1.Series.Add(segment.MagnetPosition.ToString());
                 mag.ChartArea = ChartAreaMagnet;
                 mag.ChartType = SeriesChartType.Point;
             }
@@ -222,12 +258,18 @@ namespace BikeSignalProcessing
             System.Windows.Forms.DataVisualization.Charting.DataPoint d =
                 new System.Windows.Forms.DataVisualization.Charting.DataPoint(
                     segment.AverageSpeed, segment.AveragePower);
-            d.MarkerSize = ((segment.End - segment.Start) / 20) * 5;
+            //d.MarkerSize = ((segment.End - segment.Start) / 20) * 5;
             d.Tag = line;  // Tag the segment so we can find it.
             //d.ToolTip = summary;
             //d.Label = summary;
 
             mag.Points.Add(d);
+
+            // Draw linear mag fit if available.
+            if (segment.Fit != null)
+            {
+                DrawMagLinear(segment);
+            }
         }
         
         private void RemoveSegments()
@@ -281,7 +323,6 @@ namespace BikeSignalProcessing
             rideArea.AxisY2.Maximum = 40; // limit to 40 mph.
             rideArea.CursorX.IsUserSelectionEnabled = true;
 
-
             ChartArea magArea = chart1.ChartAreas.Add("Magnet");
             magArea.Position.Width = 30;
             magArea.Position.Height = 100;
@@ -291,6 +332,7 @@ namespace BikeSignalProcessing
             magArea.Position.X = 70;
             magArea.AxisX.Interval = 3;
             magArea.AxisX.LabelStyle.Format = "{0:0} mph";
+            magArea.CursorX.IsUserSelectionEnabled = true;
 
             chart1.DataSource = mData2.DataPoints;
 
