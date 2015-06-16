@@ -189,8 +189,8 @@ namespace IRT.Calibration
         /// <param name="seriesName"></param>
         private void PlotWatts(string seriesName)
         {
-            Series wattSeries = chartCoastdown.Series.FirstOrDefault(x => x.Name == seriesName);
-
+            Series wattSeries = chartCoastdown.Series.FindByName(seriesName);
+            
             if (wattSeries != null)
             {
                 // Remove if already exists.
