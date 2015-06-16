@@ -4,6 +4,7 @@ using AntPlus.Profiles.BikePower;
 using AntPlus.Profiles.Common;
 using AntPlus.Profiles.Components;
 using AntPlus.Types;
+using BikeSignalProcessing;
 using IntervalParser;
 using IRT.Calibration;
 using IRT_GUI.IrtMessages;
@@ -2256,13 +2257,23 @@ namespace IRT_GUI
 
         private void btnChartOpen_Click(object sender, EventArgs e)
         {
-            BikeSignalProcessingReporter bsp = new BikeSignalProcessingReporter();
+
+            float drag, rr;
+            float.TryParse(this.txtDrag.Text, out drag);
+            float.TryParse(this.txtRR.Text, out rr);
+
+            Data mData = new Data();
+            BikeSignalProcessing.Form1 mForm = new Form1(mData, drag, rr);
+            BikeSignalProcessingReporter bsp = new BikeSignalProcessingReporter(mData);
             m_reporters.Add(bsp);
 
-            bsp.Closing += (o, v) =>
+            mForm.FormClosing += (o, v) =>
             {
                 m_reporters.Remove(bsp);
             };
+
+            mForm.Show();
+
 
             //GraphForm graph = new GraphForm();
             //m_reporters.Add(graph);

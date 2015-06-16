@@ -4,10 +4,16 @@ using System.Linq;
 
 namespace IRT.Calibration
 {
-    internal class PowerFit
+    public class PowerFit
     {
         private double[] m_coeff = { 0.0, 0.0 };
         private DecelerationFit m_decelFit;
+
+        public static double Power(double speedMph, double drag, double rr)
+        {
+            double speedMps = speedMph * 0.44704;
+            return fit_drag_rr(speedMps, drag, rr);
+        }
 
         public PowerFit(DecelerationFit decelFit)
         {

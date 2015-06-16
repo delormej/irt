@@ -7,7 +7,7 @@ namespace IRT.Calibration
     /// <summary>
     /// Calculates rate of deceleration for a given speed.
     /// </summary>
-    internal class DecelerationFit
+    public class DecelerationFit
     {
         alglib.barycentricinterpolant m_interpolant;
         double m_lastSpeed;

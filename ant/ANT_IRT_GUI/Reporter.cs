@@ -35,25 +35,11 @@ namespace ANT_Console
 
     public class BikeSignalProcessingReporter : IReporter
     {
-        BikeSignalProcessing.Form1 mForm;
         BikeSignalProcessing.Data mData;
 
-        public event EventHandler Closing;
-
-        public BikeSignalProcessingReporter()
+        public BikeSignalProcessingReporter(Data data)
         {
-            mData = new Data();
-            BikeSignalProcessing.Form1 mForm = new Form1(mData);
-            mForm.FormClosing += MForm_FormClosing;
-            mForm.Show();
-        }
-
-        private void MForm_FormClosing(object sender, System.Windows.Forms.FormClosingEventArgs e)
-        {
-            if (this.Closing != null)
-            {
-                Closing(this, EventArgs.Empty);
-            }
+            mData = data;
         }
 
         public void Report(string message)

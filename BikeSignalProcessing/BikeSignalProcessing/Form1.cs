@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IRT.Calibration;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -18,6 +19,9 @@ namespace BikeSignalProcessing
         private const string ChartAreaMagnet = "Magnet";
         private const int SegmentLineWidth = 3;
 
+        private double mDrag;
+        private double mRr;
+
         private Data mData;
         private Data mData2;
         private AsyncCsvFactory asyncCsv;
@@ -36,10 +40,55 @@ namespace BikeSignalProcessing
             chart1.MouseClick += Chart1_MouseClick;
             chart1.MouseMove += Chart1_MouseMove;
         }
-        public Form1(Data data) : this()
+        public Form1(Data data, double drag, double rr) : this()
         {
+            mDrag = drag;
+            mRr = rr;
+
             mData2 = data;
             BindData();
+            PlotCoastdownPower(drag, rr);
+        }
+
+        public void PlotCoastdownPower(double drag, double rr)
+        {
+            if (double.IsNaN(drag) || double.IsNaN(rr))
+                return;
+
+            string seriesName = "Coastdown Power Estimate";
+
+            Series wattSeries = chart1.Series.FindByName(seriesName);
+
+            if (wattSeries != null)
+            {
+                // Remove if already exists.
+                chart1.Series.Remove(wattSeries);
+            }
+
+            var powerArea = chart1.ChartAreas[ChartAreaMagnet];
+
+            wattSeries = chart1.Series.Add(seriesName);
+            wattSeries.ChartArea = ChartAreaMagnet;
+            wattSeries.ChartType = SeriesChartType.Spline;
+
+            //chart1.ChartAreas["Power"].AxisY.Title = "Power (watts)";
+            //chart1.ChartAreas["Power"].AxisX.Title = "Speed (mph)";
+            //chart1.ChartAreas["Power"].AxisX.RoundAxisValues();
+            ////chart1.ChartAreas["Coastdown"].AxisX = chart1.ChartAreas["Power"].AxisX;
+
+            chart1.Series[seriesName].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
+
+            for (double mph = 2; mph < 35; mph++)
+            {
+                double watts = PowerFit.Power(mph, drag, rr);
+                int i = wattSeries.Points.AddXY(mph, watts);
+
+                if (mph % 5 == 0)
+                {
+                    wattSeries.Points[i].MarkerStyle = MarkerStyle.Circle;
+                    wattSeries.Points[i].MarkerSize = 5;
+                }
+            }
         }
 
         private void Chart1_MouseMove(object sender, MouseEventArgs e)
@@ -450,6 +499,7 @@ namespace BikeSignalProcessing
         {
             BindChart(mData2);
             ChartSegments(mData2.StableSegments);
+            PlotCoastdownPower(mDrag, mRr);
             mData2.SegmentDetected += MData2_SegmentDetected;
         }
 
@@ -584,11 +634,6 @@ namespace BikeSignalProcessing
             ////ChartSegments(mZoomStart, mZoomEnd);
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-            Zoom();
-        }
-
         private void button3_Click(object sender, EventArgs e)
         {
             // Reset
@@ -600,6 +645,11 @@ namespace BikeSignalProcessing
         {
             Threshold = (double)upDownThreshold.Value;
             ChartSegments();
+        }
+
+        private void btnBest_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
