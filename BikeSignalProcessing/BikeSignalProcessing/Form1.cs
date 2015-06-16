@@ -20,11 +20,10 @@ namespace BikeSignalProcessing
         private const int SegmentLineWidth = 3;
 
         private double mDrag;
-        private double mRr;
+        private double mRollingResistance;
 
         private Data mData;
-        private Data mData2;
-        private AsyncCsvFactory asyncCsv;
+        //private AsyncCsvFactory asyncCsv;
 
         private int mZoomStart = -1;
         private int mZoomEnd = -1;
@@ -43,9 +42,9 @@ namespace BikeSignalProcessing
         public Form1(Data data, double drag, double rr) : this()
         {
             mDrag = drag;
-            mRr = rr;
+            mRollingResistance = rr;
 
-            mData2 = data;
+            mData = data;
             BindData();
             PlotCoastdownPower(drag, rr);
         }
@@ -224,7 +223,7 @@ namespace BikeSignalProcessing
             } while (i++ < end);
         }
 
-        private void DrawMagLinear(Segment segment)
+        private void DrawMagLinear(Segment segment, Color color)
         {
             double lowSpeed = 10.0; //  chart1.ChartAreas[ChartAreaMagnet].AxisX.ScaleView.ViewMinimum;
             double highSpeed = 25.0; //  chart1.ChartAreas[ChartAreaMagnet].AxisX.ScaleView.ViewMinimum;
@@ -241,6 +240,7 @@ namespace BikeSignalProcessing
                 magLinear = chart1.Series.Add(name);
                 magLinear.ChartArea = ChartAreaMagnet;
                 magLinear.ChartType = SeriesChartType.Line;
+                magLinear.Color = color;
             }
             else
             {
@@ -315,9 +315,10 @@ namespace BikeSignalProcessing
             mag.Points.Add(d);
 
             // Draw linear mag fit if available.
-            if (segment.Fit != null)
+            if (segment.Fit != null && segment.MagnetPosition != 2000)
             {
-                DrawMagLinear(segment);
+                chart1.ApplyPaletteColors();
+                DrawMagLinear(segment, mag.Color);
             }
         }
         
@@ -335,28 +336,13 @@ namespace BikeSignalProcessing
             if (segments == null)
                 return;
 
+            // Chart all segments
             foreach (var seg in segments)
             {
                 System.Diagnostics.Debug.WriteLine("Start: {0}, End: {1}, Power: {2}",
                     seg.Start, seg.End, seg.AveragePower);
                 DrawSegment(seg);
             }
-        }
-
-        
-        private void ChartSegments(int start, int end)
-        {
-            /*
-            double[] sample = new double[end - start];
-            Array.Copy(mData.SmoothedPower, start, sample, 0, end - start);
-
-            ChartSegments(sample);
-            */
-        }
-
-        private void ChartSegments()
-        {
-            //ChartSegments(mData.SmoothedPower);
         }
 
         private void BindChart(Data data)
@@ -383,9 +369,9 @@ namespace BikeSignalProcessing
             magArea.AxisX.LabelStyle.Format = "{0:0} mph";
             magArea.CursorX.IsUserSelectionEnabled = true;
 
-            chart1.DataSource = mData2.DataPoints;
+            chart1.DataSource = mData.DataPoints;
 
-            mData2.DataPoints.CollectionChanged += (object sender, 
+            mData.DataPoints.CollectionChanged += (object sender, 
                 System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
             {
                 Action a = () => {
@@ -444,7 +430,7 @@ namespace BikeSignalProcessing
             // output smoothed power signal vs. actual power signal
             if (filename != null)
             {
-                mData2 = (Data)IrtCsvFactory.Open(filename);
+                mData = (Data)IrtCsvFactory.Open(filename);
 
                 //asyncCsv = new AsyncCsvFactory();
                 //mData2 = asyncCsv.Open(filename);
@@ -497,10 +483,10 @@ namespace BikeSignalProcessing
 
         private void BindData()
         {
-            BindChart(mData2);
-            ChartSegments(mData2.StableSegments);
-            PlotCoastdownPower(mDrag, mRr);
-            mData2.SegmentDetected += MData2_SegmentDetected;
+            BindChart(mData);
+            ChartSegments(mData.StableSegments);
+            PlotCoastdownPower(mDrag, mRollingResistance);
+            mData.SegmentDetected += MData2_SegmentDetected;
         }
 
         private void MData2_SegmentDetected(Segment segment)
@@ -643,13 +629,61 @@ namespace BikeSignalProcessing
 
         private void upDownThreshold_ValueChanged(object sender, EventArgs e)
         {
-            Threshold = (double)upDownThreshold.Value;
-            ChartSegments();
+            //Threshold = (double)upDownThreshold.Value;
+            //ChartSegments();
+        }
+
+        private void FitNoMagnet(IEnumerable<Segment> bestSegments)
+        {
+            List<double> speed = new List<double>();
+            List<double> watts = new List<double>();
+
+            foreach (var segment in bestSegments)
+            {
+                if (segment.MagnetPosition == 2000)
+                {
+                    speed.Add(segment.AverageSpeed);
+                    watts.Add(segment.AveragePower);
+                }
+            }
+
+            if (speed.Count() > 2)
+            {
+                PowerFit fit = new PowerFit();
+                fit.Fit(speed.ToArray(), watts.ToArray());
+
+                mDrag = fit.Drag;
+                mRollingResistance = fit.RollingResistance;
+
+                PlotCoastdownPower(fit.Drag, fit.RollingResistance);
+            }
         }
 
         private void btnBest_Click(object sender, EventArgs e)
         {
+            var best = Segment.FindBestSegments(mData.StableSegments);
 
+            if (best == null || best.Count() < 1)
+                return;
+
+            // Clear the old segments.
+            RemoveSegments();
+
+            // Remove any data points.
+            foreach (Segment segment in best)
+            {
+                Series series = chart1.Series.FindByName(segment.MagnetPosition.ToString());
+                if (series != null)
+                {
+                    series.Points.Clear();
+                }
+            }
+
+            // Attempt to recalculate base on best no mag data.
+            FitNoMagnet(best);
+
+            // Re-chart the best ones.
+            ChartSegments(best);
         }
     }
 }

@@ -15,6 +15,11 @@ namespace IRT.Calibration
             return fit_drag_rr(speedMps, drag, rr);
         }
 
+        public PowerFit()
+        {
+            m_decelFit = null;
+        }
+
         public PowerFit(DecelerationFit decelFit)
         {
             m_decelFit = decelFit;
@@ -37,6 +42,12 @@ namespace IRT.Calibration
         /// <returns></returns>
         public double CalculateInteria(double speedMps, double watts)
         {
+            if (m_decelFit == null)
+            {
+                throw new InvalidOperationException(
+                    "PowerFit must be constructed with DecelerationFit to use this method.");
+            }
+
             // Where P = F*v, F=ma
 
             double f = watts / speedMps;
@@ -56,12 +67,30 @@ namespace IRT.Calibration
 
         public void Fit(double inertia)
         {
-            int info;
             double[,] speed;
             double[] watts;
 
             // Generate power : speed data.
             GeneratePowerData(inertia, out speed, out watts);
+            Fit(speed, watts);
+        }
+
+        public void Fit(double[] speedMph, double[] watts)
+        {
+            double[,] speed;
+            speed = new double[speedMph.Length, 1];
+
+            for (int i = 0; i < speedMph.Length; i++)
+            {
+                speed[i, 0] = speedMph[i] * 0.44704;
+            }
+
+            Fit(speed, watts);
+        }
+
+        private void Fit(double[,] speed, double[] watts)
+        {
+            int info;
 
             alglib.lsfitstate state;
             alglib.lsfitreport report;
@@ -73,6 +102,12 @@ namespace IRT.Calibration
 
         private void GeneratePowerData(double intertia, out double[,] speed, out double[] watts)
         {
+            if (m_decelFit == null)
+            {
+                throw new InvalidOperationException(
+                    "PowerFit must be constructed with DecelerationFit to use this method.");
+            }
+
             speed = new double[30, 1];
             watts = new double[30];
 
