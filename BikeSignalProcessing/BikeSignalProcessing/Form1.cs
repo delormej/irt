@@ -28,9 +28,6 @@ namespace BikeSignalProcessing
         private int mZoomStart = -1;
         private int mZoomEnd = -1;
 
-        public double Threshold = 4.0;
-        public int Window = 10;
-
         public Form1()
         {
             InitializeComponent();
@@ -41,12 +38,38 @@ namespace BikeSignalProcessing
         }
         public Form1(Data data, double drag, double rr) : this()
         {
+            upDownThreshold.DataBindings.Add("Value", data, "Threshold");
+            upDownMinWindow.DataBindings.Add("Value", data, "Window");
+
+            upDownMinWindow.ValueChanged += SegmentConfigChanged;
+            upDownThreshold.ValueChanged += SegmentConfigChanged;
+
             mDrag = drag;
             mRollingResistance = rr;
 
             mData = data;
             BindData();
             PlotCoastdownPower(drag, rr);
+        }
+
+        private void SegmentConfigChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (upDownThreshold.Value <= 0 || upDownMinWindow.Value <= 0)
+                    return;
+
+                this.Cursor = Cursors.WaitCursor;
+                mData.Threshold = (double)upDownThreshold.Value;
+                mData.Window = (int)upDownMinWindow.Value;
+
+                // Rechart segments.
+                ChartSegments(mData.StableSegments);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
         }
 
         public void PlotCoastdownPower(double drag, double rr)

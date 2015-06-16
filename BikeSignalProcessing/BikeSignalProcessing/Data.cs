@@ -22,15 +22,44 @@ namespace BikeSignalProcessing
     /// </summary>
     public class Data : INotifyPropertyChanged
     {
+        private int mWindow = 10;
+        private double mThreshold = 4.0;
+
+        private object mUpdateLock = null;
+
         /// <summary>
         /// Minimum number of data points in a segment. 
         /// </summary>
-        public int Window = 10;
+        public int Window
+        {
+            get { return mWindow; }
+            set
+            {
+                if (value != mWindow)
+                {
+                    mWindow = value;
+                    // Force re-evaluation.
+                    ReEvaluateSegments();
+                }
+            }
+        }
 
         /// <summary>
         /// Threshold for standard deviation in stable segment.
         /// </summary>
-        public double Threshold = 4.0;
+        public double Threshold
+        {
+            get { return mThreshold; }
+            set
+            {
+                if (value != mThreshold)
+                {
+                    mThreshold = value;
+                    // Force re-evaluation.
+                    ReEvaluateSegments();
+                }
+            }
+        }
 
         /// <summary>
         /// Hangs on to the active segment.
@@ -77,6 +106,7 @@ namespace BikeSignalProcessing
 
         public Data()
         {
+            mUpdateLock = new object();
             mIndex = 0;
 
             mCurrentSegment = null;
@@ -96,25 +126,47 @@ namespace BikeSignalProcessing
         /// <param name="servoPosition"></param>
         public void Update(double speedMph, double powerWatts, int servoPosition)
         {
-            BikeDataPoint value = new BikeDataPoint();
-            value.Seconds = mIndex;
+            lock (mUpdateLock)
+            {
+                BikeDataPoint value = new BikeDataPoint();
+                value.Seconds = mIndex;
 
-            value.SpeedMph = speedMph;
-            value.PowerWatts = powerWatts;
-            value.ServoPosition = servoPosition;
+                value.SpeedMph = speedMph;
+                value.PowerWatts = powerWatts;
+                value.ServoPosition = servoPosition;
 
-            // Calculate smoothed values.
-            value.SmoothedPowerWatts = Smooth(mPowerFilter, powerWatts);
-            value.SmoothedSpeedMph = Smooth(mSpeedFilter, speedMph);
+                // Calculate smoothed values.
+                value.SmoothedPowerWatts = Smooth(mPowerFilter, powerWatts);
+                value.SmoothedSpeedMph = Smooth(mSpeedFilter, speedMph);
 
-            // Maintain segment state.
-            EvaluateSegment(value);
+                // Maintain segment state.
+                EvaluateSegment(value);
 
-            // Update the collection.
-            DataPoints.Add(value);
+                // Update the collection.
+                DataPoints.Add(value);
 
-            // Increment internal index.
-            mIndex++;
+                // Increment internal index.
+                mIndex++;
+            }
+        }
+
+        public void ReEvaluateSegments()
+        {
+            lock (mUpdateLock)
+            {
+                // Reset internal counter
+                mIndex = 0;
+
+                // Clear existing segments.
+                StableSegments.Clear();
+                mCurrentSegment = null;
+
+                foreach (BikeDataPoint point in DataPoints)
+                {
+                    EvaluateSegment(point);
+                    mIndex++;
+                }
+            }
         }
 
         private void OnPropertyChanged(string propertyName)
@@ -282,7 +334,7 @@ namespace BikeSignalProcessing
                 {
                     // Invalidate the segment.
                     // Notify that a segment was added.
-                    if (SegmentDetected != null)
+                    if (SegmentDetected != null && mCurrentSegment != null)
                     {
                         Segment copy = mCurrentSegment.Copy();
                         copy.State = SegmentState.Invalidated;

@@ -65,6 +65,8 @@ namespace IRT_GUI
 
         bool m_usingCtfRef = false; // using an SRM power meter or Crank Torque Frequency.
 
+        private ChannelStatus m_eMotionChannelStatus;
+
         // Logging stuff.
         private Timer m_reportTimer;
         private List<IReporter> m_reporters;
@@ -698,6 +700,10 @@ namespace IRT_GUI
 
         void m_reportTimer_Tick(object sender, EventArgs e)
         {
+            // Don't report if we're not connected. 
+            if (m_eMotionChannelStatus != ChannelStatus.Tracking)
+                return;
+
             m_dataPoint.Timestamp = DateTime.UtcNow;
 
             foreach (IReporter r in m_reporters)
@@ -928,6 +934,7 @@ namespace IRT_GUI
         void m_eMotion_ChannelStatusChanged(ChannelStatus status)
         {
             UpdateStatus("E-Motion channel status changed: " + status.ToString());
+            m_eMotionChannelStatus = status;
 
             ExecuteOnUI(() =>
             {
