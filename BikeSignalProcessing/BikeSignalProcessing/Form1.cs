@@ -315,7 +315,7 @@ namespace BikeSignalProcessing
             mag.Points.Add(d);
 
             // Draw linear mag fit if available.
-            if (segment.Fit != null && segment.MagnetPosition != 2000)
+            if (segment.Fit != null && segment.MagnetPosition < 1600)
             {
                 chart1.ApplyPaletteColors();
                 DrawMagLinear(segment, mag.Color);
@@ -516,7 +516,15 @@ namespace BikeSignalProcessing
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                SmoothData(dlg.FileName);
+                try
+                {
+                    this.Cursor = Cursors.WaitCursor;
+                    SmoothData(dlg.FileName);
+                }
+                finally
+                {
+                    this.Cursor = Cursors.Default;
+                }
             }
         }
 
@@ -640,7 +648,7 @@ namespace BikeSignalProcessing
 
             foreach (var segment in bestSegments)
             {
-                if (segment.MagnetPosition == 2000)
+                if (segment.MagnetPosition >= 1600)
                 {
                     speed.Add(segment.AverageSpeed);
                     watts.Add(segment.AveragePower);

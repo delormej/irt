@@ -112,7 +112,7 @@ namespace BikeSignalProcessing
                         double maxSpeed = group.Max(s => s.AverageSpeed);
 
                         int max = group.Max(s => (s.End - s.Start));
-                        best = group.Where(s => (s.End - s.Start) == max).Single();
+                        best = group.Where(s => (s.End - s.Start) == max).First();
 
                         // Reset group.
                         group = null;
