@@ -19,8 +19,8 @@ namespace BikeSignalProcessing
         private const string ChartAreaMagnet = "Magnet";
         private const int SegmentLineWidth = 3;
 
-        private double mDrag;
-        private double mRollingResistance;
+        public double Drag { get; set; }
+        public double RollingResistance { get; set; }
 
         private Data mData;
         //private AsyncCsvFactory asyncCsv;
@@ -30,22 +30,28 @@ namespace BikeSignalProcessing
 
         public Form1()
         {
+            mData = new Data();
+
             InitializeComponent();
             ClearChart();
 
             chart1.MouseClick += Chart1_MouseClick;
             chart1.MouseMove += Chart1_MouseMove;
-        }
-        public Form1(Data data, double drag, double rr) : this()
-        {
-            upDownThreshold.DataBindings.Add("Value", data, "Threshold");
-            upDownMinWindow.DataBindings.Add("Value", data, "Window");
+
+            upDownThreshold.DataBindings.Add("Value", mData, "Threshold");
+            upDownMinWindow.DataBindings.Add("Value", mData, "Window");
 
             upDownMinWindow.ValueChanged += SegmentConfigChanged;
             upDownThreshold.ValueChanged += SegmentConfigChanged;
 
-            mDrag = drag;
-            mRollingResistance = rr;
+            txtDrag.DataBindings.Add("Text", this, "Drag");
+            txtRR.DataBindings.Add("Text", this, "RollingResistance");
+        }
+
+        public Form1(Data data, double drag, double rr) : this()
+        {
+            Drag = drag;
+            RollingResistance = rr;
 
             mData = data;
             BindData();
@@ -100,7 +106,7 @@ namespace BikeSignalProcessing
 
             chart1.Series[seriesName].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
 
-            for (double mph = 2; mph < 35; mph++)
+            for (double mph = 5; mph < 41; mph++)
             {
                 double watts = PowerFit.Power(mph, drag, rr);
                 int i = wattSeries.Points.AddXY(mph, watts);
@@ -325,6 +331,7 @@ namespace BikeSignalProcessing
                 mag = chart1.Series.Add(segment.MagnetPosition.ToString());
                 mag.ChartArea = ChartAreaMagnet;
                 mag.ChartType = SeriesChartType.Point;
+                mag.ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
             }
 
             System.Windows.Forms.DataVisualization.Charting.DataPoint d =
@@ -508,7 +515,7 @@ namespace BikeSignalProcessing
         {
             BindChart(mData);
             ChartSegments(mData.StableSegments);
-            PlotCoastdownPower(mDrag, mRollingResistance);
+            PlotCoastdownPower(Drag, RollingResistance);
             mData.SegmentDetected += MData2_SegmentDetected;
         }
 
@@ -683,8 +690,8 @@ namespace BikeSignalProcessing
                 PowerFit fit = new PowerFit();
                 fit.Fit(speed.ToArray(), watts.ToArray());
 
-                mDrag = fit.Drag;
-                mRollingResistance = fit.RollingResistance;
+                Drag = fit.Drag;
+                RollingResistance = fit.RollingResistance;
 
                 PlotCoastdownPower(fit.Drag, fit.RollingResistance);
             }
