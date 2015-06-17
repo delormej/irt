@@ -60,6 +60,14 @@ namespace BikeSignalProcessing.Model
             return this.MemberwiseClone() as Segment;
         }
 
+
+        public static IEnumerable<Segment> FindBestNoMagnetSegments(IEnumerable<Segment> segments)
+        {
+            // Filter for only those that have no magnet.
+            return FindBestSegments(
+                segments.Where(s => s.MagnetPosition >= 1600) );
+        }
+
         /// <summary>
         /// Groups segments of similar speed and returns the segment with the greatest
         /// number of values.

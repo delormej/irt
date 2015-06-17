@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using BikeSignalProcessing.Model;
+using MathNet.Numerics;
 
 namespace BikeSignalProcessing.View
 {
@@ -142,6 +143,18 @@ namespace BikeSignalProcessing.View
             internal void Fit(double[] speed, double[] watts)
             {
                 coeff = MathNet.Numerics.Fit.Polynomial(speed, watts, 3);
+            }
+
+            /// <summary>
+            /// Creates a matrix of speed:power
+            /// </summary>
+            /// <returns></returns>
+            internal Tuple<double, double>[] GetPower()
+            {
+                // Find the roots of the polynomial, since we don't want values below / above
+                // var roots = FindRoots.Cubic(coeff[0], coeff[1], coeff[2], coeff[3]);
+
+                return null;
             }
         }
 
@@ -728,7 +741,7 @@ namespace BikeSignalProcessing.View
 
         private void btnBest_Click(object sender, EventArgs e)
         {
-            var best = Segment.FindBestSegments(mData.StableSegments);
+            var best = Segment.FindBestNoMagnetSegments(mData.StableSegments);
 
             if (best == null || best.Count() < 1)
                 return;
@@ -748,6 +761,8 @@ namespace BikeSignalProcessing.View
 
             // Attempt to recalculate base on best no mag data.
             FitNoMagnet(best);
+
+            temp.GetPower();
 
             // Re-chart the best ones.
             ChartSegments(best);
