@@ -1,4 +1,4 @@
-﻿namespace BikeSignalProcessing
+﻿namespace BikeSignalProcessing.View
 {
     partial class Form1
     {

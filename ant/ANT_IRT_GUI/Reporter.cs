@@ -1,4 +1,5 @@
 ﻿using BikeSignalProcessing;
+using BikeSignalProcessing.Model;
 using IRT_GUI.IrtMessages;
 using System;
 using System.IO;
@@ -35,7 +36,7 @@ namespace ANT_Console
 
     public class BikeSignalProcessingReporter : IReporter
     {
-        BikeSignalProcessing.Data mData;
+        Data mData;
 
         public BikeSignalProcessingReporter(Data data)
         {

@@ -9,8 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using BikeSignalProcessing.Model;
 
-namespace BikeSignalProcessing
+namespace BikeSignalProcessing.View
 {
     public partial class Form1 : Form
     {

@@ -4,8 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using MathNet.Numerics.Statistics;
 using MathNet.Numerics.LinearRegression;
+using MathNet.Filtering.Median;
 
-namespace BikeSignalProcessing
+namespace BikeSignalProcessing.Model
 {
     public enum SegmentState
     {
@@ -167,5 +168,27 @@ namespace BikeSignalProcessing
             Fit.Intercept = fit.Item1;
             Fit.Slope = fit.Item2;
         }
+
+        public static double[] MovingAverage(double[] data, int duration)
+        {
+            OnlineMedianFilter filter = new OnlineMedianFilter(duration);
+            return filter.ProcessSamples(data);
+        }
+
+        public static double Average(double[] data, int start, int window)
+        {
+            double[] sample = new double[window];
+            Array.Copy(data, start, sample, 0, window);
+            return sample.Average();
+        }
+
+        public static double StandardDeviation(double[] data, int start, int end)
+        {
+            double[] sample = new double[end - start];
+            Array.Copy(data, start, sample, 0, end - start);
+
+            return Statistics.StandardDeviation(sample);
+        }
+
     }
 }

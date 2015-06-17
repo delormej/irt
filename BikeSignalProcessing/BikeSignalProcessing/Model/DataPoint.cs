@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 
 
-namespace BikeSignalProcessing
+namespace BikeSignalProcessing.Model
 {
     public class BikeDataPoint
     {

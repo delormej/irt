@@ -9,7 +9,7 @@ using MathNet.Filtering.Median;
 using MathNet.Numerics.Statistics;
 using System.ComponentModel;
 
-namespace BikeSignalProcessing
+namespace BikeSignalProcessing.Model
 { 
     /// <summary>
     /// Signature of a method that receives new segments.
