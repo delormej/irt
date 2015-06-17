@@ -298,15 +298,9 @@ namespace BikeSignalProcessing.View
             } while (i++ < end);
         }
 
-        private void DrawMagLinear(Segment segment, Color color)
+        private void DrawMagLinear(MagnetFit magfit)
         {
-            double lowSpeed = 10.0; //  chart1.ChartAreas[ChartAreaMagnet].AxisX.ScaleView.ViewMinimum;
-            double highSpeed = 25.0; //  chart1.ChartAreas[ChartAreaMagnet].AxisX.ScaleView.ViewMinimum;
-
-            if (double.IsNaN(lowSpeed) || double.IsNaN(highSpeed))
-                return;
-
-            string name = segment.MagnetPosition.ToString() + " Fit";
+            string name = magfit.MagnetPosition.ToString() + " Fit";
 
             // Find or create the series
             Series magLinear = chart1.Series.FindByName(name);
@@ -315,25 +309,36 @@ namespace BikeSignalProcessing.View
                 magLinear = chart1.Series.Add(name);
                 magLinear.ChartArea = ChartAreaMagnet;
                 magLinear.ChartType = SeriesChartType.Line;
-                magLinear.Color = color;
+
+                // Grab original series for the color.
+                Series series = chart1.Series.FindByName(magfit.MagnetPosition.ToString());
+                if (series != null)
+                    magLinear.Color = series.Color;
             }
             else
             {
                 magLinear.Points.Clear();
             }
 
-            // Low speed watts.
-            double lowPower = segment.Fit.Slope * lowSpeed +
-                segment.Fit.Intercept;
-
-            // High speed watts
-            double highPower = segment.Fit.Slope * highSpeed +
-                segment.Fit.Intercept;
-
-            magLinear.Points.AddXY(lowSpeed, lowPower);
-            magLinear.Points.AddXY(highSpeed, highPower);
+            magLinear.Points.AddXY(magfit.Low().Item1, magfit.Low().Item2);
+            magLinear.Points.AddXY(magfit.High().Item1, magfit.High().Item2);
         }
-    
+        
+        private void DrawMagLinear()
+        {
+            MagnetFit[] magfit = mData.EvaluateMagnetFit();
+
+            if (magfit == null)
+                return;
+
+            // Ensure all colors are in place.
+            chart1.ApplyPaletteColors();
+
+            foreach (MagnetFit fit in magfit)
+            {
+                DrawMagLinear(fit);
+            }
+        }
 
         private void DrawSegment(Segment segment)
         {
@@ -389,13 +394,6 @@ namespace BikeSignalProcessing.View
             //d.Label = summary;
 
             mag.Points.Add(d);
-
-            // Draw linear mag fit if available.
-            if (segment.Fit != null && segment.MagnetPosition < 1600)
-            {
-                chart1.ApplyPaletteColors();
-                DrawMagLinear(segment, mag.Color);
-            }
         }
         
         private void RemoveSegments()
@@ -419,7 +417,10 @@ namespace BikeSignalProcessing.View
                     seg.Start, seg.End, seg.AveragePower);
                 DrawSegment(seg);
             }
+
+            DrawMagLinear();
         }
+
 
         private void BindChart(Data data)
         {
@@ -752,18 +753,18 @@ namespace BikeSignalProcessing.View
             if (best == null || best.Count() < 1)
                 return;
 
-            // Clear the old segments.
-            RemoveSegments();
+            //// Clear the old segments.
+            //RemoveSegments();
 
-            // Remove any data points.
-            foreach (Segment segment in best)
-            {
-                Series series = chart1.Series.FindByName(segment.MagnetPosition.ToString());
-                if (series != null)
-                {
-                    series.Points.Clear();
-                }
-            }
+            //// Remove any data points.
+            //foreach (Segment segment in best)
+            //{
+            //    Series series = chart1.Series.FindByName(segment.MagnetPosition.ToString());
+            //    if (series != null)
+            //    {
+            //        series.Points.Clear();
+            //    }
+            //}
 
             // Attempt to recalculate base on best no mag data.
             FitNoMagnet(best);
@@ -771,7 +772,7 @@ namespace BikeSignalProcessing.View
             temp.GetPower();
 
             // Re-chart the best ones.
-            ChartSegments(best);
+            //ChartSegments(best);
         }
     }
 }

@@ -169,6 +169,12 @@ namespace BikeSignalProcessing.Model
             }
         }
 
+        public MagnetFit[] EvaluateMagnetFit()
+        {
+            var magSegments = this.StableSegments.Where(s => s.MagnetPosition < 1600);
+            return MagnetFit.FitMagnet(magSegments);
+        }
+
         private void OnPropertyChanged(string propertyName)
         {
             if (PropertyChanged != null)
@@ -320,9 +326,6 @@ namespace BikeSignalProcessing.Model
 
                             Segment copy = mCurrentSegment.Copy();
                             StableSegments.Add(copy);
-
-                            // Try fitting linear regression if there are multiple points for this position.
-                            copy.FitMagnet(this.StableSegments);
 
                             // Notify that a segment was added.
                             if (SegmentDetected != null)

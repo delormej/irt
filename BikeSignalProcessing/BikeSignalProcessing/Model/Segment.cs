@@ -45,8 +45,6 @@ namespace BikeSignalProcessing.Model
         public double AverageSpeed;
         public int MagnetPosition;
 
-        public MagnetFit Fit;
-
         public SegmentState State { get; set; }
 
         public Segment()
@@ -139,42 +137,6 @@ namespace BikeSignalProcessing.Model
                     yield return best;
                 }
             } while (last != null);
-        }
-
-        /// <summary>
-        /// Fits this segment against others for a given magnet position.
-        /// </summary>
-        /// <param name="segments"></param>
-        /// <returns></returns>
-        public void FitMagnet(IEnumerable<Segment> segments)
-        {
-            var matchingSegments = segments.Where(s => s.MagnetPosition ==
-                this.MagnetPosition);
-
-            // Return null if no matches.
-            if (matchingSegments == null || matchingSegments.Count() < 2)
-                return;
-
-            // Find the best segments if there are multiple for a given speed.
-            var bestSegments = FindBestSegments(matchingSegments);
-
-            List<double> x, y;
-
-            x = new List<double>();
-            y = new List<double>();
-
-            foreach (Segment segment in bestSegments)
-            {
-                x.Add(segment.AverageSpeed);
-                y.Add(segment.AveragePower);
-            }
-
-            Tuple<double, double> fit = SimpleRegression.Fit(x.ToArray(), y.ToArray());
-
-            // Assign fit.
-            Fit = new MagnetFit();
-            Fit.Intercept = fit.Item1;
-            Fit.Slope = fit.Item2;
         }
 
         public static double[] MovingAverage(double[] data, int duration)
