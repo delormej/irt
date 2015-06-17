@@ -57,7 +57,6 @@ namespace BikeSignalProcessing.View
 
             mData = data;
             BindData();
-            PlotCoastdownPower(drag, rr);
         }
 
         private void SegmentConfigChanged(object sender, EventArgs e)
@@ -80,9 +79,9 @@ namespace BikeSignalProcessing.View
             }
         }
 
-        public void PlotCoastdownPower(double drag, double rr)
+        public void PlotCoastdownPower(Tuple<double, double>[] speedWatts)
         {
-            if (double.IsNaN(drag) || double.IsNaN(rr) || rr == 0 || drag == 0)
+            if (speedWatts == null)
                 return;
 
             string seriesName = "Coastdown Power Estimate";
@@ -108,16 +107,11 @@ namespace BikeSignalProcessing.View
 
             chart1.Series[seriesName].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
 
-            for (double mph = 5; mph < 41; mph++)
+            foreach (var val in speedWatts)
             {
-                double watts = temp.Watts(mph); //PowerFit.Power(mph, drag, rr);
-                int i = wattSeries.Points.AddXY(mph, watts);
-
-                if (mph % 5 == 0)
-                {
-                    wattSeries.Points[i].MarkerStyle = MarkerStyle.Circle;
-                    wattSeries.Points[i].MarkerSize = 5;
-                }
+                int i = wattSeries.Points.AddXY(val.Item1, val.Item2);
+                wattSeries.Points[i].MarkerStyle = MarkerStyle.Circle;
+                wattSeries.Points[i].MarkerSize = 5;
             }
         }
 
@@ -125,24 +119,29 @@ namespace BikeSignalProcessing.View
 
         internal class TempFit
         {
-            double[] coeff;
+            double[] m_coeff;
+            double[] m_speed;
+            double[] m_power;
+
             internal TempFit()
             {
             }
 
             internal double Watts(double speedMps)
             {
-                double power = coeff[3] * Math.Pow(speedMps, 3) +
-                    coeff[2] * Math.Pow(speedMps, 2) +
-                    coeff[1] * speedMps +
-                    coeff[0];
+                double power = m_coeff[3] * Math.Pow(speedMps, 3) +
+                    m_coeff[2] * Math.Pow(speedMps, 2) +
+                    m_coeff[1] * speedMps +
+                    m_coeff[0];
 
                 return power;
             }
 
             internal void Fit(double[] speed, double[] watts)
             {
-                coeff = MathNet.Numerics.Fit.Polynomial(speed, watts, 3);
+                m_speed = speed;
+                m_power = watts;
+                m_coeff = MathNet.Numerics.Fit.Polynomial(m_speed, m_power, 3);
             }
 
             /// <summary>
@@ -151,10 +150,18 @@ namespace BikeSignalProcessing.View
             /// <returns></returns>
             internal Tuple<double, double>[] GetPower()
             {
-                // Find the roots of the polynomial, since we don't want values below / above
-                // var roots = FindRoots.Cubic(coeff[0], coeff[1], coeff[2], coeff[3]);
+                double min = Math.Floor(m_speed.Min());
+                double max = Math.Ceiling(m_speed.Max());
 
-                return null;
+                double val = min;
+                List<Tuple<double, double>> speedPower = new List<Tuple<double, double>>();
+
+                do
+                {
+                    speedPower.Add(new Tuple<double, double>(val, Watts(val)));
+                } while (max >= (val += 1));
+
+                return speedPower.ToArray();
             }
         }
 
@@ -554,7 +561,6 @@ namespace BikeSignalProcessing.View
         {
             BindChart(mData);
             ChartSegments(mData.StableSegments);
-            PlotCoastdownPower(Drag, RollingResistance);
             mData.SegmentDetected += MData2_SegmentDetected;
         }
 
@@ -735,7 +741,7 @@ namespace BikeSignalProcessing.View
                 Drag = fit.Drag;
                 RollingResistance = fit.RollingResistance;
                 
-                PlotCoastdownPower(fit.Drag, fit.RollingResistance);
+                PlotCoastdownPower(temp.GetPower());
             }
         }
 

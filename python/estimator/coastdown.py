@@ -179,8 +179,10 @@ def main(file_name):
 
 	# todo: add logic here to determine if you're using older than 1.4.3 that you use the old logic.
 
-	mps = np.empty(len(tick_delta)/4)
-	seconds = np.empty(len(time)/4)
+	skip = 4
+
+	mps = np.empty(len(tick_delta)/skip)
+	seconds = np.empty(len(time)/skip)
 	mps[0] = 0;
 	seconds[0] = 0;
 
@@ -188,16 +190,16 @@ def main(file_name):
 	# ds = delta seconds
 	ix = 0
 	for idx, val in enumerate(tick_delta):
-		if (idx > 0 and idx % 4 == 0):
-			if (val < tick_delta[idx-4]):
-				dt = val + (tick_delta[idx-4] ^ 0xFFFF)
+		if (idx > 0 and idx % skip == 0):
+			if (val < tick_delta[idx-skip]):
+				dt = val + (tick_delta[idx-skip] ^ 0xFFFF)
 			else:
-				dt = val-tick_delta[idx-4]
+				dt = val-tick_delta[idx-skip]
 
-			if (time[idx] < time[idx-4]):
-				ds = time[idx] + (time[idx-4] ^ 0xFFFF)
+			if (time[idx] < time[idx-skip]):
+				ds = time[idx] + (time[idx-skip] ^ 0xFFFF)
 			else:
-				ds = time[idx]-time[idx-4]
+				ds = time[idx]-time[idx-skip]
 
 			if (ix > 0):
 			    seconds[ix] = (ds/2048) + seconds[ix-1]
@@ -220,7 +222,9 @@ def main(file_name):
 	seconds = seconds[ix_max:ix_min]
 	mps = mps[ix_max:ix_min]
 	
-	print("Max speed was at ix: %s, min was at ix: %s" % ( time[ix_max*4-1], time[ix_min*4-1] ))
+	print("hello", mps)
+	
+	print("Max speed was at ix: %s, min was at ix: %s" % ( time[ix_max*skip-1], time[ix_min*skip-1] ))
 
 	# calculate new x/y to represent time in ms since 0 and speed in meters per second
 	y = (seconds.max() - seconds)	# seconds until min
@@ -313,9 +317,27 @@ def main(file_name):
 	(fig_name, ext) = os.path.splitext(file_name)
 	plt.savefig(fig_name + '.png')
 	plt.show()
+
+def get_files(rootdir):
+    for root, dirs, files in os.walk(rootdir):
+        if root.find("BCI") > -1 or root.find("Mag_Calibration") > -1:
+            continue
+        for filename in files:
+            if filename.startswith('calib_') and filename.endswith('.csv'):
+                filepath = os.path.join(root, filename)
+                yield filepath
 	
 if __name__ == "__main__":
 	if (len(sys.argv) > 2):
 		speed_col = int(sys.argv[2])
-	main(sys.argv[1])
-
+	path = sys.argv[1]
+	
+	if os.path.isdir(path):
+		for f in get_files(path):
+			try:
+				main(f)
+			except:
+				print("skipping", f)
+	else:
+		main(path)	
+	
