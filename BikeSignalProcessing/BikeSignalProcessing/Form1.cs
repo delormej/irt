@@ -80,7 +80,7 @@ namespace BikeSignalProcessing
 
         public void PlotCoastdownPower(double drag, double rr)
         {
-            if (double.IsNaN(drag) || double.IsNaN(rr))
+            if (double.IsNaN(drag) || double.IsNaN(rr) || rr == 0 || drag == 0)
                 return;
 
             string seriesName = "Coastdown Power Estimate";
@@ -108,7 +108,7 @@ namespace BikeSignalProcessing
 
             for (double mph = 5; mph < 41; mph++)
             {
-                double watts = PowerFit.Power(mph, drag, rr);
+                double watts = temp.Watts(mph); //PowerFit.Power(mph, drag, rr);
                 int i = wattSeries.Points.AddXY(mph, watts);
 
                 if (mph % 5 == 0)
@@ -116,6 +116,31 @@ namespace BikeSignalProcessing
                     wattSeries.Points[i].MarkerStyle = MarkerStyle.Circle;
                     wattSeries.Points[i].MarkerSize = 5;
                 }
+            }
+        }
+
+        TempFit temp;
+
+        internal class TempFit
+        {
+            double[] coeff;
+            internal TempFit()
+            {
+            }
+
+            internal double Watts(double speedMps)
+            {
+                double power = coeff[3] * Math.Pow(speedMps, 3) +
+                    coeff[2] * Math.Pow(speedMps, 2) +
+                    coeff[1] * speedMps +
+                    coeff[0];
+
+                return power;
+            }
+
+            internal void Fit(double[] speed, double[] watts)
+            {
+                coeff = MathNet.Numerics.Fit.Polynomial(speed, watts, 3);
             }
         }
 
@@ -687,12 +712,15 @@ namespace BikeSignalProcessing
 
             if (speed.Count() > 2)
             {
+                temp = new TempFit();
+                temp.Fit(speed.ToArray(), watts.ToArray());
+                
                 PowerFit fit = new PowerFit();
                 fit.Fit(speed.ToArray(), watts.ToArray());
 
                 Drag = fit.Drag;
                 RollingResistance = fit.RollingResistance;
-
+                
                 PlotCoastdownPower(fit.Drag, fit.RollingResistance);
             }
         }
