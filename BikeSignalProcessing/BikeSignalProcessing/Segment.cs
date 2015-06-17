@@ -67,12 +67,10 @@ namespace BikeSignalProcessing
         /// <returns></returns>
         public static IEnumerable<Segment> FindBestSegments(IEnumerable<Segment> segments)
         {
-            var speeds = segments
-                .OrderBy(s => s.AverageSpeed)
-                .Select(s => s.AverageSpeed);
+            var segs = segments.OrderBy(s => s.AverageSpeed);
+            var speeds = segs.Select(s => s.AverageSpeed);
 
             double dev = speeds.StandardDeviation();
-            var segs = segments.OrderBy(s => s.AverageSpeed);
 
             List<Segment> group = null;
 
