@@ -240,15 +240,12 @@ namespace BikeSignalProcessing.View
         
         private void DrawMagLinear()
         {
-            MagnetFit[] magfit = mData.EvaluateMagnetFit();
-
-            if (magfit == null)
-                return;
-
             // Ensure all colors are in place.
             chart1.ApplyPaletteColors();
 
-            foreach (MagnetFit fit in magfit)
+            mData.EvaluateMagnetFit();
+
+            foreach (MagnetFit fit in mData.MagnetFits)
             {
                 DrawMagLinear(fit);
             }
@@ -540,6 +537,19 @@ namespace BikeSignalProcessing.View
             */
         }
 
+        private void ClearMagPoints()
+        {
+            foreach (Segment seg in mData.StableSegments)
+            {
+                // Clear any mag points.
+                Series series = chart1.Series.FindByName(seg.MagnetPosition.ToString());
+                if (series != null)
+                {
+                    series.Points.Clear();
+                }
+            }
+        }
+
         private void btnReset_Click(object sender, EventArgs e)
         {
             // Reset
@@ -555,6 +565,8 @@ namespace BikeSignalProcessing.View
 
         private void btnBest_Click(object sender, EventArgs e)
         {
+            ClearMagPoints();
+
             // Attempt to fit the coast down.
             double[] speed, power;
             mData.EvaluateNoMagnetFit(out speed, out power);
@@ -563,13 +575,6 @@ namespace BikeSignalProcessing.View
             {
                 PlotCoastdownPower(speed, power);
             }
-
-            //// Clear any mag points.
-            //Series series = chart1.Series.FindByName(seg.MagnetPosition.ToString());
-            //if (series != null)
-            //{
-            //    series.Points.Clear();
-            //}
 
             ChartSegments(mData.StableSegments);
             DrawMagLinear();

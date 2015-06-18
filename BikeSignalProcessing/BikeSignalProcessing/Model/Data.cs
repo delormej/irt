@@ -103,12 +103,14 @@ namespace BikeSignalProcessing.Model
         /// <summary>
         /// Segments represent stable windows into this collection of data points.
         /// </summary>
-        public ObservableCollection<Segment> StableSegments { get; set; }
+        public ObservableCollection<Segment> StableSegments { get; private set; }
 
         /// <summary>
         /// Data points including raw received and smoothed values.
         /// </summary>
-        public ObservableCollection<BikeDataPoint> DataPoints { get; set; }
+        public ObservableCollection<BikeDataPoint> DataPoints { get; private set; }
+
+        public ObservableCollection<MagnetFit> MagnetFits { get; private set; }
 
         public Data()
         {
@@ -175,12 +177,14 @@ namespace BikeSignalProcessing.Model
             }
         }
 
-        public MagnetFit[] EvaluateMagnetFit()
+        public void EvaluateMagnetFit()
         {
             // Filter for only the magnet ON positions.
             var magSegments = this.StableSegments.Where(s => s.MagnetPosition < 1600);
 
-            return MagnetFit.FitMagnet(magSegments);
+            MagnetFits = new ObservableCollection<MagnetFit>(
+                
+                MagnetFit.FitMagnet(magSegments));
         }
 
         public void EvaluateNoMagnetFit(out double[] speedModified, out double[] powerData)
@@ -208,21 +212,30 @@ namespace BikeSignalProcessing.Model
 
             if (speed.Count() > 2)
             {
-                mPowerFit = new PolyPowerFit();
-                mPowerFit.Fit(speed.ToArray(), watts.ToArray());
-
-                Drag = mPowerFit.Drag;
-                RollingResistance = mPowerFit.RollingResistance;
-
-                double[,] speedData;
-                mPowerFit.GeneratePowerData(out speedData, out powerData);
-
-                speedModified = new double[powerData.Length];
-
-                int i = 0;
-                foreach (double d in speedData)
+                try
                 {
-                    speedModified[i++] = d;
+                    mPowerFit = new PolyPowerFit();
+                    mPowerFit.Fit(speed.ToArray(), watts.ToArray());
+
+                    Drag = mPowerFit.Drag;
+                    RollingResistance = mPowerFit.RollingResistance;
+
+                    double[,] speedData;
+                    mPowerFit.GeneratePowerData(out speedData, out powerData);
+
+                    speedModified = new double[powerData.Length];
+
+                    int i = 0;
+                    foreach (double d in speedData)
+                    {
+                        speedModified[i++] = d;
+                    }
+                }
+                catch
+                {
+                    mPowerFit = null;
+                    speedModified = null;
+                    powerData = null;
                 }
             }
             else
