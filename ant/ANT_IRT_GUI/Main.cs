@@ -2274,7 +2274,7 @@ namespace IRT_GUI
             Data mData = new Data();
             mData.Drag = drag;
             mData.RollingResistance = rr;
-            Form1 mForm = new Form1(mData);
+            ChartView mForm = new ChartView(mData);
             BikeSignalProcessingReporter bsp = new BikeSignalProcessingReporter(mData);
             m_reporters.Add(bsp);
 

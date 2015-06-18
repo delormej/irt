@@ -1,6 +1,6 @@
 ﻿namespace BikeSignalProcessing.View
 {
-    partial class Form1
+    partial class ChartView
     {
         /// <summary>
         /// Required designer variable.

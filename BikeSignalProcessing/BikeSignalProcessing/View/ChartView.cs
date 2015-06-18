@@ -14,7 +14,7 @@ using MathNet.Numerics;
 
 namespace BikeSignalProcessing.View
 {
-    public partial class Form1 : Form
+    public partial class ChartView : Form
     {
         private const string ActualSeriesName = "Actual";
         private const string SmoothSeriesName = "Smoothed";
@@ -27,7 +27,7 @@ namespace BikeSignalProcessing.View
         private int mZoomStart = -1;
         private int mZoomEnd = -1;
 
-        public Form1()
+        public ChartView()
         {
             mData = new Data();
 
@@ -47,7 +47,7 @@ namespace BikeSignalProcessing.View
             txtRR.DataBindings.Add("Text", mData, "RollingResistance");
         }
 
-        public Form1(Data data) : this()
+        public ChartView(Data data) : this()
         {
             mData = data;
             BindData(null);
