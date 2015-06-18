@@ -397,8 +397,13 @@ namespace BikeSignalProcessing.View
             //segmentArea.AlignmentOrientation = AreaAlignmentOrientations.Vertical;
             //segmentArea.AlignmentStyle = AreaAlignmentStyles.AxesView;
             //segmentArea.AxisX.Maximum = 30;
-            segmentArea.AxisX.ScaleView.Size = 10;
+            segmentArea.AxisX.ScaleView.Size = 30;
             segmentArea.AxisX.ScrollBar.Enabled = false;
+            segmentArea.AxisX.IntervalType = DateTimeIntervalType.Seconds;
+            segmentArea.AxisY.MajorGrid.Enabled = false;
+            segmentArea.AxisY.MinorGrid.Enabled = false;
+            segmentArea.AxisY2.MajorGrid.Enabled = false;
+            segmentArea.AxisY2.MinorGrid.Enabled = false;
 
             Series segmentPower = chart1.Series.Add("Segment Power");
             segmentPower.ChartType = SeriesChartType.FastLine;
@@ -407,11 +412,10 @@ namespace BikeSignalProcessing.View
             segmentPower.ChartArea = "Segment";
 
             Series segmentSpeed = chart1.Series.Add("Segment Speed (mph)");
-            actualSpeed.ChartType = SeriesChartType.FastLine;
-            actualSpeed.YValueMembers = "SpeedMph";
-            actualSpeed.YAxisType = AxisType.Secondary;
-            actualSpeed.ChartArea = "Segment";
-
+            segmentSpeed.ChartType = SeriesChartType.FastLine;
+            segmentSpeed.YValueMembers = "SpeedMph";
+            segmentSpeed.YAxisType = AxisType.Secondary;
+            segmentSpeed.ChartArea = "Segment";
 
             mData.DataPoints.CollectionChanged += (object sender,
                 System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
@@ -420,13 +424,12 @@ namespace BikeSignalProcessing.View
                     try
                     {
                         chart1.DataBind();
-
-                        //double max = e.NewStartingIndex; //  chart1.ChartAreas["Segment"].AxisX.Maximum;
+                        
                         ChartArea area = chart1.ChartAreas["Segment"];
 
                         if (area.AxisX.Maximum > area.AxisX.ScaleView.Size)
                         {
-                            area.AxisX.ScaleView.Scroll(area.AxisX.Maximum);
+                            area.AxisX.ScaleView.Scroll(area.AxisX.Maximum + 5);
                         }
                     }
                     catch (Exception ex)
