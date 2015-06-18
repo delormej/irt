@@ -19,6 +19,20 @@ namespace BikeSignalProcessing.Model
     {
         private int mStart;
         private int mEnd;
+        private Data mOwner;    // object that owns this segment.
+        private double mAveragePower;
+
+        // Hide constructor without Data arg.
+        private Segment()
+        {
+            Start = 0;
+            End = 0;
+        }
+
+        public Segment(Data owner) : this()
+        {
+            this.mOwner = owner;
+        }
 
         public int Start
         {
@@ -41,17 +55,27 @@ namespace BikeSignalProcessing.Model
         }
 
         public double StdDev;
-        public double AveragePower;
+        public double AveragePower
+        {
+            get
+            {
+                if (mOwner.mPowerFit != null)
+                {
+                    return mAveragePower -
+                        mOwner.mPowerFit.Watts(this.AverageSpeed);
+                }
+                else
+                {
+                    return mAveragePower;
+                }
+            }
+            set { mAveragePower = value; }
+        }
+
         public double AverageSpeed;
         public int MagnetPosition;
 
         public SegmentState State { get; set; }
-
-        public Segment()
-        {
-            Start = 0;
-            End = 0;
-        }
 
         public Segment Copy()
         {

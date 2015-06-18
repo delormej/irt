@@ -39,7 +39,7 @@ namespace BikeSignalProcessing.Model
         /// </summary>
         /// <param name="segments"></param>
         /// <returns></returns>
-        public static MagnetFit[] FitMagnet(IEnumerable<Segment> segments, PowerFit powerFit)
+        public static MagnetFit[] FitMagnet(IEnumerable<Segment> segments)
         {
             List<MagnetFit> fits = new List<MagnetFit>();
 
@@ -59,20 +59,8 @@ namespace BikeSignalProcessing.Model
 
                 foreach (Segment segment in best)
                 {
-                    double magOnlyPower;
-
-                    if (powerFit != null)
-                    {
-                        magOnlyPower = segment.AveragePower -
-                            powerFit.Watts(segment.AverageSpeed);
-                    }
-                    else
-                    {
-                        magOnlyPower = segment.AveragePower;
-                    }
-
                     x.Add(segment.AverageSpeed);
-                    y.Add(magOnlyPower);
+                    y.Add(segment.AveragePower);
                 }
 
                 Tuple<double, double> fit = SimpleRegression.Fit(x.ToArray(), y.ToArray());

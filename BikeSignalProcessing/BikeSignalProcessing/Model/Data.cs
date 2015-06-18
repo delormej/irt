@@ -28,7 +28,7 @@ namespace BikeSignalProcessing.Model
 
         private object mUpdateLock = null;
 
-        private PowerFit mPowerFit;
+        internal PowerFit mPowerFit;
 
         /// <summary>
         /// Minimum number of data points in a segment. 
@@ -180,7 +180,7 @@ namespace BikeSignalProcessing.Model
             // Filter for only the magnet ON positions.
             var magSegments = this.StableSegments.Where(s => s.MagnetPosition < 1600);
 
-            return MagnetFit.FitMagnet(magSegments, mPowerFit);
+            return MagnetFit.FitMagnet(magSegments);
         }
 
         public void EvaluateNoMagnetFit(out double[] speedModified, out double[] powerData)
@@ -344,7 +344,7 @@ namespace BikeSignalProcessing.Model
                 if (mCurrentSegment == null)
                 {
                     // Starting a new segment.
-                    mCurrentSegment = new Segment();
+                    mCurrentSegment = new Segment(this);
                     mCurrentSegment.Start = start;
 
                     // Notify that we started a segment.
