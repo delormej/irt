@@ -339,19 +339,21 @@ namespace BikeSignalProcessing.View
 
             ChartArea rideArea = chart1.ChartAreas.Add("Ride");
             rideArea.Position.Width = 70;
-            rideArea.Position.Height = 100;
+            rideArea.Position.Height = 80;
             rideArea.Position.X = 0;
+            rideArea.Position.Y = 20;
             rideArea.AxisX.IntervalType = DateTimeIntervalType.Seconds;
             rideArea.AxisY2.Maximum = 40; // limit to 40 mph.
             rideArea.CursorX.IsUserSelectionEnabled = true;
 
             ChartArea magArea = chart1.ChartAreas.Add("Magnet");
             magArea.Position.Width = 30;
-            magArea.Position.Height = 100;
+            magArea.Position.Height = 80;
             magArea.AlignWithChartArea = "Ride";
             magArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
             magArea.AlignmentStyle = AreaAlignmentStyles.AxesView;
             magArea.Position.X = 70;
+            magArea.Position.Y = 20;
             magArea.AxisX.Interval = 3;
             magArea.AxisX.LabelStyle.Format = "{0:0} mph";
             magArea.CursorX.IsUserSelectionEnabled = true;
@@ -381,8 +383,6 @@ namespace BikeSignalProcessing.View
                 {
                     this.Invoke(a);
                 }
-
-                //chart1.DataBind();
             };
 
             Series actualPower = chart1.Series.Add(ActualSeriesName);
@@ -409,6 +409,30 @@ namespace BikeSignalProcessing.View
             smoothSpeed.YValueMembers = "SmoothedSpeedMph";
             smoothSpeed.YAxisType = AxisType.Secondary;
             smoothSpeed.ChartArea = "Ride";
+
+            //
+            // Create an area on the graph to zoom into a segment.
+            //
+            ChartArea segmentArea = chart1.ChartAreas.Add("Segment");
+            segmentArea.Position.Width = 50;
+            segmentArea.Position.Height = 20;
+            segmentArea.Position.X = 20;
+            segmentArea.Position.Y = 0;
+            //segmentArea.AlignWithChartArea = "Ride";
+            //segmentArea.AlignmentOrientation = AreaAlignmentOrientations.Vertical;
+            //segmentArea.AlignmentStyle = AreaAlignmentStyles.AxesView;
+
+            Series segmentPower = chart1.Series.Add("Segment Power");
+            segmentPower.ChartType = SeriesChartType.FastLine;
+            segmentPower.YValueMembers = "PowerWatts";
+            segmentPower.YAxisType = AxisType.Primary;
+            segmentPower.ChartArea = "Segment";
+
+            Series segmentSpeed = chart1.Series.Add("Segment Speed (mph)");
+            actualSpeed.ChartType = SeriesChartType.FastLine;
+            actualSpeed.YValueMembers = "SpeedMph";
+            actualSpeed.YAxisType = AxisType.Secondary;
+            actualSpeed.ChartArea = "Segment";
         }
 
         private void BindData(string filename)
