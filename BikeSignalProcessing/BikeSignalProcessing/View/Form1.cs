@@ -20,10 +20,7 @@ namespace BikeSignalProcessing.View
         private const string SmoothSeriesName = "Smoothed";
         private const string ChartAreaMagnet = "Magnet";
         private const int SegmentLineWidth = 3;
-
-        public double Drag { get; set; }
-        public double RollingResistance { get; set; }
-
+        
         private Data mData;
         //private AsyncCsvFactory asyncCsv;
 
@@ -46,15 +43,12 @@ namespace BikeSignalProcessing.View
             upDownMinWindow.ValueChanged += SegmentConfigChanged;
             upDownThreshold.ValueChanged += SegmentConfigChanged;
 
-            txtDrag.DataBindings.Add("Text", this, "Drag");
-            txtRR.DataBindings.Add("Text", this, "RollingResistance");
+            txtDrag.DataBindings.Add("Text", mData, "Drag");
+            txtRR.DataBindings.Add("Text", mData, "RollingResistance");
         }
 
-        public Form1(Data data, double drag, double rr) : this()
+        public Form1(Data data) : this()
         {
-            Drag = drag;
-            RollingResistance = rr;
-
             mData = data;
             BindData();
         }
@@ -351,17 +345,17 @@ namespace BikeSignalProcessing.View
 
         private void ChartSegments(IEnumerable<Segment> segments)
         {
-            // Remove any old segments.
-            RemoveSegments(); 
-
             if (segments == null)
                 return;
+
+            // Remove any old segments.
+            RemoveSegments(); 
 
             // Chart all segments
             foreach (var seg in segments)
             {
-                System.Diagnostics.Debug.WriteLine("Start: {0}, End: {1}, Power: {2}",
-                    seg.Start, seg.End, seg.AveragePower);
+                //System.Diagnostics.Debug.WriteLine("Start: {0}, End: {1}, Power: {2}",
+                //    seg.Start, seg.End, seg.AveragePower);
                 DrawSegment(seg);
             }
 
@@ -509,10 +503,10 @@ namespace BikeSignalProcessing.View
         {
             BindChart(mData);
             ChartSegments(mData.StableSegments);
-            mData.SegmentDetected += MData2_SegmentDetected;
+            mData.SegmentDetected += OnSegmentDetected;
         }
 
-        private void MData2_SegmentDetected(Segment segment)
+        private void OnSegmentDetected(Segment segment)
         {
             Action a = () => { DrawSegment(segment); };
 
@@ -664,69 +658,24 @@ namespace BikeSignalProcessing.View
             //ChartSegments();
         }
 
-        private void FitNoMagnet(IEnumerable<Segment> bestSegments)
-        {
-            List<double> speed = new List<double>();
-            List<double> watts = new List<double>();
-
-            foreach (var segment in bestSegments)
-            {
-                if (segment.MagnetPosition >= 1600)
-                {
-                    speed.Add(segment.AverageSpeed);
-                    watts.Add(segment.AveragePower);
-                }
-            }
-
-            if (speed.Count() > 2)
-            {
-                PolyPowerFit fit = new PolyPowerFit();
-                fit.Fit(speed.ToArray(), watts.ToArray());
-
-                Drag = fit.Drag;
-                RollingResistance = fit.RollingResistance;
-
-                double[,] speedData;
-                double[] powerData;
-                fit.GeneratePowerData(out speedData, out powerData);
-
-                double[] speedModified = new double[powerData.Length];
-
-                int i = 0;
-                foreach (double d in speedData)
-                {
-                    speedModified[i++] = d;
-                }
-                
-                PlotCoastdownPower(speedModified, powerData);
-            }
-        }
-
         private void btnBest_Click(object sender, EventArgs e)
         {
-            var best = Segment.FindBestNoMagnetSegments(mData.StableSegments);
+            double[] speed, power;
+            mData.EvaluateNoMagnetFit(out speed, out power);
+            PlotCoastdownPower(speed, power);
 
-            if (best == null || best.Count() < 1)
-                return;
-
-            //// Clear the old segments.
-            //RemoveSegments();
-
-            //// Remove any data points.
-            //foreach (Segment segment in best)
+            //// Clear any mag points.
+            //Series series = chart1.Series.FindByName(seg.MagnetPosition.ToString());
+            //if (series != null)
             //{
-            //    Series series = chart1.Series.FindByName(segment.MagnetPosition.ToString());
-            //    if (series != null)
-            //    {
-            //        series.Points.Clear();
-            //    }
+            //    series.Points.Clear();
             //}
 
-            // Attempt to recalculate base on best no mag data.
-            FitNoMagnet(best);
+            ChartSegments(mData.StableSegments);
+            DrawMagLinear();
 
-            // Re-chart the best ones.
-            //ChartSegments(best);
+            //// Re-chart only the best segments.
+            //ChartSegments(Segment.FindBestSegments(mData.StableSegments));
         }
     }
 }

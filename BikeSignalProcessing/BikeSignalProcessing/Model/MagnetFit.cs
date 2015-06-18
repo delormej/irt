@@ -1,4 +1,5 @@
-﻿using MathNet.Numerics.LinearRegression;
+﻿using IRT.Calibration;
+using MathNet.Numerics.LinearRegression;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +39,7 @@ namespace BikeSignalProcessing.Model
         /// </summary>
         /// <param name="segments"></param>
         /// <returns></returns>
-        public static MagnetFit[] FitMagnet(IEnumerable<Segment> segments)
+        public static MagnetFit[] FitMagnet(IEnumerable<Segment> segments, PowerFit powerFit)
         {
             List<MagnetFit> fits = new List<MagnetFit>();
 
@@ -58,8 +59,20 @@ namespace BikeSignalProcessing.Model
 
                 foreach (Segment segment in best)
                 {
+                    double magOnlyPower;
+
+                    if (powerFit != null)
+                    {
+                        magOnlyPower = segment.AveragePower -
+                            powerFit.Watts(segment.AverageSpeed);
+                    }
+                    else
+                    {
+                        magOnlyPower = segment.AveragePower;
+                    }
+
                     x.Add(segment.AverageSpeed);
-                    y.Add(segment.AveragePower);
+                    y.Add(magOnlyPower);
                 }
 
                 Tuple<double, double> fit = SimpleRegression.Fit(x.ToArray(), y.ToArray());
@@ -74,8 +87,6 @@ namespace BikeSignalProcessing.Model
             }
 
             return fits.ToArray();
-
         }
-
     }
 }

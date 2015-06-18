@@ -2272,7 +2272,9 @@ namespace IRT_GUI
             float.TryParse(this.txtRR.Text, out rr);
 
             Data mData = new Data();
-            Form1 mForm = new Form1(mData, drag, rr);
+            mData.Drag = drag;
+            mData.RollingResistance = rr;
+            Form1 mForm = new Form1(mData);
             BikeSignalProcessingReporter bsp = new BikeSignalProcessingReporter(mData);
             m_reporters.Add(bsp);
 
