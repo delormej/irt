@@ -33,7 +33,7 @@ namespace BikeSignalProcessing.Model
 
             return value;
         }
-
+        
         /// <summary>
         /// Fits this segment against others for a given magnet position.
         /// </summary>
@@ -60,14 +60,14 @@ namespace BikeSignalProcessing.Model
                 foreach (Segment segment in best)
                 {
                     x.Add(segment.AverageSpeed);
-                    y.Add(segment.AveragePower);
+                    y.Add(segment.NoMagnetPower);
                 }
 
                 Tuple<double, double> fit = SimpleRegression.Fit(x.ToArray(), y.ToArray());
 
                 // Assign fit.
                 MagnetFit magfit = new MagnetFit();
-                magfit.MagnetPosition = group.First().MagnetPosition;
+                magfit.MagnetPosition = group.Key;
                 magfit.Intercept = fit.Item1;
                 magfit.Slope = fit.Item2;
 

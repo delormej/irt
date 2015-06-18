@@ -379,9 +379,6 @@ namespace BikeSignalProcessing.Model
                         if (mCurrentSegment.AveragePower > 40 &&
                             mCurrentSegment.AverageSpeed > 4.0)
                         {
-                            mCurrentSegment.MagnetPosition =
-                                DataPoints[mCurrentSegment.Start].ServoPosition;
-
                             Segment copy = mCurrentSegment.Copy();
                             StableSegments.Add(copy);
 

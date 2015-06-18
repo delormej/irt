@@ -54,12 +54,30 @@ namespace BikeSignalProcessing.Model
             }
         }
 
-        public double StdDev;
-        public double AveragePower
+        public int Length
         {
             get
             {
-                if (mOwner.mPowerFit != null)
+                if (End > Start)
+                    return End - Start;
+                else
+                    return 0;
+            }
+        }
+
+        public double StdDev;
+
+        public double AveragePower
+        {
+            get { return mAveragePower; }
+            set { mAveragePower = value; }
+        }
+
+        public double NoMagnetPower
+        {
+            get
+            {
+                if (mOwner.mPowerFit != null && this.MagnetPosition <= 1600)
                 {
                     return mAveragePower -
                         mOwner.mPowerFit.Watts(this.AverageSpeed);
@@ -69,11 +87,33 @@ namespace BikeSignalProcessing.Model
                     return mAveragePower;
                 }
             }
-            set { mAveragePower = value; }
         }
 
         public double AverageSpeed;
-        public int MagnetPosition;
+
+        /// <summary>
+        /// Grabs the mid point of segment range.
+        /// </summary>
+        public int MagnetPosition
+        {
+            get
+            {
+                if (End == 0)
+                {
+                    return mOwner.DataPoints[Start].ServoPosition;
+                }
+                else if (End > 0)
+                {
+                    // Get the mid point.
+                    int mid = Start + ((int)(End - Start) / 2);
+                    return mOwner.DataPoints[mid].ServoPosition;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
 
         public SegmentState State { get; set; }
 
