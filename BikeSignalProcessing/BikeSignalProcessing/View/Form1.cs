@@ -79,11 +79,8 @@ namespace BikeSignalProcessing.View
             }
         }
 
-        public void PlotCoastdownPower(Tuple<double, double>[] speedWatts)
+        public void PlotCoastdownPower(double[] speed, double[] watts)
         {
-            if (speedWatts == null)
-                return;
-
             string seriesName = "Coastdown Power Estimate";
 
             Series wattSeries = chart1.Series.FindByName(seriesName);
@@ -107,61 +104,11 @@ namespace BikeSignalProcessing.View
 
             chart1.Series[seriesName].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
 
-            foreach (var val in speedWatts)
+            for (int j = 0; j < speed.Length; j++)
             {
-                int i = wattSeries.Points.AddXY(val.Item1, val.Item2);
+                int i = wattSeries.Points.AddXY(speed[j], watts[j]);
                 wattSeries.Points[i].MarkerStyle = MarkerStyle.Circle;
                 wattSeries.Points[i].MarkerSize = 5;
-            }
-        }
-
-        TempFit temp;
-
-        internal class TempFit
-        {
-            double[] m_coeff;
-            double[] m_speed;
-            double[] m_power;
-
-            internal TempFit()
-            {
-            }
-
-            internal double Watts(double speedMps)
-            {
-                double power = m_coeff[3] * Math.Pow(speedMps, 3) +
-                    m_coeff[2] * Math.Pow(speedMps, 2) +
-                    m_coeff[1] * speedMps +
-                    m_coeff[0];
-
-                return power;
-            }
-
-            internal void Fit(double[] speed, double[] watts)
-            {
-                m_speed = speed;
-                m_power = watts;
-                m_coeff = MathNet.Numerics.Fit.Polynomial(m_speed, m_power, 3);
-            }
-
-            /// <summary>
-            /// Creates a matrix of speed:power
-            /// </summary>
-            /// <returns></returns>
-            internal Tuple<double, double>[] GetPower()
-            {
-                double min = Math.Floor(m_speed.Min());
-                double max = Math.Ceiling(m_speed.Max());
-
-                double val = min;
-                List<Tuple<double, double>> speedPower = new List<Tuple<double, double>>();
-
-                do
-                {
-                    speedPower.Add(new Tuple<double, double>(val, Watts(val)));
-                } while (max >= (val += 1));
-
-                return speedPower.ToArray();
             }
         }
 
@@ -733,16 +680,25 @@ namespace BikeSignalProcessing.View
 
             if (speed.Count() > 2)
             {
-                temp = new TempFit();
-                temp.Fit(speed.ToArray(), watts.ToArray());
-                
-                PowerFit fit = new PowerFit();
+                PolyPowerFit fit = new PolyPowerFit();
                 fit.Fit(speed.ToArray(), watts.ToArray());
 
                 Drag = fit.Drag;
                 RollingResistance = fit.RollingResistance;
+
+                double[,] speedData;
+                double[] powerData;
+                fit.GeneratePowerData(out speedData, out powerData);
+
+                double[] speedModified = new double[powerData.Length];
+
+                int i = 0;
+                foreach (double d in speedData)
+                {
+                    speedModified[i++] = d;
+                }
                 
-                PlotCoastdownPower(temp.GetPower());
+                PlotCoastdownPower(speedModified, powerData);
             }
         }
 
@@ -768,8 +724,6 @@ namespace BikeSignalProcessing.View
 
             // Attempt to recalculate base on best no mag data.
             FitNoMagnet(best);
-
-            temp.GetPower();
 
             // Re-chart the best ones.
             //ChartSegments(best);

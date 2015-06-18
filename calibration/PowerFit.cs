@@ -7,6 +7,7 @@ namespace IRT.Calibration
     public class PowerFit
     {
         private double[] m_coeff = { 0.0, 0.0 };
+        private double m_inertia = 0;
         private DecelerationFit m_decelFit;
 
         public static double Power(double speedMph, double drag, double rr)
@@ -29,7 +30,9 @@ namespace IRT.Calibration
 
         public double RollingResistance { get { return m_coeff[1]; } }
 
-        public double Watts(double speedMps)
+        public double Inertia {  get { return m_inertia; } set { m_inertia = value; } }
+
+        public virtual double Watts(double speedMps)
         {
             return fit_drag_rr(speedMps, Drag, RollingResistance);
         }
@@ -56,26 +59,25 @@ namespace IRT.Calibration
             // Get the rate of deceleration (a) for a given velocity.
 
             // Solve for m = f/a
-            return f / a;
+            Inertia = f / a;
+
+            return Inertia;
         }
 
-        public void Fit(double stableSpeedMps, double stableWatts)
+        public virtual void Fit()
         {
-            double intertia = CalculateInteria(stableSpeedMps, stableWatts);
-            Fit(intertia);
-        }
+            if (double.IsNaN(m_inertia) || m_inertia == 0)
+                throw new InvalidOperationException("Inertia must be calculated first.");
 
-        public void Fit(double inertia)
-        {
             double[,] speed;
             double[] watts;
 
             // Generate power : speed data.
-            GeneratePowerData(inertia, out speed, out watts);
+            GeneratePowerData(out speed, out watts);
             Fit(speed, watts);
         }
 
-        public void Fit(double[] speedMph, double[] watts)
+        public virtual void Fit(double[] speedMph, double[] watts)
         {
             double[,] speed;
             speed = new double[speedMph.Length, 1];
@@ -100,7 +102,7 @@ namespace IRT.Calibration
             alglib.lsfitresults(state, out info, out m_coeff, out report);
         }
 
-        private void GeneratePowerData(double intertia, out double[,] speed, out double[] watts)
+        public virtual void GeneratePowerData(out double[,] speed, out double[] watts)
         {
             if (m_decelFit == null)
             {
@@ -126,7 +128,7 @@ namespace IRT.Calibration
                 }
                 else
                 {
-                    double f = intertia * a;
+                    double f = Inertia * a;
 
                     speed[ix, 0] = v;
                     watts[ix] = f * v;

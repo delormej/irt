@@ -42,8 +42,12 @@ def main(file_name, drag=0, rr=0, offset=0):
     #x = np.array([12, 16, 20, 28, 32])  # 20 == 73??
     #y = [39 ,54 ,73, 113, 131]
     
+    #x = np.array([10.5, 14.9, 16.4, 19.8, 26])	
+    #y = [79, 125, 140, 182, 255]
+    
     #drag, rr = fit.fit_bike_science(x*0.44704,y)
     #print("using calibration:", drag, rr)
+    #return
     
     p = lp.LogParser(file_name)
     

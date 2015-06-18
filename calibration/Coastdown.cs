@@ -136,9 +136,9 @@ namespace IRT.Calibration
 
             if (model.Inertia == 0)
             {
-                model.Inertia = m_powerFit.CalculateInteria(model.StableSpeedMps, model.StableWatts);
+                m_powerFit.CalculateInteria(model.StableSpeedMps, model.StableWatts);
             }
-            m_powerFit.Fit(model.Inertia);
+            m_powerFit.Fit();
         }
     }
 
