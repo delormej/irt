@@ -360,31 +360,6 @@ namespace BikeSignalProcessing.View
 
             chart1.DataSource = mData.DataPoints;
 
-            mData.DataPoints.CollectionChanged += (object sender, 
-                System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
-            {
-                Action a = () => {
-                    try
-                    {
-                        chart1.DataBind();
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine(ex);
-                    }
-                };
-
-                // Chart doesn't seem to catch collection changed, so force update.
-                if (this.InvokeRequired)
-                {
-                    this.BeginInvoke(a);
-                }
-                else
-                {
-                    this.Invoke(a);
-                }
-            };
-
             Series actualPower = chart1.Series.Add(ActualSeriesName);
             actualPower.ChartType = SeriesChartType.FastLine;
             actualPower.YAxisType = AxisType.Primary;
@@ -421,6 +396,9 @@ namespace BikeSignalProcessing.View
             //segmentArea.AlignWithChartArea = "Ride";
             //segmentArea.AlignmentOrientation = AreaAlignmentOrientations.Vertical;
             //segmentArea.AlignmentStyle = AreaAlignmentStyles.AxesView;
+            //segmentArea.AxisX.Maximum = 30;
+            segmentArea.AxisX.ScaleView.Size = 10;
+            segmentArea.AxisX.ScrollBar.Enabled = false;
 
             Series segmentPower = chart1.Series.Add("Segment Power");
             segmentPower.ChartType = SeriesChartType.FastLine;
@@ -433,6 +411,40 @@ namespace BikeSignalProcessing.View
             actualSpeed.YValueMembers = "SpeedMph";
             actualSpeed.YAxisType = AxisType.Secondary;
             actualSpeed.ChartArea = "Segment";
+
+
+            mData.DataPoints.CollectionChanged += (object sender,
+                System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
+            {
+                Action a = () => {
+                    try
+                    {
+                        chart1.DataBind();
+
+                        //double max = e.NewStartingIndex; //  chart1.ChartAreas["Segment"].AxisX.Maximum;
+                        ChartArea area = chart1.ChartAreas["Segment"];
+
+                        if (area.AxisX.Maximum > area.AxisX.ScaleView.Size)
+                        {
+                            area.AxisX.ScaleView.Scroll(area.AxisX.Maximum);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ex);
+                    }
+                };
+
+                // Chart doesn't seem to catch collection changed, so force update.
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(a);
+                }
+                else
+                {
+                    this.Invoke(a);
+                }
+            };
         }
 
         private void BindData(string filename)
