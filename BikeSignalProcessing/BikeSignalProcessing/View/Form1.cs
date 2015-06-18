@@ -50,7 +50,7 @@ namespace BikeSignalProcessing.View
         public Form1(Data data) : this()
         {
             mData = data;
-            BindData();
+            BindData(null);
         }
 
         private void SegmentConfigChanged(object sender, EventArgs e)
@@ -212,33 +212,6 @@ namespace BikeSignalProcessing.View
             chart1.Series.Clear();
         }
 
-        private void ChartSmoothPower(double point)
-        {
-            Series series = chart1.Series.FindByName(SmoothSeriesName+2);
-            if (series == null)
-            {
-                series = chart1.Series.Add(SmoothSeriesName + 2);
-                series.ChartType = SeriesChartType.FastLine;
-            }
-
-            series.Points.AddY(point);
-        }
-
-        private void Chart(double[] data, string seriesName)
-        {
-            Series series = chart1.Series.Add(seriesName);
-            series.ChartType = SeriesChartType.Line;
-
-            int i = mZoomStart > 0 ? mZoomStart : 0;
-            int end = mZoomEnd > 0 ? mZoomEnd : data.Length;
-
-            do
-            {
-                double d = data[i];
-                series.Points.AddY(d);
-            } while (i++ < end);
-        }
-
         private void DrawMagLinear(MagnetFit magfit)
         {
             string name = magfit.MagnetPosition.ToString() + " Fit";
@@ -362,7 +335,6 @@ namespace BikeSignalProcessing.View
             DrawMagLinear();
         }
 
-
         private void BindChart(Data data)
         {
             chart1.Series.Clear();
@@ -442,65 +414,13 @@ namespace BikeSignalProcessing.View
             smoothSpeed.ChartArea = "Ride";
         }
 
-        private void SmoothData(string filename)
+        private void BindData(string filename)
         {
-            // Open a CSV file, grab speed, power, servo pos columns
-            // output smoothed power signal vs. actual power signal
             if (filename != null)
             {
                 mData = (Data)IrtCsvFactory.Open(filename);
-
-                //asyncCsv = new AsyncCsvFactory();
-                //mData2 = asyncCsv.Open(filename);
-
-                BindData();
-
-                //foreach (Segment seg in mData2.StableSegments.OrderBy(s => s.AverageSpeed))
-                //{
-                //    System.Diagnostics.Debug.WriteLine("Speed: {0:N1}, Len: {1:N0}",
-                //        seg.AverageSpeed, seg.End - seg.Start);
-                //}
-
-                //System.Diagnostics.Debug.WriteLine("BEST...");
-
-                //var best = Segment.FindBestSegments(mData2.StableSegments);
-                //foreach (Segment seg in best)
-                //{
-                //    System.Diagnostics.Debug.WriteLine("Speed: {0:N1}, Len: {1:N0}",
-                //        seg.AverageSpeed, seg.End - seg.Start);
-                //}
-
-                /*
-                double[] d = mData2.StableSegments.Select(s => s.AverageSpeed).ToArray();
-                MathNet.Numerics.Statistics.Histogram h = new MathNet.Numerics.Statistics.Histogram(d, 5);
-                int x = h.BucketCount;
-                */
             }
-            /*
-            if (mData != null)
-            {
-                upDownThreshold.Value = (decimal)Threshold;
 
-                PowerSmoothing smoother = new PowerSmoothing();
-
-                foreach (double d in mData.RawPower)
-                {
-                    double smoothed = smoother.SmoothPower(d);
-                    ChartSmoothPower(smoothed);
-                }
-
-                Chart(mData.RawPower, ActualSeriesName);
-                //Chart(mData.Power5secMA, "Moving Average (5 sec)");
-                Chart(mData.SmoothedPower, SmoothSeriesName);
-                //Chart(mData.Power10secMA, "Moving Average (10 sec)");
-
-                ChartSegments();
-            }
-            */
-        }
-
-        private void BindData()
-        {
             BindChart(mData);
             ChartSegments(mData.StableSegments);
             mData.SegmentDetected += OnSegmentDetected;
@@ -536,7 +456,7 @@ namespace BikeSignalProcessing.View
                 try
                 {
                     this.Cursor = Cursors.WaitCursor;
-                    SmoothData(dlg.FileName);
+                    BindData(dlg.FileName);
                 }
                 finally
                 {
@@ -620,36 +540,11 @@ namespace BikeSignalProcessing.View
             */
         }
 
-        private void Zoom()
-        {
-            //if (mZoomStart == -1 || mZoomEnd == -1)
-            //    return;
-
-            //ClearChart();
-
-            //PowerSmoothing smoother = new PowerSmoothing();
-
-            //for (int i = mZoomStart; i < mZoomEnd; i++)
-            //{
-            //    double d = mData.RawPower[i];
-
-            //    double smoothed = smoother.SmoothPower(d);
-            //    ChartSmoothPower(smoothed);
-            //}
-
-            //Chart(mData.RawPower, "Actual");
-            //Chart(mData.SmoothedPower, "Smoothed");
-            ////Chart(mData.Power5secMA, "Moving Average (5 sec)", x[0], x[1]);
-            ////Chart(mData.Power10secMA, "Moving Average (10 sec)", x[0], x[1]);
-
-            ////ChartSegments(mZoomStart, mZoomEnd);
-        }
-
         private void button3_Click(object sender, EventArgs e)
         {
             // Reset
             ClearChart();
-            SmoothData(null);
+            BindData(null);
         }
 
         private void upDownThreshold_ValueChanged(object sender, EventArgs e)
