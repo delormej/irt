@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataView));
             this.dgvSegments = new System.Windows.Forms.DataGridView();
             this.dgvMagnetFit = new System.Windows.Forms.DataGridView();
             ((System.ComponentModel.ISupportInitialize)(this.dgvSegments)).BeginInit();
@@ -61,6 +62,7 @@
             this.ClientSize = new System.Drawing.Size(698, 555);
             this.Controls.Add(this.dgvMagnetFit);
             this.Controls.Add(this.dgvSegments);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "DataView";
             this.Text = "DataView";
             ((System.ComponentModel.ISupportInitialize)(this.dgvSegments)).EndInit();

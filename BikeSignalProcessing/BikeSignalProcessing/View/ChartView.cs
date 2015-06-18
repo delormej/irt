@@ -125,7 +125,9 @@ namespace BikeSignalProcessing.View
                 LineAnnotation line = result.Object as LineAnnotation;
                 if (line != null)
                 {
+                    // Reset
                     line.LineWidth = SegmentLineWidth;
+                    ResetSegmentArea();
                 }
             }
         }
@@ -151,6 +153,7 @@ namespace BikeSignalProcessing.View
                         if (text != null)
                         {
                             text.Visible = true;
+                            ChartSegmentArea(segment);
                         }
                     }
                 }
@@ -186,6 +189,27 @@ namespace BikeSignalProcessing.View
             return text;
         }
 
+        private void ChartSegmentArea(Segment segment)
+        {
+            ChartArea area = chart1.ChartAreas["Segment"];
+            area.AxisX.ScaleView.Position = segment.Start;
+            area.AxisX.ScaleView.Size = segment.Length;
+            area.AxisY.ScaleView.Size = 100;
+            area.AxisY.ScaleView.Position = Math.Floor(segment.AveragePower) - (area.AxisY.ScaleView.Size / 2);
+            area.AxisY2.ScaleView.Size = 10;
+            area.AxisY2.ScaleView.Position = Math.Floor(segment.AverageSpeed) - (area.AxisY2.ScaleView.Size / 2);
+            area.AxisY.ScrollBar.Enabled = false;
+            area.AxisY2.ScrollBar.Enabled = false;
+            //area.AxisX.ScaleView.Zoom(segment.Start, segment.End);
+        }
+
+        private void ResetSegmentArea()
+        {
+            ChartArea area = chart1.ChartAreas["Segment"];
+            area.AxisX.ScaleView.Size = 30;
+            //area.AxisX.ScaleView.ZoomReset();
+        }
+
         /// <summary>
         /// Shows the segment by highlighting the line.
         /// </summary>
@@ -203,13 +227,17 @@ namespace BikeSignalProcessing.View
             TextAnnotation text = FindTextAnnotation(segment);
             if (text != null)
                 text.Visible = true;
-            
+
+            ChartSegmentArea(segment);
         }
 
         private void ClearChart()
         {
             RemoveZoomMarkers();
+
+            chart1.Annotations.Clear();
             chart1.Series.Clear();
+            chart1.ChartAreas.Clear();
         }
 
         private void DrawMagLinear(MagnetFit magfit)
@@ -397,7 +425,7 @@ namespace BikeSignalProcessing.View
             //segmentArea.AlignmentOrientation = AreaAlignmentOrientations.Vertical;
             //segmentArea.AlignmentStyle = AreaAlignmentStyles.AxesView;
             //segmentArea.AxisX.Maximum = 30;
-            segmentArea.AxisX.ScaleView.Size = 30;
+            ResetSegmentArea();
             segmentArea.AxisX.ScrollBar.Enabled = false;
             segmentArea.AxisX.IntervalType = DateTimeIntervalType.Seconds;
             segmentArea.AxisY.MajorGrid.Enabled = false;
@@ -455,6 +483,8 @@ namespace BikeSignalProcessing.View
             if (filename != null)
             {
                 mData = (Data)IrtCsvFactory.Open(filename);
+                var f = new System.IO.FileInfo(filename);
+                this.Text = f.Name;
             }
 
             BindChart(mData);
@@ -509,19 +539,18 @@ namespace BikeSignalProcessing.View
         private void RemoveZoomMarkers()
         {
             chart1.Annotations.Clear();
-            return;
 
-            System.Diagnostics.Debug.WriteLine("Removing vertical lines.");
-            chart1.UpdateAnnotations();
+            //System.Diagnostics.Debug.WriteLine("Removing vertical lines.");
+            //chart1.UpdateAnnotations();
 
-            if (chart1.Annotations.Count < 1)
-                return;
+            //if (chart1.Annotations.Count < 1)
+            //    return;
 
-            foreach (var a in chart1.Annotations)
-            {
-                if (a is VerticalLineAnnotation)
-                    chart1.Annotations.Remove(a);
-            }
+            //foreach (var a in chart1.Annotations)
+            //{
+            //    if (a is VerticalLineAnnotation)
+            //        chart1.Annotations.Remove(a);
+            //}
         }
 
         /// <summary>
@@ -594,6 +623,7 @@ namespace BikeSignalProcessing.View
             // Reset
             ClearChart();
             BindData(null);
+            mData.ReEvaluateSegments();
         }
 
         private void upDownThreshold_ValueChanged(object sender, EventArgs e)
@@ -624,6 +654,7 @@ namespace BikeSignalProcessing.View
         private void btnData_Click(object sender, EventArgs e)
         {
             DataView dv = new DataView(mData);
+            dv.Text = this.Text;
             dv.Show();
         }
     }
