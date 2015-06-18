@@ -183,7 +183,6 @@ namespace BikeSignalProcessing.Model
             var magSegments = this.StableSegments.Where(s => s.MagnetPosition < 1600);
 
             MagnetFits = new ObservableCollection<MagnetFit>(
-                
                 MagnetFit.FitMagnet(magSegments));
         }
 

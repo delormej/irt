@@ -9,9 +9,9 @@ namespace BikeSignalProcessing.Model
 {
     public class MagnetFit
     {
-        public double Slope;
-        public double Intercept;
-        public int MagnetPosition;
+        public double Slope { get; set; }
+        public double Intercept { get; set; }
+        public int MagnetPosition { get; set; }
 
         private double lowSpeed = 10.0; 
         private double highSpeed = 25.0; 

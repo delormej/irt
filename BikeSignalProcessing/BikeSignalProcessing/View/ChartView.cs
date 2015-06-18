@@ -577,10 +577,15 @@ namespace BikeSignalProcessing.View
             }
 
             ChartSegments(mData.StableSegments);
-            DrawMagLinear();
 
             //// Re-chart only the best segments.
             //ChartSegments(Segment.FindBestSegments(mData.StableSegments));
+        }
+
+        private void btnData_Click(object sender, EventArgs e)
+        {
+            DataView dv = new DataView(mData);
+            dv.Show();
         }
     }
 }
