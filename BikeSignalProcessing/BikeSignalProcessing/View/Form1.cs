@@ -540,7 +540,7 @@ namespace BikeSignalProcessing.View
             */
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void btnReset_Click(object sender, EventArgs e)
         {
             // Reset
             ClearChart();
@@ -555,9 +555,14 @@ namespace BikeSignalProcessing.View
 
         private void btnBest_Click(object sender, EventArgs e)
         {
+            // Attempt to fit the coast down.
             double[] speed, power;
             mData.EvaluateNoMagnetFit(out speed, out power);
-            PlotCoastdownPower(speed, power);
+
+            if (speed != null && power != null)
+            {
+                PlotCoastdownPower(speed, power);
+            }
 
             //// Clear any mag points.
             //Series series = chart1.Series.FindByName(seg.MagnetPosition.ToString());

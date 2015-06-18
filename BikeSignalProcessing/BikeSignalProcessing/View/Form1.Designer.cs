@@ -37,7 +37,7 @@
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.button3 = new System.Windows.Forms.Button();
+            this.btnReset = new System.Windows.Forms.Button();
             this.upDownThreshold = new System.Windows.Forms.NumericUpDown();
             this.btnBest = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
@@ -104,16 +104,16 @@
             this.openToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
             this.openToolStripMenuItem.Text = "Open";
             // 
-            // button3
+            // btnReset
             // 
-            this.button3.Location = new System.Drawing.Point(16, 68);
-            this.button3.Margin = new System.Windows.Forms.Padding(2);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(69, 20);
-            this.button3.TabIndex = 3;
-            this.button3.Text = "Reset";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.btnReset.Location = new System.Drawing.Point(16, 68);
+            this.btnReset.Margin = new System.Windows.Forms.Padding(2);
+            this.btnReset.Name = "btnReset";
+            this.btnReset.Size = new System.Drawing.Size(69, 20);
+            this.btnReset.TabIndex = 3;
+            this.btnReset.Text = "Reset";
+            this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
             // 
             // upDownThreshold
             // 
@@ -243,7 +243,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnBest);
             this.Controls.Add(this.upDownThreshold);
-            this.Controls.Add(this.button3);
+            this.Controls.Add(this.btnReset);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.chart1);
             this.Margin = new System.Windows.Forms.Padding(2);
@@ -265,7 +265,7 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.NumericUpDown upDownThreshold;
         private System.Windows.Forms.Button btnBest;
         private System.Windows.Forms.Label label1;
