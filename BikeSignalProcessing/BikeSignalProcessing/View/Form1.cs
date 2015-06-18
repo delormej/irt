@@ -301,7 +301,7 @@ namespace BikeSignalProcessing.View
 
             System.Windows.Forms.DataVisualization.Charting.DataPoint d =
                 new System.Windows.Forms.DataVisualization.Charting.DataPoint(
-                    segment.AverageSpeed, segment.AveragePower);
+                    segment.AverageSpeed, segment.NoMagnetPower);
             //d.MarkerSize = ((segment.End - segment.Start) / 20) * 5;
             d.Tag = line;  // Tag the segment so we can find it.
             //d.ToolTip = summary;
