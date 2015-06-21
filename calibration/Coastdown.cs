@@ -133,11 +133,7 @@ namespace IRT.Calibration
 
             // Calculate the power fit.
             m_powerFit = new PowerFit(m_decelFit);
-
-            if (model.Inertia == 0)
-            {
-                m_powerFit.CalculateInteria(model.StableSpeedMps, model.StableWatts);
-            }
+            m_powerFit.CalculateStablePowerFactor(model.StableSpeedMps, model.StableWatts);
             m_powerFit.Fit();
         }
     }

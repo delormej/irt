@@ -9,9 +9,15 @@ namespace IRT.Calibration
     /// </summary>
     public class DecelerationFit
     {
-        alglib.barycentricinterpolant m_interpolant;
-        double m_lastSpeed;
-        double[] m_coeff;
+        private double[] m_coeff = { 0.0, 0.0 };
+
+        public double[] Coeff
+        {
+            get
+            {
+                return m_coeff;
+            }
+        }
 
         public DecelerationFit()
         {
@@ -26,7 +32,11 @@ namespace IRT.Calibration
         public double Seconds(double speedMps)
         {
             // Get the amount of time it takes to coast down from this speed.
-            return alglib.barycentriccalc(m_interpolant, speedMps);
+            //return alglib.barycentriccalc(m_interpolant, speedMps);
+            double acceleration = Rate(speedMps);
+            double seconds = speedMps / acceleration;
+
+            return seconds;
         }
 
         /// <summary>
@@ -36,43 +46,75 @@ namespace IRT.Calibration
         /// <returns></returns>
         public double Rate(double speedMps)
         {
-            if (speedMps < m_lastSpeed)
-            {
-                return 0;
-            }
-
-            double dTime = Seconds(speedMps);
-
-            // Get the change in speed.
-            double dSpeed = speedMps - m_lastSpeed;
-
-            // Get the rate of change in m/s^2.
-            double acceleration = dSpeed / dTime;
-
-            return acceleration;
+            return fit_coastdown(speedMps, m_coeff[0], m_coeff[1]);
         }
-
 
         /// <summary>
         /// Smoothes and fits raw coast down data to a curve.  This method must 
         /// be called before evaluating any deceleration rates.
+        /// Speed and decleration should come in fastest first, i.e. element 0 is the fastest
+        /// speed and the longest duration to coastdown.
         /// </summary>
         public void Fit(double[] speedMps, double[] coastdownSeconds)
         {
             // internal implementation of curve fitting.
             int info = 0;
-            m_lastSpeed = speedMps.Last();
 
-            alglib.polynomialfitreport report;
-
-            alglib.polynomialfit(speedMps, coastdownSeconds, speedMps.Length,
-                4, out info, out m_interpolant, out report);
-            alglib.polynomialbar2pow(m_interpolant, out m_coeff);
-
-            if (info != 1)
+            if (speedMps.Length != coastdownSeconds.Length)
             {
-                throw new CoastdownException("Unable to fit deceleration curve.");
+                throw new ArgumentException("speedMps must have the same length as coastdownSeconds");
             }
+
+            int size = speedMps.Length - 1;
+
+            double[] acceleration = new double[size];
+            double[,] speed = new double[size, 1];
+
+            // Calcualte rate of acceleration for each speed (velocity).
+            for (int i = 0; i < size; i++)
+            //while (--records > 0) 
+            {
+                // speedMps[size] is the last record, slowest speed.
+                acceleration[i] = (speedMps[i] - speedMps[size]) /
+                    coastdownSeconds[i];
+
+                // Copy speed into the appropriate array shape for the function.
+                speed[i, 0] = speedMps[i];
+            }
+
+            // Fit a curve in the function of y = mx^2+b, or { a = c1+c2*v^2 }
+
+            alglib.lsfitstate state;
+            alglib.lsfitreport report;
+            alglib.lsfitcreatef(speed, acceleration, m_coeff, 0.0000001, out state);
+            //alglib.lsfitsetbc(state, new double[] { 0.0, 0.0 }, new double[] { 0.0, 0.0 });
+            alglib.lsfitfit(state, fit_func, null, null);
+            alglib.lsfitresults(state, out info, out m_coeff, out report);
+        }
+
+        /// <summary>
+        /// Fits a=c1+c2*v^2
+        /// </summary>
+        /// <param name="velocity"></param>
+        /// <param name="c1"></param>
+        /// <param name="c2"></param>
+        /// <returns></returns>
+        static double fit_coastdown(double v, double c1, double c2)
+        {
+            // Two coefficients of coastdown.
+            return c1 + c2 * Math.Pow(v, 2);
+        }
+
+        /// <summary>
+        /// Fits acceleration to velocity. 
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="x"></param>
+        /// <param name="func"></param>
+        /// <param name="obj"></param>
+        static void fit_func(double[] c, double[] x, ref double func, object obj)
+        {
+            func = fit_coastdown(x[0], c[0], c[1]);
         }
     }
 }
