@@ -72,6 +72,9 @@ def fit_bike_power_by_decel(mass, coeff):
 	
 	return x, pwr
 	
+def coastdown_func(v, k, crr):
+	return crr + k*(v**2)
+	
 # fit to a 2nd degree polynomial
 def fit_poly2d(x_new, x, y):
 	coefficients = np.polyfit(x, y, 2)
@@ -169,6 +172,27 @@ def get_avg_watts(power, decel_idx):
 	
 	return avg_power
 
+def calculate_decel(speed, seconds):
+	# Calculate rate of deceleration
+	min_seconds = seconds.min()
+	min_speed = speed.min()
+	size = seconds.size - 2
+	
+	# Get array of velcoity and acceleration.
+	v = speed[:size]
+	a = (v - min_speed) / (seconds[:size] - min_seconds)
+	
+	pars, covar = spo.curve_fit(coastdown_func, v, a)
+	print("coastdown:", pars[0], pars[1])
+	
+	#	
+	#print("speed", speed)
+	#print("seconds", seconds) 
+	
+	print("max decel:", a.max(), "min decel:", a.min())
+	print(a)
+
+
 def main(file_name):
 	#
 	# load the csv file
@@ -179,7 +203,7 @@ def main(file_name):
 
 	# todo: add logic here to determine if you're using older than 1.4.3 that you use the old logic.
 
-	skip = 4
+	skip = 2
 
 	mps = np.empty(len(tick_delta)/skip)
 	seconds = np.empty(len(time)/skip)
@@ -248,6 +272,8 @@ def main(file_name):
 	plt.plot(x, y, 'bo')
 	plt.ylim(ymin=0)
 	plt.xlim(xmin=0, xmax=x.max())
+
+	calculate_decel(x,y)
 
 	# if I wanted to reverse the axis visualy, also need to adjust min/max for this.
 	#plt.gca().invert_yaxis()
