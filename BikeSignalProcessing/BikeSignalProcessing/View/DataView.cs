@@ -13,20 +13,23 @@ namespace BikeSignalProcessing.View
 {
     public partial class DataView : Form
     {
+        Data mData;
+
         public DataView(Data data)
         {
+            mData = data;
+
             InitializeComponent();
 
-            dgvSegments.DataSource = data.StableSegments;
-            dgvMagnetFit.DataSource = data.MagnetFits;
+            dgvSegments.DataSource = mData.StableSegments;
+            dgvMagnetFit.DataSource = mData.MagnetFits;
 
             dgvMagnetFit.RowEnter += DgvMagnetFit_RowEnter;
         }
 
         private void DgvMagnetFit_RowEnter(object sender, DataGridViewCellEventArgs e)
         {
-            Collection<MagnetFit> data = dgvMagnetFit.DataSource as
-                Collection<MagnetFit>;
+            var data = mData.MagnetFits;
 
             if (data != null)
             {
@@ -40,6 +43,11 @@ namespace BikeSignalProcessing.View
                     txtWatts.Text = power.ToString("N1");
                 }
             }
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            
         }
     }
 }

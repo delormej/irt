@@ -89,7 +89,7 @@ namespace BikeSignalProcessing.Model
             }
         }
 
-        public double AverageSpeed;
+        public double AverageSpeed { get; set; }
 
         /// <summary>
         /// Grabs the mid point of segment range.
