@@ -84,12 +84,19 @@ namespace IRT.Calibration
         /// <summary>
         /// Calculated coefficient of Drag.
         /// </summary>
-        public double Drag { get { return m_powerFit.Drag; } }
+        public double Drag
+        {
+            get { return m_powerFit.Drag; }
+            set { m_powerFit.Drag = value; }
+        }
 
         /// <summary>
         /// Calculated coefficient of Rolling Resistance.
         /// </summary>
-        public double RollingResistance { get { return m_powerFit.RollingResistance; } }
+        public double RollingResistance {
+            get { return m_powerFit.RollingResistance; }
+            set { m_powerFit.RollingResistance = value; }
+        }
 
         /// <summary>
         /// Returns the time it takes to coastdown in seconds from a given speed.

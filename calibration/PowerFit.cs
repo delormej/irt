@@ -27,9 +27,9 @@ namespace IRT.Calibration
             m_decelFit = decelFit;
         }
 
-        public double Drag { get; private set; }
+        public double Drag { get; set; }
 
-        public double RollingResistance { get; private set; }
+        public double RollingResistance { get; set; }
 
         public virtual double Watts(double speedMps)
         {
