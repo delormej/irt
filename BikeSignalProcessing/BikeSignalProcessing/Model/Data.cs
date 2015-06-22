@@ -186,6 +186,28 @@ namespace BikeSignalProcessing.Model
                 MagnetFit.FitMagnet(magSegments));
         }
 
+        public void GetCoastdownFit(out double[] speedMph, out double[] watts)
+        {
+            if (!(Drag > 0 && RollingResistance > 0))
+            {
+                speedMph = null;
+                watts = null;
+                return;
+            }
+
+            int start = 5;
+            int len = 35 - start;
+
+            speedMph = new double[len];
+            watts = new double[len];
+
+            for (int i = 0; i < len; i++)
+            {
+                speedMph[i] = i+start;
+                watts[i] = PowerFit.Power(speedMph[i], Drag, RollingResistance);
+            }
+        }
+
         public void EvaluateNoMagnetFit(out double[] speedModified, out double[] powerData)
         {
             List<double> speed = new List<double>();

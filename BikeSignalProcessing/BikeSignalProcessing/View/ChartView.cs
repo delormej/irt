@@ -73,8 +73,18 @@ namespace BikeSignalProcessing.View
             }
         }
 
-        public void PlotCoastdownPower(double[] speed, double[] watts)
+        public void PlotCoastdownPower()
         {
+            // Attempt to fit the coast down.
+            double[] speed, power;
+            //mData.EvaluateNoMagnetFit(out speed, out power);
+            mData.GetCoastdownFit(out speed, out power);
+
+            if (speed == null || power == null)
+            {
+                return;
+            }
+
             string seriesName = "Coastdown Power Estimate";
 
             Series wattSeries = chart1.Series.FindByName(seriesName);
@@ -100,7 +110,7 @@ namespace BikeSignalProcessing.View
 
             for (int j = 0; j < speed.Length; j++)
             {
-                int i = wattSeries.Points.AddXY(speed[j], watts[j]);
+                int i = wattSeries.Points.AddXY(speed[j], power[j]);
                 wattSeries.Points[i].MarkerStyle = MarkerStyle.Circle;
                 wattSeries.Points[i].MarkerSize = 5;
             }
@@ -635,16 +645,7 @@ namespace BikeSignalProcessing.View
         private void btnBest_Click(object sender, EventArgs e)
         {
             ClearMagPoints();
-
-            // Attempt to fit the coast down.
-            double[] speed, power;
-            mData.EvaluateNoMagnetFit(out speed, out power);
-
-            if (speed != null && power != null)
-            {
-                PlotCoastdownPower(speed, power);
-            }
-
+            PlotCoastdownPower();
             ChartSegments(mData.StableSegments);
 
             //// Re-chart only the best segments.

@@ -71,6 +71,21 @@ namespace BikeSignalProcessing
 
                         data.Update(speedMph, power, servoPosition);
                     }
+                    else if (vals.Length == 2)
+                    {
+                        // Settings
+                        string setting = vals[0].Replace("\"", "");
+                        string value = vals[1].Replace("\"", "");
+
+                        if (setting == "Drag")
+                        {
+                            data.Drag = double.Parse(value);
+                        }
+                        else if (setting == "RR")
+                        {
+                            data.RollingResistance = double.Parse(value);
+                        }
+                    }
                 }
             }
 
