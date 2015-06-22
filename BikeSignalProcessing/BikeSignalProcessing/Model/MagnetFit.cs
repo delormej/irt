@@ -59,7 +59,8 @@ namespace BikeSignalProcessing.Model
 
                 foreach (Segment segment in best)
                 {
-                    x.Add(segment.AverageSpeed);
+                    // Convert to MPS for the fit.
+                    x.Add(segment.AverageSpeed * 0.44704);
                     y.Add(segment.NoMagnetPower);
                 }
 

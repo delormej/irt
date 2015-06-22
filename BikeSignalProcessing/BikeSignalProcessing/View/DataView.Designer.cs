@@ -49,9 +49,10 @@
             this.dgvSegments.AllowUserToAddRows = false;
             this.dgvSegments.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvSegments.Dock = System.Windows.Forms.DockStyle.Top;
-            this.dgvSegments.Location = new System.Drawing.Point(0, 24);
+            this.dgvSegments.Location = new System.Drawing.Point(0, 35);
+            this.dgvSegments.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dgvSegments.Name = "dgvSegments";
-            this.dgvSegments.Size = new System.Drawing.Size(698, 260);
+            this.dgvSegments.Size = new System.Drawing.Size(1047, 400);
             this.dgvSegments.TabIndex = 0;
             // 
             // dgvMagnetFit
@@ -59,51 +60,58 @@
             this.dgvMagnetFit.AllowUserToAddRows = false;
             this.dgvMagnetFit.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvMagnetFit.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.dgvMagnetFit.Location = new System.Drawing.Point(0, 305);
+            this.dgvMagnetFit.Location = new System.Drawing.Point(0, 495);
+            this.dgvMagnetFit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.dgvMagnetFit.Name = "dgvMagnetFit";
-            this.dgvMagnetFit.Size = new System.Drawing.Size(698, 250);
+            this.dgvMagnetFit.Size = new System.Drawing.Size(1047, 359);
             this.dgvMagnetFit.TabIndex = 1;
             // 
             // txtSpeedMph
             // 
-            this.txtSpeedMph.Location = new System.Drawing.Point(78, 279);
+            this.txtSpeedMph.Location = new System.Drawing.Point(117, 445);
+            this.txtSpeedMph.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtSpeedMph.Name = "txtSpeedMph";
-            this.txtSpeedMph.Size = new System.Drawing.Size(54, 20);
+            this.txtSpeedMph.Size = new System.Drawing.Size(79, 26);
             this.txtSpeedMph.TabIndex = 2;
             this.txtSpeedMph.Text = "15.0";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(5, 282);
+            this.label1.Location = new System.Drawing.Point(8, 450);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(67, 13);
+            this.label1.Size = new System.Drawing.Size(101, 20);
             this.label1.TabIndex = 3;
             this.label1.Text = "Speed (mph)";
             // 
             // txtWatts
             // 
-            this.txtWatts.Location = new System.Drawing.Point(191, 279);
+            this.txtWatts.Location = new System.Drawing.Point(286, 445);
+            this.txtWatts.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtWatts.Name = "txtWatts";
-            this.txtWatts.Size = new System.Drawing.Size(54, 20);
+            this.txtWatts.Size = new System.Drawing.Size(79, 26);
             this.txtWatts.TabIndex = 4;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(147, 282);
+            this.label2.Location = new System.Drawing.Point(220, 450);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(35, 13);
+            this.label2.Size = new System.Drawing.Size(51, 20);
             this.label2.TabIndex = 5;
             this.label2.Text = "Watts";
             // 
             // menuStrip1
             // 
+            this.menuStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(698, 24);
+            this.menuStrip1.Padding = new System.Windows.Forms.Padding(9, 3, 0, 3);
+            this.menuStrip1.Size = new System.Drawing.Size(1047, 35);
             this.menuStrip1.TabIndex = 6;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -113,27 +121,27 @@
             this.saveToolStripMenuItem,
             this.closeToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(50, 29);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(140, 30);
             this.saveToolStripMenuItem.Text = "&Save";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
             // 
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(140, 30);
             this.closeToolStripMenuItem.Text = "&Close";
             // 
             // DataView
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(698, 555);
+            this.ClientSize = new System.Drawing.Size(1047, 854);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.txtWatts);
             this.Controls.Add(this.label1);
@@ -143,6 +151,7 @@
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "DataView";
             this.Text = "DataView";
             ((System.ComponentModel.ISupportInitialize)(this.dgvSegments)).EndInit();
