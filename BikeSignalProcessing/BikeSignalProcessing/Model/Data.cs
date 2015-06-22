@@ -263,7 +263,7 @@ namespace BikeSignalProcessing.Model
             {
                 try
                 {
-                    m_powerFit = new PolyPowerFit();
+                    m_powerFit = new PowerFit();
                     m_powerFit.Fit(speed.ToArray(), watts.ToArray());
 
                     Drag = m_powerFit.Drag;

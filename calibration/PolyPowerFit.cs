@@ -7,7 +7,6 @@ namespace IRT.Calibration
 {
     public class PolyPowerFit : PowerFit
     { 
-        double[] m_coeff;
         double[] m_speed;
         double[] m_power;
 

@@ -6,7 +6,7 @@ namespace IRT.Calibration
 {
     public class PowerFit
     {
-        private double[] m_coeff = { 0.0, 0.0 };
+        protected double[] m_coeff = { 0.0, 0.0 };
         private double m_coastdownToPowerRatio;
 
         private DecelerationFit m_decelFit;
@@ -104,6 +104,9 @@ namespace IRT.Calibration
             alglib.lsfitsetbc(state, new double[] { 0.0, 0.0 }, new double[] { 5.0, 50.0 });
             alglib.lsfitfit(state, fit_func, null, null);
             alglib.lsfitresults(state, out info, out m_coeff, out report);
+
+            Drag = m_coeff[0];
+            RollingResistance = m_coeff[1];
         }
 
         public virtual void GeneratePowerData(out double[,] speed, out double[] watts)

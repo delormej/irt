@@ -68,12 +68,19 @@ namespace BikeSignalProcessing.View
             }
         }
 
-        public void PlotCoastdownPower()
+        public void PlotCoastdownPower(bool fit)
         {
             // Attempt to fit the coast down.
             double[] speed, power;
-            //mData.EvaluateNoMagnetFit(out speed, out power);
-            mData.GetCoastdownFit(out speed, out power);
+
+            if (fit)
+            {
+                mData.EvaluateNoMagnetFit(out speed, out power);
+            }
+            else
+            {
+                mData.GetCoastdownFit(out speed, out power);
+            }
 
             if (speed == null || power == null)
             {
@@ -508,6 +515,7 @@ namespace BikeSignalProcessing.View
             txtRR.DataBindings.Add("Text", mData, "RollingResistance", true, DataSourceUpdateMode.OnPropertyChanged);
 
             BindChart(mData);
+            PlotCoastdownPower(false);
             ChartSegments(mData.StableSegments);
             mData.SegmentDetected += OnSegmentDetected;
         }
@@ -656,7 +664,7 @@ namespace BikeSignalProcessing.View
         private void btnBest_Click(object sender, EventArgs e)
         {
             ClearMagPoints();
-            PlotCoastdownPower();
+            PlotCoastdownPower(true);
             ChartSegments(mData.StableSegments);
 
             //// Re-chart only the best segments.
