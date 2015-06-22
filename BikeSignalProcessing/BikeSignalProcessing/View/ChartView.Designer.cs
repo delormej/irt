@@ -47,6 +47,8 @@
             this.btnViewData = new System.Windows.Forms.Button();
             this.txtDrag = new System.Windows.Forms.TextBox();
             this.txtRR = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.upDownThreshold)).BeginInit();
@@ -202,23 +204,45 @@
             // 
             // txtDrag
             // 
-            this.txtDrag.Location = new System.Drawing.Point(16, 155);
+            this.txtDrag.Location = new System.Drawing.Point(49, 155);
             this.txtDrag.Name = "txtDrag";
             this.txtDrag.Size = new System.Drawing.Size(69, 20);
             this.txtDrag.TabIndex = 25;
             // 
             // txtRR
             // 
-            this.txtRR.Location = new System.Drawing.Point(16, 181);
+            this.txtRR.Location = new System.Drawing.Point(49, 181);
             this.txtRR.Name = "txtRR";
             this.txtRR.Size = new System.Drawing.Size(69, 20);
             this.txtRR.TabIndex = 26;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.BackColor = System.Drawing.SystemColors.Window;
+            this.label3.Location = new System.Drawing.Point(13, 158);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(30, 13);
+            this.label3.TabIndex = 27;
+            this.label3.Text = "Drag";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.BackColor = System.Drawing.SystemColors.Window;
+            this.label4.Location = new System.Drawing.Point(13, 184);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(23, 13);
+            this.label4.TabIndex = 28;
+            this.label4.Text = "RR";
             // 
             // ChartView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(661, 428);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.txtRR);
             this.Controls.Add(this.txtDrag);
             this.Controls.Add(this.btnViewData);
@@ -259,6 +283,8 @@
         private System.Windows.Forms.Button btnViewData;
         private System.Windows.Forms.TextBox txtDrag;
         private System.Windows.Forms.TextBox txtRR;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
     }
 }
 
