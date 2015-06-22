@@ -17,7 +17,7 @@ namespace BikeSignalProcessing
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new ChartView());
+            Application.Run(new ChartView(null));
         }
     }
 }

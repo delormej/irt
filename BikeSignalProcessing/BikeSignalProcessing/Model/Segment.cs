@@ -77,10 +77,10 @@ namespace BikeSignalProcessing.Model
         {
             get
             {
-                if (mOwner.mPowerFit != null && this.MagnetPosition <= 1600)
+                if (mOwner.m_powerFit != null && this.MagnetPosition <= 1600)
                 {
                     return mAveragePower -
-                        mOwner.mPowerFit.Watts(this.AverageSpeed);
+                        mOwner.m_powerFit.Watts(this.AverageSpeed);
                 }
                 else
                 {

@@ -11,7 +11,7 @@ using System.ComponentModel;
 using IRT.Calibration;
 
 namespace BikeSignalProcessing.Model
-{ 
+{
     /// <summary>
     /// Signature of a method that receives new segments.
     /// </summary>
@@ -23,26 +23,30 @@ namespace BikeSignalProcessing.Model
     /// </summary>
     public class Data : INotifyPropertyChanged
     {
-        private int mWindow = 10;
-        private double mThreshold = 4.0;
+        private int m_window = 10;
+        private double m_threshold = 4.0;
+        private double m_drag;
+        private double m_rr;
 
-        private object mUpdateLock = null;
+        private object m_updateLock = null;
 
-        internal PowerFit mPowerFit;
+        internal PowerFit m_powerFit;
 
         /// <summary>
         /// Minimum number of data points in a segment. 
         /// </summary>
         public int Window
         {
-            get { return mWindow; }
+            get { return m_window; }
             set
             {
-                if (value != mWindow)
+                if (value != m_window)
                 {
-                    mWindow = value;
+                    m_window = value;
                     // Force re-evaluation.
                     ReEvaluateSegments();
+
+                    OnPropertyChanged("Window");
                 }
             }
         }
@@ -52,20 +56,44 @@ namespace BikeSignalProcessing.Model
         /// </summary>
         public double Threshold
         {
-            get { return mThreshold; }
+            get { return m_threshold; }
             set
             {
-                if (value != mThreshold)
+                if (value != m_threshold)
                 {
-                    mThreshold = value;
+                    m_threshold = value;
                     // Force re-evaluation.
                     ReEvaluateSegments();
+
+                    OnPropertyChanged("Threshold");
                 }
             }
         }
 
-        public double Drag { get; set; }
-        public double RollingResistance { get; set; }
+        public double Drag
+        {
+            get
+            {
+                return m_drag;
+            }
+            set
+            {
+                m_drag = value;
+                OnPropertyChanged("Drag");
+            }
+        }
+        public double RollingResistance
+        {
+            get
+            {
+                return m_rr;
+            }
+            set
+            {
+                m_rr = value;
+                OnPropertyChanged("RollingResistance");
+            }
+        }
 
         /// <summary>
         /// Hangs on to the active segment.
@@ -114,7 +142,7 @@ namespace BikeSignalProcessing.Model
 
         public Data()
         {
-            mUpdateLock = new object();
+            m_updateLock = new object();
             mIndex = 0;
 
             mCurrentSegment = null;
@@ -134,7 +162,7 @@ namespace BikeSignalProcessing.Model
         /// <param name="servoPosition"></param>
         public void Update(double speedMph, double powerWatts, int servoPosition)
         {
-            lock (mUpdateLock)
+            lock (m_updateLock)
             {
                 BikeDataPoint value = new BikeDataPoint();
                 value.Seconds = mIndex;
@@ -160,7 +188,7 @@ namespace BikeSignalProcessing.Model
 
         public void ReEvaluateSegments()
         {
-            lock (mUpdateLock)
+            lock (m_updateLock)
             {
                 // Reset internal counter
                 mIndex = 0;
@@ -235,14 +263,14 @@ namespace BikeSignalProcessing.Model
             {
                 try
                 {
-                    mPowerFit = new PolyPowerFit();
-                    mPowerFit.Fit(speed.ToArray(), watts.ToArray());
+                    m_powerFit = new PolyPowerFit();
+                    m_powerFit.Fit(speed.ToArray(), watts.ToArray());
 
-                    Drag = mPowerFit.Drag;
-                    RollingResistance = mPowerFit.RollingResistance;
+                    Drag = m_powerFit.Drag;
+                    RollingResistance = m_powerFit.RollingResistance;
 
                     double[,] speedData;
-                    mPowerFit.GeneratePowerData(out speedData, out powerData);
+                    m_powerFit.GeneratePowerData(out speedData, out powerData);
 
                     speedModified = new double[powerData.Length];
 
@@ -254,7 +282,7 @@ namespace BikeSignalProcessing.Model
                 }
                 catch
                 {
-                    mPowerFit = null;
+                    m_powerFit = null;
                     speedModified = null;
                     powerData = null;
                 }
@@ -263,15 +291,6 @@ namespace BikeSignalProcessing.Model
             {
                 powerData = null;
                 speedModified = null;
-            }
-        }
-
-
-        private void OnPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
 
@@ -437,5 +456,14 @@ namespace BikeSignalProcessing.Model
                 mCurrentSegment = null;
             }
         }
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
     }
 }

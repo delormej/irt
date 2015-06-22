@@ -27,9 +27,14 @@ namespace BikeSignalProcessing.View
         private int mZoomStart = -1;
         private int mZoomEnd = -1;
 
-        public ChartView()
+        public ChartView(Data data)
         {
-            mData = new Data();
+            if (data == null)
+            {
+                mData = new Data();
+            }
+
+            mData = data;
 
             InitializeComponent();
             ClearChart();
@@ -37,20 +42,10 @@ namespace BikeSignalProcessing.View
             chart1.MouseClick += Chart1_MouseClick;
             chart1.MouseMove += Chart1_MouseMove;
 
-            upDownThreshold.DataBindings.Add("Value", mData, "Threshold");
-            upDownMinWindow.DataBindings.Add("Value", mData, "Window");
-
             upDownMinWindow.ValueChanged += SegmentConfigChanged;
             upDownThreshold.ValueChanged += SegmentConfigChanged;
 
-            txtDrag.DataBindings.Add("Text", mData, "Drag");
-            txtRR.DataBindings.Add("Text", mData, "RollingResistance");
-        }
-
-        public ChartView(Data data) : this()
-        {
-            mData = data;
-            BindData(null);
+            BindData();
         }
 
         private void SegmentConfigChanged(object sender, EventArgs e)
@@ -488,7 +483,7 @@ namespace BikeSignalProcessing.View
             };
         }
 
-        private void BindData(string filename)
+        private void LoadData(string filename)
         {
             if (filename != null)
             {
@@ -496,6 +491,21 @@ namespace BikeSignalProcessing.View
                 var f = new System.IO.FileInfo(filename);
                 this.Text = f.Name;
             }
+        }
+
+        private void BindData()
+        {
+            // Clear any existing bindings.
+            upDownThreshold.DataBindings.Clear();
+            upDownMinWindow.DataBindings.Clear();
+            txtDrag.DataBindings.Clear();
+            txtRR.DataBindings.Clear();
+
+            upDownThreshold.DataBindings.Add("Value", mData, "Threshold");
+            upDownMinWindow.DataBindings.Add("Value", mData, "Window");
+
+            txtDrag.DataBindings.Add("Text", mData, "Drag", true, DataSourceUpdateMode.OnPropertyChanged);
+            txtRR.DataBindings.Add("Text", mData, "RollingResistance", true, DataSourceUpdateMode.OnPropertyChanged);
 
             BindChart(mData);
             ChartSegments(mData.StableSegments);
@@ -532,7 +542,8 @@ namespace BikeSignalProcessing.View
                 try
                 {
                     this.Cursor = Cursors.WaitCursor;
-                    BindData(dlg.FileName);
+                    LoadData(dlg.FileName);
+                    BindData();
                 }
                 finally
                 {
@@ -632,7 +643,7 @@ namespace BikeSignalProcessing.View
         {
             // Reset
             ClearChart();
-            BindData(null);
+            BindData();
             mData.ReEvaluateSegments();
         }
 
