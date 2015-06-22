@@ -108,7 +108,7 @@ namespace IRT.Calibration
             powerArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
 
             // Plot data on the chart.
-            PlotComputedCoastDown();
+            //PlotComputedCoastDown();
             PlotActualCoastDown(m_coastdown.Data.CoastdownSeconds, 
                 m_coastdown.Data.SpeedMps);
             PlotStableWatts(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
