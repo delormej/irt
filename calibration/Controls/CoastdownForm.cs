@@ -1,4 +1,5 @@
 ﻿using IRT.Calibration;
+using IRT.Calibration.Controls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -91,26 +92,22 @@ namespace IRT.Calibration
             //
             chartCoastdown.ChartAreas.Clear();
             var coastdownArea = chartCoastdown.ChartAreas.Add("Coastdown");
-            coastdownArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
             
             chartCoastdown.Series.Clear();
-
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Minimum = 0;
-            chartCoastdown.ChartAreas["Coastdown"].AxisX.Minimum = 0;
-
             chartCoastdown.Legends[0].Docking = Docking.Bottom;
 
-            chartCoastdown.ChartAreas["Coastdown"].AxisX.Title = "Coastdown (seconds)";
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Title = "Speed (mph)";
+            coastdownArea.AxisX.Title = "Coastdown (seconds)";
+            coastdownArea.AxisY.Title = "Speed (mph)";
 
             // Second chart with power curve.
             var powerArea = chartCoastdown.ChartAreas.Add("Power");
-            powerArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
 
-            // Plot data on the chart.
-            //PlotComputedCoastDown();
-            PlotActualCoastDown(m_coastdown.Data.CoastdownSeconds, 
-                m_coastdown.Data.SpeedMps);
+            powerArea.AlignWithChartArea = "Coastdown";
+
+            PlotActualCoastDown(m_coastdown.Data.SpeedMps, 
+                m_coastdown.Data.Acceleration);
+            PlotComputedCoastDown();
+
             PlotStableWatts(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
             PlotWatts("Watts");
         }
@@ -122,21 +119,28 @@ namespace IRT.Calibration
         {
             var series1 = chartCoastdown.Series.Add("Computed");
             series1.ChartType = SeriesChartType.Spline;
+            series1.ChartArea = "Coastdown";
+
+            // Get the starting point.
+            double mph = Math.Floor(m_coastdown.Data.SpeedMps.Min() * 2.23694);
+            double max = Math.Ceiling(m_coastdown.Data.SpeedMps.Max() * 2.23694);
 
             // Plot the calculated curve line first.
-            for (double mph = 2; mph < 35; mph++)
+            while (mph < max)
             {
-                var time = m_coastdown.CoastdownTime(mph * 0.44704);
-                series1.Points.AddXY(time, mph);
+                //var time = m_coastdown.Data.SpeedMps(mph * 0.44704);
+                double acceleration = m_coastdown.Deceleration(mph * 0.44704);
+                series1.Points.AddXY(mph, acceleration);
+                mph++;
             }
         }
 
         /// <summary>
         /// Plot actual coast down time/speed values.
         /// </summary>
-        /// <param name="time"></param>
-        /// <param name="speed"></param>
-        public void PlotActualCoastDown(double[] time, double[] speed, string name = "Actual")
+        /// <param name="speedMps"></param>
+        /// <param name="acceleration"></param>
+        public void PlotActualCoastDown(double[] speedMps, double[] acceleration, string name = "Actual")
         {
             Series series2 = null;
 
@@ -147,13 +151,20 @@ namespace IRT.Calibration
 
             series2 = chartCoastdown.Series.Add(name);
             series2.ChartType = SeriesChartType.Point;
+            series2.ChartArea = "Coastdown";
+            series2.ToolTip = "Acceleration: #VALY{N2}\nMph: #VALX{N1}";
+
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Minimum = acceleration.Min();
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Maximum = acceleration.Max();
+
+            //chartCoastdown.ChartAreas["Coastdown"].AxisX.Minimum = 0;
 
             // Plot the actual values as points.
-            for (int i = 0; i < speed.Length; i++)
+            for (int i = 0; i < acceleration.Length; i++)
             {
                 series2.Points.AddXY(
-                    time[i],
-                    Math.Round(speed[i] * 2.23694, 1));
+                    Math.Round(speedMps[i] * 2.23694, 1),
+                    acceleration[i]);
             }
         }
 
@@ -308,6 +319,12 @@ namespace IRT.Calibration
                     RecalculatePower();
                 }
             }
+        }
+
+        private void dataToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CoastdownDataForm form = new CoastdownDataForm(m_coastdown.Data);
+            form.Show();
         }
     }
 }

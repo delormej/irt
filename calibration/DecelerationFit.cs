@@ -55,29 +55,22 @@ namespace IRT.Calibration
         /// Speed and decleration should come in fastest first, i.e. element 0 is the fastest
         /// speed and the longest duration to coastdown.
         /// </summary>
-        public void Fit(double[] speedMps, double[] coastdownSeconds)
+        public void Fit(double[] speedMps, double[] acceleration)
         {
             // internal implementation of curve fitting.
             int info = 0;
 
-            if (speedMps.Length != coastdownSeconds.Length)
+            if (speedMps.Length != acceleration.Length)
             {
                 throw new ArgumentException("speedMps must have the same length as coastdownSeconds");
             }
 
-            int size = speedMps.Length - 1;
-
-            double[] acceleration = new double[size];
+            // Copy speed to jagged array as per alglib requirement.
+            int size = speedMps.Length;
             double[,] speed = new double[size, 1];
 
-            // Calcualte rate of acceleration for each speed (velocity).
             for (int i = 0; i < size; i++)
-            //while (--records > 0) 
             {
-                // speedMps[size] is the last record, slowest speed.
-                acceleration[i] = (speedMps[i] - speedMps[size]) /
-                    coastdownSeconds[i];
-
                 // Copy speed into the appropriate array shape for the function.
                 speed[i, 0] = speedMps[i];
             }

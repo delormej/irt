@@ -69,6 +69,12 @@
     <Compile Include="Controls\CalibrationForm.Designer.cs">
       <DependentUpon>CalibrationForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CoastdownDataForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\CoastdownDataForm.Designer.cs">
+      <DependentUpon>CoastdownDataForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Global.cs" />
     <Compile Include="MagGapCalibration.cs" />
     <Compile Include="MagnetCalibration.cs" />
@@ -101,6 +107,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Controls\CalibrationForm.resx">
       <DependentUpon>CalibrationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\CoastdownDataForm.resx">
+      <DependentUpon>CoastdownDataForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\CoastdownForm.resx">
       <DependentUpon>CoastdownForm.cs</DependentUpon>
