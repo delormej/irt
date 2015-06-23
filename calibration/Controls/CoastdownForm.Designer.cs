@@ -53,6 +53,7 @@
             this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.applyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chartCoastdown = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.dataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chartCoastdown)).BeginInit();
             this.SuspendLayout();
@@ -204,7 +205,7 @@
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.exitToolStripMenuItem.Text = "E&xit";
             // 
             // coastdownToolStripMenuItem
@@ -213,7 +214,8 @@
             this.evaluateToolStripMenuItem,
             this.recalculateToolStripMenuItem,
             this.resetToolStripMenuItem,
-            this.applyToolStripMenuItem});
+            this.applyToolStripMenuItem,
+            this.dataToolStripMenuItem});
             this.coastdownToolStripMenuItem.Name = "coastdownToolStripMenuItem";
             this.coastdownToolStripMenuItem.Size = new System.Drawing.Size(79, 20);
             this.coastdownToolStripMenuItem.Text = "Coastdown";
@@ -221,25 +223,25 @@
             // evaluateToolStripMenuItem
             // 
             this.evaluateToolStripMenuItem.Name = "evaluateToolStripMenuItem";
-            this.evaluateToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+            this.evaluateToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.evaluateToolStripMenuItem.Text = "&Evaluate";
             // 
             // recalculateToolStripMenuItem
             // 
             this.recalculateToolStripMenuItem.Name = "recalculateToolStripMenuItem";
-            this.recalculateToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+            this.recalculateToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.recalculateToolStripMenuItem.Text = "&Recalculate";
             // 
             // resetToolStripMenuItem
             // 
             this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
-            this.resetToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+            this.resetToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.resetToolStripMenuItem.Text = "Re&set";
             // 
             // applyToolStripMenuItem
             // 
             this.applyToolStripMenuItem.Name = "applyToolStripMenuItem";
-            this.applyToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+            this.applyToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.applyToolStripMenuItem.Text = "&Apply";
             // 
             // chartCoastdown
@@ -260,6 +262,13 @@
             this.chartCoastdown.Size = new System.Drawing.Size(516, 419);
             this.chartCoastdown.TabIndex = 7;
             this.chartCoastdown.Text = "chart1";
+            // 
+            // dataToolStripMenuItem
+            // 
+            this.dataToolStripMenuItem.Name = "dataToolStripMenuItem";
+            this.dataToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.dataToolStripMenuItem.Text = "&Data";
+            this.dataToolStripMenuItem.Click += new System.EventHandler(this.dataToolStripMenuItem_Click);
             // 
             // CoastdownForm
             // 
@@ -318,5 +327,6 @@
         private System.Windows.Forms.DataVisualization.Charting.Chart chartCoastdown;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem applyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem dataToolStripMenuItem;
     }
 }
