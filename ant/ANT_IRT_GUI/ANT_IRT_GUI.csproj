@@ -150,6 +150,10 @@
     <Content Include="IR 1 red_alter4ICON.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\BikeSignalProcessing\BikeSignalProcessing\BikeSignalProcessing.csproj">
+      <Project>{bc11346d-06dc-482c-8659-659148569497}</Project>
+      <Name>BikeSignalProcessing</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\calibration\Calibration.csproj">
       <Project>{cbcac49e-7428-4218-b68f-c148e2742e35}</Project>
       <Name>Calibration</Name>

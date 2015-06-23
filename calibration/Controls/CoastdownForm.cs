@@ -108,7 +108,7 @@ namespace IRT.Calibration
             powerArea.AlignmentOrientation = AreaAlignmentOrientations.Horizontal;
 
             // Plot data on the chart.
-            PlotComputedCoastDown();
+            //PlotComputedCoastDown();
             PlotActualCoastDown(m_coastdown.Data.CoastdownSeconds, 
                 m_coastdown.Data.SpeedMps);
             PlotStableWatts(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
@@ -189,8 +189,8 @@ namespace IRT.Calibration
         /// <param name="seriesName"></param>
         private void PlotWatts(string seriesName)
         {
-            Series wattSeries = chartCoastdown.Series.FirstOrDefault(x => x.Name == seriesName);
-
+            Series wattSeries = chartCoastdown.Series.FindByName(seriesName);
+            
             if (wattSeries != null)
             {
                 // Remove if already exists.
@@ -252,7 +252,7 @@ namespace IRT.Calibration
         private void RecalculatePower()
         {
             double stableMph;
-
+            
             if (double.TryParse(txtStableSpeed.Text, out stableMph))
             {
                 this.txtStableWatts.Text =
@@ -281,6 +281,32 @@ namespace IRT.Calibration
             if (txtStableSpeed.Modified)
             {
                 RecalculatePower();
+            }
+        }
+
+        private void txtDrag_Leave(object sender, EventArgs e)
+        {
+            if (txtDrag.Modified)
+            {
+                double drag;
+                if (double.TryParse(txtDrag.Text, out drag))
+                {
+                    m_coastdown.Drag = drag;
+                    RecalculatePower();
+                }
+            }
+        }
+
+        private void txtRR_Leave(object sender, EventArgs e)
+        {
+            if (txtRR.Modified)
+            {
+                double rr;
+                if (double.TryParse(txtRR.Text, out rr))
+                {
+                    m_coastdown.RollingResistance = rr;
+                    RecalculatePower();
+                }
             }
         }
     }

@@ -4,6 +4,9 @@ using AntPlus.Profiles.BikePower;
 using AntPlus.Profiles.Common;
 using AntPlus.Profiles.Components;
 using AntPlus.Types;
+using BikeSignalProcessing;
+using BikeSignalProcessing.Model;
+using BikeSignalProcessing.View;
 using IntervalParser;
 using IRT.Calibration;
 using IRT_GUI.IrtMessages;
@@ -63,6 +66,8 @@ namespace IRT_GUI
         bool m_SystemUiUpdate = false;
 
         bool m_usingCtfRef = false; // using an SRM power meter or Crank Torque Frequency.
+
+        private ChannelStatus m_eMotionChannelStatus;
 
         // Logging stuff.
         private Timer m_reportTimer;
@@ -697,6 +702,10 @@ namespace IRT_GUI
 
         void m_reportTimer_Tick(object sender, EventArgs e)
         {
+            // Don't report if we're not connected. 
+            if (m_eMotionChannelStatus != ChannelStatus.Tracking)
+                return;
+
             m_dataPoint.Timestamp = DateTime.UtcNow;
 
             foreach (IReporter r in m_reporters)
@@ -927,6 +936,7 @@ namespace IRT_GUI
         void m_eMotion_ChannelStatusChanged(ChannelStatus status)
         {
             UpdateStatus("E-Motion channel status changed: " + status.ToString());
+            m_eMotionChannelStatus = status;
 
             ExecuteOnUI(() =>
             {
@@ -2256,20 +2266,40 @@ namespace IRT_GUI
 
         private void btnChartOpen_Click(object sender, EventArgs e)
         {
-            GraphForm graph = new GraphForm();
-            m_reporters.Add(graph);
-            graph.FormClosing += (o, v) =>
+
+            float drag, rr;
+            float.TryParse(this.txtDrag.Text, out drag);
+            float.TryParse(this.txtRR.Text, out rr);
+
+            Data mData = new Data();
+            mData.Drag = drag;
+            mData.RollingResistance = rr;
+            ChartView mForm = new ChartView(mData);
+            BikeSignalProcessingReporter bsp = new BikeSignalProcessingReporter(mData);
+            m_reporters.Add(bsp);
+
+            mForm.FormClosing += (o, v) =>
             {
-                m_reporters.Remove(graph);
+                m_reporters.Remove(bsp);
             };
 
-            Screen screen = Screen.FromControl(this);
-            int width = screen.WorkingArea.Width;
-            graph.Width = width;
-            graph.Height = (int)(screen.WorkingArea.Height * 0.4);
-            graph.SetDesktopLocation(0, 0);
+            mForm.Show();
 
-            graph.Show();
+
+            //GraphForm graph = new GraphForm();
+            //m_reporters.Add(graph);
+            //graph.FormClosing += (o, v) =>
+            //{
+            //    m_reporters.Remove(graph);
+            //};
+
+            //Screen screen = Screen.FromControl(this);
+            //int width = screen.WorkingArea.Width;
+            //graph.Width = width;
+            //graph.Height = (int)(screen.WorkingArea.Height * 0.4);
+            //graph.SetDesktopLocation(0, 0);
+
+            //graph.Show();
         }
 
         private void btnSimRefPower_Click(object sender, EventArgs e)

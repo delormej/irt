@@ -9,7 +9,7 @@ namespace IRT.Calibration
     /// </summary>
     public class CoastdownData
     {
-        private List<double> m_speedMps, m_coastdownSeconds;
+        private List<double> m_speedMps, m_coastdownSeconds, m_acceleration;
 
         public CoastdownData()
         {}
@@ -17,6 +17,8 @@ namespace IRT.Calibration
         public double[] SpeedMps { get {  return m_speedMps.ToArray(); } }
 
         public double[] CoastdownSeconds { get { return m_coastdownSeconds.ToArray();  } }
+
+        public double[] Acceleration{ get { return m_acceleration.ToArray(); } } 
 
         /// <summary>
         /// Filters and processes raw coastdown records into only the records that
@@ -99,16 +101,23 @@ namespace IRT.Calibration
             {
                 m_speedMps = new List<double>();
                 m_coastdownSeconds = new List<double>();
+                m_acceleration = new List<double>();
             }
 
             //Array.Copy(speed, maxSpeedIdx, SpeedMps, 0, len);
             for (int j = maxSpeedIdx; j <= minSpeedIdx; j++)
             {
-                if (speed[j] > 0)
+                double time = seconds[minSpeedIdx] - seconds[j];
+
+                if (time > 0 && speed[j] > 0)
                 {
                     m_speedMps.Add(speed[j]);
                     // Invert the timestamp seconds to record seconds to min speed.
-                    m_coastdownSeconds.Add(seconds[minSpeedIdx] - seconds[j]);
+                    
+                    m_coastdownSeconds.Add(time);
+
+                    // Acceleration is the change in speed over the change in time.
+                    m_acceleration.Add((speed[j] - speed[minSpeedIdx]) / time);
                 }
             }
 

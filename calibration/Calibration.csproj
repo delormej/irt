@@ -45,9 +45,14 @@
     <Reference Include="ANT_NET">
       <HintPath>..\ant\ANT_IRT_GUI\ANT_NET.dll</HintPath>
     </Reference>
+    <Reference Include="MathNet.Numerics, Version=3.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\ant\ANT_IRT_GUI\packages\MathNet.Numerics.3.7.0\lib\net40\MathNet.Numerics.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xml.Linq" />
@@ -70,6 +75,7 @@
     <Compile Include="MagnetPosition.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="AveragePower.cs" />
+    <Compile Include="PolyPowerFit.cs" />
     <Compile Include="Speed.cs" />
     <Compile Include="Coastdown.cs" />
     <Compile Include="CoastdownData.cs" />
@@ -90,6 +96,7 @@
       <Link>position_slope_intercept.csv</Link>
     </EmbeddedResource>
     <None Include="App.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Controls\CalibrationForm.resx">
