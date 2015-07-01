@@ -79,11 +79,15 @@ namespace BikeSignalProcessing
 
                         if (setting == "Drag")
                         {
-                            data.Drag = double.Parse(value);
+                            double drag;
+                            if (double.TryParse(value, out drag))
+                                data.Drag = drag;
                         }
                         else if (setting == "RR")
                         {
-                            data.RollingResistance = double.Parse(value);
+                            double rr;
+                            if (double.TryParse(value, out rr))
+                                data.RollingResistance = rr;
                         }
                     }
                 }
