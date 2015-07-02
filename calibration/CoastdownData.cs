@@ -96,13 +96,9 @@ namespace IRT.Calibration
             int minSpeedIdx = FindMinSpeedIndex(speed);
             //int len = minSpeedIdx - maxSpeedIdx;
 
-            // Copy to the array.
-            if (m_speedMps == null)
-            {
-                m_speedMps = new List<double>();
-                m_coastdownSeconds = new List<double>();
-                m_acceleration = new List<double>();
-            }
+            m_speedMps = new List<double>();
+            m_coastdownSeconds = new List<double>();
+            m_acceleration = new List<double>();
 
             //Array.Copy(speed, maxSpeedIdx, SpeedMps, 0, len);
             for (int j = maxSpeedIdx; j <= minSpeedIdx; j++)
@@ -125,7 +121,6 @@ namespace IRT.Calibration
             {
                 throw new ApplicationException("Unable to detect suitable deceleration, please retry.");
             }
-
         }
 
         /// <summary>
@@ -156,8 +151,16 @@ namespace IRT.Calibration
 
         private int FindMinSpeedIndex(double[] speeds)
         {
-            // Always returns the end of the file.
-            return speeds.Length-1;
+            int i = speeds.Length - 1;
+
+            // Find the last record greater than 0.
+            do
+            {
+                if (speeds[i] > 0)
+                    return i;
+            } while (--i > 0);
+
+            throw new IndexOutOfRangeException("Unable to find speed greater than 0.");
         }
     }
 }
