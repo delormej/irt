@@ -62,6 +62,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccelerationFit.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="Controls\CalibrationForm.cs">
       <SubType>Form</SubType>

@@ -9,9 +9,9 @@ namespace IRT.Calibration
     /// </summary>
     public class DecelerationFit
     {
-        private double[] m_coeff = { 0.0, 0.0 };
+        protected double[] m_coeff = { 0.0, 0.0 };
 
-        public double[] Coeff
+        public virtual double[] Coeff
         {
             get
             {
@@ -55,7 +55,7 @@ namespace IRT.Calibration
         /// Speed and decleration should come in fastest first, i.e. element 0 is the fastest
         /// speed and the longest duration to coastdown.
         /// </summary>
-        public void Fit(double[] speedMps, double[] acceleration)
+        public virtual void Fit(double[] speedMps, double[] acceleration)
         {
             // internal implementation of curve fitting.
             int info = 0;

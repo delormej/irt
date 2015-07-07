@@ -142,6 +142,10 @@ namespace IRT.Calibration
             m_powerFit = new PowerFit(m_decelFit);
             m_powerFit.CalculateStablePowerFactor(model.StableSpeedMps, model.StableWatts);
             m_powerFit.Fit();
+
+            // Not used right now, but do a fit against acceleration.
+            AccelerationFit accelFit = new AccelerationFit();
+            accelFit.Fit(m_coastdownData.SpeedMps, m_coastdownData.Acceleration);
         }
     }
 
