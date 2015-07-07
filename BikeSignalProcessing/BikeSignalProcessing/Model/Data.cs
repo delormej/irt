@@ -27,6 +27,7 @@ namespace BikeSignalProcessing.Model
         private double m_threshold = 4.0;
         private double m_drag;
         private double m_rr;
+        private int m_skipRows;
 
         private object m_updateLock = null;
 
@@ -67,6 +68,19 @@ namespace BikeSignalProcessing.Model
 
                     OnPropertyChanged("Threshold");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Sets or gets the # of initial rows to skip.
+        /// </summary>
+        public int SkipRows
+        {
+            get { return m_skipRows; }
+            set
+            {
+                m_skipRows = value;
+                OnPropertyChanged("SkipRows");
             }
         }
 
@@ -191,13 +205,13 @@ namespace BikeSignalProcessing.Model
             lock (m_updateLock)
             {
                 // Reset internal counter
-                mIndex = 0;
-
+                mIndex = SkipRows > 0 && DataPoints.Count > SkipRows ? SkipRows : 0;
+                
                 // Clear existing segments.
                 StableSegments.Clear();
                 mCurrentSegment = null;
 
-                foreach (BikeDataPoint point in DataPoints)
+                foreach (BikeDataPoint point in DataPoints.Skip(mIndex))
                 {
                     EvaluateSegment(point);
                     mIndex++;

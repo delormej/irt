@@ -49,18 +49,20 @@
             this.txtRR = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.upDownSkipRows = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.upDownThreshold)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.upDownMinWindow)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.upDownSkipRows)).BeginInit();
             this.SuspendLayout();
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(16, 19);
-            this.button1.Margin = new System.Windows.Forms.Padding(2);
+            this.button1.Location = new System.Drawing.Point(24, 29);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(69, 20);
+            this.button1.Size = new System.Drawing.Size(104, 31);
             this.button1.TabIndex = 0;
             this.button1.Text = "Load";
             this.button1.UseVisualStyleBackColor = true;
@@ -74,13 +76,12 @@
             legend1.Name = "Legend1";
             this.chart1.Legends.Add(legend1);
             this.chart1.Location = new System.Drawing.Point(0, 0);
-            this.chart1.Margin = new System.Windows.Forms.Padding(2);
             this.chart1.Name = "chart1";
             series1.ChartArea = "ChartArea1";
             series1.Legend = "Legend1";
             series1.Name = "Series1";
             this.chart1.Series.Add(series1);
-            this.chart1.Size = new System.Drawing.Size(661, 428);
+            this.chart1.Size = new System.Drawing.Size(992, 658);
             this.chart1.TabIndex = 1;
             this.chart1.Text = "chart1";
             // 
@@ -90,28 +91,27 @@
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(93, 26);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(124, 34);
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(123, 30);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(141, 30);
             this.openToolStripMenuItem.Text = "Open";
             // 
             // btnReset
             // 
-            this.btnReset.Location = new System.Drawing.Point(16, 68);
-            this.btnReset.Margin = new System.Windows.Forms.Padding(2);
+            this.btnReset.Location = new System.Drawing.Point(24, 105);
             this.btnReset.Name = "btnReset";
-            this.btnReset.Size = new System.Drawing.Size(69, 20);
+            this.btnReset.Size = new System.Drawing.Size(104, 31);
             this.btnReset.TabIndex = 3;
             this.btnReset.Text = "Reset";
             this.btnReset.UseVisualStyleBackColor = true;
@@ -125,24 +125,22 @@
             0,
             0,
             65536});
-            this.upDownThreshold.Location = new System.Drawing.Point(16, 97);
-            this.upDownThreshold.Margin = new System.Windows.Forms.Padding(2);
+            this.upDownThreshold.Location = new System.Drawing.Point(24, 149);
             this.upDownThreshold.Maximum = new decimal(new int[] {
             50,
             0,
             0,
             0});
             this.upDownThreshold.Name = "upDownThreshold";
-            this.upDownThreshold.Size = new System.Drawing.Size(46, 20);
+            this.upDownThreshold.Size = new System.Drawing.Size(69, 26);
             this.upDownThreshold.TabIndex = 4;
             this.upDownThreshold.ValueChanged += new System.EventHandler(this.upDownThreshold_ValueChanged);
             // 
             // btnBest
             // 
-            this.btnBest.Location = new System.Drawing.Point(16, 43);
-            this.btnBest.Margin = new System.Windows.Forms.Padding(2);
+            this.btnBest.Location = new System.Drawing.Point(24, 66);
             this.btnBest.Name = "btnBest";
-            this.btnBest.Size = new System.Drawing.Size(69, 20);
+            this.btnBest.Size = new System.Drawing.Size(104, 31);
             this.btnBest.TabIndex = 5;
             this.btnBest.Text = "Best";
             this.btnBest.UseVisualStyleBackColor = true;
@@ -152,16 +150,16 @@
             // 
             this.label1.AutoSize = true;
             this.label1.BackColor = System.Drawing.SystemColors.Window;
-            this.label1.Location = new System.Drawing.Point(66, 99);
+            this.label1.Location = new System.Drawing.Point(99, 152);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(43, 13);
+            this.label1.Size = new System.Drawing.Size(62, 20);
             this.label1.TabIndex = 6;
             this.label1.Text = "StdDev";
             // 
             // upDownMinWindow
             // 
-            this.upDownMinWindow.Location = new System.Drawing.Point(16, 121);
-            this.upDownMinWindow.Margin = new System.Windows.Forms.Padding(2);
+            this.upDownMinWindow.Location = new System.Drawing.Point(24, 186);
             this.upDownMinWindow.Maximum = new decimal(new int[] {
             500,
             0,
@@ -173,7 +171,7 @@
             0,
             0});
             this.upDownMinWindow.Name = "upDownMinWindow";
-            this.upDownMinWindow.Size = new System.Drawing.Size(46, 20);
+            this.upDownMinWindow.Size = new System.Drawing.Size(69, 26);
             this.upDownMinWindow.TabIndex = 7;
             this.upDownMinWindow.Value = new decimal(new int[] {
             9,
@@ -185,18 +183,18 @@
             // 
             this.label2.AutoSize = true;
             this.label2.BackColor = System.Drawing.SystemColors.Window;
-            this.label2.Location = new System.Drawing.Point(66, 123);
+            this.label2.Location = new System.Drawing.Point(99, 189);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(46, 13);
+            this.label2.Size = new System.Drawing.Size(65, 20);
             this.label2.TabIndex = 8;
             this.label2.Text = "Window";
             // 
             // btnViewData
             // 
-            this.btnViewData.Location = new System.Drawing.Point(16, 206);
-            this.btnViewData.Margin = new System.Windows.Forms.Padding(2);
+            this.btnViewData.Location = new System.Drawing.Point(24, 361);
             this.btnViewData.Name = "btnViewData";
-            this.btnViewData.Size = new System.Drawing.Size(69, 20);
+            this.btnViewData.Size = new System.Drawing.Size(104, 31);
             this.btnViewData.TabIndex = 24;
             this.btnViewData.Text = "Data";
             this.btnViewData.UseVisualStyleBackColor = true;
@@ -204,25 +202,28 @@
             // 
             // txtDrag
             // 
-            this.txtDrag.Location = new System.Drawing.Point(49, 155);
+            this.txtDrag.Location = new System.Drawing.Point(74, 282);
+            this.txtDrag.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtDrag.Name = "txtDrag";
-            this.txtDrag.Size = new System.Drawing.Size(69, 20);
+            this.txtDrag.Size = new System.Drawing.Size(102, 26);
             this.txtDrag.TabIndex = 25;
             // 
             // txtRR
             // 
-            this.txtRR.Location = new System.Drawing.Point(49, 181);
+            this.txtRR.Location = new System.Drawing.Point(74, 322);
+            this.txtRR.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.txtRR.Name = "txtRR";
-            this.txtRR.Size = new System.Drawing.Size(69, 20);
+            this.txtRR.Size = new System.Drawing.Size(102, 26);
             this.txtRR.TabIndex = 26;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.BackColor = System.Drawing.SystemColors.Window;
-            this.label3.Location = new System.Drawing.Point(13, 158);
+            this.label3.Location = new System.Drawing.Point(20, 287);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(30, 13);
+            this.label3.Size = new System.Drawing.Size(44, 20);
             this.label3.TabIndex = 27;
             this.label3.Text = "Drag";
             // 
@@ -230,17 +231,48 @@
             // 
             this.label4.AutoSize = true;
             this.label4.BackColor = System.Drawing.SystemColors.Window;
-            this.label4.Location = new System.Drawing.Point(13, 184);
+            this.label4.Location = new System.Drawing.Point(20, 327);
+            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(23, 13);
+            this.label4.Size = new System.Drawing.Size(33, 20);
             this.label4.TabIndex = 28;
             this.label4.Text = "RR";
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.BackColor = System.Drawing.SystemColors.Window;
+            this.label5.Location = new System.Drawing.Point(99, 228);
+            this.label5.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(84, 20);
+            this.label5.TabIndex = 30;
+            this.label5.Text = "Skip Rows";
+            // 
+            // upDownSkipRows
+            // 
+            this.upDownSkipRows.Location = new System.Drawing.Point(24, 225);
+            this.upDownSkipRows.Maximum = new decimal(new int[] {
+            9999,
+            0,
+            0,
+            0});
+            this.upDownSkipRows.Name = "upDownSkipRows";
+            this.upDownSkipRows.Size = new System.Drawing.Size(69, 26);
+            this.upDownSkipRows.TabIndex = 29;
+            this.upDownSkipRows.Value = new decimal(new int[] {
+            300,
+            0,
+            0,
+            0});
+            // 
             // ChartView
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(661, 428);
+            this.ClientSize = new System.Drawing.Size(992, 658);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.upDownSkipRows);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.txtRR);
@@ -255,13 +287,13 @@
             this.Controls.Add(this.button1);
             this.Controls.Add(this.chart1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "ChartView";
             this.Text = "Chart View";
             ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
             this.contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.upDownThreshold)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.upDownMinWindow)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.upDownSkipRows)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -285,6 +317,8 @@
         private System.Windows.Forms.TextBox txtRR;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.NumericUpDown upDownSkipRows;
     }
 }
 

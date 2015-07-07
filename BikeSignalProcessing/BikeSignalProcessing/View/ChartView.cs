@@ -44,6 +44,7 @@ namespace BikeSignalProcessing.View
 
             upDownMinWindow.ValueChanged += SegmentConfigChanged;
             upDownThreshold.ValueChanged += SegmentConfigChanged;
+            upDownSkipRows.ValueChanged += SegmentConfigChanged;
 
             BindData();
         }
@@ -58,6 +59,10 @@ namespace BikeSignalProcessing.View
                 this.Cursor = Cursors.WaitCursor;
                 mData.Threshold = (double)upDownThreshold.Value;
                 mData.Window = (int)upDownMinWindow.Value;
+                mData.SkipRows = (int)upDownSkipRows.Value;
+
+                // Force revaluation of the segments.
+                mData.ReEvaluateSegments();
 
                 // Rechart segments.
                 ChartSegments(mData.StableSegments);
