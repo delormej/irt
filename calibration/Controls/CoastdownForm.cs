@@ -96,16 +96,15 @@ namespace IRT.Calibration
             chartCoastdown.Series.Clear();
             chartCoastdown.Legends[0].Docking = Docking.Bottom;
 
-            coastdownArea.AxisX.Title = "Coastdown (seconds)";
-            coastdownArea.AxisY.Title = "Speed (mph)";
+            //coastdownArea.AxisX.Title = "Coastdown (seconds)";
+            //coastdownArea.AxisY.Title = "Speed (mph)";
 
             // Second chart with power curve.
             var powerArea = chartCoastdown.ChartAreas.Add("Power");
 
             powerArea.AlignWithChartArea = "Coastdown";
 
-            PlotActualCoastDown(m_coastdown.Data.SpeedMps, 
-                m_coastdown.Data.Acceleration);
+            PlotActualCoastDown(m_coastdown.Data.SpeedMps, m_coastdown.Data.Acceleration);
             PlotComputedCoastDown();
 
             PlotStableWatts(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
@@ -122,25 +121,27 @@ namespace IRT.Calibration
             series1.ChartArea = "Coastdown";
 
             // Get the starting point.
-            double mph = Math.Floor(m_coastdown.Data.SpeedMps.Min() * 2.23694);
-            double max = Math.Ceiling(m_coastdown.Data.SpeedMps.Max() * 2.23694);
+            double mps = Math.Floor(m_coastdown.Data.SpeedMps.Min());
+            double mps_max = Math.Ceiling(m_coastdown.Data.SpeedMps.Max());
 
-            // Plot the calculated curve line first.
-            while (mph < max)
+            // Plot the calculated line.
+            while (mps < mps_max)
             {
                 //var time = m_coastdown.Data.SpeedMps(mph * 0.44704);
-                double acceleration = m_coastdown.Deceleration(mph * 0.44704);
-                series1.Points.AddXY(mph, acceleration);
-                mph++;
+                double acceleration = m_coastdown.Deceleration(mps);
+                series1.Points.AddXY(
+                    Math.Round(mps * 2.23694, 1), // convert to Mph from Mps
+                    acceleration);
+                mps += 0.5;
             }
         }
 
         /// <summary>
         /// Plot actual coast down time/speed values.
         /// </summary>
-        /// <param name="speedMps"></param>
+        /// <param name="x"></param>
         /// <param name="acceleration"></param>
-        public void PlotActualCoastDown(double[] speedMps, double[] acceleration, string name = "Actual")
+        public void PlotActualCoastDown(double[] x, double[] y, string name = "Actual")
         {
             Series series2 = null;
 
@@ -154,17 +155,17 @@ namespace IRT.Calibration
             series2.ChartArea = "Coastdown";
             series2.ToolTip = "Acceleration: #VALY{N2}\nMph: #VALX{N1}";
 
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Minimum = acceleration.Min();
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Maximum = acceleration.Max();
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Minimum = y.Min();
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Maximum = y.Max();
 
             //chartCoastdown.ChartAreas["Coastdown"].AxisX.Minimum = 0;
 
             // Plot the actual values as points.
-            for (int i = 0; i < acceleration.Length; i++)
+            for (int i = 0; i < x.Length; i++)
             {
                 series2.Points.AddXY(
-                    Math.Round(speedMps[i] * 2.23694, 1),
-                    acceleration[i]);
+                    Math.Round(x[i] * 2.23694, 1), // convert to Mph from Mps
+                    y[i]); // acceleration
             }
         }
 
@@ -242,6 +243,8 @@ namespace IRT.Calibration
             this.lblStableSeconds.Text = String.Format("{0:0.0}", m_model.StableSeconds);
             this.txtStableSpeed.Text = String.Format("{0:0.0}", m_model.StableSpeedMps * 2.23694);
             this.txtStableWatts.Text = m_model.StableWatts.ToString();
+            this.txtSlope.Text = m_coastdown.Slope.ToString();
+            this.txtIntercept.Text = m_coastdown.Intercept.ToString();
         }
 
         private void RecalculateCoastdown()

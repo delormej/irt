@@ -13,7 +13,7 @@ namespace IRT.Calibration
         private CoastdownData m_coastdownData;
 
         // Fit objects.
-        private DecelerationFit m_decelFit;
+        private AccelerationFit m_decelFit;
         private PowerFit m_powerFit;
 
         public Coastdown()
@@ -25,6 +25,23 @@ namespace IRT.Calibration
         /// from max to min speed.
         /// </summary>
         public CoastdownData Data { get { return m_coastdownData; } }
+
+        public double GoodnessOfFit {
+            get
+            {
+                return m_decelFit.GoodnessOfFit;
+            }
+        }
+
+        /// <summary>
+        /// Intercept of a linear coastdown.
+        /// </summary>
+        public double Intercept {  get { return m_decelFit.Intercept;  } }
+
+        /// <summary>
+        /// Slope of a linear coastdown.
+        /// </summary>
+        public double Slope { get { return m_decelFit.Slope; } }
 
         /// <summary>
         /// Calculates based on multiple runs of coastdown.
@@ -135,17 +152,13 @@ namespace IRT.Calibration
         private void Fit(Model model)
         {
             // Calculate the deceleration.
-            m_decelFit = new DecelerationFit();
+            m_decelFit = new AccelerationFit();
             m_decelFit.Fit(m_coastdownData.SpeedMps, m_coastdownData.Acceleration);
 
             // Calculate the power fit.
             m_powerFit = new PowerFit(m_decelFit);
             m_powerFit.CalculateStablePowerFactor(model.StableSpeedMps, model.StableWatts);
             m_powerFit.Fit();
-
-            // Not used right now, but do a fit against acceleration.
-            AccelerationFit accelFit = new AccelerationFit();
-            accelFit.Fit(m_coastdownData.SpeedMps, m_coastdownData.Acceleration);
         }
     }
 

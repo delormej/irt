@@ -44,7 +44,7 @@ namespace IRT.Calibration
         /// </summary>
         /// <param name="speed_mps"></param>
         /// <returns></returns>
-        public double Rate(double speedMps)
+        public virtual double Rate(double speedMps)
         {
             return fit_coastdown(speedMps, m_coeff[0], m_coeff[1]);
         }

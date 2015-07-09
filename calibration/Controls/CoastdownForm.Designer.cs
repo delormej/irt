@@ -52,8 +52,12 @@
             this.recalculateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.applyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.chartCoastdown = new System.Windows.Forms.DataVisualization.Charting.Chart();
             this.dataToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.chartCoastdown = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.txtIntercept = new System.Windows.Forms.TextBox();
+            this.txtSlope = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.chartCoastdown)).BeginInit();
             this.SuspendLayout();
@@ -63,7 +67,7 @@
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(273, 486);
+            this.label2.Location = new System.Drawing.Point(273, 521);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(34, 13);
             this.label2.TabIndex = 1;
@@ -74,7 +78,7 @@
             this.label4.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(273, 509);
+            this.label4.Location = new System.Drawing.Point(273, 544);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(113, 13);
             this.label4.TabIndex = 3;
@@ -83,7 +87,7 @@
             // btnApply
             // 
             this.btnApply.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.btnApply.Location = new System.Drawing.Point(180, 538);
+            this.btnApply.Location = new System.Drawing.Point(180, 573);
             this.btnApply.Name = "btnApply";
             this.btnApply.Size = new System.Drawing.Size(75, 23);
             this.btnApply.TabIndex = 20;
@@ -95,7 +99,7 @@
             // 
             this.btnCancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(261, 538);
+            this.btnCancel.Location = new System.Drawing.Point(261, 573);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -108,7 +112,7 @@
             this.label3.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(12, 486);
+            this.label3.Location = new System.Drawing.Point(12, 521);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(80, 13);
             this.label3.TabIndex = 10;
@@ -118,7 +122,7 @@
             // 
             this.lblStableSeconds.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.lblStableSeconds.AutoSize = true;
-            this.lblStableSeconds.Location = new System.Drawing.Point(154, 462);
+            this.lblStableSeconds.Location = new System.Drawing.Point(154, 497);
             this.lblStableSeconds.Name = "lblStableSeconds";
             this.lblStableSeconds.Size = new System.Drawing.Size(13, 13);
             this.lblStableSeconds.TabIndex = 9;
@@ -129,7 +133,7 @@
             this.label6.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(12, 462);
+            this.label6.Location = new System.Drawing.Point(12, 497);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(96, 13);
             this.label6.TabIndex = 8;
@@ -140,7 +144,7 @@
             this.label5.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(12, 509);
+            this.label5.Location = new System.Drawing.Point(12, 544);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(118, 13);
             this.label5.TabIndex = 12;
@@ -149,7 +153,7 @@
             // txtStableSpeed
             // 
             this.txtStableSpeed.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.txtStableSpeed.Location = new System.Drawing.Point(157, 506);
+            this.txtStableSpeed.Location = new System.Drawing.Point(157, 541);
             this.txtStableSpeed.Name = "txtStableSpeed";
             this.txtStableSpeed.Size = new System.Drawing.Size(75, 20);
             this.txtStableSpeed.TabIndex = 14;
@@ -158,7 +162,7 @@
             // txtStableWatts
             // 
             this.txtStableWatts.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.txtStableWatts.Location = new System.Drawing.Point(157, 483);
+            this.txtStableWatts.Location = new System.Drawing.Point(157, 518);
             this.txtStableWatts.Name = "txtStableWatts";
             this.txtStableWatts.Size = new System.Drawing.Size(75, 20);
             this.txtStableWatts.TabIndex = 13;
@@ -166,7 +170,7 @@
             // txtDrag
             // 
             this.txtDrag.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.txtDrag.Location = new System.Drawing.Point(405, 483);
+            this.txtDrag.Location = new System.Drawing.Point(405, 518);
             this.txtDrag.Name = "txtDrag";
             this.txtDrag.Size = new System.Drawing.Size(75, 20);
             this.txtDrag.TabIndex = 18;
@@ -175,7 +179,7 @@
             // txtRR
             // 
             this.txtRR.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.txtRR.Location = new System.Drawing.Point(405, 506);
+            this.txtRR.Location = new System.Drawing.Point(405, 541);
             this.txtRR.Name = "txtRR";
             this.txtRR.Size = new System.Drawing.Size(75, 20);
             this.txtRR.TabIndex = 19;
@@ -205,7 +209,7 @@
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(92, 22);
             this.exitToolStripMenuItem.Text = "E&xit";
             // 
             // coastdownToolStripMenuItem
@@ -223,26 +227,33 @@
             // evaluateToolStripMenuItem
             // 
             this.evaluateToolStripMenuItem.Name = "evaluateToolStripMenuItem";
-            this.evaluateToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.evaluateToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
             this.evaluateToolStripMenuItem.Text = "&Evaluate";
             // 
             // recalculateToolStripMenuItem
             // 
             this.recalculateToolStripMenuItem.Name = "recalculateToolStripMenuItem";
-            this.recalculateToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.recalculateToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
             this.recalculateToolStripMenuItem.Text = "&Recalculate";
             // 
             // resetToolStripMenuItem
             // 
             this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
-            this.resetToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.resetToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
             this.resetToolStripMenuItem.Text = "Re&set";
             // 
             // applyToolStripMenuItem
             // 
             this.applyToolStripMenuItem.Name = "applyToolStripMenuItem";
-            this.applyToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.applyToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
             this.applyToolStripMenuItem.Text = "&Apply";
+            // 
+            // dataToolStripMenuItem
+            // 
+            this.dataToolStripMenuItem.Name = "dataToolStripMenuItem";
+            this.dataToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+            this.dataToolStripMenuItem.Text = "&Data";
+            this.dataToolStripMenuItem.Click += new System.EventHandler(this.dataToolStripMenuItem_Click);
             // 
             // chartCoastdown
             // 
@@ -259,16 +270,47 @@
             series1.Legend = "Legend1";
             series1.Name = "Series1";
             this.chartCoastdown.Series.Add(series1);
-            this.chartCoastdown.Size = new System.Drawing.Size(516, 419);
+            this.chartCoastdown.Size = new System.Drawing.Size(516, 437);
             this.chartCoastdown.TabIndex = 7;
             this.chartCoastdown.Text = "chart1";
             // 
-            // dataToolStripMenuItem
+            // txtIntercept
             // 
-            this.dataToolStripMenuItem.Name = "dataToolStripMenuItem";
-            this.dataToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.dataToolStripMenuItem.Text = "&Data";
-            this.dataToolStripMenuItem.Click += new System.EventHandler(this.dataToolStripMenuItem_Click);
+            this.txtIntercept.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.txtIntercept.Location = new System.Drawing.Point(405, 471);
+            this.txtIntercept.Name = "txtIntercept";
+            this.txtIntercept.Size = new System.Drawing.Size(75, 20);
+            this.txtIntercept.TabIndex = 23;
+            // 
+            // txtSlope
+            // 
+            this.txtSlope.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.txtSlope.Location = new System.Drawing.Point(405, 494);
+            this.txtSlope.Name = "txtSlope";
+            this.txtSlope.Size = new System.Drawing.Size(75, 20);
+            this.txtSlope.TabIndex = 24;
+            // 
+            // label1
+            // 
+            this.label1.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(273, 478);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(39, 13);
+            this.label1.TabIndex = 25;
+            this.label1.Text = "Slope";
+            // 
+            // label7
+            // 
+            this.label7.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.Location = new System.Drawing.Point(273, 497);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(58, 13);
+            this.label7.TabIndex = 26;
+            this.label7.Text = "Intercept";
             // 
             // CoastdownForm
             // 
@@ -276,7 +318,11 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(516, 573);
+            this.ClientSize = new System.Drawing.Size(516, 603);
+            this.Controls.Add(this.label7);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.txtIntercept);
+            this.Controls.Add(this.txtSlope);
             this.Controls.Add(this.chartCoastdown);
             this.Controls.Add(this.txtDrag);
             this.Controls.Add(this.txtRR);
@@ -328,5 +374,9 @@
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem applyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem dataToolStripMenuItem;
+        private System.Windows.Forms.TextBox txtIntercept;
+        private System.Windows.Forms.TextBox txtSlope;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label7;
     }
 }

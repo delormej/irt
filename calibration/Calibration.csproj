@@ -45,6 +45,10 @@
     <Reference Include="ANT_NET">
       <HintPath>..\ant\ANT_IRT_GUI\ANT_NET.dll</HintPath>
     </Reference>
+    <Reference Include="MathNet.Filtering, Version=0.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\ant\ANT_IRT_GUI\packages\MathNet.Filtering.0.2.0-alpha\lib\net40\MathNet.Filtering.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="MathNet.Numerics, Version=3.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\ant\ANT_IRT_GUI\packages\MathNet.Numerics.3.7.0\lib\net40\MathNet.Numerics.dll</HintPath>
       <Private>True</Private>

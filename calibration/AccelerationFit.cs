@@ -8,39 +8,74 @@ namespace IRT.Calibration
 {
     public class AccelerationFit : DecelerationFit
     {
+        private double m_goodnessOfFit;
+
         public AccelerationFit()
         {
 
         }
 
-        public override void Fit(double[] speedMps, double[] acceleration)
+        public double GoodnessOfFit
         {
-            //MathNet.Numerics.LinearRegression.SimpleRegression
-            double[] vSquared = new double[speedMps.Length];
-
-            // Smoothing
-            
-
-            for (int i = 0; i < speedMps.Length; i++)
+            get
             {
-                vSquared[i] = Math.Pow(speedMps[i], 2);
+                return m_goodnessOfFit;
+            }
+        }
+
+        public double Slope
+        {
+            get
+            {
+                return m_coeff[1];
             }
 
-            var c = MathNet.Numerics.Fit.Line(vSquared, acceleration);
+            set
+            {
+                m_coeff[1] = value;
+            }
+        }
 
-            m_coeff[0] = c.Item1;
-            m_coeff[1] = c.Item2;
+        public double Intercept
+        {
+            get
+            {
+                return m_coeff[0];
+            }
 
-            double a = c.Item1;
-            double b = c.Item2;
+            set
+            {
+                m_coeff[0] = value;
+            }
+        }
 
-            var g = MathNet.Numerics.GoodnessOfFit.R(
-                speedMps.Select(x => a + b * x),
-                acceleration);
+        public override double Rate(double speedMps)
+        {
+            // y = mx + b
+            return Slope * speedMps + Intercept;
+        }
+
+        public override void Fit(double[] speedMps, double[] acceleration)
+        {
+            // Smoothing
+            var filterAccel = MathNet.Filtering.OnlineFilter.CreateDenoise();
+            var filteredAccel = filterAccel.ProcessSamples(acceleration);
+
+            var filterSpeed = MathNet.Filtering.OnlineFilter.CreateDenoise();
+            var filteredSpeed = filterSpeed.ProcessSamples(speedMps);
+
+            var c = MathNet.Numerics.Fit.Line(speedMps, filteredAccel);
+
+            Intercept = c.Item1;
+            Slope = c.Item2;
+
+            m_goodnessOfFit = MathNet.Numerics.GoodnessOfFit.R(
+                speedMps.Select(x => Intercept + Slope * x),
+                filteredAccel);
 
             System.Diagnostics.Debug.WriteLine(
                 "a={0:N5},b={1:N5},good={2:N5}",
-                a, b, g);
+                Intercept, Slope, m_goodnessOfFit);
         }
     }
 }
