@@ -182,6 +182,19 @@ def calculate_decel(speed, seconds):
 	v = speed[:size]
 	a = (v - min_speed) / (seconds[:size] - min_seconds)
 	
+	###
+	# instead, do a linear fit of speed / aceeleration
+	# between 10,20 mph. 
+	#
+	print("Linear approach");
+	slope, intercept = fit_linear(0, v, a) 
+	
+	plt.plot(v, a)
+	
+	x_new = np.linspace(v[0], v[-1], len(v))
+	plt.plot(x_new, v * slope + intercept)
+	
+	
 	pars, covar = spo.curve_fit(coastdown_func, v, a)
 	print("coastdown:", pars[0], pars[1])
 	
@@ -203,7 +216,7 @@ def main(file_name):
 
 	# todo: add logic here to determine if you're using older than 1.4.3 that you use the old logic.
 
-	skip = 2
+	skip = 4
 
 	mps = np.empty(len(tick_delta)/skip)
 	seconds = np.empty(len(time)/skip)
@@ -269,9 +282,9 @@ def main(file_name):
 	plt.ylabel('Coastdown Time (seconds)')
 
 	# plot actual values
-	plt.plot(x, y, 'bo')
-	plt.ylim(ymin=0)
-	plt.xlim(xmin=0, xmax=x.max())
+	#plt.plot(x, y, 'bo')
+	#plt.ylim(ymin=0)
+	#plt.xlim(xmin=0, xmax=x.max())
 
 	calculate_decel(x,y)
 
@@ -282,12 +295,16 @@ def main(file_name):
 	x_new = np.linspace(x[0], x[-1], len(x))
 	#fp = fit_power(x_new, x, y)
 	f2d, coeff, y_new = fit_poly2d(x_new, x, y)
-	plt.plot(x_new, y_new, 'r--')
+	#plt.plot(x_new, y_new, 'r--')
 
-	slope, intercept = fit_linear(x_new, x, y) 
+	r10_20 = np.where(np.logical_and(x>=4.4704, x<=8.9408))
+
+	slope, intercept = fit_linear(x_new, x[r10_20], y[r10_20]) 
 	x_lin = x_new
 	y_lin = x_new * slope + intercept
-	plt.plot(x_lin, y_lin, 'g')
+	#plt.plot(x_lin, y_lin, 'g')
+
+	print('coastdown:', slope, intercept)
 
 	# print the formula
 	#plt.text(x.max() * 0.05, y.max() * 0.95, fp, fontsize=8, color='y')
