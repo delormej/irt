@@ -277,7 +277,7 @@
             // txtIntercept
             // 
             this.txtIntercept.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.txtIntercept.Location = new System.Drawing.Point(405, 471);
+            this.txtIntercept.Location = new System.Drawing.Point(405, 497);
             this.txtIntercept.Name = "txtIntercept";
             this.txtIntercept.Size = new System.Drawing.Size(75, 20);
             this.txtIntercept.TabIndex = 23;
@@ -285,7 +285,7 @@
             // txtSlope
             // 
             this.txtSlope.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.txtSlope.Location = new System.Drawing.Point(405, 494);
+            this.txtSlope.Location = new System.Drawing.Point(405, 475);
             this.txtSlope.Name = "txtSlope";
             this.txtSlope.Size = new System.Drawing.Size(75, 20);
             this.txtSlope.TabIndex = 24;
