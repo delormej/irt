@@ -20,7 +20,9 @@ namespace BikeSignalProcessing.View
         private const string SmoothSeriesName = "Smoothed";
         private const string ChartAreaMagnet = "Magnet";
         private const int SegmentLineWidth = 3;
-        
+
+        private List<Series> m_magSeries;
+
         private Data mData;
         //private AsyncCsvFactory asyncCsv;
 
@@ -255,6 +257,7 @@ namespace BikeSignalProcessing.View
             chart1.Annotations.Clear();
             chart1.Series.Clear();
             chart1.ChartAreas.Clear();
+            m_magSeries = new List<Series>();
         }
 
         private void DrawMagLinear(MagnetFit magfit)
@@ -268,11 +271,15 @@ namespace BikeSignalProcessing.View
                 magLinear = chart1.Series.Add(name);
                 magLinear.ChartArea = ChartAreaMagnet;
                 magLinear.ChartType = SeriesChartType.Line;
+                // Keep track so we can remove later.
+                m_magSeries.Add(magLinear);
 
                 // Grab original series for the color.
                 Series series = chart1.Series.FindByName(magfit.MagnetPosition.ToString());
                 if (series != null)
+                {
                     magLinear.Color = series.Color;
+                }
             }
             else
             {
@@ -339,6 +346,7 @@ namespace BikeSignalProcessing.View
                 mag.ChartArea = ChartAreaMagnet;
                 mag.ChartType = SeriesChartType.Point;
                 mag.ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
+                m_magSeries.Add(mag);
             }
 
             System.Windows.Forms.DataVisualization.Charting.DataPoint d =
@@ -356,6 +364,13 @@ namespace BikeSignalProcessing.View
         {
             // hack for now.
             chart1.Annotations.Clear();
+
+            // Remove all data series for mag linear.
+            foreach (var series in m_magSeries)
+            {
+                series.Points.Clear();
+                chart1.Series.Remove(series);
+            }
         }
 
         private void ChartSegments(IEnumerable<Segment> segments)
@@ -648,6 +663,7 @@ namespace BikeSignalProcessing.View
                 if (series != null)
                 {
                     series.Points.Clear();
+                    chart1.Series.Remove(series);
                 }
             }
         }
@@ -668,12 +684,11 @@ namespace BikeSignalProcessing.View
 
         private void btnBest_Click(object sender, EventArgs e)
         {
-            ClearMagPoints();
+            RemoveSegments();
             PlotCoastdownPower(true);
-            ChartSegments(mData.StableSegments);
 
-            //// Re-chart only the best segments.
-            //ChartSegments(Segment.FindBestSegments(mData.StableSegments));
+            // Re-chart only the best segments.
+            ChartSegments(Segment.FindBestSegments(mData.StableSegments));
         }
 
         private void btnData_Click(object sender, EventArgs e)

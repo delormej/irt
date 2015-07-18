@@ -266,7 +266,7 @@ namespace BikeSignalProcessing.Model
 
             foreach (var segment in best)
             {
-                if (segment.MagnetPosition >= 1600)
+                if (segment != null && segment.MagnetPosition >= 1600)
                 {
                     speed.Add(segment.AverageSpeed);
                     watts.Add(segment.AveragePower);

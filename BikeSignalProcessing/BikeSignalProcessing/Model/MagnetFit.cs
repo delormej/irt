@@ -64,6 +64,10 @@ namespace BikeSignalProcessing.Model
                     y.Add(segment.NoMagnetPower);
                 }
 
+                // To really get a slope, we should have at least 3 mph between the min & max.
+                if ((x.Min() + (0.44704 * 3.0)) > x.Max())
+                    continue;
+
                 Tuple<double, double> fit = SimpleRegression.Fit(x.ToArray(), y.ToArray());
 
                 // Assign fit.
