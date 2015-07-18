@@ -216,7 +216,7 @@ def main(file_name):
 
 	# todo: add logic here to determine if you're using older than 1.4.3 that you use the old logic.
 
-	skip = 4
+	skip = 2
 
 	mps = np.empty(len(tick_delta)/skip)
 	seconds = np.empty(len(time)/skip)
