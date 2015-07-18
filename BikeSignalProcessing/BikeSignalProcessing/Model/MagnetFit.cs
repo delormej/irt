@@ -20,7 +20,7 @@ namespace BikeSignalProcessing.Model
         {
             Tuple<double, double> value = new Tuple<double, double>(
                 lowSpeed,
-                Slope * lowSpeed + Intercept);
+                Slope * (lowSpeed * 0.44704) + Intercept);
 
             return value;
         }
@@ -29,7 +29,7 @@ namespace BikeSignalProcessing.Model
         {
             Tuple<double, double> value = new Tuple<double, double>(
                 highSpeed,
-                Slope * highSpeed + Intercept);
+                Slope * (highSpeed * 0.44704) + Intercept);
 
             return value;
         }
