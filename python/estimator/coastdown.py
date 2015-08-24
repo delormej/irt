@@ -182,6 +182,9 @@ def calculate_decel(speed, seconds):
 	v = speed[:size]
 	a = (v - min_speed) / (seconds[:size] - min_seconds)
 	
+	# plot actual coastdown values.
+	plt.plot(v, a, 'b')
+	
 	###
 	# instead, do a linear fit of speed / aceeleration
 	# between 10,20 mph. 
@@ -189,14 +192,14 @@ def calculate_decel(speed, seconds):
 	print("Linear approach");
 	slope, intercept = fit_linear(0, v, a) 
 	
-	plt.plot(v, a)
+	x_new = np.linspace(min_speed, speed.max(), 50)
+	plt.plot(x_new, x_new * slope + intercept, 'r--')
 	
-	x_new = np.linspace(v[0], v[-1], len(v))
-	plt.plot(x_new, v * slope + intercept)
+	plt.show();
+	return
 	
-	
-	pars, covar = spo.curve_fit(coastdown_func, v, a)
-	print("coastdown:", pars[0], pars[1])
+	#pars, covar = spo.curve_fit(coastdown_func, v, a)
+	#print("coastdown:", pars[0], pars[1])
 	
 	#	
 	#print("speed", speed)
@@ -288,6 +291,8 @@ def main(file_name):
 
 	calculate_decel(x,y)
 
+	return
+	
 	# if I wanted to reverse the axis visualy, also need to adjust min/max for this.
 	#plt.gca().invert_yaxis()
 
