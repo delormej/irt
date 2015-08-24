@@ -1,4 +1,6 @@
-﻿using IRT_GUI.IrtMessages;
+﻿using BikeSignalProcessing;
+using BikeSignalProcessing.Model;
+using IRT_GUI.IrtMessages;
 using System;
 using System.IO;
 
@@ -29,6 +31,26 @@ namespace ANT_Console
                 data.FlywheelRevs);
 
             return value;
+        }
+    }
+
+    public class BikeSignalProcessingReporter : IReporter
+    {
+        Data mData;
+
+        public BikeSignalProcessingReporter(Data data)
+        {
+            mData = data;
+        }
+
+        public void Report(string message)
+        {
+            return;
+        }
+
+        public void Report(DataPoint data)
+        {
+            mData.Update(data.SpeedEMotionMph, data.PowerReference, data.ServoPosition);
         }
     }
 

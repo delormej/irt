@@ -31,6 +31,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmIrtGui));
             this.txtLog = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.lblTemperature = new System.Windows.Forms.Label();
+            this.label36 = new System.Windows.Forms.Label();
             this.label27 = new System.Windows.Forms.Label();
             this.lblSpeedAvg = new System.Windows.Forms.Label();
             this.lblFlywheel = new System.Windows.Forms.Label();
@@ -143,8 +145,6 @@
             this.btnSetGapOffset = new System.Windows.Forms.Button();
             this.txtGapOffset = new System.Windows.Forms.TextBox();
             this.label12 = new System.Windows.Forms.Label();
-            this.lblTemperature = new System.Windows.Forms.Label();
-            this.label36 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMovingAvgSec)).BeginInit();
@@ -208,6 +208,24 @@
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "E-Motion Rollers";
+            // 
+            // lblTemperature
+            // 
+            this.lblTemperature.AutoSize = true;
+            this.lblTemperature.Location = new System.Drawing.Point(108, 157);
+            this.lblTemperature.Name = "lblTemperature";
+            this.lblTemperature.Size = new System.Drawing.Size(13, 13);
+            this.lblTemperature.TabIndex = 38;
+            this.lblTemperature.Text = "..";
+            // 
+            // label36
+            // 
+            this.label36.AutoSize = true;
+            this.label36.Location = new System.Drawing.Point(7, 155);
+            this.label36.Name = "label36";
+            this.label36.Size = new System.Drawing.Size(82, 13);
+            this.label36.TabIndex = 37;
+            this.label36.Text = "Temperature (c)";
             // 
             // label27
             // 
@@ -786,7 +804,7 @@
             this.btnSetResistancePositions.Name = "btnSetResistancePositions";
             this.btnSetResistancePositions.Size = new System.Drawing.Size(111, 23);
             this.btnSetResistancePositions.TabIndex = 29;
-            this.btnSetResistancePositions.Text = "Positions";
+            this.btnSetResistancePositions.Text = "Magnet";
             this.btnSetResistancePositions.UseVisualStyleBackColor = true;
             this.btnSetResistancePositions.Click += new System.EventHandler(this.btnSetResistancePositions_Click);
             // 
@@ -1349,24 +1367,6 @@
             this.label12.Size = new System.Drawing.Size(58, 13);
             this.label12.TabIndex = 27;
             this.label12.Text = "Gap Offset";
-            // 
-            // lblTemperature
-            // 
-            this.lblTemperature.AutoSize = true;
-            this.lblTemperature.Location = new System.Drawing.Point(108, 157);
-            this.lblTemperature.Name = "lblTemperature";
-            this.lblTemperature.Size = new System.Drawing.Size(13, 13);
-            this.lblTemperature.TabIndex = 38;
-            this.lblTemperature.Text = "..";
-            // 
-            // label36
-            // 
-            this.label36.AutoSize = true;
-            this.label36.Location = new System.Drawing.Point(7, 155);
-            this.label36.Name = "label36";
-            this.label36.Size = new System.Drawing.Size(82, 13);
-            this.label36.TabIndex = 37;
-            this.label36.Text = "Temperature (c)";
             // 
             // frmIrtGui
             // 

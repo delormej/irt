@@ -1402,6 +1402,8 @@ static void on_set_resistance(rc_evt_t rc_evt)
 // Invoked when a button is pushed on the remote control.
 static void on_ant_ctrl_command(ctrl_evt_t evt)
 {
+	LOG("[MAIN]:on_ant_ctrl_command Command: %i\r\n", evt.command);
+	
 	// Remote can transmit no serial number as 0xFFFF, in which case
 	// we can't bond specifically, so we'll just process commands.
 	if (evt.remote_serial_no != 0xFFFF)
@@ -1422,9 +1424,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 			return;
 		}
 	}
-
-	LOG("[MAIN]:on_ant_ctrl_command Command: %i\r\n", evt.command);
-
+	
 	switch (evt.command)
 	{
 		case ANT_CTRL_BUTTON_UP:

@@ -84,12 +84,19 @@ namespace IRT.Calibration
         /// <summary>
         /// Calculated coefficient of Drag.
         /// </summary>
-        public double Drag { get { return m_powerFit.Drag; } }
+        public double Drag
+        {
+            get { return m_powerFit.Drag; }
+            set { m_powerFit.Drag = value; }
+        }
 
         /// <summary>
         /// Calculated coefficient of Rolling Resistance.
         /// </summary>
-        public double RollingResistance { get { return m_powerFit.RollingResistance; } }
+        public double RollingResistance {
+            get { return m_powerFit.RollingResistance; }
+            set { m_powerFit.RollingResistance = value; }
+        }
 
         /// <summary>
         /// Returns the time it takes to coastdown in seconds from a given speed.
@@ -133,12 +140,8 @@ namespace IRT.Calibration
 
             // Calculate the power fit.
             m_powerFit = new PowerFit(m_decelFit);
-
-            if (model.Inertia == 0)
-            {
-                model.Inertia = m_powerFit.CalculateInteria(model.StableSpeedMps, model.StableWatts);
-            }
-            m_powerFit.Fit(model.Inertia);
+            m_powerFit.CalculateStablePowerFactor(model.StableSpeedMps, model.StableWatts);
+            m_powerFit.Fit();
         }
     }
 

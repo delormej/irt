@@ -8,6 +8,7 @@
 #include "irt_common.h"
 #include "ant_interface.h"
 #include "ant_parameters.h"
+#include "debug.h"
 
 //
 // Module specific defines.
@@ -24,6 +25,15 @@
 #define CTRL_CMD_REQ_DATA_PAGE		0x46		// Request Data - Common Data Page 70
 #define CTRL_CMD_STATUS_PAGE		0x47		// Command status - Common Page 71
 #define CTRL_CMD_PAGE				0x49		// Generic Command Page - Common Data Page 73
+
+/**@brief Debug logging for module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define AC_LOG debug_log
+#else
+#define AC_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 const uint8_t manufacturer_page_interleave = 65u;
 const uint8_t product_page_interleave = 130u;
@@ -105,6 +115,8 @@ static ant_ctrl_data_page71_t		m_ctrl_status;	// Keeps track of the last command
 static void on_command_page(ant_ctrl_data_page73_t* p_page)
 {
 	ctrl_evt_t evt;
+
+	AC_LOG("[AC] on_command_page, seq:%i\r\n", m_ctrl_status.sequence);
 
 	// Only process if a new sequence.
 	if (p_page->sequence == m_ctrl_status.sequence)
@@ -209,15 +221,6 @@ void ant_ctrl_device_avail_tx(uint8_t notifications)
 	static uint8_t event_count;		// Event count for interleaving common pages.
 	uint32_t err_code;
 
-	// Copy the template and set notification status.
-	ant_ctrl_data_page2_t page = m_data_page2;
-	page.notifications = notifications;
-
-	err_code = sd_ant_broadcast_message_tx(m_channel_id,
-		TX_BUFFER_SIZE, 
-		(uint8_t*) &page);
-	APP_ERROR_CHECK(err_code);
-
 	event_count++;	// Increment event count.
 
 	// Interleave common pages.
@@ -225,12 +228,21 @@ void ant_ctrl_device_avail_tx(uint8_t notifications)
 	{
 		// # Figures out which common message to submit at which time.
 		ant_common_page_transmit(m_channel_id, ant_product_page);
-		event_count++;		// Always increment event counter.
 	}
 	else if (event_count % manufacturer_page_interleave == 0)
 	{
 		ant_common_page_transmit(m_channel_id, ant_manufacturer_page);
-		event_count++;		// Always increment event counter.
+	}
+	else
+	{
+		// Copy the template and set notification status.
+		ant_ctrl_data_page2_t page = m_data_page2;
+		page.notifications = notifications;
+		
+		err_code = sd_ant_broadcast_message_tx(m_channel_id,
+			TX_BUFFER_SIZE, 
+			(uint8_t*) &page);
+		APP_ERROR_CHECK(err_code);		
 	}
 }
 
@@ -239,6 +251,8 @@ void ant_ctrl_rx_handle(ant_evt_t * p_ant_evt)
 	ANT_MESSAGE* p_mesg;
 
 	p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
+
+	AC_LOG("ant_ctrl_rx_handle:%i\r\n", p_mesg->ANT_MESSAGE_aucPayload[0]);
 
 	// Switch on page number.
 	switch (p_mesg->ANT_MESSAGE_aucPayload[0])

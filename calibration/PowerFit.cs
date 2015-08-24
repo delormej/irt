@@ -4,23 +4,43 @@ using System.Linq;
 
 namespace IRT.Calibration
 {
-    internal class PowerFit
+    public class PowerFit
     {
-        private double[] m_coeff = { 0.0, 0.0 };
+        protected double[] m_coeff = { 0.0, 0.0 };
+        private double m_coastdownToPowerRatio;
+
         private DecelerationFit m_decelFit;
+
+        public static double Power(double speedMph, double drag, double rr)
+        {
+            double speedMps = speedMph * 0.44704;
+            return fit_drag_rr(speedMps, drag, rr);
+        }
+
+        public PowerFit()
+        {
+            m_decelFit = null;
+        }
 
         public PowerFit(DecelerationFit decelFit)
         {
             m_decelFit = decelFit;
         }
 
-        public double Drag { get { return m_coeff[0]; } }
+        public double Drag { get; set; }
 
-        public double RollingResistance { get { return m_coeff[1]; } }
+        public double RollingResistance { get; set; }
 
-        public double Watts(double speedMps)
+        public virtual double Watts(double speedMps)
         {
             return fit_drag_rr(speedMps, Drag, RollingResistance);
+            //double force = (m_decelFit.Coeff[0] / m_coastdownToPowerRatio) +
+            //    (m_decelFit.Coeff[1] / m_coastdownToPowerRatio) *
+            //    Math.Pow(speedMps, 2);
+
+            //double watts = force * speedMps;
+
+            //return watts;
         }
 
         /// <summary>
@@ -29,33 +49,54 @@ namespace IRT.Calibration
         /// <param name="speed_mps"></param>
         /// <param name="watts"></param>
         /// <returns></returns>
-        public double CalculateInteria(double speedMps, double watts)
+        public double CalculateStablePowerFactor(double speedMps, double watts)
         {
-            // Where P = F*v, F=ma
+            if (m_decelFit == null)
+            {
+                throw new InvalidOperationException(
+                    "PowerFit must be constructed with DecelerationFit to use this method.");
+            }
 
+            // Where P = F*v
             double f = watts / speedMps;
+            
+            // Get the rate of deceleration (a) for a given velocity.
             double a = m_decelFit.Rate(speedMps);
 
-            // Get the rate of deceleration (a) for a given velocity.
-
-            // Solve for m = f/a
-            return f / a;
+            // Calcualte the ratio of coastdown to power coefficients.
+            m_coastdownToPowerRatio = a / f;
+            
+            return m_coastdownToPowerRatio;
         }
 
-        public void Fit(double stableSpeedMps, double stableWatts)
+        public virtual void Fit()
         {
-            double intertia = CalculateInteria(stableSpeedMps, stableWatts);
-            Fit(intertia);
+            if (m_decelFit == null)
+            {
+                throw new InvalidOperationException(
+                    "PowerFit must be constructed with DecelerationFit to use this method.");
+            }
+
+            RollingResistance = (m_decelFit.Coeff[0] / m_coastdownToPowerRatio);
+            Drag = (m_decelFit.Coeff[1] / m_coastdownToPowerRatio); 
         }
 
-        public void Fit(double inertia)
+        public virtual void Fit(double[] speedMph, double[] watts)
+        {
+            double[,] speed;
+            speed = new double[speedMph.Length, 1];
+
+            for (int i = 0; i < speedMph.Length; i++)
+            {
+                speed[i, 0] = speedMph[i] * 0.44704;
+            }
+
+            Fit(speed, watts);
+        }
+
+        private void Fit(double[,] speed, double[] watts)
         {
             int info;
-            double[,] speed;
-            double[] watts;
-
-            // Generate power : speed data.
-            GeneratePowerData(inertia, out speed, out watts);
 
             alglib.lsfitstate state;
             alglib.lsfitreport report;
@@ -63,10 +104,19 @@ namespace IRT.Calibration
             alglib.lsfitsetbc(state, new double[] { 0.0, 0.0 }, new double[] { 5.0, 50.0 });
             alglib.lsfitfit(state, fit_func, null, null);
             alglib.lsfitresults(state, out info, out m_coeff, out report);
+
+            Drag = m_coeff[0];
+            RollingResistance = m_coeff[1];
         }
 
-        private void GeneratePowerData(double intertia, out double[,] speed, out double[] watts)
+        public virtual void GeneratePowerData(out double[,] speed, out double[] watts)
         {
+            if (m_decelFit == null)
+            {
+                throw new InvalidOperationException(
+                    "PowerFit must be constructed with DecelerationFit to use this method.");
+            }
+
             speed = new double[30, 1];
             watts = new double[30];
 
@@ -75,21 +125,9 @@ namespace IRT.Calibration
             foreach (var i in Enumerable.Range(5, 30))
             {
                 double v = i * 0.44704;
-                double a = m_decelFit.Rate(v);
 
-                if (a == 0)
-                {
-                    // If we got 0 for acceleration, 0 both out.
-                    speed[ix, 0] = 0;
-                    watts[ix] = 0;
-                }
-                else
-                {
-                    double f = intertia * a;
-
-                    speed[ix, 0] = v;
-                    watts[ix] = f * v;
-                }
+                speed[ix, 0] = v;
+                watts[ix] = fit_drag_rr(v, Drag, RollingResistance);
 
                 ix++;
             }

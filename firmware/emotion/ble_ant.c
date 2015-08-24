@@ -412,17 +412,22 @@ static void conn_params_init(void) {
  * @param[in]   p_ant_evt   Event received from the stack.
  */
 static void on_ant_evt(ant_evt_t * p_ant_evt) {
-	switch (p_ant_evt->channel) {
-	case ANT_BP_TX_CHANNEL:
-		ant_bp_rx_handle(p_ant_evt);
-		break;
-
-	case ANT_CTRL_CHANNEL:
-		ant_ctrl_rx_handle(p_ant_evt);
-		break;
-
-	default:
-		break;
+	
+	if (p_ant_evt->event == EVENT_RX)
+	{
+		switch (p_ant_evt->channel) 
+		{
+			case ANT_BP_TX_CHANNEL:
+				ant_bp_rx_handle(p_ant_evt);
+				break;
+		
+			case ANT_CTRL_CHANNEL:
+				ant_ctrl_rx_handle(p_ant_evt);
+				break;
+		
+			default:
+				break;
+		}
 	}
 }
 
