@@ -28,16 +28,19 @@ C_SOURCE_FILES += pstorage.c
 C_SOURCE_FILES += nrf_delay.c
 C_SOURCE_FILES += simple_uart.c
 C_SOURCE_FILES += app_button.c
+#C_SOURCE_FILES += mpfit.c
 
 C_SOURCE_PATHS +=  ./libraries/
 C_SOURCE_PATHS +=  ./services/
 C_SOURCE_PATHS += ./libraries/math/
 C_SOURCE_PATHS += $(SDK_PATH)ble/ble_services/ble_dis/
+C_SOURCE_PATHS +=  ./mpfit/
 
 INCLUDE_PATHS +=  .
 INCLUDE_PATHS +=  ./libraries/
 INCLUDE_PATHS +=  ./libraries/math/
 INCLUDE_PATHS +=  ./services/
+INCLUDE_PATHS +=  ./mpfit/
 
 INCLUDE_PATHS += $(SDK_PATH)softdevice/common/softdevice_handler/
 INCLUDE_PATHS += $(SDK_PATH)drivers_nrf/simple_uart/

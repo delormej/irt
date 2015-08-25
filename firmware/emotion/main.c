@@ -62,6 +62,7 @@
 //#include "irt_error_log.h"
 #include "irt_led.h"
 #include "bp_response_queue.h"
+#include "mpfit.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	// Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
@@ -1904,6 +1905,100 @@ void power_manage(void)
     APP_ERROR_CHECK(err_code);
 }
 
+//// TESTING MPFIT
+
+/* This is the private data structure which contains the data points
+   and their uncertainties */
+struct vars_struct {
+  double *x;
+  double *y;
+  double *ey;
+};
+
+/*
+* 2nd order polynmoial fit function
+*
+* m - number of data points
+* n - number of parameters (2)
+* p - array of fit parameters
+* dy - array of residuals to be returned
+* vars - private data (struct vars_struct *)
+*
+* RETURNS: error code (0 = success)
+*/
+int polyfunc(int m, int n, double *p, double *dy, double **dvec, void *vars)
+{
+	int i;
+	struct vars_struct *v = (struct vars_struct *) vars;
+	double *x, *y, *ey;
+
+	x = v->x;
+	y = v->y;
+	ey = v->ey;
+	
+	for (i = 0; i<m; i++) {
+		//y = f(x) =        a  + b    * x    + c    *x^2
+    //dy[i] = (y[i] - p[0] - p[1] * x[i] - p[2] * x[i] * x[i]) / ey[i];
+		// p[0]*x[i]^3  + p[1] * x[i]^2 + p[2] * x[i]
+    
+    // y = -0.0005x2 + 0.0314x + 0.8894
+    //y = f(x) =        ax^2 + bx + c
+		dy[i] = (y[i] - p[0] * x[i] * x[i] - p[1] * x[i] - p[2]) / ey[i];
+	}
+
+	return 0;
+}
+
+int testpolyfit()
+{
+ const int datapoints = 8;
+ double x[] = {
+    2.2352,
+    4.4704,
+    6.7056,
+    8.9408,
+    11.176,
+    13.4112,
+    15.6464,
+    17.8816
+   };
+  double y[] = {
+    0.953536773,
+    1.022294531,
+    1.081083394,
+    1.131913478,
+    1.176794903,
+    1.217737788,
+    1.256752251,
+    1.29584841
+   };
+  double ey[datapoints];
+  double p[] = {0.0, 0.0, 0.0};        /* Initial conditions */             
+  double pactual[] = {0.0, 0.0, 0.0};  /* Actual values used to make data */
+  double perror[3];		       /* Returned parameter errors */      
+  int i;
+  struct vars_struct v;
+  int status;
+  mp_result result;
+
+  memset(&result,0,sizeof(result));          /* Zero results structure */
+  result.xerror = perror;	                                      
+  for (i=0; i<datapoints; i++) ey[i] = 0.2;       /* Data errors */           
+
+  v.x = x;
+  v.y = y;
+  v.ey = ey;
+
+  /* Call fitting function for 10 data points and 3 parameters */
+  status = mpfit(polyfunc, datapoints, 3, p, 0, 0, (void *) &v, &result);
+
+  //printf("*** testpolyfit status = %d\n", status);
+  //printresult(p, pactual, &result);
+
+  return 0;  
+}
+
+
 /*----------------------------------------------------------------------------
  * Main program functions
  * ----------------------------------------------------------------------------*/
@@ -1999,6 +2094,8 @@ int main(void)
 	battery_read_start();
 
 	LOG("[MAIN]:Initialization done.\r\n");
+
+	testpolyfit();
 
     // Enter main loop
     for (;;)
