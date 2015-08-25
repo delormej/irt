@@ -28,7 +28,7 @@ C_SOURCE_FILES += app_scheduler.c
 C_SOURCE_FILES += app_timer.c
 C_SOURCE_FILES += bootloader.c
 C_SOURCE_FILES += crc16.c
-C_SOURCE_FILES += dfu_dual_bank.c
+C_SOURCE_FILES += dfu_single_bank.c
 C_SOURCE_FILES += dfu_init_template.c
 C_SOURCE_FILES += dfu_transport_ble.c
 C_SOURCE_FILES += hci_mem_pool.c
@@ -65,8 +65,7 @@ INCLUDE_PATHS +=  $(SDK_PATH)libraries/scheduler
 INCLUDE_PATHS +=  $(SDK_PATH)libraries/util
 INCLUDE_PATHS +=  $(SDK_PATH)softdevice/common/softdevice_handler
 
-DEPLOY_PATH = './../../../../Google Drive/Firmware/'
-DEPLOY_PATH2 = './../../../../SkyDrive/InsideRide/Builds/'
+DEPLOY_PATH = './../../../../OneDrive/InsideRide/Builds/'
 
 DEVICE_VARIANT = xxAA
 TARGET_DEVICE = nRF51422_xxAA
@@ -92,7 +91,7 @@ debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 # Define the Software Revision.
 ############################################
 SW_REVISION_MAJ := 1
-SW_REVISION_MIN := 0
+SW_REVISION_MIN := 1
 SW_REVISION_BLD := 0
 
 # Update project name to include the build.
@@ -100,11 +99,18 @@ PROJECT_NAME := $(PROJECT_NAME)_$(SW_REVISION_MAJ)_$(SW_REVISION_MIN)_$(SW_REVIS
 
 include $(TEMPLATE_PATH)Makefile.common
 
+DEPLOY_SCRIPT = ..\..\python\deploy\deploy.py 
+
 debug: all 
 
-deploy:
-	cp $(HEX) $(DEPLOY_PATH)$(OUTPUT_NAME).hex
-	cp $(HEX) $(DEPLOY_PATH2)$(OUTPUT_NAME).hex
+###########
+# 8/25/2015
+# Deployment script will have to change to be able to support writing bootloader.hex and system.dat
+# files rather than the application.hex/.dat as the current deploy.py does. 
+#
+#deploy:
+#	python $(DEPLOY_SCRIPT) $(HEX) 
+#	cp $(OUTPUT_PATH)$(OUTPUT_NAME).zip $(DEPLOY_PATH)$(OUTPUT_NAME).zip
 
 name:
 	@echo $(PROJECT_NAME)
