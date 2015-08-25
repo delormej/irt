@@ -114,6 +114,7 @@ static bool								m_crr_adjust_mode;							// Indicator that we're in manual ca
 static bool								m_profile_updating;
 
 // Type declarations for profile updating.
+static void testpolyfit_sched_handler(void *p_event_data, uint16_t event_size);
 static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
 static void profile_update_sched(void);
 static void profile_update_pstorage_cb_handler(pstorage_handle_t *  p_handle,
@@ -634,6 +635,12 @@ static void calibration_timeout_handler(void * p_context)
 	uint16_t timestamp_2048;
 	uint16_t tick_delta;
 
+	// Detailed log of ticks and timestamp during coastdown. 
+	LOG("[CAL] \t%i, 0, %i, 0, 0, 0.\r\n",
+		flywheel_ticks_get(),
+		seconds_2048_get()
+		);
+
 	// Every other time, just store the flywheel value.
 
 	if (count++ % 2 == 0)
@@ -1015,6 +1022,8 @@ static void send_temperature()
 static void calibration_start(void)
 {
 	uint32_t err_code;
+
+	err_code = app_sched_event_put(NULL, 0, testpolyfit_sched_handler);
 
 	// Force standard level 0 resistance.
 	// TODO: This should send a standard ack indicating changed state (if it has).
@@ -1989,15 +1998,23 @@ int testpolyfit()
   v.y = y;
   v.ey = ey;
 
+  LOG("ABOUT TO CALL...\r\n");
+
   /* Call fitting function for 10 data points and 3 parameters */
   status = mpfit(polyfunc, datapoints, 3, p, 0, 0, (void *) &v, &result);
 
   //printf("*** testpolyfit status = %d\n", status);
   //printresult(p, pactual, &result);
+  
+  LOG("[MAIN] CHI-SQUARE = %f\n", result.bestnorm);
 
   return 0;  
 }
 
+static void testpolyfit_sched_handler(void *p_event_data, uint16_t event_size)
+{
+	testpolyfit();
+}
 
 /*----------------------------------------------------------------------------
  * Main program functions
@@ -2094,8 +2111,6 @@ int main(void)
 	battery_read_start();
 
 	LOG("[MAIN]:Initialization done.\r\n");
-
-	testpolyfit();
 
     // Enter main loop
     for (;;)
