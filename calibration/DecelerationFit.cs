@@ -90,7 +90,22 @@ namespace IRT.Calibration
             //alglib.lsfitsetbc(state, new double[] { 0.0, 0.0 }, new double[] { 0.0, 0.0 });
             alglib.lsfitfit(state, fit_func, null, null);
             alglib.lsfitresults(state, out info, out m_coeff, out report);
+
+            double[] a = new double[size];
+            Array.Copy(speedMps, a, size);
+            // Try to fit to a 2nd order polynomial.
+            FitPolynomial(a, acceleration);
         }
+
+        private double[] FitPolynomial(double[] speed, double[] acceleration)
+        {
+            double[] coeff;
+
+            coeff = MathNet.Numerics.Fit.Polynomial(speed, acceleration, 2);
+
+            return coeff;
+        }
+    
 
         /// <summary>
         /// Fits a=c1+c2*v^2
