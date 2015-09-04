@@ -7,9 +7,9 @@ namespace IRT.Calibration
     public class PowerFit
     {
         protected double[] m_coeff = { 0.0, 0.0 };
-        private double m_coastdownToPowerRatio;
+        private double m_mass = 0.0;
 
-        private DecelerationFit m_decelFit;
+        private AccelerationFit m_decelFit;
 
         public static double Power(double speedMph, double drag, double rr)
         {
@@ -22,7 +22,7 @@ namespace IRT.Calibration
             m_decelFit = null;
         }
 
-        public PowerFit(DecelerationFit decelFit)
+        public PowerFit(AccelerationFit decelFit)
         {
             m_decelFit = decelFit;
         }
@@ -49,7 +49,7 @@ namespace IRT.Calibration
         /// <param name="speed_mps"></param>
         /// <param name="watts"></param>
         /// <returns></returns>
-        public double CalculateStablePowerFactor(double speedMps, double watts)
+        public double CalculateStablePower(double speedMps, double watts)
         {
             if (m_decelFit == null)
             {
@@ -61,26 +61,37 @@ namespace IRT.Calibration
             double f = watts / speedMps;
             
             // Get the rate of deceleration (a) for a given velocity.
-            double a = m_decelFit.Rate(speedMps);
+            double a = m_decelFit.Acceleration(speedMps);
 
             // Calcualte the ratio of coastdown to power coefficients.
-            m_coastdownToPowerRatio = a / f;
+            m_mass = f / a;
             
-            return m_coastdownToPowerRatio;
+            return m_mass;
         }
 
-        public virtual void Fit()
+        public void Fit()
         {
-            if (m_decelFit == null)
+            if (m_mass == 0.0)
+                throw new InvalidOperationException("Must CalculateStablePower first.");
+
+            int max = 15, min = 2;
+            int count = max - min; // max mps - min mps.
+
+            //f = m * a
+            double[,] speed = new double[count, 1];
+            double[] watts = new double[count];
+
+            for (int i = 0; i< count; i++)
             {
-                throw new InvalidOperationException(
-                    "PowerFit must be constructed with DecelerationFit to use this method.");
+                double mps = i + min;
+                double force = m_decelFit.Acceleration(i) * m_mass;
+
+                speed[i, 0] = mps;
+                watts[i] = force * mps;
             }
 
-            RollingResistance = (m_decelFit.Coeff[0] / m_coastdownToPowerRatio);
-            Drag = (m_decelFit.Coeff[1] / m_coastdownToPowerRatio); 
+            Fit(speed, watts);
         }
-
         public virtual void Fit(double[] speedMph, double[] watts)
         {
             double[,] speed;

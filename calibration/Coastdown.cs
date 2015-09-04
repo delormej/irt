@@ -13,7 +13,7 @@ namespace IRT.Calibration
         private CoastdownData m_coastdownData;
 
         // Fit objects.
-        private AccelerationFit m_decelFit;
+        private DecelerationFit m_decelFit;
         private PowerFit m_powerFit;
 
         public Coastdown()
@@ -29,19 +29,19 @@ namespace IRT.Calibration
         public double GoodnessOfFit {
             get
             {
-                return m_decelFit.GoodnessOfFit;
+                return 0; //  m_decelFit.GoodnessOfFit;
             }
         }
 
         /// <summary>
         /// Intercept of a linear coastdown.
         /// </summary>
-        public double Intercept {  get { return m_decelFit.Intercept;  } }
+        public double Intercept {  get { return 0; /* m_decelFit.Intercept;*/  } }
 
         /// <summary>
         /// Slope of a linear coastdown.
         /// </summary>
-        public double Slope { get { return m_decelFit.Slope; } }
+        public double Slope { get { return 0; /* m_decelFit.Slope;*/ } }
 
         /// <summary>
         /// Calculates based on multiple runs of coastdown.
@@ -122,7 +122,7 @@ namespace IRT.Calibration
         /// <returns></returns>
         public double CoastdownTime(double speedMps)
         {
-            return m_decelFit.Seconds(speedMps);
+            return 0; // m_decelFit.Seconds(speedMps);
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace IRT.Calibration
         /// <returns></returns>
         public double Deceleration(double speedMps)
         {
-            return m_decelFit.Rate(speedMps);
+            return 0; //  m_decelFit.Rate(speedMps);
         }
 
         /// <summary>
@@ -152,12 +152,15 @@ namespace IRT.Calibration
         private void Fit(Model model)
         {
             // Calculate the deceleration.
-            m_decelFit = new AccelerationFit();
-            m_decelFit.Fit(m_coastdownData.SpeedMps, m_coastdownData.Acceleration);
+            //m_decelFit = new DecelerationFit();
+            //m_decelFit.Fit(m_coastdownData.SpeedMps, m_coastdownData.Acceleration);
+
+            AccelerationFit accelFit = new AccelerationFit();
+            accelFit.Fit(m_coastdownData);
 
             // Calculate the power fit.
-            m_powerFit = new PowerFit(m_decelFit);
-            m_powerFit.CalculateStablePowerFactor(model.StableSpeedMps, model.StableWatts);
+            m_powerFit = new PowerFit(accelFit);
+            m_powerFit.CalculateStablePower(model.StableSpeedMps, model.StableWatts);
             m_powerFit.Fit();
         }
     }

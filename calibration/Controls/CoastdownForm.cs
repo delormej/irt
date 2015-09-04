@@ -243,8 +243,8 @@ namespace IRT.Calibration
             this.lblStableSeconds.Text = String.Format("{0:0.0}", m_model.StableSeconds);
             this.txtStableSpeed.Text = String.Format("{0:0.0}", m_model.StableSpeedMps * 2.23694);
             this.txtStableWatts.Text = m_model.StableWatts.ToString();
-            this.txtSlope.Text = m_coastdown.Slope.ToString();
-            this.txtIntercept.Text = m_coastdown.Intercept.ToString();
+            //this.txtSlope.Text = m_coastdown.Slope.ToString();
+            //this.txtIntercept.Text = m_coastdown.Intercept.ToString();
         }
 
         private void RecalculateCoastdown()
