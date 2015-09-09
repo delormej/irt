@@ -293,6 +293,7 @@ namespace IRT.Calibration
             // Kick off processing.
             try
             {
+                m_model.EvaluateCoastdown();
                 m_coastdown = new Coastdown(m_model);
                 m_coastdown.Calculate();
                 OnFinished();
