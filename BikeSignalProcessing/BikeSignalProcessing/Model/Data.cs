@@ -246,12 +246,17 @@ namespace BikeSignalProcessing.Model
             for (int i = 0; i < len; i++)
             {
                 speedMph[i] = i+start;
-                watts[i] = PowerFit.Power(speedMph[i], Drag, RollingResistance);
+                watts[i] = 0; // PowerFit.Power(speedMph[i], Drag, RollingResistance);
+#warning "Not calculating estimated power."
             }
         }
 
         public void EvaluateNoMagnetFit(out double[] speedModified, out double[] powerData)
         {
+            speedModified = new double[0];
+            powerData = new double[0];
+            return;
+
             List<double> speed = new List<double>();
             List<double> watts = new List<double>();
 
@@ -284,15 +289,16 @@ namespace BikeSignalProcessing.Model
                     RollingResistance = m_powerFit.RollingResistance;
 
                     double[,] speedData;
-                    m_powerFit.GeneratePowerData(out speedData, out powerData);
-
+                    //m_powerFit.GeneratePowerData(out speedData, out powerData);
+#warning "Not generating estimated power."
+                    /*
                     speedModified = new double[powerData.Length];
 
                     int i = 0;
                     foreach (double d in speedData)
                     {
                         speedModified[i++] = d;
-                    }
+                    }*/
                 }
                 catch
                 {

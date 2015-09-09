@@ -12,9 +12,9 @@ namespace IRT.Calibration
 {
     public partial class CalibrationForm : Form
     {
-        private Model m_model;
+        private CoastdownModel m_model;
 
-        public CalibrationForm(Model model)
+        public CalibrationForm(CoastdownModel model)
         {
             model = m_model;
             InitializeComponent();

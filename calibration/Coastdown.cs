@@ -1,175 +1,166 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using MathNet.Numerics;
 
 namespace IRT.Calibration
 {
     /// <summary>
-    /// Handles the filtering and process of the data files.
-    /// Front end interface to the end results.
+    /// Business object which encapsulates all logic for how to calculate coastdown results.  
+    /// This is not a data object.  The data from the coastdown is stored in CoastdownModel.
     /// </summary>
     public class Coastdown
     {
-        private CoastdownData m_coastdownData;
+        // 1. Fit time : speed (should be a nice fit)
+        // 2. Solve for the differential equation dV / dT for real acceleration at each step.
+        // 3. Fit 2nd order polynomial acceleration : speed. (3 coefficients)
 
-        // Fit objects.
-        private DecelerationFit m_decelFit;
-        private PowerFit m_powerFit;
+        // 4a. Given weight, wheel and Crr diameter,
+        //      solve for mass and resolve to 3 coefficients for F
+        // 4b. Given stable power & speed
+        //      f = p/v
+        //      m = f/a
+        //      foreach coefficent of a; multiply by m
 
-        public Coastdown()
+        private double[] speed;
+        private double[] seconds;
+        private double stableSpeedMps;
+        private double stableWatts;
+
+        private Func<double, double> funcAccelSpeed;
+        private Func<double, double> funcTimeSpeed;
+
+        private double m_goodnessOfFit;
+
+        public Coastdown(CoastdownModel model)
         {
+            // TODO: should we depend on model here instead of copying? 
+            stableSpeedMps = model.StableSpeedMps;
+            stableWatts = model.StableWatts;
+            speed = model.Data.SpeedMps;
+            seconds = model.Data.CoastdownSeconds;
         }
 
         /// <summary>
-        /// Raw coastdown data points, filtered for just the deceleration phase
-        /// from max to min speed.
+        /// Fits a curve to time (y) given speed (x).  The slope between each point
+        /// represents acceleration.
         /// </summary>
-        public CoastdownData Data { get { return m_coastdownData; } }
+        private void FitTimeSpeed()
+        {
+            // Fit time : speed (should be a nice fit)
+            funcTimeSpeed = Fit.PolynomialFunc(seconds, speed, 2);
 
-        public double GoodnessOfFit {
-            get
+            // We want goodness of fit to be as close to 1.0 as possible.  At least 0.999.
+            m_goodnessOfFit = MathNet.Numerics.GoodnessOfFit.R(
+                seconds.Select(x => funcTimeSpeed(x)), speed);
+
+            if (m_goodnessOfFit < 0.999)
             {
-                return 0; //  m_decelFit.GoodnessOfFit;
+                // throw a warning out here? 
             }
         }
 
         /// <summary>
-        /// Intercept of a linear coastdown.
+        /// Calculates the derivative of Time:Speed based on the function of Time:Speed.
         /// </summary>
-        public double Intercept {  get { return 0; /* m_decelFit.Intercept;*/  } }
-
-        /// <summary>
-        /// Slope of a linear coastdown.
-        /// </summary>
-        public double Slope { get { return 0; /* m_decelFit.Slope;*/ } }
-
-        /// <summary>
-        /// Calculates based on multiple runs of coastdown.
-        /// </summary>
-        /// <param name="models"></param>
-        public Model Calculate(Model[] models)
+        private void CalculateAcceleration()
         {
-            m_coastdownData = new CoastdownData();
+            // Returns the derivative function.
+            funcAccelSpeed = Differentiate.FirstDerivativeFunc(funcTimeSpeed);
+        }
 
-            foreach (Model m in models)
+        /// <summary>
+        /// Fits a curve to acceleration (y) given speed (x).
+        /// </summary>
+        /// <returns></returns>
+        private void FitAccelerationSpeed(ref double[] coeff)
+        {
+            // Get the first derivative of the time : speed function to solve for acceleration.
+            CalculateAcceleration();
+
+            // Build up a collection of time, speed pairs, then fit to a curve.
+            double[] accel = new double[this.speed.Length];
+
+            for (int i = 0; i < this.speed.Length; i++)
             {
-                // Aggregate all valid coast down data points.
-                m_coastdownData.Evaluate(m.Events.ToArray());
-                Fit(m);
+                accel[i] = funcAccelSpeed(speed[i]);
             }
 
-            Model aggregateModel = new Model();
-            
-            // Calculate average inertia for new model.
-            aggregateModel.Inertia = models.Average(m => m.Inertia);
-
-            //aggregateModel.StableSpeedMps = models.Average(m => m.StableSpeedMps);
-            //aggregateModel.StableWatts = models.Average(m => m.StableWatts);
-            aggregateModel.StableSeconds = models.Max(m => m.StableSeconds);
-
-            Fit(aggregateModel);
-
-            return aggregateModel;
+            // Assign coeff and return the function of acceleration to speed.
+            coeff = Fit.Polynomial(speed, accel, 2);
         }
 
         /// <summary>
-        /// Parses the coast down x,y values and generates coefficients of Drag 
-        /// and Rolling Resistance based on stable speed and watts.
+        /// Given stable speed, power and acceleration function, solve for the coefficients
+        /// of Force.
         /// </summary>
-        /// <returns>true/false if it succeeded.</returns>
-        public void Calculate(Model model)
-        {
-            // Process values to build speed/time arrays.
-            m_coastdownData = new CoastdownData();
-            m_coastdownData.Evaluate(model.Events.ToArray());
-
-            Fit(model);
-            /*
-            if (Drag < 0.0)
-            {
-                throw new CoastdownException(
-                    "Drag should not be negative, likely entry speed is wrong.");
-            }
-            else if (RollingResistance < 10)
-            {
-                //throw new CoastdownException(
-                // "Rolling Resistance seems incorrect, it should be greater.");
-            }
-             */
-        }
-
-        /// <summary>
-        /// Calculated coefficient of Drag.
-        /// </summary>
-        public double Drag
-        {
-            get { return m_powerFit.Drag; }
-            set { m_powerFit.Drag = value; }
-        }
-
-        /// <summary>
-        /// Calculated coefficient of Rolling Resistance.
-        /// </summary>
-        public double RollingResistance {
-            get { return m_powerFit.RollingResistance; }
-            set { m_powerFit.RollingResistance = value; }
-        }
-
-        /// <summary>
-        /// Returns the time it takes to coastdown in seconds from a given speed.
-        /// </summary>
+        /// <param name="funcAccelSpeed"></param>
+        /// <param name="accelSpeedCoeff"></param>
         /// <param name="speedMps"></param>
+        /// <param name="watts"></param>
         /// <returns></returns>
-        public double CoastdownTime(double speedMps)
+        private double[] FitForceSpeed(double[] accelSpeedCoeff)
         {
-            return 0; // m_decelFit.Seconds(speedMps);
+            // Solve for mass in F=ma
+            // Calculate stable reference acceleration.
+            double F = stableWatts / stableSpeedMps;
+            double accel = funcAccelSpeed(stableSpeedMps);
+            double m = F / accel;
+
+            //
+            // Coeff of force are equal to mass * coeff of acceleration.
+            //
+            double[] coeff = new double[3];
+
+            for (int i = 0; i < coeff.Length; i++)
+            {
+                coeff[i] = accelSpeedCoeff[i] * m;
+            }
+
+            return coeff;
+        }
+
+        public CalibrationResult Calculate()
+        {
+            double[] accelCoeff = new double[3];
+
+            // Fit curves from time (y) : speed (x) and then acceleration : speed, and force : speed.
+            FitTimeSpeed();
+            FitAccelerationSpeed(ref accelCoeff);
+            double[] forceCoeff = FitForceSpeed(accelCoeff);
+
+            CalibrationResult config = new CalibrationResult();
+            config.GoodnessOfFit = m_goodnessOfFit;
+            config.Cd = forceCoeff[2];
+            config.Slope = forceCoeff[1];
+            config.Intercept = forceCoeff[0];
+
+            return config;
         }
 
         /// <summary>
-        /// Calculate the rate of deceleration for a given speed.
+        /// Returns an estimated fit of the coast down curve x:speed, y:time.
         /// </summary>
-        /// <param name="speed_mps"></param>
-        /// <returns></returns>
-        public double Deceleration(double speedMps)
+        public double[,] EstimateCoastdown()
         {
-            return 0; //  m_decelFit.Rate(speedMps);
-        }
+            double max = 10; // max 10 seconds
+            double start = 0; // coastdown to 0
+            int step = 1; // step every second
+            int size = (int)((max - start) / step);
+            double[,] curve = new double[size, 2];
+            double time = start;
 
-        /// <summary>
-        /// Calculate the power required in watts for a given speed.
-        /// </summary>
-        /// <param name="speed_mps"></param>
-        /// <returns></returns>
-        public double Watts(double speedMps)
-        {
-            return m_powerFit.Watts(speedMps);
-        }
+            for (int i = 0; i < size; i++)
+            {
+                double speed = funcTimeSpeed(time);
 
-        /// <summary>
-        /// Performs the deceleration and power fits.
-        /// </summary>
-        /// <param name="model"></param>
-        private void Fit(Model model)
-        {
-            // Calculate the deceleration.
-            //m_decelFit = new DecelerationFit();
-            //m_decelFit.Fit(m_coastdownData.SpeedMps, m_coastdownData.Acceleration);
+                curve[i, 0] = speed;
+                curve[i, 1] = time;
 
-            AccelerationFit accelFit = new AccelerationFit();
-            accelFit.Fit(m_coastdownData);
+                time += step;
+            }
 
-            // Calculate the power fit.
-            m_powerFit = new PowerFit(accelFit);
-            m_powerFit.CalculateStablePower(model.StableSpeedMps, model.StableWatts);
-            m_powerFit.Fit();
-        }
-    }
-
-    public class CoastdownException : Exception
-    {
-        public CoastdownException(string message) : base(message)
-        {
-
+            return curve;
         }
     }
 }

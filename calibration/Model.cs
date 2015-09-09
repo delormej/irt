@@ -9,9 +9,9 @@ using System.IO;
 namespace IRT.Calibration
 {
     /// <summary>
-    /// Represents the current state of acceleration.
+    /// Represents the current state of the coastdown.
     /// </summary>
-    public class Model /* : INotifyPropertyChanged */
+    public class CoastdownModel /* : INotifyPropertyChanged */
     {
         private Speed m_speed;
         private List<TickEvent> m_tickEvents;
@@ -20,7 +20,7 @@ namespace IRT.Calibration
 
         //public event PropertyChangedEventHandler PropertyChanged;
 
-        public Model()
+        public CoastdownModel()
         {
             m_speed = new Speed(Settings.StableThresholdSpeedMps);
             m_tickEvents = new List<TickEvent>();
@@ -55,6 +55,11 @@ namespace IRT.Calibration
         /// Stage of calibration.
         /// </summary>
         public Stage Stage;
+
+        /// <summary>
+        /// Evaluated coastdown data.
+        /// </summary>
+        public CoastdownData Data;
 
         /// <summary>
         /// Dynamically calculated indication of accelerating/decelerating/stable for each speed tick.
@@ -103,14 +108,20 @@ namespace IRT.Calibration
             }
         }
 
+        public void EvaluateCoastdown()
+        {
+            this.Data = new CoastdownData();
+            this.Data.Evaluate(this.Events.ToArray());
+        }
+
         /// <summary>
         /// Creates an instance of the class by parsing a coastdown file.
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public static Model FromFile(string filename)
+        public static CoastdownModel FromFile(string filename)
         {
-            Model model = new Model();
+            CoastdownModel model = new CoastdownModel();
 
             using (StreamReader reader = File.OpenText(filename))
             {
@@ -129,6 +140,9 @@ namespace IRT.Calibration
                     }
                 }
             }
+
+            // Iterate through the file and eval the coastdown.
+            model.EvaluateCoastdown();
 
             return model;
         }

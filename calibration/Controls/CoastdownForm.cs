@@ -16,7 +16,8 @@ namespace IRT.Calibration
     {
         public event Action<Coastdown> Apply;
         private Coastdown m_coastdown;
-        private Model m_model;
+        private CoastdownModel m_model;
+        private CalibrationResult m_result;
         private Timer m_timer;
         private int m_secondsUntilApply;
 
@@ -24,7 +25,7 @@ namespace IRT.Calibration
             "In {0} second(s) calibration parameters will be applied.\r\n" +
             "Close this dialog or begin another coastdown to interrupt."; */
 
-        public CoastdownForm(Coastdown coastdown, Model model)
+        public CoastdownForm(Coastdown coastdown, CoastdownModel model)
         {
             InitializeComponent();
 
@@ -36,6 +37,7 @@ namespace IRT.Calibration
 
             m_coastdown = coastdown;
             m_model = model;
+            m_result = coastdown.Calculate();
 
             UpdateValues();
             DrawChart();
@@ -104,7 +106,7 @@ namespace IRT.Calibration
 
             powerArea.AlignWithChartArea = "Coastdown";
 
-            PlotActualCoastDown(m_coastdown.Data.SpeedMps, m_coastdown.Data.Acceleration);
+            PlotActualCoastDown();
             PlotComputedCoastDown();
 
             PlotStableWatts(m_model.StableSpeedMps * 2.23694, m_model.StableWatts);
@@ -120,19 +122,15 @@ namespace IRT.Calibration
             series1.ChartType = SeriesChartType.Spline;
             series1.ChartArea = "Coastdown";
 
-            // Get the starting point.
-            double mps = Math.Floor(m_coastdown.Data.SpeedMps.Min());
-            double mps_max = Math.Ceiling(m_coastdown.Data.SpeedMps.Max());
+            double[,] estimate = m_coastdown.EstimateCoastdown();
 
-            // Plot the calculated line.
-            while (mps < mps_max)
+            for (int i = (estimate.Length / 2) - 1; i >= 0; i--)
             {
-                //var time = m_coastdown.Data.SpeedMps(mph * 0.44704);
-                double acceleration = m_coastdown.Deceleration(mps);
+                double mps = estimate[i, 0];
+                double seconds = estimate[i, 1];
                 series1.Points.AddXY(
-                    Math.Round(mps * 2.23694, 1), // convert to Mph from Mps
-                    acceleration);
-                mps += 0.5;
+                    Math.Round(mps, 1), 
+                    seconds);
             }
         }
 
@@ -141,7 +139,7 @@ namespace IRT.Calibration
         /// </summary>
         /// <param name="x"></param>
         /// <param name="acceleration"></param>
-        public void PlotActualCoastDown(double[] x, double[] y, string name = "Actual")
+        public void PlotActualCoastDown(string name = "Actual")
         {
             Series series2 = null;
 
@@ -150,21 +148,31 @@ namespace IRT.Calibration
                 name = chartCoastdown.Series.NextUniqueName();
             }
 
+            double[] x = m_model.Data.SpeedMps;
+            double[] y = m_model.Data.CoastdownSeconds;
+
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Minimum = Math.Round(y.Min(), 0);
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Maximum = Math.Round(y.Max(), 0);
+            chartCoastdown.ChartAreas["Coastdown"].AxisX.Minimum = Math.Round(x.Min(), 0);
+            chartCoastdown.ChartAreas["Coastdown"].AxisX.Maximum = Math.Round(x.Max(), 0);
+            chartCoastdown.ChartAreas["Coastdown"].AxisX.RoundAxisValues();
+
             series2 = chartCoastdown.Series.Add(name);
             series2.ChartType = SeriesChartType.Point;
             series2.ChartArea = "Coastdown";
-            series2.ToolTip = "Acceleration: #VALY{N2}\nMph: #VALX{N1}";
+            series2.ToolTip = "Seconds: #VALY{N2}\nmps: #VALX{N1}";
 
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Minimum = y.Min();
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Maximum = y.Max();
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Title = "Seconds";
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Interval = 1;
 
-            //chartCoastdown.ChartAreas["Coastdown"].AxisX.Minimum = 0;
+            chartCoastdown.ChartAreas["Coastdown"].AxisX.Title = "Meters per second";
+            chartCoastdown.ChartAreas["Coastdown"].AxisX.IsReversed = true;
 
             // Plot the actual values as points.
             for (int i = 0; i < x.Length; i++)
             {
                 series2.Points.AddXY(
-                    Math.Round(x[i] * 2.23694, 1), // convert to Mph from Mps
+                    Math.Round(x[i], 1), 
                     y[i]); // acceleration
             }
         }
@@ -222,24 +230,24 @@ namespace IRT.Calibration
 
             chartCoastdown.Series[seriesName].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
 
-            for (double mph = 2; mph < 35; mph++)
+            PowerEstimator estimator = new PowerEstimator(m_result);
+            double[,] powerCurve = estimator.Calculate();
+
+            for (int i = 0; i < (powerCurve.Length / 2); i++)
             {
-                var watts = m_coastdown.Watts(mph * 0.44704);
-                int i = wattSeries.Points.AddXY(mph, watts);
-
-                if (mph % 5 == 0)
-                {
-                    wattSeries.Points[i].MarkerStyle = MarkerStyle.Circle;
-                    wattSeries.Points[i].MarkerSize = 5;
-                }
+                double mph = powerCurve[i, 0];
+                var watts = powerCurve[i, 1];
+                int index = wattSeries.Points.AddXY(mph, watts);
+                
+                wattSeries.Points[index].MarkerStyle = MarkerStyle.Circle;
+                wattSeries.Points[index].MarkerSize = 5;
             }
-
         }
 
         private void UpdateValues()
         {
-            this.txtDrag.Text = String.Format("{0:0.0000000}",  m_coastdown.Drag);
-            this.txtRR.Text = String.Format("{00:0.0000000}", m_coastdown.RollingResistance);
+            //this.txtDrag.Text = String.Format("{0:0.0000000}",  m_coastdown.Drag);
+            //this.txtRR.Text = String.Format("{00:0.0000000}", m_coastdown.RollingResistance);
             this.lblStableSeconds.Text = String.Format("{0:0.0}", m_model.StableSeconds);
             this.txtStableSpeed.Text = String.Format("{0:0.0}", m_model.StableSpeedMps * 2.23694);
             this.txtStableWatts.Text = m_model.StableWatts.ToString();
@@ -257,7 +265,7 @@ namespace IRT.Calibration
                 m_model.StableSpeedMps = stableMph * 0.44704;
                 m_model.Inertia = 0; // 0 out so it recalculates.
 
-                m_coastdown.Calculate(m_model);
+                m_coastdown.Calculate();
                 UpdateValues();
                 PlotWatts("Recalculated");
             }
@@ -269,8 +277,9 @@ namespace IRT.Calibration
             
             if (double.TryParse(txtStableSpeed.Text, out stableMph))
             {
-                this.txtStableWatts.Text =
-                    string.Format("{0:0}", m_coastdown.Watts(stableMph * 0.44704));
+#warning "Not recalculating power"
+                //this.txtStableWatts.Text =
+                //    string.Format("{0:0}", m_coastdown.Watts(stableMph * 0.44704));
             }
         }
 
@@ -305,7 +314,8 @@ namespace IRT.Calibration
                 double drag;
                 if (double.TryParse(txtDrag.Text, out drag))
                 {
-                    m_coastdown.Drag = drag;
+#warning "Drag not accounted for"
+                    //m_coastdown.Drag = drag;
                     RecalculatePower();
                 }
             }
@@ -318,7 +328,8 @@ namespace IRT.Calibration
                 double rr;
                 if (double.TryParse(txtRR.Text, out rr))
                 {
-                    m_coastdown.RollingResistance = rr;
+#warning "RR not accounted for"
+                    //m_coastdown.RollingResistance = rr;
                     RecalculatePower();
                 }
             }
@@ -326,7 +337,7 @@ namespace IRT.Calibration
 
         private void dataToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            CoastdownDataForm form = new CoastdownDataForm(m_coastdown.Data);
+            CoastdownDataForm form = new CoastdownDataForm(m_model.Data);
             form.Show();
         }
     }

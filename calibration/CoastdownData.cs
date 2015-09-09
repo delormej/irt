@@ -98,7 +98,6 @@ namespace IRT.Calibration
 
             m_speedMps = new List<double>();
             m_coastdownSeconds = new List<double>();
-            m_acceleration = new List<double>();
 
             //Array.Copy(speed, maxSpeedIdx, SpeedMps, 0, len);
             for (int j = maxSpeedIdx; j <= minSpeedIdx; j++)
@@ -111,9 +110,6 @@ namespace IRT.Calibration
                     // Invert the timestamp seconds to record seconds to min speed.
                     
                     m_coastdownSeconds.Add(time);
-
-                    // Acceleration is the change in speed over the change in time.
-                    m_acceleration.Add((speed[j] - speed[minSpeedIdx]) / time);
                 }
             }
 

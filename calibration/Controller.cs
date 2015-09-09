@@ -18,7 +18,7 @@ namespace IRT.Calibration
     public class Controller
     {
         BikePowerDisplay m_emotionPower, m_refPower;
-        Model m_model;
+        CoastdownModel m_model;
         Coastdown m_coastdown;
         MoveServoDelegate m_moveServo;
 
@@ -85,7 +85,7 @@ namespace IRT.Calibration
             }
         }
 
-        public Model Model { get { return m_model; } }
+        public CoastdownModel Model { get { return m_model; } }
 
         /// <summary>
         /// Displays the main calibration form during coast down.
@@ -111,8 +111,7 @@ namespace IRT.Calibration
 
         private void Initialize()
         {
-            m_model = new Model();
-            m_coastdown = new Coastdown();
+            m_model = new CoastdownModel();
             m_model.Stage = Stage.Ready;
 
             CloseCalibrationForm();
@@ -294,7 +293,8 @@ namespace IRT.Calibration
             // Kick off processing.
             try
             {
-                m_coastdown.Calculate(m_model);
+                m_coastdown = new Coastdown(m_model);
+                m_coastdown.Calculate();
                 OnFinished();
             }
             catch (Exception e)

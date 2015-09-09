@@ -2444,66 +2444,14 @@ namespace IRT_GUI
 
         private void Calibrate(string file)
         {
-            Model model = Model.FromFile(file);
-            Coastdown coastdown = new Coastdown();
+            // TODO: simplify this, actually have CoastdownForm responsible for opening file, etc...
 
-            coastdown.Calculate(model);
+            CoastdownModel model = CoastdownModel.FromFile(file);
+            Coastdown coastdown = new Coastdown(model);
+
             CoastdownForm form = new CoastdownForm(coastdown, model);
             form.Apply += m_calibration_CoastdownCalibrationApply;
             form.Show();
-        }
-
-        private void BatchCalibrate(string[] fileNames)
-        {
-            Model model = null;
-            Coastdown coastdown = new Coastdown();
-            CoastdownForm form = null;
-
-            UpdateStatus("Drag, RR, Inertia, Coastdown, Watts");
-
-            foreach (string file in fileNames)
-            {
-                try
-                {
-                    model = Model.FromFile(file);
-                    coastdown.Calculate(model);
-
-                    string output = string.Format("{0:0.000000}, {1:0.0000}, {2:0.000}, {3:0.0}, {4:0}",
-                        coastdown.Drag,
-                        coastdown.RollingResistance,
-                        model.Inertia,
-                        coastdown.CoastdownTime(15 * 0.44704),
-                        coastdown.Watts(15 * 0.44704)
-                        );
-
-                    UpdateStatus(output);
-
-                    if (form == null)
-                    {
-                        form = new CoastdownForm(coastdown, model);
-                    }
-                    else
-                    {
-                        int start = file.LastIndexOf(@"\");
-
-                        string label = file.Substring(start+1, file.Length - start-1);
-
-                        form.PlotActualCoastDown(coastdown.Data.CoastdownSeconds, 
-                            coastdown.Data.SpeedMps, label);
-                        form.PlotStableWatts(model.StableSpeedMps * 2.23694, model.StableWatts);
-                    }
-
-                }
-                catch (Exception e)
-                {
-                    UpdateStatus("Failed on: " + file);
-                }
-            }
-
-            if (form != null)
-            {
-                form.Show();
-            }
         }
 
         private void btnLoadCalibration_Click(object sender, EventArgs e)
@@ -2514,20 +2462,13 @@ namespace IRT_GUI
             dlg.FilterIndex = 1;
             dlg.RestoreDirectory = false;
             dlg.CheckFileExists = true;
-            dlg.Multiselect = true;
+            dlg.Multiselect = false;
 
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    if (dlg.FileNames.Length > 1)
-                    {
-                        BatchCalibrate(dlg.FileNames);
-                    }
-                    else
-                    {
-                        Calibrate(dlg.FileName);
-                    }
+                    Calibrate(dlg.FileName);
                 }
                 catch (Exception ex)
                 {
@@ -2541,8 +2482,9 @@ namespace IRT_GUI
         {
             ExecuteOnUI(() =>
             {
-                this.txtDrag.Text = coastdown.Drag.ToString();
-                this.txtRR.Text = coastdown.RollingResistance.ToString();
+#warning "Not displaying drag / rr"
+                //this.txtDrag.Text = coastdown.Drag.ToString();
+                //this.txtRR.Text = coastdown.RollingResistance.ToString();
 
                 this.btnCalibration2Set_Click(this, null);
             });
