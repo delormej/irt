@@ -9,89 +9,14 @@ namespace IRT.Calibration
         protected double[] m_coeff = { 0.0, 0.0 };
         private double m_mass = 0.0;
 
-        private AccelerationFit m_decelFit;
-
-        public static double Power(double speedMph, double drag, double rr)
-        {
-            double speedMps = speedMph * 0.44704;
-            return fit_drag_rr(speedMps, drag, rr);
-        }
-
         public PowerFit()
         {
-            m_decelFit = null;
-        }
-
-        public PowerFit(AccelerationFit decelFit)
-        {
-            m_decelFit = decelFit;
         }
 
         public double Drag { get; set; }
 
         public double RollingResistance { get; set; }
 
-        public virtual double Watts(double speedMps)
-        {
-            return fit_drag_rr(speedMps, Drag, RollingResistance);
-            //double force = (m_decelFit.Coeff[0] / m_coastdownToPowerRatio) +
-            //    (m_decelFit.Coeff[1] / m_coastdownToPowerRatio) *
-            //    Math.Pow(speedMps, 2);
-
-            //double watts = force * speedMps;
-
-            //return watts;
-        }
-
-        /// <summary>
-        /// Calculates the moment of inertia a.k.a mass in F=ma.
-        /// </summary>
-        /// <param name="speed_mps"></param>
-        /// <param name="watts"></param>
-        /// <returns></returns>
-        public double CalculateStablePower(double speedMps, double watts)
-        {
-            if (m_decelFit == null)
-            {
-                throw new InvalidOperationException(
-                    "PowerFit must be constructed with DecelerationFit to use this method.");
-            }
-
-            // Where P = F*v
-            double f = watts / speedMps;
-            
-            // Get the rate of deceleration (a) for a given velocity.
-            double a = m_decelFit.Acceleration(speedMps);
-
-            // Calcualte the ratio of coastdown to power coefficients.
-            m_mass = f / a;
-            
-            return m_mass;
-        }
-
-        public void Fit()
-        {
-            if (m_mass == 0.0)
-                throw new InvalidOperationException("Must CalculateStablePower first.");
-
-            int max = 15, min = 2;
-            int count = max - min; // max mps - min mps.
-
-            //f = m * a
-            double[,] speed = new double[count, 1];
-            double[] watts = new double[count];
-
-            for (int i = 0; i< count; i++)
-            {
-                double mps = i + min;
-                double force = m_decelFit.Acceleration(i) * m_mass;
-
-                speed[i, 0] = mps;
-                watts[i] = force * mps;
-            }
-
-            Fit(speed, watts);
-        }
         public virtual void Fit(double[] speedMph, double[] watts)
         {
             double[,] speed;
@@ -118,30 +43,6 @@ namespace IRT.Calibration
 
             Drag = m_coeff[0];
             RollingResistance = m_coeff[1];
-        }
-
-        public virtual void GeneratePowerData(out double[,] speed, out double[] watts)
-        {
-            if (m_decelFit == null)
-            {
-                throw new InvalidOperationException(
-                    "PowerFit must be constructed with DecelerationFit to use this method.");
-            }
-
-            speed = new double[30, 1];
-            watts = new double[30];
-
-            int ix = 0;
-            // Generate power data.
-            foreach (var i in Enumerable.Range(5, 30))
-            {
-                double v = i * 0.44704;
-
-                speed[ix, 0] = v;
-                watts[ix] = fit_drag_rr(v, Drag, RollingResistance);
-
-                ix++;
-            }
         }
 
         /// <summary>

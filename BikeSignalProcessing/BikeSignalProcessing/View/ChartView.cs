@@ -82,14 +82,14 @@ namespace BikeSignalProcessing.View
 
             if (fit)
             {
-                mData.EvaluateNoMagnetFit(out speed, out power);
+                //mData.EvaluateNoMagnetFit(out speed, out power);
             }
             else
             {
                 mData.GetCoastdownFit(out speed, out power);
             }
 
-            if (speed == null || power == null)
+            //if (speed == null || power == null)
             {
                 return;
             }

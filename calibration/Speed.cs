@@ -28,7 +28,7 @@ namespace IRT.Calibration
         /// </summary>
         /// <param name="tickEvent"></param>
         /// <param name="model"></param>
-        public void Calculate(Model model)
+        public void Calculate(CoastdownModel model)
         {
             List<TickEvent> events = model.Events;
             TickEvent tickEvent = events.Last();

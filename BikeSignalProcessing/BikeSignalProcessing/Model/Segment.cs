@@ -79,8 +79,10 @@ namespace BikeSignalProcessing.Model
             {
                 if (mOwner.m_powerFit != null && this.MagnetPosition <= 1600)
                 {
-                    return mAveragePower -
-                        mOwner.m_powerFit.Watts(this.AverageSpeed);
+#warning "Not calculating average power"
+                    return 0;
+                    /*return mAveragePower -
+                        mOwner.m_powerFit.Watts(this.AverageSpeed);*/
                 }
                 else
                 {
