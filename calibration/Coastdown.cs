@@ -27,8 +27,9 @@ namespace IRT.Calibration
         private double stableSpeedMps;
         private double stableWatts;
 
-        private Func<double, double> funcAccelSpeed;
+        private Func<double, double> funcAccelTime;
         private Func<double, double> funcTimeSpeed;
+        private Func<double, double> funcAccelSpeed;
 
         private double m_goodnessOfFit;
 
@@ -66,7 +67,7 @@ namespace IRT.Calibration
         private void CalculateAcceleration()
         {
             // Returns the derivative function.
-            funcAccelSpeed = Differentiate.FirstDerivativeFunc(funcTimeSpeed);
+            funcAccelTime = Differentiate.FirstDerivativeFunc(funcTimeSpeed);
         }
 
         /// <summary>
@@ -83,21 +84,19 @@ namespace IRT.Calibration
 
             for (int i = 0; i < this.speed.Length; i++)
             {
-                accel[i] = funcAccelSpeed(speed[i]);
+                accel[i] = funcAccelTime(seconds[i]);
             }
 
             // Assign coeff and return the function of acceleration to speed.
             coeff = Fit.Polynomial(speed, accel, 2);
+            funcAccelSpeed = Fit.PolynomialFunc(speed, accel, 2);
         }
 
         /// <summary>
         /// Given stable speed, power and acceleration function, solve for the coefficients
         /// of Force.
         /// </summary>
-        /// <param name="funcAccelSpeed"></param>
         /// <param name="accelSpeedCoeff"></param>
-        /// <param name="speedMps"></param>
-        /// <param name="watts"></param>
         /// <returns></returns>
         private double[] FitForceSpeed(double[] accelSpeedCoeff)
         {
