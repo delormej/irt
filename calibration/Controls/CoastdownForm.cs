@@ -250,7 +250,7 @@ namespace IRT.Calibration
             this.txtStableSpeed.Text = String.Format("{0:0.0}", m_model.StableSpeedMps * 2.23694);
             this.txtStableWatts.Text = m_model.StableWatts.ToString();
 
-            this.txtDrag.Text = m_result.Cd.ToString(); //  String.Format("{0:0.0000000}", m_result.Cd);
+            this.txtDrag.Text = String.Format("{0:0.00000}", m_result.Cd);
             this.txtSlope.Text = String.Format("{0:0.0000}", m_result.Slope);
             this.txtIntercept.Text = String.Format("{0:0.0000}", m_result.Intercept);
             this.txtGoodnessOfFit.Text = String.Format("{0:0.00000}", m_result.GoodnessOfFit);

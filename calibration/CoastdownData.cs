@@ -18,7 +18,11 @@ namespace IRT.Calibration
 
         public double[] CoastdownSeconds { get { return m_coastdownSeconds.ToArray();  } }
 
-        public double[] Acceleration{ get { return m_acceleration.ToArray(); } } 
+        public double[] Acceleration
+        {
+            get { return m_acceleration.ToArray(); }
+            set { m_acceleration = new List<double>(value); }
+        }
 
         /// <summary>
         /// Filters and processes raw coastdown records into only the records that

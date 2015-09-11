@@ -31,6 +31,8 @@ namespace IRT.Calibration
         private Func<double, double> funcTimeSpeed;
         private Func<double, double> funcAccelSpeed;
 
+        private CoastdownModel m_model;
+
         private double m_goodnessOfFit;
 
         public Coastdown(CoastdownModel model)
@@ -40,6 +42,9 @@ namespace IRT.Calibration
             stableWatts = model.StableWatts;
             speed = model.Data.SpeedMps;
             seconds = model.Data.CoastdownSeconds;
+
+            // Only saving this so that we can populate acceleration.  This should be fixed.
+            m_model = model;
         }
 
         /// <summary>
@@ -134,6 +139,8 @@ namespace IRT.Calibration
             config.Slope = forceCoeff[1];
             config.Intercept = forceCoeff[0];
 
+            m_model.Data.Acceleration = EstimateAcceleration();
+
             return config;
         }
 
@@ -162,14 +169,13 @@ namespace IRT.Calibration
             return curve;
         }
 
-        public double[,] EstimateAcceleration()
+        public double[] EstimateAcceleration()
         {
             // x = speed, y = accel
-            double[,] speedAccel = new double[speed.Length, 2];
+            double[] speedAccel = new double[speed.Length];
             for (int i = 0; i < speed.Length; i++)
             {
-                speedAccel[i, 0] = speed[i];
-                speedAccel[i, 1] = funcAccelSpeed(speed[i]);
+                speedAccel[i] = funcAccelSpeed(speed[i]);
             }
 
             return speedAccel;
