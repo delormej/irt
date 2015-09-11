@@ -9,7 +9,7 @@ namespace IRT.Calibration
     /// </summary>
     public class CoastdownData
     {
-        private List<double> m_speedMps, m_coastdownSeconds, m_acceleration;
+        private List<double> m_speedMps, m_coastdownSeconds, m_acceleration, m_distance;
 
         public CoastdownData()
         {}
@@ -17,6 +17,8 @@ namespace IRT.Calibration
         public double[] SpeedMps { get {  return m_speedMps.ToArray(); } }
 
         public double[] CoastdownSeconds { get { return m_coastdownSeconds.ToArray();  } }
+
+        public double[] Distance {  get { return m_distance.ToArray(); } }
 
         public double[] Acceleration
         {
@@ -42,20 +44,21 @@ namespace IRT.Calibration
                 flywheel[i] = tickEvents[i].Ticks;
             }
             
-            // Get max records, plus the last ones if not divisible by 4.
-            int records = timestamp.Length; //  (int)Math.Ceiling(timestamp.Length / 4.0d);
+            // Get max records.
+            int records = timestamp.Length; 
 
             double[] seconds = new double[records];
             double[] speed = new double[records];
+            double[] distance = new double[records];
 
             for (int ix = 0; ix < records; ix++)
             {
-                int idx = ix; //  (ix * 4);
+                int idx = ix; 
 
                 if (idx == 0)
                 {
                     // Advance to the next record to start.
-                    idx++; //= 4;
+                    idx++; 
                 }
                 // If we overrun, cap at max.
                 else if (idx > flywheel.Length)
@@ -89,10 +92,18 @@ namespace IRT.Calibration
                      * Time is sent in 1/2048 of a second.
                      */
                     speed[ix] = (dt * 0.115 / 2.0) / (ds / 2048.0);
+
+                    // Accumulate distance.
+                    if (ix > 0)
+                        distance[ix] = distance[ix - 1] +
+                                (dt * 0.115 / 2.0);
+                    else
+                        distance[ix] = 0;
                 }
                 else
                 {
                     speed[ix] = 0;
+                    distance[ix] = 0;
                 }
             }
 
@@ -102,17 +113,18 @@ namespace IRT.Calibration
 
             m_speedMps = new List<double>();
             m_coastdownSeconds = new List<double>();
+            m_distance = new List<double>();
 
             //Array.Copy(speed, maxSpeedIdx, SpeedMps, 0, len);
             for (int j = maxSpeedIdx; j <= minSpeedIdx; j++)
             {
+                // Invert the timestamp seconds to record seconds to min speed.
                 double time = seconds[minSpeedIdx] - seconds[j];
 
                 if (time > 0 && speed[j] > 0)
                 {
                     m_speedMps.Add(speed[j]);
-                    // Invert the timestamp seconds to record seconds to min speed.
-                    
+                    m_distance.Add(distance[j]);
                     m_coastdownSeconds.Add(time);
                 }
             }

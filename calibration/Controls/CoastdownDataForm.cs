@@ -22,6 +22,7 @@ namespace IRT.Calibration.Controls
         {
             dgvCoastdownData.Columns.Add("Seconds", "Seconds");
             dgvCoastdownData.Columns.Add("Speed", "Speed (mps)");
+            dgvCoastdownData.Columns.Add("Distance", "Meters");
             dgvCoastdownData.Columns.Add("Acceleration", "Acceleration mps^2");
 
             int records = data.SpeedMps.Length;
@@ -31,6 +32,7 @@ namespace IRT.Calibration.Controls
                 dgvCoastdownData.Rows.Add(
                     data.CoastdownSeconds[i],
                     data.SpeedMps[i],
+                    data.Distance[i],
                     data.Acceleration[i]);
             }
         }
