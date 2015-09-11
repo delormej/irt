@@ -162,5 +162,18 @@ namespace IRT.Calibration
 
             return curve;
         }
+
+        public double[,] EstimateAcceleration()
+        {
+            // x = speed, y = accel
+            double[,] speedAccel = new double[speed.Length, 2];
+            for (int i = 0; i < speed.Length; i++)
+            {
+                speedAccel[i, 0] = speed[i];
+                speedAccel[i, 1] = funcAccelSpeed(speed[i]);
+            }
+
+            return speedAccel;
+        }
     }
 }

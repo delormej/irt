@@ -43,7 +43,7 @@
             this.txtStableSpeed = new System.Windows.Forms.TextBox();
             this.txtStableWatts = new System.Windows.Forms.TextBox();
             this.txtDrag = new System.Windows.Forms.TextBox();
-            this.txtRR = new System.Windows.Forms.TextBox();
+            this.txtGoodnessOfFit = new System.Windows.Forms.TextBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -80,9 +80,9 @@
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label4.Location = new System.Drawing.Point(273, 544);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(113, 13);
+            this.label4.Size = new System.Drawing.Size(96, 13);
             this.label4.TabIndex = 3;
-            this.label4.Text = "Rolling Resistance";
+            this.label4.Text = "Goodness of Fit";
             // 
             // btnApply
             // 
@@ -176,14 +176,14 @@
             this.txtDrag.TabIndex = 18;
             this.txtDrag.Leave += new System.EventHandler(this.txtDrag_Leave);
             // 
-            // txtRR
+            // txtGoodnessOfFit
             // 
-            this.txtRR.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.txtRR.Location = new System.Drawing.Point(405, 541);
-            this.txtRR.Name = "txtRR";
-            this.txtRR.Size = new System.Drawing.Size(75, 20);
-            this.txtRR.TabIndex = 19;
-            this.txtRR.Leave += new System.EventHandler(this.txtRR_Leave);
+            this.txtGoodnessOfFit.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.txtGoodnessOfFit.Location = new System.Drawing.Point(405, 541);
+            this.txtGoodnessOfFit.Name = "txtGoodnessOfFit";
+            this.txtGoodnessOfFit.Size = new System.Drawing.Size(75, 20);
+            this.txtGoodnessOfFit.TabIndex = 19;
+            this.txtGoodnessOfFit.Leave += new System.EventHandler(this.txtRR_Leave);
             // 
             // menuStrip1
             // 
@@ -306,7 +306,7 @@
             this.label7.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.Location = new System.Drawing.Point(273, 497);
+            this.label7.Location = new System.Drawing.Point(273, 500);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(58, 13);
             this.label7.TabIndex = 26;
@@ -325,7 +325,7 @@
             this.Controls.Add(this.txtSlope);
             this.Controls.Add(this.chartCoastdown);
             this.Controls.Add(this.txtDrag);
-            this.Controls.Add(this.txtRR);
+            this.Controls.Add(this.txtGoodnessOfFit);
             this.Controls.Add(this.txtStableWatts);
             this.Controls.Add(this.txtStableSpeed);
             this.Controls.Add(this.label5);
@@ -363,7 +363,7 @@
         private System.Windows.Forms.TextBox txtStableSpeed;
         private System.Windows.Forms.TextBox txtStableWatts;
         private System.Windows.Forms.TextBox txtDrag;
-        private System.Windows.Forms.TextBox txtRR;
+        private System.Windows.Forms.TextBox txtGoodnessOfFit;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem coastdownToolStripMenuItem;
