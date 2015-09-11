@@ -246,13 +246,14 @@ namespace IRT.Calibration
 
         private void UpdateValues()
         {
-            //this.txtDrag.Text = String.Format("{0:0.0000000}",  m_coastdown.Drag);
-            //this.txtRR.Text = String.Format("{00:0.0000000}", m_coastdown.RollingResistance);
             this.lblStableSeconds.Text = String.Format("{0:0.0}", m_model.StableSeconds);
             this.txtStableSpeed.Text = String.Format("{0:0.0}", m_model.StableSpeedMps * 2.23694);
             this.txtStableWatts.Text = m_model.StableWatts.ToString();
-            //this.txtSlope.Text = m_coastdown.Slope.ToString();
-            //this.txtIntercept.Text = m_coastdown.Intercept.ToString();
+
+            this.txtDrag.Text = m_result.Cd.ToString(); //  String.Format("{0:0.0000000}", m_result.Cd);
+            this.txtSlope.Text = String.Format("{0:0.0000}", m_result.Slope);
+            this.txtIntercept.Text = String.Format("{0:0.0000}", m_result.Intercept);
+            this.txtGoodnessOfFit.Text = String.Format("{0:0.00000}", m_result.GoodnessOfFit);
         }
 
         private void RecalculateCoastdown()
@@ -323,10 +324,10 @@ namespace IRT.Calibration
 
         private void txtRR_Leave(object sender, EventArgs e)
         {
-            if (txtRR.Modified)
+            if (txtGoodnessOfFit.Modified)
             {
                 double rr;
-                if (double.TryParse(txtRR.Text, out rr))
+                if (double.TryParse(txtGoodnessOfFit.Text, out rr))
                 {
 #warning "RR not accounted for"
                     //m_coastdown.RollingResistance = rr;

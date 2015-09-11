@@ -59,6 +59,19 @@ namespace IRT.Calibration
             return p;
         }
 
+        static double fit_power(double K, double v, double m, double Crr)
+        {
+            double g = 9.0867;
+            double w = (K * Math.Pow(v, 2) + m * g * Crr) * v;
+
+            return w;
+        }
+
+        static void fit_power_func()
+        {
+
+        }
+
         static void fit_func(double[] c, double[] x, ref double func, object obj)
         {
             func = fit_drag_rr(x[0], c[0], c[1]);
