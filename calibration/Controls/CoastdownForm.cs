@@ -18,6 +18,7 @@ namespace IRT.Calibration
         private Coastdown m_coastdown;
         private CoastdownModel m_model;
         private CalibrationResult m_result;
+        private PowerEstimator m_estimator;
         private Timer m_timer;
         private int m_secondsUntilApply;
 
@@ -38,6 +39,7 @@ namespace IRT.Calibration
             m_coastdown = coastdown;
             m_model = model;
             m_result = coastdown.Calculate();
+            m_estimator = new PowerEstimator(m_result);
 
             UpdateValues();
             DrawChart();
@@ -230,8 +232,7 @@ namespace IRT.Calibration
 
             chartCoastdown.Series[seriesName].ToolTip = "Watts: #VALY{N0}\nMph: #VALX{N1}";
 
-            PowerEstimator estimator = new PowerEstimator(m_result);
-            double[,] powerCurve = estimator.Calculate();
+            double[,] powerCurve = m_estimator.Calculate();
 
             for (int i = 0; i < (powerCurve.Length / 2); i++)
             {
@@ -278,9 +279,8 @@ namespace IRT.Calibration
             
             if (double.TryParse(txtStableSpeed.Text, out stableMph))
             {
-#warning "Not recalculating power"
-                //this.txtStableWatts.Text =
-                //    string.Format("{0:0}", m_coastdown.Watts(stableMph * 0.44704));
+                this.txtStableWatts.Text =
+                    string.Format("{0:0}", m_estimator.Calculate(stableMph * 0.44704));
             }
         }
 
