@@ -116,7 +116,7 @@ namespace IRT.Calibration
         }
 
         /// <summary>
-        /// Plots coastdown data.
+        /// Plots coastdown data.  x: time, y: speed
         /// </summary>
         private void PlotComputedCoastDown()
         {
@@ -130,17 +130,14 @@ namespace IRT.Calibration
             {
                 double mps = estimate[i, 0];
                 double seconds = estimate[i, 1];
-                series1.Points.AddXY(
-                    Math.Round(mps, 1), 
-                    seconds);
+                series1.Points.AddXY(seconds,
+                    Math.Round(mps, 1));
             }
         }
 
         /// <summary>
-        /// Plot actual coast down time/speed values.
+        /// Plot actual coast down time (x) / (y) speed values.
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="acceleration"></param>
         public void PlotActualCoastDown(string name = "Actual")
         {
             Series series2 = null;
@@ -150,13 +147,13 @@ namespace IRT.Calibration
                 name = chartCoastdown.Series.NextUniqueName();
             }
 
-            double[] x = m_model.Data.SpeedMps;
-            double[] y = m_model.Data.CoastdownSeconds;
+            double[] speed = m_model.Data.SpeedMps;
+            double[] time = m_model.Data.CoastdownSeconds;
 
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Minimum = Math.Round(y.Min(), 0);
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Maximum = Math.Round(y.Max(), 0);
-            chartCoastdown.ChartAreas["Coastdown"].AxisX.Minimum = Math.Round(x.Min(), 0);
-            chartCoastdown.ChartAreas["Coastdown"].AxisX.Maximum = Math.Round(x.Max(), 0);
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Minimum = Math.Round(speed.Min(), 0);
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Maximum = Math.Round(speed.Max(), 0);
+            chartCoastdown.ChartAreas["Coastdown"].AxisX.Minimum = Math.Round(time.Min(), 0);
+            chartCoastdown.ChartAreas["Coastdown"].AxisX.Maximum = Math.Round(time.Max(), 0);
             chartCoastdown.ChartAreas["Coastdown"].AxisX.RoundAxisValues();
 
             series2 = chartCoastdown.Series.Add(name);
@@ -164,18 +161,18 @@ namespace IRT.Calibration
             series2.ChartArea = "Coastdown";
             series2.ToolTip = "Seconds: #VALY{N2}\nmps: #VALX{N1}";
 
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Title = "Seconds";
-            chartCoastdown.ChartAreas["Coastdown"].AxisY.Interval = 1;
+            chartCoastdown.ChartAreas["Coastdown"].AxisY.Title = "Speed (mps)";
+            //chartCoastdown.ChartAreas["Coastdown"].AxisY.Interval = 1;
 
-            chartCoastdown.ChartAreas["Coastdown"].AxisX.Title = "Meters per second";
+            chartCoastdown.ChartAreas["Coastdown"].AxisX.Title = "Time";
             chartCoastdown.ChartAreas["Coastdown"].AxisX.IsReversed = true;
 
             // Plot the actual values as points.
-            for (int i = 0; i < x.Length; i++)
+            for (int i = 0; i < time.Length; i++)
             {
                 series2.Points.AddXY(
-                    Math.Round(x[i], 1), 
-                    y[i]); // acceleration
+                    time[i],
+                    Math.Round(speed[i], 1)); 
             }
         }
 
