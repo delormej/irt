@@ -117,11 +117,11 @@ name:
 
 # Set to 'Valid App'
 # Set 0 for CRC value
-# Set factory features to use charger
+# Set factory features (0x10001000) to use charger (64) or for no charger (0)
 prep:
 	$(NRFJPROG) --memwr 0x3fc00 --val 1		
 	$(NRFJPROG) --memwr 0x3fc04 --val 0		
-	$(NRFJPROG) --memwr 0x10001080 --val 64	
+	$(NRFJPROG) --memwr 0x10001080 --val 0	
 
 # Does a complete install to a device, wipe clean, new softdevice, bootloader & app.
 install: | flash-softdevice flash prep 
