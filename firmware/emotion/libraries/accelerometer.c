@@ -56,8 +56,8 @@
 #define INT_EN_DRDY 		_BIT(0)		// Dataready interrupt
 
 /* CTRL_REG5 register maps the desired interrupts to INT2 or INT1 pins.
-		If the bit value is 0, then the functional block’s interrupt is routed to INT2 (default).
-		If the bit value is 1, then the functional block’s interrupt is routed to INT1.
+		If the bit value is 0, then the functional blockï¿½s interrupt is routed to INT2 (default).
+		If the bit value is 1, then the functional blockï¿½s interrupt is routed to INT1.
 */
 #define INT_CFG_FF_MT		_BIT(2)		// Freefall/motion INT1/INT2 configuration.
 #define INT_CFG_ASLP		_BIT(7)		// Auto-Sleep/Wake INT1/INT2 configuration.
@@ -196,9 +196,9 @@ static void enable_interrupt(void)
 	//
 	// Configure threshold for motion.
 	// The threshold resolution is 0.063 g/LSB and the threshold register has a
-	// range of 0 to 127 counts. The maximum range is to ±8 g.
-	// Note that even when the full scale value is set to ±2 g or ±4 g, the motion
-	// still detects up to ±8 g.
+	// range of 0 to 127 counts. The maximum range is to ï¿½8 g.
+	// Note that even when the full scale value is set to ï¿½2 g or ï¿½4 g, the motion
+	// still detects up to ï¿½8 g.
 	//
 	ret = accelerometer_write(REG8652_FF_MT_THS, 0x04);
 	RET_CHECK(ret);
@@ -252,7 +252,9 @@ static void enable_interrupt(void)
 	//
 	// Set configuration in CTRL_REG5 to route interrupt to INT1.
 	//
-	ret = accelerometer_write(REG8652_CTRL_REG5, INT_CFG_ASLP | INT_CFG_FF_MT);
+	// [jdl 12/21/2015] Disabled interupt for motion for now as a workaround for the speed glitch
+	// where too many interupts cause a miss on speed calculation which leads to power spike.
+	ret = accelerometer_write(REG8652_CTRL_REG5, INT_CFG_ASLP); // | INT_CFG_FF_MT); 
 	RET_CHECK(ret);
 	
 	//
