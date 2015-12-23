@@ -665,10 +665,16 @@ void ble_advertising_start(void) {
 }
 
 void ble_ant_start() {
+	uint32_t err_code;
+	
 	// Start execution
 #if defined(BLE_ENABLED)
 	ble_advertising_start();
 #endif // BLE_ENABLED
+
+	// Assign network address.
+    err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, (uint8_t *)m_ant_network_key);
+    APP_ERROR_CHECK(err_code);
 
 	// Open the ANT channel for transmitting power.
 	ant_bp_tx_start();

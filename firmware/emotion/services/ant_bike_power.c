@@ -507,9 +507,6 @@ void ant_bp_tx_init(ant_ble_evt_handlers_t * evt_handlers)
     
 	// Assign callback for when resistance message is processed.	
     mp_evt_handlers = evt_handlers;
-		
-    err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, (uint8_t *)m_ant_network_key);
-    APP_ERROR_CHECK(err_code);
     
     err_code = sd_ant_channel_assign(ANT_BP_TX_CHANNEL,
                                      ANT_BP_CHANNEL_TYPE,

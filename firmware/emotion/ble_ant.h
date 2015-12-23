@@ -20,6 +20,7 @@
 #define ANT_BP_TX_CHANNEL     	 			1u                                           /**< Bicycle Power ANT Channel. */
 #define ANT_CTRL_CHANNEL					2u											 /**< ANT+ Remote Control Channel */
 #define ANT_SP_TX_CHANNEL     	 			3u                                           /**< Bicycle Speed TX ANT Channel. */
+#define ANT_FEC_TX_CHANNEL     	 			4u                                           /**< ANT+ FE-C Channel. */
 
 #define ANT_COMMON_PAGE_80          		0x50u   /**< Manufacturer's identification common data page. */
 #define ANT_COMMON_PAGE_81          		0x51u   /**< Product information common data page. */
