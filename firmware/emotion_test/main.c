@@ -170,13 +170,19 @@ FEC_Page25* build_page25(irt_context_t* context) {
 	page.AccumulatedPowerLSB = LOW_BYTE(accumulated_power);
 	page.AccumulatedPowerMSB = HIGH_BYTE(accumulated_power);
 	/* 1.5 bytes used for instantaneous power.  Full 8 bits for byte LSB
-	   only 4 bits used for the MSB. */
+	   only 4 bits (0-3) used for the MSB. */
 	page.InstantPowerLSB = LOW_BYTE(context->instant_power);
-	page.InstantPowerMSB = (HIGH_BYTE(context->instant_power)) << 4;
+	page.InstantPowerMSB = HIGH_BYTE(context->instant_power) & 0x0F;
+	
+	/* MSB (bit 3) reserved, 3 bits used for calibration required flags */
+	page.TrainerStatusBit = 
+		context->bike_power_calibration_required | 			// bit 0
+		(context->resistance_calibration_required << 1) |	// bit 1
+		(context->user_configuration_required << 2) |		// bit 2
+		(0 << 3);											// bit 3 - reserved 
 	
 	return &page;
 } 
-
 
 int main(int argc, char *argv [])
 {	
@@ -189,6 +195,7 @@ int main(int argc, char *argv [])
 	context.virtual_speed_flag = 1;
 	context.lap_toggle = 1;
 	context.fe_state = ASLEEP_OFF;
+	context.user_configuration_required = 1;
 
 	FEC_Page16* p_page16 = build_page16(&context);
 	printf("page 16 (0x10): \t");
