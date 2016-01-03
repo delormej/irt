@@ -17,8 +17,7 @@ cl test.c ../emotion/libraries/math/acosf.c ../emotion/libraries/math/sqrtf.c ..
 #include <math.h>
 
 #define HR_DATA_SOURCE 				0	
-#define DISTANCE_TRAVELED_ENABLED	1
-#define VIRTUAL_SPEED_FLAG 			1 		
+#define DISTANCE_TRAVELED_ENABLED	1	
 #define EQUIPMENT_TYPE				25
 #define HEARTRATE_INVALID			0xFF
 
@@ -70,23 +69,16 @@ typedef struct {
 	float speed;
 	uint8_t distance;	// meters
 	uint8_t elapsed_time; // 1/4 seconds
-	
-	//uint8_t			reserved;
 
-	// FE-C specific state.
-	//uint8_t			distance;				// Accumulated value in meters.
-	//union {
-	//	uint16_t	data;
-	//	struct {
-			fe_state_e			fe_state : 3;				// bit field (3 bits)
-			uint8_t				lap_toggle : 1;
-			uint8_t				distance_enabled : 1;
-			uint8_t				virtual_speed_flag : 1;
-			target_power_e		target_power_limits : 2;
-			uint8_t				bike_power_calibration_required : 1;
-			uint8_t				resistance_calibration_required : 1;
-			uint8_t				user_configuration_required : 1;	//	};
-	//};
+	fe_state_e			fe_state : 3;				// bit field (3 bits)
+	uint8_t				lap_toggle : 1;
+	uint8_t				distance_enabled : 1;
+	uint8_t				virtual_speed_flag : 1;
+	target_power_e		target_power_limits : 2;
+	uint8_t				bike_power_calibration_required : 1;
+	uint8_t				resistance_calibration_required : 1;
+	uint8_t				user_configuration_required : 1;	//	};
+
 } irt_context_t;
 
 typedef struct {
@@ -97,13 +89,11 @@ typedef struct {
 	uint8_t 	SpeedLSB;
 	uint8_t 	SpeedMSB;
 	uint8_t 	HeartRate;
-	union {
-		uint8_t byte7;
-		struct {
-			uint8_t		capabilities : 4;
-			uint8_t		FEState : 4;
-		};
-	};
+	/* On the wire FEState bits appear in most significant nibble, before capabilities
+	   nibble. bit 0 of EACH nibble (4 bits) is the right most bit (least significant). */
+	uint8_t		capabilities : 4;
+	uint8_t		FEState : 4;
+	
 } FEC_Page16; // General FE Data Page
 
 // how to store efficently with assignment (structured)
@@ -127,6 +117,10 @@ uint16_t float_to_int16(float f) {
 }
 
 FEC_Page16* build_page16(irt_context_t* context) {	
+	
+	// byte 7 uses two nibbles for bit flags.
+	
+
 	static FEC_Page16 page;
 
 	uint16_t speed_int = float_to_int16(context->speed);
@@ -138,13 +132,15 @@ FEC_Page16* build_page16(irt_context_t* context) {
 	page.SpeedLSB = LOW_BYTE(speed_int);
 	page.SpeedMSB = HIGH_BYTE(speed_int);
 	page.HeartRate = HEARTRATE_INVALID;
-	page.FEState = 0;
-	page.capabilities = 3;
-	/*page.capabilities = 
-		(HR_DATA_SOURCE << 2) | 
-		(DISTANCE_TRAVELED_ENABLED << 1) | 
-		VIRTUAL_SPEED_FLAG; */
-	page.FEState = 6; // (context->fe_state << 1) | context->lap_toggle;
+	page.capabilities = 
+		HR_DATA_SOURCE | 						// bits 0-1
+		(DISTANCE_TRAVELED_ENABLED << 2) | 		// bit 2
+		(context->virtual_speed_flag << 3);   	// bit 3 
+	page.FEState = context->fe_state |			// bits 0-2 
+		(context->lap_toggle << 3);				// bit 3 
+		
+	//page.capabilities = 1;
+	//page.FEState = 2;
 	
 	return &page;
 }
@@ -157,37 +153,14 @@ int main(int argc, char *argv [])
 	irt_context_t context;
 	context.elapsed_time = 154; // # of 1/4 seconds.
 	context.distance = 180;
-	context.speed = 8.6f;
+	context.speed = 8.333f;
+	context.virtual_speed_flag = 1;
 	context.lap_toggle = 1;
-	context.fe_state = IN_USE;
+	context.fe_state = ASLEEP_OFF;
 
 	FEC_Page16* p_page16 = build_page16(&context);
 	print_hex((uint8_t*)p_page16);
-	
-	//page.FEState = 0; // 0 out the state variable.
-	
-	//page.FEState = state;
-	//page.message.FEState.state = IN_USE;
 
-	
-	// context.fe_state.state = IN_USE;
-	// context.fe_state.lap_toggle = 0;
-	// context.capabilities.hr_data_source = 0; // (Default) Invalid. The source of the heart rate data is unknown.
-	// context.capabilities.distance_enabled = 1; // FE will transmit distance.
-	// context.capabilities.virtual_speed_flag = 0; // 0 = real speed, 1 = virtual speed.
-	// context.flags.target_power_limits = TARGET_AT_POWER;
-	// context.trainer_status.bike_power_calibration = 1;
-	// context.trainer_status.resistance_calibration = 0;
-	// context.trainer_status.user_configuration = 0;
-
-	// page.byte7 = (uint8_t)context.capabilities;
-
-	//page.message.byte7 = 0;
-	//page.message.byte7 = 0x40;
-
-	//
-	//printf("watts: %.6f\r\n", 2.4f);
-	//printf("state: %i\r\n", page.FEState);
 	printf("size: %i\r\n", sizeof(fe_state_t));
 	printf("size: %i\r\n", sizeof(irt_context_t));
 	//printf("value: %i\r\n", page.message.FEState);
