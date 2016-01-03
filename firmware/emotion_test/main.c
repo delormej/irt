@@ -210,5 +210,12 @@ int main(int argc, char *argv [])
 	printf("size: %i\r\n", sizeof(irt_context_t));
 	//printf("value: %i\r\n", page.message.FEState);
 
+
+	fe_state_t fe_state;
+	fe_state.lap_toggle = 1;
+	fe_state.state = IN_USE; // 3
+
+	printf("FE state: [%.2x]\r\n", fe_state);
+
 	return 0;
 }
