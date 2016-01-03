@@ -19,7 +19,7 @@ cl test.c ../emotion/libraries/math/acosf.c ../emotion/libraries/math/sqrtf.c ..
 #define HR_DATA_SOURCE 				0	
 #define DISTANCE_TRAVELED_ENABLED	1	
 #define EQUIPMENT_TYPE				25
-#define HEARTRATE_INVALID			0xFF
+#define BYTE_INVALID				0xFF
 
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
 #define LOW_BYTE(word)               		(uint8_t)(word & 0x00FFu)                   /**< Get low byte of a uint16_t. */
@@ -65,19 +65,20 @@ typedef struct __attribute__((packed)) {
 } trainer_status_t; // 4 bits
 
 typedef struct {
+	float			instant_speed_mps;
+	int16_t			instant_power;         										// Note this is a SIGNED int16
+	
+	uint8_t 		distance;	// meters
+	uint8_t 		elapsed_time; // 1/4 seconds
 
-	float speed;
-	uint8_t distance;	// meters
-	uint8_t elapsed_time; // 1/4 seconds
-
-	fe_state_e			fe_state : 3;				// bit field (3 bits)
-	uint8_t				lap_toggle : 1;
-	uint8_t				distance_enabled : 1;
-	uint8_t				virtual_speed_flag : 1;
-	target_power_e		target_power_limits : 2;
-	uint8_t				bike_power_calibration_required : 1;
-	uint8_t				resistance_calibration_required : 1;
-	uint8_t				user_configuration_required : 1;	//	};
+	fe_state_e		fe_state : 3;				// bit field (3 bits)
+	uint8_t			lap_toggle : 1;
+	uint8_t			distance_enabled : 1;
+	uint8_t			virtual_speed_flag : 1;
+	target_power_e	target_power_limits : 2;
+	uint8_t			bike_power_calibration_required : 1;
+	uint8_t			resistance_calibration_required : 1;
+	uint8_t			user_configuration_required : 1;	//	};
 
 } irt_context_t;
 
@@ -95,6 +96,19 @@ typedef struct {
 	uint8_t		FEState : 4;
 	
 } FEC_Page16; // General FE Data Page
+
+typedef struct {
+	uint8_t 	DataPageNumber;
+	uint8_t		UpdateEventCount;
+	uint8_t		InstantCadence;
+	uint8_t		AccumulatedPowerLSB;
+	uint8_t		AccumulatedPowerMSB;
+	uint8_t		InstantPowerLSB;
+	uint8_t		InstantPowerMSB:4;			// Uses 1.5 bytes
+	uint8_t		TrainerStatusBit:4;			
+	uint8_t		Flags:4;
+	uint8_t		FEState:4;
+} FEC_Page25; // Specific Trainer Data Page
 
 // how to store efficently with assignment (structured)
 // how to assign to the message (unstructred ok)
@@ -123,7 +137,7 @@ FEC_Page16* build_page16(irt_context_t* context) {
 
 	static FEC_Page16 page;
 
-	uint16_t speed_int = float_to_int16(context->speed);
+	uint16_t speed_int = float_to_int16(context->instant_speed_mps);
 
 	page.DataPageNumber = 16;
 	page.EquipmentType = EQUIPMENT_TYPE;
@@ -131,7 +145,7 @@ FEC_Page16* build_page16(irt_context_t* context) {
 	page.Distance = context->distance;
 	page.SpeedLSB = LOW_BYTE(speed_int);
 	page.SpeedMSB = HIGH_BYTE(speed_int);
-	page.HeartRate = HEARTRATE_INVALID;
+	page.HeartRate = BYTE_INVALID;
 	page.capabilities = 
 		HR_DATA_SOURCE | 						// bits 0-1
 		(DISTANCE_TRAVELED_ENABLED << 2) | 		// bit 2
@@ -145,21 +159,44 @@ FEC_Page16* build_page16(irt_context_t* context) {
 	return &page;
 }
 
+FEC_Page25* build_page25(irt_context_t* context) {
+	static uint8_t event_count = 253;
+	static uint16_t accumulated_power = 14031;
+	static FEC_Page25 page;
+	
+	page.DataPageNumber = 25;
+	page.UpdateEventCount = event_count;
+	page.InstantCadence = BYTE_INVALID;
+	page.AccumulatedPowerLSB = LOW_BYTE(accumulated_power);
+	page.AccumulatedPowerMSB = HIGH_BYTE(accumulated_power);
+	/* 1.5 bytes used for instantaneous power.  Full 8 bits for byte LSB
+	   only 4 bits used for the MSB. */
+	page.InstantPowerLSB = LOW_BYTE(context->instant_power);
+	page.InstantPowerMSB = (HIGH_BYTE(context->instant_power)) << 4;
+	
+	return &page;
+} 
+
 
 int main(int argc, char *argv [])
 {	
-	//ctx.distance = 205;
-	// ctx.fe_state.fe_state = 
+	// setup some dummy context. 
 	irt_context_t context;
 	context.elapsed_time = 154; // # of 1/4 seconds.
 	context.distance = 180;
-	context.speed = 8.333f;
+	context.instant_speed_mps = 8.333f;
+	context.instant_power = 304;
 	context.virtual_speed_flag = 1;
 	context.lap_toggle = 1;
 	context.fe_state = ASLEEP_OFF;
 
 	FEC_Page16* p_page16 = build_page16(&context);
+	printf("page 16 (0x10): \t");
 	print_hex((uint8_t*)p_page16);
+
+	FEC_Page25* p_page25 = build_page25(&context);
+	printf("page 25 (0x19): \t");
+	print_hex((uint8_t*)p_page25);
 
 	printf("size: %i\r\n", sizeof(fe_state_t));
 	printf("size: %i\r\n", sizeof(irt_context_t));
