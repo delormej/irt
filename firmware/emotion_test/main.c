@@ -40,29 +40,32 @@ typedef enum __attribute__((packed)) {
 	TARGET_UNDETERMINED
 } target_power_e;
 
+/*
 typedef struct  __attribute__((packed)) {
 	target_power_e	target_power_limits : 2;
 	uint8_t			reserved : 2;
 } flags_t; // Flags contains target Power Limits. (Table 6-29)
 
+
 typedef struct __attribute__((packed)) {
 	fe_state_e 	state : 3;			// specific this should only occupy 3 bits.
 	uint8_t		lap_toggle : 1;
-} fe_state_t;
+} fe_state_t; */
 
-/* Only the virtual speed flag wll ever get set in this structure, so we may just do awawy with it? */
+/* Only the virtual speed flag wll ever get set in this structure, so we may just do awawy with it? 
 typedef struct __attribute__((packed)) {
 	uint8_t		hr_data_source : 2;
 	uint8_t		distance_enabled : 1;
 	uint8_t		virtual_speed_flag : 1;
-} capabilities_t;
+} capabilities_t; */
 
+/*
 typedef struct __attribute__((packed)) {
 	uint8_t		bike_power_calibration : 1;
 	uint8_t		resistance_calibration : 1;
 	uint8_t		user_configuration : 1;
 	uint8_t		reserved : 1;
-} trainer_status_t; // 4 bits
+} trainer_status_t; // 4 bits */
 
 typedef struct {
 	float			instant_speed_mps;
@@ -175,11 +178,9 @@ FEC_Page25* build_page25(irt_context_t* context) {
 		(context->resistance_calibration_required << 1) |	// bit 1
 		(context->user_configuration_required << 2) |		// bit 2
 		(0 << 3);											// bit 3 - reserved 
-	
 	page.Flags = context->target_power_limits;
-	
-	page.FEState = context->fe_state |			// bits 0-2 
-		(context->lap_toggle << 3);				// bit 3 
+	page.FEState = context->fe_state |						// bits 0-2 
+		(context->lap_toggle << 3);							// bit 3 
 	
 	return &page;
 } 
@@ -206,16 +207,10 @@ int main(int argc, char *argv [])
 	printf("page 25 (0x19): \t");
 	print_hex((uint8_t*)p_page25);
 
-	printf("size: %i\r\n", sizeof(fe_state_t));
+	//printf("size: %i\r\n", sizeof(fe_state_t));
 	printf("size: %i\r\n", sizeof(irt_context_t));
 	//printf("value: %i\r\n", page.message.FEState);
 
-
-	fe_state_t fe_state;
-	fe_state.lap_toggle = 1;
-	fe_state.state = IN_USE; // 3
-
-	printf("FE state: [%.2x]\r\n", fe_state);
 
 	return 0;
 }
