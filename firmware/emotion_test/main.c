@@ -131,9 +131,6 @@ uint16_t float_to_int16(float f) {
 }
 
 FEC_Page16* build_page16(irt_context_t* context) {	
-	
-	// byte 7 uses two nibbles for bit flags.
-	
 
 	static FEC_Page16 page;
 
@@ -152,14 +149,12 @@ FEC_Page16* build_page16(irt_context_t* context) {
 		(context->virtual_speed_flag << 3);   	// bit 3 
 	page.FEState = context->fe_state |			// bits 0-2 
 		(context->lap_toggle << 3);				// bit 3 
-		
-	//page.capabilities = 1;
-	//page.FEState = 2;
 	
 	return &page;
 }
 
 FEC_Page25* build_page25(irt_context_t* context) {
+	
 	static uint8_t event_count = 253;
 	static uint16_t accumulated_power = 14031;
 	static FEC_Page25 page;
@@ -181,6 +176,11 @@ FEC_Page25* build_page25(irt_context_t* context) {
 		(context->user_configuration_required << 2) |		// bit 2
 		(0 << 3);											// bit 3 - reserved 
 	
+	page.Flags = context->target_power_limits;
+	
+	page.FEState = context->fe_state |			// bits 0-2 
+		(context->lap_toggle << 3);				// bit 3 
+	
 	return &page;
 } 
 
@@ -193,9 +193,10 @@ int main(int argc, char *argv [])
 	context.instant_speed_mps = 8.333f;
 	context.instant_power = 304;
 	context.virtual_speed_flag = 1;
-	context.lap_toggle = 1;
-	context.fe_state = ASLEEP_OFF;
+	context.lap_toggle = 0;
+	context.fe_state = IN_USE;
 	context.user_configuration_required = 1;
+	context.target_power_limits = TARGET_SPEED_TOO_HIGH;
 
 	FEC_Page16* p_page16 = build_page16(&context);
 	printf("page 16 (0x10): \t");
