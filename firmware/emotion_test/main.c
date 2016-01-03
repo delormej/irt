@@ -19,13 +19,20 @@ cl test.c ../emotion/libraries/math/acosf.c ../emotion/libraries/math/sqrtf.c ..
 #define HR_DATA_SOURCE 				0	
 #define DISTANCE_TRAVELED_ENABLED	1	
 #define EQUIPMENT_TYPE				25
-#define BYTE_INVALID				0xFF
+#define CADENCE_INVALID				0xFF
+#define HEARTRATE_INVALID			0xFF
+#define INCLINE_INVALID				0x7FFF
+#define RESISTANCE_INVALID			0xFF
 
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
 #define LOW_BYTE(word)               		(uint8_t)(word & 0x00FFu)                   /**< Get low byte of a uint16_t. */
 
-#define FESTATE_CONTEXT(context)			(context->fe_state |			\	 
-											(context->lap_toggle << 3))			
+#define FESTATE_CONTEXT(context)			(context->fe_state | (context->lap_toggle << 3))			
+
+#define CAPABILITIES_CONTEXT(context) 	\
+		(HR_DATA_SOURCE |	\	
+		(DISTANCE_TRAVELED_ENABLED << 2) |	\	
+		(context->virtual_speed_flag << 3))   	
 
 typedef enum __attribute__((packed)) {
 	RESERVED = 0,
@@ -70,11 +77,33 @@ typedef struct __attribute__((packed)) {
 	uint8_t		reserved : 1;
 } trainer_status_t; // 4 bits */
 
+#define RESISTANCE_SET_STANDARD		0x41
+
+typedef struct user_profile_s {
+	uint8_t		version;					// Version of the profile for future compatibility purposes.
+	uint8_t		reserved;					// Padding (word alignment size is 16 bits).
+	uint16_t	settings;					// Bitmask of feature/settings to turn on/off.
+	uint16_t	total_weight_kg;			// Stored in int format 1/100, e.g. 8181 = 81.81kg
+	uint16_t	wheel_size_mm;
+	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/1,000 e.g. 20741 = 20.741
+	uint16_t	ca_intercept;				// Calibration intercept. This value is inverted on the wire -1/1,000 e.g. 40144 = -40.144
+	uint16_t	ca_temp;					// need Temperature recorded when calibration was set.  See: Bicycling Science (1% drop in Crr proportional to 1 degree change in temp).
+	uint16_t	ca_reserved;				// Placeholder for another calibration value if necessary.
+	int16_t		servo_offset;				// Calibration offset for servo position.
+	//servo_positions_t servo_positions;		// Servo positions (size should be 21 bytes)
+	float		ca_drag;					// Calibration co-efficient of drag which produces the "curve" from a coastdown.
+	float		ca_rr;						// Co-efficient of rolling resistance.
+	//mag_calibration_factors_t ca_mag_factors; // Magnet calibration factors.
+	//uint8_t		reserved_2[7]; // (sizeof(servo_positions_t)+2) % 16];					// For block size alignment -- 16 bit alignment
+} user_profile_t;
+
 typedef struct {
 	// Existing fields.
 	float			instant_speed_mps;
 	int16_t			instant_power;         										// Note this is a SIGNED int16
 	uint8_t 		distance;	// meters	
+	uint8_t 	resistance_mode;
+	uint16_t	resistance_level;
 	
 	//
 	// New state to track.
@@ -114,7 +143,6 @@ typedef struct {
 	uint8_t 	CycleLength;				// Wheel Circumference on a Trainer in meters. 0.01 - 2.54m
 	uint8_t 	InclineLSB;
 	uint8_t 	InclineMSB;
-	uint8_t		ResistanceLevelPersonal; 	// Set to invalid 0xFF.
 	uint8_t		ResistanceLevelFEC; 		// Percentage of maximum applicable resitsance (0-100%)
 	uint8_t		Capabilities:4; 			// Reserved for future, set to: 0x0
 	uint8_t		FEState:4;					//  
@@ -170,7 +198,7 @@ FEC_Page16* build_page16(irt_context_t* context) {
 	page.Distance = context->distance;
 	page.SpeedLSB = LOW_BYTE(speed_int);
 	page.SpeedMSB = HIGH_BYTE(speed_int);
-	page.HeartRate = BYTE_INVALID;
+	page.HeartRate = HEARTRATE_INVALID;
 	page.capabilities = 
 		HR_DATA_SOURCE | 						// bits 0-1
 		(DISTANCE_TRAVELED_ENABLED << 2) | 		// bit 2
@@ -182,6 +210,26 @@ FEC_Page16* build_page16(irt_context_t* context) {
 	return &page;
 }
 
+FEC_Page17* build_page17(irt_context_t* context, user_profile_t* profile) {
+	
+	static FEC_Page17 page;
+	
+	page.DataPageNumber = 17;
+	page.CycleLength = (uint8_t)(profile->wheel_size_mm / 10);	// Convert wheel centimeters.
+	page.InclineLSB = LOW_BYTE(INCLINE_INVALID);
+	page.InclineMSB = HIGH_BYTE(INCLINE_INVALID);
+	
+	if (context->resistance_mode == RESISTANCE_SET_STANDARD)
+		page.ResistanceLevelFEC = (uint8_t)context->resistance_level;
+	else 
+		page.ResistanceLevelFEC = RESISTANCE_INVALID; 
+
+	page.Capabilities = CAPABILITIES_CONTEXT(context);
+	page.FEState = FESTATE_CONTEXT(context);
+	
+	return &page;	
+}
+
 FEC_Page25* build_page25(irt_context_t* context) {
 	
 	static uint8_t event_count = 253;
@@ -190,7 +238,7 @@ FEC_Page25* build_page25(irt_context_t* context) {
 	
 	page.DataPageNumber = 25;
 	page.UpdateEventCount = event_count;
-	page.InstantCadence = BYTE_INVALID;
+	page.InstantCadence = CADENCE_INVALID;
 	page.AccumulatedPowerLSB = LOW_BYTE(accumulated_power);
 	page.AccumulatedPowerMSB = HIGH_BYTE(accumulated_power);
 	/* 1.5 bytes used for instantaneous power.  Full 8 bits for byte LSB
@@ -226,13 +274,28 @@ int main(int argc, char *argv [])
 	context.user_configuration_required = 1;
 	context.target_power_limits = TARGET_SPEED_TOO_HIGH;
 
+	context.resistance_mode = RESISTANCE_SET_STANDARD; 
+	context.resistance_level = 3;
+
+	user_profile_t profile;
+	profile.wheel_size_mm = 2070;
+
 	FEC_Page16* p_page16 = build_page16(&context);
 	printf("page 16 (0x10): \t");
 	print_hex((uint8_t*)p_page16);
 
+	FEC_Page17* p_page17 = build_page17(&context, &profile);
+	printf("page 17 (0x11): \t");
+	print_hex((uint8_t*)p_page17);	
+
 	FEC_Page25* p_page25 = build_page25(&context);
 	printf("page 25 (0x19): \t");
 	print_hex((uint8_t*)p_page25);
+
+	/* Transmission pattern:
+	
+	
+	*/
 
 	//printf("size: %i\r\n", sizeof(fe_state_t));
 	printf("size: %i\r\n", sizeof(irt_context_t));

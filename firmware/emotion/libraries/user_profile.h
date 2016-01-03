@@ -52,7 +52,7 @@ typedef struct user_profile_s {
 	uint8_t		reserved;					// Padding (word alignment size is 16 bits).
 	uint16_t	settings;					// Bitmask of feature/settings to turn on/off.
 	uint16_t	total_weight_kg;			// Stored in int format 1/100, e.g. 8181 = 81.81kg
-	uint16_t	wheel_size_mm;
+	uint16_t	wheel_size_mm;				// Circumference of wheel size in millimeters, e.g. 2070 is 2.07 meters.
 	uint16_t	ca_slope;					// Calibration slope.  Stored in 1/1,000 e.g. 20741 = 20.741
 	uint16_t	ca_intercept;				// Calibration intercept. This value is inverted on the wire -1/1,000 e.g. 40144 = -40.144
 	uint16_t	ca_temp;					// need Temperature recorded when calibration was set.  See: Bicycling Science (1% drop in Crr proportional to 1 degree change in temp).
