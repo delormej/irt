@@ -24,6 +24,8 @@ cl test.c ../emotion/libraries/math/acosf.c ../emotion/libraries/math/sqrtf.c ..
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
 #define LOW_BYTE(word)               		(uint8_t)(word & 0x00FFu)                   /**< Get low byte of a uint16_t. */
 
+#define FESTATE_CONTEXT(context)			(context->fe_state |			\	 
+											(context->lap_toggle << 3))			
 
 typedef enum __attribute__((packed)) {
 	RESERVED = 0,
@@ -39,6 +41,7 @@ typedef enum __attribute__((packed)) {
 	TARGET_SPEED_TOO_HIGH,
 	TARGET_UNDETERMINED
 } target_power_e;
+
 
 /*
 typedef struct  __attribute__((packed)) {
@@ -68,10 +71,15 @@ typedef struct __attribute__((packed)) {
 } trainer_status_t; // 4 bits */
 
 typedef struct {
+	// Existing fields.
 	float			instant_speed_mps;
 	int16_t			instant_power;         										// Note this is a SIGNED int16
+	uint8_t 		distance;	// meters	
 	
-	uint8_t 		distance;	// meters
+	//
+	// New state to track.
+	//
+	
 	uint8_t 		elapsed_time; // 1/4 seconds
 
 	fe_state_e		fe_state : 3;				// bit field (3 bits)
@@ -102,6 +110,18 @@ typedef struct {
 
 typedef struct {
 	uint8_t 	DataPageNumber;
+	uint16_t 	Reserved;
+	uint8_t 	CycleLength;				// Wheel Circumference on a Trainer in meters. 0.01 - 2.54m
+	uint8_t 	InclineLSB;
+	uint8_t 	InclineMSB;
+	uint8_t		ResistanceLevelPersonal; 	// Set to invalid 0xFF.
+	uint8_t		ResistanceLevelFEC; 		// Percentage of maximum applicable resitsance (0-100%)
+	uint8_t		Capabilities:4; 			// Reserved for future, set to: 0x0
+	uint8_t		FEState:4;					//  
+} FEC_Page17; // General Settings Page
+
+typedef struct {
+	uint8_t 	DataPageNumber;
 	uint8_t		UpdateEventCount;
 	uint8_t		InstantCadence;
 	uint8_t		AccumulatedPowerLSB;
@@ -112,6 +132,11 @@ typedef struct {
 	uint8_t		Flags:4;
 	uint8_t		FEState:4;
 } FEC_Page25; // Specific Trainer Data Page
+
+// Page 54
+
+// Page 55
+
 
 // how to store efficently with assignment (structured)
 // how to assign to the message (unstructred ok)
@@ -150,8 +175,9 @@ FEC_Page16* build_page16(irt_context_t* context) {
 		HR_DATA_SOURCE | 						// bits 0-1
 		(DISTANCE_TRAVELED_ENABLED << 2) | 		// bit 2
 		(context->virtual_speed_flag << 3);   	// bit 3 
-	page.FEState = context->fe_state |			// bits 0-2 
-		(context->lap_toggle << 3);				// bit 3 
+/* page.FEState = context->fe_state |			// bits 0-2 
+		(context->lap_toggle << 3);				// bit 3 */ 
+	page.FEState = FESTATE_CONTEXT(context);
 	
 	return &page;
 }
@@ -179,8 +205,9 @@ FEC_Page25* build_page25(irt_context_t* context) {
 		(context->user_configuration_required << 2) |		// bit 2
 		(0 << 3);											// bit 3 - reserved 
 	page.Flags = context->target_power_limits;
-	page.FEState = context->fe_state |						// bits 0-2 
-		(context->lap_toggle << 3);							// bit 3 
+/*	page.FEState = context->fe_state |						// bits 0-2 
+		(context->lap_toggle << 3);							// bit 3 */
+	page.FEState = FESTATE_CONTEXT(context);
 	
 	return &page;
 } 
@@ -210,7 +237,6 @@ int main(int argc, char *argv [])
 	//printf("size: %i\r\n", sizeof(fe_state_t));
 	printf("size: %i\r\n", sizeof(irt_context_t));
 	//printf("value: %i\r\n", page.message.FEState);
-
 
 	return 0;
 }
