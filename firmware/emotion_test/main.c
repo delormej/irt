@@ -77,6 +77,7 @@ typedef struct __attribute__((packed)) {
 	uint8_t		reserved : 1;
 } trainer_status_t; // 4 bits */
 
+#define RESISTANCE_SET_PERCENT		0x40
 #define RESISTANCE_SET_STANDARD		0x41
 
 typedef struct user_profile_s {
@@ -104,6 +105,7 @@ typedef struct {
 	uint8_t 		distance;	// meters	
 	uint8_t 	resistance_mode;
 	uint16_t	resistance_level;
+	uint16_t	servo_position;
 	
 	//
 	// New state to track.
@@ -169,6 +171,15 @@ typedef struct {
 // how to store efficently with assignment (structured)
 // how to assign to the message (unstructred ok)
 
+
+/**@brief		Gets the percentage of total resistance at a given servo position.
+ * @returns		Percentage of maximum resistance (Units: 0.5%, Range: 0-100%).
+ */
+uint8_t resistance_pct_get(uint16_t position) {
+	float resistance_pct =  
+		(float) ((1600 - position) / (1600 - 800.0)) * 200;
+}
+
 void print_hex(uint8_t* buffer) {
 	printf("[BUFFER] [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 			buffer[0],
@@ -219,10 +230,15 @@ FEC_Page17* build_page17(irt_context_t* context, user_profile_t* profile) {
 	page.InclineLSB = LOW_BYTE(INCLINE_INVALID);
 	page.InclineMSB = HIGH_BYTE(INCLINE_INVALID);
 	
-	if (context->resistance_mode == RESISTANCE_SET_STANDARD)
-		page.ResistanceLevelFEC = (uint8_t)context->resistance_level;
-	else 
-		page.ResistanceLevelFEC = RESISTANCE_INVALID; 
+	// In basic modes, calculate percentage.
+	switch (context->resistance_mode) 
+	{
+		case RESISTANCE_SET_STANDARD:
+		case RESISTANCE_SET_PERCENT:
+			page.ResistanceLevelFEC = resistance_pct_get(context->servo_position);
+		default:
+			page.ResistanceLevelFEC = RESISTANCE_INVALID;
+	} 
 
 	page.Capabilities = CAPABILITIES_CONTEXT(context);
 	page.FEState = FESTATE_CONTEXT(context);
@@ -232,10 +248,15 @@ FEC_Page17* build_page17(irt_context_t* context, user_profile_t* profile) {
 
 FEC_Page25* build_page25(irt_context_t* context) {
 	
-	static uint8_t event_count = 253;
+	static uint8_t event_count = 6;
 	static uint16_t accumulated_power = 14031;
 	static FEC_Page25 page;
+
+	// Increment static fields.
+	event_count++;
+	accumulated_power += context->instant_power;
 	
+	// Update the page.
 	page.DataPageNumber = 25;
 	page.UpdateEventCount = event_count;
 	page.InstantCadence = CADENCE_INVALID;
@@ -294,11 +315,14 @@ int main(int argc, char *argv [])
 
 	/* Transmission pattern:
 	
+	page 16: sent at least twice consecutively every 4 messages, or exactly once every 5th message.
+	page 17: at least once every 20 messages (see section 6.5)
+	
 	
 	*/
 
 	//printf("size: %i\r\n", sizeof(fe_state_t));
-	printf("size: %i\r\n", sizeof(irt_context_t));
+	//printf("res: %i\r\n", (uint8_t)resistance_pct);
 	//printf("value: %i\r\n", page.message.FEState);
 
 	return 0;

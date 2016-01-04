@@ -201,6 +201,20 @@ uint8_t resistance_level_count()
 	return mp_user_profile->servo_positions.count;
 }
 
+/**@brief		Gets the percentage of total resistance at a given servo position.
+ * @returns		Percentage of maximum resistance (Units: 0.5%, Range: 0-100%).
+ */
+uint8_t resistance_pct_get(uint16_t position)
+{
+	// Subtract position from min position, divide by full range,
+	// multiply by 200 to remove the decimal and represent units of 0.5%.
+	float resistance_pct = (float) 
+		((MAGNET_POSITION_MIN_RESISTANCE - position) /
+		(MAGNET_POSITION_MIN_RESISTANCE - MAGNET_POSITION_MAX_RESISTANCE)) * 200;
+		
+	return (uint8_t)resistance_pct;
+}
+
 uint16_t resistance_pct_set(float percent)
 {
 	/*

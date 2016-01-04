@@ -25,11 +25,11 @@
 #define COMMAND_STATUS_PAGE			71
 
 typedef enum {
-	RESERVED = 0;
-	ASLEEP_OFF;
-	READY;
-	IN_USE;
-	FINISHED_PAUSED;	
+	RESERVED = 0,
+	ASLEEP_OFF,
+	READY,
+	IN_USE,
+	FINISHED_PAUSED	
 } FE_State;	// Used in FE State bit.
 
 typedef struct {

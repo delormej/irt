@@ -129,6 +129,11 @@ uint16_t resistance_level_set(uint8_t level);
   */
 uint8_t resistance_level_count(void);
 
+/**@brief		Gets the percentage of total resistance at a given servo position.
+ * @returns		Percentage of maximum resistance (Units: 0.5%, Range: 0-100%).
+ */
+uint8_t resistance_pct_get(uint16_t position);
+
 /**@brief		Sets the resistance to a value 0-100 percent.
  *
  */
