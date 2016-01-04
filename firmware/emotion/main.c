@@ -53,6 +53,7 @@
 #include "ble_ant.h"
 #include "ant_bike_power.h"
 #include "ant_bike_speed.h"
+#include "ant_fec.h"
 #include "nrf_delay.h"
 #include "ant_ctrl.h"
 #include "app_timer.h"
@@ -758,6 +759,9 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Transmit the power messages.
 	cycling_power_send(&m_current_state);
+
+	// Transmit FE-C messages.
+	ant_fec_tx_send(&m_current_state);
 
 	// Send speed data.
 	ant_sp_tx_send(m_current_state.last_wheel_event_2048 / 2, 	// Requires 1/1024 time

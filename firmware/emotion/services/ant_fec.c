@@ -21,7 +21,6 @@
 #define ANT_FEC_MSG_PERIOD            0x2000                                     	/**< Message Periods, decimal 8192 (~4.00Hz) data is transmitted every 8192/32768 seconds. */
 #define ANT_FEC_EXT_ASSIGN            0	                                            /**< ANT Ext Assign. */
 
-static uint8_t tx_buffer[TX_BUFFER_SIZE];
 static ant_ble_evt_handlers_t* mp_evt_handlers;
 static uint8_t m_event_count = 0;	
 
@@ -60,23 +59,6 @@ static uint32_t GeneralFEDataPage_Send(irt_context_t* context)
 static uint32_t GeneralSettingsPage_Send();
 static uint32_t SpecificTrainerDataPage_Send();
 static uint32_t SpecificTrainerTorqueDataPage_Send();
-
-/**@brief	Wrapper for sending broadcast message on this channel.
-*/
-static uint32_t broadcast_message_transmit()
-{
-	uint32_t err_code;
-
-	err_code = sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
-
-	if (ANT_ERROR_AS_WARN(err_code))
-	{
-		//BP_LOG("[FEC]:broadcast_message_transmit WARN:%#.8x\r\n", err_code);
-		err_code = NRF_SUCCESS;
-	}
-	
-	return err_code;
-}
 
 /**@brief	Sets initial state for FE-C (Fitness Equipment-Control).
  */
@@ -137,6 +119,8 @@ void ant_fec_tx_send(irt_context_t * p_power_meas)
 	// TODO: If this is the first time, call...
 	state_init(p_power_meas);
 
+	// Just keep sending page 16 for right now.
+	GeneralFEDataPage_Send(p_power_meas);
 }
 
 /**@brief	Handle messages sent from ANT+ FE-C display.

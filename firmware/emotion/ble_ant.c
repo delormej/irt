@@ -28,6 +28,7 @@
 #include "irt_peripheral.h"
 #include "ant_bike_power.h"
 #include "ant_bike_speed.h"
+#include "ant_fec.h"
 #include "ble_dis.h"
 #include "ble_cps.h"
 #include "ble_gap.h"
@@ -319,6 +320,9 @@ static void services_init() {
 
 	// Initialize ANT bike power channel.
 	ant_bp_tx_init(mp_ant_ble_evt_handlers);
+
+	// Initialize ANT+ FE-C transmit channel.
+	ant_fec_tx_init(mp_ant_ble_evt_handlers);
 
 	// Initialize the ANT+ remote control service.
 	ant_ctrl_tx_init(ANT_CTRL_CHANNEL,
@@ -678,6 +682,9 @@ void ble_ant_start() {
 
 	// Open the ANT channel for transmitting power.
 	ant_bp_tx_start();
+	
+	// Open the ANT channel for transmitting FE-C.
+	ant_fec_tx_start();
 
 	// Open the ANT channel for transimitting speed.
 	ant_sp_tx_start();
