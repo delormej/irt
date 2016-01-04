@@ -40,7 +40,7 @@ static uint32_t broadcast_message_transmit()
 
 	if (ANT_ERROR_AS_WARN(err_code))
 	{
-		BP_LOG("[FEC]:broadcast_message_transmit WARN:%#.8x\r\n", err_code);
+		//BP_LOG("[FEC]:broadcast_message_transmit WARN:%#.8x\r\n", err_code);
 		err_code = NRF_SUCCESS;
 	}
 	

@@ -25,11 +25,6 @@
 #define COMMAND_STATUS_PAGE			71
 
 typedef struct {
-	FE_State 	state:3;
-	bool		lap_toggle;
-} FE_State_Field;
-
-typedef struct {
 	uint8_t 	DataPageNumber;
 	uint8_t 	EquipmentType;
 	uint8_t 	ElapsedTime;
@@ -37,8 +32,11 @@ typedef struct {
 	uint8_t 	SpeedLSB;
 	uint8_t 	SpeedMSB;
 	uint8_t 	HeartRate;
+	/* On the wire FEState bits appear in most significant nibble, before capabilities
+	   nibble. bit 0 of EACH nibble (4 bits) is the right most bit (least significant). */
 	uint8_t 	Capabilities:4;
 	uint8_t 	FEState:4;
+	
 } FEC_Page16; // General FE Data Page
 
 typedef struct {
@@ -47,7 +45,6 @@ typedef struct {
 	uint8_t 	CycleLength;				// Wheel Circumference on a Trainer in meters. 0.01 - 2.54m
 	uint8_t 	InclineLSB;
 	uint8_t 	InclineMSB;
-	uint8_t		ResistanceLevelPersonal; 	// Set to invalid 0xFF.
 	uint8_t		ResistanceLevelFEC; 		// Percentage of maximum applicable resitsance (0-100%)
 	uint8_t		Capabilities:4; 			// Reserved for future, set to: 0x0
 	uint8_t		FEState:4;					//  
