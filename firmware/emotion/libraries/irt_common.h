@@ -174,7 +174,6 @@ typedef struct
 	uint8_t 		elapsed_time; 											// 1/4 seconds
 	fe_state_e		fe_state : 3;
 	uint8_t			lap_toggle : 1;
-	uint8_t			distance_enabled : 1;
 	uint8_t			virtual_speed_flag : 1;
 	target_power_e	target_power_limits : 2;
 	uint8_t			bike_power_calibration_required : 1;
