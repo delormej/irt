@@ -80,6 +80,8 @@ irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, user_profile_
  */
 irt_resistance_state_t* resistance_state_get(void)
 {
+	// TODO: Should this return an immutable object to enforce all state changes
+	// happen in this module? 
 	return &m_resistance_state;
 }
 
