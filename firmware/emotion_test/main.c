@@ -34,12 +34,12 @@ cl test.c ../emotion/libraries/math/acosf.c ../emotion/libraries/math/sqrtf.c ..
 		(DISTANCE_TRAVELED_ENABLED << 2) |	\	
 		(context->virtual_speed_flag << 3))   	
 
-typedef enum __attribute__((packed)) {
-	RESERVED = 0,
-	ASLEEP_OFF,
-	READY,
-	IN_USE,
-	FINISHED_PAUSED
+typedef enum  {
+	FE_RESERVED = 0,
+	FE_ASLEEP_OFF,
+	FE_READY,
+	FE_IN_USE,
+	FE_FINISHED_PAUSED
 } fe_state_e;	// Used in FE State bit.
 
 typedef enum __attribute__((packed)) {
@@ -192,7 +192,7 @@ void print_hex(uint8_t* buffer) {
 			buffer[7]);
 }
 
-uint16_t float_to_int16(float f) {
+uint16_t speed_mps_to_int16(float f) {
 	uint16_t i = (uint16_t)(f * 1000.0f);
 	return i;
 }
@@ -201,7 +201,7 @@ FEC_Page16* build_page16(irt_context_t* context) {
 
 	static FEC_Page16 page;
 
-	uint16_t speed_int = float_to_int16(context->instant_speed_mps);
+	uint16_t speed_int = speed_mps_to_int16(context->instant_speed_mps);
 
 	page.DataPageNumber = 16;
 	page.EquipmentType = EQUIPMENT_TYPE;
@@ -291,7 +291,7 @@ int main(int argc, char *argv [])
 	context.instant_power = 304;
 	context.virtual_speed_flag = 1;
 	context.lap_toggle = 0;
-	context.fe_state = IN_USE;
+	context.fe_state = FE_IN_USE;
 	context.user_configuration_required = 1;
 	context.target_power_limits = TARGET_SPEED_TOO_HIGH;
 
@@ -317,7 +317,17 @@ int main(int argc, char *argv [])
 	
 	page 16: sent at least twice consecutively every 4 messages, or exactly once every 5th message.
 	page 17: at least once every 20 messages (see section 6.5)
+	page 25: once every 5 messages (see section 6.5)
+	pages (48-51): -- transmitted by the open display
 	
+	On Demand pages: capabilities data page and configuration data page, as requested by page 70
+		see section 6.10 
+	
+	Background pages interleaved ithe broadcast pattern at a minimum rate o 2 consecutive background pages every 66 pages.
+	Each background page is transmitted twice consecutively at least once every 132 messages.
+	
+	16, 16, 25, 17 ... 16, 16, 25, 255 ... 16, 16, 25, 17 ... 16, 16, 25, 255 
+	 .{64 pages}. 80 80 .{64 pages}. 81, 81  
 	
 	*/
 

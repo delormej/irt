@@ -119,6 +119,25 @@ typedef struct irt_battery_status_s
 	uint32_t	operating_time;
 } irt_battery_status_t;
 
+/**@brief FE-C Specific device state.
+ */
+typedef enum  {
+	FE_RESERVED = 0,
+	FE_ASLEEP_OFF,
+	FE_READY,
+	FE_IN_USE,
+	FE_FINISHED_PAUSED
+} fe_state_e;	// Used in FE State bit.
+
+/**@brief Possible states for power target.
+ */
+typedef enum {
+	TARGET_AT_POWER = 0,													// Able to hit target at current speed.
+	TARGET_SPEED_TOO_LOW,													// Rider must speed up in order to hit power target.
+	TARGET_SPEED_TOO_HIGH,													// Rider must slow down in order to lower power to target.
+	TARGET_UNDETERMINED														// Undetermined.
+} target_power_e;
+
 /**@brief Cycling Power Service measurement type. */
 typedef struct
 {
@@ -148,6 +167,19 @@ typedef struct
 	uint8_t		accel_y_msb;
 
 	irt_battery_status_t battery_status;
+	
+	//
+	// FE-C State maintained.
+	//
+	uint8_t 		elapsed_time; 											// 1/4 seconds
+	fe_state_e		fe_state : 3;
+	uint8_t			lap_toggle : 1;
+	uint8_t			distance_enabled : 1;
+	uint8_t			virtual_speed_flag : 1;
+	target_power_e	target_power_limits : 2;
+	uint8_t			bike_power_calibration_required : 1;
+	uint8_t			resistance_calibration_required : 1;
+	uint8_t			user_configuration_required : 1;		
 } irt_context_t;
 
 //
