@@ -47,6 +47,19 @@ static uint32_t broadcast_message_transmit()
 	return err_code;
 }
 
+/**@brief	Sets initial state for FE-C (Fitness Equipment-Control).
+ */
+static void state_init(irt_context_t* p_context)
+{
+	p_context->elapsed_time = 0;
+	p_context->fe_state = FE_ASLEEP_OFF;
+	p_context->lap_toggle = 0;
+	p_context->virtual_speed_flag = 0;
+	p_context->target_power_limits = TARGET_UNDETERMINED;
+	p_context->bike_power_calibration_required = 0;
+	p_context->resistance_calibration_required = 0;
+	p_context->user_configuration_required = 0;
+}
 
 /**@brief	Initialize the ANT+ FE-C profile and register callbacks.
  */
@@ -90,7 +103,9 @@ void ant_fec_tx_start(void)
  */
 void ant_fec_tx_send(irt_context_t * p_power_meas)
 {
-	
+	// TODO: If this is the first time, call...
+	state_init(p_power_meas);
+
 }
 
 /**@brief	Handle messages sent from ANT+ FE-C display.

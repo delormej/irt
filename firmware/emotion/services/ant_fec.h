@@ -24,14 +24,6 @@
 #define TRACK_RESISTANCE_PAGE		51
 #define COMMAND_STATUS_PAGE			71
 
-typedef enum {
-	RESERVED = 0,
-	ASLEEP_OFF,
-	READY,
-	IN_USE,
-	FINISHED_PAUSED	
-} FE_State;	// Used in FE State bit.
-
 typedef struct {
 	FE_State 	state:3;
 	bool		lap_toggle;
@@ -115,8 +107,8 @@ void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers);
 
 void ant_fec_tx_start(void);
 
-void ant_fec_tx_send(irt_context_t * p_power_meas);
+void ant_fec_tx_send(irt_context_t* p_power_meas);
 
-void ant_fec_rx_handle(ant_evt_t * p_ant_evt);
+void ant_fec_rx_handle(ant_evt_t* p_ant_evt);
 
 #endif	// ANT_FE_C_H__
