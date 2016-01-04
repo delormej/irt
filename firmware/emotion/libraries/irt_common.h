@@ -171,7 +171,8 @@ typedef struct
 	//
 	// FE-C State maintained.
 	//
-	uint8_t 		elapsed_time; 											// 1/4 seconds
+	uint8_t 		elapsed_time; 											// 1/4 seconds since the start of the workout.
+	uint8_t			distance_m;												// Meters travelled since the start of the workout. 
 	fe_state_e		fe_state : 3;
 	uint8_t			lap_toggle : 1;
 	uint8_t			virtual_speed_flag : 1;

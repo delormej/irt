@@ -24,6 +24,31 @@
 #define TRACK_RESISTANCE_PAGE		51
 #define COMMAND_STATUS_PAGE			71
 
+#define HR_DATA_SOURCE 				0	
+#define DISTANCE_TRAVELED_ENABLED	1	
+#define EQUIPMENT_TYPE				25
+#define CADENCE_INVALID				0xFF
+#define HEARTRATE_INVALID			0xFF
+#define INCLINE_INVALID				0x7FFF
+#define RESISTANCE_INVALID			0xFF
+
+/**@ brief	Macro to set the value of FE State bit field (nibble) from irt_context_t. 	
+				fe_state 			// bits 0-2 
+				lap_toggle 			// bit 3 
+ */
+#define FESTATE_CONTEXT(context) \
+		(context->fe_state | (context->lap_toggle << 3))			
+
+/**@ brief	Macro to set the value of FE capabilities bit field (nibble) from irt_context_t.
+		HR_DATA_SOURCE  						// bits 0-1
+		DISTANCE_TRAVELED_ENABLED 				// bit 2
+		virtual_speed_flag   					// bit 3
+ */
+#define CAPABILITIES_CONTEXT(context) \
+		(HR_DATA_SOURCE | \	
+		(DISTANCE_TRAVELED_ENABLED << 2) | \	
+		(context->virtual_speed_flag << 3))   	
+
 typedef struct {
 	uint8_t 	DataPageNumber;
 	uint8_t 	EquipmentType;
@@ -36,7 +61,6 @@ typedef struct {
 	   nibble. bit 0 of EACH nibble (4 bits) is the right most bit (least significant). */
 	uint8_t 	Capabilities:4;
 	uint8_t 	FEState:4;
-	
 } FEC_Page16; // General FE Data Page
 
 typedef struct {

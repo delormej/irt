@@ -25,7 +25,38 @@ static uint8_t tx_buffer[TX_BUFFER_SIZE];
 static ant_ble_evt_handlers_t* mp_evt_handlers;
 static uint8_t m_event_count = 0;	
 
-static uint32_t GeneralFEDataPage_Send();
+/**@brief	Converts speed in mps as float into a dword.
+ */
+static uint16_t speed_mps_to_int16(float f) {
+	// Speed is sent in 0.001 m/s, removing the decimal point to represent int.
+	uint16_t i = (uint16_t)(f * 1000.0f);
+	return i;
+}
+
+/**@brief 	Builds and transmits General FE Dat page from irt_context_t.
+ */
+static uint32_t GeneralFEDataPage_Send(irt_context_t* context)
+{
+	static FEC_Page16 page;
+	uint32_t err_code = 0;
+	uint16_t speed_int = speed_mps_to_int16(context->instant_speed_mps);
+
+	page.DataPageNumber = 16;
+	page.EquipmentType = EQUIPMENT_TYPE;
+	page.ElapsedTime = context->elapsed_time;
+	page.Distance = context->distance_m;
+	page.SpeedLSB = LOW_BYTE(speed_int);
+	page.SpeedMSB = HIGH_BYTE(speed_int);
+	page.HeartRate = HEARTRATE_INVALID;
+	page.Capabilities = CAPABILITIES_CONTEXT(context); 
+	page.FEState = FESTATE_CONTEXT(context);
+	
+	err_code = sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&page);
+
+	return err_code;
+}
+
 static uint32_t GeneralSettingsPage_Send();
 static uint32_t SpecificTrainerDataPage_Send();
 static uint32_t SpecificTrainerTorqueDataPage_Send();
