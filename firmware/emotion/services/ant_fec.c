@@ -56,9 +56,9 @@ static uint32_t GeneralFEDataPage_Send(irt_context_t* context)
 	return err_code;
 }
 
-static uint32_t GeneralSettingsPage_Send();
-static uint32_t SpecificTrainerDataPage_Send();
-static uint32_t SpecificTrainerTorqueDataPage_Send();
+static uint32_t GeneralSettingsPage_Send() {return 0;}
+static uint32_t SpecificTrainerDataPage_Send() {return 0;}
+static uint32_t SpecificTrainerTorqueDataPage_Send() {return 0;}
 
 /**@brief	Sets initial state for FE-C (Fitness Equipment-Control).
  */
@@ -116,11 +116,66 @@ void ant_fec_tx_start(void)
  */
 void ant_fec_tx_send(irt_context_t * p_power_meas)
 {
+    static uint8_t count = 0; 
+    
 	// TODO: If this is the first time, call...
 	state_init(p_power_meas);
-
-	// Just keep sending page 16 for right now.
-	GeneralFEDataPage_Send(p_power_meas);
+    
+    // xor , then flip ~, and with a bunch of 00s
+    /* Binary patterns that match last 2 bits (*):
+        0   0000 *
+        1   0001 **
+        2   0010 ***
+        3   0011 -
+        4   0100 *
+        5   0101 **
+        6   0110 ***
+        7   0111 --
+        
+        Message Pattern:
+        16 26 25 17  16 26 25 255 .{64 messages}. 80 80 .{64 messages}. 81 81
+    */
+    if (count == 128 || count == 129)
+    {
+        // Send this page twice consecutively.
+        ant_common_page_transmit(ANT_FEC_TX_CHANNEL, ant_product_page);
+    }
+    else if (count == 64 || count == 65)
+    {
+        // Send this page twice consecutively.
+        ant_common_page_transmit(ANT_FEC_TX_CHANNEL, ant_manufacturer_page);
+    }
+    else if (  (~(0b01 ^ count) & 3) == 3  )
+    {
+        // Message sequence 1 & 5: Page 26.
+        SpecificTrainerTorqueDataPage_Send();
+    }
+    else if (  (~(0b10 ^ count) & 3) == 3  )
+    {
+        // Message sequence 2 & 6: Page 25.
+        SpecificTrainerDataPage_Send();
+    }
+    else if (  (~(0b111 ^ count) & 7) == 7  )
+    {
+        // Message sequence 7: Manufacturer specific page.
+        // Send IRT specific Extra_info_page.
+    }       
+    else if (  (~(0b11 ^ count) & 3) == 3  )
+    {
+        // Message sequence 3: Page 17.
+        GeneralSettingsPage_Send();
+    }     
+    else 
+    {
+        // Default message, page 16.
+        GeneralFEDataPage_Send(p_power_meas);    
+    }
+    
+    // Reset after two complete, or increment.
+    if (count == 129)
+        count = 0;
+    else 
+        count++;
 }
 
 /**@brief	Handle messages sent from ANT+ FE-C display.

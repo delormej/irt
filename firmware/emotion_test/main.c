@@ -300,17 +300,79 @@ int main(int argc, char *argv [])
 	user_profile_t profile;
 	profile.wheel_size_mm = 2070;
 
-	FEC_Page16* p_page16 = build_page16(&context);
-	printf("page 16 (0x10): \t");
-	print_hex((uint8_t*)p_page16);
+    uint8_t i = 0; // message sequence
 
-	FEC_Page17* p_page17 = build_page17(&context, &profile);
-	printf("page 17 (0x11): \t");
-	print_hex((uint8_t*)p_page17);	
 
-	FEC_Page25* p_page25 = build_page25(&context);
-	printf("page 25 (0x19): \t");
-	print_hex((uint8_t*)p_page25);
+    while (i < 255) 
+    {
+        // xor , then flip ~, and with a bunch of 00s
+        
+        /* Binary patterns that match last 2 bits (*):
+            0   0000 *
+            1   0001 **
+            2   0010 ***
+            3   0011 -
+            4   0100 *
+            5   0101 **
+            6   0110 ***
+            7   0111 --
+            
+            Message Pattern:
+            16 26 25 17  16 26 25 255 .{64 messages}. 80 80 .{64 messages}. 81 81
+            
+        */
+        
+        if (i == 128 || i == 129)
+        {
+            printf("%i:\t81\r\n", i);
+        }
+        else if (i == 64 || i == 65)
+        {
+            printf("%i:\t80\r\n", i);
+        }
+        else if (  (~(0b01 ^ i) & 3) == 3  )
+        {
+            // Messages 1 & 5
+            printf("%i:\t26\r\n", i);
+        }
+        else if (  (~(0b10 ^ i) & 3) == 3  )
+        {
+            // Messages 2 & 6
+            printf("%i:\t25\r\n", i);
+        }
+        else if (  (~(0b111 ^ i) & 7) == 7  )
+        {
+            // Message 7
+            printf("%i:\t255\r\n", i);
+        }       
+        else if (  (~(0b11 ^ i) & 3) == 3  )
+        {
+            // Message 3
+            printf("%i:\t17\r\n", i);
+        }     
+        else 
+        {
+            printf("%i:\t16\r\n", i);    
+        }
+          
+        /*else
+        {
+            printf("%i\tmissed.\r\n", i);
+        }*/
+/*        
+        FEC_Page17* p_page17 = build_page17(&context, &profile);
+        printf("%i\tpage 17 (0x11): \t", i);
+        print_hex((uint8_t*)p_page17);	
+
+        FEC_Page25* p_page25 = build_page25(&context);
+        printf("%i\tpage 25 (0x19): \t", i);
+        print_hex((uint8_t*)p_page25);
+*/        
+        i++;
+        
+        if (i > 129)
+            i = 0;
+    }
 
 	/* Transmission pattern:
 	
@@ -324,7 +386,7 @@ int main(int argc, char *argv [])
 	
 	Background pages interleaved ithe broadcast pattern at a minimum rate o 2 consecutive background pages every 66 pages.
 	Each background page is transmitted twice consecutively at least once every 132 messages.
-	
+	0   1   2   3      4   5   6   7
 	16, 16, 25, 17 ... 16, 16, 25, 255 ... 16, 16, 25, 17 ... 16, 16, 25, 255 
 	 .{64 pages}. 80 80 .{64 pages}. 81, 81  
 	
