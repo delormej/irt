@@ -12,6 +12,8 @@
 #include "app_error.h"
 #include "nordic_common.h"
 #include "irt_common.h"
+#include "user_profile.h"
+#include "resistance.h"
 #include "debug.h"
 
 
@@ -22,7 +24,6 @@
 #define ANT_FEC_EXT_ASSIGN            0	                                            /**< ANT Ext Assign. */
 
 static ant_ble_evt_handlers_t* mp_evt_handlers;
-static uint8_t m_event_count = 0;	
 
 /**@brief	Converts speed in mps as float into a dword.
  */
@@ -32,12 +33,12 @@ static uint16_t speed_mps_to_int16(float f) {
 	return i;
 }
 
-/**@brief 	Builds and transmits General FE Dat page from irt_context_t.
+/**@brief 	Builds and transmits General FE Data page (Page 16) from irt_context_t.
  */
 static uint32_t GeneralFEDataPage_Send(irt_context_t* context)
 {
 	static FEC_Page16 page;
-	uint32_t err_code = 0;
+
 	uint16_t speed_int = speed_mps_to_int16(context->instant_speed_mps);
 
 	page.DataPageNumber = 16;
@@ -50,13 +51,38 @@ static uint32_t GeneralFEDataPage_Send(irt_context_t* context)
 	page.Capabilities = CAPABILITIES_CONTEXT(context); 
 	page.FEState = FESTATE_CONTEXT(context);
 	
-	err_code = sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		(uint8_t*)&page);
-
-	return err_code;
 }
 
-static uint32_t GeneralSettingsPage_Send() {return 0;}
+/**@brief   Builds and transmits General Settings page (Page 17) from irt_context_t.
+ */ 
+static uint32_t GeneralSettingsPage_Send(irt_context_t* context) 
+{
+	static FEC_Page17 page;
+	
+	page.DataPageNumber = 17;
+	//page.CycleLength = (uint8_t)(profile->wheel_size_mm / 10);	// Convert wheel centimeters.
+	page.InclineLSB = LOW_BYTE(INCLINE_INVALID);
+	page.InclineMSB = HIGH_BYTE(INCLINE_INVALID);
+	
+	// In basic modes, calculate percentage.
+	switch (context->resistance_mode) 
+	{
+		case RESISTANCE_SET_STANDARD:
+		case RESISTANCE_SET_PERCENT:
+			page.ResistanceLevelFEC = resistance_pct_get(context->servo_position);
+		default:
+			page.ResistanceLevelFEC = RESISTANCE_INVALID;
+	} 
+
+	page.Capabilities = CAPABILITIES_CONTEXT(context);
+	page.FEState = FESTATE_CONTEXT(context);
+	
+	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&page);    
+}
+
 static uint32_t SpecificTrainerDataPage_Send() {return 0;}
 static uint32_t SpecificTrainerTorqueDataPage_Send() {return 0;}
 
@@ -163,7 +189,7 @@ void ant_fec_tx_send(irt_context_t * p_power_meas)
     else if (  (~(0b11 ^ count) & 3) == 3  )
     {
         // Message sequence 3: Page 17.
-        GeneralSettingsPage_Send();
+        GeneralSettingsPage_Send(p_power_meas);
     }     
     else 
     {
