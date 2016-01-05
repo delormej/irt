@@ -79,11 +79,8 @@
 #define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE,\
                                             BLE_STACK_HANDLER_SCHED_EVT_SIZE)       /**< Maximum size of scheduler events. */
 //
-// Default profile and simulation values.
+// Default simulation values.
 //
-#define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
-#define DEFAULT_TOTAL_WEIGHT_KG			8180ul 										// Default weight (convert 180.0lbs to KG).
-#define DEFAULT_SETTINGS				SETTING_INVALID								// Default 32bit field of settings.
 #define CRR_ADJUST_VALUE				1											// Amount to adjust (up/down) CRR on button command.
 #define SHUTDOWN_VOLTS					6											// Shut the device down when battery drops below 6.0v
 
@@ -101,7 +98,7 @@ static app_timer_id_t               	m_ant_4hz_timer_id;                    		//
 static app_timer_id_t					m_sensor_read_timer_id;						// Timer used to read sensors, out of phase from the 4hz messages.
 static app_timer_id_t					m_ca_timer_id;								// Calibration timer.
 
-static user_profile_t  					m_user_profile __attribute__ ((aligned (4))); // Force required 4-byte alignment of struct loaded from flash.
+static user_profile_t*                  mp_user_profile;                             // Pointer to user profile object.
 static accelerometer_data_t 			m_accelerometer_data;
 static const irt_resistance_state_t* 	mp_resistance_state;
 
@@ -110,17 +107,6 @@ static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote 
 static uint32_t 						m_battery_start_ticks __attribute__ ((section (".NoInit")));			// Time (in ticks) when we started running on battery.
 
 static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
-
-static bool								m_profile_updating;
-
-// Type declarations for profile updating.
-static void profile_update_sched_handler(void *p_event_data, uint16_t event_size);
-static void profile_update_sched(void);
-static void profile_update_pstorage_cb_handler(pstorage_handle_t *  p_handle,
-                                  uint8_t              op_code,
-                                  uint32_t             result,
-                                  uint8_t *            p_data,
-                                  uint32_t             data_len);
 
 static void on_get_parameter(ant_request_data_page_t* p_request);
 static void send_temperature();
@@ -275,16 +261,16 @@ static void set_wheel_params(uint16_t value)
 	// Comes as 20700 for example, we'll round to nearest mm.
 	wheel_size = value / 10;
 
-	if (m_user_profile.wheel_size_mm != wheel_size && wheel_size > 1800)
+	if (mp_user_profile->wheel_size_mm != wheel_size && wheel_size > 1800)
 	{
 		LOG("[MAIN]:set_wheel_params {wheel:%lu}\r\n", wheel_size);
 
-		m_user_profile.wheel_size_mm = wheel_size;
+		mp_user_profile->wheel_size_mm = wheel_size;
 		// Schedule an update to persist the profile to flash.
-		profile_update_sched();
+		user_profile_store();
 
 		// Call speed module to update the wheel size.
-		speed_wheel_size_set(m_user_profile.wheel_size_mm);
+		speed_wheel_size_set(mp_user_profile->wheel_size_mm);
 	}
 }
 
@@ -301,15 +287,15 @@ static void set_sim_params(uint8_t *pBuffer)
 
 	if (weight > 30.0f) // minimum weight.
 	{
-		if (m_user_profile.total_weight_kg != weight)
+		if (mp_user_profile->total_weight_kg != weight)
 		{
-			m_user_profile.total_weight_kg = weight;
+			mp_user_profile->total_weight_kg = weight;
 
 			// Schedule an update to persist the profile to flash.
-			profile_update_sched();
+			user_profile_store();
 
 			// Re-initialize the power module with updated weight.
-			power_init(&m_user_profile);
+			power_init(mp_user_profile);
 		}
 	}
 
@@ -326,7 +312,7 @@ static void set_sim_params(uint8_t *pBuffer)
 
 	/*
 	LOG("[MAIN]:set_sim_params {weight:%.2f, crr:%i, c:%i}\r\n",
-		(m_user_profile.total_weight_kg / 100.0f),
+		(mp_user_profile->total_weight_kg / 100.0f),
 		(uint16_t)(m_sim_forces.crr * 10000),
 		(uint16_t)(m_sim_forces.c * 1000) ); */
 }
@@ -403,209 +389,6 @@ static void acknowledge_resistance()
 			bp_queue_resistance_ack(mp_resistance_state->mode, 0);
 			break;
 	}
-}
-
-/**@brief	Initializes user profile and loads from flash.  Sets defaults for
- * 				simulation parameters if not set.
- */
-static void profile_init(void)
-{
-		uint32_t err_code;
-
-		m_profile_updating = false;
-
-		err_code = user_profile_init(profile_update_pstorage_cb_handler);
-		APP_ERROR_CHECK(err_code);
-
-		// Initialize hard coded user profile for now.
-		memset(&m_user_profile, 0, sizeof(m_user_profile));
-
-		// Attempt to load stored profile from flash.
-		err_code = user_profile_load(&m_user_profile);
-		APP_ERROR_CHECK(err_code);
-
-		// TODO: this should be refactored into profile class?
-		// should all DEFAULT_x defines live in profile.h? The reason they don't today is that
-		// certain settings don't live in the profile - so it makes sense to keep all the default DEFINES together
-		// Check profile defaults.
-
-		//
-		// Check the version of the profile, if it's not the current version
-		// set the default parameters.
-		//
-		if (m_user_profile.version != PROFILE_VERSION)
-		{
-			LOG("[MAIN]: Older profile version %i. Setting defaults where needed.\r\n",
-					m_user_profile.version);
-
-			m_user_profile.version = PROFILE_VERSION;
-
-			// TODO: under what situation would these ever be 0?
-			if (m_user_profile.wheel_size_mm == 0 ||
-					m_user_profile.wheel_size_mm == 0xFFFF)
-			{
-				LOG("[MAIN]:profile_init using default wheel circumference.\r\n");
-
-				// Wheel circumference in mm.
-				m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
-			}
-
-			if (m_user_profile.total_weight_kg == 0 ||
-					m_user_profile.total_weight_kg == 0xFFFF)
-			{
-				LOG("[MAIN]:profile_init using default weight.\r\n");
-
-				// Total weight of rider + bike + shoes, clothing, etc...
-				m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
-			}
-
-			if (m_user_profile.servo_offset == -1) 	// -1 == (int16_t)0xFFFF
-			{
-				LOG("[MAIN]:profile_init using default servo offset.\r\n");
-				m_user_profile.servo_offset = 0; // default to 0 offset.
-			}
-
-			// Check for default servo positions.
-			if (m_user_profile.servo_positions.count == 0xFF)
-			{
-				LOG("[MAIN]: Setting default servo positions.\r\n");
-
-				m_user_profile.servo_positions.count = 7;
-				m_user_profile.servo_positions.positions[0] = 2000;
-				m_user_profile.servo_positions.positions[1] = 1300;
-				m_user_profile.servo_positions.positions[2] = 1200;
-				m_user_profile.servo_positions.positions[3] = 1100;
-				m_user_profile.servo_positions.positions[4] = 1000;
-				m_user_profile.servo_positions.positions[5] = 900;
-				m_user_profile.servo_positions.positions[6] = 800;
-			}
-
-			// Initialize default magnet calibration.
-			if (m_user_profile.ca_mag_factors.low_speed_mps == 0xFFFF)
-			{
-				// Default to no gap offset.
-				m_user_profile.ca_mag_factors.gap_offset = 0;				
-				
-				// 15 mph in meters per second * 1,000.
-				m_user_profile.ca_mag_factors.low_speed_mps = 6705;
-
-				// 25 mph in meters per second * 1,000.
-				m_user_profile.ca_mag_factors.high_speed_mps = 11176;
-				
-				// Position at which we no longer use power curve, revert to linear.
-				m_user_profile.ca_mag_factors.root_position = 1454;
-
-				m_user_profile.ca_mag_factors.low_factors[0] = 1.27516039631e-06f;
-				m_user_profile.ca_mag_factors.low_factors[1] = -0.00401345920329f;
-				m_user_profile.ca_mag_factors.low_factors[2] = 3.58655403892f;
-				m_user_profile.ca_mag_factors.low_factors[3] = -645.523540742f;
-
-				m_user_profile.ca_mag_factors.high_factors[0] = 2.19872670294e-06f;
-				m_user_profile.ca_mag_factors.high_factors[1] = -0.00686992504214f;
-				m_user_profile.ca_mag_factors.high_factors[2] = 6.03431060782f;
-				m_user_profile.ca_mag_factors.high_factors[3] = -998.115074474f;
-			}
-
-			// Schedule an update.
-			profile_update_sched();
-		}
-
-		LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t " \
-			"settings: %lu \r\n\t ca_root_position: %i \r\n\t " \
-			"ca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
-			"ca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n",
-				m_user_profile.total_weight_kg,
-				m_user_profile.wheel_size_mm,
-				m_user_profile.settings,
-				m_user_profile.ca_mag_factors.root_position,
-				m_user_profile.ca_mag_factors.low_factors[0],
-				m_user_profile.ca_mag_factors.low_factors[1],
-				m_user_profile.ca_mag_factors.low_factors[2],
-				m_user_profile.ca_mag_factors.low_factors[3],			
-				m_user_profile.ca_mag_factors.high_factors[0],
-				m_user_profile.ca_mag_factors.high_factors[1],
-				m_user_profile.ca_mag_factors.high_factors[2],
-				m_user_profile.ca_mag_factors.high_factors[3]
-				);
-}
-
-/**@brief 	Callback function used by pstorage which reports result of trying to store
- * 			data to flash.  Main controls event flow, so handles this even here.
- *
- */
-static void profile_update_pstorage_cb_handler(pstorage_handle_t * handle,
-											   uint8_t             op_code,
-											   uint32_t            result,
-											   uint8_t           * p_data,
-											   uint32_t            data_len)
-{
-	static uint8_t retry = 0;
-
-	// Regardless of success the operation is done.
-	m_profile_updating = false;
-
-    if (result != NRF_SUCCESS)
-    {
-    	LOG("[MAIN]:up_pstorage_cb_handler WARN: Error %lu\r\n", result);
-
-    	if (retry++ < 20)
-    	{
-			// Try again.
-			profile_update_sched();
-    	}
-    	else
-    	{
-    		LOG("MAIN:up_pstorage_cb_handler aborting save attempt after %i retries.\r\n", retry);
-    	}
-    }
-}
-
-/**@brief Function for handling profile update.
- *
- * @details This function will be called by the scheduler to update the profile.
- * 			Writing to flash causes the radio to stop, so we don't want to do this
- * 			too often, so we let the scheduler decide when.
- */
-static void profile_update_sched_handler(void *p_event_data, uint16_t event_size)
-{
-	UNUSED_PARAMETER(p_event_data);
-	UNUSED_PARAMETER(event_size);
-
-	uint32_t err_code;
-
-	if (m_profile_updating)
-	{
-		// Throw it back on the queue until we're not currently writing.
-		profile_update_sched();
-
-		LOG("[MAIN]:profile_update write already in progress, re-queuing.\r\n");
-		return;
-	}
-
-	m_profile_updating = true;
-
-	// This method ensures the device is in a proper state in order to update
-	// the profile.
-	err_code = user_profile_store(&m_user_profile);
-	APP_ERROR_CHECK(err_code);
-
-	LOG("[MAIN]:profile_update:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t slope: %i \r\n\t intercept: %i \r\n",
-			m_user_profile.total_weight_kg,
-			m_user_profile.wheel_size_mm,
-			m_user_profile.settings,
-			m_user_profile.ca_slope,
-			m_user_profile.ca_intercept);
-}
-
-/**@brief Schedules an update to the profile.  See notes above in handler.
- *
- */
-static void profile_update_sched(void)
-{
-	uint32_t err_code;
-
-	err_code = app_sched_event_put(NULL, 0, profile_update_sched_handler);
-	APP_ERROR_CHECK(err_code);
 }
 
 /**@brief	Sends a heart beat message for the ANT+ remote control.
@@ -900,7 +683,7 @@ static void servo_pos_to_response(ant_request_data_page_t* p_request, uint8_t* p
 	for (uint8_t i = start_idx; i < (start_idx + 2); i++)
 	{
 		LOG("[MAIN] servo_position[%i] %i\r\n", i,
-				m_user_profile.servo_positions.positions[i]);
+				mp_user_profile->servo_positions.positions[i]);
 
 		if (i >= RESISTANCE_LEVELS)
 		{
@@ -909,8 +692,8 @@ static void servo_pos_to_response(ant_request_data_page_t* p_request, uint8_t* p
 		}
 		else
 		{
-			p_response[roffset++] = LOW_BYTE(m_user_profile.servo_positions.positions[i]);
-			p_response[roffset++] = HIGH_BYTE(m_user_profile.servo_positions.positions[i]);
+			p_response[roffset++] = LOW_BYTE(mp_user_profile->servo_positions.positions[i]);
+			p_response[roffset++] = HIGH_BYTE(mp_user_profile->servo_positions.positions[i]);
 		}
 	}
 }
@@ -940,20 +723,20 @@ static void on_get_parameter(ant_request_data_page_t* p_request)
 	switch (subpage)
 	{
 		case IRT_MSG_SUBPAGE_SETTINGS:
-			memcpy(&response, &m_user_profile.settings, sizeof(uint16_t));
+			memcpy(&response, &mp_user_profile->settings, sizeof(uint16_t));
 			break;
 
 		case IRT_MSG_SUBPAGE_CRR:
-			memcpy(&response, &m_user_profile.ca_slope, sizeof(uint16_t));
-			memcpy(&response[2], &m_user_profile.ca_intercept, sizeof(uint16_t));
+			memcpy(&response, &mp_user_profile->ca_slope, sizeof(uint16_t));
+			memcpy(&response[2], &mp_user_profile->ca_intercept, sizeof(uint16_t));
 			break;
 
 		case IRT_MSG_SUBPAGE_WEIGHT:
-			memcpy(&response, &m_user_profile.total_weight_kg, sizeof(uint16_t));
+			memcpy(&response, &mp_user_profile->total_weight_kg, sizeof(uint16_t));
 			break;
 
 		case IRT_MSG_SUBPAGE_WHEEL_SIZE:
-			memcpy(&response, &m_user_profile.wheel_size_mm, sizeof(uint16_t));
+			memcpy(&response, &mp_user_profile->wheel_size_mm, sizeof(uint16_t));
 			break;
 
 		/*case IRT_MSG_SUBPAGE_GET_ERROR:
@@ -961,7 +744,7 @@ static void on_get_parameter(ant_request_data_page_t* p_request)
 			break; */
 
 		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
-			memcpy(&response, &m_user_profile.servo_offset, sizeof(int16_t));
+			memcpy(&response, &mp_user_profile->servo_offset, sizeof(int16_t));
 			break;
 
 		case IRT_MSG_SUBPAGE_CHARGER:
@@ -978,15 +761,15 @@ static void on_get_parameter(ant_request_data_page_t* p_request)
 			break;
 
 		case IRT_MSG_SUBPAGE_DRAG:
-			memcpy(&response, &m_user_profile.ca_drag, sizeof(uint32_t));
+			memcpy(&response, &mp_user_profile->ca_drag, sizeof(uint32_t));
 			break;
 
 		case IRT_MSG_SUBPAGE_RR:
-			memcpy(&response, &m_user_profile.ca_rr, sizeof(uint32_t));
+			memcpy(&response, &mp_user_profile->ca_rr, sizeof(uint32_t));
 			break;
 
 		case IRT_MSG_SUBPAGE_GAP_OFFSET:
-			memcpy(&response, &m_user_profile.ca_mag_factors.gap_offset, sizeof(uint32_t));
+			memcpy(&response, &mp_user_profile->ca_mag_factors.gap_offset, sizeof(uint32_t));
 			break;
 
 		default:
@@ -1070,20 +853,20 @@ static void settings_update(uint8_t* buffer)
 	// MSB is flagged to indicate if we should persist or if this is just temporary.
 	memcpy(&settings, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint16_t));
 
-	m_user_profile.settings = SETTING_VALUE(settings);
+	mp_user_profile->settings = SETTING_VALUE(settings);
 
 	/*LOG("[MAIN] Request to update settings to: ACCEL:%i \r\n",
-				SETTING_IS_SET(m_user_profile.settings, SETTING_ACL_SLEEP_ON) );*/
+				SETTING_IS_SET(mp_user_profile->settings, SETTING_ACL_SLEEP_ON) );*/
 
 	LOG("[MAIN]:settings_update raw: %i, translated: %i\r\n",
-			settings, m_user_profile.settings);
+			settings, mp_user_profile->settings);
 
 	if (SETTING_PERSIST(settings))
 	{
 		LOG("[MAIN] Scheduled persistence of updated settings: %i\r\n",
-				m_user_profile.settings);
+				mp_user_profile->settings);
 		// Schedule update to the profile.
-		profile_update_sched();
+		user_profile_store();
 	}
 }
 
@@ -1099,11 +882,11 @@ static void crr_adjust(int8_t value)
 			.tx_response = DATA_PAGE_RESPONSE_TYPE
 	};
 
-	if (m_user_profile.ca_intercept != 0xFFFF)
+	if (mp_user_profile->ca_intercept != 0xFFFF)
 	{
 		// Wire value of intercept is sent in 1/1000, i.e. 57236 == 57.236
-		m_user_profile.ca_intercept += (value * 1000);
-		power_init(&m_user_profile);
+		mp_user_profile->ca_intercept += (value * 1000);
+		power_init(mp_user_profile);
 		bp_queue_data_response(request);
 	}
 }
@@ -1206,7 +989,7 @@ static void on_button_menu(void)
 	if (!m_crr_adjust_mode)
 	{
 		// Start / stop TR whenever the middle button is pushed.
-		if ( SETTING_IS_SET(m_user_profile.settings, SETTING_ANT_TR_PAUSE_ENABLED) )
+		if ( SETTING_IS_SET(mp_user_profile->settings, SETTING_ANT_TR_PAUSE_ENABLED) )
 		{
 			bp_queue_resistance_ack(RESISTANCE_START_STOP_TR, 0);
 		}
@@ -1538,50 +1321,50 @@ static void on_set_parameter(uint8_t* buffer)
 
 		case IRT_MSG_SUBPAGE_CRR:
 			// Update CRR.
-			memcpy(&m_user_profile.ca_slope, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
+			memcpy(&mp_user_profile->ca_slope, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
 					sizeof(uint16_t));
-			memcpy(&m_user_profile.ca_intercept, &buffer[IRT_MSG_PAGE2_DATA_INDEX+2],
+			memcpy(&mp_user_profile->ca_intercept, &buffer[IRT_MSG_PAGE2_DATA_INDEX+2],
 					sizeof(uint16_t));
 			LOG("[MAIN] Updated slope:%i intercept:%i \r\n",
-					m_user_profile.ca_slope, m_user_profile.ca_intercept);
+					mp_user_profile->ca_slope, mp_user_profile->ca_intercept);
 
 			// Remove drag & rr values as they will conflict.
-			m_user_profile.ca_drag = NAN;
-			m_user_profile.ca_rr = NAN;
+			mp_user_profile->ca_drag = NAN;
+			mp_user_profile->ca_rr = NAN;
 
 			// Reinitialize power.
-			power_init(&m_user_profile);
+			power_init(mp_user_profile);
 
 			// Schedule update to the user profile.
-			profile_update_sched();
+			user_profile_store();
 			break;
 
 		case IRT_MSG_SUBPAGE_DRAG:
 			// Update co-efficient of drag from calibration.
-			memcpy(&m_user_profile.ca_drag, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
-			LOG("[MAIN] on_set_parameter ca_drag:%.7f\r\n", m_user_profile.ca_drag);
+			memcpy(&mp_user_profile->ca_drag, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
+			LOG("[MAIN] on_set_parameter ca_drag:%.7f\r\n", mp_user_profile->ca_drag);
 			break;
 
 		case IRT_MSG_SUBPAGE_RR:
 			// Update co-efficient of rolling resistance from calibration.
-			memcpy(&m_user_profile.ca_rr, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
-			LOG("[MAIN] on_set_parameter ca_rr:%.7f\r\n", m_user_profile.ca_rr);
+			memcpy(&mp_user_profile->ca_rr, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
+			LOG("[MAIN] on_set_parameter ca_rr:%.7f\r\n", mp_user_profile->ca_rr);
 
-			if (!isnan(m_user_profile.ca_drag))
+			if (!isnan(mp_user_profile->ca_drag))
 			{
 				// If we've received both params, schedule a profile update.
-				profile_update_sched();
+				user_profile_store();
 			}
 
 			break;
 
 		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
-			m_user_profile.servo_offset = (int16_t)(buffer[IRT_MSG_PAGE2_DATA_INDEX] |
+			mp_user_profile->servo_offset = (int16_t)(buffer[IRT_MSG_PAGE2_DATA_INDEX] |
 				buffer[IRT_MSG_PAGE2_DATA_INDEX+1] << 8);
-			LOG("[MAIN] Updated servo_offset:%i \r\n", m_user_profile.servo_offset);
+			LOG("[MAIN] Updated servo_offset:%i \r\n", mp_user_profile->servo_offset);
 
 			// Schedule update to the user profile.
-			profile_update_sched();
+			user_profile_store();
 			break;
 
 		case IRT_MSG_SUBPAGE_SLEEP:
@@ -1604,11 +1387,11 @@ static void on_set_parameter(uint8_t* buffer)
 			break;
 
 		case IRT_MSG_SUBPAGE_GAP_OFFSET:
-			memcpy(&m_user_profile.ca_mag_factors.gap_offset, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint16_t));
-			LOG("[MAIN] on_set_parameter ca_gap_offset:%i\r\n", m_user_profile.ca_mag_factors.gap_offset);
+			memcpy(&mp_user_profile->ca_mag_factors.gap_offset, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint16_t));
+			LOG("[MAIN] on_set_parameter ca_gap_offset:%i\r\n", mp_user_profile->ca_mag_factors.gap_offset);
 
 			// Schedule update to the user profile.
-			profile_update_sched();
+			user_profile_store();
 			break;
 
 			/*
@@ -1647,20 +1430,20 @@ static void on_set_servo_positions(servo_positions_t* positions)
 	}
 
 	// Save the value.
-	m_user_profile.servo_positions = *positions;
+	mp_user_profile->servo_positions = *positions;
 
 #ifdef ENABLE_DEBUG_LOG
 	LOG("[MAIN] on_set_servo_positions count:%i\r\n",
-			m_user_profile.servo_positions.count);
+			mp_user_profile->servo_positions.count);
 
-	for (uint8_t i = 0; i <= m_user_profile.servo_positions.count-1; i++)
+	for (uint8_t i = 0; i <= mp_user_profile->servo_positions.count-1; i++)
 	{
 		LOG("[MAIN] handle_burst_set_position[%i]: %i\r\n", i,
-				m_user_profile.servo_positions.positions[i]);
+				mp_user_profile->servo_positions.positions[i]);
 	}
 #endif
 
-	profile_update_sched();
+	user_profile_store();
 }
 
 /**@brief	Called when a charge status has been indicated.
@@ -1765,9 +1548,9 @@ static void on_set_mag_calibration(mag_calibration_factors_t* p_factors)
 			p_factors->low_factors[3]);
 
 	// Update profile.
-	memcpy(&m_user_profile.ca_mag_factors, p_factors, 
+	memcpy(&mp_user_profile->ca_mag_factors, p_factors, 
 		sizeof(mag_calibration_factors_t));
-	profile_update_sched(); 
+	user_profile_store(); 
 }
 
 /**@brief	Configures chip power options.
@@ -1978,20 +1761,20 @@ int main(void)
 	// Initializes the Bluetooth and ANT stacks.
 	ble_ant_init(&ant_ble_handlers);
 
-	// initialize the user profile.
-	profile_init();
+	// Initialize the user profile.
+	mp_user_profile = user_profile_get();
 
 	// Initialize the magnet module.
-	magnet_init(&m_user_profile.ca_mag_factors);
+	magnet_init(&mp_user_profile->ca_mag_factors);
 
 	// Initialize resistance module and initial values.
-	mp_resistance_state = resistance_init(PIN_SERVO_SIGNAL, &m_user_profile);
+	mp_resistance_state = resistance_init(PIN_SERVO_SIGNAL, mp_user_profile);
 
 	// Initialize module to read speed from flywheel.
-	speed_init(PIN_FLYWHEEL, m_user_profile.wheel_size_mm);
+	speed_init(PIN_FLYWHEEL, mp_user_profile->wheel_size_mm);
 
 	// Initialize power module with user profile.
-	power_init(&m_user_profile);
+	power_init(mp_user_profile);
 
 	// Begin advertising and receiving ANT messages.
 	ble_ant_start();

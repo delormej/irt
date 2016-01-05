@@ -65,13 +65,10 @@ typedef struct user_profile_s {
 	//uint8_t		reserved_2[7]; // (sizeof(servo_positions_t)+2) % 16];					// For block size alignment -- 16 bit alignment
 } user_profile_t;
 
-/**@brief Initializes access to storage. */
-uint32_t user_profile_init(pstorage_ntf_cb_t cb);
-
-/**@brief Loads the user's profile from device persistent storage. */
-uint32_t user_profile_load(user_profile_t *p_user_profile);
+/**@brief Returns a pointer to the user profile object. */
+user_profile_t* user_profile_get(void);
 
 /**@brief Stores user profile in persistent storage on the device. */
-uint32_t user_profile_store(user_profile_t *p_user_profile);
+uint32_t user_profile_store(void);
 
 #endif // __USER_PROFILE_H__
