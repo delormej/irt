@@ -71,12 +71,12 @@ static uint16_t speed_mps_to_int16(float f) {
  */
 static uint32_t GeneralFEDataPage_Send(irt_context_t* context)
 {
-	static FEC_Page16 page;
+	static FEC_Page16 page = { 
+        .DataPageNumber = GENERAL_FE_DATA_PAGE, 
+        .EquipmentType = EQUIPMENT_TYPE }; 
 
 	uint16_t speed_int = speed_mps_to_int16(context->instant_speed_mps);
-
-	page.DataPageNumber = 16;
-	page.EquipmentType = EQUIPMENT_TYPE;
+	
 	page.ElapsedTime = context->elapsed_time;
 	page.Distance = context->distance_m;
 	page.SpeedLSB = LOW_BYTE(speed_int);
@@ -99,7 +99,6 @@ static uint32_t GeneralSettingsPage_Send(irt_context_t* context)
         .Reserved[1] = 0xFF, 
         .Incline = INCLINE_INVALID };
     
-	//page.DataPageNumber = 17;
 	page.CycleLength = (uint8_t)(mp_user_profile->wheel_size_mm / 10);	// Convert wheel centimeters.
 	
 	// In basic modes, calculate percentage.
@@ -123,7 +122,38 @@ static uint32_t GeneralSettingsPage_Send(irt_context_t* context)
 		(uint8_t*)&page);    
 }
 
-static uint32_t SpecificTrainerDataPage_Send() {return 0;}
+static uint32_t SpecificTrainerDataPage_Send(irt_context_t* context) 
+{
+	static uint8_t event_count = 0;
+	static uint16_t accumulated_power = 0;
+	static FEC_Page25 page = { 
+        .DataPageNumber = SPECIFIC_TRAINER_PAGE,
+        .InstantCadence = CADENCE_INVALID };
+
+	// Increment static fields.
+	accumulated_power += context->instant_power;
+	
+	// Update the page.
+	page.UpdateEventCount = event_count++;
+	page.AccumulatedPowerLSB = LOW_BYTE(accumulated_power);
+	page.AccumulatedPowerMSB = HIGH_BYTE(accumulated_power);
+	/* 1.5 bytes used for instantaneous power.  Full 8 bits for byte LSB
+	   only 4 bits (0-3) used for the MSB. */
+	page.InstantPowerLSB = LOW_BYTE(context->instant_power);
+	page.InstantPowerMSB = HIGH_BYTE(context->instant_power) & 0x0F;
+	
+	/* MSB (bit 3) reserved, 3 bits used for calibration required flags */
+	page.TrainerStatusBit = 
+		context->bike_power_calibration_required | 			// bit 0
+		(context->resistance_calibration_required << 1) |	// bit 1
+		(context->user_configuration_required << 2) |		// bit 2
+		(0 << 3);											// bit 3 - reserved 
+	page.Flags = context->target_power_limits;
+	page.FEState = FESTATE_CONTEXT(context);
+	
+	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&page);   
+}
 static uint32_t SpecificTrainerTorqueDataPage_Send() {return 0;}
 
 /**@brief	Sets initial state for FE-C (Fitness Equipment-Control).
@@ -223,7 +253,7 @@ void ant_fec_tx_send(irt_context_t * p_power_meas)
     else if (  (~(0b10 ^ count) & 3) == 3  )
     {
         // Message sequence 2 & 6: Page 25.
-        SpecificTrainerDataPage_Send();
+        SpecificTrainerDataPage_Send(p_power_meas);
     }
     else if (  (~(0b111 ^ count) & 7) == 7  )
     {
