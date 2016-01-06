@@ -208,12 +208,17 @@ uint8_t resistance_level_count()
  */
 uint8_t resistance_pct_get(uint16_t position)
 {
-	// Subtract position from min position, divide by full range,
-	// multiply by 200 to remove the decimal and represent units of 0.5%.
-	float resistance_pct = (float) 
-		((MAGNET_POSITION_MIN_RESISTANCE - position) /
-		(MAGNET_POSITION_MIN_RESISTANCE - MAGNET_POSITION_MAX_RESISTANCE)) * 200;
-		
+	float resistance_pct = 0.0f;
+    
+    if (position != MAGNET_POSITION_OFF)
+    {
+        // Subtract position from min position, divide by full range,
+        // multiply by 200 to remove the decimal and represent units of 0.5%.
+        resistance_pct = 200 * (  
+            (float)((MAGNET_POSITION_MIN_RESISTANCE - position) /
+            (float)(MAGNET_POSITION_MIN_RESISTANCE - MAGNET_POSITION_MAX_RESISTANCE)));
+    }	
+    
 	return (uint8_t)resistance_pct;
 }
 
