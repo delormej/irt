@@ -24,31 +24,6 @@
 #define TRACK_RESISTANCE_PAGE		51
 #define COMMAND_STATUS_PAGE			71
 
-#define HR_DATA_SOURCE 				0	
-#define DISTANCE_TRAVELED_ENABLED	1	
-#define EQUIPMENT_TYPE				25
-#define CADENCE_INVALID				0xFF
-#define HEARTRATE_INVALID			0xFF
-#define INCLINE_INVALID				0x7FFF
-#define RESISTANCE_INVALID			0xFF
-
-/**@ brief	Macro to set the value of FE State bit field (nibble) from irt_context_t. 	
-				fe_state 			// bits 0-2 
-				lap_toggle 			// bit 3 
- */
-#define FESTATE_CONTEXT(context) \
-		(context->fe_state | (context->lap_toggle << 3))			
-
-/**@ brief	Macro to set the value of FE capabilities bit field (nibble) from irt_context_t.
-		HR_DATA_SOURCE  						// bits 0-1
-		DISTANCE_TRAVELED_ENABLED 				// bit 2
-		virtual_speed_flag   					// bit 3
- */
-#define CAPABILITIES_CONTEXT(context) \
-		(HR_DATA_SOURCE | \	
-		(DISTANCE_TRAVELED_ENABLED << 2) | \	
-		(context->virtual_speed_flag << 3))   	
-
 typedef struct {
 	uint8_t 	DataPageNumber;
 	uint8_t 	EquipmentType;
@@ -65,10 +40,9 @@ typedef struct {
 
 typedef struct {
 	uint8_t 	DataPageNumber;
-	uint16_t 	Reserved;
+	uint8_t 	Reserved[2];
 	uint8_t 	CycleLength;				// Wheel Circumference on a Trainer in meters. 0.01 - 2.54m
-	uint8_t 	InclineLSB;
-	uint8_t 	InclineMSB;
+	uint16_t 	Incline;                    // Not used, send 0x7FFF.
 	uint8_t		ResistanceLevelFEC; 		// Percentage of maximum applicable resitsance (0-100%)
 	uint8_t		Capabilities:4; 			// Reserved for future, set to: 0x0
 	uint8_t		FEState:4;					//  

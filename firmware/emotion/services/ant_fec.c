@@ -1,4 +1,4 @@
-/* Copyright (c) 2015 Inside Ride Technologies, LLC. All Rights Reserved.
+/* Copyright (c) 2016 Inside Ride Technologies, LLC. All Rights Reserved.
 */
 
 #include <stdbool.h>
@@ -16,6 +16,14 @@
 #include "resistance.h"
 #include "debug.h"
 
+/**@brief Debug logging for module.
+ *
+ */
+#ifdef ENABLE_DEBUG_LOG
+#define FE_LOG debug_log
+#else
+#define FE_LOG(...)
+#endif // ENABLE_DEBUG_LOG
 
 #define ANT_FEC_CHANNEL_TYPE          0x10                                          /**< Channel Type TX. */
 #define ANT_FEC_DEVICE_TYPE           0x11                                          /**< Channel ID device type. */
@@ -23,7 +31,33 @@
 #define ANT_FEC_MSG_PERIOD            0x2000                                     	/**< Message Periods, decimal 8192 (~4.00Hz) data is transmitted every 8192/32768 seconds. */
 #define ANT_FEC_EXT_ASSIGN            0	                                            /**< ANT Ext Assign. */
 
+#define HR_DATA_SOURCE 				0	
+#define DISTANCE_TRAVELED_ENABLED	1	
+#define EQUIPMENT_TYPE				25
+#define CADENCE_INVALID				0xFF
+#define HEARTRATE_INVALID			0xFF
+#define INCLINE_INVALID				0x7FFF
+#define RESISTANCE_INVALID			0xFF
+
+/**@ brief	Macro to set the value of FE State bit field (nibble) from irt_context_t. 	
+				fe_state 			// bits 0-2 
+				lap_toggle 			// bit 3 
+ */
+#define FESTATE_CONTEXT(context) \
+		(context->fe_state | (context->lap_toggle << 3))			
+
+/**@ brief	Macro to set the value of FE capabilities bit field (nibble) from irt_context_t.
+		HR_DATA_SOURCE  						// bits 0-1
+		DISTANCE_TRAVELED_ENABLED 				// bit 2
+		virtual_speed_flag   					// bit 3
+ */
+#define CAPABILITIES_CONTEXT(context) \
+		(HR_DATA_SOURCE | \	
+		(DISTANCE_TRAVELED_ENABLED << 2) | \	
+		(context->virtual_speed_flag << 3))   	
+
 static ant_ble_evt_handlers_t* mp_evt_handlers;
+static user_profile_t* mp_user_profile;
 
 /**@brief	Converts speed in mps as float into a dword.
  */
@@ -59,12 +93,14 @@ static uint32_t GeneralFEDataPage_Send(irt_context_t* context)
  */ 
 static uint32_t GeneralSettingsPage_Send(irt_context_t* context) 
 {
-	static FEC_Page17 page;
-	
-	page.DataPageNumber = 17;
-	//page.CycleLength = (uint8_t)(profile->wheel_size_mm / 10);	// Convert wheel centimeters.
-	page.InclineLSB = LOW_BYTE(INCLINE_INVALID);
-	page.InclineMSB = HIGH_BYTE(INCLINE_INVALID);
+	static FEC_Page17 page = { 
+        .DataPageNumber = GENERAL_SETTINGS_PAGE, 
+        .Reserved[0] = 0xFF, 
+        .Reserved[1] = 0xFF, 
+        .Incline = INCLINE_INVALID };
+    
+	//page.DataPageNumber = 17;
+	page.CycleLength = (uint8_t)(mp_user_profile->wheel_size_mm / 10);	// Convert wheel centimeters.
 	
 	// In basic modes, calculate percentage.
 	switch (context->resistance_mode) 
@@ -72,9 +108,13 @@ static uint32_t GeneralSettingsPage_Send(irt_context_t* context)
 		case RESISTANCE_SET_STANDARD:
 		case RESISTANCE_SET_PERCENT:
 			page.ResistanceLevelFEC = resistance_pct_get(context->servo_position);
+            break;
 		default:
 			page.ResistanceLevelFEC = RESISTANCE_INVALID;
+            break;
 	} 
+
+    FE_LOG("[FE]:resistance pct: %i, %i\r\n",context->servo_position, resistance_pct_get(context->servo_position));
 
 	page.Capabilities = CAPABILITIES_CONTEXT(context);
 	page.FEState = FESTATE_CONTEXT(context);
@@ -105,10 +145,15 @@ static void state_init(irt_context_t* p_context)
 void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers)
 {
     uint32_t err_code;
-    
+
 	// Assign callback for when resistance message is processed.	
     mp_evt_handlers = evt_handlers;
 
+    // Get a pointer to the user profile object.
+    mp_user_profile = user_profile_get();
+
+
+    // Configure ANT channel.
     err_code = sd_ant_channel_assign(ANT_FEC_TX_CHANNEL,
                                      ANT_FEC_CHANNEL_TYPE,
                                      ANTPLUS_NETWORK_NUMBER,
@@ -126,7 +171,6 @@ void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers)
     
     err_code = sd_ant_channel_period_set(ANT_FEC_TX_CHANNEL, ANT_FEC_MSG_PERIOD);
     APP_ERROR_CHECK(err_code);
-
 }
 
 /**@brief	Opens the ANT+ channel.
