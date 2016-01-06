@@ -284,4 +284,24 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
 {
 	// Deal with all messages sent from the FE-C display such as resistance 
 	// control and calibration.
+	// Only interested in BURST events right now for processing resistance control.
+    if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] == MESG_ACKNOWLEDGED_DATA_ID)
+	{
+		// TODO: remove these hard coded array position values and create defines.
+		switch (p_ant_evt->evt_buffer[3])  // Switch on the page number.
+		{
+			default:
+				FE_LOG("[FE]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+						p_ant_evt->evt_buffer[0],
+						p_ant_evt->evt_buffer[1],
+						p_ant_evt->evt_buffer[2],
+						p_ant_evt->evt_buffer[3],
+						p_ant_evt->evt_buffer[4],
+						p_ant_evt->evt_buffer[5],
+						p_ant_evt->evt_buffer[6],
+						p_ant_evt->evt_buffer[7],
+						p_ant_evt->evt_buffer[8]);
+				break;
+		}
+	}  
 }

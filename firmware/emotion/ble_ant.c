@@ -421,6 +421,10 @@ static void on_ant_evt(ant_evt_t * p_ant_evt) {
 	{
 		switch (p_ant_evt->channel) 
 		{
+            case ANT_FEC_TX_CHANNEL:
+                ant_fec_rx_handle(p_ant_evt);                
+                break;
+            
 			case ANT_BP_TX_CHANNEL:
 				ant_bp_rx_handle(p_ant_evt);
 				break;
