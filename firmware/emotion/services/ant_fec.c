@@ -113,7 +113,7 @@ static uint32_t GeneralSettingsPage_Send(irt_context_t* context)
             break;
 	} 
 
-    FE_LOG("[FE]:resistance pct: %i, %i\r\n",context->servo_position, resistance_pct_get(context->servo_position));
+    //FE_LOG("[FE]:resistance pct: %i, %i\r\n",context->servo_position, resistance_pct_get(context->servo_position));
 
 	page.Capabilities = CAPABILITIES_CONTEXT(context);
 	page.FEState = FESTATE_CONTEXT(context);
@@ -155,6 +155,33 @@ static uint32_t SpecificTrainerDataPage_Send(irt_context_t* context)
 		(uint8_t*)&page);   
 }
 static uint32_t SpecificTrainerTorqueDataPage_Send() {return 0;}
+
+static void HandleResistancePages(uint8_t* buffer)
+{
+	rc_evt_t resistance_evt; 
+    memset(&resistance_evt, 0, sizeof(rc_evt_t));
+
+    // Operation is the page number, which is the first byte.
+    resistance_evt.operation = buffer[0]; 
+    
+    switch (resistance_evt.operation) 
+    {
+        case BASIC_RESISTANCE_PAGE:
+            resistance_evt.total_resistance = (float)(buffer[7] / 255.0f);
+            FE_LOG("[FE] total_resistance: %.2f\r\n", 
+                resistance_evt.total_resistance);
+            break;
+            
+        case TARGET_POWER_PAGE:
+        case WIND_RESISTANCE_PAGE:
+        case TRACK_RESISTANCE_PAGE:
+            break;
+        default:
+            break;   
+    };
+                
+    mp_evt_handlers->on_set_resistance(resistance_evt);
+}
 
 /**@brief	Sets initial state for FE-C (Fitness Equipment-Control).
  */
@@ -287,9 +314,26 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
 	// Only interested in BURST events right now for processing resistance control.
     if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] == MESG_ACKNOWLEDGED_DATA_ID)
 	{
+        FE_LOG("[FE]: message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+                p_ant_evt->evt_buffer[3],
+                p_ant_evt->evt_buffer[4],
+                p_ant_evt->evt_buffer[5],
+                p_ant_evt->evt_buffer[6],
+                p_ant_evt->evt_buffer[7],
+                p_ant_evt->evt_buffer[8],
+                p_ant_evt->evt_buffer[9],
+                p_ant_evt->evt_buffer[10]);        
+        
 		// TODO: remove these hard coded array position values and create defines.
 		switch (p_ant_evt->evt_buffer[3])  // Switch on the page number.
 		{
+            case BASIC_RESISTANCE_PAGE:
+            case TARGET_POWER_PAGE:
+            case WIND_RESISTANCE_PAGE:
+            case TRACK_RESISTANCE_PAGE:           
+                HandleResistancePages(&p_ant_evt->evt_buffer[3]);
+                break;
+            
 			default:
 				FE_LOG("[FE]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 						p_ant_evt->evt_buffer[0],

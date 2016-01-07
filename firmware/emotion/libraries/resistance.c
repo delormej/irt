@@ -236,6 +236,8 @@ uint16_t resistance_pct_set(float percent)
 	*/
 	uint16_t position;
 
+    RC_LOG("[RC] resistance_pct_set: %.2f\r\n", percent);
+
 	m_resistance_state.mode = RESISTANCE_SET_PERCENT;
 
 	if (percent == 0.0f)

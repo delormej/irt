@@ -1117,7 +1117,12 @@ static void on_set_resistance(rc_evt_t rc_evt)
 {
 	uint16_t value = 0;
 
-	value =  uint16_decode(rc_evt.pBuffer);
+    // Only applies to the older WAHOO messages and not FE-C
+    if (rc_evt.operation >= RESISTANCE_SET_PERCENT &&
+        rc_evt.operation <= RESISTANCE_START_STOP_TR )
+    {
+	   value =  uint16_decode(rc_evt.pBuffer);
+    }
 
 	LOG("[MAIN]:on_set_resistance {OP:%#.2x,VAL:%i}\r\n",
 			(uint8_t)rc_evt.operation, value);
@@ -1176,6 +1181,16 @@ static void on_set_resistance(rc_evt_t rc_evt)
 
 		case RESISTANCE_SET_WEIGHT:
 			set_sim_params(rc_evt.pBuffer);
+            break;
+
+		case RESISTANCE_SET_BASIC:
+            resistance_pct_set(rc_evt.total_resistance);
+            break;
+            
+        case RESISTANCE_SET_TARGET_POWER:
+        case RESISTANCE_SET_FE_WIND:
+        case RESISTANCE_SET_TRACK:
+        case RESISTANCE_SET_USER_CONFIG:
 			break;
 
 		default:

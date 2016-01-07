@@ -22,6 +22,8 @@
 #define TARGET_POWER_PAGE			49
 #define WIND_RESISTANCE_PAGE		50
 #define TRACK_RESISTANCE_PAGE		51
+#define FE_CAPABILITIES_PAGE        54
+#define USER_CONFIGURATION_PAGE     55
 #define COMMAND_STATUS_PAGE			71
 
 typedef struct {

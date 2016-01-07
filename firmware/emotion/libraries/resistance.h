@@ -31,6 +31,14 @@ typedef enum
 /**@brief Resistance modes. */
 typedef enum 
 {
+    // FE-C specific modes.
+    RESISTANCE_SET_BASIC        = 0x30,
+    RESISTANCE_SET_TARGET_POWER = 0x31,
+    RESISTANCE_SET_FE_WIND      = 0x32,
+    RESISTANCE_SET_TRACK        = 0x33,
+    RESISTANCE_SET_USER_CONFIG  = 0x37,
+
+    // Legacy WAHOO modes.    
 	RESISTANCE_SET_PERCENT 		= 0x40,
 	RESISTANCE_SET_STANDARD		= 0x41,
 	RESISTANCE_SET_ERG			= 0x42,
@@ -70,6 +78,21 @@ typedef enum
 } WFKICKRCommands_t;
 */
 
+/**@brief       Parameters for simulated wind resistance.
+ */
+typedef struct {
+    float       wind_coefficient;               // Product of front surface area, drag coeff and air density.
+    int8_t      wind_speed_km;                  // -127 - 127 km/h
+    float       drafting_factor;                // Simulated drafting scale factor 0 - 1.00.        
+} resistance_wind_t;
+
+/**@brief       Parameters for simulated track resistance.
+ */
+typedef struct {
+   float        grade;                          // Grade of simulated track (-200% - +200%).
+   float        crr;                            // Coefficient of rolling resistance. 
+} resistance_track_t;
+
 /**@brief 		Resistance control event payload.
  * 				TODO: this belongs in a separate module responsible for decoding
  * 				resistance control messages.
@@ -77,7 +100,13 @@ typedef enum
 typedef struct
 {
 	resistance_mode_t 	operation;				// Operation to perform or mode to set for resistance.
-	uint8_t				*pBuffer; 				// Pointer to values required for the operation.
+	union {
+        uint8_t*		    pBuffer; 				// Pointer to values required for the operation.
+        float               total_resistance;       // Percentage of maximum resistance to be applied 0 - 100% in basic resistance mode.
+        uint16_t            target_power;           // Erg Target power for a trainer operating in target power mode.
+        resistance_wind_t   wind;                   // Simulated wind resistance factors.
+        resistance_track_t  track;                  // Simulated track resistance factors.
+    };    
 } rc_evt_t;
 
 /**@brief Set resistance event handler type. */

@@ -140,10 +140,9 @@ typedef struct {
 
 typedef struct {
 	uint8_t 	DataPageNumber;
-	uint16_t 	Reserved;
+	uint8_t 	Reserved[2];
 	uint8_t 	CycleLength;				// Wheel Circumference on a Trainer in meters. 0.01 - 2.54m
-	uint8_t 	InclineLSB;
-	uint8_t 	InclineMSB;
+	uint16_t 	Incline;                    // Not used, send 0x7FFF.
 	uint8_t		ResistanceLevelFEC; 		// Percentage of maximum applicable resitsance (0-100%)
 	uint8_t		Capabilities:4; 			// Reserved for future, set to: 0x0
 	uint8_t		FEState:4;					//  
@@ -173,10 +172,29 @@ typedef struct {
 
 /**@brief		Gets the percentage of total resistance at a given servo position.
  * @returns		Percentage of maximum resistance (Units: 0.5%, Range: 0-100%).
- */
+
 uint8_t resistance_pct_get(uint16_t position) {
 	float resistance_pct =  
 		(float) ((1600 - position) / (1600 - 800.0)) * 200;
+} */
+uint8_t resistance_pct_get(uint16_t position)
+{
+	float resistance_pct = 0.0f;
+    uint8_t pct = 0;
+    if (position != 2000)
+    {
+        // Subtract position from min position, divide by full range,
+        // multiply by 200 to remove the decimal and represent units of 0.5%.
+        /*resistance_pct =  
+            (float)((1600 - position) /
+            (float)(1600 - 800)) * 200;*/
+            
+        pct =  
+            ((1600 - position) * 200) /
+            ((1600 - 800) * 200);            
+    }	
+    
+	return pct; //(uint8_t)resistance_pct;
 }
 
 void print_hex(uint8_t* buffer) {
@@ -225,10 +243,8 @@ FEC_Page17* build_page17(irt_context_t* context, user_profile_t* profile) {
 	static FEC_Page17 page;
 	
 	page.DataPageNumber = 17;
-	page.CycleLength = (uint8_t)(profile->wheel_size_mm / 10);	// Convert wheel centimeters.
-	page.InclineLSB = LOW_BYTE(INCLINE_INVALID);
-	page.InclineMSB = HIGH_BYTE(INCLINE_INVALID);
-	
+	page.CycleLength = (uint8_t)(2071 / 10);	// Convert wheel centimeters.
+
 	// In basic modes, calculate percentage.
 	switch (context->resistance_mode) 
 	{
@@ -280,8 +296,16 @@ FEC_Page25* build_page25(irt_context_t* context) {
 	return &page;
 } 
 
+
+
+
 int main(int argc, char *argv [])
-{	
+{
+    uint8_t buffer[2] = { 0x30, 0x00 };
+    printf("size: %.2f\r\n", (float)(buffer[0] / 2.55f));
+    	
+    return 0;
+    
 	// setup some dummy context. 
 	irt_context_t context;
 	context.elapsed_time = 154; // # of 1/4 seconds.
@@ -297,104 +321,13 @@ int main(int argc, char *argv [])
 	context.resistance_mode = RESISTANCE_SET_STANDARD; 
 	context.resistance_level = 3;
 
-	user_profile_t profile;
-	profile.wheel_size_mm = 2070;
+    FEC_Page17 page = { .DataPageNumber = 17, .Reserved[0] = 0xFF, .Reserved[1] = 0xFF, .Incline = 0x7FFF };
+    page.ResistanceLevelFEC = resistance_pct_get(1200);
 
-    uint8_t i = 0; // message sequence
+    print_hex((uint8_t*)&page);	
 
-
-    while (i < 255) 
-    {
-        // xor , then flip ~, and with a bunch of 00s
-        
-        /* Binary patterns that match last 2 bits (*):
-            0   0000 *
-            1   0001 **
-            2   0010 ***
-            3   0011 -
-            4   0100 *
-            5   0101 **
-            6   0110 ***
-            7   0111 --
-            
-            Message Pattern:
-            16 26 25 17  16 26 25 255 .{64 messages}. 80 80 .{64 messages}. 81 81
-            
-        */
-        
-        if (i == 128 || i == 129)
-        {
-            printf("%i:\t81\r\n", i);
-        }
-        else if (i == 64 || i == 65)
-        {
-            printf("%i:\t80\r\n", i);
-        }
-        else if (  (~(0b01 ^ i) & 3) == 3  )
-        {
-            // Messages 1 & 5
-            printf("%i:\t26\r\n", i);
-        }
-        else if (  (~(0b10 ^ i) & 3) == 3  )
-        {
-            // Messages 2 & 6
-            printf("%i:\t25\r\n", i);
-        }
-        else if (  (~(0b111 ^ i) & 7) == 7  )
-        {
-            // Message 7
-            printf("%i:\t255\r\n", i);
-        }       
-        else if (  (~(0b11 ^ i) & 3) == 3  )
-        {
-            // Message 3
-            printf("%i:\t17\r\n", i);
-        }     
-        else 
-        {
-            printf("%i:\t16\r\n", i);    
-        }
-          
-        /*else
-        {
-            printf("%i\tmissed.\r\n", i);
-        }*/
-/*        
-        FEC_Page17* p_page17 = build_page17(&context, &profile);
-        printf("%i\tpage 17 (0x11): \t", i);
-        print_hex((uint8_t*)p_page17);	
-
-        FEC_Page25* p_page25 = build_page25(&context);
-        printf("%i\tpage 25 (0x19): \t", i);
-        print_hex((uint8_t*)p_page25);
-*/        
-        i++;
-        
-        if (i > 129)
-            i = 0;
-    }
-
-	/* Transmission pattern:
-	
-	page 16: sent at least twice consecutively every 4 messages, or exactly once every 5th message.
-	page 17: at least once every 20 messages (see section 6.5)
-	page 25: once every 5 messages (see section 6.5)
-	pages (48-51): -- transmitted by the open display
-	
-	On Demand pages: capabilities data page and configuration data page, as requested by page 70
-		see section 6.10 
-	
-	Background pages interleaved ithe broadcast pattern at a minimum rate o 2 consecutive background pages every 66 pages.
-	Each background page is transmitted twice consecutively at least once every 132 messages.
-	0   1   2   3      4   5   6   7
-	16, 16, 25, 17 ... 16, 16, 25, 255 ... 16, 16, 25, 17 ... 16, 16, 25, 255 
-	 .{64 pages}. 80 80 .{64 pages}. 81, 81  
-	
-	*/
-
-	//printf("size: %i\r\n", sizeof(fe_state_t));
-	//printf("res: %i\r\n", (uint8_t)resistance_pct);
-	//printf("value: %i\r\n", page.message.FEState);
+    printf("pct: %i\r\n", page.ResistanceLevelFEC);
+    
 
 	return 0;
 }
