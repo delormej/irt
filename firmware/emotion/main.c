@@ -1188,6 +1188,9 @@ static void on_set_resistance(rc_evt_t rc_evt)
             break;
             
         case RESISTANCE_SET_TARGET_POWER:
+             resistance_erg_set(rc_evt.target_power);
+            break;
+                    
         case RESISTANCE_SET_FE_WIND:
         case RESISTANCE_SET_TRACK:
         case RESISTANCE_SET_USER_CONFIG:

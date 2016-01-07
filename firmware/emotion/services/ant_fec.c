@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include "ant_fec.h"
 #include "ble_ant.h"
 #include "ant_stack_handler_types.h"
@@ -10,6 +11,7 @@
 #include "ant_interface.h"
 #include "ant_error.h"
 #include "app_error.h"
+#include "app_util.h"
 #include "nordic_common.h"
 #include "irt_common.h"
 #include "user_profile.h"
@@ -167,12 +169,16 @@ static void HandleResistancePages(uint8_t* buffer)
     switch (resistance_evt.operation) 
     {
         case BASIC_RESISTANCE_PAGE:
-            resistance_evt.total_resistance = (float)(buffer[7] / 255.0f);
+            resistance_evt.total_resistance = (float)(buffer[7] / 200.0f);
             FE_LOG("[FE] total_resistance: %.2f\r\n", 
                 resistance_evt.total_resistance);
             break;
             
         case TARGET_POWER_PAGE:
+            resistance_evt.target_power = (uint16_t) (uint16_decode(&buffer[6]) / 4.0f);
+            FE_LOG("[FE] target_power: %i\r\n",resistance_evt.target_power);            
+            break;
+        
         case WIND_RESISTANCE_PAGE:
         case TRACK_RESISTANCE_PAGE:
             break;
