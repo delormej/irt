@@ -169,13 +169,15 @@ static void HandleResistancePages(uint8_t* buffer)
     switch (resistance_evt.operation) 
     {
         case BASIC_RESISTANCE_PAGE:
+            // Decode 0.5% increments, range 0 - 100%.
             resistance_evt.total_resistance = (float)(buffer[7] / 200.0f);
             FE_LOG("[FE] total_resistance: %.2f\r\n", 
                 resistance_evt.total_resistance);
             break;
             
         case TARGET_POWER_PAGE:
-            resistance_evt.target_power = (uint16_t) (uint16_decode(&buffer[6]) / 4.0f);
+            // Decode 0.25w increments, range 0 - 4000 watts.
+            resistance_evt.target_power = uint16_decode(&buffer[6]) / 4;
             FE_LOG("[FE] target_power: %i\r\n",resistance_evt.target_power);            
             break;
         
