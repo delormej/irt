@@ -22,6 +22,12 @@
 #define ANT_SP_TX_CHANNEL     	 			3u                                           /**< Bicycle Speed TX ANT Channel. */
 #define ANT_FEC_TX_CHANNEL     	 			4u                                           /**< ANT+ FE-C Channel. */
 
+// Generic ANT pages.
+#define ANT_PAGE_GETSET_PARAMETERS		0x02
+#define ANT_PAGE_MEASURE_OUTPUT			0x03	// Measurement Output Data Page (0x03)
+#define ANT_PAGE_REQUEST_DATA			0x46
+#define ANT_PAGE_BATTERY_STATUS			0x52
+
 #define ANT_COMMON_PAGE_80          		0x50u   /**< Manufacturer's identification common data page. */
 #define ANT_COMMON_PAGE_81          		0x51u   /**< Product information common data page. */
 //#define COMMON_PAGE_BATTERY_VOLTAGE 		0x52u   /**< TODO: Optional battery voltage reporting. */

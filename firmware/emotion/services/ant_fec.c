@@ -158,6 +158,21 @@ static uint32_t SpecificTrainerDataPage_Send(irt_context_t* context)
 }
 static uint32_t SpecificTrainerTorqueDataPage_Send() {return 0;}
 
+static uint32_t FECapabilitiesDataPage_Send()
+{
+    static FEC_Page54 page = { 
+        .DataPageNumber = FE_CAPABILITIES_PAGE,
+        .FECapabilities = FE_CAPABILITIES_BIT_FIELD
+    };
+    
+    // TODO: Calculate maximum resistance for the current speed.
+    page.MaxResistanceLSB = 0xFF;
+    page.MaxResistanceMSB = 0xFF;
+    
+	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&page);       
+}
+
 static void HandleResistancePages(uint8_t* buffer)
 {
 	rc_evt_t resistance_evt; 
@@ -305,16 +320,6 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
 	// Only interested in BURST events right now for processing resistance control.
     if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] == MESG_ACKNOWLEDGED_DATA_ID)
 	{
-        FE_LOG("[FE]: message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-                p_ant_evt->evt_buffer[3],
-                p_ant_evt->evt_buffer[4],
-                p_ant_evt->evt_buffer[5],
-                p_ant_evt->evt_buffer[6],
-                p_ant_evt->evt_buffer[7],
-                p_ant_evt->evt_buffer[8],
-                p_ant_evt->evt_buffer[9],
-                p_ant_evt->evt_buffer[10]);        
-        
 		// TODO: remove these hard coded array position values and create defines.
 		switch (p_ant_evt->evt_buffer[3])  // Switch on the page number.
 		{
@@ -324,6 +329,11 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
             case TRACK_RESISTANCE_PAGE:           
                 HandleResistancePages(&p_ant_evt->evt_buffer[3]);
                 break;
+            
+			case ANT_PAGE_REQUEST_DATA:
+				FE_LOG("[FE]:requesting data page: [%.2x]\r\n", p_ant_evt->evt_buffer[9]);
+                mp_evt_handlers->on_request_data(&(p_ant_evt->evt_buffer[3]));				
+				break;            
             
 			default:
 				FE_LOG("[FE]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",

@@ -15,12 +15,6 @@
 #define ANT_BP_PAGE_TORQUE_AT_WHEEL		0x11   /**< Power reported as torque at wheel data page, which includes speed. */
 #define ANT_BP_PAGE_EXTRA_INFO			0xF1   // Manufacturer specific page.
 
-// Generic ANT pages.
-#define ANT_PAGE_GETSET_PARAMETERS		0x02
-#define ANT_PAGE_MEASURE_OUTPUT			0x03	// Measurement Output Data Page (0x03)
-#define ANT_PAGE_REQUEST_DATA			0x46
-#define ANT_PAGE_BATTERY_STATUS			0x52
-
 #define ANT_BP_CAL_PARAM_RESPONSE		0xBB
 #define ANT_BP_CAL_SUCCESS_RESPONSE		0xAC
 #define ANT_BP_CAL_FAIL_RESPONSE		0xAF

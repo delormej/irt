@@ -26,6 +26,8 @@
 #define USER_CONFIGURATION_PAGE     55
 #define COMMAND_STATUS_PAGE			71
 
+#define FE_CAPABILITIES_BIT_FIELD   0x7     // (Basic = 1 | Target Power = 2 | Simulation = 4) == 7  
+
 typedef struct {
 	uint8_t 	DataPageNumber;
 	uint8_t 	EquipmentType;
@@ -91,6 +93,14 @@ typedef struct {
 	uint8_t		GradeMSB;
 	uint8_t		CoeffRollingResistance;				
 } FEC_Page51; // Track Resistance
+
+typedef struct {
+	uint8_t		DataPageNumber;
+	uint8_t		Reserved[4];
+	uint8_t		MaxResistanceLSB;
+	uint8_t		MaxResistanceMSB;				// 0 - 65534 newtons.
+    uint8_t     FECapabilities;        
+} FEC_Page54; // FE Capabilities
 
 typedef struct {
 	uint8_t		DataPageNumber;
