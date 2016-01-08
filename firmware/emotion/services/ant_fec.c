@@ -60,6 +60,13 @@
 
 static ant_ble_evt_handlers_t* mp_evt_handlers;
 static user_profile_t* mp_user_profile;
+static FEC_Page71 m_last_command = {           // Manages state for the last command received.
+    .DataPageNumber = COMMAND_STATUS_PAGE,
+    .LastReceivedCommandID = 0xFF,
+    .Sequence = 0xFF,
+    .CommandStatus = FE_COMMAND_UNINITIALIZED,
+    .Data = { 0xFF, 0xFF, 0xFF, 0xFF } 
+    };
 
 /**@brief	Converts speed in mps as float into a dword.
  */
@@ -178,14 +185,18 @@ static void HandleResistancePages(uint8_t* buffer)
 	rc_evt_t resistance_evt; 
     memset(&resistance_evt, 0, sizeof(rc_evt_t));
 
+    // TODO: refactor and remove resistance_evt to just share page 71 (Last command).
     // Operation is the page number, which is the first byte.
+    memset(m_last_command.Data, 0xFF, sizeof(m_last_command.Data));
     resistance_evt.operation = buffer[0]; 
-    
+
     switch (resistance_evt.operation) 
     {
         case BASIC_RESISTANCE_PAGE:
             // Decode 0.5% increments, range 0 - 100%.
             resistance_evt.total_resistance = (float)(buffer[7] / 200.0f);
+            // Store total resistance.
+            m_last_command.Data[3] = buffer[7];
             FE_LOG("[FE] total_resistance: %.2f\r\n", 
                 resistance_evt.total_resistance);
             break;
@@ -193,6 +204,10 @@ static void HandleResistancePages(uint8_t* buffer)
         case TARGET_POWER_PAGE:
             // Decode 0.25w increments, range 0 - 4000 watts.
             resistance_evt.target_power = uint16_decode(&buffer[6]) / 4;
+            // Store target power.
+            m_last_command.Data[2] = buffer[6];
+            m_last_command.Data[3] = buffer[7];
+            
             FE_LOG("[FE] target_power: %i\r\n",resistance_evt.target_power);            
             break;
         
@@ -202,8 +217,16 @@ static void HandleResistancePages(uint8_t* buffer)
         default:
             break;   
     };
+
+    m_last_command.LastReceivedCommandID = resistance_evt.operation;
+    m_last_command.Sequence++;
+    m_last_command.CommandStatus = FE_COMMAND_PENDING;
                 
     mp_evt_handlers->on_set_resistance(resistance_evt);
+    
+    // TODO: There is an opportunity here to handle errors more gracefully.
+    // If we didn't fail on previous call, assume a pass.
+    m_last_command.CommandStatus = FE_COMMAND_PASS;
 }
 
 /**@brief	Initialize the ANT+ FE-C profile and register callbacks.
@@ -349,4 +372,15 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
 				break;
 		}
 	}  
+}
+
+void ant_fec_common_page_send(uint8_t page_number)
+{
+    /*
+    #define ANT_COMMON_PAGE_80
+    #define ANT_COMMON_PAGE_81
+    #define FE_CAPABILITIES_PAGE
+    #define USER_CONFIGURATION_PAGE
+    #define COMMAND_STATUS_PAGE
+    */   
 }

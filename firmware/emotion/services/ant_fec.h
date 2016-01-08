@@ -28,6 +28,15 @@
 
 #define FE_CAPABILITIES_BIT_FIELD   0x7     // (Basic = 1 | Target Power = 2 | Simulation = 4) == 7  
 
+typedef enum {
+    FE_COMMAND_PASS = 0,
+    FE_COMMAND_FAIL,
+    FE_COMMAND_NOT_SUPPORTED,
+    FE_COMMAND_REJECTED,
+    FE_COMMAND_PENDING,
+    FE_COMMAND_UNINITIALIZED = 0xFF
+} fec_command_status_e;
+
 typedef struct {
 	uint8_t 	DataPageNumber;
 	uint8_t 	EquipmentType;
@@ -105,9 +114,9 @@ typedef struct {
 typedef struct {
 	uint8_t		DataPageNumber;
 	uint8_t		LastReceivedCommandID;
-	uint8_t		Sequence; 					// Default to 255 if no control page yet been receieved.
+	uint8_t		Sequence; 					   // Default to 255 if no control page yet been receieved.
 	uint8_t		CommandStatus;				
-	uint32_t	Data;						// Response data specific to command ID.
+	uint8_t	    Data[4];						// Response data specific to command ID.
 } FEC_Page71; // Command Status Page
 
 void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers);
