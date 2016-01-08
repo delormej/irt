@@ -60,6 +60,7 @@
 #include "debug.h"
 #include "boards.h"
 #include "battery.h"
+#include "magnet.h"
 //#include "irt_error_log.h"
 #include "irt_led.h"
 #include "bp_response_queue.h"
@@ -92,8 +93,18 @@
 
 #define DATA_PAGE_RESPONSE_TYPE			0x80										// 0X80 For acknowledged response or number of times to send broadcast data requests.
 
-static irt_context_t 					m_current_state;							// Current state structure.
-
+static irt_context_t 					m_current_state =	{						// Current state structure, initalized:
+    .fe_state = FE_READY,
+    .elapsed_time = 0, 
+    .distance_m = 0, 
+    .lap_toggle = 0,
+    .instant_speed_mps = 0.0f,
+    .target_power_limits = TARGET_UNDETERMINED,
+    .bike_power_calibration_required = 0,
+	.resistance_calibration_required = 0,
+	.user_configuration_required = 0    
+    };
+    
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 static app_timer_id_t					m_sensor_read_timer_id;						// Timer used to read sensors, out of phase from the 4hz messages.
 static app_timer_id_t					m_ca_timer_id;								// Calibration timer.
@@ -285,7 +296,7 @@ static void set_sim_params(uint8_t *pBuffer)
 
 	weight = uint16_decode(pBuffer);
 
-	if (weight > 30.0f) // minimum weight.
+	if (weight  > 30.0f) // minimum weight.
 	{
 		if (mp_user_profile->total_weight_kg != weight)
 		{
@@ -319,6 +330,7 @@ static void set_sim_params(uint8_t *pBuffer)
 
 /**@brief	Helper method that updates context object with current resistance state.
  * 			Copies the resistance state for point in time reporting.
+ *          NOTE: this must be called @4hz in main handler.
  *
  */
 static void update_resistance_state()
@@ -340,6 +352,40 @@ static void update_resistance_state()
 			m_current_state.resistance_level = 0;
 			break;
 	}
+    
+    /* 
+     * State transition: READY -> IN_USE <-> FINISHED/PAUSED
+     * If we're moving and in READY, move to IN USE
+     * If we're IN USE and stopped, move to FINISHED/PAUSED
+     */
+    switch (m_current_state.fe_state)
+    {
+        case FE_READY:
+        case FE_FINISHED_PAUSED:
+            if (m_current_state.instant_speed_mps > 1.0f)
+            {
+                // Transition to in use.
+                m_current_state.fe_state = FE_IN_USE;                
+            }
+            break;
+        
+        case FE_IN_USE:
+            if (m_current_state.instant_speed_mps < 1.0f)
+            {
+                // Transition to finished / paused.
+                m_current_state.fe_state = FE_FINISHED_PAUSED;                
+            }
+            else
+            {
+                // Increment time & distance.
+                m_current_state.distance_m = speed_distance_get();
+                m_current_state.elapsed_time++;
+            }
+            break;
+            
+        default:
+            break;
+    }
 }
 
 /**@brief	Toggles between standard and erg mode.

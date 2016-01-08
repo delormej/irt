@@ -34,6 +34,10 @@ cl test.c ../emotion/libraries/math/acosf.c ../emotion/libraries/math/sqrtf.c ..
 		(DISTANCE_TRAVELED_ENABLED << 2) |	\	
 		(context->virtual_speed_flag << 3))   	
 
+#define FLYWHEEL_TICK_PER_REV		2																// # of ticks per flywheel revolution.
+#define FLYWHEEL_ROAD_DISTANCE		0.115f															// Virtual road distance traveled in meters per complete flywheel rev.
+#define FLYWHEEL_TICK_PER_METER		((1.0f / FLYWHEEL_ROAD_DISTANCE) * FLYWHEEL_TICK_PER_REV)		// # of flywheel ticks per meter
+
 typedef enum  {
 	FE_RESERVED = 0,
 	FE_ASLEEP_OFF,
@@ -296,11 +300,14 @@ FEC_Page25* build_page25(irt_context_t* context) {
 	return &page;
 } 
 
-
-
+uint8_t speed_distance_get(void) 
+{
+    return (uint8_t)(0 / FLYWHEEL_TICK_PER_METER);     
+}
 
 int main(int argc, char *argv [])
 {
+    /*
     uint8_t buffer[2] = { 0x30, 0x00 };
     printf("size: %.2f\r\n", (float)(buffer[0] / 2.55f));
     	
@@ -325,8 +332,8 @@ int main(int argc, char *argv [])
     page.ResistanceLevelFEC = resistance_pct_get(1200);
 
     print_hex((uint8_t*)&page);	
-
-    printf("pct: %i\r\n", page.ResistanceLevelFEC);
+    */
+    printf("distance: %i\r\n", speed_distance_get());
     
 
 	return 0;

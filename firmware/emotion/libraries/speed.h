@@ -66,4 +66,9 @@ uint16_t flywheel_ticks_get();
  */
 uint16_t seconds_2048_get(void);
 
+/**@brief 	Returns the distance traveled in meters.  Rolls over at 256m.
+ *
+ */
+uint8_t speed_distance_get(void);
+
 #endif

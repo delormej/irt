@@ -191,20 +191,6 @@ static void HandleResistancePages(uint8_t* buffer)
     mp_evt_handlers->on_set_resistance(resistance_evt);
 }
 
-/**@brief	Sets initial state for FE-C (Fitness Equipment-Control).
- */
-static void state_init(irt_context_t* p_context)
-{
-	p_context->elapsed_time = 0;
-	p_context->fe_state = FE_ASLEEP_OFF;
-	p_context->lap_toggle = 0;
-	p_context->virtual_speed_flag = 0;
-	p_context->target_power_limits = TARGET_UNDETERMINED;
-	p_context->bike_power_calibration_required = 0;
-	p_context->resistance_calibration_required = 0;
-	p_context->user_configuration_required = 0;
-}
-
 /**@brief	Initialize the ANT+ FE-C profile and register callbacks.
  */
 void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers)
@@ -252,9 +238,6 @@ void ant_fec_tx_start(void)
 void ant_fec_tx_send(irt_context_t * p_power_meas)
 {
     static uint8_t count = 0; 
-    
-	// TODO: If this is the first time, call...
-	state_init(p_power_meas);
     
     // xor , then flip ~, and with a bunch of 00s
     /* Binary patterns that match last 2 bits (*):

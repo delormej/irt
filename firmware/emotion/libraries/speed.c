@@ -263,3 +263,13 @@ uint16_t seconds_2048_get(void)
 {
 	return m_lastSpeedEvent.event_time_2048;
 }
+
+/**@brief 	Returns the distance traveled in meters.  Rolls over at 256m.
+ *
+ */
+uint8_t speed_distance_get(void) 
+{
+    // Convert flywheel ticks to meters.
+    return (uint8_t)
+        (m_lastSpeedEvent.accum_flywheel_ticks / FLYWHEEL_TICK_PER_METER);     
+}
