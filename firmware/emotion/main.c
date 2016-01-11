@@ -531,10 +531,6 @@ static void ant_4hz_timeout_handler(void * p_context)
 	// Extra Info debug messages (to be removed before production and replaced with request data page)
 	// Acknowledgments to resistance control
 
-	// If there was another ANT+ message response dequeued and sent, wait until next timeslot..
-	if (dequeue_ant_response())
-		return;
-
 	// Maintain a static event count, we don't do everything each time.
 	event_count++;
 
@@ -586,8 +582,13 @@ static void ant_4hz_timeout_handler(void * p_context)
 		}
 	}
 
-	// Transmit the power messages.
-	cycling_power_send(&m_current_state);
+    // If there was another ANT+ message response in queue it was sent as a response
+    // so skip until next time slot for cycling power.
+	if (!dequeue_ant_response())
+    {
+        // Transmit the power messages.
+        cycling_power_send(&m_current_state);
+    }
 
 	// Transmit FE-C messages.
 	ant_fec_tx_send(&m_current_state);

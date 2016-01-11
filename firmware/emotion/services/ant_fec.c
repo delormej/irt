@@ -230,12 +230,18 @@ static void HandleResistancePages(uint8_t* buffer)
         case WIND_RESISTANCE_PAGE:
             // Make a copy of the page.
             memcpy(&m_page50, buffer, sizeof(FEC_Page50));
+            m_last_command.Data[1] = m_page50.WindResistanceCoeff;
+            m_last_command.Data[2] = m_page50.WindSpeed;
+            m_last_command.Data[3] = m_page50.DraftingFactor;    
             FE_LOG("[FE] wind_resistance \r\n");
             break;
         
         case TRACK_RESISTANCE_PAGE:
             // Make a copy of the page.
             memcpy(&m_page51, buffer, sizeof(FEC_Page51));
+            m_last_command.Data[1] = m_page51.GradeLSB;
+            m_last_command.Data[2] = m_page51.GradeMSB;
+            m_last_command.Data[3] = m_page51.CoeffRollingResistance;    
             FE_LOG("[FE] track_resistance \r\n");
             break;
             

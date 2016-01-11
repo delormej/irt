@@ -92,7 +92,7 @@ typedef struct {
 	uint8_t		Reserved[4];
 	uint8_t		WindResistanceCoeff;
 	uint8_t		WindSpeed;					// -127 - +127 km/h
-	uint8_t		DraftingFactor;				// 0 - 1.00				
+        uint8_t		DraftingFactor;				// 0 - 1.00				
 } FEC_Page50; // Wind Resistance
 
 typedef struct {
