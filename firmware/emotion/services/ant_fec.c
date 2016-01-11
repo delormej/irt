@@ -301,6 +301,12 @@ static bool dequeue_request()
             FECapabilitiesDataPage_Send();
             break;
             
+        case USER_CONFIGURATION_PAGE:
+            // TOOD: send user configuration.
+            /*sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE,
+                (uint8_t*)&m_page55);        */
+            break;
+            
         case WIND_RESISTANCE_PAGE:
             sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE,
                 (uint8_t*)&m_page50);
@@ -479,15 +485,4 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
 				break;
 		}
 	}  
-}
-
-void ant_fec_common_page_send(uint8_t page_number)
-{
-    /*
-    #define ANT_COMMON_PAGE_80
-    #define ANT_COMMON_PAGE_81
-    #define FE_CAPABILITIES_PAGE
-    #define USER_CONFIGURATION_PAGE
-    #define COMMAND_STATUS_PAGE
-    */   
 }
