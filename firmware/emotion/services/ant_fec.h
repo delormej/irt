@@ -113,6 +113,18 @@ typedef struct {
 
 typedef struct {
 	uint8_t		DataPageNumber;
+	uint8_t		UserWeightLSB;
+	uint8_t		UserWeightMSB;
+	uint8_t		Reserved;
+	uint8_t		WheelDiameterOffset : 4;		// units: 1mm, range: 0 - 10 mm.  No offset = 0xF.
+	uint8_t		BikeWeightLSN : 4;				// units: 0.05kg, range: 0 - 50 kg Least significant nibble.
+    uint8_t     BikeWeightMSB;					// Most significant byte.
+	uint8_t		WheelDiameter;					// units: 0.01m, range: 0 - 2.54m
+	uint8_t		GearRatio;						// Invalid 0.00, units: 0.03, range 0.03 - 7.65    
+} FEC_Page55; // FE User Configuration
+
+typedef struct {
+	uint8_t		DataPageNumber;
 	uint8_t		LastReceivedCommandID;
 	uint8_t		Sequence; 					   // Default to 255 if no control page yet been receieved.
 	uint8_t		CommandStatus;				
