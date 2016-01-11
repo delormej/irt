@@ -28,6 +28,7 @@ C_SOURCE_FILES += pstorage.c
 C_SOURCE_FILES += nrf_delay.c
 C_SOURCE_FILES += simple_uart.c
 C_SOURCE_FILES += app_button.c
+C_SOURCE_FILES += app_fifo.c
 
 C_SOURCE_PATHS +=  ./libraries/
 C_SOURCE_PATHS +=  ./services/
@@ -50,6 +51,7 @@ INCLUDE_PATHS += $(SDK_PATH)libraries/timer/
 INCLUDE_PATHS += $(SDK_PATH)libraries/scheduler/
 INCLUDE_PATHS += $(SDK_PATH)libraries/gpiote
 INCLUDE_PATHS += $(SDK_PATH)libraries/button/
+INCLUDE_PATHS += $(SDK_PATH)libraries/fifo/
 INCLUDE_PATHS += $(SDK_PATH)ble/common/
 INCLUDE_PATHS += $(SDK_PATH)ble/ble_services/ble_dis/
 INCLUDE_PATHS += $(SDK_PATH)ble/ble_services/ble_cscs/

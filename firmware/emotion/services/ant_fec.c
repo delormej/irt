@@ -16,6 +16,7 @@
 #include "irt_common.h"
 #include "user_profile.h"
 #include "resistance.h"
+#include "app_fifo.h"
 #include "debug.h"
 
 /**@brief Debug logging for module.
@@ -58,9 +59,24 @@
 		(DISTANCE_TRAVELED_ENABLED << 2) | \	
 		(context->virtual_speed_flag << 3))   	
 
+//
+// Circular buffer to queue for page requests.
+//
+#define FIFO_BUFFER_SIZE 4
+static app_fifo_t request_queue;
+static uint8_t m_fifo_buffer[FIFO_BUFFER_SIZE];
+
 static ant_ble_evt_handlers_t* mp_evt_handlers;
 static user_profile_t* mp_user_profile;
-static FEC_Page71 m_last_command = {           // Manages state for the last command received.
+
+// Hold on to these pages to respond with when requested.
+static FEC_Page50 m_page50;
+static FEC_Page51 m_page51;
+
+static FEC_Page55 m_page55; // Store user configuration page.
+
+// Manages state for the last command received.
+static FEC_Page71 m_last_command = {           
     .DataPageNumber = COMMAND_STATUS_PAGE,
     .LastReceivedCommandID = 0xFF,
     .Sequence = 0xFF,
@@ -212,8 +228,17 @@ static void HandleResistancePages(uint8_t* buffer)
             break;
         
         case WIND_RESISTANCE_PAGE:
-        case TRACK_RESISTANCE_PAGE:
+            // Make a copy of the page.
+            memcpy(&m_page50, buffer, sizeof(FEC_Page50));
+            FE_LOG("[FE] wind_resistance \r\n");
             break;
+        
+        case TRACK_RESISTANCE_PAGE:
+            // Make a copy of the page.
+            memcpy(&m_page51, buffer, sizeof(FEC_Page51));
+            FE_LOG("[FE] track_resistance \r\n");
+            break;
+            
         default:
             break;   
     };
@@ -229,6 +254,66 @@ static void HandleResistancePages(uint8_t* buffer)
     m_last_command.CommandStatus = FE_COMMAND_PASS;
 }
 
+/**@brief   Queues a request to send a given page.
+ */
+static void queue_request(uint8_t page_number)
+{
+    uint32_t err_code;
+    err_code = app_fifo_put(&request_queue, page_number);
+    
+    // If the queue was full, warn and move on.  We won't be able to respond to
+    // that request. 
+    if (err_code == NRF_ERROR_NO_MEM)
+    {
+        FE_LOG("[FE] queue_request : QUEUE FULL.\r\n"); 
+    }
+}
+
+/**@brief   Checks if there are requested pages queued to send.
+ *          If so, sends the requested page.
+ */
+static bool dequeue_request()
+{
+    uint8_t page_number = 0;
+    if (app_fifo_get(&request_queue, &page_number) == NRF_ERROR_NOT_FOUND)
+    {
+        // No message to send.
+        return false;
+    } 
+    
+    switch (page_number)
+    {
+        case ANT_COMMON_PAGE_80:
+            ant_common_page_transmit(ANT_FEC_TX_CHANNEL, ant_manufacturer_page);
+            break;
+            
+        case ANT_COMMON_PAGE_81:
+            ant_common_page_transmit(ANT_FEC_TX_CHANNEL, ant_product_page);
+            break;
+            
+        case FE_CAPABILITIES_PAGE:
+            FECapabilitiesDataPage_Send();
+            break;
+            
+        case WIND_RESISTANCE_PAGE:
+            sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE,
+                (uint8_t*)&m_page50);
+            break;
+        
+        case TRACK_RESISTANCE_PAGE:
+            sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE,
+                (uint8_t*)&m_page51);
+            break;
+
+        case COMMAND_STATUS_PAGE:
+            sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		      (uint8_t*)&m_last_command);       
+            break;
+    }
+    
+    return true;
+}
+
 /**@brief	Initialize the ANT+ FE-C profile and register callbacks.
  */
 void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers)
@@ -237,6 +322,11 @@ void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers)
 
 	// Assign callback for when resistance message is processed.	
     mp_evt_handlers = evt_handlers;
+
+    // Initialize the queue.
+    err_code = app_fifo_init(&request_queue, m_fifo_buffer, 
+        (uint16_t)sizeof(m_fifo_buffer));
+    APP_ERROR_CHECK(err_code);
 
     // Get a pointer to the user profile object.
     mp_user_profile = user_profile_get();
@@ -276,6 +366,15 @@ void ant_fec_tx_start(void)
 void ant_fec_tx_send(irt_context_t * p_power_meas)
 {
     static uint8_t count = 0; 
+    
+    // TOOD: conslodate where we send the broadcast message, single call
+    // the rest of this code should just get a handle to the page to send.
+    // This way we can centralize error handling, etc...
+    
+    // Check to see if we have any pending data page requests.
+    // If so that message is sent, so return for this cycle.
+    if (dequeue_request())
+        return;
     
     // xor , then flip ~, and with a bunch of 00s
     /* Binary patterns that match last 2 bits (*):
@@ -355,7 +454,9 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
             
 			case ANT_PAGE_REQUEST_DATA:
 				FE_LOG("[FE]:requesting data page: [%.2x]\r\n", p_ant_evt->evt_buffer[9]);
-                mp_evt_handlers->on_request_data(&(p_ant_evt->evt_buffer[3]));				
+                
+                // Add this to the request queue.
+                queue_request(p_ant_evt->evt_buffer[9]);
 				break;            
             
 			default:
