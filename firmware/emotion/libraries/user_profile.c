@@ -14,7 +14,7 @@
 #define USER_PROFILE_OFFSET			0u	
 
 #define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
-#define DEFAULT_TOTAL_WEIGHT_KG			8180ul 										// Default weight (convert 180.0lbs to KG).
+#define DEFAULT_TOTAL_WEIGHT_KG			8500ul 										// Default weight 85kg (75kg user, 10kg bike) as per FE-C spec.
 #define DEFAULT_SETTINGS				SETTING_INVALID								// Default 32bit field of settings.
 
 /**@brief Debug logging for main module.

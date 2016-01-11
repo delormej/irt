@@ -41,6 +41,9 @@
 #define HEARTRATE_INVALID			0xFF
 #define INCLINE_INVALID				0x7FFF
 #define RESISTANCE_INVALID			0xFF
+#define GEAR_RATIO_INVALID          0x00
+
+#define DEFAULT_BIKE_WEIGHT_KG		1000ul 										// Default weight 10kg as per FE-C spec.
 
 /**@ brief	Macro to set the value of FE State bit field (nibble) from irt_context_t. 	
 				fe_state 			// bits 0-2 
@@ -73,7 +76,11 @@ static user_profile_t* mp_user_profile;
 static FEC_Page50 m_page50;
 static FEC_Page51 m_page51;
 
-static FEC_Page55 m_page55; // Store user configuration page.
+static FEC_Page55 m_page55 = { 
+        .DataPageNumber = USER_CONFIGURATION_PAGE,
+        .Reserved = 0xFF,
+        .GearRatio = GEAR_RATIO_INVALID                // We don't support this now.
+    };      
 
 // Manages state for the last command received.
 static FEC_Page71 m_last_command = {           
@@ -196,6 +203,48 @@ static uint32_t FECapabilitiesDataPage_Send()
 		(uint8_t*)&page);       
 }
 
+static uint32_t UserConfigurationPage_Send()
+{
+    // DEFAULT_TOTAL_WEIGHT_KG
+    
+    // Calculate weight bike weight as total weight - user weight.
+    // Since we do not store bike weight directly.
+    // Currently, total weight will never be invalid because the user profile init
+    // routine will default the value.  
+    // TODO: reconsider who is responsible for what here as the code is getting too complicated.
+    uint16_t user_weight = mp_user_profile->user_weight_kg;
+    uint16_t bike_weight;
+    
+    FE_LOG("[FE] User Weight:%i\r\n", user_weight);
+    
+    // If user weight is invalid, set bike to default.
+    if (user_weight == 0xFFFF)
+    {
+        bike_weight = DEFAULT_BIKE_WEIGHT_KG;
+        user_weight = (mp_user_profile->total_weight_kg - bike_weight); 
+    }
+    else
+    {
+        // Otherwise calculate from total.
+        bike_weight = (mp_user_profile->total_weight_kg - user_weight);
+    }
+
+    // Unit for bike weight is 0.05kg, 0x0FFF == 50kg, 
+    // Calculate wire value by dividing by 5.
+    bike_weight = (uint16_t)(bike_weight / 5u);
+    
+    // Bike weight == 1.5 bytes.
+    m_page55.BikeWeightMSB = (uint8_t)((bike_weight >> 4) & 0x0FF);
+    m_page55.BikeWeightLSN = (uint8_t)(bike_weight & 0x000F);
+    
+    // User weight.
+    m_page55.UserWeightLSB = LOW_BYTE(user_weight);
+    m_page55.UserWeightMSB = HIGH_BYTE(user_weight);
+
+	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&m_page55);    
+}
+
 static void HandleResistancePages(uint8_t* buffer)
 {
 	rc_evt_t resistance_evt; 
@@ -260,6 +309,23 @@ static void HandleResistancePages(uint8_t* buffer)
     m_last_command.CommandStatus = FE_COMMAND_PASS;
 }
 
+static void HandleUserConfigurationPage(uint8_t* buffer)
+{
+    FE_LOG("[FE] user configuration received: [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+        buffer[0],
+        buffer[1],
+        buffer[2],
+        buffer[3],
+        buffer[4],
+        buffer[5],
+        buffer[6],
+        buffer[7]);
+    
+    // TODO: Assign user configuration values and ensure it gets updated in flash.
+    // NOTE: this is another problem area because things like speed depends on wheel circumference.
+    // This is another reason to centralize in the user profile.
+}
+
 /**@brief   Queues a request to send a given page.
  */
 static void queue_request(uint8_t page_number)
@@ -302,9 +368,7 @@ static bool dequeue_request()
             break;
             
         case USER_CONFIGURATION_PAGE:
-            // TOOD: send user configuration.
-            /*sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE,
-                (uint8_t*)&m_page55);        */
+            UserConfigurationPage_Send();
             break;
             
         case WIND_RESISTANCE_PAGE:
@@ -462,6 +526,10 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
             case WIND_RESISTANCE_PAGE:
             case TRACK_RESISTANCE_PAGE:           
                 HandleResistancePages(&p_ant_evt->evt_buffer[3]);
+                break;
+
+            case USER_CONFIGURATION_PAGE:
+                HandleUserConfigurationPage(&p_ant_evt->evt_buffer[3]);
                 break;
             
 			case ANT_PAGE_REQUEST_DATA:

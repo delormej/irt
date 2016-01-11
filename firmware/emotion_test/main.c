@@ -168,7 +168,17 @@ typedef struct {
 // Page 54
 
 // Page 55
-
+typedef struct {
+	uint8_t		DataPageNumber;
+	uint8_t		UserWeightLSB;
+	uint8_t		UserWeightMSB;
+	uint8_t		Reserved;
+	uint8_t		WheelDiameterOffset : 4;		// units: 1mm, range: 0 - 10 mm.  No offset = 0xF.
+	uint8_t		BikeWeightLSN : 4;				// units: 0.05kg, range: 0 - 50 kg Least significant nibble.
+    uint8_t     BikeWeightMSB;					// Most significant byte.
+	uint8_t		WheelDiameter;					// units: 0.01m, range: 0 - 2.54m
+	uint8_t		GearRatio;						// Invalid 0.00, units: 0.03, range 0.03 - 7.65    
+} FEC_Page55; // FE User Configuration
 
 // how to store efficently with assignment (structured)
 // how to assign to the message (unstructred ok)
@@ -305,8 +315,31 @@ uint8_t speed_distance_get(void)
     return (uint8_t)(0 / FLYWHEEL_TICK_PER_METER);     
 }
 
+
+static FEC_Page55* UserConfigurationPage_Send(uint16_t bike_weight)
+{
+    static FEC_Page55 page;
+
+    // DEFAULT_TOTAL_WEIGHT_KG
+
+    // Unit for bike weight is 0.05kg, 0x0FFF == 50kg, 
+    // calculate binary value by dividing by 5.
+    bike_weight = (uint16_t)(bike_weight / 5u);
+    
+    // Bike weight == 1.5 bytes.
+    page.BikeWeightMSB = (uint8_t)((bike_weight >> 4) & 0x0FF);
+    page.BikeWeightLSN = (uint8_t)(bike_weight & 0x000F);
+
+    return &page;
+}
+
 int main(int argc, char *argv [])
 {
+    FEC_Page55* page;
+    page = UserConfigurationPage_Send(10);
+    print_hex((uint8_t*)page);	
+    return;
+    
     /*
     uint8_t buffer[2] = { 0x30, 0x00 };
     printf("size: %.2f\r\n", (float)(buffer[0] / 2.55f));
