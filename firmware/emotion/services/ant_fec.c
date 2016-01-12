@@ -214,6 +214,7 @@ static uint32_t UserConfigurationPage_Send()
     // TODO: reconsider who is responsible for what here as the code is getting too complicated.
     uint16_t user_weight = mp_user_profile->user_weight_kg;
     uint16_t bike_weight;
+    float wheel_diameter;
     
     FE_LOG("[FE] User Weight:%i\r\n", user_weight);
     
@@ -240,6 +241,11 @@ static uint32_t UserConfigurationPage_Send()
     // User weight.
     m_page55.UserWeightLSB = LOW_BYTE(user_weight);
     m_page55.UserWeightMSB = HIGH_BYTE(user_weight);
+
+    // Wheel size is transmitted here in diameter, but we store and use in circumference.
+    // This is stored as another 1.5 byte field.
+    wheel_diameter = (((float)mp_user_profile->wheel_size_mm) / 3.14f);
+        
 
 	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		(uint8_t*)&m_page55);    
@@ -311,6 +317,11 @@ static void HandleResistancePages(uint8_t* buffer)
 
 static void HandleUserConfigurationPage(uint8_t* buffer)
 {
+    uint16_t bike_weight;
+    uint16_t user_weight;
+    uint16_t total_weight;
+    uint16_t wheel_size;
+    
     FE_LOG("[FE] user configuration received: [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
         buffer[0],
         buffer[1],
@@ -320,10 +331,51 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
         buffer[5],
         buffer[6],
         buffer[7]);
+        
+    // Copy into page 55 structure.
+    memcpy(&m_page55, buffer, sizeof(FEC_Page55));
     
-    // TODO: Assign user configuration values and ensure it gets updated in flash.
-    // NOTE: this is another problem area because things like speed depends on wheel circumference.
-    // This is another reason to centralize in the user profile.
+    // Parse user weight.
+    user_weight = uint16_decode((const uint8_t*)&m_page55.UserWeightLSB);
+    FE_LOG("[FE] User Weight Set to:%i\r\n", user_weight);
+    
+    // Wire value is 1.5 bytes.  Unit for bike weight is 0.05kg, 0x0FFF == 50kg, 
+    // Calculate value from wire, multiply by * 5.
+    // Store as 1/100kg, i.e. 6.7kg is stored as 670. 
+    bike_weight = 5 * (m_page55.BikeWeightLSN | 
+        (uint16_t)(m_page55.BikeWeightMSB << 4));
+    FE_LOG("[FE] Bike Weight Set to:%i\r\n", bike_weight);
+    
+    total_weight = user_weight + bike_weight;
+
+    // Parse Wheel size.  
+    //NOTE: from the Garmin Edge 520, this does not appear to be sent correctly.
+    // Diameter comes in cm, convert to millimeters.
+    wheel_size = m_page55.WheelDiameter * 10;
+    
+    if (m_page55.WheelDiameterOffset != 0xF)
+    {
+        // Add offset in millimeters.
+        wheel_size += m_page55.WheelDiameterOffset;
+    }
+    
+    // Calculate circumference from PI.
+    wheel_size = (uint16_t)((wheel_size * 314u) / 100u); 
+    FE_LOG("[FE] Bike Wheel Size to:%i\r\n", wheel_size);
+    
+    // Determine if this represents a change to the user profile.
+    if (mp_user_profile->total_weight_kg != total_weight ||
+        mp_user_profile->wheel_size_mm != wheel_size)
+    {
+        mp_user_profile->total_weight_kg = total_weight;
+        mp_user_profile->user_weight_kg = user_weight;
+        mp_user_profile->wheel_size_mm = wheel_size;
+        
+        // Signal to update the proile.
+        // TODO: Assign user configuration values and ensure it gets updated in flash.
+        // NOTE: this is another problem area because things like speed depends on wheel circumference.
+        // This is another reason to centralize in the user profile.
+    }
 }
 
 /**@brief   Queues a request to send a given page.
