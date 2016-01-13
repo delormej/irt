@@ -76,12 +76,6 @@ static user_profile_t* mp_user_profile;
 static FEC_Page50 m_page50;
 static FEC_Page51 m_page51;
 
-static FEC_Page55 m_page55 = { 
-        .DataPageNumber = USER_CONFIGURATION_PAGE,
-        .Reserved = 0xFF,
-        .GearRatio = GEAR_RATIO_INVALID                // We don't support this now.
-    };      
-
 // Manages state for the last command received.
 static FEC_Page71 m_last_command = {           
     .DataPageNumber = COMMAND_STATUS_PAGE,
@@ -203,6 +197,8 @@ static uint32_t FECapabilitiesDataPage_Send()
 		(uint8_t*)&page);       
 }
 
+/** It's unclear whether we need to send this page, seems that we only need to receive it.
+ *
 static uint32_t UserConfigurationPage_Send()
 {
     // DEFAULT_TOTAL_WEIGHT_KG
@@ -249,7 +245,7 @@ static uint32_t UserConfigurationPage_Send()
 
 	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		(uint8_t*)&m_page55);    
-}
+} */
 
 static void HandleResistancePages(uint8_t* buffer)
 {
@@ -315,8 +311,12 @@ static void HandleResistancePages(uint8_t* buffer)
     m_last_command.CommandStatus = FE_COMMAND_PASS;
 }
 
+/**@brief   Parses user configuration and applies to the user profile.
+ * 
+ */
 static void HandleUserConfigurationPage(uint8_t* buffer)
 {
+    FEC_Page55 page55;
     uint16_t bike_weight;
     uint16_t user_weight;
     uint16_t total_weight;
@@ -333,17 +333,17 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
         buffer[7]);
         
     // Copy into page 55 structure.
-    memcpy(&m_page55, buffer, sizeof(FEC_Page55));
+    memcpy(&page55, buffer, sizeof(FEC_Page55));
     
     // Parse user weight.
-    user_weight = uint16_decode((const uint8_t*)&m_page55.UserWeightLSB);
+    user_weight = uint16_decode((const uint8_t*)&page55.UserWeightLSB);
     FE_LOG("[FE] User Weight Set to:%i\r\n", user_weight);
     
     // Wire value is 1.5 bytes.  Unit for bike weight is 0.05kg, 0x0FFF == 50kg, 
     // Calculate value from wire, multiply by * 5.
     // Store as 1/100kg, i.e. 6.7kg is stored as 670. 
-    bike_weight = 5 * (m_page55.BikeWeightLSN | 
-        (uint16_t)(m_page55.BikeWeightMSB << 4));
+    bike_weight = 5 * (page55.BikeWeightLSN | 
+        (uint16_t)(page55.BikeWeightMSB << 4));
     FE_LOG("[FE] Bike Weight Set to:%i\r\n", bike_weight);
     
     total_weight = user_weight + bike_weight;
@@ -351,12 +351,12 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
     // Parse Wheel size.  
     //NOTE: from the Garmin Edge 520, this does not appear to be sent correctly.
     // Diameter comes in cm, convert to millimeters.
-    wheel_size = m_page55.WheelDiameter * 10;
+    wheel_size = page55.WheelDiameter * 10;
     
-    if (m_page55.WheelDiameterOffset != 0xF)
+    if (page55.WheelDiameterOffset != 0xF)
     {
         // Add offset in millimeters.
-        wheel_size += m_page55.WheelDiameterOffset;
+        wheel_size += page55.WheelDiameterOffset;
     }
     
     // Calculate circumference from PI.
@@ -371,10 +371,8 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
         mp_user_profile->user_weight_kg = user_weight;
         mp_user_profile->wheel_size_mm = wheel_size;
         
-        // Signal to update the proile.
-        // TODO: Assign user configuration values and ensure it gets updated in flash.
-        // NOTE: this is another problem area because things like speed depends on wheel circumference.
-        // This is another reason to centralize in the user profile.
+        // Signal to the user profile module to update persistent storage.
+        user_profile_store();
     }
 }
 
@@ -418,10 +416,10 @@ static bool dequeue_request()
         case FE_CAPABILITIES_PAGE:
             FECapabilitiesDataPage_Send();
             break;
-            
-        case USER_CONFIGURATION_PAGE:
+          
+        /*case USER_CONFIGURATION_PAGE:
             UserConfigurationPage_Send();
-            break;
+            break;*/
             
         case WIND_RESISTANCE_PAGE:
             sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE,
