@@ -279,9 +279,6 @@ static void set_wheel_params(uint16_t value)
 		mp_user_profile->wheel_size_mm = wheel_size;
 		// Schedule an update to persist the profile to flash.
 		user_profile_store();
-
-		// Call speed module to update the wheel size.
-		speed_wheel_size_set(mp_user_profile->wheel_size_mm);
 	}
 }
 
@@ -1836,7 +1833,7 @@ int main(void)
 	mp_resistance_state = resistance_init(PIN_SERVO_SIGNAL, mp_user_profile);
 
 	// Initialize module to read speed from flywheel.
-	speed_init(PIN_FLYWHEEL, mp_user_profile->wheel_size_mm);
+	speed_init(PIN_FLYWHEEL, mp_user_profile);
 
 	// Initialize power module with user profile.
 	power_init(mp_user_profile);

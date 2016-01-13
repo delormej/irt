@@ -28,6 +28,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "irt_common.h"
+#include "user_profile.h"
 
 typedef struct
 {
@@ -39,12 +40,7 @@ typedef struct
 /**@brief 	Initializes the flywheel photo sensor that reports revolutions.
 *
 */
-void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm);
-
-/**@brief 	Set's the wheel size.  Defaults to DEFAULT_WHEEL_SIZE_MM if not set.
-*
-*/
-void speed_wheel_size_set(uint16_t wheel_size_mm);
+void speed_init(uint32_t pin_flywheel_rev, user_profile_t* p_profile);
 
 /**@brief	Calculates a running smoothed average of speed.
  *

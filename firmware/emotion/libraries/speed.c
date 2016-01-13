@@ -18,6 +18,7 @@
 #include "app_error.h"
 #include "app_util.h"
 #include "app_gpiote.h"
+#include "user_profile.h"
 #include "debug.h"
 
 /**@brief Debug logging for resistance control module.
@@ -49,9 +50,30 @@
 static speed_event_t				m_lastSpeedEvent;												// Last flywheel tick event.
 
 static uint16_t 					m_wheel_size;													// Wheel diameter size in mm.
-static float 						m_flywheel_to_wheel_revs;										// Ratio of flywheel revolutions for 1 wheel revolution.
 
 static app_gpiote_user_id_t 		mp_user_id;
+static user_profile_t*				mp_user_profile;
+
+/**@brief	Calculates the ratio of flywheel revolutions for 1 wheel revolution.
+ *
+ */
+static float flywheel_to_wheel_revs()
+{
+	float ratio;
+
+	/*
+		For example, assuming a 2.07m wheel circumference:
+		 0.01 miles : 144 flywheel_revs
+		 0.01 miles = 16.09344 meters
+		 1 servo_rev = 0.11176 distance_meters (FLYWHEEL_SIZE)
+	*/
+	// For every 1 wheel revolution, the flywheel ticks this many times.
+	ratio = (((mp_user_profile->wheel_size_mm / 1000.0f) / FLYWHEEL_ROAD_DISTANCE)  	// Convert wheel size in mm to m, divide by the virtual road distance of 1 flywheel rev.
+			* FLYWHEEL_TICK_PER_REV);													// Multiple by the # of ticks in a single flywheel rev.
+			
+	return ratio;
+}
+
 
 /**@brief	Invoked each time there is a tick of the flywheel.  This records the last tick
  * 			time and a running count of the number of ticks.
@@ -164,25 +186,10 @@ static float speed_calc_mps(speed_event_t first, speed_event_t last)
 *
 *****************************************************************************/
 
-void speed_wheel_size_set(uint16_t wheel_size_mm)
+void speed_init(uint32_t pin_flywheel_rev, user_profile_t* p_profile)
 {
-	m_wheel_size = wheel_size_mm;
-	/*
-		For example, assuming a 2.07m wheel circumference:
-		 0.01 miles : 144 flywheel_revs
-		 0.01 miles = 16.09344 meters
-		 1 servo_rev = 0.11176 distance_meters (FLYWHEEL_SIZE)
-	*/
-	// For every 1 wheel revolution, the flywheel ticks this many times.
-	m_flywheel_to_wheel_revs = (((wheel_size_mm / 1000.0f) / FLYWHEEL_ROAD_DISTANCE)  	// Convert wheel size in mm to m, divide by the virtual road distance of 1 flywheel rev.
-			* FLYWHEEL_TICK_PER_REV);													// Multiple by the # of ticks in a single flywheel rev.
-}
-
-void speed_init(uint32_t pin_flywheel_rev, uint16_t wheel_size_mm)
-{
-	// TODO: remove this and figure another way.
-	speed_wheel_size_set(wheel_size_mm);
-
+	mp_user_profile = p_profile;
+	 
 	revs_init_gpiote(pin_flywheel_rev);
 
 	SP_LOG("[SP] Initialized speed.\r\n");
@@ -227,7 +234,7 @@ uint32_t speed_calc(irt_context_t * p_meas)
 	if (p_meas->instant_speed_mps > 0.0f)
 	{
 		// Calculate complete bicycle wheel revs based on wheel size and truncate to int.
-		fractional_wheel_revs = p_meas->accum_flywheel_ticks / m_flywheel_to_wheel_revs;
+		fractional_wheel_revs = p_meas->accum_flywheel_ticks / flywheel_to_wheel_revs();
 		p_meas->accum_wheel_revs = (uint32_t)fractional_wheel_revs;
 
 		// Calculate average wheel period; the amount of time (1/2048s) it takes for a complete wheel rev.
