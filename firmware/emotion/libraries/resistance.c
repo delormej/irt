@@ -404,10 +404,17 @@ void resistance_erg_set(uint16_t watts)
 }
 
 /**@brief		Sets simulation grade.
+ *				Range is -2.0 - +2.0.  E.g. 6% grade is 0.06.
  *
  */
 void resistance_grade_set(float grade)
 {
+	if (grade > 2.0 || grade < -2.0)
+	{
+		RC_LOG("[RC]:Grade out of range: %.2f\r\n", grade);
+		APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+	}
+	
 	m_resistance_state.grade = grade;
 	m_resistance_state.mode = RESISTANCE_SET_SIM;
 }
