@@ -333,11 +333,29 @@ static FEC_Page55* UserConfigurationPage_Send(uint16_t bike_weight)
     return &page;
 }
 
+
+static float track_grade_get(uint16_t raw_grade)
+{
+	// 6% grade: 20600
+	// (800 * 0.01) - 200
+	
+    // Simulated Grade (%) = (Raw Grade Value x 0.01%) – 200.00%
+    float grade = (raw_grade * 0.01f) - 200.0f;    
+    
+    return grade; // / 100;
+}
+
+
 int main(int argc, char *argv [])
 {
-    FEC_Page55* page;
-    page = UserConfigurationPage_Send(10);
-    print_hex((uint8_t*)page);	
+	uint8_t buffer = 80u;
+	float crr = (float)(buffer * 0.00005f);
+	
+	printf("grade (-200%):\t%.3f\r\n", track_grade_get(0x0));
+	printf("grade (200%):\t%.2f\r\n", track_grade_get(0x9c40));
+	printf("crr (0%):\t%.5f\r\n", crr);
+	
+	printf("grade:\t%.4f\r\n", track_grade_get(20601) / 100.0f);
     return;
     
     /*

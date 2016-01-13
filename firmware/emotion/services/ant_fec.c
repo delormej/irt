@@ -93,6 +93,36 @@ static uint16_t speed_mps_to_int16(float f) {
 	return i;
 }
 
+/**@brief   Helper method that parses simulation track grade.
+ *          The grade of the simulated track is set as a percentage of vertical displacement to horizontal displacement. Fitness equipment shall assume the default grade of 0% (flat track) if the open display sets the grade field to invalid (0xFF). Fitness equipment that is capable of adjusting the *           incline directly (e.g. treadmills) should apply the grade simulation parameter in this way. Other fitness equipment that is not capable of adjusting the incline (e.g. stationary bikes or trainers) shall use the grade field to calculate gravitational resistance to apply to the user.
+ *
+ *          The grade (slope) field is interpreted as a decimal value with units of 0.01% and an offset of -200.00%.
+ */
+static float track_grade_get(uint8_t* buffer)
+{
+    // Simulated Grade (%) = (Raw Grade Value x 0.01%) – 200.00%
+    uint16_t raw_grade = uint16_decode(buffer);
+    float grade = (raw_grade * 0.01f) - 200.0f;    
+    
+    // Internally we store as 0.06 for example, so move the decimal. 
+    return grade / 100.0f;
+}
+
+/**@brief   Helper method to parse the coefficient of rolling resistance. 
+ *
+ */
+static float track_crr_get(uint8_t buffer)
+{
+    float crr = 0.004f; // DEFAULT_CRR
+    
+    if (buffer != 0xFF) // Indicates invalid.
+    {
+        crr = (float)(buffer * 0.00005f);
+    }
+
+    return crr;
+}
+
 /**@brief 	Builds and transmits General FE Data page (Page 16) from irt_context_t.
  */
 static uint32_t GeneralFEDataPage_Send(irt_context_t* context)
@@ -293,7 +323,15 @@ static void HandleResistancePages(uint8_t* buffer)
             m_last_command.Data[1] = m_page51.GradeLSB;
             m_last_command.Data[2] = m_page51.GradeMSB;
             m_last_command.Data[3] = m_page51.CoeffRollingResistance;    
-            FE_LOG("[FE] track_resistance \r\n");
+            
+            // Parse the grade.
+            resistance_evt.track.grade = track_grade_get((uint8_t*)&m_page51.GradeLSB); 
+            
+            // Parse crr.
+            resistance_evt.track.crr = track_crr_get(m_page51.CoeffRollingResistance);
+            
+            FE_LOG("[FE] track_resistance, grade:%.4f, crr:%.5f \r\n",
+                resistance_evt.track.grade, resistance_evt.track.crr);
             break;
             
         default:

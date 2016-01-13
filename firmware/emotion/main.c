@@ -1236,8 +1236,12 @@ static void on_set_resistance(rc_evt_t rc_evt)
             break;
                     
         case RESISTANCE_SET_FE_WIND:
+			// set c, wind speed, drafting factor.
+			break;
+			
         case RESISTANCE_SET_TRACK:
-        case RESISTANCE_SET_USER_CONFIG:
+        	resistance_grade_set(rc_evt.track.grade);
+			resistance_crr_set(rc_evt.track.crr);
 			break;
 
 		default:
