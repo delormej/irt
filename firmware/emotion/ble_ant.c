@@ -318,8 +318,10 @@ static void services_init() {
 	ble_cps_service_init();		// Cycling Power Service
 #endif
 
+#if defined(BP_ENABLED)
 	// Initialize ANT bike power channel.
 	ant_bp_tx_init(mp_ant_ble_evt_handlers);
+#endif
 
 	// Initialize ANT+ FE-C transmit channel.
 	ant_fec_tx_init(mp_ant_ble_evt_handlers);
@@ -559,8 +561,10 @@ void ble_ant_resistance_ack(uint8_t op_code, uint16_t value)
 {
 	uint32_t err_code;
 
+#if defined(BP_ENABLED)
 	err_code = ant_bp_resistance_tx_send(op_code, value);
 	APP_ERROR_CHECK(err_code);
+#endif
 
 #if defined(BLE_ENABLED)
 	if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
@@ -581,8 +585,10 @@ void cycling_power_send(irt_context_t * p_cps_meas)
 	// TODO: THIS IS A HACK, BUT NEED TO REFACTOR.
 	static uint32_t event_count = 0;
 
+#if defined(BP_ENABLED)
 	// Always send ANT+ message.
 	ant_bp_tx_send(p_cps_meas);
+#endif
 
 #if defined(BLE_ENABLED)
 	// Only send BLE power every 4 messages (1hz vs. ANT is 4hz)
@@ -684,9 +690,11 @@ void ble_ant_start() {
     err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, (uint8_t *)m_ant_network_key);
     APP_ERROR_CHECK(err_code);
 
+#if defined(BP_ENABLED)
 	// Open the ANT channel for transmitting power.
 	ant_bp_tx_start();
-	
+#endif	
+
 	// Open the ANT channel for transmitting FE-C.
 	ant_fec_tx_start();
 

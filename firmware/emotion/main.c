@@ -219,8 +219,10 @@ static bool dequeue_ant_response(void)
 	// Prioritize data response messages first.
 	if (request.data_page == ANT_PAGE_REQUEST_DATA)
 	{
+#if defined(BP_ENABLED)
 		switch (request.tx_page)
 		{
+
 			case ANT_PAGE_MEASURE_OUTPUT:
 				// TODO: This is the only measurement being sent right now, but we'll have more
 				// to cycle through here.
@@ -243,7 +245,7 @@ static bool dequeue_ant_response(void)
 				on_get_parameter(&request);
 				break;
 		}
-
+#endif
 	}
 	else if (request.data_page == WF_ANT_RESPONSE_PAGE_ID)
 	{
@@ -474,8 +476,9 @@ static void calibration_timeout_handler(void * p_context)
 		// TODO: think about this because we shouldn't actually be sending accum_flywheel[0] since
 		// we don't know exactly when it occured without the timestamp, we just hope that the
 		// recipient doesn't use that value.  Remove the first val in a future build.
-		ant_bp_calibration_speed_tx_send(timestamp_2048, accum_flywheel);
-
+#if defined(BP_ENABLED)		
+        ant_bp_calibration_speed_tx_send(timestamp_2048, accum_flywheel);
+#endif
 		// Keep device awake.
 		WDT_RELOAD();
 
@@ -820,8 +823,9 @@ static void on_get_parameter(ant_request_data_page_t* p_request)
 			LOG("[MAIN] Unrecognized subpage: %i. \r\n", subpage);
 			return;
 	}
-
+#if defined(BP_ENABLED)
 	ant_bp_page2_tx_send(subpage, response, p_request->tx_response);
+#endif    
 }
 
 /**@brief	Sends temperature value as measurement output page (0x03)
@@ -836,8 +840,9 @@ static void send_temperature()
 	value = (int16_t)(1024.0 * temp);  // TODO: look closer at how the scale factor works. (2^10)
 
 	LOG("[MAIN] Sending temperature as: %i \r\n", value);
-
+#if defined(BP_ENABLED)
 	ant_bp_page3_tx_send(1, TEMPERATURE, 10, 0, value);
+#endif    
 }
 
 /**@brief 	Suspends normal messages and starts sending calibration messages.
@@ -874,8 +879,10 @@ static void calibration_stop(void)
     APP_ERROR_CHECK(err_code);
 	m_crr_adjust_mode = false;
 
+#if defined(BP_ENABLED)
 	// Send a message indicating completion.
 	ant_bp_calibration_complete(true, 0);
+#endif
 
 	led_set(LED_CALIBRATION_EXIT);
 
