@@ -49,8 +49,6 @@
 
 static speed_event_t				m_lastSpeedEvent;												// Last flywheel tick event.
 
-static uint16_t 					m_wheel_size;													// Wheel diameter size in mm.
-
 static app_gpiote_user_id_t 		mp_user_id;
 static user_profile_t*				mp_user_profile;
 
@@ -238,7 +236,7 @@ uint32_t speed_calc(irt_context_t * p_meas)
 		p_meas->accum_wheel_revs = (uint32_t)fractional_wheel_revs;
 
 		// Calculate average wheel period; the amount of time (1/2048s) it takes for a complete wheel rev.
-		p_meas->wheel_period = ((1 / (p_meas->instant_speed_mps / m_wheel_size)) / 1000) * 2048;
+		p_meas->wheel_period = ((1 / (p_meas->instant_speed_mps / mp_user_profile->wheel_size_mm)) / 1000) * 2048;
 
 		// Accumulate the wheel period.
 		accumWheelPeriod += p_meas->wheel_period;
