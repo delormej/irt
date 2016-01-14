@@ -412,7 +412,7 @@ void resistance_grade_set(float grade)
 	if (grade > 2.0 || grade < -2.0)
 	{
 		RC_LOG("[RC]:Grade out of range: %.2f\r\n", grade);
-		APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+		return; //APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
 	}
 	
 	m_resistance_state.grade = grade;
