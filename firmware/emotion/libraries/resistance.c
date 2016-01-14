@@ -41,7 +41,8 @@
 // MACRO for getting to the array.
 #define RESISTANCE_LEVEL 	mp_user_profile->servo_positions.positions
 #define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
-#define SIM_C							0.60f										// Default co-efficient for drag.  See resistance sim methods.
+#define SIM_C							0.51f										// Default co-efficient for drag.  See resistance sim methods.
+#define SIM_DRAFTING_FACTOR             1.0f                                        // Default drafing is none, 1.0f.
 
 static user_profile_t* 			mp_user_profile;
 static irt_resistance_state_t	m_resistance_state;
@@ -64,6 +65,7 @@ irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, user_profile_
 	 */
 	m_resistance_state.crr = SIM_CRR;
 	m_resistance_state.c = SIM_C;
+    m_resistance_state.drafting_factor = SIM_DRAFTING_FACTOR;
 
 	// Initialize pulse-width-modulation.
 	pwm_init(servo_pin_number);
@@ -305,10 +307,19 @@ static uint16_t resistance_sim_position(float speed_mps, int16_t magoff_watts)
 
 	// p_sim_forces->c is equal to A*Cw*Rho where A is effective frontal area (m^2); 
 	// Cw is drag coefficent (unitless); and Rho is the air density (kg/m^3). 
-	// The default value for A*Cw*Rho is 0.60.
+	// The default value for A*Cw*Rho is 0.51.
 
 	// Note that we add HEAD and subtract TAIL wind speed in the speed calc here.
-	float wind = 0.5f * (m_resistance_state.c * pow((speed_mps + m_resistance_state.wind_speed_mps), 2));
+    
+    /*
+    The drafting factor
+    scales the total wind resistance depending on the position of the user relative to other virtual competitors. The drafting
+    scale factor ranges from 0.0 to 1.0, where 0.0 removes all air resistance from the simulation, and 1.0 indicates no drafting
+    effects (e.g. cycling alone, or in the lead of a pack). 
+    */    
+	float wind = (0.5f * (m_resistance_state.c * pow((speed_mps + m_resistance_state.wind_speed_mps), 2))) *
+        m_resistance_state.drafting_factor;
+
 
 	// Weight * GRAVITY * Co-efficient of rolling resistance.
 	float rolling = (mp_user_profile->total_weight_kg / 100.0f) * GRAVITY * m_resistance_state.crr;
@@ -444,6 +455,19 @@ void resistance_crr_set(float crr)
 {
 	m_resistance_state.crr = crr;
 	m_resistance_state.mode = RESISTANCE_SET_SIM;
+}
+
+/**@brief		Sets simulation coefficient of rolling resistance.
+ *
+ *@remarks      The drafting factor scales the total wind resistance depending 
+ *              on the position of the user relative to other virtual competitors. 
+ *              The drafting scale factor ranges from 0.0 to 1.0, where 0.0 removes
+ *              all air resistance from the simulation, and 1.0 indicates no drafting
+ *              effects (e.g. cycling alone, or in the lead of a pack). 
+ */
+void resistance_drafting_set(float factor)
+{
+    m_resistance_state.drafting_factor = factor;
 }
 
 /**@brief		Adjusts resistance +/- by either a step or % (erg mode).

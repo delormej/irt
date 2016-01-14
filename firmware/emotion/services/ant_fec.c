@@ -93,6 +93,45 @@ static uint16_t speed_mps_to_int16(float f) {
 	return i;
 }
 
+/**@brief   Helper method that parses wind resistance simulation.
+ *
+ */
+static void wind_resistance_get(FEC_Page50* p_page, resistance_wind_t* p_wind)
+{
+    // Transported as 0.01 kg/m, range: 0.00 - 0.168.
+    if (m_page50.WindResistanceCoeff > 0 && m_page50.WindResistanceCoeff <= 186) 
+    {
+        p_wind->wind_coefficient = m_page50.WindResistanceCoeff / 100.0f;
+    }
+    else
+    {
+        // Out of range, use default value.
+        FE_LOG("[FE] wind_coefficient out of range: %i\r\n", 
+            m_page50.WindResistanceCoeff);
+        p_wind->wind_coefficient = 0.51f;
+    }
+    
+    // NOTE: Message is in km/h, but we process in meters per second.  
+    // Conversion is currently in main.c, but that should change.   
+    // Cast to a SIGNED int8_t -127 - +127. 
+    p_wind->wind_speed_km = (int8_t) m_page50.WindSpeed;
+    
+    // Range 0.00 - 1.00.
+    if (m_page50.DraftingFactor <= 100)
+    {
+        p_wind->drafting_factor = m_page50.DraftingFactor / 100.0f;
+    }
+    else
+    {
+        // Out of range, use default value.
+        FE_LOG("[FE] drafting factor out of range: %i\r\n", 
+            m_page50.DraftingFactor);
+        
+        // Default is 1.0 (no drafting factor).
+        p_wind->drafting_factor = 1.0f;
+    } 
+}
+
 /**@brief   Helper method that parses simulation track grade.
  *          The grade of the simulated track is set as a percentage of vertical displacement to horizontal displacement. Fitness equipment shall assume the default grade of 0% (flat track) if the open display sets the grade field to invalid (0xFF). Fitness equipment that is capable of adjusting the *           incline directly (e.g. treadmills) should apply the grade simulation parameter in this way. Other fitness equipment that is not capable of adjusting the incline (e.g. stationary bikes or trainers) shall use the grade field to calculate gravitational resistance to apply to the user.
  *
@@ -282,6 +321,17 @@ static void HandleResistancePages(uint8_t* buffer)
 	rc_evt_t resistance_evt; 
     memset(&resistance_evt, 0, sizeof(rc_evt_t));
 
+    FE_LOG("[FE]:resistance message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+            buffer[0],
+            buffer[1],
+            buffer[2],
+            buffer[3],
+            buffer[4],
+            buffer[5],
+            buffer[6],
+            buffer[7],
+            buffer[8]);
+
     // TODO: refactor and remove resistance_evt to just share page 71 (Last command).
     // Operation is the page number, which is the first byte.
     memset(m_last_command.Data, 0xFF, sizeof(m_last_command.Data));
@@ -314,6 +364,9 @@ static void HandleResistancePages(uint8_t* buffer)
             m_last_command.Data[1] = m_page50.WindResistanceCoeff;
             m_last_command.Data[2] = m_page50.WindSpeed;
             m_last_command.Data[3] = m_page50.DraftingFactor;    
+            
+            wind_resistance_get(&m_page50, &resistance_evt.wind);
+            
             FE_LOG("[FE] wind_resistance \r\n");
             break;
         

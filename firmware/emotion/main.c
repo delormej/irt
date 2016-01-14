@@ -1237,6 +1237,11 @@ static void on_set_resistance(rc_evt_t rc_evt)
                     
         case RESISTANCE_SET_FE_WIND:
 			// set c, wind speed, drafting factor.
+            resistance_c_set(rc_evt.wind.wind_coefficient);
+            // Convert to meters per second.
+            resistance_windspeed_set(rc_evt.wind.wind_speed_km * 0.277778f);
+            // Set drafting factor.
+            resistance_drafting_set(rc_evt.wind.drafting_factor);
 			break;
 			
         case RESISTANCE_SET_TRACK:

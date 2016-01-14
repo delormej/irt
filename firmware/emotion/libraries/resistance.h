@@ -120,6 +120,7 @@ typedef struct
 	float 		crr;
 	float 		c;
 	float 		wind_speed_mps;
+    float       drafting_factor;
 	float 		grade;
 	int16_t 	erg_watts;
 	int16_t 	unadjusted_erg_watts;	// Unadjusted, original erg target.
@@ -192,6 +193,16 @@ void resistance_c_set(float drag);
  *
  */
 void resistance_crr_set(float crr);
+
+/**@brief		Sets simulation coefficient of rolling resistance.
+ *
+ *@remarks      The drafting factor scales the total wind resistance depending 
+ *              on the position of the user relative to other virtual competitors. 
+ *              The drafting scale factor ranges from 0.0 to 1.0, where 0.0 removes
+ *              all air resistance from the simulation, and 1.0 indicates no drafting
+ *              effects (e.g. cycling alone, or in the lead of a pack). 
+ */
+void resistance_drafting_set(float factor);
 
 /**@brief		Adjusts dynamic magnetic resistance control based on current
  * 				speed and watts.
