@@ -68,10 +68,67 @@ static float watts_linear(const float watts, uint16_t position)
 				(float)(MAGNET_POSITION_MIN_RESISTANCE - mp_mag_calibration_factors->root_position)
 			) * watts;
 
-	MAG_LOG("pos: %i, watts_linear: %.2f from min: %.2f\r\n", position,
+	/*
+    MAG_LOG("pos: %i, watts_linear: %.2f from min: %.2f\r\n", position,
 			linear_watts, watts);
-
+            */
 	return linear_watts;
+}
+
+/*@brief    Solves for the roots of the 3rd order polynomial which represents
+ *          power to servo position.       
+ *
+ */
+static uint16_t position_root(float speed_mps, float mag_watts)
+{
+	float coeff[COEFF_COUNT];
+
+	// A set of math-intensive formula friendly names.
+	#define a	coeff[0]
+	#define b	coeff[1]
+	#define c	coeff[2]
+	#define d	coeff[3]
+
+	float f, g, h, r, theta, rc;
+	float x2a, x2b, x2c, x3 = 0.0f;
+	int8_t k;
+
+    // Interpolate to calculate the coefficients of the position:pwoercurve.
+    curve_coeff(speed_mps, coeff);
+
+    // To solve for a specific watt target, subtract from coefficient d.
+    d = d - mag_watts;
+
+    //<!--EVALUATING THE 'f'TERM-->
+    f = (((3 * c) / a) - (((b*b) / (a*a)))) / 3;
+
+    //<!--EVALUATING THE 'g'TERM-->
+    g = ((2 * ((b*b*b) / (a*a*a)) - (9 * b*c / (a*a)) + ((27 * (d / a))))) / 27;
+
+    //<!--EVALUATING THE 'h'TERM-->
+    h = (((g*g) / 4) + ((f*f*f) / 27));
+
+    /* Original code adopted from javascript website, need to refactor, but it
+    * works.  Code could solve for 3 solutions (x1, x2, x3) given a cubic
+    * polynomial, however we only need to solve for the last form (x3).
+    */
+    if (h <= 0)
+    {
+        //<!-- - (S + U) / 2 - (b / 3a) - i*(S - U)*(3) ^ .5-->
+        r = ((j_sqrtf((g*g / 4) - h)));
+        k = 1;
+        if (r < 0) k = -1;
+        //<!--rc is the cube root of 'r' -->
+        rc = pow((r*k), (1.0 / 3.0))*k;
+        k = 1;
+        theta = j_acosf((-g / (2 * r)));
+        x2a = rc*-1;
+        x2b = j_cosf(theta / 3);
+        x2c = j_sqrtf(3)*(j_sinf(theta / 3));
+        x3 = (x2a*(x2b - x2c)) - (b / (3 * a));
+    }
+
+    return (uint16_t)x3;    
 }
 
 /*@brief 	The model only goes so low.  For higher speeds at the model min
@@ -184,19 +241,9 @@ float magnet_watts(float speed_mps, uint16_t position)
 /**@brief	Calculates magnet position for a given speed and watt target.
  *
  */
-uint16_t magnet_position(float speed_mps, float mag_watts)
+uint16_t magnet_position(float speed_mps, float mag_watts, target_power_e* p_target)
 {
-	float coeff[COEFF_COUNT];
-
-	// A set of math-intensive formula friendly names.
-	#define a	coeff[0]
-	#define b	coeff[1]
-	#define c	coeff[2]
-	#define d	coeff[3]
-
-	float f, g, h, r, theta, rc;
-	float x2a, x2b, x2c, x3;
-	int8_t k;
+    uint16_t position = 0;
 
 	// Calculate the offset.
 	if (GAP_OFFSET > 0)
@@ -205,60 +252,41 @@ uint16_t magnet_position(float speed_mps, float mag_watts)
 	}
 
 	// Send the magnet to the home position if no mag watts required.
-	if (mag_watts <= 0)
+	if (mag_watts <= 0.0f)
 	{
-		return MAGNET_POSITION_MIN_RESISTANCE;
+		position = MAGNET_POSITION_MIN_RESISTANCE;
 	}
-	else if (mag_watts < 
-		magnet_watts(speed_mps, mp_mag_calibration_factors->root_position))
-	{
-		// Solve for the position linearly.
-		x3 = position_linear(speed_mps, mag_watts);
+    else
+    {
+        // Attempt to solve for the position linearly. 
+		position = position_linear(speed_mps, mag_watts);        
+        
+        // Otherwise, solve for the root.
+        if (position == 0)
+        {
+            position = position_root(speed_mps, mag_watts);
+        }
+    }
+    
+    //
+    // Assign power target state.
+    //
+    if (mag_watts < 0.0f)
+    {
+        // If the watt target is negative, rider is going too fast to hit target.
+        *p_target = TARGET_SPEED_TOO_HIGH;         
+    }    
+    else if (position > MAGNET_POSITION_MIN_RESISTANCE || 
+        position < MAGNET_POSITION_MAX_RESISTANCE)
+    {
+        // If position returned is 0 or out of the acceptable range, we can't
+        // hit that target.    
+        *p_target = TARGET_SPEED_TOO_LOW;
+    }
+    else
+    {
+        *p_target = TARGET_AT_POWER;
+    } 
 
-		if (x3 != 0)
-		{
-			return x3;
-		}
-	}
-
-	// Interpolate to calculate the coefficients of the position:pwoercurve.
-	curve_coeff(speed_mps, coeff);
-
-	// To solve for a specific watt target, subtract from coefficient d.
-	d = d - mag_watts;
-
-	//<!--EVALUATING THE 'f'TERM-->
-	f = (((3 * c) / a) - (((b*b) / (a*a)))) / 3;
-
-	//<!--EVALUATING THE 'g'TERM-->
-	g = ((2 * ((b*b*b) / (a*a*a)) - (9 * b*c / (a*a)) + ((27 * (d / a))))) / 27;
-
-	//<!--EVALUATING THE 'h'TERM-->
-	h = (((g*g) / 4) + ((f*f*f) / 27));
-
-	/* Original code adopted from javascript website, need to refactor, but it
-	* works.  Code could solve for 3 solutions (x1, x2, x3) given a cubic
-	* polynomial, however we only need to solve for the last form (x3).
-	*/
-	if (h <= 0)
-	{
-		//<!-- - (S + U) / 2 - (b / 3a) - i*(S - U)*(3) ^ .5-->
-		r = ((j_sqrtf((g*g / 4) - h)));
-		k = 1;
-		if (r < 0) k = -1;
-		//<!--rc is the cube root of 'r' -->
-		rc = pow((r*k), (1.0 / 3.0))*k;
-		k = 1;
-		theta = j_acosf((-g / (2 * r)));
-		x2a = rc*-1;
-		x2b = j_cosf(theta / 3);
-		x2c = j_sqrtf(3)*(j_sinf(theta / 3));
-		x3 = (x2a*(x2b - x2c)) - (b / (3 * a));
-	}
-	else
-	{
-		return 0u;
-	}
-
-	return (uint16_t) x3;
+	return position;    
 }

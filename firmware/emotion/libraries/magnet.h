@@ -51,6 +51,6 @@ float magnet_watts(float speed_mps, uint16_t position);
 /**@brief	Calculates magnet position for a given speed and watt target.
  *
  */
-uint16_t magnet_position(float speed_mps, float mag_watts);
+uint16_t magnet_position(float speed_mps, float mag_watts, target_power_e* p_target);
 
 #endif /* MAGNET_H_ */

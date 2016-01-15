@@ -70,7 +70,7 @@ typedef struct {
 	uint8_t		InstantPowerLSB;
 	uint8_t		InstantPowerMSB:4;			// Uses 1.5 bytes
 	uint8_t		TrainerStatusBit:4;			
-	uint8_t		Flags:4;
+	uint8_t		Flags:4;                    // Holds the target power limits flag.
 	uint8_t		FEState:4;
 } FEC_Page25; // Specific Trainer Data Page
 

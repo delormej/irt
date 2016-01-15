@@ -116,16 +116,17 @@ typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);
 typedef struct
 {
 	resistance_mode_t mode;
-	uint16_t 	servo_position;
-	float 		crr;
-	float 		c;
-	float 		wind_speed_mps;
-    float       drafting_factor;
-	float 		grade;
-	int16_t 	erg_watts;
-	int16_t 	unadjusted_erg_watts;	// Unadjusted, original erg target.
-	uint8_t 	level;
-	uint8_t		adjust_pct;				// Tracks a percentage of adjustment 0-254%
+	uint16_t 	      servo_position;
+	float             crr;
+	float 		      c;
+	float 		      wind_speed_mps;
+    float             drafting_factor;
+	float 		      grade;
+	int16_t 	      erg_watts;
+	int16_t 	      unadjusted_erg_watts;	// Unadjusted, original erg target.
+	uint8_t 	      level;
+	uint8_t		      adjust_pct;				// Tracks a percentage of adjustment 0-254%
+    target_power_e    power_limit;              // Tracks whether we're going too slow/fast to meet erg / sim target.
 } irt_resistance_state_t;
 
 /**@brief	Initializes the resistance module which controls the servo.
