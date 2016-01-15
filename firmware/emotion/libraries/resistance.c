@@ -284,7 +284,7 @@ static uint16_t resistance_erg_position(float speed_mps, int16_t magoff_watts)
 	//
 	mag_watts = m_resistance_state.erg_watts - magoff_watts;
 
-	return magnet_position(speed_mps, mag_watts);
+	return magnet_position(speed_mps, mag_watts, &m_resistance_state.power_limit);
 }
 
 /**@brief	Get the position of the servo based on simulation mode forces.
@@ -351,7 +351,7 @@ static uint16_t resistance_sim_position(float speed_mps, int16_t magoff_watts)
 	}
 
 	// Get the servo to the required position.
-	return magnet_position(speed_mps, mag_watts);
+	return magnet_position(speed_mps, mag_watts, &m_resistance_state.power_limit);
 }
 
 /**@brief		Adjusts dynamic magnetic resistance control based on current
@@ -364,8 +364,11 @@ void resistance_adjust(float speed_mps, int16_t magoff_watts)
 	bool use_smoothing;
 
 	if (speed_mps < RESISTANCE_MIN_SPEED_ADJUST)
+    {
+        m_resistance_state.power_limit = TARGET_SPEED_TOO_LOW;
 		return;
-
+    }
+    
 	// If in erg or sim mode, destermine the magnet position.
 	switch (m_resistance_state.mode)
 	{

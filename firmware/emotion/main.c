@@ -339,14 +339,21 @@ static void update_resistance_state()
 	{
 		case RESISTANCE_SET_ERG:
 			m_current_state.resistance_level = (int16_t)mp_resistance_state->erg_watts;
+            m_current_state.target_power_limits = mp_resistance_state->power_limit;
 			break;
+
+        case RESISTANCE_SET_SIM:
+            m_current_state.target_power_limits = mp_resistance_state->power_limit;
+            break;
 
 		case RESISTANCE_SET_STANDARD:
 			m_current_state.resistance_level = mp_resistance_state->level;
+            m_current_state.target_power_limits = TARGET_UNDETERMINED;
 			break;
 
 		default:
 			m_current_state.resistance_level = 0;
+            m_current_state.target_power_limits = TARGET_UNDETERMINED;
 			break;
 	}
     
@@ -370,7 +377,8 @@ static void update_resistance_state()
             if (m_current_state.instant_speed_mps < 1.0f)
             {
                 // Transition to finished / paused.
-                m_current_state.fe_state = FE_FINISHED_PAUSED;                
+                m_current_state.fe_state = FE_FINISHED_PAUSED;   
+                m_current_state.target_power_limits = TARGET_UNDETERMINED;             
             }
             else
             {
