@@ -526,6 +526,11 @@ static bool dequeue_request()
             sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		      (uint8_t*)&m_last_command);       
             break;
+            
+        default:
+            FE_LOG("[FE] dequeue_request, unrecognized page:%i.\r\n", 
+                page_number); 
+            return false;
     }
     
     return true;
