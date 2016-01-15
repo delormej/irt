@@ -377,7 +377,8 @@ static void update_resistance_state()
             if (m_current_state.instant_speed_mps < 1.0f)
             {
                 // Transition to finished / paused.
-                m_current_state.fe_state = FE_FINISHED_PAUSED;                
+                m_current_state.fe_state = FE_FINISHED_PAUSED;   
+                m_current_state.target_power_limits = TARGET_UNDETERMINED;             
             }
             else
             {
