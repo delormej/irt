@@ -8,6 +8,7 @@
 #include "irt_common.h"
 #include "ant_interface.h"
 #include "ant_parameters.h"
+#include "app_fifo.h"
 #include "debug.h"
 
 //
@@ -112,6 +113,67 @@ static ctrl_evt_handler_t			m_on_ctrl_command;
 static uint8_t						m_channel_id;
 static ant_ctrl_data_page71_t		m_ctrl_status;	// Keeps track of the last command and status.
 
+
+//
+// Circular buffer to queue for page requests.
+//
+#define FIFO_BUFFER_SIZE 4
+static app_fifo_t request_queue;
+static uint8_t m_fifo_buffer[FIFO_BUFFER_SIZE];
+
+/**@brief   Queues a request to send a given page.
+ */
+static void queue_request(uint8_t page_number)
+{
+    uint32_t err_code;
+    err_code = app_fifo_put(&request_queue, page_number);
+    
+    // If the queue was full, warn and move on.  We won't be able to respond to
+    // that request. 
+    if (err_code == NRF_ERROR_NO_MEM)
+    {
+        AC_LOG("[AC] queue_request : QUEUE FULL.\r\n"); 
+    }
+}
+
+/**@brief   Checks if there are requested pages queued to send.
+ *          If so, sends the requested page.
+ */
+static bool dequeue_request()
+{
+    uint8_t page_number = 0;
+    if (app_fifo_get(&request_queue, &page_number) == NRF_ERROR_NOT_FOUND)
+    {
+        // No message to send.
+        return false;
+    } 
+    
+    switch (page_number)
+    {
+        case ANT_COMMON_PAGE_80:
+            ant_common_page_transmit(m_channel_id, ant_manufacturer_page);
+            break;
+            
+        case ANT_COMMON_PAGE_81:
+            ant_common_page_transmit(m_channel_id, ant_product_page);
+            break;
+
+        case CTRL_CMD_STATUS_PAGE:
+            // The slave isn't required to ask for this, but the master
+            // is required to respond via broadcast if it does.
+            sd_ant_broadcast_message_tx(m_channel_id, TX_BUFFER_SIZE,
+                (uint8_t*) &m_ctrl_status);
+            break;
+
+        default:
+            AC_LOG("[AC] dequeue_request, unrecognized page:%i\r\n", page_number);
+            return false;
+            break;            
+    }
+    
+    return true;
+}
+
 static void on_command_page(ant_ctrl_data_page73_t* p_page)
 {
 	ctrl_evt_t evt;
@@ -141,23 +203,6 @@ static void on_command_page(ant_ctrl_data_page73_t* p_page)
 	m_ctrl_status.status = Pass; 
 }
 
-static void on_request_data_page(ant_ctrl_data_page70_t* p_page)
-{
-	uint32_t err_code;
-
-	// Is slave asking for command status background page?
-	if (p_page->req_page_number != CTRL_CMD_STATUS_PAGE)
-		return;
-
-	// The slave isn't required to ask for this, but the master
-	// is required to respond via broadcast if it does.
-	err_code = sd_ant_broadcast_message_tx(m_channel_id,
-		TX_BUFFER_SIZE,
-		(uint8_t*) &m_ctrl_status);
-
-	APP_ERROR_CHECK(err_code); 
-}
-
 void ant_ctrl_tx_init(uint8_t channel_id, ctrl_evt_handler_t on_ctrl_command)
 {
 	uint32_t err_code;
@@ -167,6 +212,11 @@ void ant_ctrl_tx_init(uint8_t channel_id, ctrl_evt_handler_t on_ctrl_command)
 
 	// Assign callback for when command message is processed.
 	m_on_ctrl_command = on_ctrl_command;
+
+    // Initialize the queue.
+    err_code = app_fifo_init(&request_queue, m_fifo_buffer, 
+        (uint16_t)sizeof(m_fifo_buffer));
+    APP_ERROR_CHECK(err_code);
 
 	// Initialize status.
 	memset(&m_ctrl_status, 0, sizeof(ant_ctrl_data_page71_t));
@@ -218,6 +268,11 @@ void ant_ctrl_device_avail_tx(uint8_t notifications)
 	static uint8_t event_count;		// Event count for interleaving common pages.
 	uint32_t err_code;
 
+    // Check to see if we have any pending data page requests.
+    // If so that message is sent, so return for this cycle.
+    if (dequeue_request())
+        return;
+
 	event_count++;	// Increment event count.
 
 	// Interleave common pages.
@@ -255,7 +310,8 @@ void ant_ctrl_rx_handle(ant_evt_t * p_ant_evt)
 	switch (p_mesg->ANT_MESSAGE_aucPayload[0])
 	{
 		case CTRL_CMD_REQ_DATA_PAGE:
-			on_request_data_page((ant_ctrl_data_page70_t*) p_mesg->ANT_MESSAGE_aucPayload);
+            // Queue a request for a data page.
+            queue_request(p_mesg->ANT_MESSAGE_aucPayload[0]);
 			break;
 
 		case CTRL_CMD_PAGE:
