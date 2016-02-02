@@ -667,6 +667,10 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
 		// TODO: remove these hard coded array position values and create defines.
 		switch (p_ant_evt->evt_buffer[3])  // Switch on the page number.
 		{
+            case CALIBRATION_REQUEST_PAGE:
+                //
+                break;
+                
             case BASIC_RESISTANCE_PAGE:
             case TARGET_POWER_PAGE:
             case WIND_RESISTANCE_PAGE:
