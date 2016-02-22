@@ -316,6 +316,11 @@ static uint32_t UserConfigurationPage_Send()
 		(uint8_t*)&m_page55);    
 } */
 
+static void CalibrationInProgress_Send(calibration_status_t * p_calibration_status)
+{
+    //
+}
+
 static void HandleResistancePages(uint8_t* buffer)
 {
 	rc_evt_t resistance_evt; 
@@ -400,6 +405,16 @@ static void HandleResistancePages(uint8_t* buffer)
     // TODO: There is an opportunity here to handle errors more gracefully.
     // If we didn't fail on previous call, assume a pass.
     m_last_command.CommandStatus = FE_COMMAND_PASS;
+}
+
+/**@brief   Parses the request calibration page.
+ *
+ */
+static void HandleCalibrationRequestPage(uint8_t* buffer)
+{
+    // TODO: Indicate which TYPE of calibration requested from buffer[1] 
+    // Raise event that calibratoin has been requested.
+    mp_evt_handlers->on_request_calibration();
 }
 
 /**@brief   Parses user configuration and applies to the user profile.
@@ -581,6 +596,27 @@ void ant_fec_tx_start(void)
 	// Open the channel.
     uint32_t err_code = sd_ant_channel_open(ANT_FEC_TX_CHANNEL);
     APP_ERROR_CHECK(err_code);    	
+}
+
+/**@brief	Send appropriate message during calibration.
+ */
+void ant_fec_calibration_send(irt_context_t * p_power_meas,
+    calibration_status_t * p_calibration_status)
+{
+    static uint8_t count = 0;
+    // If ending calibration, send page 0x01 3 times.
+    
+    // If in calibration mode, alternate page 0x02 and 0x10, until complete.
+    if (count % 2 == 0)
+    {
+        // send page 0x02
+        CalibrationInProgress_Send(p_calibration_status);
+    }
+    else
+    {
+        // send page 0x10.
+        GeneralFEDataPage_Send(p_power_meas);   
+    }
 }
 
 /**@brief	Send appropriate message based on current event count.

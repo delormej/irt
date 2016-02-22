@@ -138,6 +138,17 @@ typedef enum {
 	TARGET_UNDETERMINED														// Undetermined.
 } target_power_e;
 
+/**@brief   Structure represents calibration status.
+ *
+ */
+typedef struct {
+    uint8_t     status : 2;      // 0 = not requested, 1 = requested, 2 = in progress, 3 = finished  
+    uint8_t     zero_offset : 1; // Flagged if requested
+    uint8_t     spin_down : 1;   // Flagged if requested
+    uint8_t     temperature : 2; // Status of whether temp is too low or OK
+    uint8_t     speed : 2;       // Status if speed is too low or OK.
+} calibration_status_t;
+
 /**@brief Cycling Power Service measurement type. */
 typedef struct
 {
@@ -179,7 +190,7 @@ typedef struct
 	target_power_e	target_power_limits : 2;
 	uint8_t			bike_power_calibration_required : 1;
 	uint8_t			resistance_calibration_required : 1;
-	uint8_t			user_configuration_required : 1;		
+	uint8_t			user_configuration_required : 1;
 } irt_context_t;
 
 //
