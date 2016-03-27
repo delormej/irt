@@ -69,6 +69,15 @@
 #define SEC_PARAM_MIN_KEY_SIZE          7                                            /**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE          16                                           /**< Maximum encryption key size. */
 
+// Custom message fields.
+#define EXTRA_INFO_SERVO_POS_LSB		1u
+#define EXTRA_INFO_SERVO_POS_MSB		2u
+#define EXTRA_INFO_TARGET_LSB			3u
+#define EXTRA_INFO_TARGET_MSB			4u
+#define EXTRA_INFO_FLYWHEEL_REVS_LSB	5u
+#define EXTRA_INFO_FLYWHEEL_REVS_MSB	6u
+#define EXTRA_INFO_TEMP					7u
+
 #define DEAD_BEEF                       0xDEADBEEF                                   /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
@@ -609,6 +618,48 @@ void ant_common_page_transmit(uint8_t ant_channel, uint8_t* common_page)
 	if (!(ANT_ERROR_AS_WARN(err_code)))
 		APP_ERROR_CHECK(err_code);
 }
+
+
+// Encodes the resistance mode into the 2 most significant bits.
+static uint8_t encode_resistance_level(irt_context_t * p_power_meas)
+{
+	uint8_t target_msb;
+	uint8_t mode;
+
+	// Subtract 64 (0x40) from mode to use only 2 bits.
+	// Modes only go from 0x40 - 0x45 or so.
+	mode = p_power_meas->resistance_mode - 64u;
+
+	// Grab the most significant bits of the resistance level.
+	target_msb = HIGH_BYTE(p_power_meas->resistance_level);
+
+	// Use the 2 most significant bits for the mode and stuff them in the
+	// highest 2 bits.  Level should never need to use these 2 bits.
+	target_msb |= mode << 6;
+
+	return target_msb;
+}
+
+// Transmits extra info embedded in the power measurement.
+// TODO: Need a formal message/methodology for this.
+uint32_t extra_info_transmit(uint8_t channelId, irt_context_t * p_power_meas)
+{
+	uint8_t tx_buffer[8];
+    uint16_t flywheel;
+	flywheel = p_power_meas->accum_flywheel_ticks;
+
+	tx_buffer[0]			                = ANT_BP_PAGE_EXTRA_INFO;
+	tx_buffer[EXTRA_INFO_SERVO_POS_LSB]		= LOW_BYTE(p_power_meas->servo_position);
+	tx_buffer[EXTRA_INFO_SERVO_POS_MSB]		= HIGH_BYTE(p_power_meas->servo_position);
+	tx_buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
+	tx_buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
+	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]	= LOW_BYTE(flywheel);
+	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]	= HIGH_BYTE(flywheel);
+	tx_buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
+
+	return sd_ant_broadcast_message_tx(channelId, TX_BUFFER_SIZE, tx_buffer);
+}
+
 
 void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 {

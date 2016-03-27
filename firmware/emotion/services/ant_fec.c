@@ -677,7 +677,7 @@ void ant_fec_tx_send(irt_context_t * p_power_meas)
     else if (  (~(0b111 ^ count) & 7) == 7  )
     {
         // Message sequence 7: Manufacturer specific page.
-        // Send IRT specific Extra_info_page.
+        extra_info_transmit(ANT_FEC_TX_CHANNEL, p_power_meas);
     }       
     else if (  (~(0b11 ^ count) & 3) == 3  )
     {

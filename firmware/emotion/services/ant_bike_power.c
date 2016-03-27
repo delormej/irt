@@ -31,15 +31,6 @@
 #define INSTANT_POWER_LSB_INDEX         6u                  /**< Index of the instantaneous power LSB field in the power-only main data page. */
 #define INSTANT_POWER_MSB_INDEX         7u                  /**< Index of the instantaneous power MSB field in the power-only main data page. */
 
-// Custom message fields.
-#define EXTRA_INFO_SERVO_POS_LSB		1u
-#define EXTRA_INFO_SERVO_POS_MSB		2u
-#define EXTRA_INFO_TARGET_LSB			3u
-#define EXTRA_INFO_TARGET_MSB			4u
-#define EXTRA_INFO_FLYWHEEL_REVS_LSB	5u
-#define EXTRA_INFO_FLYWHEEL_REVS_MSB	6u
-#define EXTRA_INFO_TEMP					7u
-
 // Standard Wheel Torque Main Data Page (0x11)
 #define WHEEL_TICKS_INDEX				2u
 #define	WHEEL_PERIOD_LSB_INDEX			4u
@@ -161,45 +152,6 @@ static uint32_t power_transmit(uint16_t watts)
 	tx_buffer[INSTANT_POWER_MSB_INDEX]		= HIGH_BYTE(watts);
 			
 	return broadcast_message_transmit();
-}
-
-// Encodes the resistance mode into the 2 most significant bits.
-static uint8_t encode_resistance_level(irt_context_t * p_power_meas)
-{
-	uint8_t target_msb;
-	uint8_t mode;
-
-	// Subtract 64 (0x40) from mode to use only 2 bits.
-	// Modes only go from 0x40 - 0x45 or so.
-	mode = p_power_meas->resistance_mode - 64u;
-
-	// Grab the most significant bits of the resistance level.
-	target_msb = HIGH_BYTE(p_power_meas->resistance_level);
-
-	// Use the 2 most significant bits for the mode and stuff them in the
-	// highest 2 bits.  Level should never need to use these 2 bits.
-	target_msb |= mode << 6;
-
-	return target_msb;
-}
-
-// Transmits extra info embedded in the power measurement.
-// TODO: Need a formal message/methodology for this.
-static uint32_t extra_info_transmit(irt_context_t * p_power_meas)
-{
-	uint16_t flywheel;
-	flywheel = p_power_meas->accum_flywheel_ticks;
-
-	tx_buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_EXTRA_INFO;
-	tx_buffer[EXTRA_INFO_SERVO_POS_LSB]		= LOW_BYTE(p_power_meas->servo_position);
-	tx_buffer[EXTRA_INFO_SERVO_POS_MSB]		= HIGH_BYTE(p_power_meas->servo_position);
-	tx_buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
-	tx_buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
-	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]	= LOW_BYTE(flywheel);
-	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]	= HIGH_BYTE(flywheel);
-	tx_buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
-
-	return sd_ant_broadcast_message_tx(ANT_BP_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 }
 
 /**@brief	Helper method to decode an ANT buffer into array of 2 floats.	
@@ -612,7 +564,7 @@ void ant_bp_tx_send(irt_context_t * p_power_meas)
 	else if (message_sequence % extra_info_page_interleave == 0)
 	{
 		// Send DEBUG info.
-		extra_info_transmit(p_power_meas);
+		extra_info_transmit(ANT_BP_TX_CHANNEL, p_power_meas);
 	}
 	else if (message_sequence % power_page_interleave == 0)
 	{
