@@ -75,6 +75,7 @@ static user_profile_t* mp_user_profile;
 // Hold on to these pages to respond with when requested.
 static FEC_Page50 m_page50;
 static FEC_Page51 m_page51;
+static FEC_Page55 m_page55;
 
 // Manages state for the last command received.
 static FEC_Page71 m_last_command = {           
@@ -91,6 +92,24 @@ static uint16_t speed_mps_to_int16(float f) {
 	// Speed is sent in 0.001 m/s, removing the decimal point to represent int.
 	uint16_t i = (uint16_t)(f * 1000.0f);
 	return i;
+}
+
+/**@brief	Converts wheel cicrumference in mm i.e. (2107) or 2.107m into
+ *          a byte for wheel diameter 0.01m and 1/2 a byte diameter offset (0-10mm).
+ *          The return value is the offset (0-10mm), the diameter_cm parameter
+ *          is referenced and updated with the calculated value.
+ */
+static uint8_t calc_wheel_diameter(uint16_t circ_mm, uint8_t* diameter_cm) {
+    uint8_t diameter_offset_mm = 0;
+    // Calculate diameter from circumference.
+    float diameter = ((float)circ_mm / 3.14f) / 10.0f;
+    // Truncate to 0.01m without decimnal, but essential it's the cm.
+    *diameter_cm = (uint8_t)diameter; 
+    
+    // Calculate remainder, 0-10 mm.
+    diameter_offset_mm = (uint8_t)((diameter - (*diameter_cm)) * 100.0f);
+    
+    return diameter_offset_mm;
 }
 
 /**@brief   Helper method that parses wind resistance simulation.
@@ -266,8 +285,9 @@ static uint32_t FECapabilitiesDataPage_Send()
 		(uint8_t*)&page);       
 }
 
-/** It's unclear whether we need to send this page, seems that we only need to receive it.
- *
+/**@brief   Parses user configuration and applies to the user profile.
+ * 
+ */
 static uint32_t UserConfigurationPage_Send()
 {
     // DEFAULT_TOTAL_WEIGHT_KG
@@ -278,8 +298,7 @@ static uint32_t UserConfigurationPage_Send()
     // routine will default the value.  
     // TODO: reconsider who is responsible for what here as the code is getting too complicated.
     uint16_t user_weight = mp_user_profile->user_weight_kg;
-    uint16_t bike_weight;
-    float wheel_diameter;
+    uint16_t bike_weight = 0;
     
     FE_LOG("[FE] User Weight:%i\r\n", user_weight);
     
@@ -309,12 +328,17 @@ static uint32_t UserConfigurationPage_Send()
 
     // Wheel size is transmitted here in diameter, but we store and use in circumference.
     // This is stored as another 1.5 byte field.
-    wheel_diameter = (((float)mp_user_profile->wheel_size_mm) / 3.14f);
+    // Can't pass offset by ref because it's a bitfield, so this is very sloppy
+    // The method sets the value of wheel diameter and 4 bits of the return value 
+    // is used as the offset. 
+    m_page55.WheelDiameterOffset = 0xF & calc_wheel_diameter(
+            mp_user_profile->wheel_size_mm, &m_page55.WheelDiameter);
+            
+    m_page55.GearRatio = 0x00; // invalid.
         
-
 	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		(uint8_t*)&m_page55);    
-} */
+} 
 
 static void CalibrationInProgress_Send(calibration_status_t * p_calibration_status)
 {
@@ -323,7 +347,7 @@ static void CalibrationInProgress_Send(calibration_status_t * p_calibration_stat
         .DataPageNumber = CALIBRATION_PROGRESS_PAGE
     };
     
-	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+	sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		(uint8_t*)&page);       
 }
 
@@ -529,9 +553,9 @@ static bool dequeue_request()
             FECapabilitiesDataPage_Send();
             break;
           
-        /*case USER_CONFIGURATION_PAGE:
+        case USER_CONFIGURATION_PAGE:
             UserConfigurationPage_Send();
-            break;*/
+            break;
             
         case WIND_RESISTANCE_PAGE:
             sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE,
