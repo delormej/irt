@@ -648,7 +648,7 @@ uint32_t extra_info_transmit(uint8_t channelId, irt_context_t * p_power_meas)
     uint16_t flywheel;
 	flywheel = p_power_meas->accum_flywheel_ticks;
 
-	tx_buffer[0]			                = ANT_BP_PAGE_EXTRA_INFO;
+	tx_buffer[0]			                = ANT_IRT_PAGE_EXTRA_INFO;
 	tx_buffer[EXTRA_INFO_SERVO_POS_LSB]		= LOW_BYTE(p_power_meas->servo_position);
 	tx_buffer[EXTRA_INFO_SERVO_POS_MSB]		= HIGH_BYTE(p_power_meas->servo_position);
 	tx_buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
