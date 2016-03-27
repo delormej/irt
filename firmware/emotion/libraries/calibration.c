@@ -32,6 +32,10 @@ void calibration_stop(void)
 calibration_status_t* calibration_progress(irt_context_t* p_context)
 {
     // If calibration is requested, flag start time.
+    // Maintain a 32 position cyclical buffer for speed values.  
+    // They'll always be at 1/4 second intervals.
+    
+    // Analyze how long coastdowns are taking most? 7-9 seconds typically. 
     
     // Calcluates spin-down time.
     

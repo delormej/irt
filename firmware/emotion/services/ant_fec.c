@@ -319,6 +319,12 @@ static uint32_t UserConfigurationPage_Send()
 static void CalibrationInProgress_Send(calibration_status_t * p_calibration_status)
 {
     //
+    static  FEC_Page2 page =  {
+        .DataPageNumber = CALIBRATION_PROGRESS_PAGE
+    };
+    
+	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&page);       
 }
 
 static void HandleResistancePages(uint8_t* buffer)

@@ -41,6 +41,17 @@ typedef enum {
 
 typedef struct {
 	uint8_t 	DataPageNumber;
+	uint8_t 	CalibrationStatus;
+    uint8_t     CalibrationConditions;
+    uint8_t     CurrentTemp;
+    uint8_t     TargetSpeedLSB;
+    uint8_t     TargetSpeedMSB;
+    uint8_t     TargetSpinDownTimeLSB;
+    uint8_t     TargetSpinDownTimeMSB;        
+} FEC_Page2;
+
+typedef struct {
+	uint8_t 	DataPageNumber;
 	uint8_t 	EquipmentType;
 	uint8_t 	ElapsedTime;
 	uint8_t 	Distance;
