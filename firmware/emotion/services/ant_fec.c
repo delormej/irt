@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
 #include "ant_fec.h"
 #include "ble_ant.h"
 #include "ant_stack_handler_types.h"
@@ -102,14 +103,35 @@ static uint16_t speed_mps_to_int16(float f) {
 static uint8_t calc_wheel_diameter(uint16_t circ_mm, uint8_t* diameter_cm) {
     uint8_t diameter_offset_mm = 0;
     // Calculate diameter from circumference.
-    float diameter = ((float)circ_mm / 3.14f) / 10.0f;
+    float diameter = ((float)circ_mm / 31.4f); 
     // Truncate to 0.01m without decimnal, but essential it's the cm.
     *diameter_cm = (uint8_t)diameter; 
     
     // Calculate remainder, 0-10 mm.
-    diameter_offset_mm = (uint8_t)((diameter - (*diameter_cm)) * 100.0f);
+    diameter_offset_mm = (uint8_t)((diameter - (*diameter_cm)) * 10.0f);
     
     return diameter_offset_mm;
+}
+
+/**@brief	Converts two part wheel diameter into cicrumference in mm.
+ */
+static uint16_t calc_wheel_circ(uint8_t diameter_cm, uint8_t diameter_offset_mm) {  
+    //NOTE: from the Garmin Edge 520, this does not appear to be sent correctly.
+    // Diameter comes in cm, convert to millimeters.
+    float circ = 0.0f;
+    int16_t diameter = diameter_cm * 10;
+     
+    if (diameter_offset_mm != 0xF)
+    {
+        // Add offset in millimeters.
+        diameter += diameter_offset_mm;
+    }
+    
+    // Calculate circumference from PI.
+    circ = (float)diameter * 3.14f; 
+
+    // TODO: use math rounding function.
+    return (uint16_t)round(circ);
 }
 
 /**@brief   Helper method that parses wind resistance simulation.
@@ -484,19 +506,7 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
     
     total_weight = user_weight + bike_weight;
 
-    // Parse Wheel size.  
-    //NOTE: from the Garmin Edge 520, this does not appear to be sent correctly.
-    // Diameter comes in cm, convert to millimeters.
-    wheel_size = page55.WheelDiameter * 10;
-    
-    if (page55.WheelDiameterOffset != 0xF)
-    {
-        // Add offset in millimeters.
-        wheel_size += page55.WheelDiameterOffset;
-    }
-    
-    // Calculate circumference from PI.
-    wheel_size = (uint16_t)((wheel_size * 314u) / 100u); 
+    wheel_size = calc_wheel_circ(page55.WheelDiameter, page55.WheelDiameterOffset);    
     FE_LOG("[FE] Bike Wheel Size to:%i\r\n", wheel_size);
     
     // Determine if this represents a change to the user profile.
