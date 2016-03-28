@@ -553,7 +553,6 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
 static void HandleIRTSettingsPage(uint8_t* buffer) {
     FEC_IRTSettingsPage page;
     
-    
     FE_LOG("[FE] IRT settings received: [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
         buffer[0],
         buffer[1],
