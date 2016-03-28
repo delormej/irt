@@ -373,6 +373,30 @@ static void CalibrationInProgress_Send(calibration_status_t * p_calibration_stat
 		(uint8_t*)&page);       
 }
 
+/**@brief	Sends manufacturer specific page containing settings.
+ */
+static uint32_t IRTSettingsPage_Send() {
+    uint16_t drag = (uint16_t) (mp_user_profile->ca_drag * 1000000.0f);
+    uint16_t rr = (uint16_t) (mp_user_profile->ca_rr * 1000.0f);
+
+    FEC_IRTSettingsPage page = {
+        .DataPageNumber = ANT_IRT_PAGE_SETTINGS,
+        .DragLSB = LOW_BYTE(drag),
+        .DragMSB = HIGH_BYTE(drag),
+        .RRLSB = LOW_BYTE(rr),
+        .RRMSB = HIGH_BYTE(rr),
+        .ServoOffsetLSB = LOW_BYTE(mp_user_profile->servo_offset),
+        .ServoOffsetMSB = HIGH_BYTE(mp_user_profile->servo_offset),
+        .Settings = (uint8_t)mp_user_profile->settings // truncated to 1 byte.
+    };
+    
+    return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&page);
+}
+
+/**@brief	Processes pages responsible for setting resistance modes and 
+ *          raises the event to change resistance.
+ */
 static void HandleResistancePages(uint8_t* buffer)
 {
 	rc_evt_t resistance_evt; 
@@ -522,6 +546,40 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
     }
 }
 
+
+/**@brief   Parses IRT specific settings and applies to the user profile.
+ * 
+ */
+static void HandleIRTSettingsPage(uint8_t* buffer) {
+    FEC_IRTSettingsPage page;
+    
+    
+    FE_LOG("[FE] IRT settings received: [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+        buffer[0],
+        buffer[1],
+        buffer[2],
+        buffer[3],
+        buffer[4],
+        buffer[5],
+        buffer[6],
+        buffer[7]);
+        
+    // Copy into page structure.
+    memcpy(&page, buffer, sizeof(FEC_IRTSettingsPage));
+    
+    mp_user_profile->ca_drag = (float)(page.DragMSB << 8 | page.DragLSB) 
+        / 1000000.0f;
+    mp_user_profile->ca_rr = (float)(page.RRMSB << 8 | page.RRLSB) 
+        / 1000.0f;
+    mp_user_profile->servo_offset = page.ServoOffsetMSB << 8 |
+         page.ServoOffsetLSB;
+    // Only the 1st byte of settings comes over.
+    mp_user_profile->settings |= page.Settings;
+    
+    // Signal to the user profile module to update persistent storage.
+    user_profile_store();    
+}
+
 /**@brief   Queues a request to send a given page.
  */
 static void queue_request(uint8_t page_number)
@@ -583,7 +641,7 @@ static bool dequeue_request()
             break;
             
         case ANT_IRT_PAGE_SETTINGS:
-            IRTSettingaPage_Send();
+            IRTSettingsPage_Send();
             break;    
 
         default:
@@ -661,24 +719,6 @@ void ant_fec_calibration_send(irt_context_t * p_power_meas,
         // send page 0x10.
         GeneralFEDataPage_Send(p_power_meas);   
     }
-}
-
-/**@brief	Sends manufacturer specific page containing settings.
- */
-static uint32_t IRTSettingsPage_Send() {
-    FEC_IRTSettingsPage page = {
-        .DataPageNumber = ANT_IRT_PAGE_SETTINGS,
-        .DragLSB = LOW_BYTE(mp_user_profile->ca_drag),
-        .DragMSB = HIGH_BYTE(mp_user_profile->ca_drag),
-        .RRLSB = LOW_BYTE(mp_user_profile->ca_rr),
-        .RRMSB = HIGH_BYTE(mp_user_profile->ca_rr),
-        .ServoOffsetLSB = LOW_BYTE(mp_user_profile->servo_offset),
-        .ServoOffsetMSB = HIGH_BYTE(mp_user_profile->servo_offset),
-        .Settings = (uint8_t)mp_user_profile->settings // truncated to 1 byte.
-    };
-    
-    return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
-		(uint8_t*)&page);
 }
 
 /**@brief	Send appropriate message based on current event count.
@@ -785,7 +825,11 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
                 
                 // Add this to the request queue.
                 queue_request(p_ant_evt->evt_buffer[9]);
-				break;            
+				break;           
+                
+            case ANT_IRT_PAGE_SETTINGS:
+                HandleIRTSettingsPage(&p_ant_evt->evt_buffer[3]);
+                break; 
             
 			default:
 				FE_LOG("[FE]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
