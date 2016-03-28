@@ -582,6 +582,10 @@ static bool dequeue_request()
 		      (uint8_t*)&m_last_command);       
             break;
             
+        case ANT_IRT_PAGE_SETTINGS:
+            IRTSettingaPage_Send();
+            break;    
+
         default:
             FE_LOG("[FE] dequeue_request, unrecognized page:%i.\r\n", 
                 page_number); 
@@ -657,6 +661,24 @@ void ant_fec_calibration_send(irt_context_t * p_power_meas,
         // send page 0x10.
         GeneralFEDataPage_Send(p_power_meas);   
     }
+}
+
+/**@brief	Sends manufacturer specific page containing settings.
+ */
+static uint32_t IRTSettingsPage_Send() {
+    FEC_IRTSettingsPage page = {
+        .DataPageNumber = ANT_IRT_PAGE_SETTINGS,
+        .DragLSB = LOW_BYTE(mp_user_profile->ca_drag),
+        .DragMSB = HIGH_BYTE(mp_user_profile->ca_drag),
+        .RRLSB = LOW_BYTE(mp_user_profile->ca_rr),
+        .RRMSB = HIGH_BYTE(mp_user_profile->ca_rr),
+        .ServoOffsetLSB = LOW_BYTE(mp_user_profile->servo_offset),
+        .ServoOffsetMSB = HIGH_BYTE(mp_user_profile->servo_offset),
+        .Settings = (uint8_t)mp_user_profile->settings // truncated to 1 byte.
+    };
+    
+    return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&page);
 }
 
 /**@brief	Send appropriate message based on current event count.

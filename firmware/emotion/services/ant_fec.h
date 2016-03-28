@@ -144,6 +144,18 @@ typedef struct {
 	uint8_t	    Data[4];						// Response data specific to command ID.
 } FEC_Page71; // Command Status Page
 
+// Contains device settings for get/set parameters.
+typedef struct {
+    uint8_t		DataPageNumber;
+    uint8_t     DragLSB;
+    uint8_t     DragMSB;
+    uint8_t     RRLSB;
+    uint8_t     RRMSB;
+    uint8_t     ServoOffsetLSB;
+    uint8_t     ServoOffsetMSB;
+    uint8_t     Settings;           // truncated to 1 byte for now.        
+} FEC_IRTSettingsPage;
+
 void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers);
 
 void ant_fec_tx_start(void);
