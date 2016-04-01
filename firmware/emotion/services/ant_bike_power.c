@@ -14,6 +14,7 @@
 #include "app_error.h"
 #include "nordic_common.h"
 #include "irt_common.h"
+#include "wahoo.h"
 #include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
@@ -166,10 +167,7 @@ static void decode_magnet_factors(const uint8_t* p_buffer, float* p_factors)
 
 static void handle_move_servo(ant_evt_t * p_ant_evt)
 {
-	rc_evt_t evt;
-
-	evt.operation = RESISTANCE_SET_SERVO_POS;
-	evt.pBuffer = &(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]);
+    RC_EVT_SET_SERVO(p_ant_evt);
 	mp_evt_handlers->on_set_resistance(evt);
 }
 

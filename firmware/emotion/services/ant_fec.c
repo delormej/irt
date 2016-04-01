@@ -18,6 +18,7 @@
 #include "user_profile.h"
 #include "resistance.h"
 #include "app_fifo.h"
+#include "wahoo.h" // need a couple of defines from here.
 #include "debug.h"
 
 /**@brief Debug logging for module.
@@ -579,6 +580,13 @@ static void HandleIRTSettingsPage(uint8_t* buffer) {
     user_profile_store();    
 }
 
+/**@brief   Raises the set resistance event.
+ */
+static void HandleSetServo(ant_evt_t * p_ant_evt) {
+    RC_EVT_SET_SERVO(p_ant_evt);
+	mp_evt_handlers->on_set_resistance(evt);
+}
+
 /**@brief   Queues a request to send a given page.
  */
 static void queue_request(uint8_t page_number)
@@ -829,6 +837,23 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
             case ANT_IRT_PAGE_SETTINGS:
                 HandleIRTSettingsPage(&p_ant_evt->evt_buffer[3]);
                 break; 
+
+			case WF_ANT_RESPONSE_PAGE_ID:
+                // Determine the "command".
+                switch (p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET])
+                {
+                    case ANT_BP_ENABLE_DFU_COMMAND:	// Invoke device firmware update mode.
+                        mp_evt_handlers->on_enable_dfu_mode();
+                        break;
+
+                    case ANT_BP_MOVE_SERVO_COMMAND: // Move the servo to a specific position.
+                         HandleSetServo(p_ant_evt);
+                        break;
+
+                    default:
+                        break;
+                }            
+                break;
             
 			default:
 				FE_LOG("[FE]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",

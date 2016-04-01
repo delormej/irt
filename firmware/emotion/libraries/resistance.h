@@ -21,6 +21,12 @@
 #define DEFAULT_ERG_WATTS				175u				// Default erg target_watts when not otherwise set.
 #define RESISTANCE_MIN_SPEED_ADJUST		3.0f				// (~6.71mph) Minimum speed in meters per second at which we adjust resistance.
 
+// Macro to create a resstance control event.
+#define RC_EVT_SET_SERVO(p_ant_evt) \
+	rc_evt_t evt; \
+	evt.operation = RESISTANCE_SET_SERVO_POS; \
+	evt.pBuffer = &(p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET+2]); \
+
 /**@brief Bike types, used for predefined resistance coefficients. */
 typedef enum
 {
