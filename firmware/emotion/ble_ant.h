@@ -27,6 +27,8 @@
 #define ANT_PAGE_MEASURE_OUTPUT			0x03	// Measurement Output Data Page (0x03)
 #define ANT_PAGE_REQUEST_DATA			0x46
 #define ANT_PAGE_BATTERY_STATUS			0x52
+#define ANT_IRT_PAGE_EXTRA_INFO			0xF1   // Manufacturer specific page sending servo position, etc...
+#define ANT_IRT_PAGE_SETTINGS			0xF2   // Manufacturer specific page sending device specific settings.
 
 #define ANT_COMMON_PAGE_80          		0x50u   /**< Manufacturer's identification common data page. */
 #define ANT_COMMON_PAGE_81          		0x51u   /**< Product information common data page. */
@@ -111,5 +113,6 @@ void ble_advertising_start(void);
 void cycling_power_send(irt_context_t * p_cps_meas);
 void ble_ant_resistance_ack(uint8_t op_code, uint16_t value);
 void ant_common_page_transmit(uint8_t ant_channel, uint8_t* common_page);
+uint32_t extra_info_transmit(uint8_t channelId, irt_context_t * p_power_meas);
 
 #endif // BLE_ANT_H__

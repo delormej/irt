@@ -4,16 +4,10 @@
 #ifndef ANT_BIKE_POWER_H__
 #define ANT_BIKE_POWER_H__
 
-#define ANT_BP_COMMAND_OFFSET			4u
-#define ANT_BP_SET_WEIGHT_COMMAND		0x60
-#define ANT_BP_MOVE_SERVO_COMMAND		0x61
-#define ANT_BP_ENABLE_DFU_COMMAND		0x64
-
 // ANT Bike Power specific pages.
 #define ANT_BP_PAGE_CALIBRATION			0x01	// Calibration page
 #define ANT_BP_PAGE_STANDARD_POWER_ONLY 0x10   /**< Standard Power only main data page. */
 #define ANT_BP_PAGE_TORQUE_AT_WHEEL		0x11   /**< Power reported as torque at wheel data page, which includes speed. */
-#define ANT_BP_PAGE_EXTRA_INFO			0xF1   // Manufacturer specific page.
 
 #define ANT_BP_CAL_PARAM_RESPONSE		0xBB
 #define ANT_BP_CAL_SUCCESS_RESPONSE		0xAC

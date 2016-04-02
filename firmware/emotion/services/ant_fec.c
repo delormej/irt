@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
 #include "ant_fec.h"
 #include "ble_ant.h"
 #include "ant_stack_handler_types.h"
@@ -17,6 +18,7 @@
 #include "user_profile.h"
 #include "resistance.h"
 #include "app_fifo.h"
+#include "wahoo.h" // need a couple of defines from here.
 #include "debug.h"
 
 /**@brief Debug logging for module.
@@ -75,6 +77,7 @@ static user_profile_t* mp_user_profile;
 // Hold on to these pages to respond with when requested.
 static FEC_Page50 m_page50;
 static FEC_Page51 m_page51;
+static FEC_Page55 m_page55;
 
 // Manages state for the last command received.
 static FEC_Page71 m_last_command = {           
@@ -91,6 +94,45 @@ static uint16_t speed_mps_to_int16(float f) {
 	// Speed is sent in 0.001 m/s, removing the decimal point to represent int.
 	uint16_t i = (uint16_t)(f * 1000.0f);
 	return i;
+}
+
+/**@brief	Converts wheel cicrumference in mm i.e. (2107) or 2.107m into
+ *          a byte for wheel diameter 0.01m and 1/2 a byte diameter offset (0-10mm).
+ *          The return value is the offset (0-10mm), the diameter_cm parameter
+ *          is referenced and updated with the calculated value.
+ */
+static uint8_t calc_wheel_diameter(uint16_t circ_mm, uint8_t* diameter_cm) {
+    uint8_t diameter_offset_mm = 0;
+    // Calculate diameter from circumference.
+    float diameter = ((float)circ_mm / 31.4f); 
+    // Truncate to 0.01m without decimnal, but essential it's the cm.
+    *diameter_cm = (uint8_t)diameter; 
+    
+    // Calculate remainder, 0-10 mm.
+    diameter_offset_mm = (uint8_t)((diameter - (*diameter_cm)) * 10.0f);
+    
+    return diameter_offset_mm;
+}
+
+/**@brief	Converts two part wheel diameter into cicrumference in mm.
+ */
+static uint16_t calc_wheel_circ(uint8_t diameter_cm, uint8_t diameter_offset_mm) {  
+    //NOTE: from the Garmin Edge 520, this does not appear to be sent correctly.
+    // Diameter comes in cm, convert to millimeters.
+    float circ = 0.0f;
+    int16_t diameter = diameter_cm * 10;
+     
+    if (diameter_offset_mm != 0xF)
+    {
+        // Add offset in millimeters.
+        diameter += diameter_offset_mm;
+    }
+    
+    // Calculate circumference from PI.
+    circ = (float)diameter * 3.14f; 
+
+    // TODO: use math rounding function.
+    return (uint16_t)round(circ);
 }
 
 /**@brief   Helper method that parses wind resistance simulation.
@@ -284,8 +326,9 @@ static uint32_t ManufacturerSpecificPage_Send(irt_context_t* context)
 	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 }
 
-/** It's unclear whether we need to send this page, seems that we only need to receive it.
- *
+/**@brief   Parses user configuration and applies to the user profile.
+ * 
+ */
 static uint32_t UserConfigurationPage_Send()
 {
     // DEFAULT_TOTAL_WEIGHT_KG
@@ -296,8 +339,7 @@ static uint32_t UserConfigurationPage_Send()
     // routine will default the value.  
     // TODO: reconsider who is responsible for what here as the code is getting too complicated.
     uint16_t user_weight = mp_user_profile->user_weight_kg;
-    uint16_t bike_weight;
-    float wheel_diameter;
+    uint16_t bike_weight = 0;
     
     FE_LOG("[FE] User Weight:%i\r\n", user_weight);
     
@@ -327,13 +369,53 @@ static uint32_t UserConfigurationPage_Send()
 
     // Wheel size is transmitted here in diameter, but we store and use in circumference.
     // This is stored as another 1.5 byte field.
-    wheel_diameter = (((float)mp_user_profile->wheel_size_mm) / 3.14f);
+    // Can't pass offset by ref because it's a bitfield, so this is very sloppy
+    // The method sets the value of wheel diameter and 4 bits of the return value 
+    // is used as the offset. 
+    m_page55.WheelDiameterOffset = 0xF & calc_wheel_diameter(
+            mp_user_profile->wheel_size_mm, &m_page55.WheelDiameter);
+            
+    m_page55.GearRatio = 0x00; // invalid.
         
-
 	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		(uint8_t*)&m_page55);    
-} */
+} 
 
+static void CalibrationInProgress_Send(calibration_status_t * p_calibration_status)
+{
+    //
+    static  FEC_Page2 page =  {
+        .DataPageNumber = CALIBRATION_PROGRESS_PAGE
+    };
+    
+	sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&page);       
+}
+
+/**@brief	Sends manufacturer specific page containing settings.
+ */
+static uint32_t IRTSettingsPage_Send() {
+    uint16_t drag = (uint16_t) (mp_user_profile->ca_drag * 1000000.0f);
+    uint16_t rr = (uint16_t) (mp_user_profile->ca_rr * 1000.0f);
+
+    FEC_IRTSettingsPage page = {
+        .DataPageNumber = ANT_IRT_PAGE_SETTINGS,
+        .DragLSB = LOW_BYTE(drag),
+        .DragMSB = HIGH_BYTE(drag),
+        .RRLSB = LOW_BYTE(rr),
+        .RRMSB = HIGH_BYTE(rr),
+        .ServoOffsetLSB = LOW_BYTE(mp_user_profile->servo_offset),
+        .ServoOffsetMSB = HIGH_BYTE(mp_user_profile->servo_offset),
+        .Settings = (uint8_t)mp_user_profile->settings // truncated to 1 byte.
+    };
+    
+    return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&page);
+}
+
+/**@brief	Processes pages responsible for setting resistance modes and 
+ *          raises the event to change resistance.
+ */
 static void HandleResistancePages(uint8_t* buffer)
 {
 	rc_evt_t resistance_evt; 
@@ -420,6 +502,16 @@ static void HandleResistancePages(uint8_t* buffer)
     m_last_command.CommandStatus = FE_COMMAND_PASS;
 }
 
+/**@brief   Parses the request calibration page.
+ *
+ */
+static void HandleCalibrationRequestPage(uint8_t* buffer)
+{
+    // TODO: Indicate which TYPE of calibration requested from buffer[1] 
+    // Raise event that calibratoin has been requested.
+    mp_evt_handlers->on_request_calibration();
+}
+
 /**@brief   Parses user configuration and applies to the user profile.
  * 
  */
@@ -457,19 +549,7 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
     
     total_weight = user_weight + bike_weight;
 
-    // Parse Wheel size.  
-    //NOTE: from the Garmin Edge 520, this does not appear to be sent correctly.
-    // Diameter comes in cm, convert to millimeters.
-    wheel_size = page55.WheelDiameter * 10;
-    
-    if (page55.WheelDiameterOffset != 0xF)
-    {
-        // Add offset in millimeters.
-        wheel_size += page55.WheelDiameterOffset;
-    }
-    
-    // Calculate circumference from PI.
-    wheel_size = (uint16_t)((wheel_size * 314u) / 100u); 
+    wheel_size = calc_wheel_circ(page55.WheelDiameter, page55.WheelDiameterOffset);    
     FE_LOG("[FE] Bike Wheel Size to:%i\r\n", wheel_size);
     
     // Determine if this represents a change to the user profile.
@@ -483,6 +563,46 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
         // Signal to the user profile module to update persistent storage.
         user_profile_store();
     }
+}
+
+
+/**@brief   Parses IRT specific settings and applies to the user profile.
+ * 
+ */
+static void HandleIRTSettingsPage(uint8_t* buffer) {
+    FEC_IRTSettingsPage page;
+    
+    FE_LOG("[FE] IRT settings received: [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+        buffer[0],
+        buffer[1],
+        buffer[2],
+        buffer[3],
+        buffer[4],
+        buffer[5],
+        buffer[6],
+        buffer[7]);
+        
+    // Copy into page structure.
+    memcpy(&page, buffer, sizeof(FEC_IRTSettingsPage));
+    
+    mp_user_profile->ca_drag = (float)(page.DragMSB << 8 | page.DragLSB) 
+        / 1000000.0f;
+    mp_user_profile->ca_rr = (float)(page.RRMSB << 8 | page.RRLSB) 
+        / 1000.0f;
+    mp_user_profile->servo_offset = page.ServoOffsetMSB << 8 |
+         page.ServoOffsetLSB;
+    // Only the 1st byte of settings comes over.
+    mp_user_profile->settings |= page.Settings;
+    
+    // Signal to the user profile module to update persistent storage.
+    user_profile_store();    
+}
+
+/**@brief   Raises the set resistance event.
+ */
+static void HandleSetServo(ant_evt_t * p_ant_evt) {
+    RC_EVT_SET_SERVO(p_ant_evt);
+	mp_evt_handlers->on_set_resistance(evt);
 }
 
 /**@brief   Queues a request to send a given page.
@@ -526,9 +646,9 @@ static bool dequeue_request()
             FECapabilitiesDataPage_Send();
             break;
           
-        /*case USER_CONFIGURATION_PAGE:
+        case USER_CONFIGURATION_PAGE:
             UserConfigurationPage_Send();
-            break;*/
+            break;
             
         case WIND_RESISTANCE_PAGE:
             sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE,
@@ -545,6 +665,10 @@ static bool dequeue_request()
 		      (uint8_t*)&m_last_command);       
             break;
             
+        case ANT_IRT_PAGE_SETTINGS:
+            IRTSettingsPage_Send();
+            break;    
+
         default:
             FE_LOG("[FE] dequeue_request, unrecognized page:%i.\r\n", 
                 page_number); 
@@ -601,6 +725,27 @@ void ant_fec_tx_start(void)
     APP_ERROR_CHECK(err_code);    	
 }
 
+/**@brief	Send appropriate message during calibration.
+ */
+void ant_fec_calibration_send(irt_context_t * p_power_meas,
+    calibration_status_t * p_calibration_status)
+{
+    static uint8_t count = 0;
+    // If ending calibration, send page 0x01 3 times.
+    
+    // If in calibration mode, alternate page 0x02 and 0x10, until complete.
+    if (count % 2 == 0)
+    {
+        // send page 0x02
+        CalibrationInProgress_Send(p_calibration_status);
+    }
+    else
+    {
+        // send page 0x10.
+        GeneralFEDataPage_Send(p_power_meas);   
+    }
+}
+
 /**@brief	Send appropriate message based on current event count.
  */
 void ant_fec_tx_send(irt_context_t * p_power_meas)
@@ -653,7 +798,7 @@ void ant_fec_tx_send(irt_context_t * p_power_meas)
     else if (  (~(0b111 ^ count) & 7) == 7  )
     {
         // Message sequence 7: Manufacturer specific page.
-        ManufacturerSpecificPage_Send(p_power_meas);
+        // Send IRT specific Extra_info_page.
     }       
     else if (  (~(0b11 ^ count) & 3) == 3  )
     {
@@ -685,6 +830,10 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
 		// TODO: remove these hard coded array position values and create defines.
 		switch (p_ant_evt->evt_buffer[3])  // Switch on the page number.
 		{
+            case CALIBRATION_REQUEST_PAGE:
+                //
+                break;
+                
             case BASIC_RESISTANCE_PAGE:
             case TARGET_POWER_PAGE:
             case WIND_RESISTANCE_PAGE:
@@ -701,7 +850,28 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
                 
                 // Add this to the request queue.
                 queue_request(p_ant_evt->evt_buffer[9]);
-				break;            
+				break;           
+                
+            case ANT_IRT_PAGE_SETTINGS:
+                HandleIRTSettingsPage(&p_ant_evt->evt_buffer[3]);
+                break; 
+
+			case WF_ANT_RESPONSE_PAGE_ID:
+                // Determine the "command".
+                switch (p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET])
+                {
+                    case ANT_BP_ENABLE_DFU_COMMAND:	// Invoke device firmware update mode.
+                        mp_evt_handlers->on_enable_dfu_mode();
+                        break;
+
+                    case ANT_BP_MOVE_SERVO_COMMAND: // Move the servo to a specific position.
+                         HandleSetServo(p_ant_evt);
+                        break;
+
+                    default:
+                        break;
+                }            
+                break;
             
 			default:
 				FE_LOG("[FE]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",

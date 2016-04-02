@@ -15,6 +15,8 @@
 
 #define EQUIPMENT_TRAINER			25
 
+#define CALIBRATION_REQUEST_PAGE	0x01
+#define CALIBRATION_PROGRESS_PAGE   0x02
 #define GENERAL_FE_DATA_PAGE		16
 #define GENERAL_SETTINGS_PAGE		17
 #define SPECIFIC_TRAINER_PAGE		25
@@ -36,6 +38,17 @@ typedef enum {
     FE_COMMAND_PENDING,
     FE_COMMAND_UNINITIALIZED = 0xFF
 } fec_command_status_e;
+
+typedef struct {
+	uint8_t 	DataPageNumber;
+	uint8_t 	CalibrationStatus;
+    uint8_t     CalibrationConditions;
+    uint8_t     CurrentTemp;
+    uint8_t     TargetSpeedLSB;
+    uint8_t     TargetSpeedMSB;
+    uint8_t     TargetSpinDownTimeLSB;
+    uint8_t     TargetSpinDownTimeMSB;        
+} FEC_Page2;
 
 typedef struct {
 	uint8_t 	DataPageNumber;
@@ -131,6 +144,18 @@ typedef struct {
 	uint8_t	    Data[4];						// Response data specific to command ID.
 } FEC_Page71; // Command Status Page
 
+// Contains device settings for get/set parameters.
+typedef struct {
+    uint8_t		DataPageNumber;
+    uint8_t     DragLSB;
+    uint8_t     DragMSB;
+    uint8_t     RRLSB;
+    uint8_t     RRMSB;
+    uint8_t     ServoOffsetLSB;
+    uint8_t     ServoOffsetMSB;
+    uint8_t     Settings;           // truncated to 1 byte for now.        
+} FEC_IRTSettingsPage;
+
 void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers);
 
 void ant_fec_tx_start(void);
@@ -138,5 +163,8 @@ void ant_fec_tx_start(void);
 void ant_fec_tx_send(irt_context_t* p_power_meas);
 
 void ant_fec_rx_handle(ant_evt_t* p_ant_evt);
+
+void ant_fec_calibration_send(irt_context_t * p_power_meas,
+    calibration_status_t * p_calibration_status);
 
 #endif	// ANT_FE_C_H__

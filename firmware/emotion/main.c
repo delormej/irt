@@ -64,10 +64,10 @@
 //#include "irt_error_log.h"
 #include "irt_led.h"
 #include "bp_response_queue.h"
+#include "calibration.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	// Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
-#define CALIBRATION_READ_INTERVAL		APP_TIMER_TICKS(125, APP_TIMER_PRESCALER) 	// 8HZ, every 125ms
 
 #define WATCHDOG_TICK_COUNT				APP_TIMER_CLOCK_FREQ * 60 * 5 				// (NRF_WDT->CRV + 1)/32768 seconds * 60 seconds * 'n' minutes
 #define WDT_RELOAD()					NRF_WDT->RR[0] = WDT_RR_RR_Reload			// Keep the device awake.
@@ -107,7 +107,6 @@ static irt_context_t 					m_current_state =	{						// Current state structure, i
     
 static app_timer_id_t               	m_ant_4hz_timer_id;                    		// ANT 4hz timer.  TOOD: should rename since it's the core timer for all reporting (not just ANT).
 static app_timer_id_t					m_sensor_read_timer_id;						// Timer used to read sensors, out of phase from the 4hz messages.
-static app_timer_id_t					m_ca_timer_id;								// Calibration timer.
 
 static user_profile_t*                  mp_user_profile;                             // Pointer to user profile object.
 static accelerometer_data_t 			m_accelerometer_data;
@@ -117,13 +116,11 @@ static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote 
 
 static uint32_t 						m_battery_start_ticks __attribute__ ((section (".NoInit")));			// Time (in ticks) when we started running on battery.
 
-static bool								m_crr_adjust_mode;							// Indicator that we're in manual calibration mode.
-
 static void on_get_parameter(ant_request_data_page_t* p_request);
 static void send_temperature();
 static void on_enable_dfu_mode();
-static void calibration_stop();
 static void on_resistance_off();
+static void on_request_calibration();
 
 /**@brief Debug logging for main module.
  *
@@ -454,67 +451,6 @@ static void ant_ctrl_available(void)
  * Timer functions
  * ----------------------------------------------------------------------------*/
 
-/**@brief Called during calibration to send frequent calibration messages.
- *
- */
-static void calibration_timeout_handler(void * p_context)
-{
-	#define MIN_SPEED_TICKS					5		// 5 ticks @8hz is ~5mph
-	#define STOP_INDICATIONS				2		// # of times that we see below min speed before we flag over.
-	UNUSED_PARAMETER(p_context);
-	static uint8_t stop_count = 0;					// Flag a few times just to be sure it's not just a misread.
-	static uint8_t count = 0;
-	static uint16_t accum_flywheel[2];
-	uint16_t timestamp_2048;
-	uint16_t tick_delta;
-
-	// Every other time, just store the flywheel value.
-
-	if (count++ % 2 == 0)
-	{
-		accum_flywheel[0] = flywheel_ticks_get();
-	}
-	else
-	{
-		accum_flywheel[1] = flywheel_ticks_get();
-		timestamp_2048 = seconds_2048_get();
-
-		// TODO: think about this because we shouldn't actually be sending accum_flywheel[0] since
-		// we don't know exactly when it occured without the timestamp, we just hope that the
-		// recipient doesn't use that value.  Remove the first val in a future build.
-		ant_bp_calibration_speed_tx_send(timestamp_2048, accum_flywheel);
-
-		// Keep device awake.
-		WDT_RELOAD();
-
-		/*
-		 * Check the last sample.  If we've slowed below ~5mph, it's time to exit calibration.
-		 */
-
-		// Handle rollover
-		if (accum_flywheel[1] < accum_flywheel[0])
-		{
-			tick_delta = (accum_flywheel[0] ^ 0xFFFF) +
-					accum_flywheel[1];
-		}
-		else
-		{
-			tick_delta = accum_flywheel[1] - accum_flywheel[0];
-		}
-
-
-		if (tick_delta < MIN_SPEED_TICKS)
-		{
-			if (++stop_count >= STOP_INDICATIONS)
-			{
-				calibration_stop();
-				LOG("[MAIN] calibration_timeout_handler: min speed reached.\r\n");
-				stop_count = 0;
-			}
-		}
-	}
-}
-
 /**@brief Function for handling the ANT 4hz measurement timer timeout.
  *
  * @details This function will be called each timer expiration.  The default period
@@ -553,9 +489,9 @@ static void ant_4hz_timeout_handler(void * p_context)
 	}
 
 	//
-	// Only calculate speed/power every 1/2 second.
+	// Only calculate speed/power every 1/2 second, unless in calibration.
 	//
-	if (event_count % 2 == 0)
+	if (event_count % 2 == 0 || calibration_in_progress)
 	{
 		m_current_state.event_count++;	// Increment to indicate we're recording data.
 
@@ -587,17 +523,25 @@ static void ant_4hz_timeout_handler(void * p_context)
 		}
 	}
 
-    // If there was another ANT+ message response in queue it was sent as a response
-    // so skip until next time slot for cycling power.
-	if (!dequeue_ant_response())
+    if (calibration_in_progress)
     {
-        // Transmit the power messages.
-        cycling_power_send(&m_current_state);
+        calibration_status_t* p_state = calibration_progress(&m_current_state);
+        ant_fec_calibration_send(&m_current_state, p_state);
     }
+    else 
+    {
+        // If there was another ANT+ message response in queue it was sent as a response
+        // so skip until next time slot for cycling power.
+        if (!dequeue_ant_response())
+        {
+            // Transmit the power messages.
+            cycling_power_send(&m_current_state);
+        }
 
-	// Transmit FE-C messages.
-	ant_fec_tx_send(&m_current_state);
-
+        // Transmit FE-C messages.
+        ant_fec_tx_send(&m_current_state);
+    }
+    
 	// Send speed data.
 	ant_sp_tx_send(m_current_state.last_wheel_event_2048 / 2, 	// Requires 1/1024 time
 			(int16_t)m_current_state.accum_wheel_revs); 		// Requires truncating to 16 bits.
@@ -694,12 +638,6 @@ static void timers_init(void)
 	err_code = app_timer_create(&m_sensor_read_timer_id,
                                 APP_TIMER_MODE_REPEATED,
                                 sensor_read_timeout_handler);
-	APP_ERROR_CHECK(err_code);
-
-	// Record data much more frequently during calibration.
-	err_code = app_timer_create(&m_ca_timer_id,
-								APP_TIMER_MODE_REPEATED,
-								calibration_timeout_handler);
 	APP_ERROR_CHECK(err_code);
 }
 
@@ -848,49 +786,6 @@ static void send_temperature()
 	ant_bp_page3_tx_send(1, TEMPERATURE, 10, 0, value);
 }
 
-/**@brief 	Suspends normal messages and starts sending calibration messages.
- */
-static void calibration_start(void)
-{
-	uint32_t err_code;
-
-	// Force standard level 0 resistance.
-	// TODO: This should send a standard ack indicating changed state (if it has).
-	resistance_level_set(0);
-
-	// Stop existing ANT timer.
-	err_code = app_timer_stop(m_ant_4hz_timer_id);
-	APP_ERROR_CHECK(err_code);
-
-	// Start the calibration timer.
-    err_code = app_timer_start(m_ca_timer_id, CALIBRATION_READ_INTERVAL, NULL);
-    APP_ERROR_CHECK(err_code);
-
-    m_crr_adjust_mode = true;
-
-	led_set(LED_CALIBRATION_ENTER);
-}
-
-/**@brief 	Stops calibration and resumes normal activity.
- */
-static void calibration_stop(void)
-{
-	uint32_t err_code;
-
-	// Stop the calibration timer.
-	err_code = app_timer_stop(m_ca_timer_id);
-    APP_ERROR_CHECK(err_code);
-	m_crr_adjust_mode = false;
-
-	// Send a message indicating completion.
-	ant_bp_calibration_complete(true, 0);
-
-	led_set(LED_CALIBRATION_EXIT);
-
-	// Restart the normal ANT timer.
-	err_code = app_timer_start(m_ant_4hz_timer_id, ANT_4HZ_INTERVAL, NULL);
-}
-
 /**@brief	Updates settings either temporarily or with persistence.
  * @warn	NOTE that if any other profile persistence occurs during the session
  * 			these settings will be updated to flash.
@@ -1000,7 +895,7 @@ static void on_resistance_step(bool increment, bool minor)
 
 static void on_button_up(void)
 {
-	if (m_crr_adjust_mode)
+	if (calibration_in_progress)
 	{
 		crr_adjust(CRR_ADJUST_VALUE);
 		led_set(LED_BUTTON_UP);
@@ -1014,7 +909,7 @@ static void on_button_up(void)
 
 static void on_button_down(void)
 {
-	if (m_crr_adjust_mode)
+	if (calibration_in_progress)
 	{
 		crr_adjust(CRR_ADJUST_VALUE*-1);
 		led_set(LED_BUTTON_DOWN);
@@ -1038,7 +933,7 @@ static void on_button_long_up(void)
 
 static void on_button_menu(void)
 {
-	if (!m_crr_adjust_mode)
+	if (!calibration_in_progress)
 	{
 		// Start / stop TR whenever the middle button is pushed.
 		if ( SETTING_IS_SET(mp_user_profile->settings, SETTING_ANT_TR_PAUSE_ENABLED) )
@@ -1053,10 +948,10 @@ static void on_button_menu(void)
 
 static void on_button_long_menu(void)
 {
-	if (!m_crr_adjust_mode)
+	if (!calibration_in_progress)
 	{
 		// Change into crr mode.
-		calibration_start();
+		on_request_calibration();
 	}
 }
 
@@ -1611,6 +1506,9 @@ static void on_battery_result(uint16_t battery_level)
  */
 static void on_request_calibration()
 {
+    // Force standard level 0 resistance.
+	// TODO: This should send a standard ack indicating changed state (if it has).
+	resistance_level_set(0);
 	calibration_start();
 }
 
