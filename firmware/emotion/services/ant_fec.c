@@ -266,6 +266,24 @@ static uint32_t FECapabilitiesDataPage_Send()
 		(uint8_t*)&page);       
 }
 
+static uint32_t ManufacturerSpecificPage_Send(irt_context_t* context)
+{
+	uint8_t txbuffer[8];
+    uint16_t flywheel;
+	flywheel = context->accum_flywheel_ticks;
+
+	tx_buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_EXTRA_INFO;
+	tx_buffer[EXTRA_INFO_SERVO_POS_LSB]		= LOW_BYTE(context->servo_position);
+	tx_buffer[EXTRA_INFO_SERVO_POS_MSB]		= HIGH_BYTE(context->servo_position);
+	tx_buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(context->resistance_level);
+	tx_buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(context);
+	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]	= LOW_BYTE(flywheel);
+	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]	= HIGH_BYTE(flywheel);
+	tx_buffer[EXTRA_INFO_TEMP]				= (uint8_t)(context->temp);
+
+	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
+}
+
 /** It's unclear whether we need to send this page, seems that we only need to receive it.
  *
 static uint32_t UserConfigurationPage_Send()
@@ -635,7 +653,7 @@ void ant_fec_tx_send(irt_context_t * p_power_meas)
     else if (  (~(0b111 ^ count) & 7) == 7  )
     {
         // Message sequence 7: Manufacturer specific page.
-        // Send IRT specific Extra_info_page.
+        ManufacturerSpecificPage_Send(p_power_meas);
     }       
     else if (  (~(0b11 ^ count) & 3) == 3  )
     {
