@@ -310,11 +310,11 @@ static uint32_t FECapabilitiesDataPage_Send()
 
 static uint32_t ManufacturerSpecificPage_Send(irt_context_t* context)
 {
-	uint8_t txbuffer[8];
+	uint8_t tx_buffer[8];
     uint16_t flywheel;
 	flywheel = context->accum_flywheel_ticks;
 
-	tx_buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_EXTRA_INFO;
+	tx_buffer[PAGE_NUMBER_INDEX]			= ANT_IRT_PAGE_EXTRA_INFO;
 	tx_buffer[EXTRA_INFO_SERVO_POS_LSB]		= LOW_BYTE(context->servo_position);
 	tx_buffer[EXTRA_INFO_SERVO_POS_MSB]		= HIGH_BYTE(context->servo_position);
 	tx_buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(context->resistance_level);

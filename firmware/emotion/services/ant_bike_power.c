@@ -23,7 +23,6 @@
 #define PRODUCT_PAGE_INTERLEAVE_COUNT		242u
 #define BATTERY_PAGE_INTERLEAVE_COUNT		61u
 
-#define PAGE_NUMBER_INDEX               0                   /**< Index of the data page number field.  */
 #define EVENT_COUNT_INDEX               1u                  /**< Index of the event count field in the power-only main data page. */
 #define PEDAL_POWER_INDEX               2u                  /**< Index of the pedal power field in the power-only main data page. */
 #define INSTANT_CADENCE_INDEX           3u                  /**< Index of the instantaneous cadence field in the power-only main data page. */

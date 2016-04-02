@@ -34,6 +34,17 @@
 #define ANT_COMMON_PAGE_81          		0x51u   /**< Product information common data page. */
 //#define COMMON_PAGE_BATTERY_VOLTAGE 		0x52u   /**< TODO: Optional battery voltage reporting. */
 
+#define PAGE_NUMBER_INDEX               0                   /**< Index of the data page number field.  */
+
+// Custom message fields.
+#define EXTRA_INFO_SERVO_POS_LSB		1u
+#define EXTRA_INFO_SERVO_POS_MSB		2u
+#define EXTRA_INFO_TARGET_LSB			3u
+#define EXTRA_INFO_TARGET_MSB			4u
+#define EXTRA_INFO_FLYWHEEL_REVS_LSB	5u
+#define EXTRA_INFO_FLYWHEEL_REVS_MSB	6u
+#define EXTRA_INFO_TEMP					7u
+
 #define WF_ANT_RESPONSE_PAGE_ID              0xF0	// Manufacturer-Specific pages (0xF0 - 0xFF).
 
 #define BP_PAGE_RESERVE_BYTE    			0xFFu   /**< Page reserved value. */

@@ -69,15 +69,6 @@
 #define SEC_PARAM_MIN_KEY_SIZE          7                                            /**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE          16                                           /**< Maximum encryption key size. */
 
-// Custom message fields.
-#define EXTRA_INFO_SERVO_POS_LSB		1u
-#define EXTRA_INFO_SERVO_POS_MSB		2u
-#define EXTRA_INFO_TARGET_LSB			3u
-#define EXTRA_INFO_TARGET_MSB			4u
-#define EXTRA_INFO_FLYWHEEL_REVS_LSB	5u
-#define EXTRA_INFO_FLYWHEEL_REVS_MSB	6u
-#define EXTRA_INFO_TEMP					7u
-
 #define DEAD_BEEF                       0xDEADBEEF                                   /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
