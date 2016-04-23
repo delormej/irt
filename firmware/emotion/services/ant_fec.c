@@ -504,7 +504,7 @@ static void HandleResistancePages(uint8_t* buffer)
     m_last_command.CommandStatus = FE_COMMAND_PASS;
     
     // Queue a response to go out with last command.
-    // queue_request(COMMAND_STATUS_PAGE);
+    queue_request(COMMAND_STATUS_PAGE);
 }
 
 /**@brief   Parses the request calibration page.
