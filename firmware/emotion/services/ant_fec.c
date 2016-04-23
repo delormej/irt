@@ -79,7 +79,9 @@ static void queue_request(uint8_t);
 // Hold on to these pages to respond with when requested.
 static FEC_Page50 m_page50;
 static FEC_Page51 m_page51;
-static FEC_Page55 m_page55;
+static FEC_Page55 m_page55 = {
+    .DataPageNumber = USER_CONFIGURATION_PAGE    
+};
 
 // Manages state for the last command received.
 static FEC_Page71 m_last_command = {           
