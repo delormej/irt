@@ -612,7 +612,7 @@ void ant_common_page_transmit(uint8_t ant_channel, uint8_t* common_page)
 
 
 // Encodes the resistance mode into the 2 most significant bits.
-static uint8_t encode_resistance_level(irt_context_t * p_power_meas)
+uint8_t encode_resistance_level(irt_context_t * p_power_meas)
 {
 	uint8_t target_msb;
 	uint8_t mode;

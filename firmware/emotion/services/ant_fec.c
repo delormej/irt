@@ -74,6 +74,8 @@ static uint8_t m_fifo_buffer[FIFO_BUFFER_SIZE];
 static ant_ble_evt_handlers_t* mp_evt_handlers;
 static user_profile_t* mp_user_profile;
 
+static void queue_request(uint8_t);
+
 // Hold on to these pages to respond with when requested.
 static FEC_Page50 m_page50;
 static FEC_Page51 m_page51;
@@ -500,6 +502,9 @@ static void HandleResistancePages(uint8_t* buffer)
     // TODO: There is an opportunity here to handle errors more gracefully.
     // If we didn't fail on previous call, assume a pass.
     m_last_command.CommandStatus = FE_COMMAND_PASS;
+    
+    // Queue a response to go out with last command.
+    // queue_request(COMMAND_STATUS_PAGE);
 }
 
 /**@brief   Parses the request calibration page.
@@ -797,8 +802,8 @@ void ant_fec_tx_send(irt_context_t * p_power_meas)
     }
     else if (  (~(0b111 ^ count) & 7) == 7  )
     {
-        // Message sequence 7: Manufacturer specific page.
-        // Send IRT specific Extra_info_page.
+        // Message sequence 7: Manufacturer specific page, IRT Extra Info.
+        ManufacturerSpecificPage_Send(p_power_meas);
     }       
     else if (  (~(0b11 ^ count) & 3) == 3  )
     {
