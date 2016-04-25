@@ -506,7 +506,8 @@ static void HandleResistancePages(uint8_t* buffer)
     m_last_command.CommandStatus = FE_COMMAND_PASS;
     
     // Queue a response to go out with last command.
-    queue_request(COMMAND_STATUS_PAGE);
+    // This is not in the ANT+ FE-C spec, client is supposed to ask for it.
+    // queue_request(COMMAND_STATUS_PAGE);
 }
 
 /**@brief   Parses the request calibration page.
