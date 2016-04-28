@@ -298,9 +298,6 @@ static void set_sim_params(uint8_t *pBuffer)
 
 			// Schedule an update to persist the profile to flash.
 			user_profile_store();
-
-			// Re-initialize the power module with updated weight.
-			power_init(mp_user_profile);
 		}
 	}
 
@@ -818,7 +815,7 @@ static void settings_update(uint8_t* buffer)
 }
 
 /**@brief	Adjusts the crr intercept by the value.
- *
+ *			TODO: I don't think this is used, validate.
  */
 static void crr_adjust(int8_t value)
 {
@@ -833,7 +830,6 @@ static void crr_adjust(int8_t value)
 	{
 		// Wire value of intercept is sent in 1/1000, i.e. 57236 == 57.236
 		mp_user_profile->ca_intercept += (value * 1000);
-		power_init(mp_user_profile);
 		bp_queue_data_response(request);
 	}
 }
@@ -1305,9 +1301,6 @@ static void on_set_parameter(uint8_t* buffer)
 			// Remove drag & rr values as they will conflict.
 			mp_user_profile->ca_drag = NAN;
 			mp_user_profile->ca_rr = NAN;
-
-			// Reinitialize power.
-			power_init(mp_user_profile);
 
 			// Schedule update to the user profile.
 			user_profile_store();

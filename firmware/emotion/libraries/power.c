@@ -26,8 +26,8 @@
 #endif // ENABLE_DEBUG_LOG
 
 static float m_rr_force;
-static float m_ca_slope;			// calibration parameters
-static float m_ca_intercept;
+//static float m_ca_slope;			// calibration parameters
+//static float m_ca_intercept;
 static user_profile_t* mp_profile;
 //static bool  m_use_big_mag;
 
@@ -73,23 +73,6 @@ void power_init(user_profile_t* p_profile)
 	//m_use_big_mag = FEATURE_AVAILABLE(FEATURE_BIG_MAG);
 	//PW_LOG("[PW] Use small mag?: %i\r\n", m_use_big_mag);
 	mp_profile = p_profile;
-
-	if (mp_profile->ca_slope != 0xFFFF)
-	{
-		m_ca_slope = (mp_profile->ca_slope / 1000.0f);
-		m_ca_intercept = (mp_profile->ca_intercept / 1000.0f);
-		m_rr_force = 0;
-
-		PW_LOG("[PW] Initializing power with slope: %.4f intercept %.3f \r\n",
-				m_ca_slope, m_ca_intercept);
-	}
-	else
-	{
-		m_rr_force = (GRAVITY * (mp_profile->total_weight_kg / 100.0f) *
-				(DEFAULT_CRR / 1000.0f));
-		m_ca_slope = 0xFFFF;
-		m_ca_intercept = 0xFFFF;
-	}
 }
 
 /**@brief	Calculates and records current power measurement relative to last measurement.
@@ -100,8 +83,8 @@ uint32_t power_calc(irt_context_t* p_meas)
 	uint16_t torque = 0;
 	float mag_watts = 0;
 
-	/* There are currently 3 ways to calculate base resistance as shown below.
-	 * The goal is to get to 1, but for legacy reasons we support all 3 until we  
+	/* There are currently 2 ways to calculate base resistance as shown below.
+	 * The goal is to get to 1, but for legacy reasons we support both until we  
 	 * know which one is best.
 	 */
 	if (!isnan(mp_profile->ca_drag) && !isnan(mp_profile->ca_rr))
@@ -112,19 +95,21 @@ uint32_t power_calc(irt_context_t* p_meas)
 		p_meas->magoff_power = ( (mp_profile->ca_drag * pow(p_meas->instant_speed_mps, 2)) +
 				mp_profile->ca_rr ) * p_meas->instant_speed_mps ;
 	}
-	else if (m_ca_slope != 0xFFFF)
+	/*else if (m_ca_slope != 0xFFFF)
 	{
-		/*
+		*
 		 * Calibrated linear power equation.
-		 */
+		 *
 		p_meas->magoff_power =
 				(p_meas->instant_speed_mps * m_ca_slope - m_ca_intercept);
-	}
+	}*/
 	else
 	{
 		/*
 		 * Default linear power equation.
 		 */
+		m_rr_force = (GRAVITY * (mp_profile->total_weight_kg / 100.0f) *
+				(DEFAULT_CRR / 1000.0f));		 
 		p_meas->magoff_power = m_rr_force * p_meas->instant_speed_mps;
 	}
 
