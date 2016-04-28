@@ -100,6 +100,10 @@ uint32_t power_calc(irt_context_t* p_meas)
 	uint16_t torque = 0;
 	float mag_watts = 0;
 
+	/* There are currently 3 ways to calculate base resistance as shown below.
+	 * The goal is to get to 1, but for legacy reasons we support all 3 until we  
+	 * know which one is best.
+	 */
 	if (!isnan(mp_profile->ca_drag) && !isnan(mp_profile->ca_rr))
 	{
 		/*

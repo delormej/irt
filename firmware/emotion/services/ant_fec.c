@@ -525,6 +525,7 @@ static void HandleCalibrationRequestPage(uint8_t* buffer)
  */
 static void HandleUserConfigurationPage(uint8_t* buffer)
 {
+    bool dirty = false; 
     FEC_Page55 page55;
     uint16_t bike_weight;
     uint16_t user_weight;
@@ -547,27 +548,40 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
     // Parse user weight.
     user_weight = uint16_decode((const uint8_t*)&page55.UserWeightLSB);
     FE_LOG("[FE] User Weight Set to:%i\r\n", user_weight);
-    
-    // Wire value is 1.5 bytes.  Unit for bike weight is 0.05kg, 0x0FFF == 50kg, 
-    // Calculate value from wire, multiply by * 5.
-    // Store as 1/100kg, i.e. 6.7kg is stored as 670. 
-    bike_weight = 5 * (page55.BikeWeightLSN | 
-        (uint16_t)(page55.BikeWeightMSB << 4));
-    FE_LOG("[FE] Bike Weight Set to:%i\r\n", bike_weight);
-    
-    total_weight = user_weight + bike_weight;
 
-    wheel_size = calc_wheel_circ(page55.WheelDiameter, page55.WheelDiameterOffset);    
-    FE_LOG("[FE] Bike Wheel Size to:%i\r\n", wheel_size);
-    
-    // Determine if this represents a change to the user profile.
-    if (mp_user_profile->total_weight_kg != total_weight ||
-        mp_user_profile->wheel_size_mm != wheel_size)
+    if (user_weight != 0xFFFF /*invalid*/) 
     {
-        mp_user_profile->total_weight_kg = total_weight;
-        mp_user_profile->user_weight_kg = user_weight;
-        mp_user_profile->wheel_size_mm = wheel_size;
+        // Wire value is 1.5 bytes.  Unit for bike weight is 0.05kg, 0x0FFF == 50kg, 
+        // Calculate value from wire, multiply by * 5.
+        // Store as 1/100kg, i.e. 6.7kg is stored as 670. 
+        bike_weight = 5 * (page55.BikeWeightLSN | 
+            (uint16_t)(page55.BikeWeightMSB << 4));
+        FE_LOG("[FE] Bike Weight Set to:%i\r\n", bike_weight);
         
+        total_weight = user_weight + bike_weight;
+        
+        if (mp_user_profile->total_weight_kg != total_weight) {
+            mp_user_profile->total_weight_kg = total_weight;
+            mp_user_profile->user_weight_kg = user_weight;  
+            dirty = true;
+        }
+    }
+
+    if (page55.WheelDiameter != 0xFF /*invalid*/) 
+    {
+        wheel_size = calc_wheel_circ(page55.WheelDiameter, page55.WheelDiameterOffset);    
+        FE_LOG("[FE] Bike Wheel Size to:%i\r\n", wheel_size);
+        
+        // Determine if this represents a change to the user profile.
+        if (mp_user_profile->wheel_size_mm != wheel_size) {
+                mp_user_profile->wheel_size_mm = wheel_size;
+            dirty = true;
+        }
+    }
+    
+    // If there were changes to the profile.
+    if (dirty) 
+    {
         // Signal to the user profile module to update persistent storage.
         user_profile_store();
     }
@@ -579,6 +593,10 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
  */
 static void HandleIRTSettingsPage(uint8_t* buffer) {
     FEC_IRTSettingsPage page;
+    bool dirty = false;
+    float ca_drag = 0.0f;
+    float ca_rr = 0.0f;
+    int16_t servo_offset = 0;
     
     FE_LOG("[FE] IRT settings received: [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
         buffer[0],
@@ -593,17 +611,49 @@ static void HandleIRTSettingsPage(uint8_t* buffer) {
     // Copy into page structure.
     memcpy(&page, buffer, sizeof(FEC_IRTSettingsPage));
     
-    mp_user_profile->ca_drag = (float)(page.DragMSB << 8 | page.DragLSB) 
-        / 1000000.0f;
-    mp_user_profile->ca_rr = (float)(page.RRMSB << 8 | page.RRLSB) 
-        / 1000.0f;
-    mp_user_profile->servo_offset = page.ServoOffsetMSB << 8 |
-         page.ServoOffsetLSB;
-    // Only the 1st byte of settings comes over.
-    mp_user_profile->settings |= page.Settings;
+    if (page.DragMSB != 0xFF && page.DragLSB != 0xFF /*invalid*/)
+    {
+        ca_drag = (float)(page.DragMSB << 8 | page.DragLSB) / 1000000.0f;
+        ca_rr = (float)(page.RRMSB << 8 | page.RRLSB) / 1000.0f;
+        
+        if (ca_drag != mp_user_profile->ca_drag ||
+            ca_rr != mp_user_profile->ca_rr) 
+        {
+            mp_user_profile->ca_drag = ca_drag;
+            mp_user_profile->ca_rr = ca_rr;
+            dirty = true;             
+        }        
+    } 
+    else 
+    {
+        // Force to use default resistance by total weight.
+        mp_user_profile->ca_slope = 0xFFFF;
+        mp_user_profile->ca_drag = NAN; 
+        mp_user_profile->ca_rr = NAN;
+        dirty = true;
+    }
     
-    // Signal to the user profile module to update persistent storage.
-    user_profile_store();    
+    servo_offset = page.ServoOffsetMSB << 8 | page.ServoOffsetLSB;
+    
+    if (servo_offset != 0xFFFF /*invalid*/ && 
+        mp_user_profile->servo_offset != servo_offset) 
+    {
+        mp_user_profile->servo_offset = servo_offset;
+        dirty = true;
+    }
+    
+    if ((mp_user_profile->settings & 0xFF) != page.Settings) 
+    {
+        // Only the 1st byte of settings comes over.
+        mp_user_profile->settings |= page.Settings;
+        dirty = true;
+    }
+    
+    if (dirty)
+    {
+        // Signal to the user profile module to update persistent storage.
+        user_profile_store();
+    }    
 }
 
 /**@brief   Raises the set resistance event.
