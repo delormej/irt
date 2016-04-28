@@ -624,14 +624,6 @@ static void HandleIRTSettingsPage(uint8_t* buffer) {
             dirty = true;             
         }        
     } 
-    else 
-    {
-        // Force to use default resistance by total weight.
-        mp_user_profile->ca_slope = 0xFFFF;
-        mp_user_profile->ca_drag = NAN; 
-        mp_user_profile->ca_rr = NAN;
-        dirty = true;
-    }
     
     servo_offset = page.ServoOffsetMSB << 8 | page.ServoOffsetLSB;
     
