@@ -10,6 +10,7 @@
 /* Interrupt Macros */
 #define _BIT(x)					(0x01 << x)
 
+#define NRF_TWI					1		// Define which instance of NRF_TWI to use.
 #define NCT75_I2C_ADDRESS 		0x48
 #define NCT75_WRITE				(NCT75_I2C_ADDRESS << 1)	
 #define NCT75_READ				(NCT75_WRITE | 0x1)			
@@ -37,7 +38,11 @@ void temperature_init()
 	buffer[0] = REGNCT75_CONFIG;
 	buffer[1] = NCT75_ONE_SHOT_CONFIG;
 
-	twi_master_transfer(NCT75_WRITE,
+	// TODO: should we attempt to init TWI again? 
+	//twi_master_init(NRF_TWI);
+	
+	twi_master_transfer(NRF_TWI,
+						NCT75_WRITE,
 						buffer,
 						sizeof(buffer),
 						true);
@@ -52,7 +57,8 @@ void temperature_shutdown()
 	buffer[0] = REGNCT75_CONFIG;
 	buffer[1] = NCT75_SHUTDOWN;
 
-	twi_master_transfer(NCT75_WRITE,
+	twi_master_transfer(NRF_TWI,
+						NCT75_WRITE,
 						buffer,
 						sizeof(buffer),
 						true);
@@ -64,19 +70,22 @@ float temperature_read()
 	float temp;
 
 	uint8_t reg = REGNCT75_ONE_SHOT;
-	twi_master_transfer(NCT75_WRITE,
+	twi_master_transfer(NRF_TWI,
+						NCT75_WRITE,
 						&reg,
 						sizeof(uint8_t),
 						true);
 
 	reg = REGNCT75_STORED_TEMP;
-	twi_master_transfer(NCT75_WRITE,
+	twi_master_transfer(NRF_TWI,
+						NCT75_WRITE,
 						&reg,
 						sizeof(uint8_t),
 						false);
 
 	uint8_t buffer[] = { 0, 0 };
-	twi_master_transfer(NCT75_READ,
+	twi_master_transfer(NRF_TWI,
+						NCT75_READ,
 						buffer,
 						sizeof(uint16_t),	// read two-bytes.
 						true);

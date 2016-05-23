@@ -21,11 +21,14 @@
 #include "nrf_soc.h"
 #include "nrf_error.h"
 
+/* Helper macro to resolve the required TWI device instance. */
+#define NRF_TWI(TWI)                (TWI==0 ? NRF_TWI0 : NRF_TWI1 )
+
 /* Max cycles approximately to wait on RXDREADY and TXDREADY event, 
  * This is optimized way instead of using timers, this is not power aware. */
 #define MAX_TIMEOUT_LOOPS             (20000UL)        /**< MAX while loops to wait for RXD/TXD event */
 
-static bool twi_master_write(uint8_t *data, uint8_t data_length, bool issue_stop_condition)
+static bool twi_master_write(uint8_t twi, uint8_t *data, uint8_t data_length, bool issue_stop_condition)
 {
     uint32_t timeout = MAX_TIMEOUT_LOOPS;   /* max loops to wait for EVENTS_TXDSENT event*/
 
@@ -35,49 +38,49 @@ static bool twi_master_write(uint8_t *data, uint8_t data_length, bool issue_stop
         return false;
     }
 
-    NRF_TWI1->TXD           = *data++;
-    NRF_TWI1->TASKS_STARTTX = 1;
+    NRF_TWI(twi)->TXD           = *data++;
+    NRF_TWI(twi)->TASKS_STARTTX = 1;
 
     /** @snippet [TWI HW master write] */            
     while (true)
     {
-        while(NRF_TWI1->EVENTS_TXDSENT == 0 && NRF_TWI1->EVENTS_ERROR == 0 && (--timeout))
+        while(NRF_TWI(twi)->EVENTS_TXDSENT == 0 && NRF_TWI(twi)->EVENTS_ERROR == 0 && (--timeout))
         {
             // Do nothing.
         }
 
-        if (timeout == 0 || NRF_TWI1->EVENTS_ERROR != 0)
+        if (timeout == 0 || NRF_TWI(twi)->EVENTS_ERROR != 0)
         {
           // Recover the peripheral as indicated by PAN 56: "TWI: TWI module lock-up." found at 
           // Product Anomaly Notification document found at 
           // https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF51822/#Downloads
-          NRF_TWI1->EVENTS_ERROR = 0;
-          NRF_TWI1->ENABLE       = TWI_ENABLE_ENABLE_Disabled << TWI_ENABLE_ENABLE_Pos; 
-          NRF_TWI1->POWER        = 0; 
+          NRF_TWI(twi)->EVENTS_ERROR = 0;
+          NRF_TWI(twi)->ENABLE       = TWI_ENABLE_ENABLE_Disabled << TWI_ENABLE_ENABLE_Pos; 
+          NRF_TWI(twi)->POWER        = 0; 
           nrf_delay_us(5); 
-          NRF_TWI1->POWER        = 1; 
-          NRF_TWI1->ENABLE       = TWI_ENABLE_ENABLE_Enabled << TWI_ENABLE_ENABLE_Pos;
+          NRF_TWI(twi)->POWER        = 1; 
+          NRF_TWI(twi)->ENABLE       = TWI_ENABLE_ENABLE_Enabled << TWI_ENABLE_ENABLE_Pos;
 
-          (void)twi_master_init();          
+          (void)twi_master_init(twi);          
 
           return false;
         }
-        NRF_TWI1->EVENTS_TXDSENT = 0;
+        NRF_TWI(twi)->EVENTS_TXDSENT = 0;
         if (--data_length == 0)
         {
             break;
         }
 
-        NRF_TWI1->TXD = *data++;
+        NRF_TWI(twi)->TXD = *data++;
     }
     /** @snippet [TWI HW master write] */            
     
     if (issue_stop_condition) 
     { 
-        NRF_TWI1->EVENTS_STOPPED = 0; 
-        NRF_TWI1->TASKS_STOP     = 1; 
+        NRF_TWI(twi)->EVENTS_STOPPED = 0; 
+        NRF_TWI(twi)->TASKS_STOP     = 1; 
         /* Wait until stop sequence is sent */ 
-        while(NRF_TWI1->EVENTS_STOPPED == 0) 
+        while(NRF_TWI(twi)->EVENTS_STOPPED == 0) 
         { 
             // Do nothing.
         } 
@@ -88,7 +91,7 @@ static bool twi_master_write(uint8_t *data, uint8_t data_length, bool issue_stop
 
 /** @brief Function for read by twi_master. 
  */
-static bool twi_master_read(uint8_t *data, uint8_t data_length, bool issue_stop_condition)
+static bool twi_master_read(uint8_t twi, uint8_t *data, uint8_t data_length, bool issue_stop_condition)
 {
     uint32_t timeout = MAX_TIMEOUT_LOOPS;   /* max loops to wait for RXDREADY event*/
 
@@ -99,59 +102,59 @@ static bool twi_master_read(uint8_t *data, uint8_t data_length, bool issue_stop_
     }
     else if (data_length == 1)
     {
-        //NRF_PPI->CH[0].TEP = (uint32_t)&NRF_TWI1->TASKS_STOP;
+        //NRF_PPI->CH[0].TEP = (uint32_t)&NRF_TWI(twi)->TASKS_STOP;
 		sd_ppi_channel_assign(6,
-			&(NRF_TWI1->EVENTS_BB),
-			&(NRF_TWI1->TASKS_STOP));
+			&(NRF_TWI(twi)->EVENTS_BB),
+			&(NRF_TWI(twi)->TASKS_STOP));
     }
     else
     {
-        //NRF_PPI->CH[0].TEP = (uint32_t)&NRF_TWI1->TASKS_SUSPEND;
+        //NRF_PPI->CH[0].TEP = (uint32_t)&NRF_TWI(twi)->TASKS_SUSPEND;
 		sd_ppi_channel_assign(6,
-			&(NRF_TWI1->EVENTS_BB),
-			&(NRF_TWI1->TASKS_SUSPEND));
+			&(NRF_TWI(twi)->EVENTS_BB),
+			&(NRF_TWI(twi)->TASKS_SUSPEND));
     }
     
     //NRF_PPI->CHENSET          = PPI_CHENSET_CH0_Msk;
 	sd_ppi_channel_enable_set(PPI_CHEN_CH6_Msk);
-    NRF_TWI1->EVENTS_RXDREADY = 0;
-    NRF_TWI1->TASKS_STARTRX   = 1;
+    NRF_TWI(twi)->EVENTS_RXDREADY = 0;
+    NRF_TWI(twi)->TASKS_STARTRX   = 1;
     
     /** @snippet [TWI HW master read] */                
     while (true)
     {
-        while(NRF_TWI1->EVENTS_RXDREADY == 0 && NRF_TWI1->EVENTS_ERROR == 0 && (--timeout))
+        while(NRF_TWI(twi)->EVENTS_RXDREADY == 0 && NRF_TWI(twi)->EVENTS_ERROR == 0 && (--timeout))
         {    
             // Do nothing.
         }
-        NRF_TWI1->EVENTS_RXDREADY = 0;
+        NRF_TWI(twi)->EVENTS_RXDREADY = 0;
 
-        if (timeout == 0 || NRF_TWI1->EVENTS_ERROR != 0)
+        if (timeout == 0 || NRF_TWI(twi)->EVENTS_ERROR != 0)
         {
           // Recover the peripheral as indicated by PAN 56: "TWI: TWI module lock-up." found at 
           // Product Anomaly Notification document found at 
           // https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF51822/#Downloads
-          NRF_TWI1->EVENTS_ERROR = 0;
-          NRF_TWI1->ENABLE       = TWI_ENABLE_ENABLE_Disabled << TWI_ENABLE_ENABLE_Pos; 
-          NRF_TWI1->POWER        = 0; 
+          NRF_TWI(twi)->EVENTS_ERROR = 0;
+          NRF_TWI(twi)->ENABLE       = TWI_ENABLE_ENABLE_Disabled << TWI_ENABLE_ENABLE_Pos; 
+          NRF_TWI(twi)->POWER        = 0; 
           nrf_delay_us(5); 
-          NRF_TWI1->POWER        = 1; 
-          NRF_TWI1->ENABLE       = TWI_ENABLE_ENABLE_Enabled << TWI_ENABLE_ENABLE_Pos;
+          NRF_TWI(twi)->POWER        = 1; 
+          NRF_TWI(twi)->ENABLE       = TWI_ENABLE_ENABLE_Enabled << TWI_ENABLE_ENABLE_Pos;
 
-          (void)twi_master_init();          
+          (void)twi_master_init(twi);          
           
           return false;
         }
 
-        *data++ = NRF_TWI1->RXD;
+        *data++ = NRF_TWI(twi)->RXD;
 
         /* Configure PPI to stop TWI master before we get last BB event */
         if (--data_length == 1)
         {
-            //NRF_PPI->CH[0].TEP = (uint32_t)&NRF_TWI1->TASKS_STOP;
+            //NRF_PPI->CH[0].TEP = (uint32_t)&NRF_TWI(twi)->TASKS_STOP;
 			sd_ppi_channel_assign(6,
-				&(NRF_TWI1->EVENTS_BB),
-				&(NRF_TWI1->TASKS_STOP));
+				&(NRF_TWI(twi)->EVENTS_BB),
+				&(NRF_TWI(twi)->TASKS_STOP));
         }
 
         if (data_length == 0)
@@ -163,18 +166,18 @@ static bool twi_master_read(uint8_t *data, uint8_t data_length, bool issue_stop_
         // Product Anomaly Notification document found at 
         // https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF51822/#Downloads
         nrf_delay_us(20);      
-        NRF_TWI1->TASKS_RESUME = 1;
+        NRF_TWI(twi)->TASKS_RESUME = 1;
     }
     /** @snippet [TWI HW master read] */                    
 
     timeout = MAX_TIMEOUT_LOOPS;   /* max loops to wait for event*/
 
     /* Wait until stop sequence is sent */
-    while(NRF_TWI1->EVENTS_STOPPED == 0 && (--timeout))
+    while(NRF_TWI(twi)->EVENTS_STOPPED == 0 && (--timeout))
     {
         // Do nothing.
     }
-    NRF_TWI1->EVENTS_STOPPED = 0;
+    NRF_TWI(twi)->EVENTS_STOPPED = 0;
 
     //NRF_PPI->CHENCLR = PPI_CHENCLR_CH0_Msk;
 	sd_ppi_channel_enable_clr(PPI_CHEN_CH6_Msk);
@@ -186,11 +189,12 @@ static bool twi_master_read(uint8_t *data, uint8_t data_length, bool issue_stop_
 /**
  * @brief Function for detecting stuck slaves (SDA = 0 and SCL = 1) and tries to clear the bus.
  *
+ * @param twi Specifies which TWI device (0 or 1).
  * @return
  * @retval false Bus is stuck.
  * @retval true Bus is clear.
  */
-static bool twi_master_clear_bus(void)
+static bool twi_master_clear_bus(uint8_t twi)
 {
     uint32_t twi_state;
     bool bus_clear;
@@ -198,12 +202,12 @@ static bool twi_master_clear_bus(void)
     uint32_t data_pin_config;
         
     // Save and disable TWI hardware so software can take control over the pins.
-    twi_state        = NRF_TWI1->ENABLE;
-    NRF_TWI1->ENABLE = TWI_ENABLE_ENABLE_Disabled << TWI_ENABLE_ENABLE_Pos;
+    twi_state        = NRF_TWI(twi)->ENABLE;
+    NRF_TWI(twi)->ENABLE = TWI_ENABLE_ENABLE_Disabled << TWI_ENABLE_ENABLE_Pos;
     
     clk_pin_config                                        =  \
-            NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER];    
-    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER] =   \
+            NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER[twi]];    
+    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER[twi]] =   \
             (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos) \
           | (GPIO_PIN_CNF_DRIVE_S0D1     << GPIO_PIN_CNF_DRIVE_Pos) \
           | (GPIO_PIN_CNF_PULL_Pullup    << GPIO_PIN_CNF_PULL_Pos)  \
@@ -211,19 +215,19 @@ static bool twi_master_clear_bus(void)
           | (GPIO_PIN_CNF_DIR_Output     << GPIO_PIN_CNF_DIR_Pos);    
 
     data_pin_config                                      = \
-        NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_DATA_PIN_NUMBER];
-    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_DATA_PIN_NUMBER] = \
+        NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_DATA_PIN_NUMBER[twi]];
+    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_DATA_PIN_NUMBER[twi]] = \
         (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos) \
       | (GPIO_PIN_CNF_DRIVE_S0D1     << GPIO_PIN_CNF_DRIVE_Pos) \
       | (GPIO_PIN_CNF_PULL_Pullup    << GPIO_PIN_CNF_PULL_Pos)  \
       | (GPIO_PIN_CNF_INPUT_Connect  << GPIO_PIN_CNF_INPUT_Pos) \
       | (GPIO_PIN_CNF_DIR_Output     << GPIO_PIN_CNF_DIR_Pos);    
       
-    TWI_SDA_HIGH();
-    TWI_SCL_HIGH();
+    TWI_SDA_HIGH(twi);
+    TWI_SCL_HIGH(twi);
     TWI_DELAY();
 
-    if ((TWI_SDA_READ() == 1) && (TWI_SCL_READ() == 1))
+    if ((TWI_SDA_READ(twi) == 1) && (TWI_SCL_READ(twi) == 1))
     {
         bus_clear = true;
     }
@@ -236,12 +240,12 @@ static bool twi_master_clear_bus(void)
         // for slave to respond) to SCL line and wait for SDA come high.
         for (i=18; i--;)
         {
-            TWI_SCL_LOW();
+            TWI_SCL_LOW(twi);
             TWI_DELAY();
-            TWI_SCL_HIGH();
+            TWI_SCL_HIGH(twi);
             TWI_DELAY();
 
-            if (TWI_SDA_READ() == 1)
+            if (TWI_SDA_READ(twi) == 1)
             {
                 bus_clear = true;
                 break;
@@ -249,10 +253,10 @@ static bool twi_master_clear_bus(void)
         }
     }
     
-    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER] = clk_pin_config;
-    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_DATA_PIN_NUMBER]  = data_pin_config;
+    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER[twi]] = clk_pin_config;
+    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_DATA_PIN_NUMBER[twi]]  = data_pin_config;
 
-    NRF_TWI1->ENABLE = twi_state;
+    NRF_TWI(twi)->ENABLE = twi_state;
 
     return bus_clear;
 }
@@ -260,7 +264,7 @@ static bool twi_master_clear_bus(void)
 
 /** @brief Function for initializing the twi_master.
  */
-bool twi_master_init(void)
+bool twi_master_init(uint8_t twi)
 {
     /* To secure correct signal levels on the pins used by the TWI
        master when the system is in OFF mode, and when the TWI master is 
@@ -268,62 +272,63 @@ bool twi_master_init(void)
     */
 	uint32_t err_code;
 
-    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER] =     \
+    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER[twi]] =     \
         (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos) \
       | (GPIO_PIN_CNF_DRIVE_S0D1     << GPIO_PIN_CNF_DRIVE_Pos) \
       | (GPIO_PIN_CNF_PULL_Pullup    << GPIO_PIN_CNF_PULL_Pos)  \
       | (GPIO_PIN_CNF_INPUT_Connect  << GPIO_PIN_CNF_INPUT_Pos) \
       | (GPIO_PIN_CNF_DIR_Input      << GPIO_PIN_CNF_DIR_Pos);   
 
-    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_DATA_PIN_NUMBER] =      \
+    NRF_GPIO->PIN_CNF[TWI_MASTER_CONFIG_DATA_PIN_NUMBER[twi]] =      \
         (GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos) \
       | (GPIO_PIN_CNF_DRIVE_S0D1     << GPIO_PIN_CNF_DRIVE_Pos) \
       | (GPIO_PIN_CNF_PULL_Pullup    << GPIO_PIN_CNF_PULL_Pos)  \
       | (GPIO_PIN_CNF_INPUT_Connect  << GPIO_PIN_CNF_INPUT_Pos) \
       | (GPIO_PIN_CNF_DIR_Input      << GPIO_PIN_CNF_DIR_Pos);    
 
-    NRF_TWI1->EVENTS_RXDREADY = 0;
-    NRF_TWI1->EVENTS_TXDSENT  = 0;
-    NRF_TWI1->PSELSCL         = TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER;
-    NRF_TWI1->PSELSDA         = TWI_MASTER_CONFIG_DATA_PIN_NUMBER;
-    NRF_TWI1->FREQUENCY       = TWI_FREQUENCY_FREQUENCY_K100 << TWI_FREQUENCY_FREQUENCY_Pos;
+    NRF_TWI(twi)->EVENTS_RXDREADY = 0;
+    NRF_TWI(twi)->EVENTS_TXDSENT  = 0;
+    NRF_TWI(twi)->PSELSCL         = TWI_MASTER_CONFIG_CLOCK_PIN_NUMBER[twi];
+    NRF_TWI(twi)->PSELSDA         = TWI_MASTER_CONFIG_DATA_PIN_NUMBER[twi];
+    NRF_TWI(twi)->FREQUENCY       = TWI_FREQUENCY_FREQUENCY_K100 << TWI_FREQUENCY_FREQUENCY_Pos;
 	/*
-	NRF_PPI->CH[0].EEP = (uint32_t)&NRF_TWI1->EVENTS_BB;
-	NRF_PPI->CH[0].TEP = (uint32_t)&NRF_TWI1->TASKS_SUSPEND;
+	NRF_PPI->CH[0].EEP = (uint32_t)&NRF_TWI(twi)->EVENTS_BB;
+	NRF_PPI->CH[0].TEP = (uint32_t)&NRF_TWI(twi)->TASKS_SUSPEND;
 	NRF_PPI->CHENCLR = PPI_CHENCLR_CH0_Msk;*/
 	err_code = sd_ppi_channel_assign(6,
-		&(NRF_TWI1->EVENTS_BB),
-		&(NRF_TWI1->TASKS_SUSPEND));
+		&(NRF_TWI(twi)->EVENTS_BB),
+		&(NRF_TWI(twi)->TASKS_SUSPEND));
 	ASSERT(err_code == NRF_SUCCESS);
 
 	err_code = sd_ppi_channel_enable_clr(PPI_CHEN_CH6_Msk);
 	ASSERT(err_code == NRF_SUCCESS);
 
-    NRF_TWI1->ENABLE          = TWI_ENABLE_ENABLE_Enabled << TWI_ENABLE_ENABLE_Pos;
+    NRF_TWI(twi)->ENABLE          = TWI_ENABLE_ENABLE_Enabled << TWI_ENABLE_ENABLE_Pos;
 
-    return twi_master_clear_bus();
+    return twi_master_clear_bus(twi);
 }
 
 
 /** @brief  Function for transfer by twi_master.
  */ 
-bool twi_master_transfer(uint8_t   address, 
+bool twi_master_transfer(uint8_t   twi,
+                         uint8_t   address, 
                          uint8_t * data, 
                          uint8_t   data_length, 
                          bool      issue_stop_condition)
 {
     bool transfer_succeeded = false;
-    if (data_length > 0 && twi_master_clear_bus())
+    if (data_length > 0 && twi_master_clear_bus(twi))
     {
-        NRF_TWI1->ADDRESS = (address >> 1);
+        NRF_TWI(twi)->ADDRESS = (address >> 1);
 
         if ((address & TWI_READ_BIT))
         {
-            transfer_succeeded = twi_master_read(data, data_length, issue_stop_condition);
+            transfer_succeeded = twi_master_read(twi, data, data_length, issue_stop_condition);
         }
         else
         {
-            transfer_succeeded = twi_master_write(data, data_length, issue_stop_condition);
+            transfer_succeeded = twi_master_write(twi, data, data_length, issue_stop_condition);
         }
     }
     return transfer_succeeded;

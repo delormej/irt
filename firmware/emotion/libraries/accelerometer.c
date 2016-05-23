@@ -13,6 +13,7 @@
 #include "twi_master.h"
 #include "app_error.h"
 
+#define NRF_TWI						1		// Define which instance of NRF_TWI to use.
 #define MMA8652FC_I2C_ADDRESS		0x1D
 #define MMA8652FC_WRITE				(MMA8652FC_I2C_ADDRESS << 1)	// 0x3A
 #define MMA8652FC_READ				(MMA8652FC_WRITE | 0x1)			// 0x3B
@@ -141,12 +142,14 @@ enum {
 
 static void accelerometer_read(uint8_t reg, uint8_t *data, uint8_t size)
 {
-	twi_master_transfer(MMA8652FC_WRITE,
+	twi_master_transfer(NRF_TWI,
+						MMA8652FC_WRITE,
 						&reg,
 						1,
 						false);
 
-	twi_master_transfer(MMA8652FC_READ,
+	twi_master_transfer(NRF_TWI,
+						MMA8652FC_READ,
 						data,
 						size,
 						true);
@@ -160,7 +163,8 @@ static bool accelerometer_write(uint8_t reg, uint8_t data)
 	buffer[1] = data;
 
 	// Write the register address.
-	return twi_master_transfer(MMA8652FC_WRITE,
+	return twi_master_transfer(NRF_TWI,
+					         MMA8652FC_WRITE,
 							 buffer,
 							 sizeof(buffer),
 							 true);
@@ -315,7 +319,7 @@ void accelerometer_standby(void)
 
 void accelerometer_init(void)
 {
-	twi_master_init();
+	twi_master_init(NRF_TWI);
 	enable_interrupt();
 	read_test();
 }

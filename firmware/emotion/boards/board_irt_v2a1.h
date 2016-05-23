@@ -20,4 +20,14 @@
 
 #define	PIN_AC_PWR					PIN_TP19 // monitors the status of the AC Power. P0.20 monitors a similar signal from a different source with the inverse logic sense.
 
+/* Redefine support for 2 TWI device instances. */ 
+#undef PIN_SDA
+#undef PIN_SCL
+#define PIN_TWI_0_SDA				PIN_SERVO_SIGNAL	// Bidirectional signal from I2C bus
+#define PIN_TWI_0_SCL				PIN_UART_RTS	// Clock signal for I2C bus.
+#define PIN_TWI_1_SDA				14	// Bidirectional signal from I2C bus
+#define PIN_TWI_1_SCL				15	// Clock signal for I2C bus.
+static const uint8_t PIN_SDA[] = {PIN_TWI_0_SDA, PIN_TWI_1_SDA};
+static const uint8_t PIN_SCL[] = {PIN_TWI_0_SCL, PIN_TWI_1_SCL};
+
 #endif /* IRT_REV_2A1_H */
