@@ -11,8 +11,8 @@
 #define _BIT(x)					(0x01 << x)
 
 #define NCT75_I2C_ADDRESS 		0x48
-#define NCT75_WRITE				(NCT75_I2C_ADDRESS << 1)	// 0x3A
-#define NCT75_READ				(NCT75_WRITE | 0x1)			// 0x3B
+#define NCT75_WRITE				(NCT75_I2C_ADDRESS << 1)	
+#define NCT75_READ				(NCT75_WRITE | 0x1)			
 
 /* Bit fields */
 #define NCT75_ONE_SHOT_CONFIG	_BIT(5)		// Configuration Register bit for One shot
