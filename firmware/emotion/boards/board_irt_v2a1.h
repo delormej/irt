@@ -25,7 +25,7 @@
 #undef PIN_SCL
 #define PIN_TWI_0_SDA				PIN_SERVO_SIGNAL	// Bidirectional signal from I2C bus
 #define PIN_TWI_0_SCL				PIN_UART_RTS	// Clock signal for I2C bus.
-#define PIN_TWI_1_SDA				14	// Bidirectional signal from I2C bus
+#define PIN_TWI_1_SDA				16	// Bidirectional signal from I2C bus
 #define PIN_TWI_1_SCL				15	// Clock signal for I2C bus.
 static const uint8_t PIN_SDA[] = {PIN_TWI_0_SDA, PIN_TWI_1_SDA};
 static const uint8_t PIN_SCL[] = {PIN_TWI_0_SCL, PIN_TWI_1_SCL};
