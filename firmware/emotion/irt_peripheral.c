@@ -13,6 +13,7 @@
 #include "nrf_gpio.h"
 #include "accelerometer.h"
 #include "temperature.h"
+#include "d2ac.h"
 #include "boards.h"
 #include "debug.h"
 #include "battery.h"
@@ -402,6 +403,10 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
     button_init();
     accelerometer_init();
 	temperature_init();
+	d2ac_init();
+
+	// Test method.
+	d2ac_set(4094);
 
 	PH_LOG("[PH] peripheral_init: power plugged in? %i\r\n", peripheral_plugged_in());
 

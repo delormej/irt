@@ -16,7 +16,8 @@
 #include "app_error.h"
 #include "magnet.h"
 #include "resistance.h"
-#include "nrf_pwm.h"
+//#include "nrf_pwm.h"
+#include "d2ac.h"
 #include <math.h>
 #include "debug.h"
 
@@ -68,7 +69,7 @@ irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, user_profile_
     m_resistance_state.drafting_factor = SIM_DRAFTING_FACTOR;
 
 	// Initialize pulse-width-modulation.
-	pwm_init(servo_pin_number);
+	//pwm_init(servo_pin_number);
 
 	// Always start off with resistance at level 0.
 	resistance_level_set(0);
@@ -92,6 +93,9 @@ irt_resistance_state_t* resistance_state_get(void)
  */
 uint16_t resistance_position_set(uint16_t servo_pos, bool smooth)
 {
+	d2ac_set(servo_pos);
+	return;
+
 	uint32_t err_code;
 	// Actual servo position after calibration.
 	uint16_t actual_servo_pos;
@@ -134,7 +138,9 @@ uint16_t resistance_position_set(uint16_t servo_pos, bool smooth)
 	if ( (m_resistance_state.servo_position != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
 	{
 		// Issue a command to move the servo.
-		err_code = pwm_set_servo(actual_servo_pos, smooth);
+		//err_code = pwm_set_servo(actual_servo_pos, smooth);
+		//err_code = d2ac_set(actual_servo_pos);
+
 		APP_ERROR_CHECK(err_code);
 
 		// Save module state for next adjustment.
