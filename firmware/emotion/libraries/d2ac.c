@@ -15,11 +15,27 @@
 #define MCP4725_WRITE				(MCP4725_I2C_ADDRESS << 1)	
 #define MCP4725_READ				(MCP4725_WRITE | 0x1)			
 
+/* Writes default to register. */
+static uint32_t d2ac_set_default() 
+{
+	uint8_t buffer[3];
+	buffer[0] = 0x60; // C2, C1, C0, X, X, PD1, PD0, X
+	buffer[1] = 0; // 2nd byte
+	buffer[2] = 0; // 3rd byte
+
+	// Write the register address.
+	return twi_master_transfer(NRF_TWI,
+					         MCP4725_WRITE,
+							 buffer,
+							 sizeof(buffer),
+							 true);
+}
 
 /* Initializes and sets power on defaults for d2ac. */ 
 void d2ac_init() 
 {
     twi_master_init(NRF_TWI);
+	d2ac_set_default();
 }
 
 /* Set the 12 bit output voltage, relative to VDD. */

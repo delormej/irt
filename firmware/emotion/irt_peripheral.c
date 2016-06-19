@@ -405,9 +405,6 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	temperature_init();
 	d2ac_init();
 
-	// Test method.
-	d2ac_set(4094);
-
 	PH_LOG("[PH] peripheral_init: power plugged in? %i\r\n", peripheral_plugged_in());
 
 	// Ensure aux power is off for right now, we're not using.
