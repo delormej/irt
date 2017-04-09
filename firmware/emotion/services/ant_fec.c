@@ -594,6 +594,7 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
 static void HandleIRTSettingsPage(uint8_t* buffer) {
     FEC_IRTSettingsPage page;
     bool dirty = false;
+    bool persist = true; 
     float ca_drag = 0.0f;
     float ca_rr = 0.0f;
     int16_t servo_offset = 0;
@@ -614,18 +615,30 @@ static void HandleIRTSettingsPage(uint8_t* buffer) {
     if (page.DragMSB != 0xFF && page.DragLSB != 0xFF /*invalid*/)
     {
         ca_drag = (float)(page.DragMSB << 8 | page.DragLSB) / 1000000.0f;
-        ca_rr = (float)(page.RRMSB << 8 | page.RRLSB) / 1000.0f;
         
-        if (ca_drag != mp_user_profile->ca_drag ||
-            ca_rr != mp_user_profile->ca_rr) 
+        if (ca_drag != mp_user_profile->ca_drag) 
         {
             mp_user_profile->ca_drag = ca_drag;
-            mp_user_profile->ca_rr = ca_rr;
             dirty = true;             
         }        
     } 
+
+    if (page.RRMSB != 0xFF && page.RRLSB != 0xFF /*invalid*/)
+    {
+        ca_rr = (float)(page.RRMSB << 8 | page.RRLSB) / 1000.0f;
+
+        if (ca_rr != mp_user_profile->ca_rr)
+        {
+            mp_user_profile->ca_rr = ca_rr;
+            dirty = true;
+        }
+    }
     
-    servo_offset = page.ServoOffsetMSB << 8 | page.ServoOffsetLSB;
+    // Read the most significant bit as a flag as to whether to persist changes to flash.
+    persist = (page.ServoOffsetMSB & 0x80);
+
+    // Most significant bit is a persistance flag.
+    servo_offset = (page.ServoOffsetMSB & 0x7F) << 8 | page.ServoOffsetLSB;
     
     if (servo_offset != 0xFFFF /*invalid*/ && 
         mp_user_profile->servo_offset != servo_offset) 
@@ -641,11 +654,15 @@ static void HandleIRTSettingsPage(uint8_t* buffer) {
         dirty = true;
     }
     
-    if (dirty)
+    if (dirty && persist)
     {
         // Signal to the user profile module to update persistent storage.
         user_profile_store();
     }    
+    else 
+    {
+        FE_LOG("[FE]:Flagged not to persist IRT Settings changes.\r\n");
+    }
 }
 
 /**@brief   Raises the set resistance event.
