@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 Inside Ride Technologies, LLC. All Rights Reserved.
+    /* Copyright (c) 2016 Inside Ride Technologies, LLC. All Rights Reserved.
 */
 
 #include <stdbool.h>
@@ -594,7 +594,7 @@ static void HandleUserConfigurationPage(uint8_t* buffer)
 static void HandleIRTSettingsPage(uint8_t* buffer) {
     FEC_IRTSettingsPage page;
     bool dirty = false;
-    bool persist = true; 
+    bool persist = true;  // Flag whether to persist to flash or not.
     float ca_drag = 0.0f;
     float ca_rr = 0.0f;
     int16_t servo_offset = 0;
@@ -634,7 +634,7 @@ static void HandleIRTSettingsPage(uint8_t* buffer) {
         }
     }
     
-    // Read the most significant bit as a flag as to whether to persist changes to flash.
+    // Read flag persist changes to flash, stored in the MSB of byte 6 (ServoOffsetMSB).
     persist = (page.ServoOffsetMSB & 0x80);
 
     // Most significant bit is a persistance flag.
