@@ -190,12 +190,15 @@ static uint32_t user_profile_init()
     }
 
     UP_LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t " \
-        "settings: %lu \r\n\t ca_root_position: %i \r\n\t " \
+        "settings: %lu \r\n\t drag: %.3f, rr: %.3f \r\n" \
+        "ca_root_position: %i \r\n\t " \
         "ca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
         "ca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n",
             m_user_profile.total_weight_kg,
             m_user_profile.wheel_size_mm,
             m_user_profile.settings,
+            m_user_profile.ca_drag,
+            m_user_profile.ca_rr,
             m_user_profile.ca_mag_factors.root_position,
             m_user_profile.ca_mag_factors.low_factors[0],
             m_user_profile.ca_mag_factors.low_factors[1],
