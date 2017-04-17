@@ -638,9 +638,9 @@ static void HandleIRTSettingsPage(uint8_t* buffer) {
     persist = (page.ServoOffsetMSB & 0x80);
 
     // Most significant bit is a persistance flag.
-    servo_offset = (page.ServoOffsetMSB & 0x7F) << 8 | page.ServoOffsetLSB;
+    servo_offset = ((page.ServoOffsetMSB & 0x7F) << 8) | page.ServoOffsetLSB;
     
-    if ( (servo_offset & 0x7FFF) == 0x7FFF /*invalid*/ && 
+    if ( (servo_offset & 0x7FFF) != 0x7FFF /*invalid*/ && 
         mp_user_profile->servo_offset != servo_offset) 
     {
         mp_user_profile->servo_offset = servo_offset;
