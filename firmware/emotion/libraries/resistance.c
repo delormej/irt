@@ -361,7 +361,7 @@ static uint16_t resistance_sim_position(float speed_mps, int16_t magoff_watts)
 void resistance_adjust(float speed_mps, int16_t magoff_watts)
 {
 	uint16_t servo_pos = 0;
-	bool use_smoothing;
+	bool use_smoothing = false;
 
 	if (speed_mps < RESISTANCE_MIN_SPEED_ADJUST)
     {
@@ -377,19 +377,21 @@ void resistance_adjust(float speed_mps, int16_t magoff_watts)
 	{
 		case RESISTANCE_SET_ERG:
 			servo_pos = resistance_erg_position(speed_mps, magoff_watts);
+			// If recovering from a speed too low event, smooth into the position.
+			if (m_resistance_state.power_limit == TARGET_SPEED_TOO_LOW) {
+				use_smoothing = true;
+			}
 			break;
 
 		case RESISTANCE_SET_SIM:
 			servo_pos = resistance_sim_position(speed_mps, magoff_watts);
+			use_smoothing = true;
 			break;
 
 		default:
 			RC_LOG("[RC] resistance_adjust: WARNING called with invalid resistance mode.\r\n");
 			break;
 	}
-
-	// Only smooth out servo transition if in simulation mode.
-	use_smoothing = (m_resistance_state.mode == RESISTANCE_SET_SIM);
 
 	// Move the servo, with smoothing only if in sim mode.
 	resistance_position_set(servo_pos, use_smoothing);
