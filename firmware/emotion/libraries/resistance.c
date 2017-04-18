@@ -366,6 +366,9 @@ void resistance_adjust(float speed_mps, int16_t magoff_watts)
 	if (speed_mps < RESISTANCE_MIN_SPEED_ADJUST)
     {
         m_resistance_state.power_limit = TARGET_SPEED_TOO_LOW;
+		// Move magnet to the min position, as it will be tough for rider to overcome
+		// magnet force from a slow speed.
+		resistance_position_set(MAGNET_POSITION_MIN_RESISTANCE, false);
 		return;
     }
     

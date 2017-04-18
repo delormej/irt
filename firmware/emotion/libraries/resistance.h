@@ -19,7 +19,7 @@
 #define ERG_ADJUST_MAJOR		10U							// Percent watts to adjust increment /decrement for major step
 #define ERG_ADJUST_MIN			50U							// Erg doesn't go below this watt level.
 #define DEFAULT_ERG_WATTS				175u				// Default erg target_watts when not otherwise set.
-#define RESISTANCE_MIN_SPEED_ADJUST		3.0f				// (~6.71mph) Minimum speed in meters per second at which we adjust resistance.
+#define RESISTANCE_MIN_SPEED_ADJUST		4.0f				// (~9mph) Minimum speed in meters per second at which we adjust resistance.
 
 // Macro to create a resstance control event.
 #define RC_EVT_SET_SERVO(p_ant_evt) \
