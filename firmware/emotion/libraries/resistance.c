@@ -376,11 +376,11 @@ void resistance_adjust(float speed_mps, int16_t magoff_watts)
 	switch (m_resistance_state.mode)
 	{
 		case RESISTANCE_SET_ERG:
-			servo_pos = resistance_erg_position(speed_mps, magoff_watts);
 			// If recovering from a speed too low event, smooth into the position.
 			if (m_resistance_state.power_limit == TARGET_SPEED_TOO_LOW) {
 				use_smoothing = true;
 			}
+			servo_pos = resistance_erg_position(speed_mps, magoff_watts);
 			break;
 
 		case RESISTANCE_SET_SIM:
