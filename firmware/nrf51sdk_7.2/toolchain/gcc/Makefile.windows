@@ -1,5 +1,13 @@
-TOOLCHAIN_PATH = "c:\Program Files (x86)\GNU Tools ARM Embedded\4.8 2013q4\bin\"
-JLINK_PATH = "C:\Program Files (x86)\SEGGER\JLink_V492\"
+# TOOLCHAIN_PATH = "c:\Program Files (x86)\GNU Tools ARM Embedded\4.8 2013q4\bin\"
+ifndef TOOLCHAIN_PATH
+$(error no TOOLCHAIN_PATH defined for GNU Tools ARM Embedded.)
+endif
+
+# JLINK_PATH = "C:\Program Files (x86)\SEGGER\JLink_V492\"
+ifndef JLINK_PATH
+$(error no JLINK_PATH defined for Segger\JLink_Vxxx.)
+endif
+
 GDB_PORT_NUMBER = 2331
 MAKE_BUILD_FOLDER = if not exist $(OUTPUT_PATH:/=\\) mkdir $(OUTPUT_PATH:/=\\)
 

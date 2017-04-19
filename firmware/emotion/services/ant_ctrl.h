@@ -17,6 +17,7 @@
 #define NOTIFICATIONS_NO_LIMIT		0x0
 #define NOTIFICATIONS_LIMITED		0x1
 
+#include <stdint.h>
 #include "ant_stack_handler_types.h"
 
 
