@@ -1154,6 +1154,14 @@ static void on_set_resistance(rc_evt_t rc_evt)
 
 	// Send acknowledgment.
 	bp_queue_resistance_ack(rc_evt.operation, value);
+
+	// Immediately adjust resistance if in erg or sim.
+	if (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
+			m_current_state.resistance_mode == RESISTANCE_SET_SIM)
+	{
+		resistance_adjust(m_current_state.instant_speed_mps, 
+			m_current_state.magoff_power);
+	}
 }
 
 // Invoked when a button is pushed on the remote control.
