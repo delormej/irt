@@ -318,9 +318,6 @@ static void services_init() {
 	ble_cps_service_init();		// Cycling Power Service
 #endif
 
-	// Initialize ANT bike power channel.
-	ant_bp_tx_init(mp_ant_ble_evt_handlers);
-
 	// Initialize ANT+ FE-C transmit channel.
 	ant_fec_tx_init(mp_ant_ble_evt_handlers);
 
@@ -557,19 +554,16 @@ static void ble_ant_stack_init(void)
  */
 void ble_ant_resistance_ack(uint8_t op_code, uint16_t value)
 {
+#if defined(BLE_ENABLED)
 	uint32_t err_code;
 
-	err_code = ant_bp_resistance_tx_send(op_code, value);
-	APP_ERROR_CHECK(err_code);
-
-#if defined(BLE_ENABLED)
 	if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
 	{
 		err_code = ble_cps_resistance_indicate(&m_cps, op_code, value);
 		BLE_ERROR_CHECK(err_code);
 	}
-#endif // BLE_ENABLED
 	BA_LOG("[BA]:ble_ant_resistance_ack op:%i value:%i\r\n", op_code, value);
+#endif // BLE_ENABLED
 }
 
 //
@@ -580,9 +574,6 @@ void cycling_power_send(irt_context_t * p_cps_meas)
 	uint32_t err_code;
 	// TODO: THIS IS A HACK, BUT NEED TO REFACTOR.
 	static uint32_t event_count = 0;
-
-	// Always send ANT+ message.
-	ant_bp_tx_send(p_cps_meas);
 
 #if defined(BLE_ENABLED)
 	// Only send BLE power every 4 messages (1hz vs. ANT is 4hz)
@@ -610,7 +601,6 @@ void ant_common_page_transmit(uint8_t ant_channel, uint8_t* common_page)
 		APP_ERROR_CHECK(err_code);
 }
 
-
 // Encodes the resistance mode into the 2 most significant bits.
 uint8_t encode_resistance_level(irt_context_t * p_power_meas)
 {
@@ -631,46 +621,8 @@ uint8_t encode_resistance_level(irt_context_t * p_power_meas)
 	return target_msb;
 }
 
-// Transmits extra info embedded in the power measurement.
-// TODO: Need a formal message/methodology for this.
-uint32_t extra_info_transmit(uint8_t channelId, irt_context_t * p_power_meas)
+void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers, uint16_t ant_bp_device_id)
 {
-	uint8_t tx_buffer[8];
-    uint16_t flywheel;
-	flywheel = p_power_meas->accum_flywheel_ticks;
-
-	tx_buffer[0]			                = ANT_IRT_PAGE_EXTRA_INFO;
-	tx_buffer[EXTRA_INFO_SERVO_POS_LSB]		= LOW_BYTE(p_power_meas->servo_position);
-	tx_buffer[EXTRA_INFO_SERVO_POS_MSB]		= HIGH_BYTE(p_power_meas->servo_position);
-	tx_buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(p_power_meas->resistance_level);
-	tx_buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(p_power_meas);
-	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]	= LOW_BYTE(flywheel);
-	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]	= HIGH_BYTE(flywheel);
-	tx_buffer[EXTRA_INFO_TEMP]				= (uint8_t)(p_power_meas->temp);
-
-	return sd_ant_broadcast_message_tx(channelId, TX_BUFFER_SIZE, tx_buffer);
-}
-
-
-void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
-{
-	// Initialize the product page.
-	ant_product_page[0] = ANT_COMMON_PAGE_81;
-	ant_product_page[1] = BP_PAGE_RESERVE_BYTE;
-	ant_product_page[2] = SW_REVISION_BLD;
-	ant_product_page[3] = (SW_REVISION_MAJ << 4) | SW_REVISION_MIN;
-	memcpy((uint8_t*)&(ant_product_page[4]), (uint32_t*)&(SERIAL_NUMBER), sizeof(uint32_t));
-
-	// Initialize the manufacturer's page.
-	ant_manufacturer_page[0] = ANT_COMMON_PAGE_80;
-	ant_manufacturer_page[1] = BP_PAGE_RESERVE_BYTE;
-	ant_manufacturer_page[2] = BP_PAGE_RESERVE_BYTE;
-	ant_manufacturer_page[3] = HW_REVISION;
-	ant_manufacturer_page[4] = LOW_BYTE(MANUFACTURER_ID);
-	ant_manufacturer_page[5] = HIGH_BYTE(MANUFACTURER_ID);
-	ant_manufacturer_page[6] = LOW_BYTE(MODEL_NUMBER);
-	ant_manufacturer_page[7] = HIGH_BYTE(MODEL_NUMBER);
-
 	// Event pointers.
 	mp_ant_ble_evt_handlers = ant_ble_evt_handlers;
 
@@ -682,6 +634,10 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 	gap_params_init();
 #endif // BLE_ENABLED
 
+	// Initialize ANT bike power listening channel.
+	ant_bp_rx_init(mp_ant_ble_evt_handlers->bp_evt_handler, ant_bp_device_id);
+
+	// Initialize other services.
 	services_init();
 
 #if defined(BLE_ENABLED)
@@ -726,8 +682,8 @@ void ble_ant_start() {
     err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, (uint8_t *)m_ant_network_key);
     APP_ERROR_CHECK(err_code);
 
-	// Open the ANT channel for transmitting power.
-	ant_bp_tx_start();
+	// Open the ANT channel for receiving power.
+	ant_bp_rx_start();
 	
 	// Open the ANT channel for transmitting FE-C.
 	ant_fec_tx_start();

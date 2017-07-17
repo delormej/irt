@@ -83,6 +83,9 @@ extern ble_state_e irt_ble_ant_state;
 
 typedef void(*ant_bp_evt_dfu_enable)(void);
 
+// Event Handler type.
+typedef void (*bp_evt_handler_t)(uint16_t);  // Only power in watts passed back here.
+
 //
 // Event callbacks needed for program flow and control.
 //
@@ -100,6 +103,7 @@ typedef struct ant_ble_evt_handlers_s {
 	void (*on_set_servo_positions)(servo_positions_t* positions); // Received command to set servo positions.
 	void (*on_request_calibration)(void);			// Display requests calibration to begin.
 	void (*on_set_mag_calibration)(mag_calibration_factors_t* factors); // Received command to set magnet calibration.
+	bp_evt_handler_t bp_evt_handler;				// Device receives relevant ant power meter message.
 } ant_ble_evt_handlers_t;
 
 /**@brief	Represents Common Data Page 70.
@@ -118,13 +122,12 @@ typedef struct ant_request_data_page_s
 } ant_request_data_page_t;
 
 // Public methods.
-void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers);
+void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers, uint16_t ant_bp_device_id);
 void ble_ant_start(void);
 void ble_advertising_start(void);
 uint8_t encode_resistance_level(irt_context_t * p_power_meas);
 void cycling_power_send(irt_context_t * p_cps_meas);
 void ble_ant_resistance_ack(uint8_t op_code, uint16_t value);
 void ant_common_page_transmit(uint8_t ant_channel, uint8_t* common_page);
-uint32_t extra_info_transmit(uint8_t channelId, irt_context_t * p_power_meas);
 
 #endif // BLE_ANT_H__

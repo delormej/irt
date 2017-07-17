@@ -121,8 +121,12 @@ static void send_temperature();
 static void on_enable_dfu_mode();
 static void on_resistance_off();
 static void on_request_calibration();
+static void on_bp_power_data(uint16_t watts);
 
 static bool m_resistanceChangeQueued = false;
+
+// Hard coding ANT power meter device id for testing.
+static uint16_t m_ant_bp_device_id = 62350;
 
 /**@brief Debug logging for main module.
  *
@@ -227,9 +231,9 @@ static bool dequeue_ant_response(void)
 				break;
 
 			case ANT_PAGE_BATTERY_STATUS:
-				ant_bp_battery_tx_send(m_current_state.battery_status);
+				//ant_bp_battery_tx_send(m_current_state.battery_status);
 				break;
-
+				/*
 			case ANT_COMMON_PAGE_80:
 				ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_manufacturer_page);
 				break;
@@ -237,7 +241,7 @@ static bool dequeue_ant_response(void)
 			case ANT_COMMON_PAGE_81:
 				ant_common_page_transmit(ANT_BP_TX_CHANNEL, ant_product_page);
 				break;
-
+				*/
 			default:
 				on_get_parameter(&request);
 				break;
@@ -707,70 +711,70 @@ static void error_to_response(uint8_t* p_response)
  */
 static void on_get_parameter(ant_request_data_page_t* p_request)
 {
-	uint8_t subpage;
-	uint8_t response[6];
+	// uint8_t subpage;
+	// uint8_t response[6];
 
-	subpage = p_request->descriptor[0];
-	memset(&response, 0, sizeof(response));
+	// subpage = p_request->descriptor[0];
+	// memset(&response, 0, sizeof(response));
 
-	switch (subpage)
-	{
-		case IRT_MSG_SUBPAGE_SETTINGS:
-			memcpy(&response, &mp_user_profile->settings, sizeof(uint16_t));
-			break;
+	// switch (subpage)
+	// {
+	// 	case IRT_MSG_SUBPAGE_SETTINGS:
+	// 		memcpy(&response, &mp_user_profile->settings, sizeof(uint16_t));
+	// 		break;
 
-		case IRT_MSG_SUBPAGE_CRR:
-			memcpy(&response, &mp_user_profile->ca_slope, sizeof(uint16_t));
-			memcpy(&response[2], &mp_user_profile->ca_intercept, sizeof(uint16_t));
-			break;
+	// 	case IRT_MSG_SUBPAGE_CRR:
+	// 		memcpy(&response, &mp_user_profile->ca_slope, sizeof(uint16_t));
+	// 		memcpy(&response[2], &mp_user_profile->ca_intercept, sizeof(uint16_t));
+	// 		break;
 
-		case IRT_MSG_SUBPAGE_WEIGHT:
-			memcpy(&response, &mp_user_profile->total_weight_kg, sizeof(uint16_t));
-			break;
+	// 	case IRT_MSG_SUBPAGE_WEIGHT:
+	// 		memcpy(&response, &mp_user_profile->total_weight_kg, sizeof(uint16_t));
+	// 		break;
 
-		case IRT_MSG_SUBPAGE_WHEEL_SIZE:
-			memcpy(&response, &mp_user_profile->wheel_size_mm, sizeof(uint16_t));
-			break;
+	// 	case IRT_MSG_SUBPAGE_WHEEL_SIZE:
+	// 		memcpy(&response, &mp_user_profile->wheel_size_mm, sizeof(uint16_t));
+	// 		break;
 
-		/*case IRT_MSG_SUBPAGE_GET_ERROR:
-			error_to_response(response);
-			break; */
+	// 	/*case IRT_MSG_SUBPAGE_GET_ERROR:
+	// 		error_to_response(response);
+	// 		break; */
 
-		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
-			memcpy(&response, &mp_user_profile->servo_offset, sizeof(int16_t));
-			break;
+	// 	case IRT_MSG_SUBPAGE_SERVO_OFFSET:
+	// 		memcpy(&response, &mp_user_profile->servo_offset, sizeof(int16_t));
+	// 		break;
 
-		case IRT_MSG_SUBPAGE_CHARGER:
-			response[0] = battery_charge_status();
-			break;
+	// 	case IRT_MSG_SUBPAGE_CHARGER:
+	// 		response[0] = battery_charge_status();
+	// 		break;
 
-		case IRT_MSG_SUBPAGE_FEATURES:
-			memcpy(&response, FEATURES, sizeof(uint16_t));
-			break;
+	// 	case IRT_MSG_SUBPAGE_FEATURES:
+	// 		memcpy(&response, FEATURES, sizeof(uint16_t));
+	// 		break;
 
-		case IRT_MSG_SUBPAGE_SERVO_POS:
-			// Start index is stored in descriptor[1]
-			servo_pos_to_response(p_request, response);
-			break;
+	// 	case IRT_MSG_SUBPAGE_SERVO_POS:
+	// 		// Start index is stored in descriptor[1]
+	// 		servo_pos_to_response(p_request, response);
+	// 		break;
 
-		case IRT_MSG_SUBPAGE_DRAG:
-			memcpy(&response, &mp_user_profile->ca_drag, sizeof(uint32_t));
-			break;
+	// 	case IRT_MSG_SUBPAGE_DRAG:
+	// 		memcpy(&response, &mp_user_profile->ca_drag, sizeof(uint32_t));
+	// 		break;
 
-		case IRT_MSG_SUBPAGE_RR:
-			memcpy(&response, &mp_user_profile->ca_rr, sizeof(uint32_t));
-			break;
+	// 	case IRT_MSG_SUBPAGE_RR:
+	// 		memcpy(&response, &mp_user_profile->ca_rr, sizeof(uint32_t));
+	// 		break;
 
-		case IRT_MSG_SUBPAGE_GAP_OFFSET:
-			memcpy(&response, &mp_user_profile->ca_mag_factors.gap_offset, sizeof(uint32_t));
-			break;
+	// 	case IRT_MSG_SUBPAGE_GAP_OFFSET:
+	// 		memcpy(&response, &mp_user_profile->ca_mag_factors.gap_offset, sizeof(uint32_t));
+	// 		break;
 
-		default:
-			LOG("[MAIN] Unrecognized subpage: %i. \r\n", subpage);
-			return;
-	}
+	// 	default:
+	// 		LOG("[MAIN] Unrecognized subpage: %i. \r\n", subpage);
+	// 		return;
+	// }
 
-	ant_bp_page2_tx_send(subpage, response, p_request->tx_response);
+	// ant_bp_page2_tx_send(subpage, response, p_request->tx_response);
 }
 
 /**@brief	Sends temperature value as measurement output page (0x03)
@@ -786,7 +790,7 @@ static void send_temperature()
 
 	LOG("[MAIN] Sending temperature as: %i \r\n", value);
 
-	ant_bp_page3_tx_send(1, TEMPERATURE, 10, 0, value);
+	// ant_bp_page3_tx_send(1, TEMPERATURE, 10, 0, value);
 }
 
 /**@brief	Updates settings either temporarily or with persistence.
@@ -1224,6 +1228,12 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 		default:
 			break;
 	}
+}
+
+// Called when a relevant bike power message is received. 
+static void on_bp_power_data(uint16_t watts) 
+{
+	LOG("Watts: %i\r\n", watts);
 }
 
 // Called when instructed to enable device firmware update mode.
@@ -1732,7 +1742,8 @@ int main(void)
 		on_set_parameter,
 		on_set_servo_positions,
 		on_request_calibration,
-		on_set_mag_calibration
+		on_set_mag_calibration,
+		on_bp_power_data
 	};
 
 	// Initialize and enable the softdevice.
@@ -1742,7 +1753,7 @@ int main(void)
 	config_dcpower();
 
 	// Initializes the Bluetooth and ANT stacks.
-	ble_ant_init(&ant_ble_handlers);
+	ble_ant_init(&ant_ble_handlers, m_ant_bp_device_id);
 
 	// Initialize the user profile.
 	mp_user_profile = user_profile_get();
