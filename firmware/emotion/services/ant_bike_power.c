@@ -126,18 +126,6 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 {
 	ANT_MESSAGE* p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
 
-	BP_LOG("ant_bp_rx_handle:%i\r\n", p_mesg->ANT_MESSAGE_aucPayload[0]);
-	BP_LOG("[BP]:message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-			p_ant_evt->evt_buffer[0],
-			p_ant_evt->evt_buffer[1],
-			p_ant_evt->evt_buffer[2],
-			p_ant_evt->evt_buffer[3],
-			p_ant_evt->evt_buffer[4],
-			p_ant_evt->evt_buffer[5],
-			p_ant_evt->evt_buffer[6],
-			p_ant_evt->evt_buffer[7],
-			p_ant_evt->evt_buffer[8]);
-
 	// Switch on page number.
 	switch (p_mesg->ANT_MESSAGE_aucPayload[0])
 	{
@@ -147,6 +135,16 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 			break;
 
 		default:
+			BP_LOG("[BP]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+					p_mesg->ANT_MESSAGE_aucPayload[0],
+					p_mesg->ANT_MESSAGE_aucPayload[1],
+					p_mesg->ANT_MESSAGE_aucPayload[2],
+					p_mesg->ANT_MESSAGE_aucPayload[3],
+					p_mesg->ANT_MESSAGE_aucPayload[4],
+					p_mesg->ANT_MESSAGE_aucPayload[5],
+					p_mesg->ANT_MESSAGE_aucPayload[6],
+					p_mesg->ANT_MESSAGE_aucPayload[7],
+					p_mesg->ANT_MESSAGE_aucPayload);
 			break;
 	}
 }
