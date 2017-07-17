@@ -107,25 +107,28 @@ uint16_t parseStandardPowerOnly(uint8_t* buffer)
 
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 {
-	// TODO: remove these hard coded array position values and create defines.
-	switch (p_ant_evt->evt_buffer[3])  // Switch on the page number.
+	ANT_MESSAGE* p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
+
+	BP_LOG("ant_bp_rx_handle:%i\r\n", p_mesg->ANT_MESSAGE_aucPayload[0]);
+	BP_LOG("[BP]:message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+			p_ant_evt->evt_buffer[0],
+			p_ant_evt->evt_buffer[1],
+			p_ant_evt->evt_buffer[2],
+			p_ant_evt->evt_buffer[3],
+			p_ant_evt->evt_buffer[4],
+			p_ant_evt->evt_buffer[5],
+			p_ant_evt->evt_buffer[6],
+			p_ant_evt->evt_buffer[7],
+			p_ant_evt->evt_buffer[8]);
+
+	// Switch on page number.
+	switch (p_mesg->ANT_MESSAGE_aucPayload[0])
 	{
 		case ANT_BP_PAGE_STANDARD_POWER_ONLY:
-			// TOOD: parse standard power page.
-			m_on_bp_power_data(parseStandardPowerOnly(p_ant_evt->evt_buffer));
+			m_on_bp_power_data(parseStandardPowerOnly(p_mesg->ANT_MESSAGE_aucPayload[0]));
 			break;
 
 		default:
-			BP_LOG("[BP]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-					p_ant_evt->evt_buffer[0],
-					p_ant_evt->evt_buffer[1],
-					p_ant_evt->evt_buffer[2],
-					p_ant_evt->evt_buffer[3],
-					p_ant_evt->evt_buffer[4],
-					p_ant_evt->evt_buffer[5],
-					p_ant_evt->evt_buffer[6],
-					p_ant_evt->evt_buffer[7],
-					p_ant_evt->evt_buffer[8]);
 			break;
 	}
 }
