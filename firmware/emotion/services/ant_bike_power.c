@@ -99,9 +99,26 @@ static uint32_t power_transmit(uint16_t watts)
 	return broadcast_message_transmit();
 } */
 
-uint16_t parseStandardPowerOnly(uint8_t* buffer)
+// Command Page.
+typedef struct 
 {
-	uint16_t watts = buffer[INSTANT_POWER_MSB_INDEX] << 8 | buffer[INSTANT_POWER_LSB_INDEX];
+	uint8_t			page_number;
+	uint8_t			event_count;
+	uint8_t			pedal_power;
+	uint8_t			instant_cadence;
+	uint8_t			accum_power_lsb;
+	uint8_t			accum_power_msb;
+	uint8_t			instant_power_lsb;
+	uint8_t			instant_power_msb;	
+} ant_bp_standard_power_only_t;
+
+uint16_t getWatts(ant_bp_standard_power_only_t* p_page)
+{
+/*
+34368:[BP]:message [09][4e][01][10][44][ff][5a][2c][4b]
+               298780921 : Tx: [10][44][FF][5A][2C][4B][1B][01] // 283 watts
+*/
+	uint16_t watts = p_page->instant_power_msb << 8 | p_page->instant_power_lsb;
 	return  watts;
 }
 
@@ -125,7 +142,8 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 	switch (p_mesg->ANT_MESSAGE_aucPayload[0])
 	{
 		case ANT_BP_PAGE_STANDARD_POWER_ONLY:
-			m_on_bp_power_data(parseStandardPowerOnly(p_mesg->ANT_MESSAGE_aucPayload[0]));
+			m_on_bp_power_data(getWatts(
+				(ant_bp_standard_power_only_t*) p_mesg->ANT_MESSAGE_aucPayload));
 			break;
 
 		default:
