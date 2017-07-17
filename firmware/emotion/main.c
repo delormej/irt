@@ -122,6 +122,8 @@ static void on_enable_dfu_mode();
 static void on_resistance_off();
 static void on_request_calibration();
 
+static bool m_resistanceChangeQueued = false;
+
 /**@brief Debug logging for main module.
  *
  */
@@ -548,16 +550,20 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	//
 	// Only adjust resistance once per second (4 events == 1 second) and only
-	// if in Erg or Sim mode.
+	// if in Erg or Sim mode, unless flagged based on a queued change.
 	//
-	if (event_count % 4 == 0 && (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
-			m_current_state.resistance_mode == RESISTANCE_SET_SIM))
+	if ( m_resistanceChangeQueued == true || 
+		(event_count % 4 == 0 && (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
+			m_current_state.resistance_mode == RESISTANCE_SET_SIM)) )
 	{
 		// Calculate average speed.
 		float speed_avg	 = speed_average_mps();
 
 		// Adjust resistance.
 		resistance_adjust(speed_avg, m_current_state.magoff_power);
+		
+		// Reset the flag.
+		m_resistanceChangeQueued = false;
 	}
 }
 
@@ -1155,12 +1161,11 @@ static void on_set_resistance(rc_evt_t rc_evt)
 	// Send acknowledgment.
 	bp_queue_resistance_ack(rc_evt.operation, value);
 
-	// Immediately adjust resistance if in erg or sim.
+	// Flag to immediately adjust resistance if in erg or sim.
 	if (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
 			m_current_state.resistance_mode == RESISTANCE_SET_SIM)
 	{
-		resistance_adjust(m_current_state.instant_speed_mps, 
-			m_current_state.magoff_power);
+		m_resistanceChangeQueued = true; 
 	}
 }
 
