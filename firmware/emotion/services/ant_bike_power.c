@@ -65,41 +65,14 @@
 #define BP_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
+/**@brief Callback to invoke when power data arrives.
+ *
+ */
 static bp_evt_handler_t m_on_bp_power_data;
 
-/*
-static uint32_t torque_transmit(uint16_t accum_torque, uint16_t accum_wheel_period_2048, uint8_t wheel_ticks)
-{
-	tx_buffer[PAGE_NUMBER_INDEX]            = ANT_BP_PAGE_TORQUE_AT_WHEEL;
-	tx_buffer[EVENT_COUNT_INDEX] 			= m_event_count;
-	tx_buffer[WHEEL_TICKS_INDEX] 			= wheel_ticks;
-	tx_buffer[INSTANT_CADENCE_INDEX]        = BP_PAGE_RESERVE_BYTE;
-	tx_buffer[WHEEL_PERIOD_LSB_INDEX] 		= LOW_BYTE(accum_wheel_period_2048);
-	tx_buffer[WHEEL_PERIOD_MSB_INDEX] 		= HIGH_BYTE(accum_wheel_period_2048);
-	tx_buffer[ACCUM_TORQUE_LSB_INDEX] 		= LOW_BYTE(accum_torque);
-	tx_buffer[ACCUM_TORQUE_MSB_INDEX] 		= HIGH_BYTE(accum_torque);
-
-	return broadcast_message_transmit();
-}
-
-static uint32_t power_transmit(uint16_t watts)
-{	
-	static uint16_t accumulated_power		= 0;
-	accumulated_power                       += watts;
-		
-	tx_buffer[PAGE_NUMBER_INDEX]			= ANT_BP_PAGE_STANDARD_POWER_ONLY;
-	tx_buffer[EVENT_COUNT_INDEX]			= m_event_count;
-	tx_buffer[PEDAL_POWER_INDEX]			= BP_PAGE_RESERVE_BYTE;
-	tx_buffer[INSTANT_CADENCE_INDEX]		= BP_PAGE_RESERVE_BYTE;
-	tx_buffer[ACCUM_POWER_LSB_INDEX]		= LOW_BYTE(accumulated_power);
-	tx_buffer[ACCUM_POWER_MSB_INDEX]		= HIGH_BYTE(accumulated_power);
-	tx_buffer[INSTANT_POWER_LSB_INDEX]		= LOW_BYTE(watts);
-	tx_buffer[INSTANT_POWER_MSB_INDEX]		= HIGH_BYTE(watts);
-			
-	return broadcast_message_transmit();
-} */
-
-// Command Page.
+/**@brief Standard Bike Power Only page structure.
+ *
+ */
 typedef struct 
 {
 	uint8_t			page_number;
@@ -112,16 +85,20 @@ typedef struct
 	uint8_t			instant_power_msb;	
 } ant_bp_standard_power_only_t;
 
+/**@brief Parses ant data page to combine bits for power in watts.
+ *
+ */
 uint16_t getWatts(ant_bp_standard_power_only_t* p_page)
 {
-/*
-34368:[BP]:message [09][4e][01][10][44][ff][5a][2c][4b]
-               298780921 : Tx: [10][44][FF][5A][2C][4B][1B][01] // 283 watts
-*/
+	//									    LSB MSB
+	// Example Tx: [10][44][FF][5A][2C][4B][1B][01] // 283 watts
 	uint16_t watts = p_page->instant_power_msb << 8 | p_page->instant_power_lsb;
 	return  watts;
 }
 
+/**@brief Invoked when a event occurs on the ant_bp channel.
+ *
+ */
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 {
 	ANT_MESSAGE* p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
@@ -149,6 +126,9 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 	}
 }
 
+/**@brief Initialize the module with callback and power meter device id to search for.
+ *
+ */
 void ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
 {
     uint32_t err_code;
@@ -175,9 +155,19 @@ void ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
     APP_ERROR_CHECK(err_code);
 }
 
-// Opens the connection, looking for a specific power meter id.
+/**@brief Opens the channel and begins to search.
+ *
+ */
 void ant_bp_rx_start(void)
 {
     uint32_t err_code = sd_ant_channel_open(ANT_BP_TX_CHANNEL);
     APP_ERROR_CHECK(err_code);
+}
+
+/**@brief Calculates average power for the period in seconds.
+ *
+ */
+uint16_t ant_bp_avg_power(uint8_t seconds)
+{
+	return 0;
 }
