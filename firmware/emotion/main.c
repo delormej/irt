@@ -126,7 +126,7 @@ static void on_bp_power_data(uint16_t watts);
 static bool m_resistanceChangeQueued = false;
 
 // Hard coding ANT power meter device id for testing.
-static uint16_t m_ant_bp_device_id = 62350;
+static uint16_t m_ant_bp_device_id = 52652;
 
 /**@brief Debug logging for main module.
  *
