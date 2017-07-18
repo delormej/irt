@@ -103,17 +103,14 @@ static event_fifo_t m_power_only_fifo;
 static uint16_t CalcAveragePower(power_event_t first, power_event_t last)
 {
 	// Deltas between first and last events.
-	uint8_t event_count;
+	uint16_t event_count;
 	uint16_t accum_power;
 	uint16_t average_power;
 
-	//
-	// Calculate ticks in the event period.
-	//
-	if (last.event_count < first.event_count)
+	// Deal with rollover.
+	if (first.event_count > last.event_count)
 	{
-		// Handle count rollover.
-		event_count = (first.event_count ^ 0xFF) + last.event_count;
+		event_count = (last.event_count + 256) - first.event_count;
 	}
 	else
 	{
@@ -260,7 +257,10 @@ uint16_t ant_bp_avg_power(uint8_t seconds)
 		(power_event_t*)speed_event_fifo_get(&m_power_only_fifo);
 	average_power = CalcAveragePower(*p_oldest, *p_current);
 
-	BP_LOG("[BP] Average Power: %i\r\n", average_power);
+	BP_LOG("[BP] %i:%i, %i:%i == Average Power: %i\r\n", 
+		p_oldest->event_count, p_oldest->accum_power,
+		p_current->event_count, p_current->accum_power, 
+		average_power);
 
 	return average_power;	
 }
