@@ -14,7 +14,7 @@
 #include "app_error.h"
 #include "nordic_common.h"
 #include "irt_common.h"
-#include "wahoo.h"
+#include "speed_event_fifo.h"
 #include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
@@ -85,6 +85,12 @@ typedef struct
 	uint8_t			instant_power_msb;	
 } ant_bp_standard_power_only_t;
 
+/**@brief Maintain a buffer of events.
+ *
+ */
+static ant_bp_standard_power_only_t m_power_only_buffer[SPEED_EVENT_CACHE_SIZE];
+static event_fifo_t m_power_only_fifo;
+
 /**@brief Parses ant data page to combine bits for power in watts.
  *
  */
@@ -109,6 +115,7 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 		case ANT_BP_PAGE_STANDARD_POWER_ONLY:
 			m_on_bp_power_data(getWatts(
 				(ant_bp_standard_power_only_t*) p_mesg->ANT_MESSAGE_aucPayload));
+			speed_event_fifo_put(&m_power_only_fifo, p_mesg->ANT_MESSAGE_aucPayload);
 			break;
 
 		default:
@@ -162,6 +169,11 @@ void ant_bp_rx_start(void)
 {
     uint32_t err_code = sd_ant_channel_open(ANT_BP_TX_CHANNEL);
     APP_ERROR_CHECK(err_code);
+
+	// Initialize fifo for collecting power events to average.
+	m_power_only_fifo = speed_event_fifo_init((uint8_t*)m_power_only_buffer, 
+		sizeof(ant_bp_standard_power_only_t));
+
 }
 
 /**@brief Calculates average power for the period in seconds.
