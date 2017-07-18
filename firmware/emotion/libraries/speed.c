@@ -191,7 +191,7 @@ void speed_init(uint32_t pin_flywheel_rev, user_profile_t* p_profile)
 	mp_user_profile = p_profile;
 	 
 	revs_init_gpiote(pin_flywheel_rev);
- 	m_speed_fifo = speed_event_fifo_init(m_speed_buffer, SPEED_EVENT_CACHE_SIZE);
+ 	m_speed_fifo = speed_event_fifo_init((uint8_t*)m_speed_buffer, sizeof(speed_event_t));
 
 	SP_LOG("[SP] Initialized speed.\r\n");
 }
@@ -201,8 +201,8 @@ void speed_init(uint32_t pin_flywheel_rev, user_profile_t* p_profile)
  */
 float speed_average_mps(void)
 {
-	speed_event_t* p_oldest = speed_event_fifo_oldest(&m_speed_fifo);
-	speed_event_t* p_current = speed_event_fifo_get(&m_speed_fifo);
+	speed_event_t* p_oldest = (speed_event_t*)speed_event_fifo_oldest(&m_speed_fifo);
+	speed_event_t* p_current = (speed_event_t*)speed_event_fifo_get(&m_speed_fifo);
 
 	//SP_LOG("[SP] %i, %i\r\n", p_oldest->accum_flywheel_ticks, p_current->accum_flywheel_ticks);
 
@@ -225,10 +225,11 @@ uint32_t speed_calc(irt_context_t * p_meas)
 	speed_event_t* p_previous;
 
 	// Get handle to previous speed event.
-	p_previous = speed_event_fifo_get(&m_speed_fifo);
+	p_previous = (speed_event_t*)speed_event_fifo_get(&m_speed_fifo);
 
 	// Make a copy of the current speed event to work on.
-	p_current = speed_event_fifo_put(&m_speed_fifo, &m_lastSpeedEvent);
+	p_current = (speed_event_t*)speed_event_fifo_put(&m_speed_fifo, 
+		(uint8_t*)&m_lastSpeedEvent);
 
 	// Get the flywheel ticks and calculate speed.
 	p_meas->accum_flywheel_ticks = p_current->accum_flywheel_ticks;
