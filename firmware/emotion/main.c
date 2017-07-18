@@ -553,18 +553,21 @@ static void ant_4hz_timeout_handler(void * p_context)
 	ant_ctrl_available();
 
 	//
-	// Only adjust resistance once per second (4 events == 1 second) and only
+	// Only adjust resistance twice per second (4 events == 1 second) and only
 	// if in Erg or Sim mode, unless flagged based on a queued change.
 	//
 	if ( m_resistanceChangeQueued == true || 
-		(event_count % 4 == 0 && (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
+		(event_count % 8 == 0 && (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
 			m_current_state.resistance_mode == RESISTANCE_SET_SIM)) )
 	{
 		// Calculate average speed.
 		float speed_avg	 = speed_average_mps();
+		uint16_t average_power = ant_bp_avg_power(0);
+		uint16_t mag_watts = magnet_watts(speed_avg, m_current_state.servo_position);
+		uint16_t magoff_power = average_power - mag_watts;
 
 		// Adjust resistance.
-		resistance_adjust(speed_avg, m_current_state.magoff_power);
+		resistance_adjust(speed_avg, magoff_power);
 		
 		// Reset the flag.
 		m_resistanceChangeQueued = false;

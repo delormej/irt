@@ -88,7 +88,7 @@ typedef struct
 typedef struct
 {
 	uint8_t 		event_count;
-	uint16_t 		power_watts;
+	uint16_t 		accum_power;
 } power_event_t;
 
 /**@brief Maintain a buffer of events.
@@ -100,66 +100,62 @@ static event_fifo_t m_power_only_fifo;
 /**@brief	Calculates average power in watts between two events.
  *
  */
-static float CalcAveragePower(ant_bp_standard_power_only_t first, 
-		ant_bp_standard_power_only_t last)
+static uint16_t CalcAveragePower(power_event_t first, power_event_t last)
 {
-	// // Deltas between first and last events.
-	// uint16_t event_count;
+	// Deltas between first and last events.
+	uint8_t event_count;
+	uint16_t accum_power;
+	uint16_t average_power;
 
-	// //
-	// // Calculate ticks in the event period.
-	// //
-	// if (last. < first.accum_flywheel_ticks)
-	// {
-	// 	// Handle ticks rollover.
-	// 	flywheel_ticks = (first.accum_flywheel_ticks ^ 0xFFFF) +
-	// 			last.accum_flywheel_ticks;
+	//
+	// Calculate ticks in the event period.
+	//
+	if (last.event_count < first.event_count)
+	{
+		// Handle count rollover.
+		event_count = (first.event_count ^ 0xFF) + last.event_count;
+	}
+	else
+	{
+		event_count = last.event_count - first.event_count;
+	}
 
-	// 	SP_LOG("[SP] speed_calc had a accum tick rollover.\r\n");
-	// }
-	// else
-	// {
-	// 	flywheel_ticks = last.accum_flywheel_ticks - first.accum_flywheel_ticks;
-	// }
+	//
+	// Only calculate power if events have occurred.
+	//
+	if (event_count == 0)
+	{
+		return 0.0f;
+	}
 
-	// //
-	// // Only calculate speed if the flywheel has rotated.
-	// //
-	// if (flywheel_ticks == 0)
-	// {
-	// 	return 0.0f;
-	// }
+	//
+	// Calculate delta in accum power between events.
+	//
+	if (last.accum_power < first.accum_power)
+	{
+		// Handle power rollover.
+		accum_power = (first.accum_power ^ 0xFFFF) + last.accum_power;
+	}
+	else
+	{
+		accum_power = last.accum_power - first.accum_power;
+	}
 
-	// //
-	// // Calculate delta in time between events.
-	// //
-	// if (last.event_time_2048 < first.event_time_2048)
-	// {
-	// 	// Handle time rollover.
-	// 	event_period = (first.event_time_2048 ^ UINT32_MAX) + last.event_time_2048;
-	// }
-	// else
-	// {
-	// 	event_period = last.event_time_2048 - first.event_time_2048;
-	// }
-
-	// // Virtual road distance traveled in meters.
+	// Calculate average power.
 	// distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
+	average_power = accum_power / event_count;
 
-	// // Calculate speed in meters per second.
-	// return (distance_m / (event_period / 2048.0f));
-
-	return 0.0f;
+	return average_power;
 }
 
 /**@brief Parses ant data page to combine bits for power in watts.
  *
  */
-static uint16_t GetWatts(ant_bp_standard_power_only_t* p_page)
+static uint16_t GetWatts(uint8_t msb, uint8_t lsb)
 {
 	//									    LSB MSB
 	// Example Tx: [10][44][FF][5A][2C][4B][1B][01] // 283 watts
-	uint16_t watts = p_page->instant_power_msb << 8 | p_page->instant_power_lsb;
+	uint16_t watts = msb << 8 | lsb;
 	return  watts;
 }
 
@@ -170,13 +166,13 @@ static void HandleStandardPowerOnlyPage(uint8_t* p_payload)
 	// Parse page.
 	ant_bp_standard_power_only_t* p_page = (ant_bp_standard_power_only_t*)p_payload;
 	event.event_count = p_page->event_count;
-	event.power_watts = GetWatts(p_page);
+	event.accum_power = GetWatts(p_page->accum_power_msb, p_page->accum_power_lsb);
 
 	// Add to the queue for later averaging.
 	speed_event_fifo_put(&m_power_only_fifo, (uint8_t*)&event);
 
-	// Raise event with new power data.
-	m_on_bp_power_data(event.power_watts);
+	// Raise event with instantnew power in watts.
+	m_on_bp_power_data(GetWatts(p_page->instant_power_msb, p_page->instant_power_lsb));
 }
 
 /**@brief Invoked when a event occurs on the ant_bp channel.
@@ -256,13 +252,15 @@ void ant_bp_rx_start(void)
  */
 uint16_t ant_bp_avg_power(uint8_t seconds)
 {
+	uint16_t average_power = 0;
+
 	power_event_t* p_oldest = 
 		(power_event_t*)speed_event_fifo_oldest(&m_power_only_fifo);
 	power_event_t* p_current = 
 		(power_event_t*)speed_event_fifo_get(&m_power_only_fifo);
+	average_power = CalcAveragePower(*p_oldest, *p_current);
 
-	//SP_LOG("[SP] %i, %i\r\n", p_oldest->accum_flywheel_ticks, p_current->accum_flywheel_ticks);
+	BP_LOG("[BP] Average Power: %i\r\n", average_power);
 
-	//return speed_calc_mps(*p_oldest, *p_current);	
-	return 0;
+	return average_power;	
 }

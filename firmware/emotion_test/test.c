@@ -61,5 +61,9 @@ int main(int argc, char *argv [])
 	p_speed = (speed_event_t*)speed_event_fifo_get(&fifo);
 	print_speed(p_speed); // most recent one.
 
+	uint16_t result = 699/2;
+
+	printf("= %i\r\n", result);
+
 	return 0;
 }
