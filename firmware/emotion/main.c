@@ -1233,6 +1233,7 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 // Called when a relevant bike power message is received. 
 static void on_bp_power_data(uint16_t watts) 
 {
+	m_current_state.instant_power = watts;
 	LOG("Watts: %i\r\n", watts);
 }
 
