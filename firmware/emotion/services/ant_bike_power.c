@@ -85,21 +85,98 @@ typedef struct
 	uint8_t			instant_power_msb;	
 } ant_bp_standard_power_only_t;
 
+typedef struct
+{
+	uint8_t 		event_count;
+	uint16_t 		power_watts;
+} power_event_t;
+
 /**@brief Maintain a buffer of events.
  *
  */
-static ant_bp_standard_power_only_t m_power_only_buffer[SPEED_EVENT_CACHE_SIZE];
+static power_event_t m_power_only_buffer[SPEED_EVENT_CACHE_SIZE];
 static event_fifo_t m_power_only_fifo;
+
+/**@brief	Calculates average power in watts between two events.
+ *
+ */
+static float CalcAveragePower(ant_bp_standard_power_only_t first, 
+		ant_bp_standard_power_only_t last)
+{
+	// // Deltas between first and last events.
+	// uint16_t event_count;
+
+	// //
+	// // Calculate ticks in the event period.
+	// //
+	// if (last. < first.accum_flywheel_ticks)
+	// {
+	// 	// Handle ticks rollover.
+	// 	flywheel_ticks = (first.accum_flywheel_ticks ^ 0xFFFF) +
+	// 			last.accum_flywheel_ticks;
+
+	// 	SP_LOG("[SP] speed_calc had a accum tick rollover.\r\n");
+	// }
+	// else
+	// {
+	// 	flywheel_ticks = last.accum_flywheel_ticks - first.accum_flywheel_ticks;
+	// }
+
+	// //
+	// // Only calculate speed if the flywheel has rotated.
+	// //
+	// if (flywheel_ticks == 0)
+	// {
+	// 	return 0.0f;
+	// }
+
+	// //
+	// // Calculate delta in time between events.
+	// //
+	// if (last.event_time_2048 < first.event_time_2048)
+	// {
+	// 	// Handle time rollover.
+	// 	event_period = (first.event_time_2048 ^ UINT32_MAX) + last.event_time_2048;
+	// }
+	// else
+	// {
+	// 	event_period = last.event_time_2048 - first.event_time_2048;
+	// }
+
+	// // Virtual road distance traveled in meters.
+	// distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
+
+	// // Calculate speed in meters per second.
+	// return (distance_m / (event_period / 2048.0f));
+
+	return 0.0f;
+}
 
 /**@brief Parses ant data page to combine bits for power in watts.
  *
  */
-uint16_t getWatts(ant_bp_standard_power_only_t* p_page)
+static uint16_t GetWatts(ant_bp_standard_power_only_t* p_page)
 {
 	//									    LSB MSB
 	// Example Tx: [10][44][FF][5A][2C][4B][1B][01] // 283 watts
 	uint16_t watts = p_page->instant_power_msb << 8 | p_page->instant_power_lsb;
 	return  watts;
+}
+
+static void HandleStandardPowerOnlyPage(uint8_t* p_payload)
+{
+	power_event_t event;
+
+	// Parse page.
+	ant_bp_standard_power_only_t* p_page = (ant_bp_standard_power_only_t*)p_payload;
+	event.event_count = p_page->event_count;
+	event.power_watts = GetWatts(p_page);
+
+	// Add to the queue for later averaging.
+	speed_event_fifo_put(&m_power_only_fifo, (uint8_t*)&event);
+
+	// Raise event with new power data.
+	m_on_bp_power_data(event.power_watts);
 }
 
 /**@brief Invoked when a event occurs on the ant_bp channel.
@@ -113,9 +190,7 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 	switch (p_mesg->ANT_MESSAGE_aucPayload[0])
 	{
 		case ANT_BP_PAGE_STANDARD_POWER_ONLY:
-			m_on_bp_power_data(getWatts(
-				(ant_bp_standard_power_only_t*) p_mesg->ANT_MESSAGE_aucPayload));
-			speed_event_fifo_put(&m_power_only_fifo, p_mesg->ANT_MESSAGE_aucPayload);
+			HandleStandardPowerOnlyPage(p_mesg->ANT_MESSAGE_aucPayload);
 			break;
 
 		default:
@@ -172,7 +247,7 @@ void ant_bp_rx_start(void)
 
 	// Initialize fifo for collecting power events to average.
 	m_power_only_fifo = speed_event_fifo_init((uint8_t*)m_power_only_buffer, 
-		sizeof(ant_bp_standard_power_only_t));
+		sizeof(power_event_t));
 
 }
 
@@ -181,5 +256,13 @@ void ant_bp_rx_start(void)
  */
 uint16_t ant_bp_avg_power(uint8_t seconds)
 {
+	power_event_t* p_oldest = 
+		(power_event_t*)speed_event_fifo_oldest(&m_power_only_fifo);
+	power_event_t* p_current = 
+		(power_event_t*)speed_event_fifo_get(&m_power_only_fifo);
+
+	//SP_LOG("[SP] %i, %i\r\n", p_oldest->accum_flywheel_ticks, p_current->accum_flywheel_ticks);
+
+	//return speed_calc_mps(*p_oldest, *p_current);	
 	return 0;
 }
