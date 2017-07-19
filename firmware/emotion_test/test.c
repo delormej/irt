@@ -31,6 +31,9 @@ typedef struct
 //
 //
 
+#define RESISTANCE_SET_ERG 1
+#define RESISTANCE_SET_SIM 2
+
 speed_event_t buffer[8];
 
 void print_speed(speed_event_t* p_speed) 
@@ -40,8 +43,26 @@ void print_speed(speed_event_t* p_speed)
 		p_speed->accum_flywheel_ticks);
 }
 
+bool test(bool m_resistanceChangeQueued, uint16_t event_count, uint8_t resistance_mode)
+{
+	if ( m_resistanceChangeQueued == true || 
+		(event_count % 8 == 0 && (resistance_mode == RESISTANCE_SET_ERG ||
+			resistance_mode == RESISTANCE_SET_SIM)) )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 int main(int argc, char *argv [])
 {	
+	bool result = test(false, 5, RESISTANCE_SET_ERG);
+	printf("result: %i\r\n", result); 
+	return;
+
 	printf("Any key to start.");
 	getchar();
 
@@ -60,10 +81,6 @@ int main(int argc, char *argv [])
 
 	p_speed = (speed_event_t*)speed_event_fifo_get(&fifo);
 	print_speed(p_speed); // most recent one.
-
-	uint16_t result = 699/2;
-
-	printf("= %i\r\n", result);
 
 	return 0;
 }

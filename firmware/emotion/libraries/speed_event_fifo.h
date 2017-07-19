@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#define SPEED_EVENT_CACHE_SIZE		8		// @ 2hz, this is 4 seconds of speed data.
+#define SPEED_EVENT_CACHE_SIZE		8		// @ 2hz, this is 3 seconds of speed data.
 
 typedef struct
 {
