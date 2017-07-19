@@ -187,6 +187,7 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 			break;
 
 		default:
+			/*
 			BP_LOG("[BP]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
 					p_mesg->ANT_MESSAGE_aucPayload[0],
 					p_mesg->ANT_MESSAGE_aucPayload[1],
@@ -196,7 +197,7 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 					p_mesg->ANT_MESSAGE_aucPayload[5],
 					p_mesg->ANT_MESSAGE_aucPayload[6],
 					p_mesg->ANT_MESSAGE_aucPayload[7],
-					p_mesg->ANT_MESSAGE_aucPayload);
+					p_mesg->ANT_MESSAGE_aucPayload); */
 			break;
 	}
 }

@@ -557,7 +557,7 @@ static void ant_4hz_timeout_handler(void * p_context)
 	// if in Erg or Sim mode, unless flagged based on a queued change.
 	//
 	if ( m_resistanceChangeQueued == true || 
-		(event_count % 8 == 0 && (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
+		(event_count % 16 == 0 && (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
 			m_current_state.resistance_mode == RESISTANCE_SET_SIM)) )
 	{
 		// Calculate average speed.
