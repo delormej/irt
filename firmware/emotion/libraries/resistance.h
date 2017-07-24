@@ -215,7 +215,7 @@ void resistance_drafting_set(float factor);
  * 				speed and watts.
  *
  */
-void resistance_adjust(float speed_mps, int16_t magoff_watts);
+void resistance_adjust();
 
 /**@brief		Adjusts resistance +/- by either a step or % (erg mode).
  *

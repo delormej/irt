@@ -123,9 +123,8 @@ static void on_resistance_off();
 static void on_request_calibration();
 static void on_bp_power_data(uint16_t watts);
 
-static bool m_resistanceChangeQueued = false;
-
 // Hard coding ANT power meter device id for testing.
+#warning "HARD CODED m_ant_bp_device_id = 52652"
 static uint16_t m_ant_bp_device_id = 52652;
 
 /**@brief Debug logging for main module.
@@ -551,27 +550,6 @@ static void ant_4hz_timeout_handler(void * p_context)
 
 	// Send remote control a heart beat.
 	ant_ctrl_available();
-
-	//
-	// Only adjust resistance twice per second (4 events == 1 second) and only
-	// if in Erg or Sim mode, unless flagged based on a queued change.
-	//
-	if ( m_resistanceChangeQueued == true || 
-		(event_count % 20 == 0 && (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
-			m_current_state.resistance_mode == RESISTANCE_SET_SIM)) )
-	{
-		// Reset the flag.
-		m_resistanceChangeQueued = false;
-
-		// Calculate average speed & power.
-		float speed_avg	 = speed_average_mps();
-		uint16_t average_power = ant_bp_avg_power(0);
-		uint16_t mag_watts = magnet_watts(speed_avg, m_current_state.servo_position);
-		uint16_t magoff_power = average_power - mag_watts;
-
-		// Adjust resistance.
-		resistance_adjust(speed_avg, magoff_power);
-	}
 }
 
 /**@brief	Timer handler for reading sensors.
@@ -1165,15 +1143,8 @@ static void on_set_resistance(rc_evt_t rc_evt)
 			break;
 	}
 
-	// Send acknowledgment.
+	// Queue to send acknowledgment (only used for BLE now).
 	bp_queue_resistance_ack(rc_evt.operation, value);
-
-	// Flag to immediately adjust resistance if in erg or sim.
-	if (m_current_state.resistance_mode == RESISTANCE_SET_ERG ||
-			m_current_state.resistance_mode == RESISTANCE_SET_SIM)
-	{
-		m_resistanceChangeQueued = true; 
-	}
 }
 
 // Invoked when a button is pushed on the remote control.
