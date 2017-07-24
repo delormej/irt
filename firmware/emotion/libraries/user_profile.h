@@ -17,7 +17,7 @@
 #include "pstorage.h"
 #include "irt_common.h"
 
-#define PROFILE_VERSION					10u	            // Current version of the profile.
+#define PROFILE_VERSION					11u	            // Current version of the profile.
 
 #define SETTING_ACL_SLEEP_ON			1UL				// Put device to sleep when accelerometer signals no motion.
 #define SETTING_BTLE_ENABLED			2UL				// BTLE Enabled
@@ -64,6 +64,7 @@ typedef struct user_profile_s {
 	mag_calibration_factors_t ca_mag_factors; // Magnet calibration factors.
 	//uint8_t		reserved_2[7]; // (sizeof(servo_positions_t)+2) % 16];					// For block size alignment -- 16 bit alignment
     uint16_t	user_weight_kg;			     // Stored in int format 1/100, unit 0.01kg, range: 0 - 655.34kg.
+	uint16_t	power_meter_ant_id;			// Device Id of power meter to pair to.
 } user_profile_t;
 
 /**@brief Returns a pointer to the user profile object. */

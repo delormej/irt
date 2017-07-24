@@ -1361,6 +1361,14 @@ static void on_set_parameter(uint8_t* buffer)
 			user_profile_store();
 			break;
 
+		case IRT_MSG_SUBPAGE_POWER_METER_ID:
+			mp_user_profile->power_meter_ant_id = (int16_t)(buffer[IRT_MSG_PAGE2_DATA_INDEX] |
+				buffer[IRT_MSG_PAGE2_DATA_INDEX+1] << 8);
+			LOG("[MAIN] Updated power_meter_ant_id:%i \r\n", mp_user_profile->power_meter_ant_id);			
+			// Schedule update to the user profile.
+			user_profile_store();
+			break;
+
 		case IRT_MSG_SUBPAGE_SLEEP:
 			LOG("[MAIN] on_set_parameter: Request device sleep.\r\n");
 			on_power_down(true);

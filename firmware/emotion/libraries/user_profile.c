@@ -185,6 +185,10 @@ static uint32_t user_profile_init()
             m_user_profile.ca_mag_factors.high_factors[3] = -998.115074474f;
         }
 
+        if (m_user_profile.power_meter_ant_id == 0xFFFF) {
+            m_user_profile.power_meter_ant_id = 0;
+        }
+
         // Schedule an update.
         profile_update_sched();
     }
