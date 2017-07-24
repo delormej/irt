@@ -422,8 +422,10 @@ void resistance_adjust()
 	bool use_smoothing = false;
 
 	// Calculate average speed & power.
-	float speed_mps = speed_average_mps();
-	uint16_t average_power = ant_bp_avg_power(0);
+	#warning "[RC] Hardcoded to 6 events (3 seconds) of bike power and speed to average."
+	float speed_mps = speed_average_mps(3);
+	uint16_t average_power = ant_bp_avg_power(3); 
+	
 	uint16_t mag_watts = magnet_watts(speed_mps, m_resistance_state.servo_position);
 	uint16_t magoff_watts = average_power - mag_watts;
 
@@ -456,6 +458,9 @@ void resistance_adjust()
 			RC_LOG("[RC] resistance_adjust: WARNING called with invalid resistance mode.\r\n");
 			break;
 	}
+
+	RC_LOG("[RC] resistance_adjust: old_servo_pos: %i, new_servo_pos: %i.\r\n", 
+		m_resistance_state.servo_position, servo_pos);
 
 	// Move the servo, with smoothing only if in sim mode.
 	resistance_position_set(servo_pos, use_smoothing);

@@ -36,14 +36,15 @@ uint8_t* speed_event_fifo_put(event_fifo_t* p_fifo, uint8_t* speed_event)
 }
 
 /*
- * Returns a pointer to oldest event in the queue.
+ * Returns a pointer to oldest event in the queue, by the # of events ago.
  */
-uint8_t* speed_event_fifo_oldest(event_fifo_t* p_fifo)
+uint8_t* speed_event_fifo_oldest(event_fifo_t* p_fifo, uint8_t events)
 {
 	// Determine index to read.
 	uint8_t idx_read;
 
-	idx_read = (p_fifo->write_index) % SPEED_EVENT_CACHE_SIZE;
+	idx_read = ( (p_fifo->write_index + SPEED_EVENT_CACHE_SIZE - events) 
+		% SPEED_EVENT_CACHE_SIZE );
 
 	// Return the pointer to the oldest event in the stack.
 	return &p_fifo->speed_buffer[idx_read * p_fifo->size];
@@ -56,7 +57,8 @@ uint8_t* speed_event_fifo_get(event_fifo_t* p_fifo)
 {
 	uint8_t idx_read;
 
-	idx_read = (p_fifo->write_index + p_fifo->size - 1) % SPEED_EVENT_CACHE_SIZE;
+	idx_read = ( (p_fifo->write_index + SPEED_EVENT_CACHE_SIZE - 1) 
+		% SPEED_EVENT_CACHE_SIZE );
 	//CN_LOG("[CN] _last %i \r\n", idx_read);
 
 	return &p_fifo->speed_buffer[idx_read * p_fifo->size];

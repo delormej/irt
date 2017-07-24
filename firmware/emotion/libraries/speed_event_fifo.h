@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-#define SPEED_EVENT_CACHE_SIZE		6		// @ 2hz, this is 3 seconds of speed data.
+#define SPEED_EVENT_CACHE_SIZE		8		// @ 2hz, this is 4 seconds of speed data. MUST BE A POWER OF 2.
 
 typedef struct
 {
@@ -23,6 +23,6 @@ typedef struct
 event_fifo_t speed_event_fifo_init(uint8_t* p_buffer, uint8_t size);
 uint8_t* speed_event_fifo_put(event_fifo_t* p_fifo, uint8_t* p_speed_event);
 uint8_t* speed_event_fifo_get(event_fifo_t* p_fifo);
-uint8_t* speed_event_fifo_oldest(event_fifo_t* p_fifo);
+uint8_t* speed_event_fifo_oldest(event_fifo_t* p_fifo, uint8_t events);
 
 #endif /* SPEED_EVENT_FIFO_H_ */

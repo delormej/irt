@@ -199,12 +199,16 @@ void speed_init(uint32_t pin_flywheel_rev, user_profile_t* p_profile)
 /**@brief	Returns a running smoothed average of speed.
  *
  */
-float speed_average_mps(void)
+float speed_average_mps(uint8_t seconds)
 {
-	speed_event_t* p_oldest = (speed_event_t*)speed_event_fifo_oldest(&m_speed_fifo);
+	uint8_t events = seconds*2; // 2 events per second.
+
+	speed_event_t* p_oldest = (speed_event_t*)speed_event_fifo_oldest(&m_speed_fifo, events);
 	speed_event_t* p_current = (speed_event_t*)speed_event_fifo_get(&m_speed_fifo);
 
-	//SP_LOG("[SP] %i, %i\r\n", p_oldest->accum_flywheel_ticks, p_current->accum_flywheel_ticks);
+	SP_LOG("[SP] %i:%i, %i:%i\r\n", 
+		p_oldest->event_time_2048, p_oldest->accum_flywheel_ticks,
+		p_current->event_time_2048, p_current->accum_flywheel_ticks);
 
 	return speed_calc_mps(*p_oldest, *p_current);
 }

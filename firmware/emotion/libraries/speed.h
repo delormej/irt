@@ -42,10 +42,10 @@ typedef struct
 */
 void speed_init(uint32_t pin_flywheel_rev, user_profile_t* p_profile);
 
-/**@brief	Calculates a running smoothed average of speed.
+/**@brief	Calculates a running smoothed average of speed, for a given # of seconds.
  *
  */
-float speed_average_mps(void);
+float speed_average_mps(uint8_t seconds);
 
 /**@brief	Calculates and records current speed measurement.
  *
