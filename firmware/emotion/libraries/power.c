@@ -128,6 +128,8 @@ uint32_t power_calc(irt_context_t* p_meas)
 		// Use power meter data if paired. 	
 		mag_watts = magnet_watts(p_meas->instant_speed_mps, p_meas->servo_position);
 		p_meas->magoff_power = p_meas->instant_power - mag_watts;
+
+		PW_LOG("[PW] Paired power, watts: %i\r\n", p_meas->instant_power);
 	}
 	else 
 	{
@@ -141,6 +143,8 @@ uint32_t power_calc(irt_context_t* p_meas)
 		p_meas->instant_power = p_meas->magoff_power + mag_watts;
 
 		// PW_LOG("[PW] rr: %.2f, servo: %.2f, watts: %i\r\n", *p_rr_force, servo, p_current->instant_power);
+		PW_LOG("[PW] Estimated power, speed: %.2f, watts: %i\r\n", p_meas->instant_speed_mps,
+			p_meas->instant_power);
 	}
 
 	// Accumulate torque from last measure.	

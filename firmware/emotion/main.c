@@ -1211,8 +1211,11 @@ static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 	switch (state)
 	{
 		case BP_MSG_POWER_DATA:
-			m_current_state.instant_power = data;
-			// LOG("Watts: %i\r\n", data);
+			if (m_current_state.power_meter_paired) 
+			{
+				m_current_state.instant_power = data;
+				// LOG("Watts: %i\r\n", data);
+			}
 			break;
 
 		case BP_MSG_DEVICE_CONNECTED:
@@ -1358,6 +1361,7 @@ static void on_set_parameter(uint8_t* buffer)
 			user_profile_store();
 			break;
 
+		// I don't think this ever gets used.. 
 		case IRT_MSG_SUBPAGE_POWER_METER_ID:
 			mp_user_profile->power_meter_ant_id = (int16_t)(buffer[IRT_MSG_PAGE2_DATA_INDEX] |
 				buffer[IRT_MSG_PAGE2_DATA_INDEX+1] << 8);
