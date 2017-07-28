@@ -423,9 +423,13 @@ static uint32_t IRTSettingsPowerAdjustSend() {
 
     FEC_IRTSettingsPowerAdjustPage page = {
         .DataPageNumber = ANT_IRT_PAGE_POWER_ADJUST,
-        .PowerMeterId = mp_user_profile->power_meter_ant_id,
+        .PowerMeterIdLSB = LOW_BYTE(mp_user_profile->power_meter_ant_id),
+        .PowerMeterIdMSB = HIGH_BYTE(mp_user_profile->power_meter_ant_id),
         .PowerAdjustSeconds = mp_user_profile->power_adjust_seconds,
-        .PowerAverageSeconds = mp_user_profile->power_average_seconds
+        .PowerAverageSeconds = mp_user_profile->power_average_seconds,
+        .Reserved[0] = 0xFF,
+        .Reserved[1] = 0xFF
+        // .PowerMeterChannelState = 
     };
     
     return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
@@ -691,13 +695,12 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
     // Copy into page structure.
     memcpy(&page, buffer, sizeof(FEC_IRTSettingsPowerAdjustPage));
 
-    //
-    // TODO: add validation and track dirty flag
-    //
-    if (  mp_user_profile->power_meter_ant_id != page.PowerMeterId && 
+    uint16_t power_meter_id = page.PowerMeterIdMSB << 8 | page.PowerMeterIdLSB;
+
+    if (  mp_user_profile->power_meter_ant_id != power_meter_id && 
         mp_user_profile->power_meter_ant_id != 0xFFFF ) 
     {
-        mp_user_profile->power_meter_ant_id = page.PowerMeterId;
+        mp_user_profile->power_meter_ant_id = power_meter_id;
         dirty = true;
     }
 

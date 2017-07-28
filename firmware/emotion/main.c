@@ -1212,13 +1212,14 @@ static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 	{
 		case BP_MSG_POWER_DATA:
 			m_current_state.instant_power = data;
-			LOG("Watts: %i\r\n", data);
+			// LOG("Watts: %i\r\n", data);
 			break;
 
 		case BP_MSG_DEVICE_CONNECTED:
 			if (mp_user_profile->power_meter_ant_id != data)
 			{
 				// TODO: should we schedule profile update??
+				LOG("[MAIN] Power Meter Connected: %i\r\n", data);
 				mp_user_profile->power_meter_ant_id = data;
 			}
 			
@@ -1227,6 +1228,7 @@ static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 
 		case BP_MSG_DEVICE_SEARCH_TIME_OUT:
 		case BP_MSG_DEVICE_CLOSED:
+			LOG("[MAIN] Power meter disconnected or search timed out.\r\n");	
 			m_current_state.power_meter_paired = false;
 			break;
 

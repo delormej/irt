@@ -114,7 +114,7 @@ static uint32_t user_profile_init()
     //
     if (m_user_profile.version != PROFILE_VERSION)
     {
-        UP_LOG("[MAIN]: Older profile version %i. Setting defaults where needed.\r\n",
+        UP_LOG("[UP]: Older profile version %i. Setting defaults where needed.\r\n",
                 m_user_profile.version);
 
         m_user_profile.version = PROFILE_VERSION;
@@ -123,7 +123,7 @@ static uint32_t user_profile_init()
         if (m_user_profile.wheel_size_mm == 0 ||
                 m_user_profile.wheel_size_mm == 0xFFFF)
         {
-            UP_LOG("[MAIN]:profile_init using default wheel circumference.\r\n");
+            UP_LOG("[UP]:profile_init using default wheel circumference.\r\n");
 
             // Wheel circumference in mm.
             m_user_profile.wheel_size_mm = DEFAULT_WHEEL_SIZE_MM;
@@ -132,7 +132,7 @@ static uint32_t user_profile_init()
         if (m_user_profile.total_weight_kg == 0 ||
                 m_user_profile.total_weight_kg == 0xFFFF)
         {
-            UP_LOG("[MAIN]:profile_init using default weight.\r\n");
+            UP_LOG("[UP]:profile_init using default weight.\r\n");
 
             // Total weight of rider + bike + shoes, clothing, etc...
             m_user_profile.total_weight_kg = DEFAULT_TOTAL_WEIGHT_KG;
@@ -140,14 +140,14 @@ static uint32_t user_profile_init()
 
         if (m_user_profile.servo_offset == -1) 	// -1 == (int16_t)0xFFFF
         {
-            UP_LOG("[MAIN]:profile_init using default servo offset.\r\n");
+            UP_LOG("[UP]:profile_init using default servo offset.\r\n");
             m_user_profile.servo_offset = 0; // default to 0 offset.
         }
 
         // Check for default servo positions.
         if (m_user_profile.servo_positions.count == 0xFF)
         {
-            UP_LOG("[MAIN]: Setting default servo positions.\r\n");
+            UP_LOG("[UP]: Setting default servo positions.\r\n");
 
             m_user_profile.servo_positions.count = 7;
             m_user_profile.servo_positions.positions[0] = 2000;
@@ -204,11 +204,13 @@ static uint32_t user_profile_init()
         profile_update_sched();
     }
 
-    UP_LOG("[MAIN]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t " \
+    UP_LOG("[UP]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t " \
         "settings: %lu \r\n\t drag: %.3f, rr: %.3f \r\n" \
         "ca_root_position: %i \r\n\t " \
         "ca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
-        "ca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n",
+        "ca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n" \
+        "power_meter_id: %i\r\n" \
+        "power_adjust_seconds: %i, power_average_seconds: %i\r\n",
             m_user_profile.total_weight_kg,
             m_user_profile.wheel_size_mm,
             m_user_profile.settings,
@@ -222,7 +224,10 @@ static uint32_t user_profile_init()
             m_user_profile.ca_mag_factors.high_factors[0],
             m_user_profile.ca_mag_factors.high_factors[1],
             m_user_profile.ca_mag_factors.high_factors[2],
-            m_user_profile.ca_mag_factors.high_factors[3]
+            m_user_profile.ca_mag_factors.high_factors[3],
+            m_user_profile.power_meter_ant_id,
+            m_user_profile.power_adjust_seconds,
+            m_user_profile.power_average_seconds
             );
             
      return err_code;       

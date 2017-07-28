@@ -258,6 +258,9 @@ void ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
     
     err_code = sd_ant_channel_period_set(ANT_BP_RX_CHANNEL, ANT_BP_MSG_PERIOD);
     APP_ERROR_CHECK(err_code);
+
+	BP_LOG("[BP] Attempting to open Bike Power channel with ANT device id: %i\r\n",
+		device_id);
 }
 
 /**@brief Opens the channel and begins to search.

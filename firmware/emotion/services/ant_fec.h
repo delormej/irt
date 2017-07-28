@@ -159,10 +159,12 @@ typedef struct {
 // Contains device settings for get/set parameters.
 typedef struct {
     uint8_t		DataPageNumber;
-    uint8_t     PowerMeterId;
+    uint8_t     PowerMeterIdLSB;
+	uint8_t     PowerMeterIdMSB;
     uint8_t     PowerAdjustSeconds;
     uint8_t     PowerAverageSeconds;
-	uint8_t		Reserved[4];		
+	uint8_t		PowerMeterChannelState;		// Are we stll searching for the power meter, connected, disconnected, not in use, etc..
+	uint8_t		Reserved[2];		
 } FEC_IRTSettingsPowerAdjustPage;
 
 void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers);
