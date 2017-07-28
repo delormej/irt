@@ -49,7 +49,7 @@
 
 /**@brief  Timeout for adjusting resistance when in erg/sim mode.
  */
-#define ADJUSTMENT_INTERVAL		APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER) // 5 seconds.
+#define ADJUSTMENT_INTERVAL		APP_TIMER_TICKS(mp_user_profile->power_adjust_seconds * 1000, APP_TIMER_PRESCALER) // Defaults to 5 seconds.
 static app_timer_id_t			m_adjust_timer_id;						  // Timer used to invoke resistance adjustments in erg/sim mode.
 
 static user_profile_t* 			mp_user_profile;
