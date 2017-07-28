@@ -138,7 +138,8 @@ typedef struct
 /**@brief	Initializes the resistance module which controls the servo.
  *
  */
-irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile);
+irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, 
+    user_profile_t* p_user_profile, irt_context_t* p_current_state);
 
 /**@brief		Gets the current resistance state object.
  *

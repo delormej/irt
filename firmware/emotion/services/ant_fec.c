@@ -417,6 +417,21 @@ static uint32_t IRTSettingsPage_Send() {
 		(uint8_t*)&page);
 }
 
+/**@brief	Sends manufacturer specific page containing power adjustment settings.
+ */
+static uint32_t IRTSettingsPowerAdjustSend() {
+
+    FEC_IRTSettingsPowerAdjustPage page = {
+        .DataPageNumber = ANT_IRT_PAGE_POWER_ADJUST,
+        .PowerMeterId = mp_user_profile->power_meter_ant_id,
+        .PowerAdjustSeconds = mp_user_profile->power_adjust_seconds,
+        .PowerAverageSeconds = mp_user_profile->power_average_seconds
+    };
+    
+    return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
+		(uint8_t*)&page);
+}
+
 /**@brief	Processes pages responsible for setting resistance modes and 
  *          raises the event to change resistance.
  */
@@ -666,6 +681,46 @@ static void HandleIRTSettingsPage(uint8_t* buffer) {
     }
 }
 
+/**@brief   Parses IRT specific settings for power adjust and applies to the user profile.
+ * 
+ */
+static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
+    FEC_IRTSettingsPowerAdjustPage page;
+    bool dirty = false;
+
+    // Copy into page structure.
+    memcpy(&page, buffer, sizeof(FEC_IRTSettingsPowerAdjustPage));
+
+    //
+    // TODO: add validation and track dirty flag
+    //
+    if (  mp_user_profile->power_meter_ant_id != page.PowerMeterId && 
+        mp_user_profile->power_meter_ant_id != 0xFFFF ) 
+    {
+        mp_user_profile->power_meter_ant_id = page.PowerMeterId;
+        dirty = true;
+    }
+
+    if ( mp_user_profile->power_adjust_seconds != page.PowerAverageSeconds && 
+        mp_user_profile->power_adjust_seconds != 0xFF ) 
+    {
+        mp_user_profile->power_adjust_seconds = page.PowerAverageSeconds;
+        dirty = true;
+    }
+
+    if ( mp_user_profile->power_average_seconds != page.PowerAverageSeconds && 
+        mp_user_profile->power_average_seconds != 0xFF )
+    {
+        mp_user_profile->power_average_seconds = page.PowerAverageSeconds;
+        dirty = true;
+    }
+    
+    if (dirty)
+    {
+        user_profile_store();
+    }
+}
+
 /**@brief   Raises the set resistance event.
  */
 static void HandleSetServo(ant_evt_t * p_ant_evt) {
@@ -736,6 +791,10 @@ static bool dequeue_request()
         case ANT_IRT_PAGE_SETTINGS:
             IRTSettingsPage_Send();
             break;    
+
+        case ANT_IRT_PAGE_POWER_ADJUST:
+            IRTSettingsPowerAdjustSend();
+            break;
 
         default:
             FE_LOG("[FE] dequeue_request, unrecognized page:%i.\r\n", 

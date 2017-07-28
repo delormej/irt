@@ -17,7 +17,7 @@
 #define ANTPLUS_RF_FREQ                 	0x39                                         /**< Frequency, Decimal 57 (2457 MHz). */
 
 // ANT Channels being used.
-#define ANT_BP_TX_CHANNEL     	 			1u                                           /**< Bicycle Power ANT Channel. */
+#define ANT_BP_RX_CHANNEL     	 			1u                                           /**< Bicycle Power ANT Channel. */
 #define ANT_CTRL_CHANNEL					2u											 /**< ANT+ Remote Control Channel */
 #define ANT_SP_TX_CHANNEL     	 			3u                                           /**< Bicycle Speed TX ANT Channel. */
 #define ANT_FEC_TX_CHANNEL     	 			4u                                           /**< ANT+ FE-C Channel. */
@@ -29,6 +29,7 @@
 #define ANT_PAGE_BATTERY_STATUS			0x52
 #define ANT_IRT_PAGE_EXTRA_INFO			0xF1   // Manufacturer specific page sending servo position, etc...
 #define ANT_IRT_PAGE_SETTINGS			0xF2   // Manufacturer specific page sending device specific settings.
+#define ANT_IRT_PAGE_POWER_ADJUST		0xF3   // Manufacturer specific page sending power adjustment settings.
 
 #define ANT_COMMON_PAGE_80          		0x50u   /**< Manufacturer's identification common data page. */
 #define ANT_COMMON_PAGE_81          		0x51u   /**< Product information common data page. */
@@ -83,8 +84,16 @@ extern ble_state_e irt_ble_ant_state;
 
 typedef void(*ant_bp_evt_dfu_enable)(void);
 
-// Event Handler type.
-typedef void (*bp_evt_handler_t)(uint16_t);  // Only power in watts passed back here.
+/**@brief Bike power Event Handler type.
+ */
+typedef enum 
+{
+	BP_MSG_POWER_DATA = 0,
+	BP_MSG_DEVICE_CONNECTED,
+	BP_MSG_DEVICE_SEARCH_TIME_OUT,
+	BP_MSG_DEVICE_CLOSED
+} ant_bp_message_type_e;
+typedef void (*bp_evt_handler_t)(ant_bp_message_type_e state, uint16_t data);
 
 //
 // Event callbacks needed for program flow and control.

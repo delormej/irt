@@ -422,7 +422,7 @@ static void on_ant_evt(ant_evt_t * p_ant_evt) {
                 ant_fec_rx_handle(p_ant_evt);                
                 break;
             
-			case ANT_BP_TX_CHANNEL:
+			case ANT_BP_RX_CHANNEL:
 				ant_bp_rx_handle(p_ant_evt);
 				break;
 		
@@ -652,7 +652,10 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers, uint16_t ant_bp
 #endif // BLE_ENABLED
 
 	// Initialize ANT bike power listening channel.
-	ant_bp_rx_init(mp_ant_ble_evt_handlers->bp_evt_handler, ant_bp_device_id);
+	if (ant_bp_device_id != 0xFFFF) 
+	{
+		ant_bp_rx_init(mp_ant_ble_evt_handlers->bp_evt_handler, ant_bp_device_id);
+	}
 
 	// Initialize other services.
 	services_init();

@@ -192,6 +192,9 @@ typedef struct
 	uint8_t			bike_power_calibration_required : 1;
 	uint8_t			resistance_calibration_required : 1;
 	uint8_t			user_configuration_required : 1;
+
+	// Flag if power meter is connected.
+	bool			power_meter_paired;
 } irt_context_t;
 
 //

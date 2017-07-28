@@ -169,7 +169,8 @@ static void HandleStandardPowerOnlyPage(uint8_t* p_payload)
 	speed_event_fifo_put(&m_power_only_fifo, (uint8_t*)&event);
 
 	// Raise event with instantnew power in watts.
-	m_on_bp_power_data(GetWatts(p_page->instant_power_msb, p_page->instant_power_lsb));
+	m_on_bp_power_data(BP_MSG_POWER_DATA,
+		GetWatts(p_page->instant_power_msb, p_page->instant_power_lsb));
 }
 
 /**@brief Invoked when a event occurs on the ant_bp channel.
@@ -179,25 +180,53 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 {
 	ANT_MESSAGE* p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
 
-	// Switch on page number.
-	switch (p_mesg->ANT_MESSAGE_aucPayload[0])
+	switch (p_mesg->ANT_MESSAGE_ucMesgID)
 	{
-		case ANT_BP_PAGE_STANDARD_POWER_ONLY:
-			HandleStandardPowerOnlyPage(p_mesg->ANT_MESSAGE_aucPayload);
+		case MESG_CHANNEL_ID_ID:
+			// Channel ID message, which means we've connected.
+			// Make a callback here which sets irt_context_t.power_meter_paired = true;
+			m_on_bp_power_data( BP_MSG_DEVICE_CONNECTED, 
+				(p_mesg->ANT_MESSAGE_aucPayload[1] << 8 | 
+					p_mesg->ANT_MESSAGE_aucPayload[0]) );
+			break;
+
+		case MESG_CHANNEL_SEARCH_TIMEOUT_ID:
+			// Timed out looking for a power meter.
+			m_on_bp_power_data(BP_MSG_DEVICE_SEARCH_TIME_OUT, 0); 
+			break;
+
+		case MESG_CLOSE_CHANNEL_ID:
+			// Channel was closed.
+			// Make a callback here which sets irt_context_t.power_meter_paired = false;
+			m_on_bp_power_data(BP_MSG_DEVICE_CLOSED, 0); 
+			break;
+
+		case MESG_BROADCAST_DATA_ID:
+		case MESG_EXT_ACKNOWLEDGED_DATA_ID:
+			// Switch on page number.
+			switch (p_mesg->ANT_MESSAGE_aucPayload[0])
+			{
+				case ANT_BP_PAGE_STANDARD_POWER_ONLY:
+					HandleStandardPowerOnlyPage(p_mesg->ANT_MESSAGE_aucPayload);
+					break;
+
+				default:
+					/*
+					BP_LOG("[BP]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+							p_mesg->ANT_MESSAGE_aucPayload[0],
+							p_mesg->ANT_MESSAGE_aucPayload[1],
+							p_mesg->ANT_MESSAGE_aucPayload[2],
+							p_mesg->ANT_MESSAGE_aucPayload[3],
+							p_mesg->ANT_MESSAGE_aucPayload[4],
+							p_mesg->ANT_MESSAGE_aucPayload[5],
+							p_mesg->ANT_MESSAGE_aucPayload[6],
+							p_mesg->ANT_MESSAGE_aucPayload[7],
+							p_mesg->ANT_MESSAGE_aucPayload); */
+					break;
+			}
 			break;
 
 		default:
-			/*
-			BP_LOG("[BP]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-					p_mesg->ANT_MESSAGE_aucPayload[0],
-					p_mesg->ANT_MESSAGE_aucPayload[1],
-					p_mesg->ANT_MESSAGE_aucPayload[2],
-					p_mesg->ANT_MESSAGE_aucPayload[3],
-					p_mesg->ANT_MESSAGE_aucPayload[4],
-					p_mesg->ANT_MESSAGE_aucPayload[5],
-					p_mesg->ANT_MESSAGE_aucPayload[6],
-					p_mesg->ANT_MESSAGE_aucPayload[7],
-					p_mesg->ANT_MESSAGE_aucPayload); */
 			break;
 	}
 }
@@ -212,22 +241,22 @@ void ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
 	// Assign callback for when resistance message is processed.	
     m_on_bp_power_data = on_bp_power_data;
     
-    err_code = sd_ant_channel_assign(ANT_BP_TX_CHANNEL,
+    err_code = sd_ant_channel_assign(ANT_BP_RX_CHANNEL,
                                      ANT_BP_CHANNEL_TYPE,
                                      ANTPLUS_NETWORK_NUMBER,
                                      ANT_BP_EXT_ASSIGN);
     APP_ERROR_CHECK(err_code);
 
-    err_code = sd_ant_channel_id_set(ANT_BP_TX_CHANNEL,
+    err_code = sd_ant_channel_id_set(ANT_BP_RX_CHANNEL,
                                      device_id,
                                      ANT_BP_DEVICE_TYPE,
                                      ANT_BP_TRANS_TYPE);
     APP_ERROR_CHECK(err_code);
     
-    err_code = sd_ant_channel_radio_freq_set(ANT_BP_TX_CHANNEL, ANTPLUS_RF_FREQ);
+    err_code = sd_ant_channel_radio_freq_set(ANT_BP_RX_CHANNEL, ANTPLUS_RF_FREQ);
     APP_ERROR_CHECK(err_code);
     
-    err_code = sd_ant_channel_period_set(ANT_BP_TX_CHANNEL, ANT_BP_MSG_PERIOD);
+    err_code = sd_ant_channel_period_set(ANT_BP_RX_CHANNEL, ANT_BP_MSG_PERIOD);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -236,7 +265,7 @@ void ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
  */
 void ant_bp_rx_start(void)
 {
-    uint32_t err_code = sd_ant_channel_open(ANT_BP_TX_CHANNEL);
+    uint32_t err_code = sd_ant_channel_open(ANT_BP_RX_CHANNEL);
     APP_ERROR_CHECK(err_code);
 
 	// Initialize fifo for collecting power events to average.

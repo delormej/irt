@@ -156,6 +156,15 @@ typedef struct {
     uint8_t     Settings;           // truncated to 1 byte for now.        
 } FEC_IRTSettingsPage;
 
+// Contains device settings for get/set parameters.
+typedef struct {
+    uint8_t		DataPageNumber;
+    uint8_t     PowerMeterId;
+    uint8_t     PowerAdjustSeconds;
+    uint8_t     PowerAverageSeconds;
+	uint8_t		Reserved[4];		
+} FEC_IRTSettingsPowerAdjustPage;
+
 void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers);
 
 void ant_fec_tx_start(void);

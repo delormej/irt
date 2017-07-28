@@ -20,6 +20,11 @@
  // This is only used if profile doesn't contain a slope/intercept override.
 #define DEFAULT_CRR						30ul										// Default Co-efficient for rolling resistance used when no slope/intercept defined.  Divide by 1000 to get 0.03f.
 
+/**@brief	Determines the right power calculation method (linear vs. bicycling science)
+ * 			and returns estimated power based on speed (no magnet).
+ */
+uint16_t power_magoff(float speed_mps);
+
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *
  */

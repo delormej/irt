@@ -53,8 +53,8 @@
 static app_timer_id_t			m_adjust_timer_id;						  // Timer used to invoke resistance adjustments in erg/sim mode.
 
 static user_profile_t* 			mp_user_profile;
+static irt_context_t*			mp_current_state;
 static irt_resistance_state_t	m_resistance_state;
-
 
 /**@brief Function for adjusting resistance on timer timeout.
  *
@@ -103,9 +103,11 @@ static void resistance_mode_set(resistance_mode_t mode)
 /**@brief	Initializes the resistance module which controls the servo.
  *
  */
-irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, user_profile_t* p_user_profile)
+irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, 
+	user_profile_t* p_user_profile, irt_context_t* p_current_state)
 {
 	mp_user_profile = p_user_profile;
+	mp_current_state = p_current_state;
 
 	memset(&m_resistance_state, 0, sizeof(m_resistance_state));
 
@@ -420,15 +422,23 @@ void resistance_adjust()
 {
 	uint16_t servo_pos = 0;
 	bool use_smoothing = false;
+	float speed_mps = 0.0f;
+	uint16_t magoff_watts = 0;
 
-	// Calculate average speed & power.
-	#warning "[RC] Hardcoded to 6 events (3 seconds) of bike power and speed to average."
-	float speed_mps = speed_average_mps(3);
-	uint16_t average_power = ant_bp_avg_power(3); 
+	speed_mps = speed_average_mps(mp_user_profile->power_adjust_seconds);
+
+	if (mp_current_state->power_meter_paired) // Paired to a power meter..
+	{
+		uint16_t average_power = ant_bp_avg_power(mp_user_profile->power_adjust_seconds); 
+		uint16_t mag_watts = magnet_watts(speed_mps, m_resistance_state.servo_position);
+		magoff_watts = average_power - mag_watts;
+	}
+	else
+	{
+		// Calculate estimated power.
+		magoff_watts = power_magoff(speed_mps);
+	}
 	
-	uint16_t mag_watts = magnet_watts(speed_mps, m_resistance_state.servo_position);
-	uint16_t magoff_watts = average_power - mag_watts;
-
 	if (speed_mps < RESISTANCE_MIN_SPEED_ADJUST)
     {
         m_resistance_state.power_limit = TARGET_SPEED_TOO_LOW;

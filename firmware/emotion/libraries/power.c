@@ -75,6 +75,46 @@ void power_init(user_profile_t* p_profile)
 	mp_profile = p_profile;
 }
 
+/**@brief	Determines the right power calculation method (linear vs. bicycling science)
+ * 			and returns estimated power based on speed (no magnet).
+ */
+uint16_t power_magoff(float speed_mps) 
+{
+	uint16_t watts = 0;
+
+	/* There are currently 2 ways to calculate base resistance as shown below.
+		* The goal is to get to 1, but for legacy reasons we support both until we  
+		* know which one is best.
+		*/
+	if (!isnan(mp_profile->ca_drag) && !isnan(mp_profile->ca_rr))
+	{
+		/*
+			* Bicycling Science Power equation = ((K * v^2) + rr) * v
+			*/
+		watts = ( (mp_profile->ca_drag * pow(speed_mps, 2)) +
+				mp_profile->ca_rr ) * speed_mps ;
+	}
+	/*else if (m_ca_slope != 0xFFFF)
+	{
+		*
+			* Calibrated linear power equation.
+			*
+		p_meas->magoff_power =
+				(p_meas->instant_speed_mps * m_ca_slope - m_ca_intercept);
+	}*/
+	else
+	{
+		/*
+			* Default linear power equation.
+			*/
+		m_rr_force = (GRAVITY * (mp_profile->total_weight_kg / 100.0f) *
+				(DEFAULT_CRR / 1000.0f));		 
+		watts = m_rr_force * speed_mps;
+	}
+
+	return watts;
+}
+
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *
  */
@@ -83,53 +123,27 @@ uint32_t power_calc(irt_context_t* p_meas)
 	uint16_t torque = 0;
 	float mag_watts = 0;
 
-	mag_watts = magnet_watts(p_meas->instant_speed_mps, p_meas->servo_position);
+	if (p_meas->power_meter_paired) 
+	{
+		// Use power meter data if paired. 	
+		mag_watts = magnet_watts(p_meas->instant_speed_mps, p_meas->servo_position);
+		p_meas->magoff_power = p_meas->instant_power - mag_watts;
+	}
+	else 
+	{
+		// Calculate estimated power with no magnet.
+		p_meas->magoff_power = power_magoff(p_meas->instant_speed_mps);
 
-	p_meas->magoff_power = p_meas->instant_power - mag_watts;
+		// Calculate watts added by magnet.
+		mag_watts = magnet_watts(p_meas->instant_speed_mps, p_meas->servo_position);
 
-	//
-	// JDL COMMENTED 7/17/2017... just using power meter for now.
-	// TODO: Need to re-enact this when a power meter is not connected.
-	//
-	// /* There are currently 2 ways to calculate base resistance as shown below.
-	//  * The goal is to get to 1, but for legacy reasons we support both until we  
-	//  * know which one is best.
-	//  */
-	// if (!isnan(mp_profile->ca_drag) && !isnan(mp_profile->ca_rr))
-	// {
-	// 	/*
-	// 	 * Bicycling Science Power equation = ((K * v^2) + rr) * v
-	// 	 */
-	// 	p_meas->magoff_power = ( (mp_profile->ca_drag * pow(p_meas->instant_speed_mps, 2)) +
-	// 			mp_profile->ca_rr ) * p_meas->instant_speed_mps ;
-	// }
-	// /*else if (m_ca_slope != 0xFFFF)
-	// {
-	// 	*
-	// 	 * Calibrated linear power equation.
-	// 	 *
-	// 	p_meas->magoff_power =
-	// 			(p_meas->instant_speed_mps * m_ca_slope - m_ca_intercept);
-	// }*/
-	// else
-	// {
-	// 	/*
-	// 	 * Default linear power equation.
-	// 	 */
-	// 	m_rr_force = (GRAVITY * (mp_profile->total_weight_kg / 100.0f) *
-	// 			(DEFAULT_CRR / 1000.0f));		 
-	// 	p_meas->magoff_power = m_rr_force * p_meas->instant_speed_mps;
-	// }
+		// Calculate power.
+		p_meas->instant_power = p_meas->magoff_power + mag_watts;
 
-	// // Calculate watts added by magnet.
-	// mag_watts = magnet_watts(p_meas->instant_speed_mps, p_meas->servo_position);
+		// PW_LOG("[PW] rr: %.2f, servo: %.2f, watts: %i\r\n", *p_rr_force, servo, p_current->instant_power);
+	}
 
-	// // Calculate power.
-	// p_meas->instant_power = p_meas->magoff_power + mag_watts;
-
-	//PW_LOG("[PW] rr: %.2f, servo: %.2f, watts: %i\r\n", *p_rr_force, servo, p_current->instant_power);
-
-	// Accumulate torque from last measure.
+	// Accumulate torque from last measure.	
 	torque = power_torque_calc(p_meas->instant_power, p_meas->wheel_period);
 	p_meas->accum_torque += torque;
 

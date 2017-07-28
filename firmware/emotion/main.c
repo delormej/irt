@@ -10,8 +10,9 @@
  *		Nordic UART Service (for debugging purposes)
  *
  * The application uses the following ANT services:
+ *		ANT FE-C profile
+ *		ANT Controls profile
  *		ANT Cycling Power RX profile
- *		ANT Cycling Power TX profile
  *		ANT Speed Sensor TX profile
  *
  * @file 		main.c 
@@ -121,11 +122,11 @@ static void send_temperature();
 static void on_enable_dfu_mode();
 static void on_resistance_off();
 static void on_request_calibration();
-static void on_bp_power_data(uint16_t watts);
+static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data);
 
-// Hard coding ANT power meter device id for testing.
-#warning "HARD CODED m_ant_bp_device_id = 52652"
-static uint16_t m_ant_bp_device_id = 52652;
+// // Hard coding ANT power meter device id for testing.
+// #warning "HARD CODED m_ant_bp_device_id = 52652"
+// static uint16_t m_ant_bp_device_id = 52652;
 
 /**@brief Debug logging for main module.
  *
@@ -1205,10 +1206,33 @@ static void on_ant_ctrl_command(ctrl_evt_t evt)
 }
 
 // Called when a relevant bike power message is received. 
-static void on_bp_power_data(uint16_t watts) 
+static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 {
-	m_current_state.instant_power = watts;
-	LOG("Watts: %i\r\n", watts);
+	switch (state)
+	{
+		case BP_MSG_POWER_DATA:
+			m_current_state.instant_power = data;
+			LOG("Watts: %i\r\n", data);
+			break;
+
+		case BP_MSG_DEVICE_CONNECTED:
+			if (mp_user_profile->power_meter_ant_id != data)
+			{
+				// TODO: should we schedule profile update??
+				mp_user_profile->power_meter_ant_id = data;
+			}
+			
+			m_current_state.power_meter_paired = true;
+			break;
+
+		case BP_MSG_DEVICE_SEARCH_TIME_OUT:
+		case BP_MSG_DEVICE_CLOSED:
+			m_current_state.power_meter_paired = false;
+			break;
+
+		default:
+			break;
+	}
 }
 
 // Called when instructed to enable device firmware update mode.
@@ -1736,7 +1760,7 @@ int main(void)
 	config_dcpower();
 
 	// Initializes the Bluetooth and ANT stacks.
-	ble_ant_init(&ant_ble_handlers, m_ant_bp_device_id);
+	ble_ant_init(&ant_ble_handlers, mp_user_profile->power_meter_ant_id);
 
 	// Initialize the user profile.
 	mp_user_profile = user_profile_get();
@@ -1745,7 +1769,8 @@ int main(void)
 	magnet_init(&mp_user_profile->ca_mag_factors);
 
 	// Initialize resistance module and initial values.
-	mp_resistance_state = resistance_init(PIN_SERVO_SIGNAL, mp_user_profile);
+	mp_resistance_state = resistance_init(PIN_SERVO_SIGNAL, mp_user_profile, 
+		&m_current_state);
 
 	// Initialize module to read speed from flywheel.
 	speed_init(PIN_FLYWHEEL, mp_user_profile);
