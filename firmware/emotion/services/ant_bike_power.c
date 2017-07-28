@@ -96,6 +96,7 @@ typedef struct
  */
 static power_event_t m_power_only_buffer[SPEED_EVENT_CACHE_SIZE];
 static event_fifo_t m_power_only_fifo;
+static uint16_t m_ant_power_meter_id = 0; // tracks when a power meter is connected.
 
 /**@brief	Calculates average power in watts between two events.
  *
@@ -156,6 +157,27 @@ static uint16_t GetWatts(uint8_t msb, uint8_t lsb)
 	return  watts;
 }
 
+/**@brief Ask ANT for the channelID.
+ *
+ */
+static uint32_t GetPowerMeterId() 
+{
+	uint8_t channelType, transmissionType;
+	uint32_t err_code = sd_ant_channel_id_get(ANT_BP_RX_CHANNEL, 
+		&m_ant_power_meter_id, &channelType, &transmissionType);
+	
+	APP_ERROR_CHECK(err_code);
+
+	if (m_ant_power_meter_id > 0) {
+		// Channel ID message, which means we've connected.
+		// Make a callback here which sets irt_context_t.power_meter_paired = true;
+		m_on_bp_power_data( BP_MSG_DEVICE_CONNECTED, m_ant_power_meter_id );
+		BP_LOG("[BP] DEVICE CONNECTED!\r\n");
+	}
+
+	return err_code;
+}
+
 static void HandleStandardPowerOnlyPage(uint8_t* p_payload)
 {
 	power_event_t event;
@@ -178,31 +200,30 @@ static void HandleStandardPowerOnlyPage(uint8_t* p_payload)
  */
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 {
+	// If this is the first message, grab the power meter Id.
+	if (m_ant_power_meter_id == 0) 
+	{
+		GetPowerMeterId();
+	}
+	
 	ANT_MESSAGE* p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
 
-	switch (p_mesg->ANT_MESSAGE_ucMesgID)
+	switch (p_ant_evt->event)
 	{
-		case MESG_CHANNEL_ID_ID:
-			// Channel ID message, which means we've connected.
-			// Make a callback here which sets irt_context_t.power_meter_paired = true;
-			m_on_bp_power_data( BP_MSG_DEVICE_CONNECTED, 
-				(p_mesg->ANT_MESSAGE_aucPayload[1] << 8 | 
-					p_mesg->ANT_MESSAGE_aucPayload[0]) );
-			break;
-
-		case MESG_CHANNEL_SEARCH_TIMEOUT_ID:
+		case EVENT_RX_FAIL_GO_TO_SEARCH:
 			// Timed out looking for a power meter.
 			m_on_bp_power_data(BP_MSG_DEVICE_SEARCH_TIME_OUT, 0); 
+			BP_LOG("[BP] SEARCH TIMEOUT!\r\n");
 			break;
 
-		case MESG_CLOSE_CHANNEL_ID:
+		case EVENT_CHANNEL_CLOSED:
 			// Channel was closed.
 			// Make a callback here which sets irt_context_t.power_meter_paired = false;
 			m_on_bp_power_data(BP_MSG_DEVICE_CLOSED, 0); 
+			BP_LOG("[BP] CHANNEL CLOSED!\r\n");
 			break;
 
-		case MESG_BROADCAST_DATA_ID:
-		case MESG_EXT_ACKNOWLEDGED_DATA_ID:
+		case EVENT_RX:
 			// Switch on page number.
 			switch (p_mesg->ANT_MESSAGE_aucPayload[0])
 			{

@@ -300,25 +300,28 @@ void ant_ctrl_device_avail_tx(uint8_t notifications)
 
 void ant_ctrl_rx_handle(ant_evt_t * p_ant_evt)
 {
-	ANT_MESSAGE* p_mesg;
-
-	p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
-
-	AC_LOG("ant_ctrl_rx_handle:%i\r\n", p_mesg->ANT_MESSAGE_aucPayload[0]);
-
-	// Switch on page number.
-	switch (p_mesg->ANT_MESSAGE_aucPayload[0])
+	if (p_ant_evt->event == EVENT_RX) 
 	{
-		case CTRL_CMD_REQ_DATA_PAGE:
-            // Queue a request for a data page.
-            queue_request(p_mesg->ANT_MESSAGE_aucPayload[0]);
-			break;
+		ANT_MESSAGE* p_mesg;
 
-		case CTRL_CMD_PAGE:
-			on_command_page((ant_ctrl_data_page73_t*) p_mesg->ANT_MESSAGE_aucPayload);
-			break;
+		p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
 
-		default:
-			break;
+		AC_LOG("ant_ctrl_rx_handle:%i\r\n", p_mesg->ANT_MESSAGE_aucPayload[0]);
+
+		// Switch on page number.
+		switch (p_mesg->ANT_MESSAGE_aucPayload[0])
+		{
+			case CTRL_CMD_REQ_DATA_PAGE:
+				// Queue a request for a data page.
+				queue_request(p_mesg->ANT_MESSAGE_aucPayload[0]);
+				break;
+
+			case CTRL_CMD_PAGE:
+				on_command_page((ant_ctrl_data_page73_t*) p_mesg->ANT_MESSAGE_aucPayload);
+				break;
+
+			default:
+				break;
+		}
 	}
 }

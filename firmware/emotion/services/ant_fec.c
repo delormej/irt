@@ -952,13 +952,15 @@ void ant_fec_tx_send(irt_context_t * p_power_meas)
  */
 void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
 {
+    ANT_MESSAGE* p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
+
 	// Deal with all messages sent from the FE-C display such as resistance 
 	// control and calibration.
 	// Only interested in BURST events right now for processing resistance control.
-    if (p_ant_evt->evt_buffer[ANT_BUFFER_INDEX_MESG_ID] == MESG_ACKNOWLEDGED_DATA_ID)
+    if (p_ant_evt->event == EVENT_RX)
 	{
 		// TODO: remove these hard coded array position values and create defines.
-		switch (p_ant_evt->evt_buffer[3])  // Switch on the page number.
+		switch (p_mesg->ANT_MESSAGE_aucPayload[0])  // Switch on the page number.
 		{
             case CALIBRATION_REQUEST_PAGE:
                 //
@@ -968,22 +970,23 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
             case TARGET_POWER_PAGE:
             case WIND_RESISTANCE_PAGE:
             case TRACK_RESISTANCE_PAGE:           
-                HandleResistancePages(&p_ant_evt->evt_buffer[3]);
+                HandleResistancePages(p_mesg->ANT_MESSAGE_aucPayload);
                 break;
 
             case USER_CONFIGURATION_PAGE:
-                HandleUserConfigurationPage(&p_ant_evt->evt_buffer[3]);
+                HandleUserConfigurationPage(p_mesg->ANT_MESSAGE_aucPayload);
                 break;
             
 			case ANT_PAGE_REQUEST_DATA:
-				FE_LOG("[FE]:requesting data page: [%.2x]\r\n", p_ant_evt->evt_buffer[9]);
+				FE_LOG("[FE]:requesting data page: [%.2x]\r\n", 
+                    p_mesg->ANT_MESSAGE_aucPayload[6]);
                 
                 // Add this to the request queue.
-                queue_request(p_ant_evt->evt_buffer[9]);
+                queue_request(p_mesg->ANT_MESSAGE_aucPayload[6]);
 				break;           
                 
             case ANT_IRT_PAGE_SETTINGS:
-                HandleIRTSettingsPage(&p_ant_evt->evt_buffer[3]);
+                HandleIRTSettingsPage(p_mesg->ANT_MESSAGE_aucPayload);
                 break; 
 
 			case WF_ANT_RESPONSE_PAGE_ID:
@@ -1005,15 +1008,15 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
             
 			default:
 				FE_LOG("[FE]:unrecognized message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-						p_ant_evt->evt_buffer[0],
-						p_ant_evt->evt_buffer[1],
-						p_ant_evt->evt_buffer[2],
-						p_ant_evt->evt_buffer[3],
-						p_ant_evt->evt_buffer[4],
-						p_ant_evt->evt_buffer[5],
-						p_ant_evt->evt_buffer[6],
-						p_ant_evt->evt_buffer[7],
-						p_ant_evt->evt_buffer[8]);
+						p_mesg->ANT_MESSAGE_aucPayload[0],
+						p_mesg->ANT_MESSAGE_aucPayload[1],
+						p_mesg->ANT_MESSAGE_aucPayload[2],
+						p_mesg->ANT_MESSAGE_aucPayload[3],
+						p_mesg->ANT_MESSAGE_aucPayload[4],
+						p_mesg->ANT_MESSAGE_aucPayload[5],
+						p_mesg->ANT_MESSAGE_aucPayload[6],
+						p_mesg->ANT_MESSAGE_aucPayload[7],
+						p_mesg->ANT_MESSAGE_aucPayload[8]);
 				break;
 		}
 	}  
