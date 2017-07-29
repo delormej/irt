@@ -721,7 +721,6 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
 
     FE_LOG("[FE] IRT Power Adjust received, power meter id: %i, adjust: %i, average: %i \r\n",
         power_meter_id,
-        buffer[1],
         page.PowerAdjustSeconds,
         page.PowerAverageSeconds);
 
@@ -995,6 +994,10 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
             case ANT_IRT_PAGE_SETTINGS:
                 HandleIRTSettingsPage(p_mesg->ANT_MESSAGE_aucPayload);
                 break; 
+
+            case ANT_IRT_PAGE_POWER_ADJUST:
+                HandleIRTPowerAdjustPage(p_mesg->ANT_MESSAGE_aucPayload);
+                break;
 
 			case WF_ANT_RESPONSE_PAGE_ID:
                 // Determine the "command".
