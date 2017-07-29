@@ -427,6 +427,7 @@ static uint32_t IRTSettingsPowerAdjustSend() {
         .PowerMeterIdMSB = HIGH_BYTE(mp_user_profile->power_meter_ant_id),
         .PowerAdjustSeconds = mp_user_profile->power_adjust_seconds,
         .PowerAverageSeconds = mp_user_profile->power_average_seconds,
+        .PowerMeterChannelState = 0xFF,
         .Reserved[0] = 0xFF,
         .Reserved[1] = 0xFF
         // .PowerMeterChannelState = 
