@@ -705,10 +705,10 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
         dirty = true;
     }
 
-    if ( mp_user_profile->power_adjust_seconds != page.PowerAverageSeconds && 
+    if ( mp_user_profile->power_adjust_seconds != page.PowerAdjustSeconds && 
         mp_user_profile->power_adjust_seconds != 0xFF ) 
     {
-        mp_user_profile->power_adjust_seconds = page.PowerAverageSeconds;
+        mp_user_profile->power_adjust_seconds = page.PowerAdjustSeconds;
         dirty = true;
     }
 
@@ -718,7 +718,13 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
         mp_user_profile->power_average_seconds = page.PowerAverageSeconds;
         dirty = true;
     }
-    
+
+    FE_LOG("[FE] IRT Power Adjust received, power meter id: %i, adjust: %i, average: %i \r\n",
+        power_meter_id,
+        buffer[1],
+        page.PowerAdjustSeconds,
+        page.PowerAverageSeconds);
+
     if (dirty)
     {
         user_profile_store();
@@ -992,7 +998,7 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
 
 			case WF_ANT_RESPONSE_PAGE_ID:
                 // Determine the "command".
-                switch (p_ant_evt->evt_buffer[ANT_BP_COMMAND_OFFSET])
+                switch (p_mesg->ANT_MESSAGE_aucPayload[1])  // 2nd byte in payload is the command.
                 {
                     case ANT_BP_ENABLE_DFU_COMMAND:	// Invoke device firmware update mode.
                         mp_evt_handlers->on_enable_dfu_mode();
