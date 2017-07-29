@@ -47,6 +47,14 @@
 
 #define DEFAULT_BIKE_WEIGHT_KG		1000ul 										// Default weight 10kg as per FE-C spec.
 
+// Battery Status page.
+#define ANT_BAT_ID_INDEX		 	 2
+#define ANT_BAT_TIME_LSB_INDEX	 	 3
+#define ANT_BAT_TIME_INDEX	 	 	 4
+#define ANT_BAT_TIME_MSB_INDEX	 	 5
+#define ANT_BAT_FRAC_VOLT_INDEX	 	 6
+#define ANT_BAT_DESC_INDEX	 	 	 7
+
 /**@ brief	Macro to set the value of FE State bit field (nibble) from irt_context_t. 	
 				fe_state 			// bits 0-2 
 				lap_toggle 			// bit 3 
@@ -435,6 +443,25 @@ static uint32_t IRTSettingsPowerAdjustSend() {
     
     return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		(uint8_t*)&page);
+}
+
+/**@brief   Sends current battery status (every 61 messages by spec.)
+ */
+static uint32_t BatteryStatusSend(irt_battery_status_t status)
+{
+	uint8_t tx_buffer[8];
+    tx_buffer[PAGE_NUMBER_INDEX]		= ANT_PAGE_BATTERY_STATUS;
+	tx_buffer[1]						= 0xFF;
+	tx_buffer[ANT_BAT_ID_INDEX]			= 0b00010001;	// bits 0:3 = Number of batteries, 4:7 = Identifier.
+	tx_buffer[ANT_BAT_TIME_LSB_INDEX]	= (uint8_t)status.operating_time;
+	tx_buffer[ANT_BAT_TIME_INDEX]	 	= (status.operating_time & 0x0000FF00) >> 8;
+	tx_buffer[ANT_BAT_TIME_MSB_INDEX]	= (status.operating_time & 0x00FF0000) >> 16;
+	tx_buffer[ANT_BAT_FRAC_VOLT_INDEX]	= status.fractional_volt;
+	tx_buffer[ANT_BAT_DESC_INDEX]		= status.coarse_volt |
+											status.status << 4 |
+											status.resolution << 7;
+
+	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 }
 
 /**@brief	Processes pages responsible for setting resistance modes and 
@@ -920,6 +947,11 @@ void ant_fec_tx_send(irt_context_t * p_power_meas)
     {
         // Send this page twice consecutively.
         ant_common_page_transmit(ANT_FEC_TX_CHANNEL, ant_manufacturer_page);
+    }
+    else if (count % 61 == 0) 
+    {
+        // Send battery status every 61 messages.
+        BatteryStatusSend(p_power_meas->battery_status);
     }
     else if (  (~(0b01 ^ count) & 3) == 3  )
     {
