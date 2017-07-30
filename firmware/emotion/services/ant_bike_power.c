@@ -195,6 +195,14 @@ static void HandleStandardPowerOnlyPage(uint8_t* p_payload)
 		GetWatts(p_page->instant_power_msb, p_page->instant_power_lsb));
 }
 
+/**@brief Returns the connected power meter ID or 0 if not connected.
+ *
+ */
+uint16_t ant_bp_power_meter_id_get()
+{
+	return m_ant_power_meter_id;
+}
+
 /**@brief Invoked when a event occurs on the ant_bp channel.
  *
  */
@@ -252,7 +260,9 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 	}
 }
 
-// Unassign if the channel is open.
+/**@brief	Close & unassign if the channel is open or in use.
+ *
+ */
 void ant_bp_unassign()
 {
 	//STATUS_UNASSIGNED_CHANNEL

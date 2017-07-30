@@ -429,17 +429,23 @@ static uint32_t IRTSettingsPage_Send() {
  */
 static uint32_t IRTSettingsPowerAdjustSend() {
 
+    uint16_t connected_power_meter_id = ant_bp_power_meter_id_get();
+    // NOTE this could be different than: mp_user_profile->power_meter_ant_id
+
     FEC_IRTSettingsPowerAdjustPage page = {
         .DataPageNumber = ANT_IRT_PAGE_POWER_ADJUST,
-        .PowerMeterIdLSB = LOW_BYTE(mp_user_profile->power_meter_ant_id),
-        .PowerMeterIdMSB = HIGH_BYTE(mp_user_profile->power_meter_ant_id),
+        .PowerMeterIdLSB = LOW_BYTE(connected_power_meter_id),
+        .PowerMeterIdMSB = HIGH_BYTE(connected_power_meter_id),
         .PowerAdjustSeconds = mp_user_profile->power_adjust_seconds,
         .PowerAverageSeconds = mp_user_profile->power_average_seconds,
-        .PowerMeterChannelState = 0xFF,
+        .PowerMeterChannelState = (connected_power_meter_id > 0),   // 1 if connected, 0 if not
         .Reserved[0] = 0xFF,
         .Reserved[1] = 0xFF
         // .PowerMeterChannelState = 
     };
+
+    if (connected_power_meter_id > 0)
+
     
     return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		(uint8_t*)&page);
