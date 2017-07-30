@@ -165,8 +165,10 @@ static uint32_t GetPowerMeterId()
 	uint8_t channelType, transmissionType;
 	uint32_t err_code = sd_ant_channel_id_get(ANT_BP_RX_CHANNEL, 
 		&m_ant_power_meter_id, &channelType, &transmissionType);
-	
+
 	APP_ERROR_CHECK(err_code);
+	
+	BP_LOG("[BP] Got Power Meter ANT ID: %i!\r\n", m_ant_power_meter_id);
 
 	if (m_ant_power_meter_id > 0) {
 		// Channel ID message, which means we've connected.
@@ -208,12 +210,6 @@ uint16_t ant_bp_power_meter_id_get()
  */
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 {
-	// If this is the first message, grab the power meter Id.
-	if (m_ant_power_meter_id == 0) 
-	{
-		GetPowerMeterId();
-	}
-	
 	ANT_MESSAGE* p_mesg = (ANT_MESSAGE*)p_ant_evt->evt_buffer;
 
 	switch (p_ant_evt->event)
@@ -227,11 +223,18 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 		case EVENT_CHANNEL_CLOSED:
 			// Channel was closed.
 			// Make a callback here which sets irt_context_t.power_meter_paired = false;
+			m_ant_power_meter_id = 0;
 			m_on_bp_power_data(BP_MSG_DEVICE_CLOSED, 0); 
 			BP_LOG("[BP] CHANNEL CLOSED!\r\n");
 			break;
 
 		case EVENT_RX:
+			// If this is the first message, grab the power meter Id.
+			if (m_ant_power_meter_id == 0) 
+			{
+				GetPowerMeterId();
+			}
+
 			// Switch on page number.
 			switch (p_mesg->ANT_MESSAGE_aucPayload[0])
 			{
