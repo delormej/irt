@@ -91,7 +91,8 @@ typedef enum
 	BP_MSG_POWER_DATA = 0,
 	BP_MSG_DEVICE_CONNECTED,
 	BP_MSG_DEVICE_SEARCH_TIME_OUT,
-	BP_MSG_DEVICE_CLOSED
+	BP_MSG_DEVICE_CLOSED,
+	FEC_MSG_NEW_DEVICE_ID
 } ant_bp_message_type_e;
 typedef void (*bp_evt_handler_t)(ant_bp_message_type_e state, uint16_t data);
 
@@ -131,7 +132,7 @@ typedef struct ant_request_data_page_s
 } ant_request_data_page_t;
 
 // Public methods.
-void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers, uint16_t ant_bp_device_id);
+void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers);
 void ble_ant_start(void);
 void ble_advertising_start(void);
 uint8_t encode_resistance_level(irt_context_t * p_power_meas);

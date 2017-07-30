@@ -90,7 +90,7 @@ debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 ############################################
 SW_REVISION_MAJ := 1
 SW_REVISION_MIN := 3
-SW_REVISION_BLD := 39
+SW_REVISION_BLD := 44
 
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)

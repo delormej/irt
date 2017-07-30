@@ -124,10 +124,6 @@ static void on_resistance_off();
 static void on_request_calibration();
 static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data);
 
-// // Hard coding ANT power meter device id for testing.
-// #warning "HARD CODED m_ant_bp_device_id = 52652"
-// static uint16_t m_ant_bp_device_id = 52652;
-
 /**@brief Debug logging for main module.
  *
  */
@@ -674,6 +670,20 @@ static void servo_pos_to_response(ant_request_data_page_t* p_request, uint8_t* p
 			p_response[roffset++] = LOW_BYTE(mp_user_profile->servo_positions.positions[i]);
 			p_response[roffset++] = HIGH_BYTE(mp_user_profile->servo_positions.positions[i]);
 		}
+	}
+}
+
+/**@brief	Initialize external bike power sensor listener.
+ *
+ */
+static void bike_power_init(uint16_t power_meter_id)
+{
+	// Initialize ANT bike power listening channel.
+	if (power_meter_id != 0xFFFF) 
+	{
+		// Open the ANT channel for receiving power.
+		ant_bp_rx_init(&on_bp_power_data, power_meter_id);
+		ant_bp_rx_start();
 	}
 }
 
@@ -1235,6 +1245,12 @@ static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 			m_current_state.power_meter_paired = false;
 			break;
 
+		case FEC_MSG_NEW_DEVICE_ID:
+			// New device ID was passed, need to reset the channel.
+			m_current_state.power_meter_paired = false;
+			bike_power_init(data);
+			break;
+
 		default:
 			break;
 	}
@@ -1766,7 +1782,7 @@ int main(void)
 	config_dcpower();
 
 	// Initializes the Bluetooth and ANT stacks.
-	ble_ant_init(&ant_ble_handlers, mp_user_profile->power_meter_ant_id);
+	ble_ant_init(&ant_ble_handlers);
 
 	// Initialize the user profile.
 	mp_user_profile = user_profile_get();
@@ -1789,6 +1805,9 @@ int main(void)
 
 	// Start the main loop for reporting ble services.
 	application_timers_start();
+
+	// Initialize and listen for bike power, if possible.
+	bike_power_init(mp_user_profile->power_meter_ant_id);
 
 	// Initiate first battery read.
 	battery_read_start();

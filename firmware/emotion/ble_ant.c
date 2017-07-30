@@ -617,7 +617,7 @@ uint8_t encode_resistance_level(irt_context_t * p_power_meas)
 	return target_msb;
 }
 
-void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers, uint16_t ant_bp_device_id)
+void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers)
 {
 	// Event pointers.
 	mp_ant_ble_evt_handlers = ant_ble_evt_handlers;
@@ -646,12 +646,6 @@ void ble_ant_init(ant_ble_evt_handlers_t * ant_ble_evt_handlers, uint16_t ant_bp
 	// Initialize Bluetooth stack parameters
 	gap_params_init();
 #endif // BLE_ENABLED
-
-	// Initialize ANT bike power listening channel.
-	if (ant_bp_device_id != 0xFFFF) 
-	{
-		ant_bp_rx_init(mp_ant_ble_evt_handlers->bp_evt_handler, ant_bp_device_id);
-	}
 
 	// Initialize other services.
 	services_init();
@@ -697,9 +691,6 @@ void ble_ant_start() {
 	// Assign network address.
     err_code = sd_ant_network_address_set(ANTPLUS_NETWORK_NUMBER, (uint8_t *)m_ant_network_key);
     APP_ERROR_CHECK(err_code);
-
-	// Open the ANT channel for receiving power.
-	ant_bp_rx_start();
 	
 	// Open the ANT channel for transmitting FE-C.
 	ant_fec_tx_start();

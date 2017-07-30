@@ -729,6 +729,8 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
         mp_user_profile->power_meter_ant_id != 0xFFFF ) 
     {
         mp_user_profile->power_meter_ant_id = power_meter_id;
+        // Raise event that the power meter id was changed.
+        mp_evt_handlers->bp_evt_handler(FEC_MSG_NEW_DEVICE_ID, power_meter_id);
         dirty = true;
     }
 

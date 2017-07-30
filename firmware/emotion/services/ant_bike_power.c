@@ -252,6 +252,42 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 	}
 }
 
+// Unassign if the channel is open.
+void ant_bp_unassign()
+{
+	//STATUS_UNASSIGNED_CHANNEL
+	// SVCALL(SVC_ANT_CHANNEL_STATUS_GET, uint32_t, sd_ant_channel_status_get (uint8_t ucChannel, uint8_t *pucStatus));
+	uint8_t status;
+	uint32_t err;
+	
+	// Reset power meter id state.
+	m_ant_power_meter_id = 0;
+
+	err = sd_ant_channel_status_get(ANT_BP_RX_CHANNEL, &status);
+	APP_ERROR_CHECK(err);
+
+	switch (status)
+	{
+		case STATUS_SEARCHING_CHANNEL:
+		case STATUS_TRACKING_CHANNEL:
+			BP_LOG("[BP] Closing previously opened bp channel.\r\n");
+			err = sd_ant_channel_close(ANT_BP_RX_CHANNEL);
+			APP_ERROR_CHECK(err);
+			// Recursively call this function to further unassign.
+			ant_bp_unassign();
+			break;
+			
+		case STATUS_ASSIGNED_CHANNEL:
+			BP_LOG("[BP] Unassigning previously used bp channel.\r\n");
+			err = sd_ant_channel_unassign(ANT_BP_RX_CHANNEL);
+			APP_ERROR_CHECK(err);
+			break;
+
+		default:
+			break;
+	}
+}
+
 /**@brief Initialize the module with callback and power meter device id to search for.
  *
  */
@@ -262,6 +298,10 @@ void ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
 	// Assign callback for when resistance message is processed.	
     m_on_bp_power_data = on_bp_power_data;
     
+	// Because this function can be called multiple times with new power meter connections,
+	// unassign any previous use.
+	ant_bp_unassign();
+
     err_code = sd_ant_channel_assign(ANT_BP_RX_CHANNEL,
                                      ANT_BP_CHANNEL_TYPE,
                                      ANTPLUS_NETWORK_NUMBER,
