@@ -425,11 +425,11 @@ void resistance_adjust()
 	float speed_mps = 0.0f;
 	uint16_t magoff_watts = 0;
 
-	speed_mps = speed_average_mps(mp_user_profile->power_adjust_seconds);
+	speed_mps = speed_average_mps(mp_user_profile->power_average_seconds);
 
 	if (mp_current_state->power_meter_paired) // Paired to a power meter..
 	{
-		uint16_t average_power = ant_bp_avg_power(mp_user_profile->power_adjust_seconds); 
+		uint16_t average_power = ant_bp_avg_power(mp_user_profile->power_average_seconds); 
 		uint16_t mag_watts = magnet_watts(speed_mps, m_resistance_state.servo_position);
 		magoff_watts = average_power - mag_watts;
 	}

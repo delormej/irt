@@ -366,8 +366,8 @@ uint16_t ant_bp_avg_power(uint8_t seconds)
 	average_power = CalcAveragePower(*p_oldest, *p_current);
 
 	BP_LOG("[BP] %i:%i, %i:%i == Average Power: %i (events:%i)\r\n", 
-		p_oldest->event_count, p_oldest->accum_power,
-		p_current->event_count, p_current->accum_power, 
+		p_oldest->event_count, p_current->event_count,
+		p_oldest->accum_power, p_current->accum_power, 
 		average_power, events);
 
 	return average_power;	
