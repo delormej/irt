@@ -111,7 +111,7 @@ static float CalcAveragePower(power_event_t first, power_event_t last)
 	// Deal with rollover.
 	if (first.event_count > last.event_count)
 	{
-		event_count = (last.event_count + 256) - first.event_count;
+		event_count = (0xFFFF ^ last.event_count) + first.event_count;
 	}
 	else
 	{
@@ -132,7 +132,7 @@ static float CalcAveragePower(power_event_t first, power_event_t last)
 	if (last.accum_power < first.accum_power)
 	{
 		// Handle power rollover.
-		accum_power = (first.accum_power ^ 0xFFFF) + last.accum_power;
+		accum_power = (0xFFFF ^ first.accum_power) + last.accum_power;
 	}
 	else
 	{

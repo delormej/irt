@@ -104,7 +104,7 @@ static void debounce_timeout_handler(uint8_t pin_no, uint8_t button_action)
 		if (ticks < last_ticks)
 		{
 			// handle rollover
-			delta = (last_ticks ^ 0xFFFFFFFF) + ticks;
+			delta = (0xFFFFFFFF ^ last_ticks) + ticks;
 		}
 		else
 		{

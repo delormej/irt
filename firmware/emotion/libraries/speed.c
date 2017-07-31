@@ -142,7 +142,7 @@ static float speed_calc_mps(speed_event_t first, speed_event_t last)
 	if (last.accum_flywheel_ticks < first.accum_flywheel_ticks)
 	{
 		// Handle ticks rollover.
-		flywheel_ticks = (first.accum_flywheel_ticks ^ 0xFFFF) +
+		flywheel_ticks = (0xFFFF ^ first.accum_flywheel_ticks) +
 				last.accum_flywheel_ticks;
 
 		SP_LOG("[SP] speed_calc had a accum tick rollover.\r\n");
@@ -166,7 +166,8 @@ static float speed_calc_mps(speed_event_t first, speed_event_t last)
 	if (last.event_time_2048 < first.event_time_2048)
 	{
 		// Handle time rollover.
-		event_period = (first.event_time_2048 ^ UINT32_MAX) + last.event_time_2048;
+		event_period = (UINT32_MAX ^ first.event_time_2048) +
+			last.event_time_2048;
 	}
 	else
 	{

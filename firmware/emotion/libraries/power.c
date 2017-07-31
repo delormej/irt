@@ -112,7 +112,7 @@ float power_magoff(float speed_mps)
 		watts = m_rr_force * speed_mps;
 	}
 
-	PW_LOG("[PW] power_magoff: %.2f\r\n", watts);
+	//PW_LOG("[PW] power_magoff: %.2f\r\n", watts);
 	return watts;
 }
 
