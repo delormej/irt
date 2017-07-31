@@ -17,6 +17,7 @@
 #include "irt_common.h"
 #include "user_profile.h"
 #include "resistance.h"
+#include "ant_bike_power.h"
 #include "app_fifo.h"
 #include "wahoo.h" // need a couple of defines from here.
 #include "debug.h"
@@ -68,8 +69,8 @@
 		virtual_speed_flag   					// bit 3
  */
 #define CAPABILITIES_CONTEXT(context) \
-		(HR_DATA_SOURCE | \	
-		(DISTANCE_TRAVELED_ENABLED << 2) | \	
+		(HR_DATA_SOURCE | \
+		(DISTANCE_TRAVELED_ENABLED << 2) | \
 		(context->virtual_speed_flag << 3))   	
 
 //

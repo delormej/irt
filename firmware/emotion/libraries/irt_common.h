@@ -160,7 +160,6 @@ typedef struct
 	int16_t		instant_power;         										// Note this is a SIGNED int16
 	float		instant_speed_mps;
 
-	int16_t		magoff_power;												// Magoff portion of the power equation.
 	uint16_t	accum_torque;												// Unit is in newton meters with a resolution of 1/32
 	uint32_t	accum_wheel_revs;											// BLE uses 32bit value, ANT uses 8 bit.
 	uint16_t	accum_wheel_period;											// Increments of 1/2048s rolls over at 32 seconds.

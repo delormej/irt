@@ -23,7 +23,7 @@
 /**@brief	Determines the right power calculation method (linear vs. bicycling science)
  * 			and returns estimated power based on speed (no magnet).
  */
-uint16_t power_magoff(float speed_mps);
+float power_magoff(float speed_mps);
 
 /**@brief	Calculates and records current power measurement relative to last measurement.
  *

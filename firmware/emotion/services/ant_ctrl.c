@@ -271,7 +271,9 @@ void ant_ctrl_device_avail_tx(uint8_t notifications)
     // Check to see if we have any pending data page requests.
     // If so that message is sent, so return for this cycle.
     if (dequeue_request())
+	{
         return;
+	}
 
 	event_count++;	// Increment event count.
 

@@ -504,9 +504,12 @@ static void ant_4hz_timeout_handler(void * p_context)
 			// Reload the WDT since there was motion, preventing the device from going to sleep.
 			WDT_RELOAD();
 
-			// Calculate power.
-			err_code = power_calc(&m_current_state);
-			APP_ERROR_CHECK(err_code);
+			// Calculate estimated power if no power meter paired.
+			if (!m_current_state.power_meter_paired) 
+			{
+				err_code = power_calc(&m_current_state);
+				APP_ERROR_CHECK(err_code);
+			}
 		}
 		else
 		{

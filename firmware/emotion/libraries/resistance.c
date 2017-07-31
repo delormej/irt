@@ -20,6 +20,7 @@
 #include "nrf_pwm.h"
 #include "speed.h"
 #include "ant_bike_power.h"
+#include "power.h"
 #include <math.h>
 #include "debug.h"
 
@@ -423,19 +424,21 @@ void resistance_adjust()
 	uint16_t servo_pos = 0;
 	bool use_smoothing = false;
 	float speed_mps = 0.0f;
-	uint16_t magoff_watts = 0;
+	float magoff_watts = 0.0f;
 
 	speed_mps = speed_average_mps(mp_user_profile->power_average_seconds);
 
 	if (mp_current_state->power_meter_paired) // Paired to a power meter..
 	{
-		uint16_t average_power = ant_bp_avg_power(mp_user_profile->power_average_seconds); 
-		uint16_t mag_watts = magnet_watts(speed_mps, m_resistance_state.servo_position);
+		float average_power = ant_bp_avg_power(mp_user_profile->power_average_seconds); 
+		float mag_watts = magnet_watts(speed_mps, m_resistance_state.servo_position);
+		
+		// Take actual power, remove estimated watts from magnet.
 		magoff_watts = average_power - mag_watts;
 	}
 	else
 	{
-		// Calculate estimated power.
+		// Calculate estimated power without the magnet force.
 		magoff_watts = power_magoff(speed_mps);
 	}
 	
@@ -469,8 +472,11 @@ void resistance_adjust()
 			break;
 	}
 
-	RC_LOG("[RC] resistance_adjust: old_servo_pos: %i, new_servo_pos: %i.\r\n", 
-		m_resistance_state.servo_position, servo_pos);
+	if (m_resistance_state.servo_position != servo_pos) 
+	{
+		RC_LOG("[RC] resistance_adjust: old_servo_pos: %i, new_servo_pos: %i.\r\n", 
+			m_resistance_state.servo_position, servo_pos);
+	}
 
 	// Move the servo, with smoothing only if in sim mode.
 	resistance_position_set(servo_pos, use_smoothing);

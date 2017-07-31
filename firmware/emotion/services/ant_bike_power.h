@@ -21,7 +21,7 @@
 void ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id);
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt);
 void ant_bp_rx_start(void);
-uint16_t ant_bp_avg_power(uint8_t seconds); // returns average power.
+float ant_bp_avg_power(uint8_t seconds); // returns average power.
 uint16_t ant_bp_power_meter_id_get(); // returns connected power meter Id or 0 if not connected.
 
 #endif	// ANT_BIKE_POWER_H__

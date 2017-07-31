@@ -101,12 +101,12 @@ static uint16_t m_ant_power_meter_id = 0; // tracks when a power meter is connec
 /**@brief	Calculates average power in watts between two events.
  *
  */
-static uint16_t CalcAveragePower(power_event_t first, power_event_t last)
+static float CalcAveragePower(power_event_t first, power_event_t last)
 {
 	// Deltas between first and last events.
-	uint16_t event_count;
-	uint16_t accum_power;
-	uint16_t average_power;
+	uint16_t event_count = 0;
+	uint16_t accum_power = 0;
+	float average_power = 0.0f;
 
 	// Deal with rollover.
 	if (first.event_count > last.event_count)
@@ -141,7 +141,7 @@ static uint16_t CalcAveragePower(power_event_t first, power_event_t last)
 
 	// Calculate average power.
 	// distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
-	average_power = accum_power / event_count;
+	average_power = (float)accum_power / (float)event_count;
 
 	return average_power;
 }
@@ -354,15 +354,16 @@ void ant_bp_rx_start(void)
 /**@brief Calculates average power for the period in seconds.
  *
  */
-uint16_t ant_bp_avg_power(uint8_t seconds)
+float ant_bp_avg_power(uint8_t seconds)
 {
-	uint16_t average_power = 0;
+	float average_power = 0.0f;
 	uint8_t events = seconds * 2; // 2 events per second, oldest event is seconds * 2.
 
 	power_event_t* p_oldest = 
 		(power_event_t*)speed_event_fifo_oldest(&m_power_only_fifo, events);
 	power_event_t* p_current = 
 		(power_event_t*)speed_event_fifo_get(&m_power_only_fifo);
+	
 	average_power = CalcAveragePower(*p_oldest, *p_current);
 
 	BP_LOG("[BP] %i:%i, %i:%i == Average Power: %i (events:%i)\r\n", 
