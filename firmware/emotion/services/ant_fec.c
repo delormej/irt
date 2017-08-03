@@ -736,13 +736,17 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
 
     uint16_t power_meter_id = page.PowerMeterIdMSB << 8 | page.PowerMeterIdLSB;
 
-    if (  mp_user_profile->power_meter_ant_id != power_meter_id && 
-        mp_user_profile->power_meter_ant_id != 0xFFFF ) 
+    if (  mp_user_profile->power_meter_ant_id != power_meter_id ) 
     {
         mp_user_profile->power_meter_ant_id = power_meter_id;
         // Raise event that the power meter id was changed.
         mp_evt_handlers->bp_evt_handler(FEC_MSG_NEW_DEVICE_ID, power_meter_id);
-        dirty = true;
+
+        // If invalid sent, don't store - just indicate no power meter connected..
+        if (power_meter_id == 0xFFFF)
+        {
+            dirty = true;
+        }
     }
 
     if ( mp_user_profile->power_adjust_seconds != page.PowerAdjustSeconds && 
