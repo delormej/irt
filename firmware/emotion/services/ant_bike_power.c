@@ -111,7 +111,8 @@ static float CalcAveragePower(power_event_t first, power_event_t last)
 	// Deal with rollover.
 	if (first.event_count > last.event_count)
 	{
-		event_count = (0xFFFF ^ last.event_count) + first.event_count;
+		// Add 1 because there is an event at count = 0.
+		event_count = 1 + (0xFF ^ first.event_count) + last.event_count;
 	}
 	else
 	{
@@ -129,7 +130,7 @@ static float CalcAveragePower(power_event_t first, power_event_t last)
 	//
 	// Calculate delta in accum power between events.
 	//
-	if (last.accum_power < first.accum_power)
+	if (first.accum_power > last.accum_power)
 	{
 		// Handle power rollover.
 		accum_power = (0xFFFF ^ first.accum_power) + last.accum_power;
@@ -366,7 +367,7 @@ float ant_bp_avg_power(uint8_t seconds)
 	
 	average_power = CalcAveragePower(*p_oldest, *p_current);
 
-	BP_LOG("[BP] %i:%i, %i:%i == Average Power: %i (events:%i)\r\n", 
+	BP_LOG("[BP] %i:%i, %i:%i == Average Power: %.2f (events:%i)\r\n", 
 		p_oldest->event_count, p_current->event_count,
 		p_oldest->accum_power, p_current->accum_power, 
 		average_power, events);

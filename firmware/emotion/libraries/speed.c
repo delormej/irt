@@ -139,7 +139,7 @@ static float speed_calc_mps(speed_event_t first, speed_event_t last)
 	//
 	// Calculate ticks in the event period.
 	//
-	if (last.accum_flywheel_ticks < first.accum_flywheel_ticks)
+	if (first.accum_flywheel_ticks > last.accum_flywheel_ticks)
 	{
 		// Handle ticks rollover.
 		flywheel_ticks = (0xFFFF ^ first.accum_flywheel_ticks) +
@@ -163,7 +163,7 @@ static float speed_calc_mps(speed_event_t first, speed_event_t last)
 	//
 	// Calculate delta in time between events.
 	//
-	if (last.event_time_2048 < first.event_time_2048)
+	if (first.event_time_2048 > last.event_time_2048)
 	{
 		// Handle time rollover.
 		event_period = (UINT32_MAX ^ first.event_time_2048) +
