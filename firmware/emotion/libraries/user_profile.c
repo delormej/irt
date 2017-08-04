@@ -185,9 +185,11 @@ static uint32_t user_profile_init()
             m_user_profile.ca_mag_factors.high_factors[3] = -998.115074474f;
         }
 
+        // By default don't try to connect to a power meter.
         /*if (m_user_profile.power_meter_ant_id == 0xFFFF) {
             m_user_profile.power_meter_ant_id = 0;
         }*/
+
         if (m_user_profile.power_adjust_seconds == 0xFF)
         {
             // In erg/sim mode, attempt to adjust power every n seconds. 
