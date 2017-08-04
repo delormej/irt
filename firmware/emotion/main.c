@@ -681,6 +681,9 @@ static void servo_pos_to_response(ant_request_data_page_t* p_request, uint8_t* p
  */
 static void bike_power_init(uint16_t power_meter_id)
 {
+	m_current_state.power_meter_paired = false;
+	led_set(LED_POWER_METER_SEARCH);
+
 	// Initialize ANT bike power listening channel.
 	if (power_meter_id != 0xFFFF) 
 	{
@@ -1240,17 +1243,23 @@ static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 			}
 			
 			m_current_state.power_meter_paired = true;
+			led_set(LED_POWER_METER_FOUND);
 			break;
 
 		case BP_MSG_DEVICE_SEARCH_TIME_OUT:
-		case BP_MSG_DEVICE_CLOSED:
-			LOG("[MAIN] Power meter disconnected or search timed out.\r\n");	
 			m_current_state.power_meter_paired = false;
+			led_set(LED_POWER_METER_SEARCH_TIMEOUT);
+			LOG("[MAIN] Power meter search timed out.\r\n");	
+			break;
+
+		case BP_MSG_DEVICE_CLOSED:
+			LOG("[MAIN] Power meter channel closed.\r\n");	
+			m_current_state.power_meter_paired = false;
+			led_set(LED_POWER_ON);	// just reset back to normal LED sequence.
 			break;
 
 		case FEC_MSG_NEW_DEVICE_ID:
 			// New device ID was passed, need to reset the channel.
-			m_current_state.power_meter_paired = false;
 			bike_power_init(data);
 			break;
 

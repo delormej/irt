@@ -189,6 +189,7 @@ void led_set(led_state_e state)
 
 		case LED_POWER_ON:
 		case LED_NOT_CHARGING:
+		case LED_POWER_METER_FOUND:
 			pattern_set(LED_FRONT_GREEN, SOLID, true);
 			break;
 
@@ -271,6 +272,14 @@ void led_set(led_state_e state)
 				default:
 					break;
 			}
+			break;
+
+		case LED_POWER_METER_SEARCH:
+			pattern_set(LED_FRONT_GREEN, FAST_BLINK_2, true);
+			break;
+
+		case LED_POWER_METER_SEARCH_TIMEOUT:
+			pattern_set(LED_FRONT_RED, FAST_BLINK_2, false);
 			break;
 
 		case LED_POWERING_DOWN:
