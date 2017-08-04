@@ -215,6 +215,7 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 
 	switch (p_ant_evt->event)
 	{
+		case EVENT_RX_SEARCH_TIMEOUT:
 		case EVENT_RX_FAIL_GO_TO_SEARCH:
 			// Timed out looking for a power meter.
 			m_on_bp_power_data(BP_MSG_DEVICE_SEARCH_TIME_OUT, 0); 
