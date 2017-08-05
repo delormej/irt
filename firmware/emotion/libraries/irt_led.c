@@ -86,7 +86,7 @@ static void pattern_set(led_e led, blink_pattern_e pattern, bool repeated)
 {
 	uint8_t led_pair = (led & 0x1) ? led-1: led+1;		// LEDs are in pairs, get it's pair
 	active_pattern[led].pattern = pattern;				// Set the active patter for the specified led
-	active_pattern[led_pair].pattern ^= (pattern & active_pattern[led_pair].pattern); 		// XOR of matching bits.
+	active_pattern[led_pair].pattern = 0; // ^= (pattern & active_pattern[led_pair].pattern); 		// XOR of matching bits.
 
 	/*LED_LOG("[LED] setting: %i, pair: %i, pattern: %i, pair: %i\r\n",
 			led, led_pair, active_pattern[led].pattern, active_pattern[led_pair].pattern);*/
@@ -128,6 +128,7 @@ static void blink_handler(void * p_context)
 	// if the end of a non-repeating pattern, restore repeated pattern
 	if (PATTERN_END(m_position))
 	{
+		// For every pin
 		for (uint8_t i = 0; i < PATTERN_LEN; i++)
 		{
 			// is this the repeating pattern for this pin?
@@ -189,7 +190,6 @@ void led_set(led_state_e state)
 
 		case LED_POWER_ON:
 		case LED_NOT_CHARGING:
-		case LED_POWER_METER_FOUND:
 			pattern_set(LED_FRONT_GREEN, SOLID, true);
 			break;
 
@@ -279,7 +279,17 @@ void led_set(led_state_e state)
 			break;
 
 		case LED_POWER_METER_SEARCH_TIMEOUT:
-			pattern_set(LED_FRONT_RED, FAST_BLINK_2, false);
+			// Set a the default recuring pattern.
+			pattern_set(LED_FRONT_GREEN, SOLID, true);
+			// Set a one time pattern, it will then revert to the repeating.
+			pattern_set(LED_FRONT_RED, FAST_BLINK_3, false);
+			break;
+
+		case LED_POWER_METER_FOUND:
+			// Set a the default recuring pattern.
+			pattern_set(LED_FRONT_GREEN, SOLID, true);
+			// Set a one time pattern, it will then revert to the repeating.
+			pattern_set(LED_FRONT_GREEN, FAST_BLINK_3, false);
 			break;
 
 		case LED_POWERING_DOWN:

@@ -1255,7 +1255,6 @@ static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 		case BP_MSG_DEVICE_CLOSED:
 			LOG("[MAIN] Power meter channel closed.\r\n");	
 			m_current_state.power_meter_paired = false;
-			led_set(LED_POWER_ON);	// just reset back to normal LED sequence.
 			break;
 
 		case FEC_MSG_NEW_DEVICE_ID:
