@@ -9,7 +9,7 @@
 #include "app_util.h"
 #include "app_gpiote.h"
 #include "app_timer.h"
-#include "app_button.h"
+#include "irt_button.h"
 #include "nrf_gpio.h"
 #include "accelerometer.h"
 #include "temperature.h"
@@ -28,8 +28,6 @@
 #define PH_LOG(...)
 #endif // ENABLE_DEBUG_LOG
 
-#define SHORT_PRESS_DELAY				100   					// Debounce interval in ms.
-#define LONG_PRESS_DELAY				(2 * TICK_FREQUENCY) 	// Seconds * ticks per second.  Amount of time the button was held to determine if it's a long press.
 
 static peripheral_evt_t 				*mp_on_peripheral_evt;
 static app_gpiote_user_id_t 			mp_user_id;
@@ -79,54 +77,6 @@ static void interrupt_handler(uint32_t event_pins_low_to_high, uint32_t event_pi
 		mp_on_peripheral_evt->on_charge_status(status);
 	}
 #endif
-}
-
-/**@brief	Button debounce handler, called when the button is pressed or released.
- * 			Detects if this was a short or long press.
- */
-static void debounce_timeout_handler(uint8_t pin_no, uint8_t button_action)
-{
-	// Last tick count, recorded when button was pushed.
-	static uint32_t last_ticks = 0;
-	uint32_t ticks, delta;
-
-	if (button_action == APP_BUTTON_PUSH)
-	{
-			// Record when the button was pushed.
-			last_ticks = NRF_RTC1->COUNTER;
-			PH_LOG("[PH] button pushed\r\n");
-	}
-	else
-	{
-		// Button was released, determine how long it was pushed for.
-		ticks = NRF_RTC1->COUNTER;
-
-		if (ticks < last_ticks)
-		{
-			// handle rollover
-			delta = (0xFFFFFFFF ^ last_ticks) + ticks;
-		}
-		else
-		{
-			delta = ticks - last_ticks;
-		}
-
-		// Determine if a long press or short.
-		if (delta >= LONG_PRESS_DELAY)
-		{
-			// long press
-			mp_on_peripheral_evt->on_button_pbsw(true);
-			//PH_LOG("[PH] button released (long press): %u \r\n", delta);
-		}
-		else
-		{
-			// short press
-			mp_on_peripheral_evt->on_button_pbsw(false);
-			//PH_LOG("[PH] button released (short press): %u \r\n", delta);
-		}
-
-		last_ticks = 0;
-	}
 }
 
 /**@brief Initialize all peripherial pins.
@@ -219,25 +169,6 @@ static void irt_gpio_init()
 	APP_ERROR_CHECK(err_code);
 }    
 
-/**@brief	Initialize debouncing of the user push button on the board.
- *
- */
-static void button_init()
-{
-	if (HW_REVISION >= 2)
-	{
-		static app_button_cfg_t button_cfg = {
-				.pin_no = PIN_PBSW,
-				.active_state = APP_BUTTON_ACTIVE_LOW,
-				.pull_cfg = NRF_GPIO_PIN_NOPULL,
-				.button_handler = debounce_timeout_handler
-		};
-
-		// App button module debounces the button input.
-		APP_BUTTON_INIT(&button_cfg, 1, SHORT_PRESS_DELAY, true);
-		app_button_enable();
-	}
-}
 
 /**@brief	Turn J7-6 power off/on.
  */
@@ -391,6 +322,7 @@ uint32_t timestamp_get()
 
 void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 {
+	uint32_t err;
 	mp_on_peripheral_evt = p_on_peripheral_evt;
 	
 	led_init();
@@ -399,7 +331,8 @@ void peripheral_init(peripheral_evt_t *p_on_peripheral_evt)
 	led_set(LED_POWER_ON);
 
     irt_gpio_init();
-    button_init();
+    err = irt_button_init(mp_on_peripheral_evt->on_button_pbsw);
+	APP_ERROR_CHECK(err);
     accelerometer_init();
 	temperature_init();
 

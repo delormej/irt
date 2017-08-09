@@ -960,19 +960,30 @@ static void on_button_long_menu(void)
 }
 
 // This is the button on the board.
-static void on_button_pbsw(bool long_press)
+static void on_button_pbsw(press_delay_e press_delay)
 {
-	if (long_press)
+	switch (press_delay)
 	{
-		// TODO: this button needs to be debounced and a LONG press should power down.
-		LOG("[MAIN] Push button switch pressed (long).\r\n");
-		on_enable_dfu_mode();
-	}
-	else
-	{
-		LOG("[MAIN] Push button switch pressed (short).\r\n");
-		// Shutting device down.
-		on_power_down(true);
+		case press_delay_short:
+			// Nothing right now.
+			break;
+		
+		case press_delay_2_sec:
+			// Attempt to pair to any power meter (0).
+			bike_power_init(0);
+			break;
+
+		case press_delay_4_sec:
+			// Shutting device down.
+			on_power_down(true);
+			break;
+		
+		case press_delay_8_sec:
+			on_enable_dfu_mode();
+			break;
+		
+		default:
+			break;
 	}
 }
 

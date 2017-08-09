@@ -27,7 +27,7 @@ C_SOURCE_FILES += ble_debug_assert_handler.c
 C_SOURCE_FILES += pstorage.c
 C_SOURCE_FILES += nrf_delay.c
 C_SOURCE_FILES += simple_uart.c
-C_SOURCE_FILES += app_button.c
+#C_SOURCE_FILES += app_button.c
 C_SOURCE_FILES += app_fifo.c
 
 C_SOURCE_PATHS +=  ./libraries/
@@ -50,7 +50,7 @@ INCLUDE_PATHS += $(SDK_PATH)drivers_nrf/ble_flash/
 INCLUDE_PATHS += $(SDK_PATH)libraries/timer/
 INCLUDE_PATHS += $(SDK_PATH)libraries/scheduler/
 INCLUDE_PATHS += $(SDK_PATH)libraries/gpiote
-INCLUDE_PATHS += $(SDK_PATH)libraries/button/
+#INCLUDE_PATHS += $(SDK_PATH)libraries/button/
 INCLUDE_PATHS += $(SDK_PATH)libraries/fifo/
 INCLUDE_PATHS += $(SDK_PATH)ble/common/
 INCLUDE_PATHS += $(SDK_PATH)ble/ble_services/ble_dis/
@@ -90,7 +90,7 @@ debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 ############################################
 SW_REVISION_MAJ := 1
 SW_REVISION_MIN := 3
-SW_REVISION_BLD := 70
+SW_REVISION_BLD := 80
 
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
