@@ -35,9 +35,6 @@ static app_gpiote_user_id_t           m_gpiote_user_id;             /**< GPIOTE 
 static app_timer_id_t                 m_debounce_timer_id;  		/**< Timer called to every 'n' to debounce button. */
 static on_button_pbsw_t				  m_on_button_pressed;			// Function pointer to be invoked when a button press and release are fully debounced.
 
-// Current stable debounced state of the button.
-static bool button_state_is_pressed = false;
-
 // Tracks when the button press was initiated.
 static uint32_t m_press_start = 0; 
 
@@ -138,23 +135,20 @@ static uint32_t get_delay()
 
 //
 // 
-// @note	desired_state = 1 (pressed) or desired_state = 0 (not pressed)
-static inline bool debounce(bool desired_state)
+// @note	
+// 	
+// This method effecively detects a stable change in state from button pressed 
+// to not pressed.  It will return true when a button push is detected and 
+// 11 occurences sequential of being called when it is not pushed.
+static inline bool debounce()
 {
 	// Current debounce status.
 	static uint16_t state = 0; 	
-	
+
 	// Progressively shift least significant bit left, OR it with 1 if pushed, 0 if not pushed.
 	// 	0xE000 	1110000000000000
-	state = (state << 1) | ( desired_state == !irt_button_raw() ) | 0xE000;
+	state = (state << 1) | !irt_button_raw() | 0xE000;
 
-	// When we want it to be pressed, and it is pressed:
-	// 		( (desired_state = 1) == !(irt_button_pressed = 0) ) == 1
-	//
-	// When we want it to be released, and it is not pressed:
-	// 		( (desired_state = 0) == !(irt_button_pressed = 1) ) == 1
-
-	// Requires 12 consecutive 1's to return a positive result as pushed or released.
 	//	0xF000  1111000000000000	
 	if (state == 0xF000)
 	{
@@ -199,8 +193,6 @@ static void irt_debounce_reset()
 	irt_debounce_sense_enable();			
 	// reset starting point.
 	m_press_start = 0;	
-	// Reset state.
-	button_state_is_pressed = false;
 }
 
 //
@@ -211,30 +203,22 @@ static void irt_debounce_timer_handler()
 	// Tracks how long the button was pressed for.
 	volatile uint32_t press_delay = 0;
 
-	// Debounce press or release.
-	if (debounce(button_state_is_pressed))
+	// Debounce the press and release.
+	if (debounce())
 	{
 		// if we're in here, we've succesfully debounced a PRESS or a RELEASE
-		BTN_LOG("[BTN] debounced! was pressed? %i.\r\n", button_state_is_pressed);			
 
-		if (button_state_is_pressed)
-		{
-			// Set future debouncing checks for a RELEASE.
-			button_state_is_pressed = false;
-		}
-		else 
-		{
-			// stop the timer, so we're not debouncing any longer.
-			irt_debounce_timer_stop();	
+		// stop the timer, so we're not debouncing any longer.
+		irt_debounce_timer_stop();	
 
-			// deal with rollover, etc... 
-			press_delay = get_delay();
-			
-			// Invoke button callback.
-			on_irt_button_released(press_delay);
-	
-			irt_debounce_reset();
-		}
+		// deal with rollover, etc... 
+		press_delay = get_delay();
+		BTN_LOG("[BTN] debounced! was pressed and released: %i.\r\n", press_delay);			
+
+		// Invoke button callback.
+		on_irt_button_released(press_delay);
+
+		irt_debounce_reset();
 	}
 	// otherwise, we have not debounced.
 	else
@@ -249,13 +233,7 @@ static void irt_debounce_timer_handler()
 
 			BTN_LOG("[BTN] delay exceeded: %i.\r\n", press_delay);
 
-			// If we just failed to get a release, raise the event.
-			if (!button_state_is_pressed)
-			{
-				// raise the event.
-				on_irt_button_released(press_delay);
-			}
-
+			// Reset state.
 			irt_debounce_reset();
 		}
 	}
@@ -266,11 +244,6 @@ static void irt_debounce_timer_handler()
 //
 static void irt_gpio_handler()
 {
-	BTN_LOG("[BTN] Got signaled.\r\n");
-	
-	// We think it's been pressed, let's debounce as such.
-	button_state_is_pressed = true;
-
 	m_press_start = NRF_RTC1->COUNTER;
 
 	// Disable pin sense so that we don't get invoked while debouncing.
@@ -278,6 +251,8 @@ static void irt_gpio_handler()
 
 	// Start the timer.
 	irt_debounce_timer_start();
+
+		BTN_LOG("[BTN] Got signaled: %i.\r\n", m_press_start);
 }
 
 //
