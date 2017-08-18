@@ -24,7 +24,7 @@
 #endif // ENABLE_DEBUG_LOG
 
 // How often to try to debounce (in ms) 
-#define DEBOUNCE_CHECK_MS				APP_TIMER_TICKS(150, APP_TIMER_PRESCALER)
+#define DEBOUNCE_CHECK_MS				APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)
 
 // Seconds * ticks per second.  Amount of time the button was held to determine if it's a long press.
 #define PRESS_DELAY_2_SEC				(2 * TICK_FREQUENCY)
@@ -34,6 +34,7 @@
 static app_gpiote_user_id_t           m_gpiote_user_id;             /**< GPIOTE user id for buttons module. */
 static app_timer_id_t                 m_debounce_timer_id;  		/**< Timer called to every 'n' to debounce button. */
 static on_button_pbsw_t				  m_on_button_pressed;			// Function pointer to be invoked when a button press and release are fully debounced.
+static bool 						  delay_exceeded = false;		// Hangs on to whether we've exceeded max delay. 
 
 // Tracks when the button press was initiated.
 static uint32_t m_press_start = 0; 
@@ -82,18 +83,26 @@ static inline uint32_t irt_button_raw()
 
 static inline void irt_debounce_sense_disable()
 {
+	app_gpiote_user_disable(m_gpiote_user_id);
+	BTN_LOG("[BTN] irt_debounce_sense_disable\r\n");
+	/*
 	// Reset the SENSE bits
 	NRF_GPIO->PIN_CNF[PIN_PBSW] &= ~GPIO_PIN_CNF_SENSE_Msk;
 	// Disable interrupt
 	NRF_GPIO->PIN_CNF[PIN_PBSW] |= GPIO_PIN_CNF_SENSE_Disabled << GPIO_PIN_CNF_SENSE_Pos;
+	*/
 }
 
 static inline void irt_debounce_sense_enable()
 {
+	app_gpiote_user_enable(m_gpiote_user_id);
+	BTN_LOG("[BTN] irt_debounce_sense_enable\r\n");
+	/*
 	// Reset the SENSE bits
 	NRF_GPIO->PIN_CNF[PIN_PBSW] &= ~GPIO_PIN_CNF_SENSE_Msk;
 	// Enable interrput
 	NRF_GPIO->PIN_CNF[PIN_PBSW] |= GPIO_PIN_CNF_SENSE_Low << GPIO_PIN_CNF_SENSE_Pos;
+	*/
 }
 
 static uint32_t irt_debounce_timer_start()
@@ -128,7 +137,7 @@ static uint32_t get_delay()
 		delta = current - m_press_start;
 	}
 
-	BTN_LOG("[BTN] get_delay: %i, %i, %i \r\n", m_press_start, current, delta);
+	// BTN_LOG("[BTN] get_delay: %i, %i, %i \r\n", m_press_start, current, delta);
 
 	return delta;
 }
@@ -189,6 +198,8 @@ static void on_irt_button_released(uint32_t press_delay)
 
 static void irt_debounce_reset()
 {
+	BTN_LOG("[BTN] debounce_reset \r\n");			
+	delay_exceeded = false;
 	// re-enable sensing
 	irt_debounce_sense_enable();			
 	// reset starting point.
@@ -202,6 +213,7 @@ static void irt_debounce_timer_handler()
 {
 	// Tracks how long the button was pressed for.
 	volatile uint32_t press_delay = 0;
+	press_delay = get_delay();
 
 	// Debounce the press and release.
 	if (debounce())
@@ -211,30 +223,27 @@ static void irt_debounce_timer_handler()
 		// stop the timer, so we're not debouncing any longer.
 		irt_debounce_timer_stop();	
 
-		// deal with rollover, etc... 
-		press_delay = get_delay();
-		BTN_LOG("[BTN] debounced! was pressed and released: %i.\r\n", press_delay);			
-
-		// Invoke button callback.
-		on_irt_button_released(press_delay);
+		// If > 8 sec, then we've already invoked and we're just waiting to reset 
+		// button state.
+		if (!delay_exceeded)
+		{
+			BTN_LOG("[BTN] debounced! was pressed and released: %i.\r\n", press_delay);			
+			// Invoke button callback.
+			on_irt_button_released(press_delay);
+		}
 
 		irt_debounce_reset();
 	}
 	// otherwise, we have not debounced.
 	else
 	{
-		press_delay = get_delay();
-
-		// Ensure we're not stuck in an infinite loop here.
-		if (press_delay >= PRESS_DELAY_8_SEC)
+		// If button is still down invoke callback, but keep debounce timer going until
+		// user eventually let's go, at which point reset state.  
+		if (!delay_exceeded && press_delay >= PRESS_DELAY_8_SEC && !irt_button_raw())
 		{
-			// stop the timer, so we're not debouncing any longer.
-			irt_debounce_timer_stop();		
-
-			BTN_LOG("[BTN] delay exceeded: %i.\r\n", press_delay);
-
-			// Reset state.
-			irt_debounce_reset();
+			// Keep track so that we only signal once.
+			delay_exceeded = true;
+			on_irt_button_released(press_delay);
 		}
 	}
 }
@@ -252,7 +261,7 @@ static void irt_gpio_handler()
 	// Start the timer.
 	irt_debounce_timer_start();
 
-		BTN_LOG("[BTN] Got signaled: %i.\r\n", m_press_start);
+	BTN_LOG("[BTN] Got signaled: %i.\r\n", m_press_start);
 }
 
 //
