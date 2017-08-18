@@ -965,7 +965,8 @@ static void on_button_pbsw(press_delay_e press_delay)
 	switch (press_delay)
 	{
 		case press_delay_short:
-			// Nothing right now.
+			// Shutting device down.
+			on_power_down(true);
 			break;
 		
 		case press_delay_2_sec:
@@ -974,8 +975,7 @@ static void on_button_pbsw(press_delay_e press_delay)
 			break;
 
 		case press_delay_4_sec:
-			// Shutting device down.
-			on_power_down(true);
+			// Do nothing
 			break;
 		
 		case press_delay_8_sec:

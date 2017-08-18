@@ -177,27 +177,30 @@ static void on_irt_button_released(uint32_t press_delay)
 	if (press_delay >= PRESS_DELAY_8_SEC)
 	{
 		BTN_LOG("[BTN] button released (PRESS_DELAY_8_SEC): %u \r\n", press_delay);
-		// m_on_button_pressed(press_delay_8_sec);
+		m_on_button_pressed(press_delay_8_sec);
 	}
 	else if (press_delay >= PRESS_DELAY_4_SEC)
 	{
 		BTN_LOG("[BTN] button released (PRESS_DELAY_4_SEC): %u \r\n", press_delay);
-		// m_on_button_pressed(press_delay_4_sec);
+		m_on_button_pressed(press_delay_4_sec);
 	}
 	else if (press_delay >= PRESS_DELAY_2_SEC)
 	{
 		BTN_LOG("[BTN] button released (PRESS_DELAY_2_SEC): %u \r\n", press_delay);
-		// m_on_button_pressed(press_delay_2_sec);
+		m_on_button_pressed(press_delay_2_sec);
 	}
 	else
 	{
 		BTN_LOG("[BTN] button released (PRESS_DELAY_SHORT): %u \r\n", press_delay);			
-		// m_on_button_pressed(press_delay_short);
+		m_on_button_pressed(press_delay_short);
 	}
 }
 
 static void irt_debounce_reset()
 {
+	// stop the timer, so we're not debouncing any longer.
+	irt_debounce_timer_stop();	
+
 	BTN_LOG("[BTN] debounce_reset \r\n");			
 	delay_exceeded = false;
 	// re-enable sensing
@@ -219,9 +222,7 @@ static void irt_debounce_timer_handler()
 	if (debounce())
 	{
 		// if we're in here, we've succesfully debounced a PRESS or a RELEASE
-
-		// stop the timer, so we're not debouncing any longer.
-		irt_debounce_timer_stop();	
+		irt_debounce_reset();
 
 		// If > 8 sec, then we've already invoked and we're just waiting to reset 
 		// button state.
@@ -232,7 +233,7 @@ static void irt_debounce_timer_handler()
 			on_irt_button_released(press_delay);
 		}
 
-		irt_debounce_reset();
+		
 	}
 	// otherwise, we have not debounced.
 	else
