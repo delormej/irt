@@ -268,10 +268,8 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 /**@brief	Close & unassign if the channel is open or in use.
  *
  */
-void ant_bp_unassign()
+void ant_bp_rx_close()
 {
-	//STATUS_UNASSIGNED_CHANNEL
-	// SVCALL(SVC_ANT_CHANNEL_STATUS_GET, uint32_t, sd_ant_channel_status_get (uint8_t ucChannel, uint8_t *pucStatus));
 	uint8_t status;
 	uint32_t err;
 	
@@ -289,7 +287,7 @@ void ant_bp_unassign()
 			err = sd_ant_channel_close(ANT_BP_RX_CHANNEL);
 			APP_ERROR_CHECK(err);
 			// Recursively call this function to further unassign.
-			ant_bp_unassign();
+			ant_bp_rx_close();
 			break;
 			
 		case STATUS_ASSIGNED_CHANNEL:
@@ -306,7 +304,7 @@ void ant_bp_unassign()
 /**@brief Initialize the module with callback and power meter device id to search for.
  *
  */
-void ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
+uint32_t ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
 {
     uint32_t err_code;
     
@@ -315,19 +313,31 @@ void ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
     
 	// Because this function can be called multiple times with new power meter connections,
 	// unassign any previous use.
-	ant_bp_unassign();
+	ant_bp_rx_close();
 
     err_code = sd_ant_channel_assign(ANT_BP_RX_CHANNEL,
                                      ANT_BP_CHANNEL_TYPE,
                                      ANTPLUS_NETWORK_NUMBER,
                                      ANT_BP_EXT_ASSIGN);
-    APP_ERROR_CHECK(err_code);
+    
+	if (err_code != NRF_SUCCESS)
+	{
+		// If in the wrong state, just exit.
+		// NRF_ANT_ERROR_CHANNEL_IN_WRONG_STATE
+		return err_code;
+	}
 
     err_code = sd_ant_channel_id_set(ANT_BP_RX_CHANNEL,
                                      device_id,
                                      ANT_BP_DEVICE_TYPE,
                                      ANT_BP_TRANS_TYPE);
-    APP_ERROR_CHECK(err_code);
+	
+	if (err_code != NRF_SUCCESS)
+	{
+		// If in the wrong state, just exit.
+		// NRF_ANT_ERROR_CHANNEL_IN_WRONG_STATE
+		return err_code;
+	}
     
     err_code = sd_ant_channel_radio_freq_set(ANT_BP_RX_CHANNEL, ANTPLUS_RF_FREQ);
     APP_ERROR_CHECK(err_code);
@@ -337,6 +347,8 @@ void ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
 
 	BP_LOG("[BP] Attempting to open Bike Power channel with ANT device id: %i\r\n",
 		device_id);
+
+	return NRF_SUCCESS;
 }
 
 /**@brief Opens the channel and begins to search.

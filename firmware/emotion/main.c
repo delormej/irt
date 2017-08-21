@@ -681,15 +681,31 @@ static void servo_pos_to_response(ant_request_data_page_t* p_request, uint8_t* p
  */
 static void bike_power_init(uint16_t power_meter_id)
 {
-	m_current_state.power_meter_paired = false;
-	led_set(LED_POWER_METER_SEARCH);
+	uint32_t err_code;
 
-	// Initialize ANT bike power listening channel.
 	if (power_meter_id != 0xFFFF) 
 	{
+		// Initialize ANT bike power listening channel.
 		// Open the ANT channel for receiving power.
-		ant_bp_rx_init(&on_bp_power_data, power_meter_id);
-		ant_bp_rx_start();
+		err_code = ant_bp_rx_init(&on_bp_power_data, power_meter_id);
+		
+		if (err_code == NRF_SUCCESS)
+		{
+			// Set state to searching and indicate visually.
+			m_current_state.power_meter_paired = false;
+			led_set(LED_POWER_METER_SEARCH);			
+			
+			// Start searching.
+			ant_bp_rx_start();
+		}
+	}
+	else
+	{
+		// If we're passed an invalid power meter id, just disconnect.
+		m_current_state.power_meter_paired = false;
+		ant_bp_rx_close();
+		// Indicate we've disconnected.
+		led_set(LED_POWER_METER_SEARCH_TIMEOUT);
 	}
 }
 
