@@ -268,7 +268,7 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 /**@brief	Close & unassign if the channel is open or in use.
  *
  */
-void ant_bp_rx_close()
+uint32_t ant_bp_rx_close()
 {
 	uint8_t status;
 	uint32_t err;
@@ -277,6 +277,7 @@ void ant_bp_rx_close()
 	m_ant_power_meter_id = 0;
 
 	err = sd_ant_channel_status_get(ANT_BP_RX_CHANNEL, &status);
+	// throw a real exception here if this fails because it shouldn't.
 	APP_ERROR_CHECK(err);
 
 	switch (status)
@@ -285,20 +286,42 @@ void ant_bp_rx_close()
 		case STATUS_TRACKING_CHANNEL:
 			BP_LOG("[BP] Closing previously opened bp channel.\r\n");
 			err = sd_ant_channel_close(ANT_BP_RX_CHANNEL);
-			APP_ERROR_CHECK(err);
-			// Recursively call this function to further unassign.
-			ant_bp_rx_close();
+			if (err != NRF_SUCCESS) 
+			{
+				// Disregard any error, but log it here.  By recalling this method
+				// it should change state. The case to protect against is infinite
+				// recursion.  ANT should eventually change state out of search/track
+				// at which point it would no longer fall into this case.
+
+				BP_LOG("[BP] Error attempt to close previously opened bp channel.%i\r\n",
+					err);
+			}
+			// Recursively call this function to further unassign or try again.
+			return ant_bp_rx_close();
+
+			// TODO: Guard against indefinite recursion, i.e. max 4 calls? 
+			// TODO: Decrement a recursion counter here? 
 			break;
 			
 		case STATUS_ASSIGNED_CHANNEL:
 			BP_LOG("[BP] Unassigning previously used bp channel.\r\n");
 			err = sd_ant_channel_unassign(ANT_BP_RX_CHANNEL);
-			APP_ERROR_CHECK(err);
+			if (err != NRF_SUCCESS) 
+			{
+				BP_LOG("[BP] Error unassigning previously used bp channel: %i.\r\n",
+					err);
+				return err;
+			}
 			break;
 
 		default:
+			// do nothing if the channel status is not one of the above states.
+			BP_LOG("[BP] Unexpected channel state: %i.\r\n", status);	
 			break;
 	}
+
+	// If we got this far, it was a success.
+	return NRF_SUCCESS;
 }
 
 /**@brief Initialize the module with callback and power meter device id to search for.
@@ -339,6 +362,11 @@ uint32_t ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
 		return err_code;
 	}
     
+	//
+	// Errors in these two methods indicate invalid params, so throw exception as 
+	// we shouldn't see these conditions.
+	//
+
     err_code = sd_ant_channel_radio_freq_set(ANT_BP_RX_CHANNEL, ANTPLUS_RF_FREQ);
     APP_ERROR_CHECK(err_code);
     

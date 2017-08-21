@@ -698,14 +698,25 @@ static void bike_power_init(uint16_t power_meter_id)
 			// Start searching.
 			ant_bp_rx_start();
 		}
+		else
+		{
+			LOG("[MAIN] Failed to initialize bike power: %i\r\n.", err_code);
+		}
 	}
 	else
 	{
-		// If we're passed an invalid power meter id, just disconnect.
-		m_current_state.power_meter_paired = false;
+		LOG("[MAIN] Invalid bike power meter passed.\r\n.");
+
+		// If we're passed an invalid power meter id and we were connected, disconnect.
+		if (m_current_state.power_meter_paired)
+		{
+			m_current_state.power_meter_paired = false;
+			// Indicate we've disconnected.
+			led_set(LED_POWER_METER_SEARCH_TIMEOUT);
+		}
+
+		// Attempt to close regardless.
 		ant_bp_rx_close();
-		// Indicate we've disconnected.
-		led_set(LED_POWER_METER_SEARCH_TIMEOUT);
 	}
 }
 
