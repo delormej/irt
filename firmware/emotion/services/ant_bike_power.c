@@ -314,6 +314,10 @@ uint32_t ant_bp_rx_close()
 			}
 			break;
 
+		case STATUS_UNASSIGNED_CHANNEL:
+			// Do nothing.
+			break;
+
 		default:
 			// do nothing if the channel status is not one of the above states.
 			BP_LOG("[BP] Unexpected channel state: %i.\r\n", status);	

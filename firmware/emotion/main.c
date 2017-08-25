@@ -676,8 +676,8 @@ static void servo_pos_to_response(ant_request_data_page_t* p_request, uint8_t* p
 	}
 }
 
-/**@brief	Initialize external bike power sensor listener.
- *
+/**@brief	Initialize external bike power sensor listener and sets state accordingly.
+ *			For instance, if an invalid power_meter_id (0xFFFF), set state to not paired.
  */
 static void bike_power_init(uint16_t power_meter_id)
 {
@@ -997,12 +997,9 @@ static void on_button_pbsw(press_delay_e press_delay)
 			break;
 		
 		case press_delay_2_sec:
+		case press_delay_4_sec:
 			// Attempt to pair to any power meter (0).
 			bike_power_init(0);
-			break;
-
-		case press_delay_4_sec:
-			// Do nothing
 			break;
 		
 		case press_delay_8_sec:
