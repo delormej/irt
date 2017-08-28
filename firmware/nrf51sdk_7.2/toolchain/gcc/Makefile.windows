@@ -31,7 +31,8 @@ $(OUTPUT_PATH):
 	if not exist .\$(OUTPUT_PATH:/=\\) md $(OUTPUT_PATH)
 
 flash: 
-	$(NRFJPROG) --program $(HEX) --sectorerase -r 
+	$(NRFJPROG) --program $(HEX) -r
+#	$(NRFJPROG) --program $(HEX) --sectorerase -r  # this is required for JLink_V492
 
 flash-softdevice:
 ifndef SOFTDEVICE
