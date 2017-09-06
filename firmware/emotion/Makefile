@@ -89,8 +89,8 @@ debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 # Define the Software Revision.
 ############################################
 SW_REVISION_MAJ := 1
-SW_REVISION_MIN := 4
-SW_REVISION_BLD := 13
+SW_REVISION_MIN := 5
+SW_REVISION_BLD := 6
 
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)

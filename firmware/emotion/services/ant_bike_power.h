@@ -8,6 +8,7 @@
 #define ANT_BP_PAGE_CALIBRATION			0x01	// Calibration page
 #define ANT_BP_PAGE_STANDARD_POWER_ONLY 0x10   /**< Standard Power only main data page. */
 #define ANT_BP_PAGE_TORQUE_AT_WHEEL		0x11   /**< Power reported as torque at wheel data page, which includes speed. */
+#define ANT_BP_PAGE_CTF_MAIN            0x20    // Crank Torque Frequency Main Data Page
 
 #define ANT_BP_CAL_PARAM_RESPONSE		0xBB
 #define ANT_BP_CAL_SUCCESS_RESPONSE		0xAC

@@ -10,6 +10,7 @@
 
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
 #define LOW_BYTE(word)               		(uint8_t)(word & 0x00FFu)                   /**< Get low byte of a uint16_t. */
+#define DELTA_ROLLOVER_16(prior, current)	(prior > current ? (UINT16_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 16 bit ints, addressing potential rollover. */
 
 #define TX_BUFFER_SIZE               		8u               
 
@@ -23,30 +24,30 @@
 #define ANT_FEC_TX_CHANNEL     	 			4u                                           /**< ANT+ FE-C Channel. */
 
 // Generic ANT pages.
-#define ANT_PAGE_GETSET_PARAMETERS		0x02
-#define ANT_PAGE_MEASURE_OUTPUT			0x03	// Measurement Output Data Page (0x03)
-#define ANT_PAGE_REQUEST_DATA			0x46
-#define ANT_PAGE_BATTERY_STATUS			0x52
-#define ANT_IRT_PAGE_EXTRA_INFO			0xF1   // Manufacturer specific page sending servo position, etc...
-#define ANT_IRT_PAGE_SETTINGS			0xF2   // Manufacturer specific page sending device specific settings.
-#define ANT_IRT_PAGE_POWER_ADJUST		0xF3   // Manufacturer specific page sending power adjustment settings.
+#define ANT_PAGE_GETSET_PARAMETERS			0x02
+#define ANT_PAGE_MEASURE_OUTPUT				0x03	// Measurement Output Data Page (0x03)
+#define ANT_PAGE_REQUEST_DATA				0x46
+#define ANT_PAGE_BATTERY_STATUS				0x52
+#define ANT_IRT_PAGE_EXTRA_INFO				0xF1   // Manufacturer specific page sending servo position, etc...
+#define ANT_IRT_PAGE_SETTINGS				0xF2   // Manufacturer specific page sending device specific settings.
+#define ANT_IRT_PAGE_POWER_ADJUST			0xF3   // Manufacturer specific page sending power adjustment settings.
 
 #define ANT_COMMON_PAGE_80          		0x50u   /**< Manufacturer's identification common data page. */
 #define ANT_COMMON_PAGE_81          		0x51u   /**< Product information common data page. */
 //#define COMMON_PAGE_BATTERY_VOLTAGE 		0x52u   /**< TODO: Optional battery voltage reporting. */
 
-#define PAGE_NUMBER_INDEX               0                   /**< Index of the data page number field.  */
+#define PAGE_NUMBER_INDEX               	0                   /**< Index of the data page number field.  */
 
 // Custom message fields.
-#define EXTRA_INFO_SERVO_POS_LSB		1u
-#define EXTRA_INFO_SERVO_POS_MSB		2u
-#define EXTRA_INFO_TARGET_LSB			3u
-#define EXTRA_INFO_TARGET_MSB			4u
-#define EXTRA_INFO_FLYWHEEL_REVS_LSB	5u
-#define EXTRA_INFO_FLYWHEEL_REVS_MSB	6u
-#define EXTRA_INFO_TEMP					7u
+#define EXTRA_INFO_SERVO_POS_LSB			1u
+#define EXTRA_INFO_SERVO_POS_MSB			2u
+#define EXTRA_INFO_TARGET_LSB				3u
+#define EXTRA_INFO_TARGET_MSB				4u
+#define EXTRA_INFO_FLYWHEEL_REVS_LSB		5u
+#define EXTRA_INFO_FLYWHEEL_REVS_MSB		6u
+#define EXTRA_INFO_TEMP						7u
 
-#define WF_ANT_RESPONSE_PAGE_ID              0xF0	// Manufacturer-Specific pages (0xF0 - 0xFF).
+#define WF_ANT_RESPONSE_PAGE_ID				0xF0	// Manufacturer-Specific pages (0xF0 - 0xFF).
 
 #define BP_PAGE_RESERVE_BYTE    			0xFFu   /**< Page reserved value. */
 
