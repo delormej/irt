@@ -57,6 +57,11 @@
 #define ANT_BURST_MSG_ID_SET_POSITIONS	0x59									/** Message ID used when setting servo button stop positions via an ANT BURST. */
 #define ANT_BURST_MSG_ID_SET_MAGNET_CA	0x60									/** Message ID used when setting magnet calibration via an ANT BURST. */
 
+// Response codes for CTF power message
+#define CTF_SUCCESS				0
+#define CTF_NO_EVENTS			1
+#define CTF_CADENCE_TIMEOUT		2
+
 /**@brief Debug logging for module.
  *
  */
@@ -100,6 +105,19 @@ typedef struct
 	uint8_t			torque_ticks_msb;
 	uint8_t			torque_ticks_lsb;
 } ant_bp_ctf_t;
+
+/**@brief	Crank Torque Frequency Calibration for Zero Offset.
+ *
+ */
+typedef struct
+{
+	uint8_t			page_number;
+	uint8_t			calibration_id;
+	uint8_t			ctf_defined_id;
+	uint8_t			reserved[3];
+	uint8_t			offset_msb;
+	uint8_t			offset_lsb;
+} ant_bp_ctf_calibration_t;
 
 typedef struct
 {
@@ -164,10 +182,6 @@ static float CalcAveragePower(power_event_t first, power_event_t last)
 
 	return average_power;
 }
-
-#define CTF_SUCCESS				0
-#define CTF_NO_EVENTS			1
-#define CTF_CADENCE_TIMEOUT		2
 
 /**@brief	Calculates power(watts) from Crank Tourque Frequency page.
  *			Returns 0 if succesful, 1 if no new events, 2 if cadence time out.
@@ -341,17 +355,18 @@ static void HandleCTFPage(uint8_t* p_payload)
 
 static void HandleCTFOffset(uint8_t* p_payload)
 {
+	ant_bp_ctf_calibration_t* p_page = (ant_bp_ctf_calibration_t*)p_payload;
 	// Byte 0 == page number (0x01)
 	// Byte 1 == calibration ID (0x10) CTF defined message
 	// Byte 2 == CTF Defined ID (0x01) Zero Offset
 	// Byte 3-5 0xFF (reserved)
 	// Byte 6 == Offset MSB
 	// Byte 7 == Offset LSB
-
-	BP_LOG("[BP] CTF OFFSET? 0x10: %i, 0x01: %i, Offset: %i\r\n", 
-		p_payload[1], p_payload[2], p_payload[6] << 8 | p_payload[7]);
-
-	m_ctf_offset = 0; // Hopefully set this here.
+	if (p_page->calibration_id == 0x10 && p_page->ctf_defined_id == 0x01)
+	{
+		m_ctf_offset = p_page->offset_msb << 8 | p_page->offset_lsb;
+		BP_LOG("[BP] Received CTF offset: %i\r\n", m_ctf_offset);
+	}
 }
 
 /**@brief Returns the connected power meter ID or 0 if not connected.
