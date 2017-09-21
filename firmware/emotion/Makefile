@@ -90,7 +90,7 @@ debug : LDFLAGS += -u _printf_float				# Required to printf a float.
 ############################################
 SW_REVISION_MAJ := 1
 SW_REVISION_MIN := 5
-SW_REVISION_BLD := 7
+SW_REVISION_BLD := 8
 
 
 CFLAGS += -DSW_REVISION_MAJ=$(SW_REVISION_MAJ)
@@ -134,7 +134,7 @@ DEPLOY_SCRIPT = ..\..\python\deploy\deploy.py
 debug: all 
 
 deploy:
-	python $(DEPLOY_SCRIPT) $(HEX) 
+	python $(DEPLOY_SCRIPT) $(BIN) 
 	cp $(OUTPUT_PATH)$(OUTPUT_NAME).zip $(DEPLOY_PATH2)$(OUTPUT_NAME).zip
 
 ############################################
