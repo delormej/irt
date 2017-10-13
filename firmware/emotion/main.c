@@ -1284,7 +1284,7 @@ static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 		case BP_MSG_DEVICE_SEARCH_TIME_OUT:
 			m_current_state.power_meter_paired = false;
 			led_set(LED_POWER_METER_SEARCH_TIMEOUT);
-			LOG("[MAIN] Power meter search timed out.\r\n");	
+			LOG("[MAIN] Power meter search timed out.\r\n");				
 			break;
 
 		case BP_MSG_DEVICE_CLOSED:
@@ -1299,6 +1299,13 @@ static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 
 		default:
 			break;
+	}
+
+	if (state == BP_MSG_DEVICE_CONNECTED || 
+		state == BP_MSG_DEVICE_CLOSED)
+	{
+		// Send a message indicating power meter status.
+		ant_fec_power_adjust_send();								
 	}
 }
 

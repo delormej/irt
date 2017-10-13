@@ -334,7 +334,10 @@ static uint32_t ManufacturerSpecificPage_Send(irt_context_t* context)
 	tx_buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(context);
 	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]	= LOW_BYTE(flywheel);
 	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]	= HIGH_BYTE(flywheel);
-	tx_buffer[EXTRA_INFO_TEMP]				= (uint8_t)(context->temp);
+    tx_buffer[EXTRA_INFO_TEMP]				= (uint8_t)(context->temp);
+    // Use MSB to indicate if power meter is paired.
+    tx_buffer[EXTRA_INFO_TEMP]              = tx_buffer[EXTRA_INFO_TEMP] | 
+                                                (context->power_meter_paired << 7);
 
 	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 }
@@ -889,6 +892,16 @@ void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers)
     
     err_code = sd_ant_channel_period_set(ANT_FEC_TX_CHANNEL, ANT_FEC_MSG_PERIOD);
     APP_ERROR_CHECK(err_code);
+}
+
+/**@brief   Queues a message to send the Power Meter adjust page
+ *          which includes a flag as to whether a power meter is 
+ *          connected or not.
+ */
+void ant_fec_power_adjust_send(void)
+{
+    //IRTSettingsPowerAdjustSend
+    queue_request(ANT_IRT_PAGE_POWER_ADJUST);
 }
 
 /**@brief	Opens the ANT+ channel.

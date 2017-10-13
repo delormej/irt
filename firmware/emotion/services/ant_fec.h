@@ -178,4 +178,6 @@ void ant_fec_rx_handle(ant_evt_t* p_ant_evt);
 void ant_fec_calibration_send(irt_context_t * p_power_meas,
     calibration_status_t * p_calibration_status);
 
+void ant_fec_power_adjust_send(void);
+
 #endif	// ANT_FE_C_H__
