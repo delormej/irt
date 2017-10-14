@@ -337,7 +337,7 @@ static uint32_t ManufacturerSpecificPage_Send(irt_context_t* context)
     tx_buffer[EXTRA_INFO_TEMP]				= (uint8_t)(context->temp);
     // Use MSB to indicate if power meter is paired.
     tx_buffer[EXTRA_INFO_TEMP]              = tx_buffer[EXTRA_INFO_TEMP] | 
-                                                (context->power_meter_paired << 7);
+                                           ((uint8_t)context->power_meter_paired << 7);
 
 	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, tx_buffer);
 }

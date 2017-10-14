@@ -258,7 +258,8 @@ static uint16_t GetWatts(uint8_t msb, uint8_t lsb)
 	return  watts;
 }
 
-/**@brief Ask ANT for the channelID.
+/**@brief Ask ANT for the channelID & raises an event that the power meter
+ * 		  was found, if device id > 0.
  *
  */
 static uint32_t GetPowerMeterId() 
@@ -389,6 +390,7 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 		case EVENT_RX_SEARCH_TIMEOUT:
 		case EVENT_RX_FAIL_GO_TO_SEARCH:
 			// Timed out looking for a power meter.
+			m_ant_power_meter_id = 0;
 			m_on_bp_power_data(BP_MSG_DEVICE_SEARCH_TIME_OUT, 0); 
 			BP_LOG("[BP] SEARCH TIMEOUT!\r\n");
 			break;
