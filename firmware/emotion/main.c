@@ -683,6 +683,8 @@ static void bike_power_init(uint16_t power_meter_id)
 {
 	uint32_t err_code;
 
+	LOG("[MAIN] bike_power_init, power_meter_id: %i.\r\n.", power_meter_id);
+
 	if (power_meter_id != 0xFFFF) 
 	{
 		// Initialize ANT bike power listening channel.
