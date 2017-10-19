@@ -356,6 +356,23 @@ static void HandleCTFPage(uint8_t* p_payload)
 
 static void HandleCTFOffset(uint8_t* p_payload)
 {
+	/*
+The transmitted offset value should be averaged over at least 5 samples during the coasting period. The standard deviation
+between the previous and current sample should be within +/- 4Hz. If the standard deviation of the received messages is
+within this +/- 4Hz range, the display shall save the sampled average as the new offset value.
+
+	1. Maintain an array of at least 5 samples.
+	2. On value received, if the timestamp is within a "coasting event" (need to define this), add to the array,
+		if not in the time window, wipe the array and start over.
+	3. If at least 5 samples are available
+		Calculate the stddev of the samples
+		If result is within +/-4hz
+			calculate the average of the samples
+			If result is within +/-4hz of the last succesful sample
+				save offset
+
+	*/	
+
 	ant_bp_ctf_calibration_t* p_page = (ant_bp_ctf_calibration_t*)p_payload;
 	// Byte 0 == page number (0x01)
 	// Byte 1 == calibration ID (0x10) CTF defined message
