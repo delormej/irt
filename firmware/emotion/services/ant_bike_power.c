@@ -384,6 +384,11 @@ within this +/- 4Hz range, the display shall save the sampled average as the new
 	{
 		m_ctf_offset = p_page->offset_msb << 8 | p_page->offset_lsb;
 		BP_LOG("[BP] Received CTF offset: %i\r\n", m_ctf_offset);
+		// TODO: timestamp is only good for 32 seconds, this won't work here.
+		// RECOMMENDATION: use context->elapsed_time (1/4 seconds since workout began)
+		// however, we need to increase from a uint8_t to uint16_t and cast appropriately
+		// where used in ant_fec.c
+		//addCtfOffsetSample(m_ctf_offset, timestamp_get());
 	}
 }
 

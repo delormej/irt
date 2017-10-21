@@ -53,5 +53,6 @@ float j_sqrtf(float x);
 float j_sinf(float x);
 float j_cosf(float x);
 float j_fabsf(float x);
+float j_std_dev(uint16_t data[], uint8_t length);
 
 #endif /* !_J_MATH_PRIVATE_H_ */
