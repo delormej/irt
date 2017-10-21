@@ -132,7 +132,23 @@ static power_event_t m_power_only_buffer[SPEED_EVENT_CACHE_SIZE];
 static event_fifo_t m_power_only_fifo;
 static uint16_t m_ant_power_meter_id = 0; // tracks when a power meter is connected.
 static uint8_t m_last_power_page[8] = { 0xFF }; // buffer for holding last power message received.
-static uint16_t m_ctf_offset = 0; // Crank Torque Frequency Offset.
+
+/**@brief	Returns whether the last power message in the buffer is a CTF Main page.
+ * 
+ */
+static bool isLastPageCtfMain()
+{
+	return m_last_power_page[0] == ANT_BP_PAGE_CTF_MAIN;
+}
+
+/**@brief	Clears the buffer holding the last power message.
+ * 
+ */
+static void resetLastPowerPage()
+{
+	memset(m_last_power_page, 0xFF, 
+		sizeof(uint8_t) * sizeof(m_last_power_page));
+}
 
 /**@brief	Calculates average power in watts between two events.
  *
@@ -228,7 +244,7 @@ static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, fl
 	uint16_t torque_ticks = DELTA_ROLLOVER_16(last_torque_ticks, current_torque_ticks);
 
 	// The average torque per revolution of the pedal is calculated using the calibrated Offset parameter.
-	float torque_frequency = (1.0f / ( (elapsed_time* 0.0005f) /torque_ticks)) - m_ctf_offset; // hz
+	float torque_frequency = (1.0f / ( (elapsed_time* 0.0005f) /torque_ticks)) - getCtfOffset(); // hz
 
 	// Torque in Nm is calculated from torque rate (Torque Frequency) using the calibrated sensitivity Slope
 	float torque = torque_frequency / (slope/10);
@@ -356,24 +372,9 @@ static void HandleCTFPage(uint8_t* p_payload)
 
 static void HandleCTFOffset(uint8_t* p_payload)
 {
-	/*
-The transmitted offset value should be averaged over at least 5 samples during the coasting period. The standard deviation
-between the previous and current sample should be within +/- 4Hz. If the standard deviation of the received messages is
-within this +/- 4Hz range, the display shall save the sampled average as the new offset value.
-
-	1. Maintain an array of at least 5 samples.
-	2. On value received, if the timestamp is within a "coasting event" (need to define this), add to the array,
-		if not in the time window, wipe the array and start over.
-	3. If at least 5 samples are available
-		Calculate the stddev of the samples
-		If result is within +/-4hz
-			calculate the average of the samples
-			If result is within +/-4hz of the last succesful sample
-				save offset
-
-	*/	
-
 	ant_bp_ctf_calibration_t* p_page = (ant_bp_ctf_calibration_t*)p_payload;
+	uint16_t ctf_offset = 0; // Crank Torque Frequency Offset.
+
 	// Byte 0 == page number (0x01)
 	// Byte 1 == calibration ID (0x10) CTF defined message
 	// Byte 2 == CTF Defined ID (0x01) Zero Offset
@@ -382,13 +383,16 @@ within this +/- 4Hz range, the display shall save the sampled average as the new
 	// Byte 7 == Offset LSB
 	if (p_page->calibration_id == 0x10 && p_page->ctf_defined_id == 0x01)
 	{
-		m_ctf_offset = p_page->offset_msb << 8 | p_page->offset_lsb;
-		BP_LOG("[BP] Received CTF offset: %i\r\n", m_ctf_offset);
-		// TODO: timestamp is only good for 32 seconds, this won't work here.
-		// RECOMMENDATION: use context->elapsed_time (1/4 seconds since workout began)
-		// however, we need to increase from a uint8_t to uint16_t and cast appropriately
-		// where used in ant_fec.c
-		//addCtfOffsetSample(m_ctf_offset, timestamp_get());
+		// If this is the first offset message, reset the state.
+		if (isLastPageCtfMain())
+		{
+			resetCtfOffsetSamples();
+			resetLastPowerPage();
+		}
+
+		ctf_offset = p_page->offset_msb << 8 | p_page->offset_lsb;
+		BP_LOG("[BP] Received CTF offset: %i\r\n", ctf_offset);
+		addCtfOffsetSample(ctf_offset);
 	}
 }
 
