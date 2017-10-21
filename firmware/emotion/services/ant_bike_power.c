@@ -16,6 +16,7 @@
 #include "nordic_common.h"
 #include "irt_common.h"
 #include "speed_event_fifo.h"
+#include "ant_ctf_offset.h"
 #include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
