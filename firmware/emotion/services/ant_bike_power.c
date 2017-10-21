@@ -213,6 +213,12 @@ static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, fl
 	uint16_t current_timestamp = p_page->timestamp_msb << 8 | p_page->timestamp_lsb;
 	uint16_t current_torque_ticks = p_page->torque_ticks_msb << 8 | p_page->torque_ticks_lsb;
 
+	// If the last page wasn't a CTF main, wait for the next event.
+	if (!isLastPageCtfMain())
+	{
+		return CTF_CADENCE_TIMEOUT;
+	}
+
 	// Parse prior message (N-1)
 	uint16_t last_timestamp = p_last_page->timestamp_msb << 8 | p_last_page->timestamp_lsb;
 	uint16_t last_torque_ticks = p_last_page->torque_ticks_msb << 8 | p_last_page->torque_ticks_lsb;
@@ -256,10 +262,10 @@ static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, fl
 	/*
 	BP_LOG("[BP] CalcCTFWatts, %i, %i \r\n", last_timestamp, current_timestamp);
 	BP_LOG("[BP] CalcCTFWatts, events: %i, elapsed_time:%i, torque_ticks:%i, slope:%i\r\n",
-		events, elapsed_time, torque_ticks, slope); */
-	BP_LOG("[BP] CalcCTFWatts, torque:%.2f, torque_frequency:%.2f cadence: %i, power:%.2f \r\n",
-		torque, torque_frequency, cadence, *p_watts);
-	
+		events, elapsed_time, torque_ticks, slope); 
+	BP_LOG("[BP] CalcCTFWatts, events:%i torque:%.2f, torque_frequency:%.2f cadence: %i, power:%.2f \r\n",
+		events, torque, torque_frequency, cadence, *p_watts);
+	*/
 
 	return CTF_SUCCESS;
 }
@@ -334,7 +340,7 @@ static void HandleCTFPage(uint8_t* p_payload)
 			// Register no power as there is no cadence.	
 			watts = 0;
 			break;
-	
+
 		case CTF_NO_EVENTS:
 			// Exit out, there is nothing to do.
 			return;
@@ -347,6 +353,9 @@ static void HandleCTFPage(uint8_t* p_payload)
 		default:
 			break;
 	}
+
+	// Make a copy of the last power page.
+	memcpy((uint8_t*)m_last_power_page, (uint8_t*)p_page, sizeof(m_last_power_page));
 
 	//
 	// Averaging needs to be accounted for, accumulate our own power and event count.
@@ -364,9 +373,6 @@ static void HandleCTFPage(uint8_t* p_payload)
 	// (do not repeat yourself) -- let's fix this.
 	//
 	speed_event_fifo_put(&m_power_only_fifo, (uint8_t*)&new_event);
-	
-	// Make a copy of the last power page.
-	memcpy((uint8_t*)m_last_power_page, (uint8_t*)p_page, sizeof(m_last_power_page));
 
 	m_on_bp_power_data(BP_MSG_POWER_DATA, watts);
 }
@@ -389,6 +395,8 @@ static void HandleCTFOffset(uint8_t* p_payload)
 		{
 			resetCtfOffsetSamples();
 			resetLastPowerPage();
+			// Signal no watts.
+			m_on_bp_power_data(BP_MSG_POWER_DATA, 0);
 		}
 
 		ctf_offset = p_page->offset_msb << 8 | p_page->offset_lsb;
