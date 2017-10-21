@@ -255,10 +255,10 @@ static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, fl
 	/*
 	BP_LOG("[BP] CalcCTFWatts, %i, %i \r\n", last_timestamp, current_timestamp);
 	BP_LOG("[BP] CalcCTFWatts, events: %i, elapsed_time:%i, torque_ticks:%i, slope:%i\r\n",
-		events, elapsed_time, torque_ticks, slope);
+		events, elapsed_time, torque_ticks, slope); */
 	BP_LOG("[BP] CalcCTFWatts, torque:%.2f, torque_frequency:%.2f cadence: %i, power:%.2f \r\n",
 		torque, torque_frequency, cadence, *p_watts);
-	*/
+	
 
 	return CTF_SUCCESS;
 }
