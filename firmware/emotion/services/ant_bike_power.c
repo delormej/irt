@@ -208,21 +208,20 @@ static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, fl
 {
 	static uint8_t cadence_time_out = 0;
 
-	// Parse current message (N)
-	uint16_t slope = p_page->slope_msb << 8 | p_page->slope_lsb;
-	uint16_t current_timestamp = p_page->timestamp_msb << 8 | p_page->timestamp_lsb;
-	uint16_t current_torque_ticks = p_page->torque_ticks_msb << 8 | p_page->torque_ticks_lsb;
-
 	// If the last page wasn't a CTF main, wait for the next event.
 	if (!isLastPageCtfMain())
 	{
 		return CTF_CADENCE_TIMEOUT;
 	}
 
+	// Parse current message (N)
+	uint16_t slope = p_page->slope_msb << 8 | p_page->slope_lsb;
+	uint16_t current_timestamp = p_page->timestamp_msb << 8 | p_page->timestamp_lsb;
+	uint16_t current_torque_ticks = p_page->torque_ticks_msb << 8 | p_page->torque_ticks_lsb;
 	// Parse prior message (N-1)
 	uint16_t last_timestamp = p_last_page->timestamp_msb << 8 | p_last_page->timestamp_lsb;
 	uint16_t last_torque_ticks = p_last_page->torque_ticks_msb << 8 | p_last_page->torque_ticks_lsb;
-
+	// Calculate delta from last event.
 	uint16_t elapsed_time = DELTA_ROLLOVER_16(last_timestamp, current_timestamp);
 	uint16_t events = DELTA_ROLLOVER_16(p_last_page->event_count, p_page->event_count);
 
@@ -259,13 +258,14 @@ static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, fl
 	// Finally, power is calculated from the cadence and torque.
 	*p_watts = torque * cadence * (MATH_PI/30); // watts
 
-	/*
-	BP_LOG("[BP] CalcCTFWatts, %i, %i \r\n", last_timestamp, current_timestamp);
+	
+	/*BP_LOG("[BP] CalcCTFWatts, %i, %i \r\n", last_timestamp, current_timestamp);
 	BP_LOG("[BP] CalcCTFWatts, events: %i, elapsed_time:%i, torque_ticks:%i, slope:%i\r\n",
 		events, elapsed_time, torque_ticks, slope); 
-	BP_LOG("[BP] CalcCTFWatts, events:%i torque:%.2f, torque_frequency:%.2f cadence: %i, power:%.2f \r\n",
-		events, torque, torque_frequency, cadence, *p_watts);
 	*/
+	BP_LOG("[BP] CalcCTFWatts, events:%i, elapsed_time: %i, torque:%.2f, torque_frequency:%.2f cadence: %i, power:%.2f \r\n",
+		events, elapsed_time, torque, torque_frequency, cadence, *p_watts);
+	
 
 	return CTF_SUCCESS;
 }
@@ -428,6 +428,7 @@ void ant_bp_rx_handle(ant_evt_t * p_ant_evt)
 			m_ant_power_meter_id = 0;
 			m_on_bp_power_data(BP_MSG_DEVICE_SEARCH_TIME_OUT, 0); 
 			BP_LOG("[BP] SEARCH TIMEOUT!\r\n");
+			resetLastPowerPage();
 			break;
 
 		case EVENT_CHANNEL_CLOSED:
