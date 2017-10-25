@@ -63,6 +63,8 @@
 #define CTF_NO_EVENTS			1
 #define CTF_CADENCE_TIMEOUT		2
 
+#define CTF_CADENCE_TIMEOUT_UNITS	6000				// 3 seconds * 1/2000 of a second.
+
 /**@brief Debug logging for module.
  *
  */
@@ -206,12 +208,12 @@ static float CalcAveragePower(power_event_t first, power_event_t last)
  */
 static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, float* p_watts)
 {
-	static uint8_t cadence_time_out = 0;
+	static uint16_t last_cadence_timestamp = 0;
 
 	// If the last page wasn't a CTF main, wait for the next event.
 	if (!isLastPageCtfMain())
 	{
-		return CTF_CADENCE_TIMEOUT;
+		return CTF_NO_EVENTS;
 	}
 
 	// Parse current message (N)
@@ -225,24 +227,24 @@ static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, fl
 	uint16_t elapsed_time = DELTA_ROLLOVER_16(last_timestamp, current_timestamp);
 	uint16_t events = DELTA_ROLLOVER_16(p_last_page->event_count, p_page->event_count);
 
-	if (events < 1) 
+	if (events == 0)
 	{
-		// If no new events, keep track until we have a cadence time out.
-
-		if (++cadence_time_out >=12)
+		if (DELTA_ROLLOVER_16(last_cadence_timestamp, current_timestamp) > CTF_CADENCE_TIMEOUT_UNITS)
 		{
-			// Cadence timed out.
-			p_watts = 0;
+			// If after 3 seconds there is no cadence update, report 0 cadence/power.
+			*p_watts = 0;
+			BP_LOG("[BP] Cadence Timeout, %i:%i == %i\r\n", last_cadence_timestamp, current_timestamp,
+				DELTA_ROLLOVER_16(last_cadence_timestamp, current_timestamp));
 			return CTF_CADENCE_TIMEOUT;
 		}
-		else 
+		else
 		{
 			return CTF_NO_EVENTS;
 		}
 	}
-	else
+	else 
 	{
-		cadence_time_out = 0;
+		last_cadence_timestamp = current_timestamp;
 	}
 
 	float cadence_period = (elapsed_time / events) * 0.0005f; // Seconds
@@ -341,10 +343,6 @@ static void HandleCTFPage(uint8_t* p_payload)
 			watts = 0;
 			break;
 
-		case CTF_NO_EVENTS:
-			// Exit out, there is nothing to do.
-			return;
-
 		case CTF_SUCCESS:
 			// Round float power into integer watts.
 			watts = roundl(power);
@@ -357,24 +355,27 @@ static void HandleCTFPage(uint8_t* p_payload)
 	// Make a copy of the last power page.
 	memcpy((uint8_t*)m_last_power_page, (uint8_t*)p_page, sizeof(m_last_power_page));
 
-	//
-	// Averaging needs to be accounted for, accumulate our own power and event count.
-	// Create new event from the old.
-	//
-	power_event_t* p_previous_event = (power_event_t*)speed_event_fifo_get(
-		&m_power_only_fifo);
+	if (err != CTF_NO_EVENTS)
+	{
+		//
+		// Averaging needs to be accounted for, accumulate our own power and event count.
+		// Create new event from the old.
+		//
+		power_event_t* p_previous_event = (power_event_t*)speed_event_fifo_get(
+			&m_power_only_fifo);
 
-	power_event_t new_event;
-	new_event.event_count = p_previous_event->event_count + 1;
-	new_event.accum_power = p_previous_event->accum_power + watts;
+		power_event_t new_event;
+		new_event.event_count = p_previous_event->event_count + 1;
+		new_event.accum_power = p_previous_event->accum_power + watts;
 
-	//
-	// TODO: These methods are duplicated with HandleStandardPowerOnlyPage 
-	// (do not repeat yourself) -- let's fix this.
-	//
-	speed_event_fifo_put(&m_power_only_fifo, (uint8_t*)&new_event);
+		//
+		// TODO: These methods are duplicated with HandleStandardPowerOnlyPage 
+		// (do not repeat yourself) -- let's fix this.
+		//
+		speed_event_fifo_put(&m_power_only_fifo, (uint8_t*)&new_event);
 
-	m_on_bp_power_data(BP_MSG_POWER_DATA, watts);
+		m_on_bp_power_data(BP_MSG_POWER_DATA, watts);
+	}
 }
 
 static void HandleCTFOffset(uint8_t* p_payload)
