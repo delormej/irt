@@ -225,7 +225,7 @@ static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, fl
 	uint16_t last_torque_ticks = p_last_page->torque_ticks_msb << 8 | p_last_page->torque_ticks_lsb;
 	// Calculate delta from last event.
 	uint16_t elapsed_time = DELTA_ROLLOVER_16(last_timestamp, current_timestamp);
-	uint16_t events = DELTA_ROLLOVER_16(p_last_page->event_count, p_page->event_count);
+	uint8_t events = DELTA_ROLLOVER_8(p_last_page->event_count, p_page->event_count);
 
 	if (events == 0)
 	{
