@@ -39,6 +39,35 @@ static void profile_update_pstorage_cb_handler(pstorage_handle_t *  p_handle,
                                   uint8_t *            p_data,
                                   uint32_t             data_len);
 
+static void profile_dump_to_log()
+{
+    UP_LOG("\r\n\t weight: %i \r\n\t wheel: %i \r\n\t " \
+        "settings: %lu \r\n\t drag: %.3f, rr: %.3f \r\n" \
+        "ca_root_position: %i \r\n\t " \
+        "ca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
+        "ca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n" \
+        "power_meter_id: %i\r\n" \
+        "power_adjust_seconds: %i, power_average_seconds: %i\r\n",
+        m_user_profile.total_weight_kg,
+        m_user_profile.wheel_size_mm,
+        m_user_profile.settings,
+        m_user_profile.ca_drag,
+        m_user_profile.ca_rr,
+        m_user_profile.ca_mag_factors.root_position,
+        m_user_profile.ca_mag_factors.low_factors[0],
+        m_user_profile.ca_mag_factors.low_factors[1],
+        m_user_profile.ca_mag_factors.low_factors[2],
+        m_user_profile.ca_mag_factors.low_factors[3],			
+        m_user_profile.ca_mag_factors.high_factors[0],
+        m_user_profile.ca_mag_factors.high_factors[1],
+        m_user_profile.ca_mag_factors.high_factors[2],
+        m_user_profile.ca_mag_factors.high_factors[3],
+        m_user_profile.power_meter_ant_id,
+        m_user_profile.power_adjust_seconds,
+        m_user_profile.power_average_seconds
+        );    
+}
+
 /**@brief Initializes access to storage. */
 static uint32_t user_profile_storage_init(pstorage_ntf_cb_t cb)
 {
@@ -75,14 +104,8 @@ static uint32_t user_profile_load()
     						sizeof (user_profile_t),
     						USER_PROFILE_OFFSET);
 
-    UP_LOG("[UP]:user_profile_load {version: %i, weight:%i, wheel:%i, settings:%i, slope:%i, intercept:%i, servo_offset:%i}\r\n",
-    		m_user_profile.version,
-    		m_user_profile.total_weight_kg,
-    		m_user_profile.wheel_size_mm,
-    		m_user_profile.settings,
-    		m_user_profile.ca_slope,
-    		m_user_profile.ca_intercept,
-    		m_user_profile.servo_offset);
+    UP_LOG("[UP]:user_profile_load {version: %i}\r\n", m_user_profile.version);
+    profile_dump_to_log();
 
     return err_code;
 }
@@ -206,31 +229,8 @@ static uint32_t user_profile_init()
         profile_update_sched();
     }
 
-    UP_LOG("[UP]:profile_init:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t " \
-        "settings: %lu \r\n\t drag: %.3f, rr: %.3f \r\n" \
-        "ca_root_position: %i \r\n\t " \
-        "ca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
-        "ca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n" \
-        "power_meter_id: %i\r\n" \
-        "power_adjust_seconds: %i, power_average_seconds: %i\r\n",
-            m_user_profile.total_weight_kg,
-            m_user_profile.wheel_size_mm,
-            m_user_profile.settings,
-            m_user_profile.ca_drag,
-            m_user_profile.ca_rr,
-            m_user_profile.ca_mag_factors.root_position,
-            m_user_profile.ca_mag_factors.low_factors[0],
-            m_user_profile.ca_mag_factors.low_factors[1],
-            m_user_profile.ca_mag_factors.low_factors[2],
-            m_user_profile.ca_mag_factors.low_factors[3],			
-            m_user_profile.ca_mag_factors.high_factors[0],
-            m_user_profile.ca_mag_factors.high_factors[1],
-            m_user_profile.ca_mag_factors.high_factors[2],
-            m_user_profile.ca_mag_factors.high_factors[3],
-            m_user_profile.power_meter_ant_id,
-            m_user_profile.power_adjust_seconds,
-            m_user_profile.power_average_seconds
-            );
+    UP_LOG("[UP]:profile_init:");
+    profile_dump_to_log();
             
      return err_code;       
 }
@@ -295,12 +295,8 @@ static void profile_update_sched_handler(void *p_event_data, uint16_t event_size
 	err_code = user_profile_store();
 	APP_ERROR_CHECK(err_code);
 
-	UP_LOG("[MAIN]:profile_update:\r\n\t weight: %i \r\n\t wheel: %i \r\n\t settings: %lu \r\n\t slope: %i \r\n\t intercept: %i \r\n",
-			m_user_profile.total_weight_kg,
-			m_user_profile.wheel_size_mm,
-			m_user_profile.settings,
-			m_user_profile.ca_slope,
-			m_user_profile.ca_intercept);
+    UP_LOG("[MAIN]:profile_update:\r\n");
+    profile_dump_to_log();
 }
 
 /**@brief   Schedules an update to the profile.  See notes above in handler.
@@ -349,15 +345,8 @@ uint32_t user_profile_store()
                                sizeof (user_profile_t),
                                USER_PROFILE_OFFSET);
 
-    UP_LOG("[UP]:user_profile_store {version: %i, weight:%i, wheel:%i, settings:%i, slope:%i, intercept:%i, servo_offset:%i, addr:%lu}\r\n",
-    		m_user_profile.version,
-    		m_user_profile.total_weight_kg,
-    		m_user_profile.wheel_size_mm,
-    		m_user_profile.settings,
-    		m_user_profile.ca_slope,
-    		m_user_profile.ca_intercept,
-    		m_user_profile.servo_offset,
-    		m_user_profile);
+    UP_LOG("[UP]:user_profile_store {version: %i}\r\n", m_user_profile.version);
+    profile_dump_to_log();
 
 	return err_code;
 }

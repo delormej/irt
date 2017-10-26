@@ -26,7 +26,8 @@
 #endif // ENABLE_DEBUG_LOG
 
 #define APP_TIMER_PRESCALER		0
-#define BLINK_RATE_TICKS		APP_TIMER_TICKS(150, APP_TIMER_PRESCALER)	// 75ms in ticks
+#define BLINK_TIME_MS			150	// blink time in milliseconds
+#define BLINK_RATE_TICKS		APP_TIMER_TICKS(BLINK_TIME_MS, APP_TIMER_PRESCALER)
 
 // TODO: this module doesn't support HW_VERSION <2
 #define LED_FRONT_GREEN_PIN			PIN_LED_B
