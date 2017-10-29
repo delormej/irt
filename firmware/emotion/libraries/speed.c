@@ -207,10 +207,10 @@ float speed_average_mps(uint8_t seconds)
 	speed_event_t* p_oldest = (speed_event_t*)speed_event_fifo_oldest(&m_speed_fifo, events);
 	speed_event_t* p_current = (speed_event_t*)speed_event_fifo_get(&m_speed_fifo);
 
-	SP_LOG("[SP] %i:%i, %i:%i, events=%i\r\n", 
-		p_oldest->event_time_2048, p_oldest->accum_flywheel_ticks,
-		p_current->event_time_2048, p_current->accum_flywheel_ticks,
-		events);
+	// SP_LOG("[SP] %i:%i, %i:%i, events=%i\r\n", 
+	// 	p_oldest->event_time_2048, p_oldest->accum_flywheel_ticks,
+	// 	p_current->event_time_2048, p_current->accum_flywheel_ticks,
+	// 	events);
 
 	return speed_calc_mps(*p_oldest, *p_current);
 }

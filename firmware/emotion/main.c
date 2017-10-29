@@ -685,6 +685,13 @@ static void bike_power_init(uint16_t power_meter_id)
 
 	LOG("[MAIN] bike_power_init, power_meter_id: %i.\r\n.", power_meter_id);
 
+	if (m_current_state.power_meter_paired == true && 
+		power_meter_id == mp_user_profile->power_meter_ant_id)
+	{
+		LOG("[MAIN] Already connected to power meter id %i.\r\n", power_meter_id);
+		return;
+	}
+
 	if (power_meter_id != 0xFFFF) 
 	{
 		// Initialize ANT bike power listening channel.
