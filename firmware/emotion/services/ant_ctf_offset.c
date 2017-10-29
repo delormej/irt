@@ -67,14 +67,15 @@ void addCtfOffsetSample(uint16_t value)
         if (j_fabsf(stddev) <= 4.0) 
         {
             float avg = average(samples, SAMPLE_SIZE);       
-            CTF_LOG("[CTF] ctfOffset std_dev: %.2f, avg: %.2f, prev: %.2f\r\n", 
-                stddev, avg, ctfOffset);
+            // CTF_LOG("[CTF] ctfOffset std_dev: %.2f, avg: %.2f, prev: %.2f\r\n", 
+            //     stddev, avg, ctfOffset);
 
             if (ctfOffset == 0.0F || j_fabsf(avg - ctfOffset) <= 4.0) 
             {
                 // Within the range of acceptible values.
                 ctfOffset = avg;
-                CTF_LOG("[CTF] New ctfOffset calculated: %.2f\r\n", ctfOffset);
+                CTF_LOG("[CTF] New ctfOffset calculated (*100): %i\r\n",
+                 (uint16_t)(ctfOffset * 100));
             }
         }
     }

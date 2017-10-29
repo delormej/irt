@@ -565,7 +565,8 @@ static void sensor_read_timeout_handler(void * p_context)
 
 	// Read temperature sensor.
 	m_current_state.temp = temperature_read();
-	LOG("[MAIN] Temperature read: %2.1f. \r\n", m_current_state.temp);
+	// Commenting out as the float debug print often causes a hardfault when the device is buy.
+	LOG("[MAIN] Temperature read.\r\n"); // %2.1f. \r\n", m_current_state.temp);
 }
 
 /**@brief Function for starting the application timers.

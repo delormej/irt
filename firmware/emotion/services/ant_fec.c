@@ -486,17 +486,6 @@ static void HandleResistancePages(uint8_t* buffer)
 	rc_evt_t resistance_evt; 
     memset(&resistance_evt, 0, sizeof(rc_evt_t));
 
-    FE_LOG("[FE]:resistance message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
-            buffer[0],
-            buffer[1],
-            buffer[2],
-            buffer[3],
-            buffer[4],
-            buffer[5],
-            buffer[6],
-            buffer[7],
-            buffer[8]);
-
     // TODO: refactor and remove resistance_evt to just share page 71 (Last command).
     // Operation is the page number, which is the first byte.
     memset(m_last_command.Data, 0xFF, sizeof(m_last_command.Data));
@@ -548,11 +537,22 @@ static void HandleResistancePages(uint8_t* buffer)
             // Parse crr.
             resistance_evt.track.crr = track_crr_get(m_page51.CoeffRollingResistance);
             
-            FE_LOG("[FE] track_resistance, grade:%.4f, crr:%.5f \r\n",
-                resistance_evt.track.grade, resistance_evt.track.crr);
+            FE_LOG("[FE] track_resistance: %i\r\n",m_page51.GradeLSB | m_page51.GradeMSB << 8);
+            // FE_LOG("[FE] track_resistance, grade:%.4f, crr:%.5f \r\n",
+            //     resistance_evt.track.grade, resistance_evt.track.crr);
             break;
             
         default:
+            FE_LOG("[FE]:resistance message [%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x][%.2x]\r\n",
+                buffer[0],
+                buffer[1],
+                buffer[2],
+                buffer[3],
+                buffer[4],
+                buffer[5],
+                buffer[6],
+                buffer[7],
+                buffer[8]);        
             break;   
     };
 

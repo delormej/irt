@@ -264,10 +264,10 @@ static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, fl
 	/*BP_LOG("[BP] CalcCTFWatts, %i, %i \r\n", last_timestamp, current_timestamp);
 	BP_LOG("[BP] CalcCTFWatts, events: %i, elapsed_time:%i, torque_ticks:%i, slope:%i\r\n",
 		events, elapsed_time, torque_ticks, slope); 
-	*/
+	
 	BP_LOG("[BP] CalcCTFWatts, events:%i, elapsed_time: %i, torque:%.2f, torque_frequency:%.2f cadence: %i, power:%.2f \r\n",
 		events, elapsed_time, torque, torque_frequency, cadence, *p_watts);
-	
+	*/
 
 	return CTF_SUCCESS;
 }
@@ -632,10 +632,10 @@ float ant_bp_avg_power(uint8_t seconds)
 	
 	average_power = CalcAveragePower(*p_oldest, *p_current);
 
-	BP_LOG("[BP] %i:%i, %i:%i == Average Power: %.2f (events:%i)\r\n", 
-		p_oldest->event_count, p_current->event_count,
-		p_oldest->accum_power, p_current->accum_power, 
-		average_power, events);
+	// BP_LOG("[BP] %i:%i, %i:%i == Average Power: %.2f (events:%i)\r\n", 
+	// 	p_oldest->event_count, p_current->event_count,
+	// 	p_oldest->accum_power, p_current->accum_power, 
+	// 	average_power, events);
 
 	return average_power;	
 }
