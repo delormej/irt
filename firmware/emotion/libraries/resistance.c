@@ -173,7 +173,8 @@ uint16_t resistance_position_set(uint16_t servo_pos, bool smooth)
 	 * Adjusted offset for the 2,000 - 1,000 range is -301, but since testing was done at -50,
 	 * the new baseline offset is 351 for a servo that is factory calibrated to 1,451.
 	*/
-	if ((servo_pos + mp_user_profile->servo_offset) > MAGNET_POSITION_OFF)
+	if (servo_pos != MAGNET_POSITION_MIN_RESISTANCE &&
+		(servo_pos + mp_user_profile->servo_offset) > MAGNET_POSITION_OFF)
 	{
 		// Don't go beyond max magnet position, even after adjusting for servo offset.
 		servo_pos = MAGNET_POSITION_OFF;
