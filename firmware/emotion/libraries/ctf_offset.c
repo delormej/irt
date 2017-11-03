@@ -10,9 +10,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "ant_ctf_offset.h"
+#include "ctf_offset.h"
 #include "math_private.h"
-#include "debug.h"
 
 #define SAMPLE_SIZE         8       // Max 8 samples to track at once
 
@@ -20,6 +19,7 @@
  *
  */
 #ifdef ENABLE_DEBUG_LOG
+#include "debug.h"
 #define CTF_LOG debug_log
 #else
 #define CTF_LOG(...)

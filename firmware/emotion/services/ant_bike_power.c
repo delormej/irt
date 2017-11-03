@@ -16,7 +16,7 @@
 #include "nordic_common.h"
 #include "irt_common.h"
 #include "speed_event_fifo.h"
-#include "ant_ctf_offset.h"
+#include "ctf_power.h"
 #include "debug.h"
 
 #define POWER_PAGE_INTERLEAVE_COUNT			5u
@@ -94,34 +94,6 @@ typedef struct
 	uint8_t			instant_power_msb;	
 } ant_bp_standard_power_only_t;
 
-/**@brief	Crank Torque Frequence Message Format.
- *
- */
-typedef struct
-{
-	uint8_t			page_number;
-	uint8_t			event_count;
-	uint8_t			slope_msb;
-	uint8_t			slope_lsb;
-	uint8_t			timestamp_msb;
-	uint8_t			timestamp_lsb;
-	uint8_t			torque_ticks_msb;
-	uint8_t			torque_ticks_lsb;
-} ant_bp_ctf_t;
-
-/**@brief	Crank Torque Frequency Calibration for Zero Offset.
- *
- */
-typedef struct
-{
-	uint8_t			page_number;
-	uint8_t			calibration_id;
-	uint8_t			ctf_defined_id;
-	uint8_t			reserved[3];
-	uint8_t			offset_msb;
-	uint8_t			offset_lsb;
-} ant_bp_ctf_calibration_t;
-
 typedef struct
 {
 	uint8_t 		event_count;
@@ -135,14 +107,6 @@ static power_event_t m_power_only_buffer[SPEED_EVENT_CACHE_SIZE];
 static event_fifo_t m_power_only_fifo;
 static uint16_t m_ant_power_meter_id = 0; // tracks when a power meter is connected.
 static uint8_t m_last_power_page[8] = { 0xFF }; // buffer for holding last power message received.
-
-/**@brief	Returns whether the last power message in the buffer is a CTF Main page.
- * 
- */
-static bool isLastPageCtfMain()
-{
-	return m_last_power_page[0] == ANT_BP_PAGE_CTF_MAIN;
-}
 
 /**@brief	Clears the buffer holding the last power message.
  * 
@@ -381,29 +345,9 @@ static void HandleCTFPage(uint8_t* p_payload)
 static void HandleCTFOffset(uint8_t* p_payload)
 {
 	ant_bp_ctf_calibration_t* p_page = (ant_bp_ctf_calibration_t*)p_payload;
-	uint16_t ctf_offset = 0; // Crank Torque Frequency Offset.
-
-	// Byte 0 == page number (0x01)
-	// Byte 1 == calibration ID (0x10) CTF defined message
-	// Byte 2 == CTF Defined ID (0x01) Zero Offset
-	// Byte 3-5 0xFF (reserved)
-	// Byte 6 == Offset MSB
-	// Byte 7 == Offset LSB
-	if (p_page->calibration_id == 0x10 && p_page->ctf_defined_id == 0x01)
-	{
-		// If this is the first offset message, reset the state.
-		if (isLastPageCtfMain())
-		{
-			resetCtfOffsetSamples();
-			resetLastPowerPage();
-			// Signal no watts.
-			m_on_bp_power_data(BP_MSG_POWER_DATA, 0);
-		}
-
-		ctf_offset = p_page->offset_msb << 8 | p_page->offset_lsb;
-		BP_LOG("[BP] Received CTF offset: %i\r\n", ctf_offset);
-		addCtfOffsetSample(ctf_offset);
-	}
+	ctf_set_calibration_page(p_page);
+	// We're getting calibration data, so there is no power.
+	 m_on_bp_power_data(BP_MSG_POWER_DATA, 0);
 }
 
 /**@brief Returns the connected power meter ID or 0 if not connected.

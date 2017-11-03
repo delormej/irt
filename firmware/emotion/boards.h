@@ -28,7 +28,7 @@
 
 #else
   #define HW_REVISION	-1
-  #error "Board is not defined"
+  #warning "Board is not defined"
 
 #endif // BOARD REVISION
 
