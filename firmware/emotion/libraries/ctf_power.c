@@ -16,10 +16,12 @@
 #define GET_TICKS(p_ctf) (p_ctf->torque_ticks_msb << 8 | p_ctf->torque_ticks_lsb)
 #define GET_SLOPE(p_ctf) (p_ctf->slope_msb << 8 | p_ctf->slope_lsb)
 
+static uint16_t page_count;
 static ant_bp_ctf_t ctf_main_page[SPEED_EVENT_CACHE_SIZE];
 static event_fifo_t ctf_main_page_fifo;
 static uint16_t last_cadence_timestamp = 0;
 static bool ctf_in_use, in_calibration = false;
+
 typedef struct
 {
     uint8_t events;
@@ -83,6 +85,7 @@ static void ctf_reset()
 {
     ctf_in_use = true;
     in_calibration = false;
+    page_count = 0;
     ctf_main_page_fifo = speed_event_fifo_init((uint8_t*)ctf_main_page, 
         sizeof(ctf_main_page)); 
 }
@@ -91,6 +94,13 @@ static void ctf_offset_reset()
 { 
     in_calibration = true;
     resetCtfOffsetSamples();
+}
+
+static void add_ctf_page(ant_bp_ctf_t* p_page)
+{
+    //TODO: do we want to put events that don't have net new data? i.e. timestamp hasn't advanced?
+    page_count++;
+    speed_event_fifo_put(&ctf_main_page_fifo, (uint8_t*)p_page);   
 }
 
 int16_t ctf_get_average_power(uint8_t seconds)
@@ -114,7 +124,7 @@ uint32_t ctf_get_power(int16_t* p_watts)
     ctf_power_delta_t delta;
 
     // Must have 2 events in order to calculate power.
-    if (ctf_main_page_fifo.write_index < 1)
+    if (page_count < 1)
         return err;
 
     p_current = get_current_ctf_main();
@@ -154,7 +164,7 @@ void ctf_set_main_page(ant_bp_ctf_t* p_page)
 {
     if (!ctf_in_use || in_calibration)
         ctf_reset();
-    speed_event_fifo_put(&ctf_main_page_fifo, (uint8_t*)p_page);
+    add_ctf_page(p_page);   
 }
 
 bool ctf_power_in_use()
