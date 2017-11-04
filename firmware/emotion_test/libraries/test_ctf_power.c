@@ -26,6 +26,20 @@ static int init()
     return 0;
 }
 
+static void test_ctf_get_average_power()
+{
+    // Add a bunch of additional power records, to create a 3??? second average??
+    // need to decide how long our average period is and if it's configurable?
+    CU_ASSERT(1); // force to fail.
+}
+
+static void test_ctf_get_average_power_rollover()
+{
+    // This should test an event series where there is a rollover in one or more of
+    // the data fields in the ctf main data page.
+    CU_ASSERT(1);    
+}
+
 static void test_ctf_get_power()
 {
     uint16_t watts = ctf_get_power();
@@ -45,4 +59,5 @@ void tests_ctf_power()
     // Add tests.
     CU_ADD_TEST(pSuite, test_ctf_get_offset);
     CU_ADD_TEST(pSuite, test_ctf_get_power);
+    CU_ADD_TEST(pSuite, test_ctf_get_average_power)
 }

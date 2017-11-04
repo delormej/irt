@@ -58,13 +58,6 @@
 #define ANT_BURST_MSG_ID_SET_POSITIONS	0x59									/** Message ID used when setting servo button stop positions via an ANT BURST. */
 #define ANT_BURST_MSG_ID_SET_MAGNET_CA	0x60									/** Message ID used when setting magnet calibration via an ANT BURST. */
 
-// Response codes for CTF power message
-#define CTF_SUCCESS				0
-#define CTF_NO_EVENTS			1
-#define CTF_CADENCE_TIMEOUT		2
-
-#define CTF_CADENCE_TIMEOUT_UNITS	6000				// 3 seconds * 1/2000 of a second.
-
 /**@brief Debug logging for module.
  *
  */
@@ -166,76 +159,6 @@ static float CalcAveragePower(power_event_t first, power_event_t last)
 	return average_power;
 }
 
-/**@brief	Calculates power(watts) from Crank Tourque Frequency page.
- *			Returns 0 if succesful, 1 if no new events, 2 if cadence time out.
- *
- */
-static uint32_t CalcCTFWatts(ant_bp_ctf_t* p_page, ant_bp_ctf_t* p_last_page, float* p_watts)
-{
-	static uint16_t last_cadence_timestamp = 0;
-
-	// If the last page wasn't a CTF main, wait for the next event.
-	if (!isLastPageCtfMain())
-	{
-		return CTF_NO_EVENTS;
-	}
-
-	// Parse current message (N)
-	uint16_t slope = p_page->slope_msb << 8 | p_page->slope_lsb;
-	uint16_t current_timestamp = p_page->timestamp_msb << 8 | p_page->timestamp_lsb;
-	uint16_t current_torque_ticks = p_page->torque_ticks_msb << 8 | p_page->torque_ticks_lsb;
-	// Parse prior message (N-1)
-	uint16_t last_timestamp = p_last_page->timestamp_msb << 8 | p_last_page->timestamp_lsb;
-	uint16_t last_torque_ticks = p_last_page->torque_ticks_msb << 8 | p_last_page->torque_ticks_lsb;
-	// Calculate delta from last event.
-	uint16_t elapsed_time = DELTA_ROLLOVER_16(last_timestamp, current_timestamp);
-	uint8_t events = DELTA_ROLLOVER_8(p_last_page->event_count, p_page->event_count);
-
-	if (events == 0)
-	{
-		if (DELTA_ROLLOVER_16(last_cadence_timestamp, current_timestamp) > CTF_CADENCE_TIMEOUT_UNITS)
-		{
-			// If after 3 seconds there is no cadence update, report 0 cadence/power.
-			*p_watts = 0;
-			BP_LOG("[BP] Cadence Timeout, %i:%i == %i\r\n", last_cadence_timestamp, current_timestamp,
-				DELTA_ROLLOVER_16(last_cadence_timestamp, current_timestamp));
-			return CTF_CADENCE_TIMEOUT;
-		}
-		else
-		{
-			return CTF_NO_EVENTS;
-		}
-	}
-	else 
-	{
-		last_cadence_timestamp = current_timestamp;
-	}
-
-	float cadence_period = (elapsed_time / events) * 0.0005f; // Seconds
-	uint16_t cadence = (uint16_t) ROUNDED_DIV(60, cadence_period); // RPMs
-	uint16_t torque_ticks = DELTA_ROLLOVER_16(last_torque_ticks, current_torque_ticks);
-
-	// The average torque per revolution of the pedal is calculated using the calibrated Offset parameter.
-	float torque_frequency = (1.0f / ( (elapsed_time* 0.0005f) /torque_ticks)) - getCtfOffset(); // hz
-
-	// Torque in Nm is calculated from torque rate (Torque Frequency) using the calibrated sensitivity Slope
-	float torque = torque_frequency / (slope/10);
-
-	// Finally, power is calculated from the cadence and torque.
-	*p_watts = torque * cadence * (MATH_PI/30); // watts
-
-	
-	/*BP_LOG("[BP] CalcCTFWatts, %i, %i \r\n", last_timestamp, current_timestamp);
-	BP_LOG("[BP] CalcCTFWatts, events: %i, elapsed_time:%i, torque_ticks:%i, slope:%i\r\n",
-		events, elapsed_time, torque_ticks, slope); 
-	
-	BP_LOG("[BP] CalcCTFWatts, events:%i, elapsed_time: %i, torque:%.2f, torque_frequency:%.2f cadence: %i, power:%.2f \r\n",
-		events, elapsed_time, torque, torque_frequency, cadence, *p_watts);
-	*/
-
-	return CTF_SUCCESS;
-}
-
 /**@brief Parses ant data page to combine bits for power in watts.
  *
  */
@@ -293,53 +216,11 @@ static void HandleStandardPowerOnlyPage(uint8_t* p_payload)
 
 static void HandleCTFPage(uint8_t* p_payload)
 {
-	// m_on_bp_power_data(BP_MSG_POWER_DATA,
+	int16_t watts;
 	ant_bp_ctf_t* p_page = (ant_bp_ctf_t*)p_payload;
-
-	float power = 0.0f;
-	uint16_t watts = 0;
-	uint32_t err = CalcCTFWatts(p_page, (ant_bp_ctf_t*)m_last_power_page, &power);
-	
-	switch (err)
-	{
-		case CTF_CADENCE_TIMEOUT:
-			// Register no power as there is no cadence.	
-			watts = 0;
-			break;
-
-		case CTF_SUCCESS:
-			// Round float power into integer watts.
-			watts = roundl(power);
-			break;
-
-		default:
-			break;
-	}
-
-	// Make a copy of the last power page.
-	memcpy((uint8_t*)m_last_power_page, (uint8_t*)p_page, sizeof(m_last_power_page));
-
-	if (err != CTF_NO_EVENTS)
-	{
-		//
-		// Averaging needs to be accounted for, accumulate our own power and event count.
-		// Create new event from the old.
-		//
-		power_event_t* p_previous_event = (power_event_t*)speed_event_fifo_get(
-			&m_power_only_fifo);
-
-		power_event_t new_event;
-		new_event.event_count = p_previous_event->event_count + 1;
-		new_event.accum_power = p_previous_event->accum_power + watts;
-
-		//
-		// TODO: These methods are duplicated with HandleStandardPowerOnlyPage 
-		// (do not repeat yourself) -- let's fix this.
-		//
-		speed_event_fifo_put(&m_power_only_fifo, (uint8_t*)&new_event);
-
+	ctf_set_main_page(p_page);
+	if (ctf_get_power(&watts) == CTF_SUCCESS)
 		m_on_bp_power_data(BP_MSG_POWER_DATA, watts);
-	}
 }
 
 static void HandleCTFOffset(uint8_t* p_payload)
@@ -347,7 +228,7 @@ static void HandleCTFOffset(uint8_t* p_payload)
 	ant_bp_ctf_calibration_t* p_page = (ant_bp_ctf_calibration_t*)p_payload;
 	ctf_set_calibration_page(p_page);
 	// We're getting calibration data, so there is no power.
-	 m_on_bp_power_data(BP_MSG_POWER_DATA, 0);
+	m_on_bp_power_data(BP_MSG_POWER_DATA, 0);
 }
 
 /**@brief Returns the connected power meter ID or 0 if not connected.

@@ -32,7 +32,7 @@ jason@DESKTOP-50IAGSN:~/dev/insideride/firmware/emotion/test/libraries$ gcc -o t
 #include <stdio.h>
 #include "CUnit/Basic.h"
 
-// Dangerous, but effective.  This allows implicit declaration of functions
+// Dangerous, but effective.  This allows implicit declaration of test suite functions
 // so that we do not need to create/include header definitions for each test suite.
 #define ADD_CU_SUITE(test_suite_name) {\
 _Pragma ("GCC diagnostic ignored \"-Wimplicit-function-declaration\"") \

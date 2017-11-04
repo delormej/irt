@@ -36,7 +36,6 @@ static float average(uint16_t data[], uint8_t length)
     {
         sum += data[i];
     }
-
     return sum / length;
 }
 
@@ -57,19 +56,17 @@ void resetCtfOffsetSamples()
 */
 void addCtfOffsetSample(uint16_t value)
 {
+    //BP_LOG("[BP] Received CTF offset: %i\r\n", ctf_offset);
     // Calculate the position 0-SAMPLE_SIZE, incrementing sampleIndex.
     samples[sampleIndex++ % SAMPLE_SIZE] = value;
- 
     if (hasValidSampleSize()) 
     {
         float stddev = j_std_dev(samples, SAMPLE_SIZE);
-
         if (j_fabsf(stddev) <= 4.0) 
         {
             float avg = average(samples, SAMPLE_SIZE);       
             // CTF_LOG("[CTF] ctfOffset std_dev: %.2f, avg: %.2f, prev: %.2f\r\n", 
             //     stddev, avg, ctfOffset);
-
             if (ctfOffset == 0.0F || j_fabsf(avg - ctfOffset) <= 4.0) 
             {
                 // Within the range of acceptible values.

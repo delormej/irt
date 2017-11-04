@@ -6,6 +6,11 @@
 #include <stdint.h>
 #include "ctf_offset.h"
 
+// Response codes for CTF power message
+#define CTF_SUCCESS				0
+#define CTF_NO_EVENTS			1
+#define CTF_CADENCE_TIMEOUT		2
+
 /**@brief	Crank Torque Frequence Message Format.
  *
  */
@@ -34,10 +39,10 @@ typedef struct
 	uint8_t			offset_lsb;
 } ant_bp_ctf_calibration_t;
 
-
+uint32_t ctf_get_power(int16_t* p_watts);
+int16_t ctf_get_average_power(uint8_t seconds);
+bool ctf_power_in_use();
 void ctf_set_main_page(ant_bp_ctf_t* p_page);
 void ctf_set_calibration_page(ant_bp_ctf_calibration_t* p_page);
-uint8_t ctf_get_cadence();
-int16_t ctf_get_power();
 
 #endif // CTF_POWER_H__
