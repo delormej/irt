@@ -4,6 +4,7 @@
 #define CTF_POWER_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "ctf_offset.h"
 
 // Response codes for CTF power message

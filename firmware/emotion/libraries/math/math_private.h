@@ -8,7 +8,9 @@
 #ifndef _J_MATH_PRIVATE_H_
 #define	_J_MATH_PRIVATE_H_
 
-#define u_int32_t uint32_t
+#define	GRAVITY						9.81f								// Coefficent of gravity.
+#define	MATH_PI						3.14159f
+#define u_int32_t         uint32_t
 
 #include <stdint.h>
 #include <float.h>

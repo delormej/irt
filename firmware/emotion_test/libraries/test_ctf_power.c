@@ -42,8 +42,9 @@ static void test_ctf_get_average_power_rollover()
 
 static void test_ctf_get_power()
 {
-    uint16_t watts = ctf_get_power();
-    CU_ASSERT(watts == 260);
+    uint16_t watts;
+    uint32_t err = ctf_get_power(&watts);
+    CU_ASSERT(watts == 260 && err == CTF_SUCCESS);
 }
 
 static void test_ctf_get_offset()
@@ -59,5 +60,5 @@ void tests_ctf_power()
     // Add tests.
     CU_ADD_TEST(pSuite, test_ctf_get_offset);
     CU_ADD_TEST(pSuite, test_ctf_get_power);
-    CU_ADD_TEST(pSuite, test_ctf_get_average_power)
+    CU_ADD_TEST(pSuite, test_ctf_get_average_power);
 }

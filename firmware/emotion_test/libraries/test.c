@@ -24,9 +24,8 @@
  *                      tests         2       2       2       0
  *                      asserts       5       5       5       0
 
-TODO: conver this to make file
- Compiled on unbuntu for Windows using:
-jason@DESKTOP-50IAGSN:~/dev/insideride/firmware/emotion/test/libraries$ gcc -o test *.c ../../libraries/math/*.c  ../../libraries/ctf_power.c ../../libraries/ctf_offset.c -iquote ../../libraries/ -iquote ../../libraries/math/ -iquote ../../ -lcunit
+TODO: convert this to make file, compiled on unbuntu for Windows using:
+jason@DESKTOP-50IAGSN:~/dev/insideride/firmware/emotion_test$ gcc -o test ./libraries/*.c ../emotion/libraries/speed_event_fifo.c ../emotion/libraries/math/*.c  ../emotion/libraries/ctf_power.c ../emotion/libraries/ctf_offset.c -iquote ../emotion/libraries/ -iquote ../emotion/libraries/math/ -iquote ./include/ -iquote ../emotion/ -iquote ../emotion/services/ -iquote ../nrf51sdk_7.2/libraries/util/ -iquote ../nrf51sdk_7.2/drivers_nrf/hal/ -lcunit -lm
  */
 
 #include <stdio.h>

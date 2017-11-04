@@ -8,6 +8,7 @@
 
 #include <float.h>
 #include <math.h>
+#include "math_private.h"
 #include "power.h"
 #include "nrf_error.h"
 #include "app_error.h"

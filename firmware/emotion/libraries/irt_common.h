@@ -22,11 +22,6 @@ All rights reserved.
 #define FACTORY_SETTINGS_BASE		(((uint8_t*)(NRF_UICR)) + 0x080) 	// Should be NRF_UICR->CUSTOMER[0] or 0x10001080 as per nRF51 Series Manual v3.0
 #define FEATURES 					((uint16_t *) FACTORY_SETTINGS_BASE)
 
-
-
-#define	GRAVITY						9.81f								// Coefficent of gravity.
-#define	MATH_PI						3.14159f
-
 #define DEVICE_NAME                 "E-Motion"                          /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME           "Inside Ride"            			/**< Manufacturer. Will be passed to Device Information Service. */
 //#define HW_REVISION                 0x01  							// This is now defined in boards.h	/**< Hardware revision for manufacturer's identification common page. */

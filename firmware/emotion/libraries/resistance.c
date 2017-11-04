@@ -15,6 +15,7 @@
 #include "irt_peripheral.h"
 #include "app_error.h"
 #include "app_timer.h"
+#include "math_private.h"
 #include "magnet.h"
 #include "resistance.h"
 #include "nrf_pwm.h"

@@ -10,8 +10,6 @@
 
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
 #define LOW_BYTE(word)               		(uint8_t)(word & 0x00FFu)                   /**< Get low byte of a uint16_t. */
-#define DELTA_ROLLOVER_16(prior, current)	(prior > current ? (UINT16_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 16 bit ints, addressing potential rollover. */
-#define DELTA_ROLLOVER_8(prior, current)	(prior > current ? (UINT8_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 8 bit ints, addressing potential rollover. */
 
 #define TX_BUFFER_SIZE               		8u               
 

@@ -1,11 +1,11 @@
 /* Copyright (c) 2017 Inside Ride Technologies, LLC. All Rights Reserved.
 */
 #include <stdbool.h>
+#include "math_private.h"
 #include <math.h>
 #include "string.h"
+#include "app_util.h"
 #include "ctf_power.h"
-#include "irt_common.h"
-#include "ble_ant.h"
 #include "speed_event_fifo.h"
 
 #define CTF_DEFINED_MESSAGE         0x10
@@ -15,6 +15,8 @@
 #define GET_TIMESTAMP(p_ctf) (p_ctf->timestamp_msb << 8 | p_ctf->timestamp_lsb)
 #define GET_TICKS(p_ctf) (p_ctf->torque_ticks_msb << 8 | p_ctf->torque_ticks_lsb)
 #define GET_SLOPE(p_ctf) (p_ctf->slope_msb << 8 | p_ctf->slope_lsb)
+#define DELTA_ROLLOVER_16(prior, current)	(prior > current ? (UINT16_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 16 bit ints, addressing potential rollover. */
+#define DELTA_ROLLOVER_8(prior, current)	(prior > current ? (UINT8_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 8 bit ints, addressing potential rollover. */
 
 static uint16_t page_count;
 static ant_bp_ctf_t ctf_main_page[SPEED_EVENT_CACHE_SIZE];
@@ -110,6 +112,7 @@ int16_t ctf_get_average_power(uint8_t seconds)
     int16_t watts;
 
     p_current = get_current_ctf_main();
+    // TODO: what if there are not enough prior events to (EVENTS_PER_SECOND * seconds)?
     delta = get_ctf_delta_from_current(p_current, (EVENTS_PER_SECOND * seconds));
     watts = get_watts(p_current, delta);
 
