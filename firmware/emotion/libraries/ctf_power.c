@@ -22,7 +22,8 @@ static uint16_t page_count;
 static ant_bp_ctf_t ctf_main_page[SPEED_EVENT_CACHE_SIZE];
 static event_fifo_t ctf_main_page_fifo;
 static uint16_t last_cadence_timestamp = 0;
-static bool ctf_in_use, in_calibration = false;
+static bool ctf_in_use;
+static bool in_calibration;
 
 typedef struct
 {
@@ -88,7 +89,7 @@ static void ctf_reset()
     ctf_in_use = true;
     in_calibration = false;
     page_count = 0;
-    ctf_main_page_fifo = speed_event_fifo_init((uint8_t*)ctf_main_page, 
+    ctf_main_page_fifo = speed_event_fifo_init((uint8_t*)&ctf_main_page_fifo, 
         sizeof(ctf_main_page)); 
 }
 
@@ -155,8 +156,6 @@ void ctf_set_calibration_page(ant_bp_ctf_calibration_t* p_page)
 {
     if (p_page->calibration_id == CTF_DEFINED_MESSAGE && p_page->ctf_defined_id == CTF_ZERO_OFFSET)
     {
-        if (!ctf_in_use)
-            ctf_reset();
         if (!in_calibration)
             ctf_offset_reset();       
         addCtfOffsetSample(p_page->offset_msb << 8 | p_page->offset_lsb);
