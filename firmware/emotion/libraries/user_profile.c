@@ -41,19 +41,22 @@ static void profile_update_pstorage_cb_handler(pstorage_handle_t *  p_handle,
 
 static void profile_dump_to_log()
 {
-    UP_LOG("\r\n\t weight: %i \r\n\t wheel: %i \r\n\t " \
-        "settings: %lu \r\n\t drag: %.3f, rr: %.3f \r\n" \
-        "ca_root_position: %i \r\n\t " \
-        "ca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
-        "ca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n" \
-        "power_meter_id: %i\r\n" \
-        "power_adjust_seconds: %i, power_average_seconds: %i\r\n",
+    UP_LOG(
+        "\tweight: %i \r\n" \
+        "\twheel: %i \r\n " \
+        "\tsettings: %lu \r\n " \
+        /*"\t drag: %.3f, rr: %.3f \r\n" \ 
+        "\tca_root_position: %i \r\n\t " \
+        "\tca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
+        "\tca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n" \ */
+        "\tpower_meter_id: %i\r\n" \
+        "\tpower_adjust_seconds: %i, power_average_seconds: %i\r\n",
         m_user_profile.total_weight_kg,
         m_user_profile.wheel_size_mm,
         m_user_profile.settings,
-        m_user_profile.ca_drag,
-        m_user_profile.ca_rr,
-        m_user_profile.ca_mag_factors.root_position,
+        //m_user_profile.ca_drag,
+        //m_user_profile.ca_rr,
+        /*m_user_profile.ca_mag_factors.root_position,
         m_user_profile.ca_mag_factors.low_factors[0],
         m_user_profile.ca_mag_factors.low_factors[1],
         m_user_profile.ca_mag_factors.low_factors[2],
@@ -61,7 +64,7 @@ static void profile_dump_to_log()
         m_user_profile.ca_mag_factors.high_factors[0],
         m_user_profile.ca_mag_factors.high_factors[1],
         m_user_profile.ca_mag_factors.high_factors[2],
-        m_user_profile.ca_mag_factors.high_factors[3],
+        m_user_profile.ca_mag_factors.high_factors[3],*/
         m_user_profile.power_meter_ant_id,
         m_user_profile.power_adjust_seconds,
         m_user_profile.power_average_seconds
@@ -226,10 +229,11 @@ static uint32_t user_profile_init()
         }
 
         // Schedule an update.
+        UP_LOG("[UP]:profile_init: scheduling update\r\n");
         profile_update_sched();
     }
 
-    UP_LOG("[UP]:profile_init:");
+    UP_LOG("[UP]:profile_init:\r\n");
     profile_dump_to_log();
             
      return err_code;       
