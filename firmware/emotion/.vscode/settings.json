@@ -1,0 +1,19 @@
+{
+    "files.associations": {
+        "ant_error.h": "c",
+        "ant_interface.h": "c",
+        "nrf_error.h": "c",
+        "ble_ant.h": "c",
+        "app_util.h": "c",
+        "math_private.h": "c",
+        "ant_ctf_offset.h": "c",
+        "ant_parameters.h": "c",
+        "speed_event_fifo.h": "c",
+        "debug.h": "c",
+        "ctf_power.h": "c",
+        "irt_led.h": "c",
+        "irt_common.h": "c",
+        "ble_cps.h": "c",
+        "compiler_abstraction.h": "c"
+    }
+}

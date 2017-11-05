@@ -24,12 +24,16 @@
  *                      tests         2       2       2       0
  *                      asserts       5       5       5       0
 
+instructions for building CUnit: http://blog.cleverelephant.ca/2014/12/building-cunit-from-source.html
+
 TODO: convert this to make file, compiled on unbuntu for Windows using:
 jason@DESKTOP-50IAGSN:~/dev/insideride/firmware/emotion_test$ gcc -o test ./libraries/*.c ../emotion/libraries/speed_event_fifo.c ../emotion/libraries/math/*.c  ../emotion/libraries/ctf_power.c ../emotion/libraries/ctf_offset.c -iquote ../emotion/libraries/ -iquote ../emotion/libraries/math/ -iquote ./include/ -iquote ../emotion/ -iquote ../emotion/services/ -iquote ../nrf51sdk_7.2/libraries/util/ -iquote ../nrf51sdk_7.2/drivers_nrf/hal/ -lcunit -lm
  */
 
 #include <stdio.h>
 #include "CUnit/Basic.h"
+
+CU_pSuite tests_ctf_power();
 
 // Dangerous, but effective.  This allows implicit declaration of test suite functions
 // so that we do not need to create/include header definitions for each test suite.
@@ -38,28 +42,31 @@ _Pragma ("GCC diagnostic ignored \"-Wimplicit-function-declaration\"") \
     test_suite_name(); \
 }
 
-void addTests()
-{
-  ADD_CU_SUITE(tests_ctf_power);
-}
+// void addTests()
+// {
+//   ADD_CU_SUITE(tests_ctf_power);
+// }
 
 /* The main() function for setting up and running the tests.
- * Returns a CUE_SUCCESS on successful running, another
- * CUnit error code on failure.
- */
+* Returns a CUE_SUCCESS on successful running, another
+* CUnit error code on failure.
+*/
 int main()
 {
-    CU_pSuite pSuite = NULL;
+  /* initialize the CUnit test registry */
+  if (CUE_SUCCESS != CU_initialize_registry())
+    return CU_get_error();
 
-   /* initialize the CUnit test registry */
-   if (CUE_SUCCESS != CU_initialize_registry())
-      return CU_get_error();
+  //addTests();
 
-    addTests();
+  CU_pSuite pSuite = (CU_Suite*)tests_ctf_power(); // CU_add_suite("ctf_power_tests", NULL, NULL);
+  // Add tests.
+  //CU_ADD_TEST(pSuite, test_ctf_get_average_power);
 
-   /* Run all tests using the CUnit Basic interface */
-   CU_basic_set_mode(CU_BRM_VERBOSE);
-   CU_basic_run_tests();
-   CU_cleanup_registry();
-   return CU_get_error();
+
+  /* Run all tests using the CUnit Basic interface */
+  CU_basic_set_mode(CU_BRM_VERBOSE);
+  CU_basic_run_tests();
+  CU_cleanup_registry();
+  return CU_get_error();
 }
