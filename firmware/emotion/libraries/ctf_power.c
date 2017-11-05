@@ -12,18 +12,19 @@
 #define CTF_ZERO_OFFSET             0x01
 #define EVENTS_PER_SECOND           4
 #define CTF_CADENCE_TIMEOUT_UNITS	6000				// 3 seconds * 1/2000 of a second.
-#define GET_TIMESTAMP(p_ctf) (p_ctf->timestamp_msb << 8 | p_ctf->timestamp_lsb)
-#define GET_TICKS(p_ctf) (p_ctf->torque_ticks_msb << 8 | p_ctf->torque_ticks_lsb)
-#define GET_SLOPE(p_ctf) (p_ctf->slope_msb << 8 | p_ctf->slope_lsb)
+#define GET_TIMESTAMP(p_ctf)        (p_ctf->timestamp_msb << 8 | p_ctf->timestamp_lsb)
+#define GET_TICKS(p_ctf)            (p_ctf->torque_ticks_msb << 8 | p_ctf->torque_ticks_lsb)
+#define GET_SLOPE(p_ctf)            (p_ctf->slope_msb << 8 | p_ctf->slope_lsb)
 #define DELTA_ROLLOVER_16(prior, current)	(prior > current ? (UINT16_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 16 bit ints, addressing potential rollover. */
 #define DELTA_ROLLOVER_8(prior, current)	(prior > current ? (UINT8_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 8 bit ints, addressing potential rollover. */
+#define IS_DELTA_NULL(delta)        (delta.events = 0 && delta.time == 0 && delta.ticks == 0)
 
 static uint16_t page_count;
 static ant_bp_ctf_t ctf_main_page[SPEED_EVENT_CACHE_SIZE];
 static event_fifo_t ctf_main_page_fifo;
 static uint16_t last_cadence_timestamp = 0;
-static bool ctf_in_use;
-static bool in_calibration;
+static bool ctf_in_use = false;
+static bool in_calibration = false;
 
 typedef struct
 {
@@ -69,8 +70,15 @@ static int16_t get_watts(ant_bp_ctf_t* p_current, ctf_power_delta_t delta)
 
 static ctf_power_delta_t get_ctf_delta_from_current(ant_bp_ctf_t* p_current, uint8_t events)
 {
-    ant_bp_ctf_t* p_previous = (ant_bp_ctf_t*)speed_event_fifo_oldest(&ctf_main_page_fifo, events);
+    ant_bp_ctf_t* p_previous;
     
+    do
+    {
+        // dig back further, until you hit the end.
+        p_previous = (ant_bp_ctf_t*)speed_event_fifo_oldest(&ctf_main_page_fifo, events);
+        
+    } while(p_previous->page_number == 0 && --events > 0);
+
     ctf_power_delta_t delta = {
         .events = DELTA_ROLLOVER_8(p_previous->event_count, p_current->event_count),
         .time = DELTA_ROLLOVER_16(GET_TIMESTAMP(p_previous), GET_TIMESTAMP(p_current)),
@@ -111,10 +119,9 @@ int16_t ctf_get_average_power(uint8_t seconds)
 {
     ant_bp_ctf_t* p_current;
     ctf_power_delta_t delta;
-    int16_t watts;
+    int16_t watts = 0;
 
     p_current = get_current_ctf_main();
-    // TODO: what if there are not enough prior events to (EVENTS_PER_SECOND * seconds)?
     delta = get_ctf_delta_from_current(p_current, (EVENTS_PER_SECOND * seconds));
     watts = get_watts(p_current, delta);
 

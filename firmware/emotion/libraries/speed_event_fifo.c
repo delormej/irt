@@ -43,7 +43,7 @@ uint8_t* speed_event_fifo_oldest(event_fifo_t* p_fifo, uint8_t events)
 	// Determine index to read.
 	uint8_t idx_read;
 
-	idx_read = ( (p_fifo->write_index + SPEED_EVENT_CACHE_SIZE - events) 
+	idx_read = ( (p_fifo->write_index - 1 + SPEED_EVENT_CACHE_SIZE - events) 
 		% SPEED_EVENT_CACHE_SIZE );
 
 	// Return the pointer to the oldest event in the stack.

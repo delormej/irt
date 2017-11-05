@@ -28,9 +28,9 @@ static int init()
 
 static void test_ctf_get_average_power(CuTest* tc)
 {
-    // Add a bunch of additional power records, to create a 3??? second average??
-    // need to decide how long our average period is and if it's configurable?
-    CuAssertTrue(tc, 1==0);
+    // TODO: Add a bunch of additional power records, to create a 3??? second average??
+    int16_t watts = ctf_get_average_power(3);
+    CuAssertTrue(tc, watts == 89);
 }
 
 static void test_ctf_get_average_power_rollover(CuTest* tc)
@@ -44,7 +44,7 @@ static void test_ctf_get_power(CuTest* tc)
 {
     int16_t watts;
     uint32_t err = ctf_get_power(&watts);
-    CuAssertTrue(tc, watts == 97);
+    CuAssertTrue(tc, err == CTF_SUCCESS && watts == 89);
 }
 
 static void test_ctf_get_offset(CuTest* tc)
