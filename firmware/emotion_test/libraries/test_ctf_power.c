@@ -1,6 +1,6 @@
 
 #include <stdint.h>
-#include "CUnit/Basic.h"
+#include "cutest/CuTest.h"
 #include "ctf_power.h"
 #include "ctf_offset.h"
 
@@ -26,42 +26,43 @@ static int init()
     return 0;
 }
 
-static void test_ctf_get_average_power()
+static void test_ctf_get_average_power(CuTest* tc)
 {
     // Add a bunch of additional power records, to create a 3??? second average??
     // need to decide how long our average period is and if it's configurable?
-    CU_ASSERT(1==0); // force to fail.
+    CuAssertTrue(tc, 1==0);
 }
 
-static void test_ctf_get_average_power_rollover()
+static void test_ctf_get_average_power_rollover(CuTest* tc)
 {
     // This should test an event series where there is a rollover in one or more of
     // the data fields in the ctf main data page.
-    CU_ASSERT(1==0);    
+    CuAssertTrue(tc, 1==0);
 }
 
-static void test_ctf_get_power()
+static void test_ctf_get_power(CuTest* tc)
 {
     // int16_t watts;
     // uint32_t err = ctf_get_power(&watts);
     // CU_ASSERT(watts == 260 && err == CTF_SUCCESS);
 }
 
-static void test_ctf_get_offset()
+static void test_ctf_get_offset(CuTest* tc)
 {
     // CU_ASSERT(getCtfOffset() == 590);
+    CuAssertTrue(tc, 1==590);
 }
 
-CU_pSuite tests_ctf_power()
+CuSuite* cu_getsuite_ctf_power()
 {
-    // Add suite.
-    CU_pSuite pSuite = CU_add_suite("ctf_power_tests", init, NULL);
+    init();
+    CuSuite* suite = CuSuiteNew();
 
     // Add tests.
-    CU_ADD_TEST(pSuite, test_ctf_get_offset);
-    CU_ADD_TEST(pSuite, test_ctf_get_power);
-    CU_ADD_TEST(pSuite, test_ctf_get_average_power);
-    CU_ADD_TEST(pSuite, test_ctf_get_average_power_rollover);
+    SUITE_ADD_TEST(suite, test_ctf_get_offset);
+    SUITE_ADD_TEST(suite, test_ctf_get_power);
+    SUITE_ADD_TEST(suite, test_ctf_get_average_power);
+    SUITE_ADD_TEST(suite, test_ctf_get_average_power_rollover);
 
-    return pSuite;
+    return suite;
 }
