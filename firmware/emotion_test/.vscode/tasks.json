@@ -1,0 +1,23 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "taskName": "build",
+            "type": "shell",
+            "command": "gcc -g -o test.exe ./*.c ./cutest/*.c ./libraries/*.c ../emotion/libraries/speed_event_fifo.c ../emotion/libraries/math/*.c  ../emotion/libraries/ctf_power.c ../emotion/libraries/ctf_offset.c -iquote ../emotion/libraries/ -iquote ../emotion/libraries/math/ -iquote ./include/ -iquote ../emotion/ -iquote ../emotion/services/ -iquote ../nrf51sdk_7.2/libraries/util/ -iquote ../nrf51sdk_7.2/drivers_nrf/hal/ -iquote . -lm",
+            "args": [],
+            "group": "build",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "taskName": "test",
+            "type": "shell",
+            "command": "./test.exe",
+            "group": "build"            
+        }
+    ]
+}

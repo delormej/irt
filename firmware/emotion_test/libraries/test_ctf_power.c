@@ -45,20 +45,19 @@ static void test_ctf_get_power(CuTest* tc)
     // int16_t watts;
     // uint32_t err = ctf_get_power(&watts);
     // CU_ASSERT(watts == 260 && err == CTF_SUCCESS);
+    CuAssertTrue(tc, 1==0);
 }
 
 static void test_ctf_get_offset(CuTest* tc)
 {
-    // CU_ASSERT(getCtfOffset() == 590);
-    CuAssertTrue(tc, 1==590);
+    CuAssertTrue(tc, getCtfOffset()==590);
 }
 
 CuSuite* cu_getsuite_ctf_power()
 {
     init();
-    CuSuite* suite = CuSuiteNew();
 
-    // Add tests.
+    CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, test_ctf_get_offset);
     SUITE_ADD_TEST(suite, test_ctf_get_power);
     SUITE_ADD_TEST(suite, test_ctf_get_average_power);

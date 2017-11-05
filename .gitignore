@@ -160,3 +160,6 @@ firmware/emotion_test/*.*
 *.vscode
 
 gdbinit
+
+# output
+_build

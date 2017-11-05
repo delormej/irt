@@ -89,13 +89,14 @@ static void ctf_reset()
     ctf_in_use = true;
     in_calibration = false;
     page_count = 0;
-    ctf_main_page_fifo = speed_event_fifo_init((uint8_t*)&ctf_main_page_fifo, 
-        sizeof(ctf_main_page)); 
+    ctf_main_page_fifo = speed_event_fifo_init((uint8_t*)ctf_main_page, 
+        sizeof(ant_bp_ctf_t)); 
 }
 
 static void ctf_offset_reset()
 { 
     in_calibration = true;
+    ctf_in_use = true;
     resetCtfOffsetSamples();
 }
 

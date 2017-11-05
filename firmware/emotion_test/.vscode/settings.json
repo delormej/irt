@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "basic.h": "c",
+        "math_private.h": "c",
+        "cutest.h": "c"
+    }
+}
