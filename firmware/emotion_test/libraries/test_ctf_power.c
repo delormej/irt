@@ -26,6 +26,11 @@ static int init()
     return 0;
 }
 
+static void test_ctf_in_use(CuTest* tc)
+{
+    CuAssertTrue(tc, ctf_power_in_use());
+}
+
 static void test_ctf_get_average_power(CuTest* tc)
 {
     // TODO: Add a bunch of additional power records, to create a 3??? second average??
@@ -57,6 +62,7 @@ CuSuite* cu_getsuite_ctf_power()
     init();
 
     CuSuite* suite = CuSuiteNew();
+    SUITE_ADD_TEST(suite, test_ctf_in_use);
     SUITE_ADD_TEST(suite, test_ctf_get_offset);
     SUITE_ADD_TEST(suite, test_ctf_get_power);
     SUITE_ADD_TEST(suite, test_ctf_get_average_power);

@@ -448,15 +448,19 @@ void ant_bp_rx_start(void)
 float ant_bp_avg_power(uint8_t seconds)
 {
 	float average_power = 0.0f;
-	uint8_t events = seconds * 2; // 2 events per second, oldest event is seconds * 2.
+	if (ctf_power_in_use())
+		average_power = ctf_get_average_power(seconds);
+	else
+	{
+		uint8_t events = seconds * 2; // 2 events per second, oldest event is seconds * 2.
 
-	power_event_t* p_oldest = 
-		(power_event_t*)speed_event_fifo_oldest(&m_power_only_fifo, events);
-	power_event_t* p_current = 
-		(power_event_t*)speed_event_fifo_get(&m_power_only_fifo);
-	
-	average_power = CalcAveragePower(*p_oldest, *p_current);
-
+		power_event_t* p_oldest = 
+			(power_event_t*)speed_event_fifo_oldest(&m_power_only_fifo, events);
+		power_event_t* p_current = 
+			(power_event_t*)speed_event_fifo_get(&m_power_only_fifo);
+		
+		average_power = CalcAveragePower(*p_oldest, *p_current);
+	}
 	// BP_LOG("[BP] %i:%i, %i:%i == Average Power: %.2f (events:%i)\r\n", 
 	// 	p_oldest->event_count, p_current->event_count,
 	// 	p_oldest->accum_power, p_current->accum_power, 
