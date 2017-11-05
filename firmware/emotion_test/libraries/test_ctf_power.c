@@ -42,10 +42,9 @@ static void test_ctf_get_average_power_rollover(CuTest* tc)
 
 static void test_ctf_get_power(CuTest* tc)
 {
-    // int16_t watts;
-    // uint32_t err = ctf_get_power(&watts);
-    // CU_ASSERT(watts == 260 && err == CTF_SUCCESS);
-    CuAssertTrue(tc, 1==0);
+    int16_t watts;
+    uint32_t err = ctf_get_power(&watts);
+    CuAssertTrue(tc, watts == 97);
 }
 
 static void test_ctf_get_offset(CuTest* tc)
