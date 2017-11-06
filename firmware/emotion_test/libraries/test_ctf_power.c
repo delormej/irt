@@ -1,8 +1,10 @@
 
+#include <stdio.h>
 #include <stdint.h>
 #include "cutest/CuTest.h"
 #include "ctf_power.h"
 #include "ctf_offset.h"
+#include "power283.h"
 
 static void init_ctf_offset()
 {
@@ -40,9 +42,26 @@ static void test_ctf_get_average_power(CuTest* tc)
 
 static void test_ctf_get_average_power_rollover(CuTest* tc)
 {
+    const uint16_t EXPECTED_WATTS = 98;
+    const uint8_t AVERAGE_SECONDS = 3;
+    int16_t watts = 0; 
+    uint16_t rows = sizeof(power_283_pages) / sizeof(power_283_pages[0]);
+    
+    // Re-initialize offset, which has the side-effect of also starting a new sequence
+    // of ctf_main_page events as these are no cohesive with the first 2 in the queue.
+    init_ctf_offset();
+
     // This should test an event series where there is a rollover in one or more of
     // the data fields in the ctf main data page.
-    CuAssertTrue(tc, 1==0);
+    for (uint16_t i = 0; i < rows; i++)
+    {
+        ctf_set_main_page((ant_bp_ctf_t*)power_283_pages[i]);
+        watts = ctf_get_average_power(AVERAGE_SECONDS);                      
+        if (watts != 0 && (watts > EXPECTED_WATTS + 50 || watts < EXPECTED_WATTS - 50))
+            CuFail(tc, "Watts outside of expected 98." );
+    }
+
+    CuAssertTrue(tc, watts == 98);
 }
 
 static void test_ctf_get_power(CuTest* tc)
