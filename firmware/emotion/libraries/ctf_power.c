@@ -123,7 +123,10 @@ int16_t ctf_get_average_power(uint8_t seconds)
 
     p_current = get_current_ctf_main();
     delta = get_ctf_delta_from_current(p_current, (EVENTS_PER_SECOND * seconds));
-    watts = get_watts(p_current, delta);
+    if (delta.events == 0)
+        watts = 0;
+    else
+        watts = get_watts(p_current, delta);
 
     return watts;
 }
