@@ -17,12 +17,10 @@
 #define GET_SLOPE(p_ctf)            (p_ctf->slope_msb << 8 | p_ctf->slope_lsb)
 #define DELTA_ROLLOVER_16(prior, current)	(prior > current ? (UINT16_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 16 bit ints, addressing potential rollover. */
 #define DELTA_ROLLOVER_8(prior, current)	(prior > current ? (UINT8_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 8 bit ints, addressing potential rollover. */
-#define IS_DELTA_NULL(delta)        (delta.events = 0 && delta.time == 0 && delta.ticks == 0)
 
 static uint16_t page_count;
 static ant_bp_ctf_t ctf_main_page[SPEED_EVENT_CACHE_SIZE];
 static event_fifo_t ctf_main_page_fifo;
-static uint16_t last_cadence_timestamp = 0;
 static bool ctf_in_use = false;
 static bool in_calibration = false;
 
@@ -156,7 +154,6 @@ uint32_t ctf_get_power(int16_t* p_watts)
     }
     else 
     {
-        last_cadence_timestamp = GET_TIMESTAMP(p_current); // Keep track of last valid event.
         *p_watts = get_watts(p_current, delta);
         err = CTF_SUCCESS;
     }
