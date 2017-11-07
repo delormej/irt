@@ -466,5 +466,15 @@ float ant_bp_avg_power(uint8_t seconds)
 	// 	p_oldest->accum_power, p_current->accum_power, 
 	// 	average_power, events);
 
+	#ifdef ENABLE_DEBUG_LOG
+	static float last_average_power = 0.0f;
+	if (last_average_power != average_power)
+	{
+		BP_LOG("[BP] last_average_power: %i, average_power: %i\r\n", 
+			(uint16_t)last_average_power, (uint16_t)average_power);
+		last_average_power = average_power;
+	}
+	#endif
+
 	return average_power;	
 }

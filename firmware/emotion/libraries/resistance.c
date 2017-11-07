@@ -474,11 +474,19 @@ void resistance_adjust()
 			break;
 	}
 
-	if (m_resistance_state.servo_position != servo_pos) 
+	#ifdef ENABLE_DEBUG_LOG
+	if (m_resistance_state.servo_position != servo_pos &&
+		(servo_pos > m_resistance_state.servo_position + 50 ||  
+		servo_pos < m_resistance_state.servo_position - 50) ) 
 	{
-		RC_LOG("[RC] resistance_adjust: old_servo_pos: %i, new_servo_pos: %i.\r\n", 
-			m_resistance_state.servo_position, servo_pos);
+		RC_LOG("[RC] resistance_adjust: old_servo_pos: %i, new_servo_pos: %i.\r\n" \
+			"\tspeed (cm/s): %i, power: %i\r\n", 
+			m_resistance_state.servo_position, servo_pos,
+			(uint16_t)(mp_current_state->instant_speed_mps * 100),
+			mp_current_state->instant_power
+		);
 	}
+	#endif
 
 	// Move the servo, with smoothing only if in sim mode.
 	resistance_position_set(servo_pos, use_smoothing);
