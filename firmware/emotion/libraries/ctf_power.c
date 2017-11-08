@@ -17,6 +17,8 @@
 #define GET_SLOPE(p_ctf)            (p_ctf->slope_msb << 8 | p_ctf->slope_lsb)
 #define DELTA_ROLLOVER_16(prior, current)	(prior > current ? (UINT16_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 16 bit ints, addressing potential rollover. */
 #define DELTA_ROLLOVER_8(prior, current)	(prior > current ? (UINT8_MAX ^ prior) + current : current - prior)  /** Handles the delta between 2 8 bit ints, addressing potential rollover. */
+#define ANT_BP_PAGE_CALIBRATION			0x01	// Calibration page
+#define ANT_BP_PAGE_CTF_MAIN            0x20    // Crank Torque Frequency Main Data Page
 
 static uint16_t page_count;
 static ant_bp_ctf_t ctf_main_page[SPEED_EVENT_CACHE_SIZE];
@@ -162,7 +164,9 @@ uint32_t ctf_get_power(int16_t* p_watts)
 
 void ctf_set_calibration_page(ant_bp_ctf_calibration_t* p_page)
 {
-    if (p_page->calibration_id == CTF_DEFINED_MESSAGE && p_page->ctf_defined_id == CTF_ZERO_OFFSET)
+    if (p_page->page_number == ANT_BP_PAGE_CALIBRATION &&
+         p_page->calibration_id == CTF_DEFINED_MESSAGE && 
+         p_page->ctf_defined_id == CTF_ZERO_OFFSET)
     {
         if (!in_calibration)
             ctf_offset_reset();       
@@ -172,6 +176,9 @@ void ctf_set_calibration_page(ant_bp_ctf_calibration_t* p_page)
 
 void ctf_set_main_page(ant_bp_ctf_t* p_page)
 {
+    if (p_page->page_number != ANT_BP_PAGE_CTF_MAIN)
+        return;
+
     if (!ctf_in_use || in_calibration)
         ctf_reset();
     add_ctf_page(p_page);   
