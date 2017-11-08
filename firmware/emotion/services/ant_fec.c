@@ -304,7 +304,6 @@ static uint32_t SpecificTrainerDataPage_Send(irt_context_t* context)
 	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		(uint8_t*)&page);   
 }
-static uint32_t SpecificTrainerTorqueDataPage_Send() {return 0;}
 
 static uint32_t FECapabilitiesDataPage_Send()
 {
@@ -977,11 +976,6 @@ void ant_fec_tx_send(irt_context_t * p_power_meas)
     {
         // Send battery status every 61 messages.
         BatteryStatusSend(p_power_meas->battery_status);
-    }
-    else if (  (~(0b01 ^ count) & 3) == 3  )
-    {
-        // Message sequence 1 & 5: Page 26.
-        SpecificTrainerTorqueDataPage_Send();
     }
     else if (  (~(0b10 ^ count) & 3) == 3  )
     {
