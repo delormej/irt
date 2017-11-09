@@ -280,8 +280,10 @@ static uint32_t SpecificTrainerDataPage_Send(irt_context_t* context)
         .DataPageNumber = SPECIFIC_TRAINER_PAGE,
         .InstantCadence = CADENCE_INVALID };
 
+    int16_t watts = context->instant_power;
+
 	// Increment static fields.
-	accumulated_power += context->instant_power;
+	accumulated_power += watts;
 	
 	// Update the page.
 	page.UpdateEventCount = event_count++;
@@ -289,8 +291,8 @@ static uint32_t SpecificTrainerDataPage_Send(irt_context_t* context)
 	page.AccumulatedPowerMSB = HIGH_BYTE(accumulated_power);
 	/* 1.5 bytes used for instantaneous power.  Full 8 bits for byte LSB
 	   only 4 bits (0-3) used for the MSB. */
-	page.InstantPowerLSB = LOW_BYTE(context->instant_power);
-	page.InstantPowerMSB = HIGH_BYTE(context->instant_power) & 0x0F;
+	page.InstantPowerLSB = LOW_BYTE(watts);
+	page.InstantPowerMSB = HIGH_BYTE(watts) & 0x0F;
 	
 	/* MSB (bit 3) reserved, 3 bits used for calibration required flags */
 	page.TrainerStatusBit = 
