@@ -153,7 +153,7 @@ $RECYCLE.BIN/
 # Mac desktop service store files
 .DS_Store
 
-firmware/emotion_test/*.*
+#firmware/emotion_test/*.*
 
 # VS Code
 *.vs
