@@ -162,11 +162,11 @@ static float CalcAveragePower(power_event_t first, power_event_t last)
 /**@brief Parses ant data page to combine bits for power in watts.
  *
  */
-static uint16_t GetWatts(uint8_t msb, uint8_t lsb)
+static int16_t GetWatts(uint8_t msb, uint8_t lsb)
 {
 	//									    LSB MSB
 	// Example Tx: [10][44][FF][5A][2C][4B][1B][01] // 283 watts
-	uint16_t watts = msb << 8 | lsb;
+	int16_t watts = msb << 8 | lsb;
 	return  watts;
 }
 

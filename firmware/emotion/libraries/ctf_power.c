@@ -139,7 +139,7 @@ uint32_t ctf_get_power(int16_t* p_watts)
     ctf_power_delta_t delta;
 
     // Must have 2 events in order to calculate power.
-    if (page_count < 1)
+    if (page_count < 2)
         return err;
 
     p_current = get_current_ctf_main();
