@@ -188,27 +188,7 @@ static uint32_t user_profile_init()
         // Initialize default magnet calibration.
         if (m_user_profile.ca_mag_factors.low_speed_mps == 0xFFFF)
         {
-            // Default to no gap offset.
-            m_user_profile.ca_mag_factors.gap_offset = 0;				
-            
-            // 15 mph in meters per second * 1,000.
-            m_user_profile.ca_mag_factors.low_speed_mps = 6705;
-
-            // 25 mph in meters per second * 1,000.
-            m_user_profile.ca_mag_factors.high_speed_mps = 11176;
-            
-            // Position at which we no longer use power curve, revert to linear.
-            m_user_profile.ca_mag_factors.root_position = 1454;
-
-            m_user_profile.ca_mag_factors.low_factors[0] = 1.27516039631e-06f;
-            m_user_profile.ca_mag_factors.low_factors[1] = -0.00401345920329f;
-            m_user_profile.ca_mag_factors.low_factors[2] = 3.58655403892f;
-            m_user_profile.ca_mag_factors.low_factors[3] = -645.523540742f;
-
-            m_user_profile.ca_mag_factors.high_factors[0] = 2.19872670294e-06f;
-            m_user_profile.ca_mag_factors.high_factors[1] = -0.00686992504214f;
-            m_user_profile.ca_mag_factors.high_factors[2] = 6.03431060782f;
-            m_user_profile.ca_mag_factors.high_factors[3] = -998.115074474f;
+            m_user_profile.ca_mag_factors = magnet_get_default_factors();
         }
 
         // By default don't try to connect to a power meter.

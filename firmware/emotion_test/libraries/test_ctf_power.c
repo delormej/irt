@@ -61,7 +61,7 @@ static void test_ctf_get_average_power_rollover(CuTest* tc)
             if (ctf_get_power(&instant_watts) == CTF_SUCCESS)
             {
                 average_watts = ctf_get_average_power(AVERAGE_SECONDS);                      
-                printf("%d, %d\n", instant_watts, average_watts);
+                // printf("%d, %d\n", instant_watts, average_watts);
                 // if (average_watts > instant_watts + 20 ||
                 //         average_watts < instant_watts - 20)
                 // {

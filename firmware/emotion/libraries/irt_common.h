@@ -252,17 +252,4 @@ typedef struct servo_positions_s
 	uint16_t			positions[MAX_RESISTANCE_LEVEL_COUNT];
 } servo_positions_t;
 
-/**@brief	Structure to encapsulate magnet calibration factors that define a
- * 			3rd order polynomial from a low speed and high speed.
- */
-typedef struct mag_calibration_factors_s
-{
-	uint16_t			gap_offset;			// Variable used to adjust for the magnet spacing gap which changes the force by this percent.  Stored as unsigned short, divide by 1,000 to get % value.
-	uint16_t			low_speed_mps;		// Divide by 100 to get speed.
-	uint16_t			high_speed_mps;
-	uint16_t			root_position;		// Servo position above which we no longer calculate as the curve turns.
-	float				low_factors[4];		// 4 factors for each speed.
-	float				high_factors[4];
-} mag_calibration_factors_t;
-
 #endif // IRT_COMMON_H

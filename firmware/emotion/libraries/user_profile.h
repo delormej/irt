@@ -16,6 +16,7 @@
 #include <float.h>
 #include "pstorage.h"
 #include "irt_common.h"
+#include "magnet.h"
 
 #define PROFILE_VERSION					14u	            // Current version of the profile.
 

@@ -181,6 +181,35 @@ void magnet_init(mag_calibration_factors_t* p_factors)
 	mp_mag_calibration_factors = p_factors;
 }
 
+mag_calibration_factors_t magnet_get_default_factors()
+{
+	mag_calibration_factors_t ca_mag_factors;
+
+	// Default to no gap offset.
+	ca_mag_factors.gap_offset = 0;				
+
+	// 15 mph in meters per second * 1,000.
+	ca_mag_factors.low_speed_mps = 6705;
+
+	// 25 mph in meters per second * 1,000.
+	ca_mag_factors.high_speed_mps = 11176;
+
+	// Position at which we no longer use power curve, revert to linear.
+	ca_mag_factors.root_position = 1454;
+
+	ca_mag_factors.low_factors[0] = 1.27516039631e-06f;
+	ca_mag_factors.low_factors[1] = -0.00401345920329f;
+	ca_mag_factors.low_factors[2] = 3.58655403892f;
+	ca_mag_factors.low_factors[3] = -645.523540742f;
+
+	ca_mag_factors.high_factors[0] = 2.19872670294e-06f;
+	ca_mag_factors.high_factors[1] = -0.00686992504214f;
+	ca_mag_factors.high_factors[2] = 6.03431060782f;
+	ca_mag_factors.high_factors[3] = -998.115074474f;	
+
+	return ca_mag_factors;
+}
+
 /**@brief	Calculates watts added by the magnet for a given speed at magnet
  *			position.  
  */

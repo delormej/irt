@@ -49,7 +49,8 @@
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10240.0/ucrt",
                 "${workspaceRoot}",
                 "${workspaceRoot}/include",
-                "${workspaceRoot}/../emotion/libraries"
+                "${workspaceRoot}/../emotion/libraries",
+                "${workspaceRoot}/../nrf51sdk_7.2/libraries/util"
             ],
             "defines": [
                 "_DEBUG",
@@ -61,7 +62,9 @@
                     "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
                     "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10240.0/ucrt",
                     "${workspaceRoot}",
-                    "${workspaceRoot}/../emotion/libraries"
+                    "${workspaceRoot}/include",
+                    "${workspaceRoot}/../emotion/libraries",
+                    "${workspaceRoot}/../nrf51sdk_7.2/libraries/util"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
