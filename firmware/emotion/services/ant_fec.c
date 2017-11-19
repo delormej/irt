@@ -250,18 +250,7 @@ static uint32_t GeneralSettingsPage_Send(irt_context_t* context)
         .Incline = INCLINE_INVALID };
     
 	page.CycleLength = (uint8_t)(mp_user_profile->wheel_size_mm / 10);	// Convert wheel centimeters.
-	
-	// In basic modes, calculate percentage.
-	switch (context->resistance_mode) 
-	{
-		case RESISTANCE_SET_STANDARD:
-		case RESISTANCE_SET_PERCENT:
-			page.ResistanceLevelFEC = resistance_pct_get(context->servo_position);
-            break;
-		default:
-			page.ResistanceLevelFEC = RESISTANCE_INVALID;
-            break;
-	} 
+    page.ResistanceLevelFEC = resistance_pct_get(context->servo_position);
 
     //FE_LOG("[FE]:resistance pct: %i, %i\r\n",context->servo_position, resistance_pct_get(context->servo_position));
 
