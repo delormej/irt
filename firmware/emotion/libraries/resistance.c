@@ -58,6 +58,12 @@ static user_profile_t* 			mp_user_profile;
 static irt_context_t*			mp_current_state;
 static irt_resistance_state_t	m_resistance_state;
 
+static uint16_t get_servo_position_with_offset()
+{
+	uint16_t raw_servo_position = pwm_get_servo_position();
+	return ACTUAL_SERVO_POS(raw_servo_position);
+}
+
 /**@brief Function for adjusting resistance on timer timeout.
  *
  * @details This function will be called each timer expiration.  
@@ -433,7 +439,7 @@ void resistance_adjust()
 	if (mp_current_state->power_meter_paired) // Paired to a power meter..
 	{
 		float average_power = ant_bp_avg_power(mp_user_profile->power_average_seconds); 
-		float mag_watts = magnet_watts(speed_mps, m_resistance_state.servo_position);
+		float mag_watts = magnet_watts(speed_mps, get_servo_position_with_offset());
 		
 		// Take actual power, remove estimated watts from magnet.
 		magoff_watts = average_power - mag_watts;

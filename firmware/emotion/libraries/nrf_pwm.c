@@ -277,6 +277,13 @@ uint32_t pwm_stop_servo(void)
 	}
 }
 
+/**@brief	Returns the current servo position.
+ */
+uint16_t pwm_get_servo_position()
+{
+	return m_last_us;
+}
+
 /**@brief 	Initializes PWM.
  *
  */

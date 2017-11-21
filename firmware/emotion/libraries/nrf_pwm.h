@@ -12,5 +12,5 @@
 void pwm_init(uint32_t pwm_pin_output_number);
 uint32_t pwm_set_servo(uint16_t pulse_width_us, bool smooth);
 uint32_t pwm_stop_servo(void);
-
+uint16_t pwm_get_servo_position(void);
 #endif
