@@ -328,7 +328,7 @@ static void set_sim_params(uint8_t *pBuffer)
  */
 static void update_resistance_state()
 {
-	m_current_state.servo_position = mp_resistance_state->servo_position;
+	m_current_state.servo_position = resistance_servo_position();
 	m_current_state.resistance_mode = mp_resistance_state->mode;
 
 	switch (m_current_state.resistance_mode)

@@ -39,9 +39,9 @@
 
 /**@brief	Determines if the move is above the threshold for a servo move.
  */
-#define ABOVE_TRESHOLD(POS)										\
-		((POS - m_resistance_state.servo_position) > MIN_THRESHOLD_MOVE || 			\
-				(m_resistance_state.servo_position - POS > MIN_THRESHOLD_MOVE))		\
+#define ABOVE_TRESHOLD(MOVE_POS, CURRENT_POS)										\
+		((MOVE_POS - CURRENT_POS) > MIN_THRESHOLD_MOVE || 			\
+				(CURRENT_POS - MOVE_POS > MIN_THRESHOLD_MOVE))		\
 
 // MACRO for getting to the array.
 #define RESISTANCE_LEVEL 	mp_user_profile->servo_positions.positions
@@ -57,12 +57,6 @@ static app_timer_id_t			m_adjust_timer_id;						  // Timer used to invoke resist
 static user_profile_t* 			mp_user_profile;
 static irt_context_t*			mp_current_state;
 static irt_resistance_state_t	m_resistance_state;
-
-static uint16_t get_servo_position_with_offset()
-{
-	uint16_t raw_servo_position = pwm_get_servo_position();
-	return ACTUAL_SERVO_POS(raw_servo_position);
-}
 
 /**@brief Function for adjusting resistance on timer timeout.
  *
@@ -145,6 +139,18 @@ irt_resistance_state_t* resistance_init(uint32_t servo_pin_number,
 	return &m_resistance_state;
 }
 
+/**@brief		Gets the current user friendly magnet position, 
+ * 				integrating any servo offset.
+ */
+uint16_t resistance_servo_position()
+{
+	uint16_t raw_servo_position = pwm_get_servo_position();
+	if (raw_servo_position > 0)
+		return raw_servo_position - mp_user_profile->servo_offset;
+	else
+		return MAGNET_POSITION_OFF;
+	}
+	
 /**@brief		Gets the current resistance state object.
  *
  */
@@ -163,6 +169,7 @@ uint16_t resistance_position_set(uint16_t servo_pos, bool smooth)
 	uint32_t err_code;
 	// Actual servo position after calibration.
 	uint16_t actual_servo_pos;
+	uint16_t current_servo_pos = resistance_servo_position();
 
 	/*
 	 * NOTE: SERVO OFFSET LOGIC
@@ -200,19 +207,17 @@ uint16_t resistance_position_set(uint16_t servo_pos, bool smooth)
 	}
 
 	// Check if we actually need to move.
-	if ( (m_resistance_state.servo_position != servo_pos) && ABOVE_TRESHOLD(servo_pos) )
+	if ( (current_servo_pos != servo_pos) 
+		&& ABOVE_TRESHOLD(servo_pos, current_servo_pos) )
 	{
 		// Issue a command to move the servo.
 		err_code = pwm_set_servo(actual_servo_pos, smooth);
 		APP_ERROR_CHECK(err_code);
 
-		// Save module state for next adjustment.
-		m_resistance_state.servo_position = servo_pos;
-
 		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
 	}
 
-	return m_resistance_state.servo_position;
+	return current_servo_pos;
 }
 
 /**@brief		Validates the values of positions are in range.
@@ -439,7 +444,7 @@ void resistance_adjust()
 	if (mp_current_state->power_meter_paired) // Paired to a power meter..
 	{
 		float average_power = ant_bp_avg_power(mp_user_profile->power_average_seconds); 
-		float mag_watts = magnet_watts(speed_mps, get_servo_position_with_offset());
+		float mag_watts = magnet_watts(speed_mps, resistance_servo_position());
 		
 		// Take actual power, remove estimated watts from magnet.
 		magoff_watts = average_power - mag_watts;
@@ -479,20 +484,6 @@ void resistance_adjust()
 			RC_LOG("[RC] resistance_adjust: WARNING called with invalid resistance mode.\r\n");
 			break;
 	}
-
-	#ifdef ENABLE_DEBUG_LOG
-	if (m_resistance_state.servo_position != servo_pos &&
-		(servo_pos > m_resistance_state.servo_position + 50 ||  
-		servo_pos < m_resistance_state.servo_position - 50) ) 
-	{
-		RC_LOG("[RC] resistance_adjust: old_servo_pos: %i, new_servo_pos: %i.\r\n" \
-			"\tspeed (cm/s): %i, power: %i\r\n", 
-			m_resistance_state.servo_position, servo_pos,
-			(uint16_t)(mp_current_state->instant_speed_mps * 100),
-			mp_current_state->instant_power
-		);
-	}
-	#endif
 
 	// Move the servo, with smoothing only if in sim mode.
 	resistance_position_set(servo_pos, use_smoothing);

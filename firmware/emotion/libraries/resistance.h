@@ -122,7 +122,6 @@ typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);
 typedef struct
 {
 	resistance_mode_t mode;
-	uint16_t 	      servo_position;
 	float             crr;
 	float 		      c;
 	float 		      wind_speed_mps;
@@ -140,6 +139,12 @@ typedef struct
  */
 irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, 
     user_profile_t* p_user_profile, irt_context_t* p_current_state);
+
+
+/**@brief		Gets the current user friendly magnet position, 
+ * 				integrating any servo offset.
+ */
+uint16_t resistance_servo_position();
 
 /**@brief		Gets the current resistance state object.
  *
