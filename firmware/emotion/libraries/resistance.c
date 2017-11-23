@@ -530,8 +530,11 @@ void resistance_grade_set(float grade)
 		return; //APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
 	}
 	
-	m_resistance_state.grade = grade;
-	resistance_mode_set(RESISTANCE_SET_SIM);
+	if (grade != m_resistance_state.grade)
+	{
+		m_resistance_state.grade = grade;
+		resistance_mode_set(RESISTANCE_SET_SIM);
+	} 
 }
 
 /**@brief		Sets simulation wind speed.
@@ -558,7 +561,6 @@ void resistance_c_set(float drag)
 void resistance_crr_set(float crr)
 {
 	m_resistance_state.crr = crr;
-	resistance_mode_set(RESISTANCE_SET_SIM);
 }
 
 /**@brief		Sets simulation coefficient of rolling resistance.
