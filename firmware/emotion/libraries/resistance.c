@@ -22,6 +22,7 @@
 #include "speed.h"
 #include "ant_bike_power.h"
 #include "power.h"
+#include "simulation.h"
 #include <math.h>
 #include "debug.h"
 
@@ -372,57 +373,13 @@ static uint16_t resistance_erg_position(float speed_mps, int16_t magoff_watts)
  */
 static uint16_t resistance_sim_position(float speed_mps, int16_t magoff_watts)
 {
-	float rr_force = (float)magoff_watts / speed_mps;
-	float mag_watts = 0;
-
-	// sim is going to calculate the estimated watts required at grade + wind for
-	// the current speed and rider total weight.  It will then hand this off to
-	// the same functions that 'erg' mode uses to find the right servo position.
-
-	// p_sim_forces->c is equal to A*Cw*Rho where A is effective frontal area (m^2); 
-	// Cw is drag coefficent (unitless); and Rho is the air density (kg/m^3). 
-	// The default value for A*Cw*Rho is 0.51.
-
-	// Note that we add HEAD and subtract TAIL wind speed in the speed calc here.
-    
-    /*
-    The drafting factor
-    scales the total wind resistance depending on the position of the user relative to other virtual competitors. The drafting
-    scale factor ranges from 0.0 to 1.0, where 0.0 removes all air resistance from the simulation, and 1.0 indicates no drafting
-    effects (e.g. cycling alone, or in the lead of a pack). 
-    */    
-	float wind = (0.5f * (m_resistance_state.c * pow((speed_mps + m_resistance_state.wind_speed_mps), 2))) *
-        m_resistance_state.drafting_factor;
-
-
-	// Weight * GRAVITY * Co-efficient of rolling resistance.
-	float rolling = (mp_user_profile->total_weight_kg / 100.0f) * GRAVITY * m_resistance_state.crr;
-
-	// fGrade is the slope of the hill (slope = rise / run). Should be from -1.0 : 1.0, 
-	// where -1.0 is a 45 degree downhill slope, 0.0 is flat ground, and 1.0 is a 45 
-	// degree uphil slope. 
-	float gravitational = (mp_user_profile->total_weight_kg / 100.0f) * GRAVITY *
-			m_resistance_state.grade;
-
-	// Determine the additional force required from the magnet if necessary.
-	mag_watts = ( (wind + rolling + gravitational) - rr_force ) * speed_mps;
-
-	/* If we have some wildly large force number returned, log what caused it.
-	if (mag_watts > 1500.0f)
-	{
-		RC_LOG("[RC]:resistance_sim_set mag_force seems to high: %.2f\r\n", mag_force);
-		RC_LOG("[RC]:rr_force: %.2f\r\n", rr_force);
-		RC_LOG("[RC]:grade: %.2f\r\n", p_sim_forces->grade);
-		RC_LOG("[RC]:gravitational: %.2f\r\n", gravitational);
-		RC_LOG("[RC]:rolling: %.2f\r\n", rolling);
-		RC_LOG("[RC]:wind_speed: %.2f\r\n", p_sim_forces->wind_speed_mps);
-	}*/
-
+	float total_watts = simulation_watts(speed_mps, mp_user_profile->total_weight_kg, 
+		&m_resistance_state);
+	// remove the existing watts we have.
+	float mag_watts = total_watts - magoff_watts; 
 	// No support for negative force.
 	if (mag_watts < 0.0f)
-	{
 		mag_watts = 0.0f;
-	}
 
 	// Get the servo to the required position.
 	return magnet_position(speed_mps, mag_watts, &m_resistance_state.power_limit);

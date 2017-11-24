@@ -17,6 +17,7 @@
 #include "irt_common.h"
 #include "user_profile.h"
 #include "resistance.h"
+#include "simulation.h"
 #include "ant_bike_power.h"
 #include "app_fifo.h"
 #include "wahoo.h" // need a couple of defines from here.
@@ -207,7 +208,7 @@ static float track_grade_get(uint8_t* buffer)
  */
 static float track_crr_get(uint8_t buffer)
 {
-    float crr = 0.004f; // DEFAULT_CRR
+    float crr = DEFAULT_CRR;
     
     if (buffer != 0xFF) // Indicates invalid.
     {

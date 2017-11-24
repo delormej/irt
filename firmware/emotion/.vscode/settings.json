@@ -14,6 +14,7 @@
         "irt_led.h": "c",
         "irt_common.h": "c",
         "ble_cps.h": "c",
-        "compiler_abstraction.h": "c"
+        "compiler_abstraction.h": "c",
+        "simulation.h": "c"
     }
 }
