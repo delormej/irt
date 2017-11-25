@@ -6,7 +6,7 @@
         {
             "taskName": "build",
             "type": "shell",
-            "command": "gcc -g -o test.exe ./*.c ./cutest/*.c ./libraries/*.c ../emotion/libraries/speed_event_fifo.c ../emotion/libraries/math/*.c  ../emotion/libraries/ctf_power.c ../emotion/libraries/magnet.c ../emotion/libraries/ctf_offset.c -iquote ../emotion/libraries/ -iquote ../emotion/libraries/math/ -iquote ./include/ -iquote ../emotion/ -iquote ../emotion/services/ -iquote ../nrf51sdk_7.2/libraries/util/ -iquote ../nrf51sdk_7.2/drivers_nrf/hal/ -iquote . -lm -std=gnu99",
+            "command": "gcc -g -o test.exe ./*.c ./cutest/*.c ./libraries/*.c ../emotion/libraries/speed_event_fifo.c ../emotion/libraries/math/*.c  ../emotion/libraries/ctf_power.c ../emotion/libraries/magnet.c ../emotion/libraries/ctf_offset.c ../emotion/libraries/simulation.c -iquote ../emotion/libraries/ -iquote ../emotion/libraries/math/ -iquote ./include/ -iquote ../emotion/ -iquote ../emotion/services/ -iquote ../nrf51sdk_7.2/libraries/util/ -iquote ../nrf51sdk_7.2/drivers_nrf/hal/ -iquote . -lm -std=gnu99",
             "args": [],
             "group": "build",
             "problemMatcher": [

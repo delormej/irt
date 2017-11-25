@@ -4,7 +4,8 @@
  */
 
 #include "simulation.h"
-#include "math_private.h"
+#include <math.h>
+
 
 #define	GRAVITY     9.81f // Coefficent of gravity.
 

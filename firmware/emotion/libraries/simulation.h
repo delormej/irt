@@ -10,7 +10,9 @@
 #include "user_profile.h"
 #include "resistance.h"
 
-#define DEFAULT_CRR     0.004f
+#define DEFAULT_CRR                     0.004f
+#define SIM_C							0.51f										// Default co-efficient for drag.  See resistance sim methods.
+#define SIM_DRAFTING_FACTOR             1.0f                                        // Default drafing is none, 1.0f.
 
 /**@brief	Calculates rolling resistance based on weight and co-efficient of rolling resistance.
  *

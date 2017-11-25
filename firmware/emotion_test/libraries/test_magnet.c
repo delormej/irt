@@ -15,8 +15,8 @@ static void test_get_default_factors(CuTest* tc)
 static void test_magnet_watts(CuTest* tc)
 {
     //float speed_mps, uint16_t position
-    float watts = magnet_watts(7.0f, 1600);
-    CuAssertTrue(tc, watts == 28.4103069F );
+    float watts = magnet_watts(7.0f, 1273);
+    CuAssertTrue(tc, watts == 49.4211922F );
 }
 
 static void test_magnet_position(CuTest* tc)
@@ -35,4 +35,6 @@ CuSuite* cu_getsuite_magnet()
     SUITE_ADD_TEST(suite, test_get_default_factors);
     SUITE_ADD_TEST(suite, test_magnet_watts);
     SUITE_ADD_TEST(suite, test_magnet_position);
+
+    return suite;
 }

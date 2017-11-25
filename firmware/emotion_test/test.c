@@ -6,6 +6,7 @@
 
 CuSuite* cu_getsuite_ctf_power();
 CuSuite* cu_getsuite_magnet();
+CuSuite* cu_getsuite_simulation();
 static CuString* output;
 
 static float track_grade_get(uint8_t* buffer)
@@ -18,25 +19,23 @@ static float track_grade_get(uint8_t* buffer)
     return grade / 100.0f;
 }
 
-static void RunSuite(const char* name, CuSuite* suite)
-{
-    printf("Running %s\r\n:", name);   
-    CuSuiteSummary(suite, output);
-    CuSuiteDetails(suite, output);
-    CuSuiteRun(suite);
-}
-
 static void RunAllTests()
 {
-    output = CuStringNew();
-    RunSuite("ctf_power", cu_getsuite_ctf_power());
-    RunSuite("magnet", cu_getsuite_magnet());
-    printf(output->buffer);
+	CuString *output = CuStringNew();
+	CuSuite* suite = CuSuiteNew();
+
+    CuSuiteAddSuite(suite, cu_getsuite_ctf_power());
+    CuSuiteAddSuite(suite, cu_getsuite_magnet());
+    CuSuiteAddSuite(suite, cu_getsuite_simulation());
+
+	CuSuiteRun(suite);
+	CuSuiteSummary(suite, output);
+	CuSuiteDetails(suite, output);
+	printf("%s\n", output->buffer);
 
     // uint8_t buffer[] = { 0x2F, 0x4E };
     // float grade = track_grade_get(buffer);
     // printf("grade: %.6f\r\n", grade);
-
 }
 
 int main(char args[])

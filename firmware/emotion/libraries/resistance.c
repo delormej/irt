@@ -46,9 +46,6 @@
 
 // MACRO for getting to the array.
 #define RESISTANCE_LEVEL 	mp_user_profile->servo_positions.positions
-#define SIM_CRR							0.0033f										// Default crr for typical outdoor rolling resistance (not the same as above).
-#define SIM_C							0.51f										// Default co-efficient for drag.  See resistance sim methods.
-#define SIM_DRAFTING_FACTOR             1.0f                                        // Default drafing is none, 1.0f.
 
 /**@brief  Timeout for adjusting resistance when in erg/sim mode.
  */
@@ -120,7 +117,7 @@ irt_resistance_state_t* resistance_init(uint32_t servo_pin_number,
 	 *	coefficent (unitless); and Rho is the air density (kg/m^3). The default value
 	 *	for A*Cw*Rho is 0.60.
 	 */
-	m_resistance_state.crr = SIM_CRR;
+	m_resistance_state.crr = DEFAULT_CRR;
 	m_resistance_state.c = SIM_C;
     m_resistance_state.drafting_factor = SIM_DRAFTING_FACTOR;
 
