@@ -432,6 +432,13 @@ void resistance_adjust()
 		case RESISTANCE_SET_SIM:
 			servo_pos = resistance_sim_position(speed_mps, magoff_watts);
 			use_smoothing = true;
+			// #if ENABLE_DEBUG_LOG
+			// RC_LOG("[RC] resistance_adjust: %i, %i, %i, %i.\r\n",
+			// 	speed_mps * 10,
+			// 	magoff_watts * 10,
+			// 	resistance_servo_position(), // Could have changed since calc?
+			// 	servo_position);
+			// #endif
 			break;
 
 		default:
@@ -484,10 +491,14 @@ void resistance_grade_set(float grade)
 		return; //APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
 	}
 	
+	if (m_resistance_state.mode != RESISTANCE_SET_SIM)
+	{
+		resistance_mode_set(RESISTANCE_SET_SIM);
+	}
+
 	if (grade != m_resistance_state.grade)
 	{
 		m_resistance_state.grade = grade;
-		resistance_mode_set(RESISTANCE_SET_SIM);
 	} 
 }
 
