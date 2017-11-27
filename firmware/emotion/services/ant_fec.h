@@ -162,7 +162,8 @@ typedef struct {
     uint8_t     PowerMeterIdLSB;
 	uint8_t     PowerMeterIdMSB;
     uint8_t     PowerAdjustSeconds;
-    uint8_t     PowerAverageSeconds;
+	uint8_t     PowerAverageSeconds:7;
+	uint8_t		ServoSmoothingEnabled:1;
 	uint8_t		PowerMeterChannelState;		// Are we stll searching for the power meter, connected, disconnected, not in use, etc..
 	uint8_t		Reserved[2];		
 } FEC_IRTSettingsPowerAdjustPage;

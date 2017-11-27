@@ -38,7 +38,25 @@ static void RunAllTests()
     // printf("grade: %.6f\r\n", grade);
 }
 
+void TestBit()
+{
+    typedef struct mystruct {
+        uint8_t		power_adjust_seconds:7;		// In erg/sim mode, attempt to adjust power every n seconds.     
+        uint8_t		servo_smoothing_enabled:1;	// In sim mode, slow the servo down for a more realistic feel or not.        
+    } mystruct_t;
+
+    mystruct_t my;
+    my.servo_smoothing_enabled = true;
+    my.power_adjust_seconds = 3;
+
+    uint8_t* myAsint = (uint8_t*)&my;
+
+    printf("Servo: %i, Adjust: %i\r\n",
+        *myAsint >> 7, *myAsint & 0x7F);
+}
+
 int main(char args[])
 {
     RunAllTests();
+    TestBit();
 }

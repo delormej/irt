@@ -431,14 +431,7 @@ void resistance_adjust()
 
 		case RESISTANCE_SET_SIM:
 			servo_pos = resistance_sim_position(speed_mps, magoff_watts);
-			use_smoothing = true;
-			// #if ENABLE_DEBUG_LOG
-			// RC_LOG("[RC] resistance_adjust: %i, %i, %i, %i.\r\n",
-			// 	speed_mps * 10,
-			// 	magoff_watts * 10,
-			// 	resistance_servo_position(), // Could have changed since calc?
-			// 	servo_position);
-			// #endif
+			use_smoothing = mp_user_profile->servo_smoothing_enabled;
 			break;
 
 		default:

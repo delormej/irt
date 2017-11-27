@@ -427,6 +427,7 @@ static uint32_t IRTSettingsPowerAdjustSend() {
         .DataPageNumber = ANT_IRT_PAGE_POWER_ADJUST,
         .PowerAdjustSeconds = mp_user_profile->power_adjust_seconds,
         .PowerAverageSeconds = mp_user_profile->power_average_seconds,
+        .ServoSmoothingEnabled = mp_user_profile->servo_smoothing_enabled,
         .Reserved[0] = 0xFF,
         .Reserved[1] = 0xFF
     };
@@ -746,11 +747,17 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
     }
 
     if ( mp_user_profile->power_average_seconds != page.PowerAverageSeconds && 
-        mp_user_profile->power_average_seconds != 0xFF )
+        mp_user_profile->power_average_seconds != 0x7F )
     {
         mp_user_profile->power_average_seconds = page.PowerAverageSeconds;
         dirty = true;
     }
+
+    if ( mp_user_profile->servo_smoothing_enabled != page.ServoSmoothingEnabled )
+    {
+        mp_user_profile->servo_smoothing_enabled = page.ServoSmoothingEnabled;
+        dirty = true;
+    }    
 
     FE_LOG("[FE] IRT Power Adjust received, power meter id: %i, adjust: %i, average: %i \r\n",
         power_meter_id,

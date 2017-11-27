@@ -199,13 +199,13 @@ static uint32_t user_profile_init()
         if (m_user_profile.power_adjust_seconds == 0xFF)
         {
             // In erg/sim mode, attempt to adjust power every n seconds. 
-            m_user_profile.power_adjust_seconds = 5;
+            m_user_profile.power_adjust_seconds = DEFAULT_POWER_ADJUST_SECONDS;
         }
 
-        if (m_user_profile.power_average_seconds == 0xFF)
+        if (m_user_profile.power_average_seconds == 0x7F)
         {
             // In erg/sim mode, calculate average power every n seconds. 
-            m_user_profile.power_average_seconds = 3;
+            m_user_profile.power_average_seconds = DEFAULT_POWER_AVERAGE_SECONDS;
         }
 
         // Schedule an update.
