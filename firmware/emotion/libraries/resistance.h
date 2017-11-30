@@ -154,7 +154,7 @@ irt_resistance_state_t* resistance_state_get(void);
 /**@brief		Sets the position of the servo.
  *
  */
-uint16_t resistance_position_set(uint16_t position, bool smooth);
+uint16_t resistance_position_set(uint16_t position, uint8_t smooth_steps);
 
 /**@brief		Validates the values of positions are in range.
  *

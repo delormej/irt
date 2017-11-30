@@ -162,7 +162,7 @@ irt_resistance_state_t* resistance_state_get(void)
 /**@brief	Determines if there is a move and move accordingly.
  *
  */
-uint16_t resistance_position_set(uint16_t servo_pos, bool smooth)
+uint16_t resistance_position_set(uint16_t servo_pos, uint8_t smooth_steps)
 {
 	uint32_t err_code;
 	// Actual servo position after calibration.
@@ -209,7 +209,7 @@ uint16_t resistance_position_set(uint16_t servo_pos, bool smooth)
 		&& ABOVE_TRESHOLD(servo_pos, current_servo_pos) )
 	{
 		// Issue a command to move the servo.
-		err_code = pwm_set_servo(actual_servo_pos, smooth);
+		err_code = pwm_set_servo(actual_servo_pos, smooth_steps);
 		APP_ERROR_CHECK(err_code);
 
 		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
@@ -267,7 +267,7 @@ uint16_t resistance_level_set(uint8_t level)
 	resistance_mode_set(RESISTANCE_SET_STANDARD);
 	m_resistance_state.level = level;
 
-	return resistance_position_set(RESISTANCE_LEVEL[level], false);
+	return resistance_position_set(RESISTANCE_LEVEL[level], 0);
 }
 
 /**@brief		Gets the levels of standard resistance available.
@@ -330,7 +330,7 @@ uint16_t resistance_pct_set(float percent)
 						percent )  );
 	}
 
-	return resistance_position_set(position, false);
+	return resistance_position_set(position, 0);
 }
 
 /**@brief		Gets magnet position resistance to simulate desired erg watts.
@@ -389,7 +389,7 @@ static uint16_t resistance_sim_position(float speed_mps, int16_t magoff_watts)
 void resistance_adjust()
 {
 	uint16_t servo_pos = 0;
-	bool use_smoothing = false;
+	uint8_t smoothing_steps = 0;
 	float speed_mps = 0.0f;
 	float magoff_watts = 0.0f;
 
@@ -414,7 +414,7 @@ void resistance_adjust()
         m_resistance_state.power_limit = TARGET_SPEED_TOO_LOW;
 		// Move magnet to the min position, as it will be tough for rider to overcome
 		// magnet force from a slow speed.
-		resistance_position_set(MAGNET_POSITION_MIN_RESISTANCE, false);
+		resistance_position_set(MAGNET_POSITION_MIN_RESISTANCE, 0);
 		return;
     }
     
@@ -424,14 +424,14 @@ void resistance_adjust()
 		case RESISTANCE_SET_ERG:
 			// If recovering from a speed too low event, smooth into the position.
 			if (m_resistance_state.power_limit == TARGET_SPEED_TOO_LOW) {
-				use_smoothing = true;
+				smoothing_steps = DEFAULT_SMOOTHING_STEPS;
 			}
 			servo_pos = resistance_erg_position(speed_mps, magoff_watts);
 			break;
 
 		case RESISTANCE_SET_SIM:
 			servo_pos = resistance_sim_position(speed_mps, magoff_watts);
-			use_smoothing = mp_user_profile->servo_smoothing_enabled;
+			smoothing_steps = mp_user_profile->servo_smoothing_steps;
 			break;
 
 		default:
@@ -440,7 +440,7 @@ void resistance_adjust()
 	}
 
 	// Move the servo, with smoothing only if in sim mode.
-	resistance_position_set(servo_pos, use_smoothing);
+	resistance_position_set(servo_pos, smoothing_steps);
 
 	// Start the timer for next resistance adjustment.
 	uint32_t err_code = app_timer_start(m_adjust_timer_id, ADJUSTMENT_INTERVAL, NULL);

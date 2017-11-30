@@ -1172,7 +1172,7 @@ static void on_set_resistance(rc_evt_t rc_evt)
 
 		case RESISTANCE_SET_SERVO_POS:
 			// Move the servo to a specific position.
-			resistance_position_set(value, false);
+			resistance_position_set(value, 0);
 			break;
 
 		case RESISTANCE_SET_WEIGHT:

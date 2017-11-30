@@ -427,9 +427,8 @@ static uint32_t IRTSettingsPowerAdjustSend() {
         .DataPageNumber = ANT_IRT_PAGE_POWER_ADJUST,
         .PowerAdjustSeconds = mp_user_profile->power_adjust_seconds,
         .PowerAverageSeconds = mp_user_profile->power_average_seconds,
-        .ServoSmoothingEnabled = mp_user_profile->servo_smoothing_enabled,
-        .Reserved[0] = 0xFF,
-        .Reserved[1] = 0xFF
+        .ServoSmoothingSteps = mp_user_profile->servo_smoothing_steps,
+        .Reserved[0] = 0xFF
     };
 
     uint16_t connected_power_meter_id = ant_bp_power_meter_id_get();
@@ -753,16 +752,17 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
         dirty = true;
     }
 
-    if ( mp_user_profile->servo_smoothing_enabled != page.ServoSmoothingEnabled )
+    if ( mp_user_profile->servo_smoothing_steps != page.ServoSmoothingSteps )
     {
-        mp_user_profile->servo_smoothing_enabled = page.ServoSmoothingEnabled;
+        mp_user_profile->servo_smoothing_steps = page.ServoSmoothingSteps;
         dirty = true;
     }    
 
-    FE_LOG("[FE] IRT Power Adjust received, power meter id: %i, adjust: %i, average: %i \r\n",
+    FE_LOG("[FE] IRT Power Adjust received, power meter id: %i, adjust: %i, average: %i, smoothing: %i\r\n",
         power_meter_id,
         page.PowerAdjustSeconds,
-        page.PowerAverageSeconds);
+        page.PowerAverageSeconds,
+		page.ServoSmoothingSteps);
 
     if (dirty)
     {

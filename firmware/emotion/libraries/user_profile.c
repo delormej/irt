@@ -202,11 +202,17 @@ static uint32_t user_profile_init()
             m_user_profile.power_adjust_seconds = DEFAULT_POWER_ADJUST_SECONDS;
         }
 
-        if (m_user_profile.power_average_seconds == 0x7F)
+        if (m_user_profile.power_average_seconds == 0xFF)
         {
             // In erg/sim mode, calculate average power every n seconds. 
             m_user_profile.power_average_seconds = DEFAULT_POWER_AVERAGE_SECONDS;
         }
+
+		if (m_user_profile.servo_smoothing_steps == 0xFF)
+		{
+			// Default steps to move every 20ms when smoothing servo movement.
+			m_user_profile.power_average_seconds = DEFAULT_SMOOTHING_STEPS; 
+		}
 
         // Schedule an update.
         UP_LOG("[UP]:profile_init: scheduling update\r\n");

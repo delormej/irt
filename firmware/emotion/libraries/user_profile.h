@@ -17,7 +17,7 @@
 #include "irt_common.h"
 #include "magnet.h"
 
-#define PROFILE_VERSION					15u	            // Current version of the profile.
+#define PROFILE_VERSION					16u	            // Current version of the profile.
 
 #define SETTING_ACL_SLEEP_ON			1UL				// Put device to sleep when accelerometer signals no motion.
 #define SETTING_BTLE_ENABLED			2UL				// BTLE Enabled
@@ -46,6 +46,7 @@
 
 #define DEFAULT_POWER_ADJUST_SECONDS	3
 #define DEFAULT_POWER_AVERAGE_SECONDS	3
+#define DEFAULT_SMOOTHING_STEPS			4		
 
 /**@brief	Structure used to for storing/reading user profile.
  * 			Must be at least PSTORAGE_MIN_BLOCK_SIZE (i.e. 16 bytes) in size and should be word aligned (16 bits).
@@ -68,9 +69,9 @@ typedef struct user_profile_s {
     uint16_t	user_weight_kg;			    // Stored in int format 1/100, unit 0.01kg, range: 0 - 655.34kg.
 	uint16_t	power_meter_ant_id;			// Device Id of power meter to pair to.
 	uint8_t		power_adjust_seconds;		// In erg/sim mode, attempt to adjust power every n seconds. 
-	uint8_t		power_average_seconds:7;	// In erg/sim mode, window size (in seconds) for averaging power and speed.
-	uint8_t		servo_smoothing_enabled:1;	// In sim mode, slow the servo down for a more realistic feel or not.        
-	uint8_t		reserved_2[11];				// Forcing 16 bit block size alignment.
+	uint8_t		power_average_seconds;		// In erg/sim mode, window size (in seconds) for averaging power and speed.
+	uint8_t		servo_smoothing_steps;		// In sim mode, slow the servo down for a more realistic feel or not.        
+	uint8_t		reserved_2[10];				// Forcing 16 bit block size alignment.
 } user_profile_t;
 
 /**@brief Returns a pointer to the user profile object. */
