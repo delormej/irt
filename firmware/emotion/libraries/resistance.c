@@ -77,25 +77,32 @@ static void adjustment_timeout_handler(void * p_context)
 	}	
 }
 
+static inline bool adjustment_timer_in_use()
+{
+	return ( ADJUSTMENT_INTERVAL > 0 && 
+		(m_resistance_state.mode == RESISTANCE_SET_ERG || 
+			m_resistance_state.mode == RESISTANCE_SET_SIM) );
+}
+
 /**@brief		Sets the mode and any logic required to transition between modes.
  *
  */
 static void resistance_mode_set(resistance_mode_t mode)
 {
 	// If in erg/sim mode stop timer to force change.
-	if ( (m_resistance_state.mode == RESISTANCE_SET_ERG ||
-		  m_resistance_state.mode == RESISTANCE_SET_SIM))
+	if ( m_resistance_state.mode == RESISTANCE_SET_ERG ||
+		  m_resistance_state.mode == RESISTANCE_SET_SIM )
 	{
-		// Stop the timer if we were in erg/sim mode.
+		// Stop the timer if we were in erg/sim mode, regardless of whether
+		// adjustment interval is 0 or not, it will not error if timer was
+		// never started.  This guarantees that timer will stop even if user
+		// changed the adjust timeout to 0 after a timer already started (possible case).
 		app_timer_stop(m_adjust_timer_id);
 	}
 
-	// Update new state.
-	m_resistance_state.mode = mode;
-
-	// If erg/sim mode, adjust resistance.
-	if (mode == RESISTANCE_SET_ERG || mode == RESISTANCE_SET_SIM)
+	if (m_resistance_state.mode != mode || !adjustment_timer_in_use())
 	{
+		m_resistance_state.mode = mode;		
 		resistance_adjust();
 	}
 }
@@ -442,9 +449,12 @@ void resistance_adjust()
 	// Move the servo, with smoothing only if in sim mode.
 	resistance_position_set(servo_pos, smoothing_steps);
 
-	// Start the timer for next resistance adjustment.
-	uint32_t err_code = app_timer_start(m_adjust_timer_id, ADJUSTMENT_INTERVAL, NULL);
-	APP_ERROR_CHECK(err_code);		
+	if (adjustment_timer_in_use())
+	{
+		// Start the timer for next resistance adjustment.
+		uint32_t err_code = app_timer_start(m_adjust_timer_id, ADJUSTMENT_INTERVAL, NULL);
+		APP_ERROR_CHECK(err_code);		
+	}
 }
 
 /**@brief		Sets erg mode with a watt target.  If 0, resumes last setting.
@@ -484,14 +494,10 @@ void resistance_grade_set(float grade)
 		return; //APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
 	}
 	
-	if (m_resistance_state.mode != RESISTANCE_SET_SIM)
-	{
-		resistance_mode_set(RESISTANCE_SET_SIM);
-	}
-
 	if (grade != m_resistance_state.grade)
 	{
 		m_resistance_state.grade = grade;
+		resistance_mode_set(RESISTANCE_SET_SIM);
 	} 
 }
 
