@@ -65,16 +65,7 @@ static irt_resistance_state_t	m_resistance_state;
  */
 static void adjustment_timeout_handler(void * p_context)
 {
-	//
-	// Only adjust resistance twice per second (4 events == 1 second) and only
-	// if in Erg or Sim mode, unless flagged based on a queued change.
-	//
-	if (m_resistance_state.mode == RESISTANCE_SET_ERG ||
-			m_resistance_state.mode == RESISTANCE_SET_SIM)
-	{
-		// Adjust resistance.
-		resistance_adjust();
-	}	
+	resistance_adjust();
 }
 
 static inline bool adjustment_timer_in_use()
@@ -82,29 +73,6 @@ static inline bool adjustment_timer_in_use()
 	return ( ADJUSTMENT_INTERVAL > 0 && 
 		(m_resistance_state.mode == RESISTANCE_SET_ERG || 
 			m_resistance_state.mode == RESISTANCE_SET_SIM) );
-}
-
-/**@brief		Sets the mode and any logic required to transition between modes.
- *
- */
-static void resistance_mode_set(resistance_mode_t mode)
-{
-	// If in erg/sim mode stop timer to force change.
-	if ( m_resistance_state.mode == RESISTANCE_SET_ERG ||
-		  m_resistance_state.mode == RESISTANCE_SET_SIM )
-	{
-		// Stop the timer if we were in erg/sim mode, regardless of whether
-		// adjustment interval is 0 or not, it will not error if timer was
-		// never started.  This guarantees that timer will stop even if user
-		// changed the adjust timeout to 0 after a timer already started (possible case).
-		app_timer_stop(m_adjust_timer_id);
-	}
-
-	if (m_resistance_state.mode != mode || !adjustment_timer_in_use())
-	{
-		m_resistance_state.mode = mode;		
-		resistance_adjust();
-	}
 }
 
 /**@brief	Initializes the resistance module which controls the servo.
@@ -271,9 +239,8 @@ uint16_t resistance_level_set(uint8_t level)
 		level = RESISTANCE_LEVELS - 1;
 	}
 	
-	resistance_mode_set(RESISTANCE_SET_STANDARD);
+	m_resistance_state.mode = RESISTANCE_SET_STANDARD;
 	m_resistance_state.level = level;
-
 	return resistance_position_set(RESISTANCE_LEVEL[level], 0);
 }
 
@@ -316,10 +283,7 @@ uint16_t resistance_pct_set(float percent)
 	turned on (0.0 = brake turned off; 0.256 = 25.6% of brake; 1.0 = 100% brake force).
 	*/
 	uint16_t position;
-
-    RC_LOG("[RC] resistance_pct_set: %.2f\r\n", percent);
-
-	resistance_mode_set(RESISTANCE_SET_PERCENT);
+	m_resistance_state.mode = RESISTANCE_SET_PERCENT;
 
 	if (percent == 0.0f)
 	{
@@ -337,6 +301,7 @@ uint16_t resistance_pct_set(float percent)
 						percent )  );
 	}
 
+    RC_LOG("[RC] resistance_pct_set: %i\r\n", percent * 100);
 	return resistance_position_set(position, 0);
 }
 
@@ -389,22 +354,12 @@ static uint16_t resistance_sim_position(float speed_mps, int16_t magoff_watts)
 	return magnet_position(speed_mps, mag_watts, &m_resistance_state.power_limit);
 }
 
-/**@brief		Adjusts dynamic magnetic resistance control based on current
- * 				speed and watts, for erg/sim mode.
- *
- */
-void resistance_adjust()
+static float calc_avg_magoff_watts(uint8_t seconds)
 {
-	uint16_t servo_pos = 0;
-	uint8_t smoothing_steps = 0;
-	float speed_mps = 0.0f;
 	float magoff_watts = 0.0f;
-
-	speed_mps = speed_average_mps(mp_user_profile->power_average_seconds);
-
 	if (mp_current_state->power_meter_paired) // Paired to a power meter..
 	{
-		float average_power = ant_bp_avg_power(mp_user_profile->power_average_seconds); 
+		float average_power = ant_bp_avg_power(seconds); 
 		float mag_watts = magnet_watts(speed_mps, resistance_servo_position());
 		
 		// Take actual power, remove estimated watts from magnet.
@@ -414,8 +369,16 @@ void resistance_adjust()
 	{
 		// Calculate estimated power without the magnet force.
 		magoff_watts = power_magoff(speed_mps);
-	}
-	
+	}	
+
+	return magoff_watts;
+}
+
+static void adjust_to_target(resistance_mode_t mode, float speed_mps, float magoff_watts)
+{
+	uint16_t servo_pos = 0;
+	uint8_t smoothing_steps = 0;
+
 	if (speed_mps < RESISTANCE_MIN_SPEED_ADJUST)
     {
         m_resistance_state.power_limit = TARGET_SPEED_TOO_LOW;
@@ -424,37 +387,47 @@ void resistance_adjust()
 		resistance_position_set(MAGNET_POSITION_MIN_RESISTANCE, 0);
 		return;
     }
-    
-	// If in erg or sim mode, destermine the magnet position.
-	switch (m_resistance_state.mode)
+
+	if (mode == RESISTANCE_SET_ERG)
 	{
-		case RESISTANCE_SET_ERG:
-			// If recovering from a speed too low event, smooth into the position.
-			if (m_resistance_state.power_limit == TARGET_SPEED_TOO_LOW) {
-				smoothing_steps = DEFAULT_SMOOTHING_STEPS;
-			}
-			servo_pos = resistance_erg_position(speed_mps, magoff_watts);
-			break;
-
-		case RESISTANCE_SET_SIM:
-			servo_pos = resistance_sim_position(speed_mps, magoff_watts);
-			smoothing_steps = mp_user_profile->servo_smoothing_steps;
-			break;
-
-		default:
-			RC_LOG("[RC] resistance_adjust: WARNING called with invalid resistance mode.\r\n");
-			break;
+		servo_pos = resistance_erg_position(speed_mps, magoff_watts);	
+		// If recovering from a speed too low event, smooth into the position.
+		if (m_resistance_state.power_limit == TARGET_SPEED_TOO_LOW) 
+			smoothing_steps = DEFAULT_SMOOTHING_STEPS;		
+	}
+	else if (mode == RESISTANCE_SET_SIM)
+	{
+		servo_pos = resistance_sim_position(speed_mps, magoff_watts);
+		smoothing_steps = mp_user_profile->servo_smoothing_steps;
+	}
+	else
+	{
+		RC_LOG("[RC] resistance_adjust: WARNING called with invalid resistance mode.\r\n");
+		return;
 	}
 
 	// Move the servo, with smoothing only if in sim mode.
 	resistance_position_set(servo_pos, smoothing_steps);
+}
 
+/**@brief		Adjusts dynamic magnetic resistance control based on current
+ * 				speed and watts, for erg/sim mode.
+ *
+ */
+static void resistance_adjust()
+{
+	// Stop the timer if we were in erg/sim mode, regardless of whether
+	// adjustment interval is 0 or not, it will not error if timer was
+	// never started.  This guarantees that timer will stop even if user
+	// changed the adjust timeout to 0 after a timer already started (possible case).
+	app_timer_stop(m_adjust_timer_id);
+
+	float speed_mps = speed_average_mps(mp_user_profile->power_average_seconds);
+	float magoff_watts = calc_avg_magoff_watts(mp_user_profile->power_average_seconds);
+	adjust_to_target(m_resistance_state.mode, speed_mps, magoff_watts);
 	if (adjustment_timer_in_use())
-	{
 		// Start the timer for next resistance adjustment.
-		uint32_t err_code = app_timer_start(m_adjust_timer_id, ADJUSTMENT_INTERVAL, NULL);
-		APP_ERROR_CHECK(err_code);		
-	}
+		APP_ERROR_CHECK(app_timer_start(m_adjust_timer_id, ADJUSTMENT_INTERVAL, NULL));
 }
 
 /**@brief		Sets erg mode with a watt target.  If 0, resumes last setting.
@@ -477,9 +450,14 @@ void resistance_erg_set(uint16_t watts)
 		}
 	}
 
-	m_resistance_state.erg_watts = watts;
-	m_resistance_state.unadjusted_erg_watts = watts;
-	resistance_mode_set(RESISTANCE_SET_ERG);
+	if (m_resistance_state.mode != RESISTANCE_SET_ERG ||
+		m_resistance_state.erg_watts != watts)
+	{
+		m_resistance_state.mode = RESISTANCE_SET_ERG;
+		m_resistance_state.erg_watts = watts;
+		m_resistance_state.unadjusted_erg_watts = watts;
+		resistance_adjust();
+	}
 }
 
 /**@brief		Sets simulation grade.
@@ -488,43 +466,44 @@ void resistance_erg_set(uint16_t watts)
  */
 void resistance_grade_set(float grade)
 {
+	bool dirty = false;
 	if (grade > 2.0 || grade < -2.0)
 	{
 		RC_LOG("[RC]:Grade out of range: %.2f\r\n", grade);
 		return; //APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
 	}
 	
-	if (grade != m_resistance_state.grade)
+	if (m_resistance_state.mode != RESISTANCE_SET_SIM)
+	{
+		m_resistance_state.mode = RESISTANCE_SET_SIM;
+		m_resistance_state.grade = grade;
+		resistance_adjust();
+	}
+	else if (m_resistance_state.grade != grade)
 	{
 		m_resistance_state.grade = grade;
-		resistance_mode_set(RESISTANCE_SET_SIM);
-	} 
+		if (ADJUSTMENT_INTERVAL == 0)
+			resistance_adjust();
+	}
 }
 
 /**@brief		Sets simulation wind speed.
  *
  */
-void resistance_windspeed_set(float windspeed_mps)
+void resistance_windspeed_set(float wind_speed_mps)
 {
-	m_resistance_state.wind_speed_mps = windspeed_mps;
-	resistance_mode_set(RESISTANCE_SET_SIM);
-}
-
-/**@brief		Sets simulation coefficient of drag.
- *
- */
-void resistance_c_set(float drag)
-{
-	m_resistance_state.c = drag;
-	resistance_mode_set(RESISTANCE_SET_SIM);
-}
-
-/**@brief		Sets simulation coefficient of rolling resistance.
- *
- */
-void resistance_crr_set(float crr)
-{
-	m_resistance_state.crr = crr;
+	if (m_resistance_state.mode != RESISTANCE_SET_SIM)
+	{
+		m_resistance_state.mode = RESISTANCE_SET_SIM;
+		m_resistance_state.wind_speed_mps = wind_speed_mps;
+		resistance_adjust();
+	}
+	else if (m_resistance_state.wind_speed_mps != wind_speed_mps)
+	{
+		m_resistance_state.wind_speed_mps = wind_speed_mps;
+		if (ADJUSTMENT_INTERVAL == 0)
+			resistance_adjust();
+	}
 }
 
 /**@brief		Sets simulation coefficient of rolling resistance.
@@ -537,8 +516,34 @@ void resistance_crr_set(float crr)
  */
 void resistance_drafting_set(float factor)
 {
-    m_resistance_state.drafting_factor = factor;
-	resistance_mode_set(RESISTANCE_SET_SIM);
+	if (m_resistance_state.mode != RESISTANCE_SET_SIM)
+	{
+		m_resistance_state.mode = RESISTANCE_SET_SIM;
+		m_resistance_state.drafting_factor = factor;
+		resistance_adjust();
+	}
+	else if (m_resistance_state.factor != factor)
+	{
+		m_resistance_state.drafting_factor = factor;
+		if (ADJUSTMENT_INTERVAL == 0)
+			resistance_adjust();
+	}
+}
+
+/**@brief		Sets simulation coefficient of drag.
+ *
+ */
+void resistance_c_set(float drag)
+{
+	m_resistance_state.c = drag;
+}
+
+/**@brief		Sets simulation coefficient of rolling resistance.
+ *
+ */
+void resistance_crr_set(float crr)
+{
+	m_resistance_state.crr = crr;
 }
 
 /**@brief		Adjusts resistance +/- by either a step or % (erg mode).

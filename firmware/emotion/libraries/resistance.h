@@ -217,12 +217,6 @@ void resistance_crr_set(float crr);
  */
 void resistance_drafting_set(float factor);
 
-/**@brief		Adjusts dynamic magnetic resistance control based on current
- * 				speed and watts.
- *
- */
-void resistance_adjust();
-
 /**@brief		Adjusts resistance +/- by either a step or % (erg mode).
  *
  */
