@@ -50,7 +50,8 @@ static void profile_dump_to_log()
         "\tca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
         "\tca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n" \ */
         "\tpower_meter_id: %i\r\n" \
-        "\tpower_adjust_seconds: %i, power_average_seconds: %i\r\n",
+        "\tpower_adjust_seconds: %i, power_average_seconds: %i\r\n" \
+		"\tservo_smoothing_steps: %i\r\n",
         m_user_profile.total_weight_kg,
         m_user_profile.wheel_size_mm,
         m_user_profile.settings,
@@ -67,7 +68,8 @@ static void profile_dump_to_log()
         m_user_profile.ca_mag_factors.high_factors[3],*/
         m_user_profile.power_meter_ant_id,
         m_user_profile.power_adjust_seconds,
-        m_user_profile.power_average_seconds
+        m_user_profile.power_average_seconds,
+		m_user_profile.servo_smoothing_steps
         );    
 }
 

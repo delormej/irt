@@ -55,6 +55,7 @@ static app_timer_id_t			m_adjust_timer_id;						  // Timer used to invoke resist
 static user_profile_t* 			mp_user_profile;
 static irt_context_t*			mp_current_state;
 static irt_resistance_state_t	m_resistance_state;
+static void resistance_adjust();
 
 /**@brief Function for adjusting resistance on timer timeout.
  *
@@ -354,7 +355,7 @@ static uint16_t resistance_sim_position(float speed_mps, int16_t magoff_watts)
 	return magnet_position(speed_mps, mag_watts, &m_resistance_state.power_limit);
 }
 
-static float calc_avg_magoff_watts(uint8_t seconds)
+static float calc_avg_magoff_watts(uint8_t seconds, float speed_mps)
 {
 	float magoff_watts = 0.0f;
 	if (mp_current_state->power_meter_paired) // Paired to a power meter..
@@ -423,7 +424,7 @@ static void resistance_adjust()
 	app_timer_stop(m_adjust_timer_id);
 
 	float speed_mps = speed_average_mps(mp_user_profile->power_average_seconds);
-	float magoff_watts = calc_avg_magoff_watts(mp_user_profile->power_average_seconds);
+	float magoff_watts = calc_avg_magoff_watts(mp_user_profile->power_average_seconds, speed_mps);
 	adjust_to_target(m_resistance_state.mode, speed_mps, magoff_watts);
 	if (adjustment_timer_in_use())
 		// Start the timer for next resistance adjustment.
@@ -466,7 +467,6 @@ void resistance_erg_set(uint16_t watts)
  */
 void resistance_grade_set(float grade)
 {
-	bool dirty = false;
 	if (grade > 2.0 || grade < -2.0)
 	{
 		RC_LOG("[RC]:Grade out of range: %.2f\r\n", grade);
@@ -522,7 +522,7 @@ void resistance_drafting_set(float factor)
 		m_resistance_state.drafting_factor = factor;
 		resistance_adjust();
 	}
-	else if (m_resistance_state.factor != factor)
+	else if (m_resistance_state.drafting_factor != factor)
 	{
 		m_resistance_state.drafting_factor = factor;
 		if (ADJUSTMENT_INTERVAL == 0)
