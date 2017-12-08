@@ -66,8 +66,8 @@ static uint16_t m_target_us;		// Utlimate target position.
 static int8_t m_step_us;			// Amount to step up / down each 20 ms.
 
 // 2x faster to release resistance than increase resistance.
-#define STEP_HARDER					-4
-#define STEP_EASIER					8
+#define STEP_HARDER_FACTOR		-1
+#define STEP_EASIER_FACTOR		2
 
 /**@brief	Forces hard timer stop.
  */
@@ -103,18 +103,18 @@ static void inline pwm_set_pulse_us(uint16_t pulse_width_us)
 	m_last_us = pulse_width_us;
 }
 
-static void pwm_smooth_pulse(uint16_t target_us)
+static void pwm_smooth_pulse(uint16_t target_us, uint8_t smooth_steps)
 {
 	// Set the goal.
 	m_target_us = target_us;
 
 	if (m_target_us > m_last_us)
 	{
-		m_step_us = STEP_EASIER;
+		m_step_us = smooth_steps * STEP_EASIER_FACTOR;
 	}
 	else
 	{
-		m_step_us = STEP_HARDER;
+		m_step_us = smooth_steps * STEP_HARDER_FACTOR;
 	}
 
 	// Set first target.
@@ -187,7 +187,7 @@ static void pwm_ppi_init(void)
  *
  *			NRF_ERROR_INVALID_PARAM returned if servo target is out of range.
  */
-uint32_t pwm_set_servo(uint16_t pulse_width_us, bool smooth)
+uint32_t pwm_set_servo(uint16_t pulse_width_us, uint8_t smooth_steps)
 {
 	uint32_t err_code;
 
@@ -211,10 +211,10 @@ uint32_t pwm_set_servo(uint16_t pulse_width_us, bool smooth)
 		}
 	}
 
-	if (smooth)
+	if (smooth_steps > 0)
 	{
 		// Setup smoothing.
-		pwm_smooth_pulse(pulse_width_us);
+		pwm_smooth_pulse(pulse_width_us, smooth_steps);
 	}
 	else
 	{
@@ -275,6 +275,13 @@ uint32_t pwm_stop_servo(void)
 	{
 		return NRF_SUCCESS;
 	}
+}
+
+/**@brief	Returns the current servo position.
+ */
+uint16_t pwm_get_servo_position()
+{
+	return m_last_us;
 }
 
 /**@brief 	Initializes PWM.

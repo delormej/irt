@@ -13,6 +13,7 @@
 #include "nrf_error.h"
 #include "app_error.h"
 #include "resistance.h"
+#include "simulation.h"
 #include "debug.h"
 #include "irt_common.h"
 #include "magnet.h"
@@ -105,11 +106,8 @@ float power_magoff(float speed_mps)
 	}*/
 	else
 	{
-		/*
-			* Default linear power equation.
-			*/
-		m_rr_force = (GRAVITY * (mp_profile->total_weight_kg / 100.0f) *
-				(DEFAULT_CRR / 1000.0f));		 
+		// Default linear power equation.
+		m_rr_force = simulation_rr_force(mp_profile->total_weight_kg, DEFAULT_CRR);
 		watts = m_rr_force * speed_mps;
 	}
 

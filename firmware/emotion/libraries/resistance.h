@@ -122,7 +122,6 @@ typedef void(*rc_evt_handler_t) (rc_evt_t rc_evt);
 typedef struct
 {
 	resistance_mode_t mode;
-	uint16_t 	      servo_position;
 	float             crr;
 	float 		      c;
 	float 		      wind_speed_mps;
@@ -141,6 +140,12 @@ typedef struct
 irt_resistance_state_t* resistance_init(uint32_t servo_pin_number, 
     user_profile_t* p_user_profile, irt_context_t* p_current_state);
 
+
+/**@brief		Gets the current user friendly magnet position, 
+ * 				integrating any servo offset.
+ */
+uint16_t resistance_servo_position();
+
 /**@brief		Gets the current resistance state object.
  *
  */
@@ -149,7 +154,7 @@ irt_resistance_state_t* resistance_state_get(void);
 /**@brief		Sets the position of the servo.
  *
  */
-uint16_t resistance_position_set(uint16_t position, bool smooth);
+uint16_t resistance_position_set(uint16_t position, uint8_t smooth_steps);
 
 /**@brief		Validates the values of positions are in range.
  *
@@ -211,12 +216,6 @@ void resistance_crr_set(float crr);
  *              effects (e.g. cycling alone, or in the lead of a pack). 
  */
 void resistance_drafting_set(float factor);
-
-/**@brief		Adjusts dynamic magnetic resistance control based on current
- * 				speed and watts.
- *
- */
-void resistance_adjust();
 
 /**@brief		Adjusts resistance +/- by either a step or % (erg mode).
  *

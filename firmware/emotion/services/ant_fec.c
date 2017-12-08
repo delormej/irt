@@ -17,6 +17,7 @@
 #include "irt_common.h"
 #include "user_profile.h"
 #include "resistance.h"
+#include "simulation.h"
 #include "ant_bike_power.h"
 #include "app_fifo.h"
 #include "wahoo.h" // need a couple of defines from here.
@@ -207,7 +208,7 @@ static float track_grade_get(uint8_t* buffer)
  */
 static float track_crr_get(uint8_t buffer)
 {
-    float crr = 0.004f; // DEFAULT_CRR
+    float crr = DEFAULT_CRR;
     
     if (buffer != 0xFF) // Indicates invalid.
     {
@@ -426,8 +427,8 @@ static uint32_t IRTSettingsPowerAdjustSend() {
         .DataPageNumber = ANT_IRT_PAGE_POWER_ADJUST,
         .PowerAdjustSeconds = mp_user_profile->power_adjust_seconds,
         .PowerAverageSeconds = mp_user_profile->power_average_seconds,
-        .Reserved[0] = 0xFF,
-        .Reserved[1] = 0xFF
+        .ServoSmoothingSteps = mp_user_profile->servo_smoothing_steps,
+        .Reserved[0] = 0xFF
     };
 
     uint16_t connected_power_meter_id = ant_bp_power_meter_id_get();
@@ -745,16 +746,23 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
     }
 
     if ( mp_user_profile->power_average_seconds != page.PowerAverageSeconds && 
-        mp_user_profile->power_average_seconds != 0xFF )
+        mp_user_profile->power_average_seconds != 0x7F )
     {
         mp_user_profile->power_average_seconds = page.PowerAverageSeconds;
         dirty = true;
     }
 
-    FE_LOG("[FE] IRT Power Adjust received, power meter id: %i, adjust: %i, average: %i \r\n",
+    if ( mp_user_profile->servo_smoothing_steps != page.ServoSmoothingSteps )
+    {
+        mp_user_profile->servo_smoothing_steps = page.ServoSmoothingSteps;
+        dirty = true;
+    }    
+
+    FE_LOG("[FE] IRT Power Adjust received, power meter id: %i, adjust: %i, average: %i, smoothing: %i\r\n",
         power_meter_id,
         page.PowerAdjustSeconds,
-        page.PowerAverageSeconds);
+        page.PowerAverageSeconds,
+		page.ServoSmoothingSteps);
 
     if (dirty)
     {
