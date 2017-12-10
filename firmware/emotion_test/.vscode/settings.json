@@ -3,5 +3,7 @@
         "basic.h": "c",
         "math_private.h": "c",
         "cutest.h": "c"
-    }
+    },
+    "terminal.integrated.shell.windows": 
+    "C:\\Windows\\sysnative\\bash.exe"
 }

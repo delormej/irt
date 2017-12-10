@@ -1,25 +1,29 @@
 {
         "version": "0.2.0",
         "configurations": [
-        {
-            "name": "(gdb) Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/test.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceRoot}",
-            "environment": [],
-            "externalConsole": true,
-            "MIMode": "gdb",
-            "miDebuggerPath": "${env:GDB_PATH}",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
-        }
+            {
+                "name": "(gdb) Bash on Windows Launch",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}/test.exe",
+                "args": [],
+                "stopAtEntry": false,
+                "cwd": "${workspaceFolder}",
+                "environment": [],
+                "externalConsole": true,
+                "pipeTransport": {
+                    "debuggerPath": "/usr/bin/gdb",
+                    "pipeProgram": "C:\\Windows\\sysnative\\bash.exe",
+                    "pipeArgs": [],
+                    "pipeCwd": ""
+                },
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                ]
+            }
         ]
     }

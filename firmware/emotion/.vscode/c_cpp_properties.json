@@ -44,7 +44,7 @@
             "name": "Win32",
             "includePath": [
                 "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
-                "C:/Users/delor/dev/insideride/firmware/nrf51sdk_7.2",
+                "${workspaceRoot}/../nrf51sdk_7.2/*",
                 "${workspaceRoot}",
                 "${workspaceRoot}/services"
             ],
@@ -53,7 +53,7 @@
                 "databaseFilename": "",
                 "path": [
                     "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
-                    "C:/Users/delor/dev/insideride/firmware/nrf51sdk_7.2",
+                    "${workspaceRoot}/../nrf51sdk_7.2/*",
                     "${workspaceRoot}"
                 ]
             },

@@ -15,6 +15,7 @@
         "irt_common.h": "c",
         "ble_cps.h": "c",
         "compiler_abstraction.h": "c",
-        "simulation.h": "c"
+        "simulation.h": "c",
+        "ant_bg_scanner.h": "c"
     }
 }

@@ -7,6 +7,7 @@
 CuSuite* cu_getsuite_ctf_power();
 CuSuite* cu_getsuite_magnet();
 CuSuite* cu_getsuite_simulation();
+CuSuite* cu_getsuite_ant_bg_scanner();
 static CuString* output;
 
 static float track_grade_get(uint8_t* buffer)
@@ -27,6 +28,7 @@ static void RunAllTests()
     CuSuiteAddSuite(suite, cu_getsuite_ctf_power());
     CuSuiteAddSuite(suite, cu_getsuite_magnet());
     CuSuiteAddSuite(suite, cu_getsuite_simulation());
+    CuSuiteAddSuite(suite, cu_getsuite_ant_bg_scanner());
 
 	CuSuiteRun(suite);
 	CuSuiteSummary(suite, output);
