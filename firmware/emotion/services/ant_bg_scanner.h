@@ -9,10 +9,10 @@
 
 #define POWER_METER_LIST_SIZE       4
 
-typedef {
-    uint16_t power_meter_id,
-    uint8_t ant_product_page[TX_BUFFER_SIZE],
-    uint8_t ant_manufacturer_page[TX_BUFFER_SIZE]    
+typedef struct {
+    uint16_t power_meter_id;
+    uint8_t ant_product_page[TX_BUFFER_SIZE];
+    uint8_t ant_manufacturer_page[TX_BUFFER_SIZE];
 } power_meter_info_t;
 
 typedef void (*pm_info_handler_t)
