@@ -12,7 +12,7 @@ static uint16_t _device_id = 0;
 static void pm_info_handler(power_meter_info_t* p_power_meter_list, uint8_t size)
 {
     if (size > 0)
-        _device_id = p_power_meter_lislt[0]->ant_device_id;
+        _device_id = p_power_meter_list[0].power_meter_id;
 }
 
 static void test_bg_scanner_handle(CuTest* tc)

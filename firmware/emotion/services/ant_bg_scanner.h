@@ -4,12 +4,14 @@
 #ifndef ANT_BG_SCANNER_H__
 #define ANT_BG_SCANNER_H__
 
-#include "ble_ant.h"
+#include <stdint.h>
 #include "ant_stack_handler_types.h"
 
-#define POWER_METER_LIST_SIZE       4
+#define POWER_METER_LIST_SIZE       4u
+#define TX_BUFFER_SIZE              8u
 
-typedef struct {
+typedef struct 
+{
     uint16_t power_meter_id;
     uint8_t ant_product_page[TX_BUFFER_SIZE];
     uint8_t ant_manufacturer_page[TX_BUFFER_SIZE];

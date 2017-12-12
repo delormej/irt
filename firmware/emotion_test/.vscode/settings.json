@@ -2,7 +2,9 @@
     "files.associations": {
         "basic.h": "c",
         "math_private.h": "c",
-        "cutest.h": "c"
+        "cutest.h": "c",
+        "ant_bg_scanner.h": "c",
+        "ant_stack_handler_types.h": "c"
     },
     "terminal.integrated.shell.windows": 
     "C:\\Windows\\sysnative\\bash.exe"

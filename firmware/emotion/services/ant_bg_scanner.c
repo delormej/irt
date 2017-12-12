@@ -1,10 +1,13 @@
 /* Copyright (c) 2017 Inside Ride Technologies, LLC. All Rights Reserved.
 */
-#include "ant_bg_scanner.h"
-#include "string.h"
-#include "ant_interface.h"
+#include <string.h>
+#include <stdbool.h>
 #include "ant_parameters.h"
+#include "ant_bg_scanner.h"
 #include "ant_stack_handler_types.h"
+
+#define ANT_MANUFACTURER_PAGE           0x50u   /**< Manufacturer's identification common data page. */
+#define ANT_PRODUCT_PAGE          		0x51u   /**< Product information common data page. */
 
 static power_meter_info_t pm_info[POWER_METER_LIST_SIZE];
 static uint8_t pm_info_size;
@@ -41,11 +44,11 @@ static bool pm_info_set_message(power_meter_info_t* p_pm_info, ANT_MESSAGE* p_me
     uint8_t page_number = p_mesg->ANT_MESSAGE_aucPayload[0];
     switch (page_number)
     {
-        case ANT_COMMON_PAGE_80:
+        case ANT_MANUFACTURER_PAGE:
             p_buffer = (uint8_t*) &p_pm_info->ant_manufacturer_page;
             break;
             
-        case ANT_COMMON_PAGE_81:
+        case ANT_PRODUCT_PAGE:
             p_buffer = (uint8_t*) &p_pm_info->ant_product_page;
             break;
 
@@ -98,5 +101,5 @@ void ant_bg_scanner_rx_handle(ant_evt_t * p_ant_evt)
 	if (p_ant_evt->event == EVENT_RX)
         pm_info_updated = read_page(p_ant_evt);
     if (pm_info_updated)
-        m_pm_info_handler(&pm_info, pm_info_size);
+        m_pm_info_handler(&pm_info[0], pm_info_size);
 }

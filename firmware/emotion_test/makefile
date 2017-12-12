@@ -28,10 +28,12 @@ SOURCES += ../emotion/libraries/ctf_offset.c
 SOURCES += ../emotion/libraries/simulation.c
 SOURCES += ../emotion/services/ant_bg_scanner.c 
 
+CFLAGS += -DANT_STACK_SUPPORT_REQD
+
 all: $(TARGET)
 
 $(TARGET): $(SOURCES)
-	$(CC) $(CFLAGS) -o $(TARGET) $(INCLUDES) $(LIB) $(SOURCES)
+	$(CC) $(CFLAGS) -o $(TARGET) $(INCLUDES) $(SOURCES) $(LIB)
 
 clean:
 	#$(RM) $(TARGET)
