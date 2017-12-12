@@ -6,7 +6,7 @@
                 "type": "cppdbg",
                 "request": "launch",
                 /* NOTE: hardcoded path required until this feature is available: https://github.com/Microsoft/vscode/issues/38685 */
-                "program": "/home/jason/dev/insideride/test.exe",
+                "program": "/home/jason/dev/insideride/firmware/emotion_test/test.exe",
                 "args": ["-fThreading"],
                 "stopAtEntry": false,
                 "cwd": "/home/jason/dev/insideride/firmware/emotion_test/",

@@ -16,6 +16,7 @@
         "ble_cps.h": "c",
         "compiler_abstraction.h": "c",
         "simulation.h": "c",
-        "ant_bg_scanner.h": "c"
+        "ant_bg_scanner.h": "c",
+        "ant_stack_handler_types.h": "c"
     }
 }
