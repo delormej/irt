@@ -34,13 +34,10 @@ static uint16_t device_id_get(ANT_MESSAGE* p_mesg)
 
 static uint8_t rssi_get(ANT_MESSAGE* p_mesg)
 {
-    /* This only works for FLag Byte 0xE0, need to support other flag variations.
-    if (p_mesg->ANT_MESSAGE_stExtMesgBF.bANTRssi)
+    if (p_mesg->ANT_MESSAGE_ucExtMesgBF == 0xE0)
         return p_mesg->ANT_MESSAGE_aucExtData[5];
     else
         return 0;
-    */
-    return 0;
 }
 
 static void pm_info_init()
