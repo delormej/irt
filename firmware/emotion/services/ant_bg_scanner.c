@@ -23,6 +23,26 @@ static void close_bg_scanning_channel()
 
 }
 
+
+static uint16_t device_id_get(ANT_MESSAGE* p_mesg)
+{
+    //67.750 {  79873671} Rx - [A4][14][4E][00][10][19][00][00][00][00][FF][24][E0][89][E0][11][05][10][01][6A][00][0C][F4][32]
+    uint16_t device_id = p_mesg->ANT_MESSAGE_aucExtData[1] << 8 | 
+        p_mesg->ANT_MESSAGE_aucExtData[0];
+    return device_id;
+}
+
+static uint8_t rssi_get(ANT_MESSAGE* p_mesg)
+{
+    /* This only works for FLag Byte 0xE0, need to support other flag variations.
+    if (p_mesg->ANT_MESSAGE_stExtMesgBF.bANTRssi)
+        return p_mesg->ANT_MESSAGE_aucExtData[5];
+    else
+        return 0;
+    */
+    return 0;
+}
+
 static void pm_info_init()
 {
     memset(&pm_info, 0, sizeof(power_meter_info_t) * POWER_METER_LIST_SIZE);
@@ -40,6 +60,7 @@ static power_meter_info_t* pm_info_get(uint16_t power_meter_id)
 
 static bool pm_info_set_message(power_meter_info_t* p_pm_info, ANT_MESSAGE* p_mesg)
 {
+    p_pm_info->rssi = rssi_get(p_mesg);
     uint8_t* p_buffer;
     uint8_t page_number = p_mesg->ANT_MESSAGE_aucPayload[0];
     switch (page_number)
@@ -57,14 +78,6 @@ static bool pm_info_set_message(power_meter_info_t* p_pm_info, ANT_MESSAGE* p_me
     }
     memcpy(p_buffer, &p_mesg->ANT_MESSAGE_aucPayload, TX_BUFFER_SIZE);
     return true;
-}
-
-static uint16_t device_id_get(ANT_MESSAGE* p_mesg)
-{
-    //67.750 {  79873671} Rx - [A4][14][4E][00][10][19][00][00][00][00][FF][24][E0][89][E0][11][05][10][01][6A][00][0C][F4][32]
-    uint16_t device_id = p_mesg->ANT_MESSAGE_aucExtData[2] << 8 | 
-        p_mesg->ANT_MESSAGE_aucExtData[1];
-    return device_id;
 }
 
 static bool read_page(ant_evt_t * p_ant_evt)

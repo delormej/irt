@@ -13,6 +13,7 @@
 typedef struct 
 {
     uint16_t power_meter_id;
+    uint8_t rssi;
     uint8_t ant_product_page[TX_BUFFER_SIZE];
     uint8_t ant_manufacturer_page[TX_BUFFER_SIZE];
 } power_meter_info_t;
