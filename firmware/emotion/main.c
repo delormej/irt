@@ -1334,7 +1334,10 @@ static void on_toggle_bg_scanning()
 	if (ant_bg_scanner_is_started())
 		ant_bg_scanner_stop();
 	else
+	{
+		bike_power_init(0xFFFF); // close any existing connection.
 		ant_bg_scanner_start(on_power_meter_info);
+	}
 }
 
 // Called when instructed to enable device firmware update mode.
