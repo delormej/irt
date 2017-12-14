@@ -2,27 +2,79 @@
 */
 #include <string.h>
 #include <stdbool.h>
+#include "nrf_error.h"
+#include "app_error.h"
+#include "ant_interface.h"
 #include "ant_parameters.h"
 #include "ant_bg_scanner.h"
 #include "ant_stack_handler_types.h"
+#include "ble_ant.h"
 
 #define ANT_MANUFACTURER_PAGE           0x50u   /**< Manufacturer's identification common data page. */
 #define ANT_PRODUCT_PAGE          		0x51u   /**< Product information common data page. */
+#define ANT_BG_SCAN_CHANNEL_TYPE        0x40
+#define ANT_BP_DEVICE_TYPE              0x0B                   /**< Channel ID device type. */
+#define ANT_BP_TRANS_TYPE               0x00 					/**< Transmission Type. */
+#define WILDCARD_DEVICE_ID              0x00
+#define SEARCH_TIMEOUT_INFINITE         0xFF
+#define EXTENDED_BYTES_CONFIG           ANT_LIB_CONFIG_MESG_OUT_INC_TIME_STAMP | ANT_LIB_CONFIG_MESG_OUT_INC_RSSI | ANT_LIB_CONFIG_MESG_OUT_INC_DEVICE_ID
 
 static power_meter_info_t pm_info[POWER_METER_LIST_SIZE];
 static uint8_t pm_info_size;
 static pm_info_handler_t m_pm_info_handler;
 
-static void open_bg_scanning_channel()
+static uint32_t open_bg_scanning_channel()
 {
+    uint32_t err_code;
 
+    err_code = sd_ant_channel_assign(ANT_BG_SCAN_CHANNEL,
+                                     ANT_BG_SCAN_CHANNEL_TYPE,
+                                     ANTPLUS_NETWORK_NUMBER,
+                                     EXT_PARAM_ALWAYS_SEARCH);
+	if (err_code != NRF_SUCCESS)
+		return err_code;
+
+    err_code = sd_ant_channel_id_set(ANT_BG_SCAN_CHANNEL,
+                                     WILDCARD_DEVICE_ID,
+                                     ANT_BP_DEVICE_TYPE,
+                                     ANT_BP_TRANS_TYPE);
+	if (err_code != NRF_SUCCESS)
+		return err_code;
+    
+    err_code = sd_ant_lib_config_set(EXTENDED_BYTES_CONFIG);
+	if (err_code != NRF_SUCCESS)
+		return err_code;
+
+    err_code = sd_ant_channel_low_priority_rx_search_timeout_set(ANT_BG_SCAN_CHANNEL, 
+                                    SEARCH_TIMEOUT_INFINITE);
+	if (err_code != NRF_SUCCESS)
+		return err_code;
+    
+	return NRF_SUCCESS;
 }
 
 static void close_bg_scanning_channel()
 {
+	uint8_t status;
+	uint32_t err;
+	
+	err = sd_ant_channel_status_get(ANT_BG_SCAN_CHANNEL, &status);
+	APP_ERROR_CHECK(err);
 
+	switch (status)
+	{
+		case STATUS_SEARCHING_CHANNEL:
+		case STATUS_TRACKING_CHANNEL:
+            err = sd_ant_channel_close(ANT_BG_SCAN_CHANNEL);
+            APP_ERROR_CHECK(err);
+            err = sd_ant_lib_config_clear(EXTENDED_BYTES_CONFIG);
+            APP_ERROR_CHECK(err);
+            break;
+
+        default:
+            return;
+    }
 }
-
 
 static uint16_t device_id_get(ANT_MESSAGE* p_mesg)
 {
@@ -34,7 +86,7 @@ static uint16_t device_id_get(ANT_MESSAGE* p_mesg)
 
 static uint8_t rssi_get(ANT_MESSAGE* p_mesg)
 {
-    if (p_mesg->ANT_MESSAGE_ucExtMesgBF == 0xE0)
+    if (p_mesg->ANT_MESSAGE_ucExtMesgBF == EXTENDED_BYTES_CONFIG)
         return p_mesg->ANT_MESSAGE_aucExtData[5];
     else
         return 0;
@@ -93,11 +145,12 @@ static bool read_page(ant_evt_t * p_ant_evt)
     return new_pm_info;
 }
 
-void ant_bg_scanner_start(pm_info_handler_t pm_info_handler)
+uint32_t ant_bg_scanner_start(pm_info_handler_t pm_info_handler)
 {
     m_pm_info_handler = pm_info_handler;
+	close_bg_scanning_channel();
     pm_info_init();
-    open_bg_scanning_channel();
+    return open_bg_scanning_channel();
 }
 
 void ant_bg_scanner_stop()

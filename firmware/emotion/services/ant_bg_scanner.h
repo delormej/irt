@@ -21,7 +21,7 @@ typedef struct
 typedef void (*pm_info_handler_t)
     (power_meter_info_t* p_power_meter_list, uint8_t size);
 
-void ant_bg_scanner_start(pm_info_handler_t pm_info_handler);
+uint32_t ant_bg_scanner_start(pm_info_handler_t pm_info_handler);
 void ant_bg_scanner_stop();
 void ant_bg_scanner_rx_handle(ant_evt_t * p_ant_evt);
 

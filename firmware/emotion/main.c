@@ -66,6 +66,7 @@
 #include "irt_led.h"
 #include "bp_response_queue.h"
 #include "calibration.h"
+#include "ant_bg_scanner.h"
 
 #define ANT_4HZ_INTERVAL				APP_TIMER_TICKS(250, APP_TIMER_PRESCALER)  	// Remote control & bike power sent at 4hz.
 #define SENSOR_READ_INTERVAL			APP_TIMER_TICKS(128768, APP_TIMER_PRESCALER) // ~2 minutes sensor read interval, which should be out of sequence with 4hz.
@@ -1319,6 +1320,15 @@ static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 	}
 }
 
+static void on_power_meter_info(power_meter_info_t* p_pm_info, uint8_t size)
+{
+	if (size == 0)
+		LOG("[MAIN] on_power_meter_info, no info.\r\n");
+
+	for (int i = 0; i < size; i++)
+		LOG("[MAIN] Power Meter info discovered: %i\r\n", p_pm_info[i].power_meter_id);
+}
+
 // Called when instructed to enable device firmware update mode.
 static void on_enable_dfu_mode(void)
 {
@@ -1835,7 +1845,8 @@ int main(void)
 		on_set_servo_positions,
 		on_request_calibration,
 		on_set_mag_calibration,
-		on_bp_power_data
+		on_bp_power_data,
+		on_power_meter_info
 	};
 
 	// Initialize and enable the softdevice.
