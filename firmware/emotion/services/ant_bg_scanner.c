@@ -17,11 +17,12 @@
 #define ANT_BP_TRANS_TYPE               0x00 					/**< Transmission Type. */
 #define WILDCARD_DEVICE_ID              0x00
 #define SEARCH_TIMEOUT_INFINITE         0xFF
-#define EXTENDED_BYTES_CONFIG           ANT_LIB_CONFIG_MESG_OUT_INC_TIME_STAMP | ANT_LIB_CONFIG_MESG_OUT_INC_RSSI | ANT_LIB_CONFIG_MESG_OUT_INC_DEVICE_ID
+#define EXTENDED_BYTES_CONFIG           (ANT_LIB_CONFIG_MESG_OUT_INC_TIME_STAMP | ANT_LIB_CONFIG_MESG_OUT_INC_RSSI | ANT_LIB_CONFIG_MESG_OUT_INC_DEVICE_ID)
 
 static power_meter_info_t pm_info[POWER_METER_LIST_SIZE];
 static uint8_t pm_info_size;
 static pm_info_handler_t m_pm_info_handler;
+static bool is_started = false;
 
 static uint32_t open_bg_scanning_channel()
 {
@@ -50,6 +51,10 @@ static uint32_t open_bg_scanning_channel()
 	if (err_code != NRF_SUCCESS)
 		return err_code;
     
+    err_code = sd_ant_channel_open(ANT_BG_SCAN_CHANNEL);
+    APP_ERROR_CHECK(err_code);
+    is_started = true;
+
 	return NRF_SUCCESS;
 }
 
@@ -74,6 +79,8 @@ static void close_bg_scanning_channel()
         default:
             return;
     }
+        
+    is_started = false;
 }
 
 static uint16_t device_id_get(ANT_MESSAGE* p_mesg)
@@ -165,4 +172,9 @@ void ant_bg_scanner_rx_handle(ant_evt_t * p_ant_evt)
         pm_info_updated = read_page(p_ant_evt);
     if (pm_info_updated)
         m_pm_info_handler(&pm_info[0], pm_info_size);
+}
+
+bool ant_bg_scanner_is_started()
+{
+    return is_started;
 }

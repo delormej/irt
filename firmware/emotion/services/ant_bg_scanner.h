@@ -24,5 +24,6 @@ typedef void (*pm_info_handler_t)
 uint32_t ant_bg_scanner_start(pm_info_handler_t pm_info_handler);
 void ant_bg_scanner_stop();
 void ant_bg_scanner_rx_handle(ant_evt_t * p_ant_evt);
+bool ant_bg_scanner_is_started();
 
 #endif // ANT_BG_SCANNER_H__

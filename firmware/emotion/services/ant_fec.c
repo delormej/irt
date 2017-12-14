@@ -1065,6 +1065,10 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
                         mp_evt_handlers->on_enable_dfu_mode();
                         break;
 
+                    case TOGGLE_BG_SCANNING_COMMAND:
+                        mp_evt_handlers->on_toggle_bg_scanning();
+                        break;
+
                     case ANT_BP_MOVE_SERVO_COMMAND: // Move the servo to a specific position.
                          HandleSetServo(p_ant_evt);
                         break;

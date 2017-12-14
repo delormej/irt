@@ -5,7 +5,6 @@
 #include "irt_common.h"
 #include "ant_ctrl.h"
 #include "resistance.h"
-#include "ant_bg_scanner.h"
 #include "ant_error.h"
 
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
@@ -115,7 +114,7 @@ typedef struct ant_ble_evt_handlers_s {
 	void (*on_request_calibration)(void);			// Display requests calibration to begin.
 	void (*on_set_mag_calibration)(mag_calibration_factors_t* factors); // Received command to set magnet calibration.
 	bp_evt_handler_t bp_evt_handler;				// Device receives relevant ant power meter message.
-	pm_info_handler_t pm_info_handler;
+	void (*on_toggle_bg_scanning)(void);			// Toggles background scanning channel on/off for discovering power meter.
 } ant_ble_evt_handlers_t;
 
 /**@brief	Represents Common Data Page 70.

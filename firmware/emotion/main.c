@@ -1329,6 +1329,14 @@ static void on_power_meter_info(power_meter_info_t* p_pm_info, uint8_t size)
 		LOG("[MAIN] Power Meter info discovered: %i\r\n", p_pm_info[i].power_meter_id);
 }
 
+static void on_toggle_bg_scanning()
+{
+	if (ant_bg_scanner_is_started())
+		ant_bg_scanner_stop();
+	else
+		ant_bg_scanner_start(on_power_meter_info);
+}
+
 // Called when instructed to enable device firmware update mode.
 static void on_enable_dfu_mode(void)
 {
@@ -1846,7 +1854,7 @@ int main(void)
 		on_request_calibration,
 		on_set_mag_calibration,
 		on_bp_power_data,
-		on_power_meter_info
+		on_toggle_bg_scanning
 	};
 
 	// Initialize and enable the softdevice.
