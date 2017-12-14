@@ -213,7 +213,7 @@ static uint32_t user_profile_init()
 		if (m_user_profile.servo_smoothing_steps == 0xFF)
 		{
 			// Default steps to move every 20ms when smoothing servo movement.
-			m_user_profile.power_average_seconds = DEFAULT_SMOOTHING_STEPS; 
+			m_user_profile.servo_smoothing_steps = DEFAULT_SMOOTHING_STEPS; 
 		}
 
         // Schedule an update.

@@ -428,7 +428,8 @@ static uint32_t IRTSettingsPowerAdjustSend() {
         .PowerAdjustSeconds = mp_user_profile->power_adjust_seconds,
         .PowerAverageSeconds = mp_user_profile->power_average_seconds,
         .ServoSmoothingSteps = mp_user_profile->servo_smoothing_steps,
-        .Reserved[0] = 0xFF
+        .Reserved = 0x7F,
+        .Persist = true
     };
 
     uint16_t connected_power_meter_id = ant_bp_power_meter_id_get();
@@ -764,7 +765,7 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
         page.PowerAverageSeconds,
 		page.ServoSmoothingSteps);
 
-    if (dirty)
+    if (dirty && page.Persist)
     {
         user_profile_store();
     }
