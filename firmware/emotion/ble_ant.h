@@ -5,6 +5,7 @@
 #include "irt_common.h"
 #include "ant_ctrl.h"
 #include "resistance.h"
+#include "ant_bg_scanner.h"
 #include "ant_error.h"
 
 #define HIGH_BYTE(word)              		(uint8_t)((word >> 8u) & 0x00FFu)           /**< Get high byte of a uint16_t. */
