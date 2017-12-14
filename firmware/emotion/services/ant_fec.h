@@ -165,7 +165,8 @@ typedef struct {
 	uint8_t     PowerAverageSeconds;
 	uint8_t		ServoSmoothingSteps;
 	uint8_t		PowerMeterChannelState;		// Are we stll searching for the power meter, connected, disconnected, not in use, etc..
-	uint8_t		Reserved[1];		
+	uint8_t		Reserved : 7;		
+	uint8_t		Persist : 1;			
 } FEC_IRTSettingsPowerAdjustPage;
 
 void ant_fec_tx_init(ant_ble_evt_handlers_t * evt_handlers);

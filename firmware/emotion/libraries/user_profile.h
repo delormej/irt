@@ -17,7 +17,7 @@
 #include "irt_common.h"
 #include "magnet.h"
 
-#define PROFILE_VERSION					16u	            // Current version of the profile.
+#define PROFILE_VERSION					18u	            // Current version of the profile.
 
 #define SETTING_ACL_SLEEP_ON			1UL				// Put device to sleep when accelerometer signals no motion.
 #define SETTING_BTLE_ENABLED			2UL				// BTLE Enabled
