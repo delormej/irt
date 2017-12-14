@@ -380,7 +380,7 @@ static void adjust_to_target(resistance_mode_t mode, float speed_mps, float mago
 	uint16_t servo_pos = 0;
 	uint8_t smoothing_steps = 0;
 
-	if (speed_mps < RESISTANCE_MIN_SPEED_ADJUST)
+	if (speed_mps < (float)mp_user_profile->min_adjust_speed_mps/10.0f)
     {
         m_resistance_state.power_limit = TARGET_SPEED_TOO_LOW;
 		// Move magnet to the min position, as it will be tough for rider to overcome

@@ -428,6 +428,7 @@ static uint32_t IRTSettingsPowerAdjustSend() {
         .PowerAdjustSeconds = mp_user_profile->power_adjust_seconds,
         .PowerAverageSeconds = mp_user_profile->power_average_seconds,
         .ServoSmoothingSteps = mp_user_profile->servo_smoothing_steps,
+        .MinAdjustSpeedMps = mp_user_profile->min_adjust_speed_mps,
         .Reserved = 0x7F,
         .Persist = true
     };
@@ -436,13 +437,11 @@ static uint32_t IRTSettingsPowerAdjustSend() {
 
     if (connected_power_meter_id > 0)  // connected
     {
-        page.PowerMeterChannelState = 1;
         page.PowerMeterIdLSB = LOW_BYTE(connected_power_meter_id);
         page.PowerMeterIdMSB = HIGH_BYTE(connected_power_meter_id);
     }
     else 
     {
-        page.PowerMeterChannelState = 0;
         page.PowerMeterIdLSB = LOW_BYTE(mp_user_profile->power_meter_ant_id);
         page.PowerMeterIdMSB = HIGH_BYTE(mp_user_profile->power_meter_ant_id)        ;
     }
@@ -733,7 +732,7 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
 
     mp_evt_handlers->bp_evt_handler(FEC_MSG_NEW_DEVICE_ID, power_meter_id);
 
-    if (  mp_user_profile->power_meter_ant_id != power_meter_id ) 
+    if ( mp_user_profile->power_meter_ant_id != power_meter_id ) 
     {
         mp_user_profile->power_meter_ant_id = power_meter_id;
         dirty = true;
@@ -759,11 +758,19 @@ static void HandleIRTPowerAdjustPage(uint8_t* buffer) {
         dirty = true;
     }    
 
-    FE_LOG("[FE] IRT Power Adjust received, power meter id: %i, adjust: %i, average: %i, smoothing: %i\r\n",
+    if ( mp_user_profile->min_adjust_speed_mps != page.MinAdjustSpeedMps )
+    {
+        mp_user_profile->min_adjust_speed_mps = page.MinAdjustSpeedMps;
+        dirty = true;
+    }    
+
+    FE_LOG("[FE] IRT Power Adjust received, power meter id: %i, adjust: %i, average: %i, smoothing: %i, min adjust speed(mps): %i\r\n",
         power_meter_id,
         page.PowerAdjustSeconds,
         page.PowerAverageSeconds,
-		page.ServoSmoothingSteps);
+        page.ServoSmoothingSteps,
+        page.MinAdjustSpeedMps
+    );
 
     if (dirty && page.Persist)
     {

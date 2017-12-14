@@ -13,9 +13,10 @@
 #define USER_PROFILE_BLOCK_ID		0u
 #define USER_PROFILE_OFFSET			0u	
 
-#define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
-#define DEFAULT_TOTAL_WEIGHT_KG			8500ul 										// Default weight 85kg (75kg user, 10kg bike) as per FE-C spec.
-#define DEFAULT_SETTINGS				SETTING_INVALID								// Default 32bit field of settings.
+#define DEFAULT_WHEEL_SIZE_MM			        2096ul										// Default wheel size.
+#define DEFAULT_TOTAL_WEIGHT_KG			        8500ul 										// Default weight 85kg (75kg user, 10kg bike) as per FE-C spec.
+#define DEFAULT_SETTINGS				        SETTING_INVALID								// Default 32bit field of settings.
+#define DEFAULT_RESISTANCE_MIN_SPEED_ADJUST		40u				// 40/10 = 4mps (~9mph) Minimum speed in meters per second at which we adjust resistance.
 
 /**@brief Debug logging for main module.
  *
@@ -51,7 +52,8 @@ static void profile_dump_to_log()
         "\tca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n" \ */
         "\tpower_meter_id: %i\r\n" \
         "\tpower_adjust_seconds: %i, power_average_seconds: %i\r\n" \
-		"\tservo_smoothing_steps: %i\r\n",
+        "\tservo_smoothing_steps: %i\r\n" \
+        "\tmin resistance adjust speed: %i\r\n",
         m_user_profile.total_weight_kg,
         m_user_profile.wheel_size_mm,
         m_user_profile.settings,
@@ -69,7 +71,8 @@ static void profile_dump_to_log()
         m_user_profile.power_meter_ant_id,
         m_user_profile.power_adjust_seconds,
         m_user_profile.power_average_seconds,
-		m_user_profile.servo_smoothing_steps
+        m_user_profile.servo_smoothing_steps,
+        m_user_profile.min_adjust_speed_mps
         );    
 }
 
@@ -214,6 +217,11 @@ static uint32_t user_profile_init()
 		{
 			// Default steps to move every 20ms when smoothing servo movement.
 			m_user_profile.servo_smoothing_steps = DEFAULT_SMOOTHING_STEPS; 
+		}
+
+		if (m_user_profile.min_adjust_speed_mps == 0xFF)
+		{
+			m_user_profile.min_adjust_speed_mps = DEFAULT_RESISTANCE_MIN_SPEED_ADJUST; 
 		}
 
         // Schedule an update.
