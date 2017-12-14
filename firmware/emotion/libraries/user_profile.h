@@ -17,7 +17,7 @@
 #include "irt_common.h"
 #include "magnet.h"
 
-#define PROFILE_VERSION					18u	            // Current version of the profile.
+#define PROFILE_VERSION					19u	            // Current version of the profile.
 
 #define SETTING_ACL_SLEEP_ON			1UL				// Put device to sleep when accelerometer signals no motion.
 #define SETTING_BTLE_ENABLED			2UL				// BTLE Enabled
@@ -71,7 +71,8 @@ typedef struct user_profile_s {
 	uint8_t		power_adjust_seconds;		// In erg/sim mode, attempt to adjust power every n seconds. 
 	uint8_t		power_average_seconds;		// In erg/sim mode, window size (in seconds) for averaging power and speed.
 	uint8_t		servo_smoothing_steps;		// In sim mode, slow the servo down for a more realistic feel or not.        
-	uint8_t		reserved_2[10];				// Forcing 16 bit block size alignment.
+	uint8_t		min_adjust_speed_mps;		// Stored in 1/10, i.e. 4.1mps = 41.  In erg/sim mode, minimum speed when we no longer adjust resistance (prevents erging out).
+	uint8_t		reserved_2[9];				// Forcing 16 bit block size alignment.
 } user_profile_t;
 
 /**@brief Returns a pointer to the user profile object. */

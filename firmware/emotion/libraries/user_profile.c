@@ -13,9 +13,10 @@
 #define USER_PROFILE_BLOCK_ID		0u
 #define USER_PROFILE_OFFSET			0u	
 
-#define DEFAULT_WHEEL_SIZE_MM			2096ul										// Default wheel size.
-#define DEFAULT_TOTAL_WEIGHT_KG			8500ul 										// Default weight 85kg (75kg user, 10kg bike) as per FE-C spec.
-#define DEFAULT_SETTINGS				SETTING_INVALID								// Default 32bit field of settings.
+#define DEFAULT_WHEEL_SIZE_MM			        2096ul										// Default wheel size.
+#define DEFAULT_TOTAL_WEIGHT_KG			        8500ul 										// Default weight 85kg (75kg user, 10kg bike) as per FE-C spec.
+#define DEFAULT_SETTINGS				        SETTING_INVALID								// Default 32bit field of settings.
+#define DEFAULT_RESISTANCE_MIN_SPEED_ADJUST		40u				// 40/10 = 4mps (~9mph) Minimum speed in meters per second at which we adjust resistance.
 
 /**@brief Debug logging for main module.
  *
@@ -214,6 +215,11 @@ static uint32_t user_profile_init()
 		{
 			// Default steps to move every 20ms when smoothing servo movement.
 			m_user_profile.servo_smoothing_steps = DEFAULT_SMOOTHING_STEPS; 
+		}
+
+		if (m_user_profile.min_adjust_speed_mps == 0xFF)
+		{
+			m_user_profile.min_adjust_speed_mps = DEFAULT_RESISTANCE_MIN_SPEED_ADJUST; 
 		}
 
         // Schedule an update.
