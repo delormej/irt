@@ -28,6 +28,7 @@
 #include "irt_peripheral.h"
 #include "ant_bike_power.h"
 #include "ant_bike_speed.h"
+#include "ant_bg_scanner.h"
 #include "ant_fec.h"
 #include "ble_dis.h"
 #include "ble_cps.h"
@@ -415,6 +416,10 @@ static void conn_params_init(void) {
 static void on_ant_evt(ant_evt_t * p_ant_evt) {	
 	switch (p_ant_evt->channel) 
 	{
+		case ANT_BG_SCAN_CHANNEL:
+			ant_bg_scanner_rx_handle(p_ant_evt);
+			break;
+
 		case ANT_FEC_TX_CHANNEL:
 			ant_fec_rx_handle(p_ant_evt);                
 			break;

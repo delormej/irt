@@ -1331,12 +1331,17 @@ static void on_power_meter_info(power_meter_info_t* p_pm_info, uint8_t size)
 
 static void on_toggle_bg_scanning()
 {
+	uint32_t err;
+
 	if (ant_bg_scanner_is_started())
 		ant_bg_scanner_stop();
 	else
 	{
+		LOG("[MAIN] Searching for Power Meters\r\n");
 		bike_power_init(0xFFFF); // close any existing connection.
-		ant_bg_scanner_start(on_power_meter_info);
+		err = ant_bg_scanner_start(on_power_meter_info);
+		if (err != NRF_SUCCESS)
+			LOG("[MAIN] ant_bg_scanner_start error: %i\r\n", err);
 	}
 }
 
