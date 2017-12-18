@@ -14,7 +14,7 @@
 #include "app_gpiote.h"
 #include "debug.h"
 
-/**@brief Debug logging for main module.
+/**@brief Debug logging for button module.
  *
  */
 #ifdef ENABLE_DEBUG_LOG
