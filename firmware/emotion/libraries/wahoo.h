@@ -18,6 +18,7 @@
 #define ANT_BP_MOVE_SERVO_COMMAND		0x61
 #define ANT_BP_ENABLE_DFU_COMMAND		0x64
 #define TOGGLE_BG_SCANNING_COMMAND		0x65
+#define BLINK_LED_COMMAND          		0x66
 
 /**@brief	Helper for decoding a float from a 2 byte buffer.*/
 #define DECODE_FLOAT(P_BUF, SCALE)	uint16_decode((const uint8_t*)P_BUF) / SCALE

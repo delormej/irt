@@ -303,6 +303,11 @@ void led_set(led_state_e state)
 			pattern_set(LED_BACK_RED, SLOW_BLINK, true);
 			break;
 
+		case LED_ID_BLINK:
+			pattern_set(LED_FRONT_RED, FAST_BLINK_3, false);
+			pattern_set(LED_BACK_RED, FAST_BLINK_3, false);
+			break;
+
 		default:
 			// THROW AN ERROR, not a supported state.
 			LED_LOG("[LED] invalid button state? %i\r\n", state);

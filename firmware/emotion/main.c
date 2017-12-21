@@ -1345,6 +1345,12 @@ static void on_toggle_bg_scanning()
 	}
 }
 
+static void on_blink_led()
+{
+	LOG("[MAIN] Blinking LEDs for identification.\r\n");
+	led_set(LED_ID_BLINK);
+}
+
 // Called when instructed to enable device firmware update mode.
 static void on_enable_dfu_mode(void)
 {
@@ -1862,7 +1868,8 @@ int main(void)
 		on_request_calibration,
 		on_set_mag_calibration,
 		on_bp_power_data,
-		on_toggle_bg_scanning
+		on_toggle_bg_scanning,
+		on_blink_led
 	};
 
 	// Initialize and enable the softdevice.

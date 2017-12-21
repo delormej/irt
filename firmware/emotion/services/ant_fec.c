@@ -1073,6 +1073,10 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
                          HandleSetServo(p_ant_evt);
                         break;
 
+                    case BLINK_LED_COMMAND:
+                        mp_evt_handlers->on_blink_led();
+                        break;
+
                     default:
                         break;
                 }            

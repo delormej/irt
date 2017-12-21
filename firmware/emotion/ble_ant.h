@@ -115,6 +115,7 @@ typedef struct ant_ble_evt_handlers_s {
 	void (*on_set_mag_calibration)(mag_calibration_factors_t* factors); // Received command to set magnet calibration.
 	bp_evt_handler_t bp_evt_handler;				// Device receives relevant ant power meter message.
 	void (*on_toggle_bg_scanning)(void);			// Toggles background scanning channel on/off for discovering power meter.
+	void (*on_blink_led)(void);						// Blinks LED for identification.
 } ant_ble_evt_handlers_t;
 
 /**@brief	Represents Common Data Page 70.
