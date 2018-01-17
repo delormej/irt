@@ -26,7 +26,7 @@ SOURCES +=  ../emotion/libraries/ctf_power.c
 SOURCES += ../emotion/libraries/magnet.c
 SOURCES += ../emotion/libraries/ctf_offset.c
 SOURCES += ../emotion/libraries/simulation.c
-SOURCES += ../emotion/services/ant_bg_scanner.c 
+#SOURCES += ../emotion/services/ant_bg_scanner.c 
 
 CFLAGS += -DANT_STACK_SUPPORT_REQD
 

@@ -5,6 +5,7 @@
 #define ANT_BG_SCANNER_H__
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "ant_stack_handler_types.h"
 
 #define POWER_METER_LIST_SIZE       4u
