@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <float.h>
 #include "irt_peripheral.h"
 #include "app_error.h"
 #include "app_timer.h"
@@ -119,11 +120,11 @@ irt_resistance_state_t* resistance_init(uint32_t servo_pin_number,
 uint16_t resistance_servo_position()
 {
 	uint16_t raw_servo_position = pwm_get_servo_position();
-	if (raw_servo_position > 0)
+	if (raw_servo_position > 0 && raw_servo_position != MAGNET_POSITION_OFF)
 		return raw_servo_position - mp_user_profile->servo_offset;
 	else
 		return MAGNET_POSITION_OFF;
-	}
+}
 	
 /**@brief		Gets the current resistance state object.
  *
@@ -138,7 +139,7 @@ irt_resistance_state_t* resistance_state_get(void)
 /**@brief	Determines if there is a move and move accordingly.
  *
  */
-uint16_t resistance_position_set(uint16_t servo_pos, uint8_t smooth_steps)
+void resistance_position_set(uint16_t servo_pos, uint8_t smooth_steps)
 {
 	uint32_t err_code;
 	// Actual servo position after calibration.
@@ -190,8 +191,6 @@ uint16_t resistance_position_set(uint16_t servo_pos, uint8_t smooth_steps)
 
 		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
 	}
-
-	return current_servo_pos;
 }
 
 /**@brief		Validates the values of positions are in range.
@@ -228,7 +227,7 @@ bool resistance_positions_validate(servo_positions_t* positions)
 /**@brief		Sets to a standard resistance level (0-9).
  *
  */
-uint16_t resistance_level_set(uint8_t level)
+void resistance_level_set(uint8_t level)
 {
 	RC_LOG("[RC] resistance_level_set: %i, max: %i\r\n",
 			level, RESISTANCE_LEVELS);
@@ -242,7 +241,7 @@ uint16_t resistance_level_set(uint8_t level)
 	
 	m_resistance_state.mode = RESISTANCE_SET_STANDARD;
 	m_resistance_state.level = level;
-	return resistance_position_set(RESISTANCE_LEVEL[level], 0);
+	resistance_position_set(RESISTANCE_LEVEL[level], 0);
 }
 
 /**@brief		Gets the levels of standard resistance available.
@@ -259,7 +258,7 @@ uint8_t resistance_pct_get(uint16_t position)
 {
 	float resistance_pct = 0.0f;
     
-    if (position != MAGNET_POSITION_OFF)
+    if (position < MAGNET_POSITION_MIN_RESISTANCE)
     {
         // Subtract position from min position, divide by full range,
         // multiply by 200 to remove the decimal and represent units of 0.5%.
@@ -271,7 +270,7 @@ uint8_t resistance_pct_get(uint16_t position)
 	return (uint8_t)resistance_pct;
 }
 
-uint16_t resistance_pct_set(float percent)
+void resistance_pct_set(float percent)
 {
 	/*
 	Puts the trainer in Resistance Mode.
@@ -303,7 +302,7 @@ uint16_t resistance_pct_set(float percent)
 	}
 
     RC_LOG("[RC] resistance_pct_set: %i\r\n", percent * 100);
-	return resistance_position_set(position, 0);
+	resistance_position_set(position, 0);
 }
 
 /**@brief		Gets magnet position resistance to simulate desired erg watts.

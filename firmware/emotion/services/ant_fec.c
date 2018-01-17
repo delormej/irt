@@ -252,9 +252,7 @@ static uint32_t GeneralSettingsPage_Send(irt_context_t* context)
     
 	page.CycleLength = (uint8_t)(mp_user_profile->wheel_size_mm / 10);	// Convert wheel centimeters.
     page.ResistanceLevelFEC = resistance_pct_get(context->servo_position);
-
-    //FE_LOG("[FE]:resistance pct: %i, %i\r\n",context->servo_position, resistance_pct_get(context->servo_position));
-
+    //FE_LOG("[FE]:resistance: %i == [%.2x]\r\n",context->servo_position, page.ResistanceLevelFEC);
 	page.Capabilities = CAPABILITIES_CONTEXT(context);
 	page.FEState = FESTATE_CONTEXT(context);
 	

@@ -153,7 +153,7 @@ irt_resistance_state_t* resistance_state_get(void);
 /**@brief		Sets the position of the servo.
  *
  */
-uint16_t resistance_position_set(uint16_t position, uint8_t smooth_steps);
+void resistance_position_set(uint16_t position, uint8_t smooth_steps);
 
 /**@brief		Validates the values of positions are in range.
  *
@@ -165,7 +165,7 @@ bool resistance_positions_validate(servo_positions_t* positions);
  *
  *@note			Levels 0-9 allowable.
  */
-uint16_t resistance_level_set(uint8_t level);
+void resistance_level_set(uint8_t level);
 
 /**@brief		Gets the levels of standard resistance available.
   */
@@ -179,7 +179,7 @@ uint8_t resistance_pct_get(uint16_t position);
 /**@brief		Sets the resistance to a value 0-100 percent.
  *
  */
-uint16_t resistance_pct_set(float percent);
+void resistance_pct_set(float percent);
 
 /**@brief		Sets erg mode with a watt target.
  *
