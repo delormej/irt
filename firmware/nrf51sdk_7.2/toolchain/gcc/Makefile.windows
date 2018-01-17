@@ -31,14 +31,15 @@ $(OUTPUT_PATH):
 	if not exist .\$(OUTPUT_PATH:/=\\) md $(OUTPUT_PATH)
 
 flash: 
-#	$(NRFJPROG) --program $(HEX) -r
-	$(NRFJPROG) --program $(HEX) -r --sectorerase  
+	$(NRFJPROG) --program $(HEX) -r
+#	$(NRFJPROG) --program $(HEX) -r --sectorerase  
 
 flash-softdevice:
 ifndef SOFTDEVICE
 	$(error "You need to set the SOFTDEVICE command-line parameter to a path (without spaces) to the softdevice hex-file")
 endif
-	$(NRFJPROG) -e --programs "$(SOFTDEVICE)" --dfu
+#	$(NRFJPROG) -e --programs "$(SOFTDEVICE)" --dfu
+	$(NRFJPROG) --program "$(SOFTDEVICE)" --chiperase
 
 recover:
 	$(NRFJPROG) --recover
