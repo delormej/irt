@@ -43,11 +43,12 @@ static void profile_update_pstorage_cb_handler(pstorage_handle_t *  p_handle,
 static void profile_dump_to_log()
 {
     UP_LOG(
-        "\tweight: %i \r\n" \
+        "\ttotal_weight_kg: %i \r\n" \
+        "\tuser_weight_kg: %i \r\n" \
         "\twheel: %i \r\n " \
         "\tsettings: %lu \r\n " \
-        /*"\t drag: %.3f, rr: %.3f \r\n" \ 
-        "\tca_root_position: %i \r\n\t " \
+        "\tdrag: %.3f, rr: %.3f \r\n" \ 
+        /*"\tca_root_position: %i \r\n\t " \
         "\tca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
         "\tca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n" \ */
         "\tpower_meter_id: %i\r\n" \
@@ -55,10 +56,11 @@ static void profile_dump_to_log()
         "\tservo_smoothing_steps: %i\r\n" \
         "\tmin resistance adjust speed: %i\r\n",
         m_user_profile.total_weight_kg,
+        m_user_profile.user_weight_kg,
         m_user_profile.wheel_size_mm,
         m_user_profile.settings,
-        //m_user_profile.ca_drag,
-        //m_user_profile.ca_rr,
+        m_user_profile.ca_drag,
+        m_user_profile.ca_rr,
         /*m_user_profile.ca_mag_factors.root_position,
         m_user_profile.ca_mag_factors.low_factors[0],
         m_user_profile.ca_mag_factors.low_factors[1],
@@ -73,7 +75,7 @@ static void profile_dump_to_log()
         m_user_profile.power_average_seconds,
         m_user_profile.servo_smoothing_steps,
         m_user_profile.min_adjust_speed_mps
-        );    
+    );    
 }
 
 /**@brief Initializes access to storage. */
