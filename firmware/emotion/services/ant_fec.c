@@ -89,9 +89,6 @@ static void queue_request(uint8_t);
 // Hold on to these pages to respond with when requested.
 static FEC_Page50 m_page50;
 static FEC_Page51 m_page51;
-static FEC_Page55 m_page55 = {
-    .DataPageNumber = USER_CONFIGURATION_PAGE    
-};
 
 // Manages state for the last command received.
 static FEC_Page71 m_last_command = {           
@@ -336,7 +333,9 @@ static uint32_t ManufacturerSpecificPage_Send(irt_context_t* context)
  */
 static uint32_t UserConfigurationPage_Send()
 {
-    // DEFAULT_TOTAL_WEIGHT_KG
+    static FEC_Page55 page55 = {
+        .DataPageNumber = USER_CONFIGURATION_PAGE    
+    };
     
     // Calculate weight bike weight as total weight - user weight.
     // Since we do not store bike weight directly.
@@ -346,7 +345,7 @@ static uint32_t UserConfigurationPage_Send()
     uint16_t user_weight = mp_user_profile->user_weight_kg;
     uint16_t bike_weight = 0;
     
-    FE_LOG("[FE] User Weight:%i\r\n", user_weight);
+    //FE_LOG("[FE] User Weight:%i\r\n", user_weight);
     
     // If user weight is invalid, set bike to default.
     if (user_weight == 0xFFFF)
@@ -365,25 +364,25 @@ static uint32_t UserConfigurationPage_Send()
     bike_weight = (uint16_t)(bike_weight / 5u);
     
     // Bike weight == 1.5 bytes.
-    m_page55.BikeWeightMSB = (uint8_t)((bike_weight >> 4) & 0x0FF);
-    m_page55.BikeWeightLSN = (uint8_t)(bike_weight & 0x000F);
+    page55.BikeWeightMSB = (uint8_t)((bike_weight >> 4) & 0x0FF);
+    page55.BikeWeightLSN = (uint8_t)(bike_weight & 0x000F);
     
     // User weight.
-    m_page55.UserWeightLSB = LOW_BYTE(user_weight);
-    m_page55.UserWeightMSB = HIGH_BYTE(user_weight);
+    page55.UserWeightLSB = LOW_BYTE(user_weight);
+    page55.UserWeightMSB = HIGH_BYTE(user_weight);
 
     // Wheel size is transmitted here in diameter, but we store and use in circumference.
     // This is stored as another 1.5 byte field.
     // Can't pass offset by ref because it's a bitfield, so this is very sloppy
     // The method sets the value of wheel diameter and 4 bits of the return value 
     // is used as the offset. 
-    m_page55.WheelDiameterOffset = 0xF & calc_wheel_diameter(
-            mp_user_profile->wheel_size_mm, &m_page55.WheelDiameter);
+    page55.WheelDiameterOffset = 0xF & calc_wheel_diameter(
+            mp_user_profile->wheel_size_mm, &page55.WheelDiameter);
             
-    m_page55.GearRatio = 0x00; // invalid.
+    page55.GearRatio = 0x00; // invalid.
         
 	return sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
-		(uint8_t*)&m_page55);    
+		(uint8_t*)&page55);    
 } 
 
 static void CalibrationInProgress_Send(calibration_status_t * p_calibration_status)
