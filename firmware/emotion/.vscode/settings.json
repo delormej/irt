@@ -17,6 +17,11 @@
         "compiler_abstraction.h": "c",
         "simulation.h": "c",
         "ant_bg_scanner.h": "c",
-        "ant_stack_handler_types.h": "c"
-    }
+        "ant_stack_handler_types.h": "c",
+        "wahoo.h": "c",
+        "stdint.h": "c",
+        "ant_bike_power.h": "c",
+        "stdint-gcc.h": "c"
+    },
+    "terminal.integrated.shell.windows": "C:\\Program Files (x86)\\GNU Tools ARM Embedded\\6 2017-q1-update\\bin\\gccvar.bat"
 }

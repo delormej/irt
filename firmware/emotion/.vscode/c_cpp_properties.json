@@ -43,21 +43,22 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
-                "${workspaceRoot}/../nrf51sdk_7.2/*",
                 "${workspaceRoot}",
-                "${workspaceRoot}/services"
+                "${workspaceRoot}/services",           
+                "C:/Program Files (x86)/GNU Tools ARM Embedded/6 2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include",
+                "${workspaceRoot}/../nrf51sdk_7.2/*"
             ],
             "browse": {
-                "limitSymbolsToIncludedHeaders": true,
+                "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": "",
                 "path": [
-                    "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
-                    "${workspaceRoot}/../nrf51sdk_7.2/*",
-                    "${workspaceRoot}"
+                    "${workspaceRoot}",
+                    "${workspaceRoot}/services",
+                    "C:/Program Files (x86)/GNU Tools ARM Embedded/6 2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include",
+                    "${workspaceRoot}/../nrf51sdk_7.2/*"
                 ]
             },
-            "intelliSenseMode": "msvc-x64"
+            "intelliSenseMode": "clang-x64"
         }
     ],
     "version": 3
