@@ -16,7 +16,7 @@ static void test_magnet_watts(CuTest* tc)
 {
     //float speed_mps, uint16_t position
     float watts = magnet_watts(7.0f, 1273);
-    CuAssertTrue(tc, watts == 49.4211922F );
+    CuAssertTrue(tc, (watts >= 49.0f && watts <= 50.0f));
 }
 
 static void test_magnet_position(CuTest* tc)

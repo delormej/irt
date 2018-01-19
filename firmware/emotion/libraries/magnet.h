@@ -36,7 +36,10 @@
 #define MAGNET_POSITION_MIN_RESISTANCE			1600		// Above this position, we don't calculate any watts.
 #define MAGNET_POSITION_MAX_RESISTANCE			800
 
-#define MIN_SPEED_MPS			7.1f * 0.440704f// Minimum speed for which mag resistance can be calculated.
+ // Minimum speed for which mag resistance can be calculated.
+#define MPH_TO_MPS				0.440704f
+#define MIN_SPEED_MPH			7.1f
+#define MIN_SPEED_MPS			MIN_SPEED_MPH * MPH_TO_MPS
 
 /**@brief	Structure to encapsulate magnet calibration factors that define a
  * 			3rd order polynomial from a low speed and high speed.

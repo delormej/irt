@@ -18,7 +18,7 @@ static void RunAllTests()
     CuSuiteAddSuite(suite, cu_getsuite_magnet());
     CuSuiteAddSuite(suite, cu_getsuite_simulation());
     //CuSuiteAddSuite(suite, cu_getsuite_ant_bg_scanner());
-	CuSuiteAddSuite(suite, cu_getsuite_ant_fec());
+	//CuSuiteAddSuite(suite, cu_getsuite_ant_fec());
 
 	CuSuiteRun(suite);
 	CuSuiteSummary(suite, output);

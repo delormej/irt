@@ -173,6 +173,20 @@ static float watts_offset(float speed_mps, float watts, bool invert)
 	return adjusted_watts;
 }
 
+static inline uint32_t ipow(uint32_t base, uint32_t exp)
+{
+    int32_t result = 1;
+    while (exp)
+    {
+        if (exp & 1)
+            result *= base;
+        exp >>= 1;
+        base *= base;
+    }
+
+    return result;
+}
+
 /**@brief	Initializes the magnet module with a set of factors for a low and
  * 			high speed polynomial.
  */
@@ -247,8 +261,8 @@ float magnet_watts(float speed_mps, uint16_t position)
 	curve_coeff(speed_mps, coeff);
 
 	watts =
-		coeff[0] * pow(position, 3) +
-		coeff[1] * pow(position, 2) +
+		coeff[0] * ipow(position, 3) +
+		coeff[1] * ipow(position, 2) +
 		coeff[2] * position +
 		coeff[3];
 
