@@ -362,14 +362,14 @@ static void update_resistance_state()
     switch (m_current_state.fe_state)
     {
         case FE_READY:
-        case FE_FINISHED_PAUSED:
-            if (m_current_state.instant_speed_mps > 1.0f)
+			if (m_current_state.instant_speed_mps > 1.0f)
             {
                 // Transition to in use.
                 m_current_state.fe_state = FE_IN_USE;                
             }
+			break;
+        case FE_FINISHED_PAUSED:
             break;
-        
         case FE_IN_USE:
             if (m_current_state.instant_speed_mps < 1.0f)
             {
@@ -412,6 +412,8 @@ static void toggle_resistance_mode()
 	{
 		// Current mode is Erg or another, turn off resistance.
 		on_resistance_off();
+		// Put device into PAUSED mode, where no other resistance commands will be accepted until unpaused.
+		m_current_state.fe_state = FE_FINISHED_PAUSED;
 	}
 }
 
@@ -1113,6 +1115,10 @@ static void on_ble_uart(uint8_t * data, uint16_t length)
 static void on_set_resistance(rc_evt_t rc_evt)
 {
 	uint16_t value = 0;
+
+	// Ignore command if we're paused.
+	if (m_current_state.fe_state == FE_FINISHED_PAUSED)
+		return;
 
     // Only applies to the older WAHOO messages and not FE-C
     if (rc_evt.operation >= RESISTANCE_SET_PERCENT &&
