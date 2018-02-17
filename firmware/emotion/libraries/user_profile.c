@@ -43,6 +43,7 @@ static void profile_update_pstorage_cb_handler(pstorage_handle_t *  p_handle,
 static void profile_dump_to_log()
 {
     UP_LOG(
+        "\tservo_offset: %i \r\n" \
         "\ttotal_weight_kg: %i \r\n" \
         "\tuser_weight_kg: %i \r\n" \
         "\twheel: %i \r\n " \
@@ -55,6 +56,7 @@ static void profile_dump_to_log()
         "\tpower_adjust_seconds: %i, power_average_seconds: %i\r\n" \
         "\tservo_smoothing_steps: %i\r\n" \
         "\tmin resistance adjust speed: %i\r\n",
+        m_user_profile.servo_offset,
         m_user_profile.total_weight_kg,
         m_user_profile.user_weight_kg,
         m_user_profile.wheel_size_mm,
