@@ -4,7 +4,8 @@
 # Uses slightly modified Pure GCC make from Nordic. 
 #
 ###############################################################################
-
+# As of Feb-2018 I needed to add SHELL otherwise make: Interrupt/Exception caught
+SHELL=C:/Windows/System32/cmd.exe
 SDK_PATH = ../nrf51sdk_7.2/
 TEMPLATE_PATH = $(SDK_PATH)toolchain/gcc/
 
