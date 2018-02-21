@@ -415,6 +415,15 @@ uint32_t ant_bp_rx_init(bp_evt_handler_t on_bp_power_data, uint16_t device_id)
 	// Errors in these two methods indicate invalid params, so throw exception as 
 	// we shouldn't see these conditions.
 	//
+	#define LOW_PRI_SEARCH_TIMEOUT         	0xFE	// 2.5s * 254 = ~10 minutes
+	#define HI_PRI_SEARCH_TIMEOUT 			0x03	// 7.5 seconds
+
+	// Search for ever at low priority. 
+    err_code = sd_ant_channel_low_priority_rx_search_timeout_set(ANT_BP_RX_CHANNEL, LOW_PRI_SEARCH_TIMEOUT);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = sd_ant_channel_rx_search_timeout_set(ANT_BP_RX_CHANNEL, HI_PRI_SEARCH_TIMEOUT);
+    APP_ERROR_CHECK(err_code);
 
     err_code = sd_ant_channel_radio_freq_set(ANT_BP_RX_CHANNEL, ANTPLUS_RF_FREQ);
     APP_ERROR_CHECK(err_code);
