@@ -395,6 +395,9 @@ static void update_resistance_state()
  */
 static void toggle_resistance_mode()
 {
+	if (m_current_state.fe_state == FE_FINISHED_PAUSED)
+		m_current_state.fe_state = FE_IN_USE;
+
 	if (mp_resistance_state->mode == RESISTANCE_SET_STANDARD)
 	{
 		// Current mode is standard, switch to Erg.
@@ -1115,10 +1118,6 @@ static void on_ble_uart(uint8_t * data, uint16_t length)
 static void on_set_resistance(rc_evt_t rc_evt)
 {
 	uint16_t value = 0;
-
-	// Ignore command if we're paused.
-	if (m_current_state.fe_state == FE_FINISHED_PAUSED)
-		return;
 
     // Only applies to the older WAHOO messages and not FE-C
     if (rc_evt.operation >= RESISTANCE_SET_PERCENT &&

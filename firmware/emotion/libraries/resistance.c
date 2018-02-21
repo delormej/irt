@@ -416,6 +416,10 @@ static void adjust_to_target(resistance_mode_t mode, float speed_mps, float mago
  */
 static void resistance_adjust()
 {
+	// Skip actual adjustment if we're paused.
+	if (mp_current_state->fe_state == FE_FINISHED_PAUSED)
+		return;
+
 	// Stop the timer if we were in erg/sim mode, regardless of whether
 	// adjustment interval is 0 or not, it will not error if timer was
 	// never started.  This guarantees that timer will stop even if user
