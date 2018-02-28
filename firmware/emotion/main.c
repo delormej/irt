@@ -117,7 +117,7 @@ static const irt_resistance_state_t* 	mp_resistance_state;
 static uint16_t							m_ant_ctrl_remote_ser_no; 					// Serial number of remote if connected.
 
 static uint32_t 						m_battery_start_ticks __attribute__ ((section (".NoInit")));			// Time (in ticks) when we started running on battery.
-
+static bool m_forced_pause = false;
 static void on_get_parameter(ant_request_data_page_t* p_request);
 static void send_temperature();
 static void on_enable_dfu_mode();
@@ -362,14 +362,13 @@ static void update_resistance_state()
     switch (m_current_state.fe_state)
     {
         case FE_READY:
-			if (m_current_state.instant_speed_mps > 1.0f)
+        case FE_FINISHED_PAUSED:		
+			if (!m_forced_pause && m_current_state.instant_speed_mps > 1.0f)
             {
                 // Transition to in use.
                 m_current_state.fe_state = FE_IN_USE;                
             }
 			break;
-        case FE_FINISHED_PAUSED:
-            break;
         case FE_IN_USE:
             if (m_current_state.instant_speed_mps < 1.0f)
             {
@@ -396,7 +395,10 @@ static void update_resistance_state()
 static void toggle_resistance_mode()
 {
 	if (m_current_state.fe_state == FE_FINISHED_PAUSED)
-		m_current_state.fe_state = FE_IN_USE;
+	{
+		m_current_state.fe_state = FE_READY;
+		m_forced_pause = false;
+	}
 
 	if (mp_resistance_state->mode == RESISTANCE_SET_STANDARD)
 	{
@@ -416,6 +418,7 @@ static void toggle_resistance_mode()
 		// Current mode is Erg or another, turn off resistance.
 		on_resistance_off();
 		// Put device into PAUSED mode, where no other resistance commands will be accepted until unpaused.
+		m_forced_pause = true;
 		m_current_state.fe_state = FE_FINISHED_PAUSED;
 	}
 }
