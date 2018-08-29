@@ -1302,9 +1302,9 @@ static void on_bp_power_data(ant_bp_message_type_e state, uint16_t data)
 		case BP_MSG_DEVICE_CONNECTED:
 			if (mp_user_profile->power_meter_ant_id != data)
 			{
-				// TODO: should we schedule profile update??
 				LOG("[MAIN] Power Meter Connected: %i\r\n", data);
 				mp_user_profile->power_meter_ant_id = data;
+				user_profile_store();
 			}
 			
 			m_current_state.power_meter_paired = true;
