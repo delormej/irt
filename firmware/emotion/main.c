@@ -1017,8 +1017,19 @@ static void on_button_pbsw(press_delay_e press_delay)
 		
 		case press_delay_2_sec:
 		case press_delay_4_sec:
-			// Attempt to pair to any power meter (0).
-			bike_power_init(0);
+			if (m_current_state.power_meter_paired)
+			{
+				// Save power meter id.
+				LOG("[MAIN] Updated power_meter_ant_id:%i \r\n", mp_user_profile->power_meter_ant_id);			
+				// Schedule update to the user profile.
+				user_profile_store();
+				led_set(LED_POWER_METER_FOUND);
+			}
+			else
+			{
+				// Attempt to pair to any power meter (0).
+				bike_power_init(0);
+			}
 			break;
 		
 		case press_delay_8_sec:
