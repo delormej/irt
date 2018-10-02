@@ -1522,7 +1522,7 @@ static void on_set_parameter(uint8_t* buffer)
 		case IRT_MSG_SUBPAGE_GAP_OFFSET:
 			memcpy(&mp_user_profile->ca_mag_factors.gap_offset, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint16_t));
 			LOG("[MAIN] on_set_parameter ca_gap_offset:%i\r\n", mp_user_profile->ca_mag_factors.gap_offset);
-
+			magnet_init(&mp_user_profile->ca_mag_factors);
 			// Schedule update to the user profile.
 			user_profile_store();
 			break;
