@@ -46,7 +46,7 @@
  */
 typedef struct mag_calibration_factors_s
 {
-	uint16_t			gap_offset;			// Variable used to adjust for the magnet spacing gap which changes the force by this percent.  Stored as unsigned short, divide by 1,000 to get % value.
+	uint16_t			gap_offset;			// Variable used to adjust for the magnet spacing gap which changes the force by this percent.  Stored as unsigned short, divide by 100 to get force value.
 	uint16_t			low_speed_mps;		// Divide by 100 to get speed.
 	uint16_t			high_speed_mps;
 	uint16_t			root_position;		// Servo position above which we no longer calculate as the curve turns.

@@ -33,7 +33,7 @@
 #define SPEED2 		(float)(mp_mag_calibration_factors->high_speed_mps) / 1000.0f
 #define COEFF_1		mp_mag_calibration_factors->low_factors
 #define COEFF_2		mp_mag_calibration_factors->high_factors
-#define GAP_OFFSET	(float)(mp_mag_calibration_factors->gap_offset) / 1000.0f	// Macro to convert gap offset storage format to percent.
+#define GAP_OFFSET	(float)(mp_mag_calibration_factors->gap_offset) / 100.0f	// Macro to convert gap offset storage format to percent.
 
 static mag_calibration_factors_t* mp_mag_calibration_factors;
 
@@ -161,13 +161,14 @@ static float watts_offset(float speed_mps, float watts, bool invert)
 	float offset = GAP_OFFSET;
 
 	// If we're doing the inverted calculation (matching power to position).
+	/*  NOT SURE WHY WE DO THIS?
 	if (invert)
 	{
 		offset = 1.0f / offset;
-	}
+	}*/
 
 	float force = watts / speed_mps;
-	float adjusted_force = force * offset;
+	float adjusted_force = force + offset;
 	float adjusted_watts = adjusted_force * speed_mps;
 
 	return adjusted_watts;

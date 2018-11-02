@@ -57,6 +57,7 @@ static user_profile_t* 			mp_user_profile;
 static irt_context_t*			mp_current_state;
 static irt_resistance_state_t	m_resistance_state;
 static void resistance_adjust();
+static void adjust_to_target(resistance_mode_t mode, float speed_mps, float magoff_watts);
 
 /**@brief Function for adjusting resistance on timer timeout.
  *
@@ -67,7 +68,32 @@ static void resistance_adjust();
  */
 static void adjustment_timeout_handler(void * p_context)
 {
-	resistance_adjust();
+	// resistance_adjust() gets called outside of the timer.
+	// there is definitely a lot of duplication here...
+	// since this is isolated to times when we're actually self-calibrating
+	// there is different logic
+
+	// Figure out how far off we were, then store this as a gap offset for the next adjustment.
+	// what we're not accounting for here though is if speed changed.
+	
+	// Don't try to adjust if servo is off.
+	uint16_t servo_pos = resistance_servo_position();
+	if (servo_pos == MAGNET_POSITION_OFF)
+		return;
+
+	float avg_power = ant_bp_avg_power(3);
+	float avg_speed = speed_average_mps(mp_user_profile->power_average_seconds);
+	int16_t target = m_resistance_state.erg_watts;	
+ 	float magnet = magnet_watts(avg_speed, servo_pos);
+
+	// we thought we got "magnet" watts, but we actually got:
+	// (target - avg_power) + magnet
+	// The Force offset should be (target - avg_power) / avg_speed
+	float forceOffset = ((float)target - avg_power) / avg_speed;
+	mp_user_profile->ca_mag_factors.gap_offset = (uint16_t)(forceOffset * 100);
+	float mag_off = avg_power - ((target - avg_power) + magnet);
+	
+	adjust_to_target(m_resistance_state.mode, avg_speed, mag_off);
 }
 
 static inline bool adjustment_timer_in_use()
