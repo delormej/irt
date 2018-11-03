@@ -274,7 +274,7 @@ float magnet_watts(float speed_mps, uint16_t position)
 	}
 
 	// If we have a gap offset, use it here.
-	if (GAP_OFFSET > 0)
+	if (GAP_OFFSET != 0 && GAP_OFFSET != 0xFFFF)
 	{
 		watts = watts_offset(speed_mps, watts, false);
 	}
