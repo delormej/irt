@@ -49,9 +49,7 @@ static void profile_dump_to_log()
         "\twheel: %i \r\n " \
         "\tsettings: %lu \r\n " \
         "\tdrag: %.3f, rr: %.3f \r\n" \ 
-        /*"\tca_root_position: %i \r\n\t " \
-        "\tca_mag_factors.low: %.12f, %.12f, %.12f, %.12f\r\n\t " \
-        "\tca_mag_factors.high: %.12f, %.12f, %.12f, %.12f\r\n" \ */
+        "\tmag gap offset: %i\r\n" \
         "\tpower_meter_id: %i\r\n" \
         "\tpower_adjust_seconds: %i, power_average_seconds: %i\r\n" \
         "\tservo_smoothing_steps: %i\r\n" \
@@ -63,15 +61,7 @@ static void profile_dump_to_log()
         m_user_profile.settings,
         m_user_profile.ca_drag,
         m_user_profile.ca_rr,
-        /*m_user_profile.ca_mag_factors.root_position,
-        m_user_profile.ca_mag_factors.low_factors[0],
-        m_user_profile.ca_mag_factors.low_factors[1],
-        m_user_profile.ca_mag_factors.low_factors[2],
-        m_user_profile.ca_mag_factors.low_factors[3],			
-        m_user_profile.ca_mag_factors.high_factors[0],
-        m_user_profile.ca_mag_factors.high_factors[1],
-        m_user_profile.ca_mag_factors.high_factors[2],
-        m_user_profile.ca_mag_factors.high_factors[3],*/
+        m_user_profile.ca_mag_factors.gap_offset,
         m_user_profile.power_meter_ant_id,
         m_user_profile.power_adjust_seconds,
         m_user_profile.power_average_seconds,
