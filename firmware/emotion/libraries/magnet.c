@@ -156,20 +156,18 @@ static uint16_t position_linear(float speed_mps, float mag_watts)
 /*@brief	Calculates the *MAG ONLY* portion of power given an offset.
  *
  */
-static float watts_offset(float speed_mps, float watts, bool invert)
+static float watts_offset(float speed_mps, float watts)
 {
+	return watts;
+	
 	float offset = GAP_OFFSET;
-
-	// If we're doing the inverted calculation (matching power to position).
-	/*  NOT SURE WHY WE DO THIS?
-	if (invert)
-	{
-		offset = 1.0f / offset;
-	}*/
 
 	float force = watts / speed_mps;
 	float adjusted_force = force + offset;
 	float adjusted_watts = adjusted_force * speed_mps;
+
+    // MAG_LOG("gap_offset: %.2f adjusted_watts: %.2f, speed_mps: %2.f\r\n", offset,
+	// 		adjusted_watts, speed_mps);            
 
 	return adjusted_watts;
 }
@@ -276,7 +274,7 @@ float magnet_watts(float speed_mps, uint16_t position)
 	// If we have a gap offset, use it here.
 	if (GAP_OFFSET != 0 && GAP_OFFSET != 0xFFFF)
 	{
-		watts = watts_offset(speed_mps, watts, false);
+		watts = watts_offset(speed_mps, watts);
 	}
 
 	return watts;
@@ -290,9 +288,9 @@ uint16_t magnet_position(float speed_mps, float mag_watts, target_power_e* p_tar
     uint16_t position = 0;
 
 	// Calculate the offset.
-	if (GAP_OFFSET > 0)
+	if (GAP_OFFSET != 0 && GAP_OFFSET != 0xFFFF)
 	{
-		mag_watts = watts_offset(speed_mps, mag_watts, true);
+		mag_watts = watts_offset(speed_mps, mag_watts);
 	}
 
 	// Send the magnet to the home position if no mag watts required.
