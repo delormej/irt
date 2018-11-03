@@ -33,7 +33,7 @@
 #define SPEED2 		(float)(mp_mag_calibration_factors->high_speed_mps) / 1000.0f
 #define COEFF_1		mp_mag_calibration_factors->low_factors
 #define COEFF_2		mp_mag_calibration_factors->high_factors
-#define GAP_OFFSET	(float)(mp_mag_calibration_factors->gap_offset) / 100.0f	// Macro to convert gap offset storage format to percent.
+#define GAP_OFFSET	(float)(mp_mag_calibration_factors->gap_offset) / 100.0f	// Macro to convert gap offset storage format to decimal.
 
 static mag_calibration_factors_t* mp_mag_calibration_factors;
 
@@ -156,18 +156,17 @@ static uint16_t position_linear(float speed_mps, float mag_watts)
 /*@brief	Calculates the *MAG ONLY* portion of power given an offset.
  *
  */
-static float watts_offset(float speed_mps, float watts)
+static float watts_offset(float speed_mps, float watts, bool invert)
 {
-	return watts;
-	
 	float offset = GAP_OFFSET;
 
 	float force = watts / speed_mps;
 	float adjusted_force = force + offset;
 	float adjusted_watts = adjusted_force * speed_mps;
 
-    // MAG_LOG("gap_offset: %.2f adjusted_watts: %.2f, speed_mps: %2.f\r\n", offset,
-	// 		adjusted_watts, speed_mps);            
+    MAG_LOG("[MAG] invert: %i, watts: %i, gap_offset: %i adjusted_watts: %i, speed_mps: %i\r\n", 
+			invert, (int16_t)(watts*10), (int16_t)(offset*100),
+			(int16_t)(adjusted_watts*10), (uint16_t)(speed_mps*10));            
 
 	return adjusted_watts;
 }
@@ -274,7 +273,7 @@ float magnet_watts(float speed_mps, uint16_t position)
 	// If we have a gap offset, use it here.
 	if (GAP_OFFSET != 0 && GAP_OFFSET != 0xFFFF)
 	{
-		watts = watts_offset(speed_mps, watts);
+		watts = watts_offset(speed_mps, watts, false);
 	}
 
 	return watts;
@@ -290,7 +289,7 @@ uint16_t magnet_position(float speed_mps, float mag_watts, target_power_e* p_tar
 	// Calculate the offset.
 	if (GAP_OFFSET != 0 && GAP_OFFSET != 0xFFFF)
 	{
-		mag_watts = watts_offset(speed_mps, mag_watts);
+		mag_watts = watts_offset(speed_mps, mag_watts, true);
 	}
 
 	// Send the magnet to the home position if no mag watts required.

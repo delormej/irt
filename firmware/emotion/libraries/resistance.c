@@ -58,6 +58,7 @@ static irt_context_t*			mp_current_state;
 static irt_resistance_state_t	m_resistance_state;
 static void resistance_adjust();
 static void adjust_to_target(resistance_mode_t mode, float speed_mps, float magoff_watts);
+static float calc_avg_magoff_watts(uint8_t seconds, float speed_mps);
 
 /**@brief Function for adjusting resistance on timer timeout.
  *
@@ -81,19 +82,29 @@ static void adjustment_timeout_handler(void * p_context)
 	if (servo_pos == MAGNET_POSITION_OFF)
 		return;
 
-	float avg_power = ant_bp_avg_power(3);
 	float avg_speed = speed_average_mps(mp_user_profile->power_average_seconds);
+	float avg_power = 0;
+	if (mp_current_state->power_meter_paired) // Paired to a power meter..
+	{
+		avg_power = ant_bp_avg_power(mp_user_profile->power_average_seconds); 
+	}
+	else
+	{
+		avg_power = mp_current_state->instant_power;
+	}	
 	int16_t target = m_resistance_state.erg_watts;	
  	float magnet = magnet_watts(avg_speed, servo_pos);
+
+	RC_LOG("[RC] adjustment_timeout_handler servo: %i, power: %i mag_watts: %i, target: %i \r\n", 
+		servo_pos, (uint16_t)avg_power, (uint16_t)magnet, (uint16_t) target);
 
 	// we thought we got "magnet" watts, but we actually got:
 	// (target - avg_power) + magnet
 	// The Force offset should be (target - avg_power) / avg_speed
 	float forceOffset = ((float)target - avg_power) / avg_speed;
-	mp_user_profile->ca_mag_factors.gap_offset = (uint16_t)(forceOffset * 100);
-	float mag_off = avg_power - ((target - avg_power) + magnet);
+	mp_user_profile->ca_mag_factors.gap_offset = (int16_t)(forceOffset * 100);
 	
-	adjust_to_target(m_resistance_state.mode, avg_speed, mag_off);
+	resistance_adjust();
 }
 
 static inline bool adjustment_timer_in_use()
