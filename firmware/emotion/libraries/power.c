@@ -106,9 +106,10 @@ float power_magoff(float speed_mps)
 	}*/
 	else
 	{
-		// Default linear power equation.
-		m_rr_force = simulation_rr_force(mp_profile->total_weight_kg, DEFAULT_CRR);
-		watts = m_rr_force * speed_mps;
+		// Default linear power equation, total hack from original IRT formula
+		float mph = speed_mps * 2.237;
+		float lbs = (mp_profile->total_weight_kg / 100.0f) *  2.205;
+		watts = (mph*14.04-33.6)-(((mph*14.04-33.06)-(mph*8.75-16.21))/90)*(220-lbs);
 	}
 
 	//PW_LOG("[PW] power_magoff: %.2f\r\n", watts);
