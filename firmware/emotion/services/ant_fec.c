@@ -74,6 +74,8 @@
 		(DISTANCE_TRAVELED_ENABLED << 2) | \
 		(context->virtual_speed_flag << 3))   	
 
+#define GAPOFFSET ((uint8_t) mp_user_profile->ca_mag_factors.gap_offset)
+
 //
 // Circular buffer to queue for page requests.
 //
@@ -318,8 +320,8 @@ static uint32_t ManufacturerSpecificPage_Send(irt_context_t* context)
 	tx_buffer[EXTRA_INFO_SERVO_POS_MSB]		= HIGH_BYTE(context->servo_position);
 	tx_buffer[EXTRA_INFO_TARGET_LSB]		= LOW_BYTE(context->resistance_level);
 	tx_buffer[EXTRA_INFO_TARGET_MSB]		= encode_resistance_level(context);
-	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]	= LOW_BYTE(flywheel);
-	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]	= HIGH_BYTE(flywheel);
+	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_LSB]	= LOW_BYTE(GAPOFFSET);
+	tx_buffer[EXTRA_INFO_FLYWHEEL_REVS_MSB]	= HIGH_BYTE(GAPOFFSET);
     tx_buffer[EXTRA_INFO_TEMP]				= (uint8_t)(context->temp);
     // Use MSB to indicate if power meter is paired.
     tx_buffer[EXTRA_INFO_TEMP]              = tx_buffer[EXTRA_INFO_TEMP] | 
@@ -841,7 +843,7 @@ static bool dequeue_request()
             sd_ant_broadcast_message_tx(ANT_FEC_TX_CHANNEL, TX_BUFFER_SIZE, 
 		      (uint8_t*)&m_last_command);       
             break;
-            
+
         case ANT_IRT_PAGE_SETTINGS:
             IRTSettingsPage_Send();
             break;    
@@ -1072,6 +1074,10 @@ void ant_fec_rx_handle(ant_evt_t * p_ant_evt)
 
                     case BLINK_LED_COMMAND:
                         mp_evt_handlers->on_blink_led();
+                        break;
+
+                    case SET_PARAMETER_COMMAND:
+                        mp_evt_handlers->on_set_parameter(p_mesg->ANT_MESSAGE_aucPayload);
                         break;
 
                     default:

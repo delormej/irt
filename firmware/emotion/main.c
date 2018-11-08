@@ -1442,64 +1442,6 @@ static void on_set_parameter(uint8_t* buffer)
 	// SubPage index
 	switch (buffer[IRT_MSG_PAGE2_SUBPAGE_INDEX])
 	{
-		case IRT_MSG_SUBPAGE_SETTINGS:
-			settings_update(buffer);
-			break;
-
-		case IRT_MSG_SUBPAGE_CRR:
-			// Update CRR.
-			memcpy(&mp_user_profile->ca_slope, &buffer[IRT_MSG_PAGE2_DATA_INDEX],
-					sizeof(uint16_t));
-			memcpy(&mp_user_profile->ca_intercept, &buffer[IRT_MSG_PAGE2_DATA_INDEX+2],
-					sizeof(uint16_t));
-			LOG("[MAIN] Updated slope:%i intercept:%i \r\n",
-					mp_user_profile->ca_slope, mp_user_profile->ca_intercept);
-
-			// Remove drag & rr values as they will conflict.
-			mp_user_profile->ca_drag = NAN;
-			mp_user_profile->ca_rr = NAN;
-
-			// Schedule update to the user profile.
-			user_profile_store();
-			break;
-
-		case IRT_MSG_SUBPAGE_DRAG:
-			// Update co-efficient of drag from calibration.
-			memcpy(&mp_user_profile->ca_drag, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
-			LOG("[MAIN] on_set_parameter ca_drag:%.7f\r\n", mp_user_profile->ca_drag);
-			break;
-
-		case IRT_MSG_SUBPAGE_RR:
-			// Update co-efficient of rolling resistance from calibration.
-			memcpy(&mp_user_profile->ca_rr, &buffer[IRT_MSG_PAGE2_DATA_INDEX], sizeof(uint32_t));
-			LOG("[MAIN] on_set_parameter ca_rr:%.7f\r\n", mp_user_profile->ca_rr);
-
-			if (!isnan(mp_user_profile->ca_drag))
-			{
-				// If we've received both params, schedule a profile update.
-				user_profile_store();
-			}
-
-			break;
-
-		case IRT_MSG_SUBPAGE_SERVO_OFFSET:
-			mp_user_profile->servo_offset = (int16_t)(buffer[IRT_MSG_PAGE2_DATA_INDEX] |
-				buffer[IRT_MSG_PAGE2_DATA_INDEX+1] << 8);
-			LOG("[MAIN] Updated servo_offset:%i \r\n", mp_user_profile->servo_offset);
-
-			// Schedule update to the user profile.
-			user_profile_store();
-			break;
-
-		// I don't think this ever gets used.. 
-		case IRT_MSG_SUBPAGE_POWER_METER_ID:
-			mp_user_profile->power_meter_ant_id = (int16_t)(buffer[IRT_MSG_PAGE2_DATA_INDEX] |
-				buffer[IRT_MSG_PAGE2_DATA_INDEX+1] << 8);
-			LOG("[MAIN] Updated power_meter_ant_id:%i \r\n", mp_user_profile->power_meter_ant_id);			
-			// Schedule update to the user profile.
-			user_profile_store();
-			break;
-
 		case IRT_MSG_SUBPAGE_SLEEP:
 			LOG("[MAIN] on_set_parameter: Request device sleep.\r\n");
 			on_power_down(true);
@@ -1526,24 +1468,6 @@ static void on_set_parameter(uint8_t* buffer)
 			// Schedule update to the user profile.
 			user_profile_store();
 			break;
-
-			/*
-		case IRT_MSG_SUBPAGE_FEATURES:
-
-			err_code = features_store(&buffer[IRT_MSG_PAGE2_DATA_INDEX]);
-			APP_ERROR_CHECK(err_code);
-
-			LOG("[MAIN] on_set_parameter: FEATURES STORE NO LONGER SUPPORTED.\r\n");
-			break; */
-
-#ifdef SIM_SPEED
-		case IRT_MSG_SUBPAGE_DEBUG_SPEED:
-			// # of ticks to simulate in debug mode.
-			LOG("[MAIN] setting debug speed ticks to: %i\r\n",
-					buffer[IRT_MSG_PAGE2_DATA_INDEX]);
-			speed_debug_ticks = buffer[IRT_MSG_PAGE2_DATA_INDEX];
-			break;
-#endif
 
 		default:
 			LOG("[MAIN] on_set_parameter: Invalid setting, skipping. \r\n");

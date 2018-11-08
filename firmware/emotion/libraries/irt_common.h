@@ -80,8 +80,8 @@ static bool __inline__ irt_feature_is_available(uint16_t feature)
 //
 // Parameter identifiers for ANT get/set parameters.
 //
-#define IRT_MSG_PAGE2_SUBPAGE_INDEX			1u					// Index of the subpage in the message buffer.
-#define IRT_MSG_PAGE2_DATA_INDEX			2u					// Index of the data in the message buffer.
+#define IRT_MSG_PAGE2_SUBPAGE_INDEX			2u					// Index of the subpage in the message buffer.
+#define IRT_MSG_PAGE2_DATA_INDEX			3u					// Index of the data in the message buffer.
 
 #define IRT_MSG_SUBPAGE_CRR					16u
 #define IRT_MSG_SUBPAGE_SETTINGS			17u
