@@ -161,7 +161,7 @@ static float watts_offset(float speed_mps, float watts, bool invert)
 	float offset = GAP_OFFSET;
 
 	float force = watts / speed_mps;
-	float adjusted_force = 0;
+	float adjusted_force = force + offset;
 	float adjusted_watts = adjusted_force * speed_mps;
 
     MAG_LOG("[MAG] invert: %i, watts: %i, gap_offset: %i adjusted_watts: %i, speed_mps: %i\r\n", 
