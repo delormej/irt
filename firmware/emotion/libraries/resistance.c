@@ -473,9 +473,19 @@ static void adjust_to_target(resistance_mode_t mode, float speed_mps, float mago
  */
 static void resistance_adjust()
 {
+	float speed_mps = speed_average_mps(mp_user_profile->power_average_seconds);
+
 	// Skip actual adjustment if we're paused.
 	if (mp_current_state->fe_state == FE_FINISHED_PAUSED)
+	{
+		if (speed_mps < 1.0f)
+		{
+			RC_LOG("[RC] Device is slowing to a stop, turning off erg resistance.\r\n");
+			// turn off resistance if device is coming to a stop.
+			resistance_position_set(MAGNET_POSITION_MIN_RESISTANCE, 0);
+		}
 		return;
+	}
 
 	// Stop the timer if we were in erg/sim mode, regardless of whether
 	// adjustment interval is 0 or not, it will not error if timer was
@@ -483,7 +493,6 @@ static void resistance_adjust()
 	// changed the adjust timeout to 0 after a timer already started (possible case).
 	app_timer_stop(m_adjust_timer_id);
 
-	float speed_mps = speed_average_mps(mp_user_profile->power_average_seconds);
 	float magoff_watts = calc_avg_magoff_watts(mp_user_profile->power_average_seconds, speed_mps);
 	adjust_to_target(m_resistance_state.mode, speed_mps, magoff_watts);
 	if (adjustment_timer_in_use())
