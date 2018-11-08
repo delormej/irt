@@ -110,55 +110,6 @@ static void resetLastPowerPage()
 		sizeof(uint8_t) * sizeof(m_last_power_page));
 }
 
-/**@brief	Calculates average power in watts between two events.
- *
- */
-static float CalcAveragePower(power_event_t first, power_event_t last)
-{
-	// Deltas between first and last events.
-	uint16_t event_count = 0;
-	uint16_t accum_power = 0;
-	float average_power = 0.0f;
-
-	// Deal with rollover.
-	if (first.event_count > last.event_count)
-	{
-		// Add 1 because there is an event at count = 0.
-		event_count = 1 + (0xFF ^ first.event_count) + last.event_count;
-	}
-	else
-	{
-		event_count = last.event_count - first.event_count;
-	}
-
-	//
-	// Only calculate power if events have occurred.
-	//
-	if (event_count == 0)
-	{
-		return 0.0f;
-	}
-
-	//
-	// Calculate delta in accum power between events.
-	//
-	if (first.accum_power > last.accum_power)
-	{
-		// Handle power rollover.
-		accum_power = (0xFFFF ^ first.accum_power) + last.accum_power;
-	}
-	else
-	{
-		accum_power = last.accum_power - first.accum_power;
-	}
-
-	// Calculate average power.
-	// distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
-	average_power = (float)accum_power / (float)event_count;
-
-	return average_power;
-}
-
 /**@brief Parses ant data page to combine bits for power in watts.
  *
  */
@@ -193,6 +144,61 @@ static uint32_t GetPowerMeterId()
 
 	return err_code;
 }
+
+/**@brief	Calculates average power in watts between two events.
+ *
+ */
+static float CalcAveragePower(power_event_t first, power_event_t last)
+{
+	// Deltas between first and last events.
+	uint16_t event_count = 0;
+	uint16_t accum_power = 0;
+	float average_power = 0.0f;
+
+	// Deal with rollover.
+	if (first.event_count > last.event_count)
+	{
+		// Add 1 because there is an event at count = 0.
+		event_count = 1 + (0xFF ^ first.event_count) + last.event_count;
+	}
+	else
+	{
+		event_count = last.event_count - first.event_count;
+	}
+
+	//
+	// Only calculate power if events have occurred, otherwise return last power reading.
+	//
+	if (event_count == 0 || first.accum_power == 0)
+	{
+		ant_bp_standard_power_only_t* p_page = (ant_bp_standard_power_only_t*)m_last_power_page;
+		average_power = GetWatts(p_page->instant_power_msb, p_page->instant_power_lsb);
+		BP_LOG("[BP] CalcAveragePower:: %i events, %i first.accum_power, average: %i\r\n",
+			event_count, first.accum_power, (int16_t)average_power);
+	}
+	else
+	{
+		//
+		// Calculate delta in accum power between events.
+		//
+		if (first.accum_power > last.accum_power)
+		{
+			// Handle power rollover.
+			accum_power = (0xFFFF ^ first.accum_power) + last.accum_power;
+		}
+		else
+		{
+			accum_power = last.accum_power - first.accum_power;
+		}
+
+		// Calculate average power.
+		// distance_m = flywheel_ticks / FLYWHEEL_TICK_PER_METER;
+		average_power = (float)accum_power / (float)event_count;
+	}
+
+	return average_power;
+}
+
 
 static void HandleStandardPowerOnlyPage(uint8_t* p_payload)
 {
@@ -445,10 +451,14 @@ void ant_bp_rx_start(void)
     uint32_t err_code = sd_ant_channel_open(ANT_BP_RX_CHANNEL);
     APP_ERROR_CHECK(err_code);
 
+	ant_bp_avg_power_reset();
+}
+
+void ant_bp_avg_power_reset()
+{
 	// Initialize fifo for collecting power events to average.
 	m_power_only_fifo = speed_event_fifo_init((uint8_t*)m_power_only_buffer, 
 		sizeof(power_event_t));
-
 }
 
 /**@brief Calculates average power for the period in seconds.
@@ -469,11 +479,12 @@ float ant_bp_avg_power(uint8_t seconds)
 			(power_event_t*)speed_event_fifo_get(&m_power_only_fifo);
 		
 		average_power = CalcAveragePower(*p_oldest, *p_current);
+
+		BP_LOG("[BP] %i:%i, %i:%i (events:%i)\r\n", 
+			p_oldest->event_count, p_current->event_count,
+			p_oldest->accum_power, p_current->accum_power, 
+			events);
 	}
-	// BP_LOG("[BP] %i:%i, %i:%i == Average Power: %.2f (events:%i)\r\n", 
-	// 	p_oldest->event_count, p_current->event_count,
-	// 	p_oldest->accum_power, p_current->accum_power, 
-	// 	average_power, events);
 
 	#ifdef ENABLE_DEBUG_LOG
 	static float last_average_power = 0.0f;

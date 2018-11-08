@@ -24,6 +24,7 @@ uint32_t ant_bp_rx_close(); // stop & close the channel.
 void ant_bp_rx_handle(ant_evt_t * p_ant_evt);
 void ant_bp_rx_start(void);
 float ant_bp_avg_power(uint8_t seconds); // returns average power.
+void ant_bp_avg_power_reset(); // resets averaging.
 uint16_t ant_bp_power_meter_id_get(); // returns connected power meter Id or 0 if not connected.
 
 #endif	// ANT_BIKE_POWER_H__

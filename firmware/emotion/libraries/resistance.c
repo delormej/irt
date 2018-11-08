@@ -76,7 +76,7 @@ static void adjustment_timeout_handler(void * p_context)
 
 	// Figure out how far off we were, then store this as a gap offset for the next adjustment.
 	// what we're not accounting for here though is if speed changed.
-	
+	/*
 	// Don't try to adjust gap offset if servo is off.
 	uint16_t servo_pos = resistance_servo_position();
 	if (servo_pos < MAGNET_POSITION_MIN_RESISTANCE)
@@ -102,8 +102,15 @@ static void adjustment_timeout_handler(void * p_context)
 
 		RC_LOG("[RC] adjustment_timeout_handler servo: %i, power: %i mag_watts: %i, target: %i, gap_offset: %i \r\n", 
 			servo_pos, (uint16_t)avg_power, (uint16_t)magnet, (uint16_t) target, mp_user_profile->ca_mag_factors.gap_offset);
-	}
+	}*/
 	resistance_adjust();
+}
+
+static bool should_reset_power_avg(servo_pos, current_servo_pos)
+{
+	const int16_t AVG_RESET_SERVO_THRESHOLD = 50;
+	int16_t change = servo_pos - current_servo_pos;
+	return abs(change) > AVG_RESET_SERVO_THRESHOLD;
 }
 
 static inline bool adjustment_timer_in_use()
@@ -221,9 +228,20 @@ void resistance_position_set(uint16_t servo_pos, uint8_t smooth_steps)
 	if ( (current_servo_pos != servo_pos) 
 		&& ABOVE_TRESHOLD(servo_pos, current_servo_pos) )
 	{
+		// Don't smooth if we're in erg mode and reducing resistance.
+		if (m_resistance_state.mode == RESISTANCE_SET_ERG && actual_servo_pos > current_servo_pos)
+			smooth_steps = 0;
+
 		// Issue a command to move the servo.
 		err_code = pwm_set_servo(actual_servo_pos, smooth_steps);
 		APP_ERROR_CHECK(err_code);
+
+		if (should_reset_power_avg(servo_pos, current_servo_pos)) 
+		{
+			// Clear average.  TODO: need to do this for CTF as well!
+			RC_LOG("[RC] reseting bp avg\r\n");
+			ant_bp_avg_power_reset();
+		}
 
 		RC_LOG("[RC]:SET_SERVO %i\r\n", actual_servo_pos);
 	}
@@ -430,6 +448,9 @@ static void adjust_to_target(resistance_mode_t mode, float speed_mps, float mago
 		// If recovering from a speed too low event, smooth into the position.
 		if (m_resistance_state.power_limit == TARGET_SPEED_TOO_LOW) 
 			smoothing_steps = DEFAULT_SMOOTHING_STEPS;		
+		else 
+			smoothing_steps = mp_user_profile->servo_smoothing_steps;		
+		
 	}
 	else if (mode == RESISTANCE_SET_SIM)
 	{
