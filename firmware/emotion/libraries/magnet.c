@@ -165,8 +165,8 @@ static float watts_offset(float speed_mps, float watts, bool invert)
 	float adjusted_watts = adjusted_force * speed_mps;
 
     MAG_LOG("[MAG] invert: %i, watts: %i, gap_offset: %i adjusted_watts: %i, speed_mps: %i\r\n", 
-			invert, (int16_t)(watts*10), (int16_t)(offset*100),
-			(int16_t)(adjusted_watts*10), (uint16_t)(speed_mps*10));            
+			invert, (int16_t)(watts), (int16_t)(offset*100.0f),
+			(int16_t)(adjusted_watts), (uint16_t)(speed_mps*10));            
 
 	return adjusted_watts;
 }
