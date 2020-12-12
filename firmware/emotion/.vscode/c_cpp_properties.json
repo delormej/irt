@@ -27,7 +27,20 @@
             "includePath": [
                 "/usr/include",
                 "/usr/local/include",
-                "${workspaceRoot}"
+                "${workspaceRoot}",
+                "${workspaceRoot}/../nrf51sdk_7.2/drivers_nrf/pstorage/",
+                "${workspaceRoot}/../nrf51sdk_7.2/drivers_nrf/pstorage/config/",
+                "${workspaceRoot}/../nrf51sdk_7.2/toolchain/",
+                "${workspaceRoot}/../nrf51sdk_7.2/toolchain/gcc/",
+                "${workspaceRoot}/../nrf51sdk_7.2/drivers_nrf/hal/*",
+                "${workspaceRoot}/../nrf51sdk_7.2/*",
+                "${workspaceRoot}/../nrf51sdk_7.2/softdevice/s310/headers/*",
+                "${workspaceRoot}/../nrf51sdk_7.2/libraries/util/",
+                "${workspaceRoot}/libraries/",
+                "${workspaceRoot}/services/",
+                "${workspaceRoot}/../nrf51sdk_7.2/libraries/timer/",
+                "${workspaceRoot}/../nrf51sdk_7.2/softdevice/common/softdevice_handler/",
+                "${workspaceRoot}/../nrf51sdk_7.2/libraries/scheduler/"
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
@@ -55,7 +68,7 @@
                     "${workspaceRoot}",
                     "${workspaceRoot}/services",
                     "C:/Program Files (x86)/GNU Tools ARM Embedded/6 2017-q1-update/lib/gcc/arm-none-eabi/6.3.1/include",
-                    "${workspaceRoot}/../nrf51sdk_7.2/*"
+                    "${workspaceRoot}/../nrf51sdk_7.2/drivers_nrf/hal/*"
                 ]
             },
             "intelliSenseMode": "clang-x64"
